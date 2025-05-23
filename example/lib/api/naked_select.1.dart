@@ -160,7 +160,8 @@ class _AnimatedSelectExampleState extends State<AnimatedSelectExample>
         child: NakedSelectTrigger(
           onHoverState: (isHovered) => setState(() => _isHovered = isHovered),
           onFocusState: (isFocused) => setState(() => _isFocused = isFocused),
-          child: Container(
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             decoration: BoxDecoration(
               color: backgroundColor,
