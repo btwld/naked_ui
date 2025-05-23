@@ -28,24 +28,8 @@ class AccordionExample extends StatefulWidget {
   State<AccordionExample> createState() => _AccordionExampleState();
 }
 
-class _AccordionExampleState extends State<AccordionExample>
-    with TickerProviderStateMixin {
+class _AccordionExampleState extends State<AccordionExample> {
   final _controller = AccordionController<String>(max: 1, min: 1);
-  late final _animationController = AnimationController(
-    duration: const Duration(milliseconds: 300),
-    vsync: this,
-  );
-
-  @override
-  void initState() {
-    super.initState();
-  }
-
-  @override
-  void dispose() {
-    _animationController.dispose();
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -74,7 +58,7 @@ class _AccordionExampleState extends State<AccordionExample>
   }
 }
 
-class AccordionItem extends StatelessWidget {
+class AccordionItem extends StatefulWidget {
   const AccordionItem({
     super.key,
     required this.value,
@@ -87,59 +71,83 @@ class AccordionItem extends StatelessWidget {
   final String content;
 
   @override
+  State<AccordionItem> createState() => _AccordionItemState();
+}
+
+class _AccordionItemState extends State<AccordionItem> {
+  bool _isHovering = false;
+
+  @override
   Widget build(BuildContext context) {
-    return NakedAccordionItem<String>(
-      value: value,
-      trigger: (context, isExpanded, toggle) {
-        return InkWell(
-          onTap: toggle,
-          child: Container(
-            decoration: BoxDecoration(
-              border: Border.all(color: const Color(0xFF3D3D3D)),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            padding: const EdgeInsets.all(12),
-            child: Row(
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF3D3D3D),
-                  ),
-                ),
-                const Spacer(),
-                AnimatedRotation(
-                  turns: isExpanded ? 0.5 : 0,
-                  duration: const Duration(milliseconds: 200),
-                  child: const Icon(
-                    Icons.expand_more,
-                    color: Color(0xFF3D3D3D),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Text(
-          content,
-          style: const TextStyle(color: Color(0xFF3D3D3D)),
-        ),
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(12),
+        color: Colors.grey.shade100,
       ),
-      transitionBuilder: (child) => AnimatedSwitcher(
-        duration: const Duration(milliseconds: 200),
-        transitionBuilder: (child, animation) {
-          return SizeTransition(
-            axis: Axis.vertical,
-            sizeFactor: animation,
-            axisAlignment: 1,
-            child: child,
+      child: NakedAccordionItem<String>(
+        value: widget.value,
+        trigger: (context, isExpanded, toggle) {
+          return NakedButton(
+            onPressed: toggle,
+            onHoverState: (isHovering) =>
+                setState(() => _isHovering = isHovering),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              decoration: BoxDecoration(
+                border: Border.all(
+                  color: _isHovering || isExpanded
+                      ? Colors.grey.shade100
+                      : Colors.grey.shade300,
+                ),
+                borderRadius: BorderRadius.circular(12),
+                color: _isHovering || isExpanded
+                    ? Colors.grey.shade100
+                    : Colors.white,
+              ),
+              padding: const EdgeInsets.all(12),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    widget.title,
+                    style: TextStyle(
+                      fontWeight: FontWeight.w500,
+                      color: Colors.grey.shade700,
+                    ),
+                  ),
+                  AnimatedRotation(
+                    turns: isExpanded ? 0.5 : 0,
+                    duration: const Duration(milliseconds: 200),
+                    child: Icon(
+                      Icons.keyboard_arrow_down_rounded,
+                      color: Colors.grey.shade600,
+                      weight: 100,
+                    ),
+                  ),
+                ],
+              ),
+            ),
           );
         },
-        child: child,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+          child: Text(
+            widget.content,
+            style: const TextStyle(color: Color(0xFF3D3D3D)),
+          ),
+        ),
+        transitionBuilder: (child) => AnimatedSwitcher(
+          duration: const Duration(milliseconds: 200),
+          transitionBuilder: (child, animation) {
+            return SizeTransition(
+              axis: Axis.vertical,
+              sizeFactor: animation,
+              axisAlignment: 1,
+              child: child,
+            );
+          },
+          child: child,
+        ),
       ),
     );
   }
