@@ -5,7 +5,5 @@
 library;
 
 // These exports will be uncommented as the implementations are completed
-// export 'naked_positioning.dart';
-export 'naked_focus_manager.dart';
 export 'naked_portal.dart';
 export 'naked_positioning.dart';
