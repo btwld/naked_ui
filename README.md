@@ -17,7 +17,7 @@ Add this package to your pubspec.yaml:
 
 ```yaml
 dependencies:
-  naked: ^0.0.1-dev.0
+  naked_ui: ^0.0.1-dev.0
 ```
 
 ## Usage
@@ -28,7 +28,7 @@ A naked button component that manages interaction state while allowing complete 
 
 ```dart
 import 'package:flutter/material.dart';
-import 'package:naked/naked.dart';
+import 'package:naked_ui/naked_ui.dart';
 
 class CustomButton extends StatefulWidget {
   final String text;

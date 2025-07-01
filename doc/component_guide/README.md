@@ -22,13 +22,13 @@ To use the Naked library, add it to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  naked: ^latest_version
+  naked_ui: ^latest_version
 ```
 
 Then import it in your Dart code:
 
 ```dart
-import 'package:naked/naked.dart';
+import 'package:naked_ui/naked_ui.dart';
 ```
 
 Basic usage example:

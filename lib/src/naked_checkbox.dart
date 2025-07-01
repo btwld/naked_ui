@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:naked/src/utilities/pressed_state_region.dart';
+import 'package:naked_ui/src/utilities/pressed_state_region.dart';
 
 /// A fully customizable checkbox with no default styling.
 ///

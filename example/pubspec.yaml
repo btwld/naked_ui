@@ -31,8 +31,8 @@ dependencies:
   flutter:
     sdk: flutter
 
-  # Update path dependency to the root package `naked`
-  naked:
+  # Update path dependency to the root package `naked_ui`
+  naked_ui:
     path: ../
 
   # The following adds the Cupertino Icons font to your application.

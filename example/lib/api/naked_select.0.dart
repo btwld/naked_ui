@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:naked/naked.dart';
+import 'package:naked_ui/naked_ui.dart';
 
 void main() {
   runApp(const MyApp());
@@ -28,7 +28,8 @@ class SelectExample extends StatefulWidget {
   State<SelectExample> createState() => _SelectExampleState();
 }
 
-class _SelectExampleState extends State<SelectExample> with TickerProviderStateMixin {
+class _SelectExampleState extends State<SelectExample>
+    with TickerProviderStateMixin {
   String? _selectedValue;
   bool _isHovered = false;
   bool _isFocused = false;

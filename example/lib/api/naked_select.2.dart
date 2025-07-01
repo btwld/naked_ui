@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:naked/naked.dart';
+import 'package:naked_ui/naked_ui.dart';
 
 void main() {
   runApp(const MyApp());

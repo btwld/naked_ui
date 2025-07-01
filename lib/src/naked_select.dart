@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:naked/naked.dart';
+import 'package:naked_ui/naked_ui.dart';
 
 import 'utilities/overlay_content_menu.dart';
 
@@ -517,7 +517,7 @@ class _NakedSelectTriggerState extends State<NakedSelectTrigger> {
 /// providing callbacks for hover, press, focus and selection states to enable complete styling control.
 ///
 /// Key features:
-/// - Customizable cursor and interaction states 
+/// - Customizable cursor and interaction states
 /// - Keyboard selection support
 /// - Optional haptic feedback
 /// - Accessibility support with ARIA attributes
