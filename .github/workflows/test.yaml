@@ -51,5 +51,6 @@ jobs:
         with:
           coverage-files: coverage/lcov.info
           minimum-coverage: 85
+          artifact-name: branch_coverage
           github-token: ${{ secrets.GITHUB_TOKEN }}
           update-comment: true
