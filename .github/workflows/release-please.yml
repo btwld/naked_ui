@@ -43,5 +43,5 @@ jobs:
           release-type: dart
           skip-github-pull-request: false
           skip-labeling: true
-          skip-github-release: true
+          skip-github-release: false
           config-file: release-please-config.json
