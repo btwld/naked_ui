@@ -54,7 +54,7 @@ class _TabsExampleState extends State<TabsExample> {
                 children: [
                   Expanded(
                     child: TabItem(
-                      tabId: 'light',
+                      tabId: 'nate',
                       label: 'Light',
                       isSelected: _selectedTabId == 'light',
                     ),
