@@ -18,7 +18,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Check version input
         id: check-version
@@ -42,4 +42,6 @@ jobs:
         with:
           release-type: dart
           skip-github-pull-request: false
+          skip-labeling: true
+          skip-github-release: true
           config-file: release-please-config.json
