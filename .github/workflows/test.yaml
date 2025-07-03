@@ -17,6 +17,8 @@ jobs:
   test:
     name: Run Tests
     runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
     strategy:
       # Keep running other jobs in the matrix even if one fails.
       fail-fast: false
@@ -39,7 +41,7 @@ jobs:
         run: flutter analyze
 
       - name: Run root tests
-        run: flutter test --coverage
+        run: flutter test
 
       - name: Setup LCOV
         uses: hrishikesh-kadam/setup-lcov@v1
@@ -49,4 +51,5 @@ jobs:
         with:
           coverage-files: coverage/lcov.info
           minimum-coverage: 90
+          github-token: ${{ secrets.GITHUB_TOKEN }}
           update-comment: true
