@@ -48,5 +48,5 @@ jobs:
 
       - uses: VeryGoodOpenSource/very_good_coverage@v2
         with:
-          path: '/coverage/lcov.info'
+          path: 'naked_ui/coverage/lcov.info'
           min_coverage: 85
