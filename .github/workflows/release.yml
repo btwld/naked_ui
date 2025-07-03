@@ -1,0 +1,59 @@
+name: Publish to pub.dev
+
+on:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+*' # Trigger on tags like v1.2.3
+
+# Cancel any in-progress runs of the same workflow for the same tag.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  publish:
+    name: Publish to pub.dev
+    # You will need to configure a trusted publisher on pub.dev for this to work.
+    # See: https://pub.dev/help/trusted-publishing
+    permissions:
+      id-token: write # Required for OIDC authentication with pub.dev
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Check if version matches tag
+        run: |
+          # Extract version from tag (e.g., v1.2.3 -> 1.2.3)
+          TAG_VERSION=${{ github.ref_name#v }}
+
+          # Extract version from pubspec.yaml
+          PUBSPEC_VERSION=$(grep '^version:' pubspec.yaml | awk '{print $2}')
+
+          echo "Tag version: $TAG_VERSION"
+          echo "Pubspec version: $PUBSPEC_VERSION"
+
+          if [ "$TAG_VERSION" != "$PUBSPEC_VERSION" ]; then
+            echo "Error: Git tag version ($TAG_VERSION) does not match pubspec.yaml version ($PUBSPEC_VERSION)."
+            exit 1
+          fi
+
+      - name: Analyze project
+        run: flutter analyze
+
+      - name: Run tests
+        run: flutter test
+
+      - name: Publish to pub.dev
+        uses: dart-lang/setup-dart@v1
+        run: flutter pub publish --force
