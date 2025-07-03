@@ -367,9 +367,13 @@ class NakedSelectInherited<T> extends InheritedWidget {
   });
 
   /// Gets the nearest NakedSelectInherited ancestor of the given context.
+  static NakedSelectInherited<T>? maybeOf<T>(BuildContext context) {
+    return context
+        .dependOnInheritedWidgetOfExactType<NakedSelectInherited<T>>();
+  }
+
   static NakedSelectInherited<T> of<T>(BuildContext context) {
-    final inherited =
-        context.dependOnInheritedWidgetOfExactType<NakedSelectInherited<T>>();
+    final inherited = maybeOf<T>(context);
     if (inherited == null) {
       throw StateError(
         'NakedSelectInherited<$T> not found in context.\n'
