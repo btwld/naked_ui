@@ -10,32 +10,29 @@ Widget builder(bool isExpanded, {required String text}) {
 
 void main() {
   group('Basic Functionality', () {
-    Widget buildAccordion({
-      List<String> initialExpandedValues = const [],
-    }) {
+    Widget buildAccordion({List<String> initialExpandedValues = const []}) {
       return NakedAccordion<String>(
         controller: NakedAccordionController(),
         initialExpandedValues: initialExpandedValues,
         children: [
           NakedAccordionItem<String>(
             value: 'item1',
-            trigger: (_, __, ___) => const Text('Trigger 1'),
+            trigger: (_, _, _) => const Text('Trigger 1'),
             child: const Text('Content 1'),
           ),
           NakedAccordionItem<String>(
             value: 'item2',
-            trigger: (_, __, ___) => const Text('Trigger 2'),
+            trigger: (_, _, _) => const Text('Trigger 2'),
             child: const Text('Content 2'),
           ),
         ],
       );
     }
 
-    testWidgets('renders triggers correctly when closed',
-        (WidgetTester tester) async {
-      await tester.pumpMaterialWidget(
-        buildAccordion(),
-      );
+    testWidgets('renders triggers correctly when closed', (
+      WidgetTester tester,
+    ) async {
+      await tester.pumpMaterialWidget(buildAccordion());
 
       expect(find.text('Trigger 1'), findsOneWidget);
       expect(find.text('Trigger 2'), findsOneWidget);
@@ -43,8 +40,9 @@ void main() {
       expect(find.text('Content 2'), findsNothing);
     });
 
-    testWidgets('initially expands items based on initialExpandedValues',
-        (WidgetTester tester) async {
+    testWidgets('initially expands items based on initialExpandedValues', (
+      WidgetTester tester,
+    ) async {
       await tester.pumpMaterialWidget(
         buildAccordion(initialExpandedValues: const ['item1']),
       );
@@ -70,7 +68,7 @@ void main() {
         children: [
           NakedAccordionItem<String>(
             value: 'item1',
-            trigger: (_, __, ___) => const Text('Trigger 1'),
+            trigger: (_, _, _) => const Text('Trigger 1'),
             onFocusState: (focused) => focusState = focused,
             autoFocus: autoFocus,
             focusNode: focusNode,
@@ -84,13 +82,13 @@ void main() {
       focusState = false;
     });
 
-    testWidgets('onFocusState callback is triggered when focused',
-        (WidgetTester tester) async {
+    testWidgets('onFocusState callback is triggered when focused', (
+      WidgetTester tester,
+    ) async {
       final focusNode = FocusNode();
-      await tester.pumpMaterialWidget(buildFocusableAccordion(
-        focusNode: focusNode,
-        autoFocus: false,
-      ));
+      await tester.pumpMaterialWidget(
+        buildFocusableAccordion(focusNode: focusNode, autoFocus: false),
+      );
 
       // Focus the accordion item
       focusNode.requestFocus();
@@ -110,7 +108,7 @@ void main() {
           children: [
             NakedAccordionItem<String>(
               value: 'item1',
-              trigger: (_, __, ___) => const Text('Trigger 1'),
+              trigger: (_, _, _) => const Text('Trigger 1'),
               onFocusState: (focused) => focusState = focused,
               autoFocus: true,
               child: const Text('Content 1'),
@@ -159,8 +157,9 @@ void main() {
       );
     }
 
-    testWidgets('controller.open() expands an item',
-        (WidgetTester tester) async {
+    testWidgets('controller.open() expands an item', (
+      WidgetTester tester,
+    ) async {
       await tester.pumpMaterialWidget(buildControlledAccordion());
 
       expect(find.text('Open 1'), findsOneWidget);
@@ -177,8 +176,9 @@ void main() {
       expect(find.text('Content 2'), findsNothing);
     });
 
-    testWidgets('controller.close() collapses an item',
-        (WidgetTester tester) async {
+    testWidgets('controller.close() collapses an item', (
+      WidgetTester tester,
+    ) async {
       controller.open('item1');
       await tester.pumpMaterialWidget(buildControlledAccordion());
 
@@ -192,8 +192,9 @@ void main() {
       expect(find.text('Content 1'), findsNothing);
     });
 
-    testWidgets('controller.toggle() toggles item expansion',
-        (WidgetTester tester) async {
+    testWidgets('controller.toggle() toggles item expansion', (
+      WidgetTester tester,
+    ) async {
       await tester.pumpMaterialWidget(buildControlledAccordion());
 
       expect(find.text('Open 1'), findsOneWidget);
@@ -212,8 +213,9 @@ void main() {
       expect(find.text('Content 1'), findsNothing);
     });
 
-    testWidgets('controller respects min expanded items',
-        (WidgetTester tester) async {
+    testWidgets('controller respects min expanded items', (
+      WidgetTester tester,
+    ) async {
       controller = NakedAccordionController<String>(min: 1);
       controller.open('item1');
 
@@ -230,8 +232,9 @@ void main() {
       expect(find.text('Content 1'), findsOneWidget);
     });
 
-    testWidgets('controller respects max expanded items',
-        (WidgetTester tester) async {
+    testWidgets('controller respects max expanded items', (
+      WidgetTester tester,
+    ) async {
       controller = NakedAccordionController<String>(max: 1);
 
       await tester.pumpMaterialWidget(buildControlledAccordion());
@@ -254,8 +257,9 @@ void main() {
       expect(find.text('Content 2'), findsOneWidget);
     });
 
-    testWidgets('controller respects both min and max constraints',
-        (WidgetTester tester) async {
+    testWidgets('controller respects both min and max constraints', (
+      WidgetTester tester,
+    ) async {
       controller = NakedAccordionController<String>(min: 1, max: 1);
 
       await tester.pumpMaterialWidget(buildControlledAccordion());
@@ -288,8 +292,9 @@ void main() {
       expect(find.text('Content 2'), findsOneWidget);
     });
 
-    testWidgets('controller.clear() collapses all items',
-        (WidgetTester tester) async {
+    testWidgets('controller.clear() collapses all items', (
+      WidgetTester tester,
+    ) async {
       controller.open('item1');
       controller.open('item2');
 
@@ -309,8 +314,9 @@ void main() {
       expect(find.text('Content 2'), findsNothing);
     });
 
-    testWidgets('controller.openAll() expands multiple items',
-        (WidgetTester tester) async {
+    testWidgets('controller.openAll() expands multiple items', (
+      WidgetTester tester,
+    ) async {
       await tester.pumpMaterialWidget(buildControlledAccordion());
 
       expect(find.text('Open 1'), findsOneWidget);
