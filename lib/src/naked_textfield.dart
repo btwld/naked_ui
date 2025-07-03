@@ -147,7 +147,8 @@ class NakedTextField extends StatefulWidget {
     this.contentInsertionConfiguration,
     this.clipBehavior = Clip.hardEdge,
     this.restorationId,
-    this.scribbleEnabled = true,
+    this.onPressUpOutside,
+    this.stylusHandwritingEnabled = true,
     this.enableIMEPersonalizedLearning = true,
     this.contextMenuBuilder,
     this.canRequestFocus = true,
@@ -158,26 +159,28 @@ class NakedTextField extends StatefulWidget {
     this.style,
     required this.builder,
     this.ignorePointers,
-  })  : assert(obscuringCharacter.length == 1),
-        smartDashesType = smartDashesType ??
-            (obscureText ? SmartDashesType.disabled : SmartDashesType.enabled),
-        smartQuotesType = smartQuotesType ??
-            (obscureText ? SmartQuotesType.disabled : SmartQuotesType.enabled),
-        assert(maxLines == null || maxLines > 0),
-        assert(minLines == null || minLines > 0),
-        assert(
-          (maxLines == null) || (minLines == null) || (maxLines >= minLines),
-          "minLines can't be greater than maxLines",
-        ),
-        assert(
-          !expands || (maxLines == null && minLines == null),
-          'minLines and maxLines must be null when expands is true.',
-        ),
-        assert(
-          !obscureText || maxLines == 1,
-          'Obscured fields cannot be multiline.',
-        ),
-        assert(maxLength == null || maxLength > 0);
+  }) : assert(obscuringCharacter.length == 1),
+       smartDashesType =
+           smartDashesType ??
+           (obscureText ? SmartDashesType.disabled : SmartDashesType.enabled),
+       smartQuotesType =
+           smartQuotesType ??
+           (obscureText ? SmartQuotesType.disabled : SmartQuotesType.enabled),
+       assert(maxLines == null || maxLines > 0),
+       assert(minLines == null || minLines > 0),
+       assert(
+         (maxLines == null) || (minLines == null) || (maxLines >= minLines),
+         "minLines can't be greater than maxLines",
+       ),
+       assert(
+         !expands || (maxLines == null && minLines == null),
+         'minLines and maxLines must be null when expands is true.',
+       ),
+       assert(
+         !obscureText || maxLines == 1,
+         'Obscured fields cannot be multiline.',
+       ),
+       assert(maxLength == null || maxLength > 0);
 
   /// The magnifier configuration to use for this text field.
   final TextMagnifierConfiguration? magnifierConfiguration;
@@ -315,9 +318,8 @@ class NakedTextField extends StatefulWidget {
   /// Called when a tap is detected outside of the field.
   final TapRegionCallback? onTapOutside;
 
-  // TODO: Implement this on the Next version of Flutter
   /// Called when a tap up is detected outside of the field.
-  // final TapRegionUpCallback? onPressUpOutside;
+  final TapRegionUpCallback? onPressUpOutside;
 
   /// Drag start behavior.
   final DragStartBehavior dragStartBehavior;
@@ -340,8 +342,7 @@ class NakedTextField extends StatefulWidget {
   /// Restoration ID for this widget.
   final String? restorationId;
 
-  /// Whether scribble is enabled.
-  final bool scribbleEnabled;
+  final bool stylusHandwritingEnabled;
 
   /// Whether to enable IME personalized learning.
   final bool enableIMEPersonalizedLearning;
@@ -426,9 +427,7 @@ class _NakedTextFieldState extends State<NakedTextField>
   void initState() {
     super.initState();
     _selectionGestureDetectorBuilder =
-        _TextFieldSelectionGestureDetectorBuilder(
-      state: this,
-    );
+        _TextFieldSelectionGestureDetectorBuilder(state: this);
     if (widget.controller == null) {
       _createLocalController();
     }
@@ -538,7 +537,7 @@ class _NakedTextFieldState extends State<NakedTextField>
     }
 
     if (cause == SelectionChangedCause.longPress ||
-        cause == SelectionChangedCause.scribble) {
+        cause == SelectionChangedCause.stylusHandwriting) {
       return true;
     }
 
@@ -633,7 +632,8 @@ class _NakedTextFieldState extends State<NakedTextField>
     assert(debugCheckHasDirectionality(context));
 
     final ThemeData theme = Theme.of(context);
-    final TextStyle style = widget.style ??
+    final TextStyle style =
+        widget.style ??
         TextStyle(
           color: widget.enabled ? Colors.black : Colors.grey,
           fontSize: 16.0,
@@ -661,7 +661,8 @@ class _NakedTextFieldState extends State<NakedTextField>
       case TargetPlatform.fuchsia:
       case TargetPlatform.linux:
       case TargetPlatform.windows:
-        spellCheckConfiguration = widget.spellCheckConfiguration ??
+        spellCheckConfiguration =
+            widget.spellCheckConfiguration ??
             const SpellCheckConfiguration.disabled();
     }
 
@@ -739,6 +740,7 @@ class _NakedTextFieldState extends State<NakedTextField>
               textAlign: widget.textAlign,
               textDirection: widget.textDirection,
               autofocus: widget.autofocus,
+              onTapUpOutside: widget.onPressUpOutside,
               obscuringCharacter: widget.obscuringCharacter,
               obscureText: widget.obscureText,
               autocorrect: widget.autocorrect,
@@ -780,14 +782,15 @@ class _NakedTextFieldState extends State<NakedTextField>
               autofillClient: this,
               clipBehavior: widget.clipBehavior,
               restorationId: 'editable',
-              scribbleEnabled: widget.scribbleEnabled,
+              stylusHandwritingEnabled: widget.stylusHandwritingEnabled,
               enableIMEPersonalizedLearning:
                   widget.enableIMEPersonalizedLearning,
               contentInsertionConfiguration:
                   widget.contentInsertionConfiguration,
               contextMenuBuilder: widget.contextMenuBuilder,
               spellCheckConfiguration: spellCheckConfiguration,
-              magnifierConfiguration: widget.magnifierConfiguration ??
+              magnifierConfiguration:
+                  widget.magnifierConfiguration ??
                   TextMagnifier.adaptiveMagnifierConfiguration,
             ),
           ),
@@ -829,10 +832,10 @@ class _NakedTextFieldState extends State<NakedTextField>
 
 class _TextFieldSelectionGestureDetectorBuilder
     extends TextSelectionGestureDetectorBuilder {
-  _TextFieldSelectionGestureDetectorBuilder(
-      {required _NakedTextFieldState state})
-      : _state = state,
-        super(delegate: state);
+  _TextFieldSelectionGestureDetectorBuilder({
+    required _NakedTextFieldState state,
+  }) : _state = state,
+       super(delegate: state);
 
   final _NakedTextFieldState _state;
 
