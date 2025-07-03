@@ -10,9 +10,8 @@ extension _WidgetTesterX on WidgetTester {
     await pumpWidget(
       WidgetsApp(
         color: Colors.white,
-        onGenerateRoute: (settings) => MaterialPageRoute(
-          builder: (context) => widget,
-        ),
+        onGenerateRoute: (settings) =>
+            MaterialPageRoute(builder: (context) => widget),
       ),
     );
   }
@@ -53,48 +52,49 @@ void main() {
       await tester.pumpTextField(
         NakedTextField(
           controller: controller,
+          autofocus: true,
           builder: (context, child) => child,
         ),
       );
 
-      await tester.tap(find.byType(NakedTextField));
-      await tester.pump();
       await tester.enterText(find.byType(NakedTextField), 'Hello, World!');
 
       expect(controller.text, equals('Hello, World!'));
     });
 
-    testWidgets('does not allow text input when readOnly is true',
-        (WidgetTester tester) async {
+    testWidgets('does not allow text input when readOnly is true', (
+      WidgetTester tester,
+    ) async {
       final controller = TextEditingController();
       await tester.pumpTextField(
         NakedTextField(
           controller: controller,
           readOnly: true,
+          autofocus: true,
           builder: (context, child) => child,
         ),
       );
 
-      await tester.tap(find.byType(NakedTextField));
-      await tester.pump();
       await tester.enterText(find.byType(NakedTextField), 'Hello, World!');
 
       expect(controller.text, equals(''));
     });
 
-    testWidgets('does not allow text input when disabled',
-        (WidgetTester tester) async {
+    testWidgets('does not allow text input when disabled', (
+      WidgetTester tester,
+    ) async {
       final controller = TextEditingController();
       await tester.pumpTextField(
-        NakedTextField(
-          controller: controller,
-          enabled: false,
-          builder: (context, child) => child,
+        SizedBox(
+          child: NakedTextField(
+            controller: controller,
+            enabled: false,
+            autofocus: true,
+            builder: (context, child) => child,
+          ),
         ),
       );
 
-      await tester.tap(find.byType(NakedTextField));
-      await tester.pump();
       await tester.enterText(find.byType(NakedTextField), 'Hello, World!');
 
       expect(controller.text, equals(''));
@@ -122,8 +122,9 @@ void main() {
       expect(isHovered, false);
     });
 
-    testWidgets('calls onPressedState on tap down/up',
-        (WidgetTester tester) async {
+    testWidgets('calls onPressedState on tap down/up', (
+      WidgetTester tester,
+    ) async {
       bool isPressed = false;
       await tester.pumpTextField(
         NakedTextField(
@@ -141,8 +142,9 @@ void main() {
       expect(isPressed, false);
     });
 
-    testWidgets('calls onFocusState when focused/unfocused',
-        (WidgetTester tester) async {
+    testWidgets('calls onFocusState when focused/unfocused', (
+      WidgetTester tester,
+    ) async {
       bool isFocused = false;
       final focusNode = FocusNode();
 
@@ -163,8 +165,9 @@ void main() {
       expect(isFocused, false);
     });
 
-    testWidgets('calls onChanged when text changes',
-        (WidgetTester tester) async {
+    testWidgets('calls onChanged when text changes', (
+      WidgetTester tester,
+    ) async {
       String changedText = '';
       await tester.pumpTextField(
         NakedTextField(
@@ -192,8 +195,9 @@ void main() {
         ),
       );
 
-      final editableText =
-          tester.widget<EditableText>(find.byType(EditableText));
+      final editableText = tester.widget<EditableText>(
+        find.byType(EditableText),
+      );
       expect(editableText.maxLines, 3);
     });
 
@@ -208,8 +212,9 @@ void main() {
         ),
       );
 
-      final editableText =
-          tester.widget<EditableText>(find.byType(EditableText));
+      final editableText = tester.widget<EditableText>(
+        find.byType(EditableText),
+      );
       expect(editableText.minLines, 2);
     });
 
@@ -232,8 +237,9 @@ void main() {
   });
 
   group('Text Formatting', () {
-    testWidgets('obscures text when obscureText is true',
-        (WidgetTester tester) async {
+    testWidgets('obscures text when obscureText is true', (
+      WidgetTester tester,
+    ) async {
       final controller = TextEditingController();
       await tester.pumpTextField(
         NakedTextField(
@@ -248,8 +254,9 @@ void main() {
       await tester.enterText(find.byType(NakedTextField), 'password');
 
       expect(controller.text, equals('password'));
-      final editableText =
-          tester.widget<EditableText>(find.byType(EditableText));
+      final editableText = tester.widget<EditableText>(
+        find.byType(EditableText),
+      );
       expect(editableText.obscureText, true);
     });
 
@@ -264,8 +271,9 @@ void main() {
         ),
       );
 
-      final editableText =
-          tester.widget<EditableText>(find.byType(EditableText));
+      final editableText = tester.widget<EditableText>(
+        find.byType(EditableText),
+      );
       expect(editableText.obscuringCharacter, '-');
     });
 
@@ -277,8 +285,9 @@ void main() {
         ),
       );
 
-      final editableText =
-          tester.widget<EditableText>(find.byType(EditableText));
+      final editableText = tester.widget<EditableText>(
+        find.byType(EditableText),
+      );
       expect(editableText.textAlign, TextAlign.justify);
     });
 
@@ -314,8 +323,9 @@ void main() {
       await tester.tap(find.byType(NakedTextField));
       await tester.pump();
 
-      final editableText =
-          tester.widget<EditableText>(find.byType(EditableText));
+      final editableText = tester.widget<EditableText>(
+        find.byType(EditableText),
+      );
       expect(editableText.keyboardType, TextInputType.number);
     });
 
@@ -330,13 +340,15 @@ void main() {
       await tester.tap(find.byType(NakedTextField));
       await tester.pump();
 
-      final editableText =
-          tester.widget<EditableText>(find.byType(EditableText));
+      final editableText = tester.widget<EditableText>(
+        find.byType(EditableText),
+      );
       expect(editableText.textInputAction, TextInputAction.search);
     });
 
-    testWidgets('calls onSubmitted when action button is pressed',
-        (WidgetTester tester) async {
+    testWidgets('calls onSubmitted when action button is pressed', (
+      WidgetTester tester,
+    ) async {
       String submitted = '';
       await tester.pumpTextField(
         NakedTextField(
@@ -378,14 +390,12 @@ void main() {
 
     testWidgets('cursor has the specified width', (WidgetTester tester) async {
       await tester.pumpTextField(
-        NakedTextField(
-          cursorWidth: 5.0,
-          builder: (context, child) => child,
-        ),
+        NakedTextField(cursorWidth: 5.0, builder: (context, child) => child),
       );
 
-      final editableText =
-          tester.widget<EditableText>(find.byType(EditableText));
+      final editableText = tester.widget<EditableText>(
+        find.byType(EditableText),
+      );
       expect(editableText.cursorWidth, 5.0);
     });
 
@@ -397,37 +407,36 @@ void main() {
         ),
       );
 
-      final editableText =
-          tester.widget<EditableText>(find.byType(EditableText));
+      final editableText = tester.widget<EditableText>(
+        find.byType(EditableText),
+      );
       expect(editableText.cursorColor, Colors.red);
     });
   });
 
   group('Accessibility', () {
-    testWidgets('provides semantic properties for accessibility',
-        (WidgetTester tester) async {
+    testWidgets('provides semantic properties for accessibility', (
+      WidgetTester tester,
+    ) async {
       await tester.pumpTextField(
-        NakedTextField(
-          builder: (context, child) => child,
-        ),
+        NakedTextField(builder: (context, child) => child),
       );
 
       final semantics = tester.getSemantics(find.byType(NakedTextField).first);
       expect(semantics.hasFlag(SemanticsFlag.isTextField), true);
     });
 
-    testWidgets('respects enabled state for semantics',
-        (WidgetTester tester) async {
+    testWidgets('respects enabled state for semantics', (
+      WidgetTester tester,
+    ) async {
       for (var enabled in [false, true]) {
         await tester.pumpTextField(
-          NakedTextField(
-            enabled: enabled,
-            builder: (context, child) => child,
-          ),
+          NakedTextField(enabled: enabled, builder: (context, child) => child),
         );
 
-        final semantics =
-            tester.getSemantics(find.byType(NakedTextField).first);
+        final semantics = tester.getSemantics(
+          find.byType(NakedTextField).first,
+        );
         expect(semantics.hasFlag(SemanticsFlag.isEnabled), enabled);
 
         await tester.pumpWidget(Container());
