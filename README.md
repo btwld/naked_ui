@@ -1,52 +1,76 @@
 # Naked
 
-A collection of behavior-first UI components for Flutter that separate state management and interaction logic from visual rendering.
+Zero-styling UI components giving you complete design freedom
 
-## Features
+## Introduction
 
-- Complete separation of state from presentation
-- Fully customizable appearance
-- Consistent interaction patterns
-- Built-in accessibility support
-- Comprehensive testing
-- Core utilities for advanced component building
+The **Naked** library provides UI components that handle only the functionality, behavior, and accessibility aspects of UI elements without imposing any visual styling. This approach gives you complete control over your design system while ensuring all components work correctly and meet accessibility standards.
 
-## Installation
+## Key Features
 
-Add this package to your pubspec.yaml:
+- **Zero-styling approach**: Components handle behavior only, you control 100% of the visual design
+- **Accessibility built-in**: All components implement proper ARIA roles and keyboard navigation
+- **Flexible state management**: Callback functions for all component states (hover, focus, pressed, etc.)
+- **Customizable**: Simple API with sensible defaults and extensive customization options
+
+## Available Components
+
+The library includes the following components:
+
+- **NakedButton**: Interactive button behavior with state callbacks
+- **NakedCheckbox**: Toggle component with customizable states
+- **NakedTooltip**: Positioned tooltip behavior with lifecycle management
+- **NakedTextField**: Text input with validation and state management
+- **NakedSelect**: Dropdown/select implementation with keyboard navigation
+- **NakedSlider**: Draggable slider with keyboard support and value constraints
+- **NakedTabs**: Tab navigation behavior with accessibility controls
+- **NakedRadioGroup**: Radio button group behavior with selection management
+- **NakedAccordion**: Expandable/collapsible section behavior
+- **NakedMenu**: Menu component with keyboard navigation
+
+## Getting Started
+
+### Installation
+
+Add the Naked UI library to your Flutter project:
 
 ```yaml
 dependencies:
-  naked_ui: ^0.0.1-dev.0
+  naked: ^latest_version  # Check for the latest version at https://pub.dev/packages/naked
 ```
 
-## Usage
+Then run:
 
-### NakedButton
+```bash
+flutter pub get
+```
 
-A naked button component that manages interaction state while allowing complete visual customization.
+### Basic Usage Pattern
+
+All Naked components follow a similar pattern:
+
+1. **Create your visual design**: Design your UI components using standard Flutter widgets
+2. **Wrap with Naked behavior**: Wrap your design with the appropriate Naked component
+3. **Handle state changes**: Use the provided callbacks to update your visual design based on component state
+
+## Example: Creating a Custom Button
 
 ```dart
-import 'package:flutter/material.dart';
-import 'package:naked_ui/naked_ui.dart';
-
-class CustomButton extends StatefulWidget {
+class MyCustomButton extends StatefulWidget {
   final String text;
-  final VoidCallback? onPressed;
-  final bool isLoading;
-
-  const CustomButton({
+  final VoidCallback onPressed;
+  
+  const MyCustomButton({
     Key? key,
     required this.text,
-    this.onPressed,
-    this.isLoading = false,
+    required this.onPressed,
   }) : super(key: key);
 
   @override
-  _CustomButtonState createState() => _CustomButtonState();
+  _MyCustomButtonState createState() => _MyCustomButtonState();
 }
 
-class _CustomButtonState extends State<CustomButton> {
+class _MyCustomButtonState extends State<MyCustomButton> {
   bool _isHovered = false;
   bool _isPressed = false;
   bool _isFocused = false;
@@ -55,103 +79,75 @@ class _CustomButtonState extends State<CustomButton> {
   Widget build(BuildContext context) {
     return NakedButton(
       onPressed: widget.onPressed,
-      isLoading: widget.isLoading,
-      semanticLabel: widget.text,
       onHoverState: (isHovered) => setState(() => _isHovered = isHovered),
       onPressedState: (isPressed) => setState(() => _isPressed = isPressed),
       onFocusState: (isFocused) => setState(() => _isFocused = isFocused),
-      child: AnimatedContainer(
-        duration: Duration(milliseconds: 200),
-        padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Container(
+        padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         decoration: BoxDecoration(
           color: _isPressed
-              ? Colors.blue.shade700
+              ? Colors.blue.shade800  // Darker when pressed
               : _isHovered
-                  ? Colors.blue.shade500
-                  : Colors.blue.shade600,
-          borderRadius: BorderRadius.circular(8),
-          boxShadow: _isPressed
-              ? null
-              : [BoxShadow(color: Colors.black26, blurRadius: _isHovered ? 4 : 2)],
+                  ? Colors.blue.shade600  // Slightly darker when hovered
+                  : Colors.blue.shade500, // Default color
+          borderRadius: BorderRadius.circular(4),
+          border: Border.all(
+            color: _isFocused ? Colors.white : Colors.transparent,
+            width: 2,
+          ),
         ),
-        child: widget.isLoading
-            ? SizedBox(
-                width: 20,
-                height: 20,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                ),
-              )
-            : Text(
-                widget.text,
-                style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: _isPressed ? FontWeight.bold : FontWeight.normal,
-                ),
-              ),
+        child: Text(
+          widget.text,
+          style: TextStyle(color: Colors.white),
+        ),
       ),
     );
   }
 }
 ```
 
-## Design Philosophy
+## Configuration
 
-The "naked" pattern provides components that:
+Each component has its own set of configuration options. Here are some common patterns:
 
-1. Manage interaction behavior and accessibility
-2. Provide direct callbacks for state changes
-3. Delegate visual rendering entirely to the consumer
+### State Callbacks
 
-This approach allows for unlimited visual customization while maintaining consistent behavior and accessibility. For a detailed explanation of our approach, see the [Naked Component Development Guide](.context/plan/naked_component_development_guide.md).
+Most components provide state callbacks that notify you when the component's state changes:
 
-## Component Architecture
+```dart
+NakedButton(
+  onHoverState: (isHovered) => handleHover(isHovered),
+  onPressedState: (isPressed) => handlePress(isPressed),
+  onFocusState: (isFocused) => handleFocus(isFocused),
+  // Other properties...
+)
+```
 
-Naked components use a callback-driven approach where:
+### Accessibility Options
 
-1. **Direct Callbacks**: Components provide callbacks like `onHoverState`, `onFocusState`, etc.
-2. **Consumer-Managed State**: You maintain your own state variables using these callbacks
-3. **Full Styling Control**: You implement your own visual rendering using state variables
+Components offer accessibility configuration:
 
-This approach:
-- Aligns with Flutter's existing patterns
-- Gives you maximum flexibility
-- Creates a simple mental model
-- Reduces abstraction layers
+```dart
+NakedButton(
+  semanticLabel: 'Submit form',
+  isSemanticButton: true,
+  // Other properties...
+)
+```
 
-### Core Utilities
+### Custom Focus Handling
 
-Naked components leverage three powerful core utilities to enhance functionality:
+You can provide your own focus nodes for advanced focus management:
 
-1. **NakedPortal** - Renders content in app overlays with proper context inheritance
-2. **NakedPositioning** - Handles optimal positioning relative to anchor elements
-3. **NakedFocusManager** - Manages focus behavior and keyboard navigation
+```dart
+final FocusNode _myFocusNode = FocusNode();
 
-These utilities are used internally by components like NakedSelect and NakedMenu to provide robust functionality without compromising on customization.
+// In your widget build method:
+NakedButton(
+  focusNode: _myFocusNode,
+  autofocus: true,
+  // Other properties...
+)
+```
 
-For detailed implementation patterns, best practices, and examples, refer to our [Naked Component Development Guide](.context/plan/naked_component_development_guide.md).
-
-## Accessibility
-
-All Naked components implement proper accessibility features, including:
-- Semantic roles for screen readers
-- Keyboard navigation
-- Focus management
-
-When implementing custom styling, ensure you preserve these accessibility features by following the guidelines in our development guide.
-
-## Available Components
-
-- NakedAccordion - Expandable/collapsible content panels
-- NakedButton - Interactive button behavior
-- NakedCheckbox - Selectable checkbox with indeterminate state
-- NakedMenu - Customizable dropdown menu with positioning and focus management
-- NakedRadioButton/NakedRadioGroup - Exclusive selection controls
-- NakedSelect - Customizable dropdown select with positioning and focus management
-- NakedSlider - Range selection slider
-- NakedTabs - Tab-based navigation component
-
-## License
-
-MIT
+See each component's documentation for details on all available configuration options.

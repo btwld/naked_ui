@@ -44,3 +44,7 @@ app.*.map.json
 
 # Orbit framework
 .orbit/
+
+# FVM Version Cache
+.fvm/
+.vscode/
