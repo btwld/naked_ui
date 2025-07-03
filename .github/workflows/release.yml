@@ -3,9 +3,7 @@ name: Publish to pub.dev
 on:
   push:
     tags:
-      - 'v[0-9]+.[0-9]+.[0-9]+*' # Trigger on tags like v1.2.3
-
-# Cancel any in-progress runs of the same workflow for the same tag.
+      - 'v[0-9]+.[0-9]+.[0-9]+*'
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
