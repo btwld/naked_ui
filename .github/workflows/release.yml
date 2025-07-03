@@ -13,10 +13,7 @@ concurrency:
 jobs:
   publish:
     name: Publish to pub.dev
-    # You will need to configure a trusted publisher on pub.dev for this to work.
-    # See: https://pub.dev/help/trusted-publishing
-    permissions:
-      id-token: write # Required for OIDC authentication with pub.dev
+    environment: Production    
     runs-on: ubuntu-latest
 
     steps:
@@ -32,28 +29,14 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
-      - name: Check if version matches tag
-        run: |
-          # Extract version from tag (e.g., v1.2.3 -> 1.2.3)
-          TAG_VERSION=${{ github.ref_name#v }}
-
-          # Extract version from pubspec.yaml
-          PUBSPEC_VERSION=$(grep '^version:' pubspec.yaml | awk '{print $2}')
-
-          echo "Tag version: $TAG_VERSION"
-          echo "Pubspec version: $PUBSPEC_VERSION"
-
-          if [ "$TAG_VERSION" != "$PUBSPEC_VERSION" ]; then
-            echo "Error: Git tag version ($TAG_VERSION) does not match pubspec.yaml version ($PUBSPEC_VERSION)."
-            exit 1
-          fi
-
       - name: Analyze project
         run: flutter analyze
 
       - name: Run tests
         run: flutter test
 
-      - name: Publish to pub.dev
-        uses: dart-lang/setup-dart@v1
-        run: flutter pub publish --force
+      - name: 'Dart package'
+        uses: k-paxian/dart-package-publisher@master
+        with:
+          accessToken: ${{ secrets.OAUTH_ACCESS_TOKEN }}
+          refreshToken: ${{ secrets.OAUTH_REFRESH_TOKEN }}
