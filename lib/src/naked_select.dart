@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:naked_ui/naked_ui.dart';
-import 'package:naked_ui/src/utilities/naked_menu_anchor.dart';
 
 /// A fully customizable select/dropdown widget with no default styling.
 ///
