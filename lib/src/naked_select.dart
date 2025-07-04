@@ -3,8 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:naked_ui/naked_ui.dart';
-
-import 'utilities/overlay_content_menu.dart';
+import 'package:naked_ui/src/utilities/naked_menu_anchor.dart';
 
 /// A fully customizable select/dropdown widget with no default styling.
 ///
@@ -108,11 +107,11 @@ class NakedSelect<T> extends StatefulWidget implements OverlayChildLifecycle {
 
   /// The alignment of the menu relative to its trigger.
   /// Specifies how to position the menu when it opens.
-  final PositionConfig menuAlignment;
+  final NakedMenuPosition menuPosition;
 
   /// Alternative alignments to try if the menu doesn't fit in the preferred position.
   /// The menu will try each alignment in order until finding one that fits.
-  final List<PositionConfig> fallbackAlignments;
+  final List<NakedMenuPosition> fallbackPositions;
 
   /// Called when the menu is opened.
   final VoidCallback? onOpen;
@@ -148,22 +147,20 @@ class NakedSelect<T> extends StatefulWidget implements OverlayChildLifecycle {
     this.autofocus = false,
     this.enableTypeAhead = true,
     this.typeAheadDebounceTime = const Duration(milliseconds: 500),
-    this.menuAlignment = const PositionConfig(
+    this.menuPosition = const NakedMenuPosition(
       target: Alignment.bottomLeft,
       follower: Alignment.topLeft,
-      offset: Offset(0, 4),
     ),
-    this.fallbackAlignments = const [
-      PositionConfig(
+    this.fallbackPositions = const [
+      NakedMenuPosition(
         target: Alignment.topLeft,
         follower: Alignment.bottomLeft,
-        offset: Offset(0, -8),
       ),
     ],
     this.closeOnClickOutside = true,
-  })  : allowMultiple = false,
-        selectedValues = null,
-        onSelectedValuesChanged = null;
+  }) : allowMultiple = false,
+       selectedValues = null,
+       onSelectedValuesChanged = null;
 
   const NakedSelect.multiple({
     super.key,
@@ -181,32 +178,30 @@ class NakedSelect<T> extends StatefulWidget implements OverlayChildLifecycle {
     this.autofocus = false,
     this.enableTypeAhead = true,
     this.typeAheadDebounceTime = const Duration(milliseconds: 500),
-    this.menuAlignment = const PositionConfig(
+    this.menuPosition = const NakedMenuPosition(
       target: Alignment.bottomLeft,
       follower: Alignment.topLeft,
-      offset: Offset(0, 4),
     ),
-    this.fallbackAlignments = const [
-      PositionConfig(
+    this.fallbackPositions = const [
+      NakedMenuPosition(
         target: Alignment.topLeft,
         follower: Alignment.bottomLeft,
-        offset: Offset(0, -8),
       ),
     ],
     this.closeOnClickOutside = true,
-  })  : allowMultiple = true,
-        selectedValue = null,
-        onSelectedValueChanged = null;
+  }) : allowMultiple = true,
+       selectedValue = null,
+       onSelectedValueChanged = null;
 
   @override
   State<NakedSelect<T>> createState() => _NakedSelectState<T>();
 }
 
 class _NakedSelectState<T> extends State<NakedSelect<T>>
-    with OverlayChildLifecycleMixin {
+    with MenuAnchorChildLifecycleMixin {
   late final _isMultipleSelection =
       widget.allowMultiple && widget.selectedValues != null;
-  bool get _isOpen => controller.isShowing;
+  bool get _isOpen => controller.isOpen;
 
   // For type-ahead functionality
   String _typeAheadBuffer = '';
@@ -267,8 +262,10 @@ class _NakedSelectState<T> extends State<NakedSelect<T>>
     }
 
     // Reset the buffer after a delay
-    _typeAheadResetTimer =
-        Timer(widget.typeAheadDebounceTime, _resetTypeAheadBuffer);
+    _typeAheadResetTimer = Timer(
+      widget.typeAheadDebounceTime,
+      _resetTypeAheadBuffer,
+    );
   }
 
   void _registerSelectableItem(T value, FocusNode focusNode) {
@@ -311,28 +308,24 @@ class _NakedSelectState<T> extends State<NakedSelect<T>>
         explicitChildNodes: true,
         container: true,
         label: widget.semanticLabel,
-        child: NakedPortal(
-          alignment: widget.menuAlignment,
-          fallbackAlignments: widget.fallbackAlignments,
+        child: NakedMenuAnchor(
+          position: widget.menuPosition,
+          fallbackPositions: widget.fallbackPositions,
+          onClose: closeMenu,
+          onOpen: openMenu,
+          consumeOutsideTaps: widget.closeOnClickOutside,
           controller: controller,
-          overlayBuilder: (context) {
-            return NakedOverlayContentMenu(
-              consumeOutsideTaps: widget.closeOnClickOutside,
-              onClose: closeMenu,
-              controller: controller,
-              onKeyEvent: (event) {
-                // Type-ahead with character keys
-                final character = event.character;
+          onKeyEvent: (event) {
+            // Type-ahead with character keys
+            final character = event.character;
 
-                if (character != null &&
-                    character.isNotEmpty &&
-                    widget.enableTypeAhead) {
-                  _handleTypeAhead(character);
-                }
-              },
-              child: widget.menu,
-            );
+            if (character != null &&
+                character.isNotEmpty &&
+                widget.enableTypeAhead) {
+              _handleTypeAhead(character);
+            }
           },
+          overlayBuilder: (_) => widget.menu,
           child: widget.child,
         ),
       ),

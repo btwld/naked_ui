@@ -179,9 +179,8 @@ bool _isOverlayFullyVisible(
 
 enum OverlayChildLifecycleState { present, pendingRemoval, removed }
 
-typedef OverlayChildLifecycleCallback = void Function(
-  OverlayChildLifecycleState state,
-);
+typedef OverlayChildLifecycleCallback =
+    void Function(OverlayChildLifecycleState state);
 
 abstract class OverlayChildLifecycle {
   final Duration removalDelay;
@@ -227,13 +226,10 @@ mixin OverlayChildLifecycleMixin<T extends StatefulWidget> on State<T> {
     } else {
       _onStateChange?.call(OverlayChildLifecycleState.pendingRemoval);
       _removalTimer?.cancel();
-      _removalTimer = Timer(
-        overlayChildLifecycle.removalDelay,
-        () {
-          controller.hide();
-          _onStateChange?.call(OverlayChildLifecycleState.removed);
-        },
-      );
+      _removalTimer = Timer(overlayChildLifecycle.removalDelay, () {
+        controller.hide();
+        _onStateChange?.call(OverlayChildLifecycleState.removed);
+      });
     }
   }
 }
