@@ -495,6 +495,7 @@ class _NakedTextFieldState extends State<NakedTextField>
     _controller = value == null
         ? RestorableTextEditingController()
         : RestorableTextEditingController.fromValue(value);
+
     if (!restorePending) {
       _registerController();
     }
