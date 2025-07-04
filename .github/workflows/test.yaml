@@ -43,11 +43,16 @@ jobs:
       - name: Run root tests
         run: flutter test --coverage 
 
-      - uses: romeovs/lcov-reporter-action@v0.2.16
+      - name: Setup LCOV
+        uses: hrishikesh-kadam/setup-lcov@v1
+
+      - name: Report Code Coverage
+        uses: zgosalvez/github-actions-report-lcov@v3
         with:
-          lcov-file: ./coverage/lcov.info
-          delete-old-comments: true
-          token: ${{ secrets.GITHUB_TOKEN }}
+          coverage-files: coverage/lcov.info
+          minimum-coverage: 95
+          artifact-name: code-coverage-report
+          github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - uses: VeryGoodOpenSource/very_good_coverage@v2
         with:
