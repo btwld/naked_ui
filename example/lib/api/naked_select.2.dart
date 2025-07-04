@@ -91,7 +91,7 @@ class _AnimatedMultiSelectExampleState extends State<AnimatedMultiSelectExample>
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      width: 250,
+      width: 300,
       child: NakedSelect<String>.multiple(
         selectedValues: _selectedValues,
         closeOnSelect: false,
@@ -108,54 +108,61 @@ class _AnimatedMultiSelectExampleState extends State<AnimatedMultiSelectExample>
               ? _animationController.forward()
               : _animationController.reverse();
         },
-        menu: SlideTransition(
-          position: _animationController.drive(Tween<Offset>(
-            begin: const Offset(0, -0.05),
-            end: Offset.zero,
+        menu: ScaleTransition(
+          scale: _animationController.drive(Tween<double>(
+            begin: 0.98,
+            end: 1,
           )),
-          child: FadeTransition(
-            opacity: _animation,
-            child: SizedBox(
-              width: 250,
-              child: Container(
-                margin: const EdgeInsets.only(top: 4),
-                padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 6),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  border: Border.all(
-                    color: Colors.grey.shade300,
-                    width: 1,
+          child: SlideTransition(
+            position: _animationController.drive(Tween<Offset>(
+              begin: const Offset(0, -0.05),
+              end: Offset.zero,
+            )),
+            child: FadeTransition(
+              opacity: _animation,
+              child: SizedBox(
+                width: 300,
+                child: Container(
+                  margin: const EdgeInsets.only(top: 4),
+                  padding:
+                      const EdgeInsets.symmetric(vertical: 6, horizontal: 6),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    border: Border.all(
+                      color: Colors.grey.shade300,
+                      width: 1,
+                    ),
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.1),
+                        blurRadius: 8,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
                   ),
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.1),
-                      blurRadius: 8,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: const Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    SelectItem(
-                      value: 'Apple',
-                      label: 'Apple',
-                    ),
-                    SelectItem(
-                      value: 'Banana',
-                      label: 'Banana',
-                    ),
-                    SelectItem(
-                      value: 'Orange',
-                      label: 'Orange',
-                    ),
-                    SelectItem(
-                      value: 'Mango',
-                      label: 'Mango',
-                    ),
-                  ],
+                  child: const Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      SelectItem(
+                        value: 'Apple',
+                        label: 'Apple',
+                      ),
+                      SelectItem(
+                        value: 'Banana',
+                        label: 'Banana',
+                      ),
+                      SelectItem(
+                        value: 'Orange',
+                        label: 'Orange',
+                      ),
+                      SelectItem(
+                        value: 'Mango',
+                        label: 'Mango',
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
