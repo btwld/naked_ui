@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:naked_ui/naked_ui.dart';
 
 const Map<ShortcutActivator, Intent> _shortcuts = <ShortcutActivator, Intent>{
   SingleActivator(LogicalKeyboardKey.gameButtonA): ActivateIntent(),
