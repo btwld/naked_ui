@@ -45,6 +45,8 @@ jobs:
 
       - name: Setup LCOV
         uses: hrishikesh-kadam/setup-lcov@v1
+        with:
+          ref: v2.0
 
       - name: Report Code Coverage
         uses: zgosalvez/github-actions-report-lcov@v3
