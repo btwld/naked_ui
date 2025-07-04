@@ -31,8 +31,8 @@
           "href": "/widget/menu"
         },
         {
-          "title": "NakedRadioGroup",
-          "href": "/widget/radio_group"
+          "title": "NakedRadio",
+          "href": "/widget/radio"
         },
         {
           "title": "NakedSelect",
