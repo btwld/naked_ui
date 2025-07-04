@@ -43,6 +43,11 @@ jobs:
       - name: Run root tests
         run: flutter test --coverage 
 
+      - uses: romeovs/lcov-reporter-action@v0.2.16
+        with:
+          lcov-file: ./coverage/lcov.info
+          delete-old-comments: true
+
       - uses: VeryGoodOpenSource/very_good_coverage@v2
         with:
           path: 'coverage/lcov.info'
