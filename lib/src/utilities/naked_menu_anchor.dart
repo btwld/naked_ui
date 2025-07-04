@@ -25,7 +25,10 @@ class NakedMenuPosition {
   final Alignment target;
   final Alignment follower;
 
-  const NakedMenuPosition({required this.target, required this.follower});
+  const NakedMenuPosition({
+    this.target = Alignment.bottomLeft,
+    this.follower = Alignment.topLeft,
+  });
 }
 
 class NakedMenuAnchor extends StatefulWidget {
@@ -116,6 +119,20 @@ class _NakedMenuAnchorState extends State<NakedMenuAnchor> {
     );
   }
 }
+
+abstract class OverlayChildLifecycle {
+  final Duration removalDelay;
+
+  final OverlayChildLifecycleCallback? onStateChange;
+
+  OverlayChildLifecycle({
+    this.onStateChange,
+    this.removalDelay = Duration.zero,
+  });
+}
+
+typedef OverlayChildLifecycleCallback =
+    void Function(OverlayChildLifecycleState state);
 
 mixin MenuAnchorChildLifecycleMixin<T extends StatefulWidget> on State<T> {
   OverlayChildLifecycle get overlayChildLifecycle =>
@@ -255,3 +272,5 @@ class _NakedPositionDelegate extends SingleChildLayoutDelegate {
         overlayTopLeft.dy + overlaySize.height <= screenSize.height;
   }
 }
+
+enum OverlayChildLifecycleState { present, pendingRemoval, removed }

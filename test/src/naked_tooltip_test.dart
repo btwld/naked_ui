@@ -7,8 +7,10 @@ import 'package:naked_ui/naked_ui.dart';
 import 'helpers/simulate_hover.dart';
 
 extension _WidgetTesterX on WidgetTester {
-  Future<void> simulateHoverOnTooltip(Key key,
-      {required VoidCallback? onHover}) async {
+  Future<void> simulateHoverOnTooltip(
+    Key key, {
+    required VoidCallback? onHover,
+  }) async {
     final gesture = await createGesture(kind: PointerDeviceKind.mouse);
     await gesture.addPointer(location: Offset.zero);
     addTearDown(gesture.removePointer);
@@ -43,8 +45,9 @@ void main() {
       expect(find.text('Tooltip Content'), findsNothing);
     });
 
-    testWidgets('shows and hides tooltip on hover',
-        (WidgetTester tester) async {
+    testWidgets('shows and hides tooltip on hover', (
+      WidgetTester tester,
+    ) async {
       final targetKey = GlobalKey();
       await tester.pumpMaterialWidget(
         Padding(
@@ -62,17 +65,21 @@ void main() {
 
       expect(find.text('Tooltip Content'), findsNothing);
 
-      await tester.simulateHoverOnTooltip(targetKey, onHover: () {
-        expect(find.text('Tooltip Content'), findsOneWidget);
-      });
+      await tester.simulateHoverOnTooltip(
+        targetKey,
+        onHover: () {
+          expect(find.text('Tooltip Content'), findsOneWidget);
+        },
+      );
 
       expect(find.text('Tooltip Content'), findsNothing);
     });
   });
 
   group('Positioning', () {
-    testWidgets('positions tooltip based on anchors',
-        (WidgetTester tester) async {
+    testWidgets('positions tooltip based on anchors', (
+      WidgetTester tester,
+    ) async {
       final targetKey = GlobalKey();
       final tooltipKey = GlobalKey();
 
@@ -86,9 +93,10 @@ void main() {
               child: const Text('tooltip'),
             ),
             waitDuration: Duration.zero,
-            targetAnchor: Alignment.topLeft,
-            followerAnchor: Alignment.bottomLeft,
-            offset: Offset.zero,
+            position: const NakedMenuPosition(
+              target: Alignment.topLeft,
+              follower: Alignment.bottomLeft,
+            ),
             child: SizedBox(
               key: targetKey,
               width: 100,
@@ -99,9 +107,12 @@ void main() {
         ),
       );
 
-      await tester.simulateHoverOnTooltip(targetKey, onHover: () {
-        expect(find.text('tooltip'), findsOneWidget);
-      });
+      await tester.simulateHoverOnTooltip(
+        targetKey,
+        onHover: () {
+          expect(find.text('tooltip'), findsOneWidget);
+        },
+      );
       await tester.pump();
 
       final targetFinder = find.byKey(targetKey);
@@ -121,53 +132,12 @@ void main() {
         50,
       );
     });
-
-    testWidgets('applies offset correctly', (WidgetTester tester) async {
-      final targetKey = GlobalKey();
-      final tooltipKey = GlobalKey();
-
-      await tester.pumpMaterialWidget(
-        Center(
-          child: NakedTooltip(
-            tooltipBuilder: (context) => SizedBox(
-              key: tooltipKey,
-              width: 100,
-              height: 50,
-              child: const Text('Tooltip Content'),
-            ),
-            waitDuration: Duration.zero,
-            targetAnchor: Alignment.topLeft,
-            followerAnchor: Alignment.bottomLeft,
-            offset: const Offset(0, 10),
-            child: SizedBox(
-              key: targetKey,
-              width: 100,
-              height: 50,
-              child: const Text('Hover Me'),
-            ),
-          ),
-        ),
-      );
-
-      await tester.simulateHoverOnTooltip(targetKey, onHover: () {
-        expect(find.text('Tooltip Content'), findsOneWidget);
-      });
-      await tester.pump();
-
-      final targetFinder = find.byKey(targetKey);
-      final tooltipFinder = find.byKey(tooltipKey);
-
-      _expectDistance(
-        tester.getTopLeft(targetFinder),
-        tester.getBottomLeft(tooltipFinder),
-        10,
-      );
-    });
   });
 
   group('Timing and State Changes', () {
-    testWidgets('waitDuration delays tooltip appearance',
-        (WidgetTester tester) async {
+    testWidgets('waitDuration delays tooltip appearance', (
+      WidgetTester tester,
+    ) async {
       final targetKey = GlobalKey();
       final stateChanges = <OverlayChildLifecycleState>[];
 
@@ -261,12 +231,13 @@ void main() {
       expect(stateChanges, [
         OverlayChildLifecycleState.present,
         OverlayChildLifecycleState.pendingRemoval,
-        OverlayChildLifecycleState.removed
+        OverlayChildLifecycleState.removed,
       ]);
     });
 
-    testWidgets('removalDelay delays removing tooltip from overlay',
-        (WidgetTester tester) async {
+    testWidgets('removalDelay delays removing tooltip from overlay', (
+      WidgetTester tester,
+    ) async {
       final targetKey = GlobalKey();
       final stateChanges = <OverlayChildLifecycleState>[];
 
@@ -316,7 +287,7 @@ void main() {
       expect(stateChanges, [
         OverlayChildLifecycleState.present,
         OverlayChildLifecycleState.pendingRemoval,
-        OverlayChildLifecycleState.removed
+        OverlayChildLifecycleState.removed,
       ]);
     });
   });

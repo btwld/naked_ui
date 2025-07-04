@@ -44,9 +44,10 @@ class _TooltipExampleState extends State<TooltipExample>
   @override
   Widget build(BuildContext context) {
     return NakedTooltip(
-      targetAnchor: Alignment.topCenter,
-      followerAnchor: Alignment.bottomCenter,
-      offset: const Offset(0, -4),
+      position: const NakedMenuPosition(
+        target: Alignment.topCenter,
+        follower: Alignment.bottomCenter,
+      ),
       waitDuration: const Duration(seconds: 0),
       showDuration: const Duration(seconds: 0),
       removalDelay: const Duration(milliseconds: 300),

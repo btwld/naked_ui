@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:naked_ui/naked_ui.dart';
 
-import 'utilities/overlay_content_menu.dart';
-
 /// A fully customizable menu with no default styling.
 ///
 /// NakedMenu provides interaction behavior and accessibility features
@@ -84,15 +82,15 @@ class NakedMenu extends StatefulWidget {
 
   /// The alignment of the menu relative to its target.
   /// Specifies how the menu should be positioned.
-  final PositionConfig menuAlignment;
+  final NakedMenuPosition menuPosition;
 
   /// Fallback alignments to try if the menu doesn't fit in the preferred position.
   /// The menu will try each alignment in order until it finds one that fits.
-  final List<PositionConfig> fallbackAlignments;
+  final List<NakedMenuPosition> fallbackPositions;
 
   /// The controller that manages the visibility of the menu.
   /// Use this to show, hide, or toggle the menu programmatically.
-  final OverlayPortalController controller;
+  final MenuController controller;
 
   /// Whether to consume outside taps.
   final bool consumeOutsideTaps;
@@ -115,16 +113,11 @@ class NakedMenu extends StatefulWidget {
     this.useRootOverlay = false,
     this.closeOnSelect = true,
     this.autofocus = false,
-    this.menuAlignment = const PositionConfig(
-      target: Alignment.bottomLeft,
-      follower: Alignment.topLeft,
-      offset: Offset(0, 8),
-    ),
-    this.fallbackAlignments = const [
-      PositionConfig(
+    this.menuPosition = const NakedMenuPosition(),
+    this.fallbackPositions = const [
+      NakedMenuPosition(
         target: Alignment.topLeft,
         follower: Alignment.bottomLeft,
-        offset: Offset(0, -8),
       ),
     ],
   });
@@ -134,29 +127,16 @@ class NakedMenu extends StatefulWidget {
 }
 
 class _NakedMenuState extends State<NakedMenu> {
-  final _focusScopeNode = FocusScopeNode();
-
-  @override
-  void dispose() {
-    _focusScopeNode.dispose();
-    super.dispose();
-  }
-
   @override
   Widget build(BuildContext context) {
-    return NakedPortal(
+    return NakedMenuAnchor(
       useRootOverlay: widget.useRootOverlay,
-      alignment: widget.menuAlignment,
-      fallbackAlignments: widget.fallbackAlignments,
+      position: widget.menuPosition,
+      fallbackPositions: widget.fallbackPositions,
       controller: widget.controller,
-      overlayBuilder: (context) {
-        return NakedOverlayContentMenu(
-          consumeOutsideTaps: widget.consumeOutsideTaps,
-          onClose: widget.onClose,
-          controller: widget.controller,
-          child: widget.overlayBuilder(context),
-        );
-      },
+      onClose: widget.onClose,
+      consumeOutsideTaps: widget.consumeOutsideTaps,
+      overlayBuilder: widget.overlayBuilder,
       child: widget.builder(context),
     );
   }

@@ -20,7 +20,7 @@ extension _NakedMenuTester on WidgetTester {
 void main() {
   group('NakedMenu', () {
     group('Basic Functionality', () {
-      NakedMenu buildBasicMenu(OverlayPortalController controller) {
+      NakedMenu buildBasicMenu(MenuController controller) {
         return NakedMenu(
           controller: controller,
           overlayBuilder: (_) => const Text('Menu Content'),
@@ -29,31 +29,29 @@ void main() {
       }
 
       testWidgets('Renders child widget', (WidgetTester tester) async {
-        final controller = OverlayPortalController();
-        await tester.pumpMaterialWidget(
-          buildBasicMenu(controller),
-        );
+        final controller = MenuController();
+        await tester.pumpMaterialWidget(buildBasicMenu(controller));
 
         expect(find.text('child'), findsOneWidget);
         expect(find.text('Menu Content'), findsNothing);
       });
 
-      testWidgets('Renders menu content when open',
-          (WidgetTester tester) async {
-        final controller = OverlayPortalController();
-        await tester.pumpMaterialWidget(
-          buildBasicMenu(controller),
-        );
-        controller.show();
+      testWidgets('Renders menu content when open', (
+        WidgetTester tester,
+      ) async {
+        final controller = MenuController();
+        await tester.pumpMaterialWidget(buildBasicMenu(controller));
+        controller.open();
         await tester.pump();
 
         expect(find.text('child'), findsOneWidget);
         expect(find.text('Menu Content'), findsOneWidget);
       });
 
-      testWidgets('Opens when controller.show() is called',
-          (WidgetTester tester) async {
-        final controller = OverlayPortalController();
+      testWidgets('Opens when controller.show() is called', (
+        WidgetTester tester,
+      ) async {
+        final controller = MenuController();
 
         await tester.pumpMaterialWidget(
           StatefulBuilder(
@@ -61,7 +59,7 @@ void main() {
               return Column(
                 children: [
                   NakedButton(
-                    onPressed: () => controller.show(),
+                    onPressed: () => controller.open(),
                     child: const Text('Open Menu'),
                   ),
                   NakedMenu(
@@ -81,19 +79,19 @@ void main() {
         expect(find.text('Menu Content'), findsOneWidget);
       });
 
-      testWidgets('Places menu according to menuAlignment parameter',
-          (WidgetTester tester) async {
-        final controller = OverlayPortalController();
+      testWidgets('Places menu according to menuAlignment parameter', (
+        WidgetTester tester,
+      ) async {
+        final controller = MenuController();
         const trigger = Key('trigger');
         const menu = Key('menu');
         await tester.pumpMaterialWidget(
           Center(
             child: NakedMenu(
               controller: controller,
-              menuAlignment: const PositionConfig(
+              menuPosition: const NakedMenuPosition(
                 target: Alignment.bottomCenter,
                 follower: Alignment.topCenter,
-                offset: Offset.zero,
               ),
               overlayBuilder: (_) => const SizedBox(
                 key: menu,
@@ -112,7 +110,7 @@ void main() {
           ),
         );
 
-        controller.show();
+        controller.open();
 
         await tester.pump();
         expect(find.byType(NakedMenu), findsOneWidget);
@@ -134,11 +132,12 @@ void main() {
     });
 
     group('State Management', () {
-      testWidgets('calls onMenuClose when Escape key pressed',
-          (WidgetTester tester) async {
+      testWidgets('calls onMenuClose when Escape key pressed', (
+        WidgetTester tester,
+      ) async {
         bool onMenuCloseCalled = false;
 
-        final controller = OverlayPortalController();
+        final controller = MenuController();
         await tester.pumpMaterialWidget(
           StatefulBuilder(
             builder: (context, setState) {
@@ -151,7 +150,7 @@ void main() {
             },
           ),
         );
-        controller.show();
+        controller.open();
 
         await tester.pumpAndSettle();
         expect(find.text('Menu Content'), findsOneWidget);
@@ -162,49 +161,54 @@ void main() {
       });
 
       testWidgets(
-          'calls onMenuClose when menu item selected (if closeOnSelect is true)',
-          (WidgetTester tester) async {
-        bool onMenuCloseCalled = false;
-        const menuKey = Key('menu');
-        const item1Key = Key('item1');
-        final controller = OverlayPortalController();
+        'calls onMenuClose when menu item selected (if closeOnSelect is true)',
+        (WidgetTester tester) async {
+          bool onMenuCloseCalled = false;
+          const menuKey = Key('menu');
+          const item1Key = Key('item1');
+          final controller = MenuController();
 
-        await tester.pumpMaterialWidget(
-          NakedMenu(
-            controller: controller,
-            closeOnSelect: true,
-            onClose: () => onMenuCloseCalled = true,
-            overlayBuilder: (_) => Container(
-              key: menuKey,
-              constraints: const BoxConstraints(maxWidth: 100, maxHeight: 100),
-              child: NakedMenuItem(
-                key: item1Key,
-                onPressed: () {},
-                child: const Text('Item 1'),
+          await tester.pumpMaterialWidget(
+            NakedMenu(
+              controller: controller,
+              closeOnSelect: true,
+              onClose: () => onMenuCloseCalled = true,
+              overlayBuilder: (_) => Container(
+                key: menuKey,
+                constraints: const BoxConstraints(
+                  maxWidth: 100,
+                  maxHeight: 100,
+                ),
+                child: NakedMenuItem(
+                  key: item1Key,
+                  onPressed: () {},
+                  child: const Text('Item 1'),
+                ),
               ),
+              builder: (_) => const Text('child'),
             ),
-            builder: (_) => const Text('child'),
-          ),
-        );
+          );
 
-        controller.show();
+          controller.open();
 
-        await tester.pump();
-        expect(find.byKey(menuKey), findsOneWidget);
+          await tester.pump();
+          expect(find.byKey(menuKey), findsOneWidget);
 
-        await tester.tap(find.text('Item 1'));
-        await tester.pumpAndSettle();
+          await tester.tap(find.text('Item 1'));
+          await tester.pumpAndSettle();
 
-        expect(onMenuCloseCalled, true);
-      });
+          expect(onMenuCloseCalled, true);
+        },
+      );
     });
 
     group('Keyboard Interaction', () {
-      testWidgets('Traps focus within menu when opens',
-          (WidgetTester tester) async {
+      testWidgets('Traps focus within menu when opens', (
+        WidgetTester tester,
+      ) async {
         bool item1Focused = false;
         bool item2Focused = false;
-        final controller = OverlayPortalController();
+        final controller = MenuController();
         await tester.pumpMaterialWidget(
           Center(
             child: NakedMenu(
@@ -232,7 +236,7 @@ void main() {
           ),
         );
 
-        controller.show();
+        controller.open();
 
         await tester.pump();
         expect(find.text('Item 1'), findsOneWidget);
@@ -275,82 +279,80 @@ void main() {
 
   group('NakedMenuContent', () {
     testWidgets('Renders child widget(s)', (WidgetTester tester) async {
-      await tester.pumpMaterialWidget(
-        const Text('Menu Content'),
-      );
+      await tester.pumpMaterialWidget(const Text('Menu Content'));
 
       expect(find.text('Menu Content'), findsOneWidget);
     });
 
     testWidgets(
-        'calls onMenuClose when clicking outside (if consumeOutsideTaps is true)',
-        (WidgetTester tester) async {
-      bool onMenuCloseCalled = false;
+      'calls onMenuClose when clicking outside (if consumeOutsideTaps is true)',
+      (WidgetTester tester) async {
+        bool onMenuCloseCalled = false;
 
-      final controller = OverlayPortalController();
+        final controller = MenuController();
 
-      await tester.pumpMaterialWidget(
-        StatefulBuilder(
-          builder: (context, setState) {
-            return Stack(
-              children: [
-                Positioned(
-                  top: 10,
-                  left: 10,
-                  child: GestureDetector(
-                    onTap: () {},
-                    child: const SizedBox(
-                      width: 50,
-                      height: 50,
-                      child: ColoredBox(color: Colors.red),
+        await tester.pumpMaterialWidget(
+          StatefulBuilder(
+            builder: (context, setState) {
+              return Stack(
+                children: [
+                  Positioned(
+                    top: 10,
+                    left: 10,
+                    child: GestureDetector(
+                      onTap: () {},
+                      child: const SizedBox(
+                        width: 50,
+                        height: 50,
+                        child: ColoredBox(color: Colors.red),
+                      ),
                     ),
                   ),
-                ),
-                Positioned(
-                  top: 100,
-                  left: 100,
-                  child: NakedMenu(
-                    controller: controller,
-                    onClose: () => onMenuCloseCalled = true,
-                    consumeOutsideTaps: true,
-                    overlayBuilder: (_) => const SizedBox(
-                      width: 100,
-                      height: 50,
-                      child: Center(child: Text('Menu Content')),
+                  Positioned(
+                    top: 100,
+                    left: 100,
+                    child: NakedMenu(
+                      controller: controller,
+                      onClose: () => onMenuCloseCalled = true,
+                      consumeOutsideTaps: true,
+                      overlayBuilder: (_) => const SizedBox(
+                        width: 100,
+                        height: 50,
+                        child: Center(child: Text('Menu Content')),
+                      ),
+                      builder: (_) => const Text('child'),
                     ),
-                    builder: (_) => const Text('child'),
                   ),
-                ),
-              ],
-            );
-          },
-        ),
-      );
-      controller.show();
+                ],
+              );
+            },
+          ),
+        );
+        controller.open();
 
-      await tester.pump();
-      expect(find.text('Menu Content'), findsOneWidget);
+        await tester.pump();
+        expect(find.text('Menu Content'), findsOneWidget);
 
-      // Tap outside the menu
-      await tester.tapOutsideMenu();
-      expect(onMenuCloseCalled, true);
-    });
+        // Tap outside the menu
+        await tester.tapOutsideMenu();
+        expect(onMenuCloseCalled, true);
+      },
+    );
   });
 
   group('NakedMenuItem', () {
     group('Basic Functionality', () {
       testWidgets('Renders child widget', (WidgetTester tester) async {
         await tester.pumpMaterialWidget(
-          const NakedMenuItem(
-            child: Text('Menu Item'),
-          ),
+          const NakedMenuItem(child: Text('Menu Item')),
         );
 
         expect(find.text('Menu Item'), findsOneWidget);
       });
 
-      testWidgets('Handles tap/click when enabled',
-          (WidgetTester tester) async {
+      testWidgets('Handles tap/click when enabled', (
+        WidgetTester tester,
+      ) async {
         bool pressed = false;
 
         await tester.pumpMaterialWidget(
@@ -364,8 +366,9 @@ void main() {
         expect(pressed, true);
       });
 
-      testWidgets('Does not respond when disabled',
-          (WidgetTester tester) async {
+      testWidgets('Does not respond when disabled', (
+        WidgetTester tester,
+      ) async {
         bool pressed = false;
 
         await tester.pumpMaterialWidget(
@@ -394,16 +397,17 @@ void main() {
               key: key,
               onPressed: () {},
               onHoverState: (value) => hovered = value,
-              child: const Text(
-                'Menu Item',
-              ),
+              child: const Text('Menu Item'),
             ),
           ),
         );
 
-        await tester.simulateHover(key, onHover: () {
-          expect(hovered, true);
-        });
+        await tester.simulateHover(
+          key,
+          onHover: () {
+            expect(hovered, true);
+          },
+        );
         expect(hovered, false);
       });
 
@@ -419,9 +423,12 @@ void main() {
           ),
         );
 
-        await tester.simulatePress(key, onPressed: () {
-          expect(pressed, true);
-        });
+        await tester.simulatePress(
+          key,
+          onPressed: () {
+            expect(pressed, true);
+          },
+        );
         expect(pressed, false);
       });
 
@@ -448,8 +455,9 @@ void main() {
     });
 
     group('Keyboard Interaction', () {
-      testWidgets('Activates with Space and Enter keys',
-          (WidgetTester tester) async {
+      testWidgets('Activates with Space and Enter keys', (
+        WidgetTester tester,
+      ) async {
         bool pressed = false;
 
         final focusNode = FocusNode();
