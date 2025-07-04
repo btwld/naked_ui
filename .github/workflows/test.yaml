@@ -4,9 +4,14 @@ on:
   pull_request:
     branches:
       - main
+    paths-ignore:
+      - docs/**
+
   push:
     branches:
       - main
+    paths-ignore:
+      - docs/**
 
 # Cancel any in-progress runs of the same workflow for the same PR/branch.
 concurrency:
