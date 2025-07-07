@@ -47,6 +47,15 @@ jobs:
       - name: Analyze root project
         run: flutter analyze
 
+      - name: Install DCM
+        uses: CQLabs/setup-dcm@v2
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Run DCM
+        run: dcm analyze .
+        shell: bash
+
       - name: Run root tests
         run: flutter test --coverage 
 
