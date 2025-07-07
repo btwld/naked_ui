@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:naked_ui/src/utilities/pressed_state_region.dart';
+
+import 'utilities/pressed_state_region.dart';
 
 /// A fully customizable checkbox with no default styling.
 ///
@@ -72,6 +73,30 @@ import 'package:naked_ui/src/utilities/pressed_state_region.dart';
 ///    Material Design styling.
 ///  * The Naked library documentation for more examples and customization options.
 class NakedCheckbox extends StatefulWidget {
+  /// Creates a naked checkbox.
+  ///
+  /// The [child] parameter is required and represents the visual appearance
+  /// of the checkbox in all states.
+  const NakedCheckbox({
+    super.key,
+    required this.child,
+    this.value = false,
+    this.tristate = false,
+    this.onChanged,
+    this.onHoverState,
+    this.onPressedState,
+    this.onFocusState,
+    this.enabled = true,
+    this.semanticLabel,
+    this.cursor = SystemMouseCursors.click,
+    this.enableHapticFeedback = true,
+    this.focusNode,
+    this.autofocus = false,
+  }) : assert(
+         (tristate || value != null),
+         'Checkbox cannot be both checked and indeterminate',
+       );
+
   /// The child widget to display.
   ///
   /// This widget should represent the visual appearance of the checkbox.
@@ -153,28 +178,6 @@ class NakedCheckbox extends StatefulWidget {
   /// Defaults to false.
   final bool autofocus;
 
-  /// Creates a naked checkbox.
-  ///
-  /// The [child] parameter is required and represents the visual appearance
-  /// of the checkbox in all states.
-  const NakedCheckbox({
-    super.key,
-    required this.child,
-    this.value = false,
-    this.tristate = false,
-    this.onChanged,
-    this.onHoverState,
-    this.onPressedState,
-    this.onFocusState,
-    this.enabled = true,
-    this.semanticLabel,
-    this.cursor = SystemMouseCursors.click,
-    this.enableHapticFeedback = true,
-    this.focusNode,
-    this.autofocus = false,
-  }) : assert((tristate || value != null),
-            'Checkbox cannot be both checked and indeterminate');
-
   @override
   State<NakedCheckbox> createState() => _NakedCheckboxState();
 }
@@ -206,24 +209,25 @@ class _NakedCheckboxState extends State<NakedCheckbox> {
   @override
   Widget build(BuildContext context) {
     return Semantics(
-      label: widget.semanticLabel,
-      checked: widget.value ?? false,
       enabled: _isInteractive,
+      checked: widget.value ?? false,
       mixed: widget.tristate ? widget.value == null : null,
+      label: widget.semanticLabel,
       child: FocusableActionDetector(
-        focusNode: widget.focusNode,
-        onFocusChange: widget.onFocusState,
-        actions: _actionMap,
         enabled: _isInteractive,
-        mouseCursor:
-            _isInteractive ? widget.cursor : SystemMouseCursors.forbidden,
+        focusNode: widget.focusNode,
+        autofocus: widget.autofocus,
+        actions: _actionMap,
         onShowFocusHighlight: widget.onFocusState,
         onShowHoverHighlight: widget.onHoverState,
-        autofocus: widget.autofocus,
+        onFocusChange: widget.onFocusState,
+        mouseCursor: _isInteractive
+            ? widget.cursor
+            : SystemMouseCursors.forbidden,
         child: PressedStateRegion(
-          enabled: _isInteractive,
           onPressedState: widget.onPressedState,
           onTap: toggleValue,
+          enabled: _isInteractive,
           child: widget.child,
         ),
       ),

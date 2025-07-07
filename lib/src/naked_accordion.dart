@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 
 /// Controller that manages the state of an accordion.
@@ -9,18 +10,6 @@ import 'package:flutter/widgets.dart';
 /// Generic type [T] represents the unique identifier for each accordion item.
 /// This could be a String, int, or any other type that can uniquely identify sections.
 class NakedAccordionController<T> with ChangeNotifier {
-  /// Creates an accordion controller.
-  ///
-  /// [min] specifies the minimum number of expanded items (default: 0).
-  /// [max] specifies the maximum number of expanded items (optional).
-  /// When [max] is specified and reached, opening a new item will close the oldest one.
-  NakedAccordionController({this.min = 0, this.max})
-      : assert(min >= 0, 'min must be greater than or equal to 0'),
-        assert(
-          max == null || max >= min,
-          'max must be greater than or equal to min',
-        );
-
   /// The minimum number of expanded items allowed.
   final int min;
 
@@ -31,13 +20,27 @@ class NakedAccordionController<T> with ChangeNotifier {
   /// Set of currently expanded values.
   final Set<T> values = {};
 
+  /// Creates an accordion controller.
+  ///
+  /// [min] specifies the minimum number of expanded items (default: 0).
+  /// [max] specifies the maximum number of expanded items (optional).
+  /// When [max] is specified and reached, opening a new item will close the oldest one.
+  NakedAccordionController({this.min = 0, this.max})
+    : assert(min >= 0, 'min must be greater than or equal to 0'),
+      assert(
+        max == null || max >= min,
+        'max must be greater than or equal to min',
+      );
+
   /// Opens the accordion item with the given [value].
   ///
   /// If [max] is specified and the maximum number of expanded items is reached,
   /// this will close the oldest expanded item to maintain the limit.
   void open(T value) {
     if (max != null && values.length >= max!) {
-      values.remove(values.first);
+      final first = values.first;
+
+      values.remove(first);
       values.add(value);
     } else {
       values.add(value);
@@ -126,15 +129,6 @@ class NakedAccordionController<T> with ChangeNotifier {
 /// )
 /// ```
 class NakedAccordion<T> extends StatefulWidget {
-  /// The accordion items to display.
-  final List<Widget> children;
-
-  /// The controller that manages which items are expanded or collapsed.
-  final NakedAccordionController<T> controller;
-
-  /// Values that should be expanded when the accordion is first built.
-  final List<T> initialExpandedValues;
-
   /// Creates a naked accordion.
   ///
   /// The [children] should be [NakedAccordionItem] widgets with the same
@@ -146,12 +140,21 @@ class NakedAccordion<T> extends StatefulWidget {
     this.initialExpandedValues = const [],
   });
 
+  /// The accordion items to display.
+  final List<Widget> children;
+
+  /// The controller that manages which items are expanded or collapsed.
+  final NakedAccordionController<T> controller;
+
+  /// Values that should be expanded when the accordion is first built.
+  final List<T> initialExpandedValues;
+
   @override
   State<NakedAccordion<T>> createState() => _NakedAccordionState<T>();
 }
 
 class _NakedAccordionState<T> extends State<NakedAccordion<T>> {
-  late final _controller = widget.controller;
+  NakedAccordionController<T> get _controller => widget.controller;
 
   @override
   void initState() {
@@ -162,7 +165,12 @@ class _NakedAccordionState<T> extends State<NakedAccordion<T>> {
   @override
   void didUpdateWidget(covariant NakedAccordion<T> oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.initialExpandedValues != widget.initialExpandedValues) {
+    final areEqual = listEquals(
+      oldWidget.initialExpandedValues,
+      widget.initialExpandedValues,
+    );
+
+    if (!areEqual) {
       _controller.clear();
       _controller.openAll(widget.initialExpandedValues);
     }
@@ -170,18 +178,13 @@ class _NakedAccordionState<T> extends State<NakedAccordion<T>> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: widget.children,
-    );
+    return Column(mainAxisSize: MainAxisSize.min, children: widget.children);
   }
 }
 
-typedef NakedAccordionTriggerBuilder = Widget Function(
-  BuildContext context,
-  bool isExpanded,
-  VoidCallback toggle,
-);
+typedef NakedAccordionTriggerBuilder =
+    // ignore: prefer-named-boolean-parameters
+    Widget Function(BuildContext context, bool isExpanded, VoidCallback toggle);
 
 /// An individual item in a [NakedAccordion].
 ///
@@ -190,7 +193,23 @@ typedef NakedAccordionTriggerBuilder = Widget Function(
 /// used to customize how content appears/disappears.
 ///
 /// Generic type [T] should match the type used in the [NakedAccordionController].
-class NakedAccordionItem<T> extends StatefulWidget {
+class NakedAccordionItem<T> extends StatelessWidget {
+  /// Creates a naked accordion item.
+  ///
+  /// The [trigger] and [child] parameters are required.
+  /// The [value] must be unique among all items controlled by the same controller.
+  const NakedAccordionItem({
+    super.key,
+    required this.trigger,
+    required this.value,
+    required this.child,
+    this.transitionBuilder,
+    this.semanticLabel,
+    this.onFocusState,
+    this.autoFocus = false,
+    this.focusNode,
+  });
+
   /// Builder function that creates the trigger widget.
   ///
   /// The builder provides:
@@ -224,54 +243,32 @@ class NakedAccordionItem<T> extends StatefulWidget {
   /// The focus node for the item.
   final FocusNode? focusNode;
 
-  /// Creates a naked accordion item.
-  ///
-  /// The [trigger] and [child] parameters are required.
-  /// The [value] must be unique among all items controlled by the same controller.
-  const NakedAccordionItem({
-    super.key,
-    required this.trigger,
-    required this.value,
-    required this.child,
-    this.transitionBuilder,
-    this.semanticLabel,
-    this.onFocusState,
-    this.autoFocus = false,
-    this.focusNode,
-  });
-
-  @override
-  State<NakedAccordionItem<T>> createState() => _NakedAccordionItemState<T>();
-}
-
-class _NakedAccordionItemState<T> extends State<NakedAccordionItem<T>> {
   @override
   Widget build(BuildContext context) {
     final state = context.findAncestorStateOfType<_NakedAccordionState<T>>();
+
     return FocusableActionDetector(
-      onFocusChange: widget.onFocusState,
-      autofocus: widget.autoFocus,
-      focusNode: widget.focusNode,
+      focusNode: focusNode,
+      autofocus: autoFocus,
+      onFocusChange: onFocusState,
       child: ListenableBuilder(
         listenable: state!._controller,
         builder: (context, child) {
-          final isExpanded = state._controller.contains(widget.value);
-          final child = isExpanded ? widget.child : const SizedBox.shrink();
+          final isExpanded = state._controller.contains(value);
+          final child = isExpanded ? this.child : const SizedBox.shrink();
 
           return Semantics(
             container: true,
-            label: widget.semanticLabel,
+            label: semanticLabel,
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                widget.trigger(
+                trigger(
                   context,
                   isExpanded,
-                  () => state._controller.toggle(widget.value),
+                  () => state._controller.toggle(value),
                 ),
-                widget.transitionBuilder != null
-                    ? widget.transitionBuilder!(child)
-                    : child,
+                transitionBuilder != null ? transitionBuilder!(child) : child,
               ],
             ),
           );

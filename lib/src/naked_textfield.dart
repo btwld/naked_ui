@@ -421,6 +421,7 @@ class _NakedTextFieldState extends State<NakedTextField>
 
   @override
   bool get selectionEnabled => widget.enableInteractiveSelection;
+
   // End of API for TextSelectionGestureDetectorBuilderDelegate.
 
   @override
@@ -439,50 +440,11 @@ class _NakedTextFieldState extends State<NakedTextField>
   bool get _canRequestFocus {
     final NavigationMode mode =
         MediaQuery.maybeNavigationModeOf(context) ?? NavigationMode.traditional;
+
     return switch (mode) {
       NavigationMode.traditional => widget.canRequestFocus && widget.enabled,
       NavigationMode.directional => true,
     };
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    _effectiveFocusNode.canRequestFocus = _canRequestFocus;
-  }
-
-  @override
-  void didUpdateWidget(NakedTextField oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (widget.controller == null && oldWidget.controller != null) {
-      _createLocalController(oldWidget.controller!.value);
-    } else if (widget.controller != null && oldWidget.controller == null) {
-      unregisterFromRestoration(_controller!);
-      _controller!.dispose();
-      _controller = null;
-    }
-
-    if (widget.focusNode != oldWidget.focusNode) {
-      (oldWidget.focusNode ?? _focusNode)?.removeListener(_handleFocusChanged);
-      (widget.focusNode ?? _focusNode)?.addListener(_handleFocusChanged);
-    }
-
-    _effectiveFocusNode.canRequestFocus = _canRequestFocus;
-
-    if (_effectiveFocusNode.hasFocus &&
-        widget.readOnly != oldWidget.readOnly &&
-        widget.enabled) {
-      if (_effectiveController.selection.isCollapsed) {
-        _showSelectionHandles = !widget.readOnly;
-      }
-    }
-  }
-
-  @override
-  void restoreState(RestorationBucket? oldBucket, bool initialRestore) {
-    if (_controller != null) {
-      _registerController();
-    }
   }
 
   void _registerController() {
@@ -500,19 +462,6 @@ class _NakedTextFieldState extends State<NakedTextField>
       _registerController();
     }
   }
-
-  @override
-  String? get restorationId => widget.restorationId;
-
-  @override
-  void dispose() {
-    _effectiveFocusNode.removeListener(_handleFocusChanged);
-    _focusNode?.dispose();
-    _controller?.dispose();
-    super.dispose();
-  }
-
-  EditableTextState? get _editableText => editableTextKey.currentState;
 
   void _requestKeyboard() {
     _editableText?.requestKeyboard();
@@ -537,6 +486,7 @@ class _NakedTextFieldState extends State<NakedTextField>
       return false;
     }
 
+    // ignore: prefer-switch-with-enums
     if (cause == SelectionChangedCause.longPress ||
         cause == SelectionChangedCause.stylusHandwriting) {
       return true;
@@ -550,6 +500,7 @@ class _NakedTextFieldState extends State<NakedTextField>
   }
 
   void _handleFocusChanged() {
+    // ignore: no-empty-block, avoid-empty-setstate
     setState(() {
       // Rebuild the widget on focus change to show/hide the text selection highlight.
     });
@@ -600,13 +551,66 @@ class _NakedTextFieldState extends State<NakedTextField>
     }
   }
 
-  // AutofillClient implementation start.
   @override
-  String get autofillId => _editableText!.autofillId;
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _effectiveFocusNode.canRequestFocus = _canRequestFocus;
+  }
+
+  @override
+  void didUpdateWidget(NakedTextField oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.controller == null && oldWidget.controller != null) {
+      _createLocalController(oldWidget.controller!.value);
+    } else if (widget.controller != null && oldWidget.controller == null) {
+      unregisterFromRestoration(_controller!);
+      _controller!.dispose();
+      _controller = null;
+    }
+
+    if (widget.focusNode != oldWidget.focusNode) {
+      (oldWidget.focusNode ?? _focusNode)?.removeListener(_handleFocusChanged);
+      (widget.focusNode ?? _focusNode)?.addListener(_handleFocusChanged);
+    }
+
+    _effectiveFocusNode.canRequestFocus = _canRequestFocus;
+
+    if (_effectiveFocusNode.hasFocus &&
+        widget.readOnly != oldWidget.readOnly &&
+        widget.enabled) {
+      if (_effectiveController.selection.isCollapsed) {
+        _showSelectionHandles = !widget.readOnly;
+      }
+    }
+  }
+
+  @override
+  void restoreState(RestorationBucket? oldBucket, bool initialRestore) {
+    if (_controller != null) {
+      _registerController();
+    }
+  }
+
+  @override
+  void dispose() {
+    _effectiveFocusNode.removeListener(_handleFocusChanged);
+    _focusNode?.dispose();
+    _controller?.dispose();
+    super.dispose();
+  }
 
   @override
   void autofill(TextEditingValue newEditingValue) =>
       _editableText!.autofill(newEditingValue);
+
+  @override
+  String? get restorationId => widget.restorationId;
+
+  EditableTextState? get _editableText => editableTextKey.currentState;
+
+  // AutofillClient implementation start.
+  @override
+  String get autofillId => _editableText!.autofillId;
 
   @override
   TextInputConfiguration get textInputConfiguration {
@@ -626,6 +630,7 @@ class _NakedTextFieldState extends State<NakedTextField>
       autofillConfiguration: autofillConfiguration,
     );
   }
+
   // AutofillClient implementation end.
 
   @override
@@ -726,58 +731,57 @@ class _NakedTextFieldState extends State<NakedTextField>
           child: UnmanagedRestorationScope(
             bucket: bucket,
             child: EditableText(
-              groupId: widget.groupId,
               key: editableTextKey,
-              readOnly: widget.readOnly || !widget.enabled,
-              showCursor: widget.showCursor,
-              showSelectionHandles: _showSelectionHandles,
               controller: controller,
               focusNode: focusNode,
-              undoController: widget.undoController,
-              keyboardType: widget.keyboardType,
-              textInputAction: widget.textInputAction,
-              textCapitalization: widget.textCapitalization,
-              style: widget.style ?? style,
-              textAlign: widget.textAlign,
-              textDirection: widget.textDirection,
-              autofocus: widget.autofocus,
-              onTapUpOutside: widget.onPressUpOutside,
+              readOnly: widget.readOnly || !widget.enabled,
               obscuringCharacter: widget.obscuringCharacter,
               obscureText: widget.obscureText,
               autocorrect: widget.autocorrect,
               smartDashesType: widget.smartDashesType,
               smartQuotesType: widget.smartQuotesType,
               enableSuggestions: widget.enableSuggestions,
+              style: widget.style ?? style,
+              cursorColor: cursorColor,
+              backgroundCursorColor: CupertinoColors.inactiveGray,
+              textAlign: widget.textAlign,
+              textDirection: widget.textDirection,
               maxLines: widget.maxLines,
               minLines: widget.minLines,
               expands: widget.expands,
+              autofocus: widget.autofocus,
+              showCursor: widget.showCursor,
+              showSelectionHandles: _showSelectionHandles,
               selectionColor: focusNode.hasFocus ? selectionColor : null,
               selectionControls: widget.enableInteractiveSelection
                   ? textSelectionControls
                   : null,
+              keyboardType: widget.keyboardType,
+              textInputAction: widget.textInputAction,
+              textCapitalization: widget.textCapitalization,
               onChanged: widget.onChanged,
-              onSelectionChanged: _handleSelectionChanged,
               onEditingComplete: widget.onEditingComplete,
               onSubmitted: widget.onSubmitted,
               onAppPrivateCommand: widget.onAppPrivateCommand,
+              onSelectionChanged: _handleSelectionChanged,
               onSelectionHandleTapped: _handleSelectionHandleTapped,
+              groupId: widget.groupId,
               onTapOutside: widget.onTapOutside,
+              onTapUpOutside: widget.onPressUpOutside,
               inputFormatters: formatters,
               rendererIgnoresPointer: true,
               cursorWidth: widget.cursorWidth,
               cursorHeight: widget.cursorHeight,
               cursorRadius: cursorRadius,
-              cursorColor: cursorColor,
-              selectionHeightStyle: widget.selectionHeightStyle,
-              selectionWidthStyle: widget.selectionWidthStyle,
               cursorOpacityAnimates: cursorOpacityAnimates,
               cursorOffset: cursorOffset,
               paintCursorAboveText: paintCursorAboveText,
-              backgroundCursorColor: CupertinoColors.inactiveGray,
+              selectionHeightStyle: widget.selectionHeightStyle,
+              selectionWidthStyle: widget.selectionWidthStyle,
               scrollPadding: widget.scrollPadding,
               keyboardAppearance: keyboardAppearance,
-              enableInteractiveSelection: widget.enableInteractiveSelection,
               dragStartBehavior: widget.dragStartBehavior,
+              enableInteractiveSelection: widget.enableInteractiveSelection,
               scrollController: widget.scrollController,
               scrollPhysics: widget.scrollPhysics,
               autofillClient: this,
@@ -793,6 +797,7 @@ class _NakedTextFieldState extends State<NakedTextField>
               magnifierConfiguration:
                   widget.magnifierConfiguration ??
                   TextMagnifier.adaptiveMagnifierConfiguration,
+              undoController: widget.undoController,
             ),
           ),
         ),
@@ -813,11 +818,11 @@ class _NakedTextFieldState extends State<NakedTextField>
             },
       child: widget.enabled
           ? MouseRegion(
-              cursor: SystemMouseCursors.text,
               onEnter: (PointerEnterEvent event) =>
                   widget.onHoverState?.call(true),
               onExit: (PointerExitEvent event) =>
                   widget.onHoverState?.call(false),
+              cursor: SystemMouseCursors.text,
               child: _selectionGestureDetectorBuilder.buildGestureDetector(
                 behavior: HitTestBehavior.translucent,
                 child: widget.builder(context, child),
@@ -833,15 +838,12 @@ class _NakedTextFieldState extends State<NakedTextField>
 
 class _TextFieldSelectionGestureDetectorBuilder
     extends TextSelectionGestureDetectorBuilder {
+  final _NakedTextFieldState _state;
+
   _TextFieldSelectionGestureDetectorBuilder({
     required _NakedTextFieldState state,
   }) : _state = state,
        super(delegate: state);
-
-  final _NakedTextFieldState _state;
-
-  @override
-  bool get onUserTapAlwaysCalled => _state.widget.onTapAlwaysCalled;
 
   @override
   void onUserTap() {
@@ -859,4 +861,7 @@ class _TextFieldSelectionGestureDetectorBuilder
     super.onSingleTapUp(details);
     _state.widget.onPressedState?.call(false);
   }
+
+  @override
+  bool get onUserTapAlwaysCalled => _state.widget.onTapAlwaysCalled;
 }

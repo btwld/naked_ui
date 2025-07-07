@@ -97,6 +97,26 @@ import 'utilities/utilities.dart';
 /// }
 /// ```
 class NakedTooltip extends StatefulWidget implements OverlayChildLifecycle {
+  /// Creates a naked tooltip.
+  ///
+  /// The [child] and [tooltipWidget] parameters are required.
+  const NakedTooltip({
+    super.key,
+    required this.child,
+    required this.tooltipBuilder,
+    this.showDuration = const Duration(seconds: 2),
+    this.waitDuration = const Duration(seconds: 1),
+    this.position = const NakedMenuPosition(
+      target: Alignment.topCenter,
+      follower: Alignment.bottomCenter,
+    ),
+    this.tooltipSemantics,
+    this.excludeFromSemantics = false,
+    this.fallbackPositions = const [],
+    this.removalDelay = Duration.zero,
+    this.onStateChange,
+  });
+
   /// The widget that triggers the tooltip.
   final Widget child;
 
@@ -129,26 +149,6 @@ class NakedTooltip extends StatefulWidget implements OverlayChildLifecycle {
   @override
   final void Function(OverlayChildLifecycleState state)? onStateChange;
 
-  /// Creates a naked tooltip.
-  ///
-  /// The [child] and [tooltipWidget] parameters are required.
-  const NakedTooltip({
-    super.key,
-    required this.child,
-    required this.tooltipBuilder,
-    this.showDuration = const Duration(seconds: 2),
-    this.waitDuration = const Duration(seconds: 1),
-    this.position = const NakedMenuPosition(
-      target: Alignment.topCenter,
-      follower: Alignment.bottomCenter,
-    ),
-    this.tooltipSemantics,
-    this.excludeFromSemantics = false,
-    this.fallbackPositions = const [],
-    this.removalDelay = Duration.zero,
-    this.onStateChange,
-  });
-
   @override
   State<NakedTooltip> createState() => _NakedTooltipState();
 }
@@ -169,16 +169,16 @@ class _NakedTooltipState extends State<NakedTooltip>
   Widget build(BuildContext context) {
     return Semantics(
       container: true,
-      tooltip: widget.excludeFromSemantics ? null : widget.tooltipSemantics,
       excludeSemantics: widget.excludeFromSemantics,
+      tooltip: widget.excludeFromSemantics ? null : widget.tooltipSemantics,
       child: ListenableBuilder(
         listenable: showNotifier,
         builder: (context, child) {
           return NakedMenuAnchor(
+            controller: controller,
+            overlayBuilder: widget.tooltipBuilder,
             position: widget.position,
             fallbackPositions: widget.fallbackPositions,
-            overlayBuilder: widget.tooltipBuilder,
-            controller: controller,
             child: MouseRegion(
               onEnter: (_) {
                 _showTimer?.cancel();

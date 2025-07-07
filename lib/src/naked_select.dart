@@ -1,8 +1,11 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:naked_ui/naked_ui.dart';
+
+import 'naked_button.dart';
+import 'utilities/utilities.dart';
 
 /// A fully customizable select/dropdown widget with no default styling.
 ///
@@ -49,6 +52,72 @@ import 'package:naked_ui/naked_ui.dart';
 /// )
 /// ```
 class NakedSelect<T> extends StatefulWidget implements OverlayChildLifecycle {
+  /// Creates a naked select dropdown.
+  ///
+  /// The [child] and [menu] parameters are required.
+  /// When [allowMultiple] is true, [selectedValues] must be provided.
+  const NakedSelect({
+    super.key,
+    required this.child,
+    required this.menu,
+    this.onClose,
+    this.onOpen,
+    this.selectedValue,
+    this.onStateChange,
+    this.removalDelay = Duration.zero,
+    this.onSelectedValueChanged,
+    this.enabled = true,
+    this.semanticLabel,
+    this.closeOnSelect = true,
+    this.autofocus = false,
+    this.enableTypeAhead = true,
+    this.typeAheadDebounceTime = const Duration(milliseconds: 500),
+    this.menuPosition = const NakedMenuPosition(
+      target: Alignment.bottomLeft,
+      follower: Alignment.topLeft,
+    ),
+    this.fallbackPositions = const [
+      NakedMenuPosition(
+        target: Alignment.topLeft,
+        follower: Alignment.bottomLeft,
+      ),
+    ],
+    this.closeOnClickOutside = true,
+  }) : allowMultiple = false,
+       selectedValues = null,
+       onSelectedValuesChanged = null;
+
+  const NakedSelect.multiple({
+    super.key,
+    required this.child,
+    required this.menu,
+    this.onClose,
+    this.onOpen,
+    this.onStateChange,
+    this.removalDelay = Duration.zero,
+    this.selectedValues,
+    this.onSelectedValuesChanged,
+    this.enabled = true,
+    this.semanticLabel,
+    this.closeOnSelect = true,
+    this.autofocus = false,
+    this.enableTypeAhead = true,
+    this.typeAheadDebounceTime = const Duration(milliseconds: 500),
+    this.menuPosition = const NakedMenuPosition(
+      target: Alignment.bottomLeft,
+      follower: Alignment.topLeft,
+    ),
+    this.fallbackPositions = const [
+      NakedMenuPosition(
+        target: Alignment.topLeft,
+        follower: Alignment.bottomLeft,
+      ),
+    ],
+    this.closeOnClickOutside = true,
+  }) : allowMultiple = true,
+       selectedValue = null,
+       onSelectedValueChanged = null;
+
   /// The target widget that triggers the select dropdown.
   /// This should typically be a [NakedSelectTrigger].
   final Widget child;
@@ -126,72 +195,6 @@ class NakedSelect<T> extends StatefulWidget implements OverlayChildLifecycle {
   @override
   final void Function(OverlayChildLifecycleState state)? onStateChange;
 
-  /// Creates a naked select dropdown.
-  ///
-  /// The [child] and [menu] parameters are required.
-  /// When [allowMultiple] is true, [selectedValues] must be provided.
-  const NakedSelect({
-    super.key,
-    required this.child,
-    required this.menu,
-    this.onClose,
-    this.onOpen,
-    this.selectedValue,
-    this.onStateChange,
-    this.removalDelay = Duration.zero,
-    this.onSelectedValueChanged,
-    this.enabled = true,
-    this.semanticLabel,
-    this.closeOnSelect = true,
-    this.autofocus = false,
-    this.enableTypeAhead = true,
-    this.typeAheadDebounceTime = const Duration(milliseconds: 500),
-    this.menuPosition = const NakedMenuPosition(
-      target: Alignment.bottomLeft,
-      follower: Alignment.topLeft,
-    ),
-    this.fallbackPositions = const [
-      NakedMenuPosition(
-        target: Alignment.topLeft,
-        follower: Alignment.bottomLeft,
-      ),
-    ],
-    this.closeOnClickOutside = true,
-  }) : allowMultiple = false,
-       selectedValues = null,
-       onSelectedValuesChanged = null;
-
-  const NakedSelect.multiple({
-    super.key,
-    required this.child,
-    required this.menu,
-    this.onClose,
-    this.onOpen,
-    this.onStateChange,
-    this.removalDelay = Duration.zero,
-    this.selectedValues,
-    this.onSelectedValuesChanged,
-    this.enabled = true,
-    this.semanticLabel,
-    this.closeOnSelect = true,
-    this.autofocus = false,
-    this.enableTypeAhead = true,
-    this.typeAheadDebounceTime = const Duration(milliseconds: 500),
-    this.menuPosition = const NakedMenuPosition(
-      target: Alignment.bottomLeft,
-      follower: Alignment.topLeft,
-    ),
-    this.fallbackPositions = const [
-      NakedMenuPosition(
-        target: Alignment.topLeft,
-        follower: Alignment.bottomLeft,
-      ),
-    ],
-    this.closeOnClickOutside = true,
-  }) : allowMultiple = true,
-       selectedValue = null,
-       onSelectedValueChanged = null;
-
   @override
   State<NakedSelect<T>> createState() => _NakedSelectState<T>();
 }
@@ -200,37 +203,12 @@ class _NakedSelectState<T> extends State<NakedSelect<T>>
     with MenuAnchorChildLifecycleMixin {
   late final _isMultipleSelection =
       widget.allowMultiple && widget.selectedValues != null;
-  bool get _isOpen => controller.isOpen;
+  final List<_SelectItemInfo<T>> _selectableItems = [];
 
+  bool get _isOpen => controller.isOpen;
   // For type-ahead functionality
   String _typeAheadBuffer = '';
   Timer? _typeAheadResetTimer;
-  final List<_SelectItemInfo<T>> _selectableItems = [];
-
-  @override
-  void dispose() {
-    _cancelTypeAheadTimer();
-    super.dispose();
-  }
-
-  void toggleMenu() {
-    if (_isOpen) {
-      closeMenu();
-    } else {
-      openMenu();
-    }
-  }
-
-  void openMenu() {
-    widget.onOpen?.call();
-    showNotifier.value = true;
-  }
-
-  void closeMenu() {
-    widget.onClose?.call();
-    _selectableItems.clear();
-    showNotifier.value = false;
-  }
 
   void _cancelTypeAheadTimer() {
     _typeAheadResetTimer?.cancel();
@@ -278,7 +256,7 @@ class _NakedSelectState<T> extends State<NakedSelect<T>>
     if (!widget.enabled) return;
 
     if (_isMultipleSelection) {
-      final newValues = Set<T>.from(widget.selectedValues!);
+      final newValues = Set<T>.of(widget.selectedValues!);
       newValues.contains(value)
           ? newValues.remove(value)
           : newValues.add(value);
@@ -293,6 +271,32 @@ class _NakedSelectState<T> extends State<NakedSelect<T>>
     }
   }
 
+  @override
+  void dispose() {
+    _typeAheadResetTimer?.cancel();
+    _typeAheadResetTimer = null;
+    super.dispose();
+  }
+
+  void toggleMenu() {
+    if (_isOpen) {
+      closeMenu();
+    } else {
+      openMenu();
+    }
+  }
+
+  void openMenu() {
+    widget.onOpen?.call();
+    showNotifier.value = true;
+  }
+
+  void closeMenu() {
+    widget.onClose?.call();
+    _selectableItems.clear();
+    showNotifier.value = false;
+  }
+
   bool get isOpen => _isOpen;
   bool get isEnabled => widget.enabled;
 
@@ -304,16 +308,17 @@ class _NakedSelectState<T> extends State<NakedSelect<T>>
       allowMultiple: widget.allowMultiple,
       enabled: widget.enabled,
       child: Semantics(
-        explicitChildNodes: true,
         container: true,
+        explicitChildNodes: true,
         label: widget.semanticLabel,
         child: NakedMenuAnchor(
+          controller: controller,
+          overlayBuilder: (_) => widget.menu,
+          consumeOutsideTaps: widget.closeOnClickOutside,
           position: widget.menuPosition,
           fallbackPositions: widget.fallbackPositions,
           onClose: closeMenu,
           onOpen: openMenu,
-          consumeOutsideTaps: widget.closeOnClickOutside,
-          controller: controller,
           onKeyEvent: (event) {
             // Type-ahead with character keys
             final character = event.character;
@@ -324,7 +329,6 @@ class _NakedSelectState<T> extends State<NakedSelect<T>>
               _handleTypeAhead(character);
             }
           },
-          overlayBuilder: (_) => widget.menu,
           child: widget.child,
         ),
       ),
@@ -337,6 +341,32 @@ class _NakedSelectState<T> extends State<NakedSelect<T>>
 /// This allows descendant widgets to efficiently access the current selection state
 /// without passing it explicitly through the widget tree.
 class NakedSelectInherited<T> extends InheritedWidget {
+  const NakedSelectInherited({
+    super.key,
+    required super.child,
+    required this.selectedValue,
+    required this.selectedValues,
+    required this.allowMultiple,
+    required this.enabled,
+  });
+
+  /// Gets the nearest NakedSelectInherited ancestor of the given context.
+  static NakedSelectInherited<T>? maybeOf<T>(BuildContext context) {
+    return context.dependOnInheritedWidgetOfExactType();
+  }
+
+  static NakedSelectInherited<T> of<T>(BuildContext context) {
+    final inherited = maybeOf<T>(context);
+    if (inherited == null) {
+      throw StateError(
+        'NakedSelectInherited<$T> not found in context.\n'
+        'Make sure NakedSelectInherited is an ancestor of the current widget.',
+      );
+    }
+
+    return inherited;
+  }
+
   /// The currently selected value for single selection mode.
   final T? selectedValue;
 
@@ -349,45 +379,21 @@ class NakedSelectInherited<T> extends InheritedWidget {
   /// Whether the select is enabled and can be interacted with.
   final bool enabled;
 
-  const NakedSelectInherited({
-    super.key,
-    required super.child,
-    required this.selectedValue,
-    required this.selectedValues,
-    required this.allowMultiple,
-    required this.enabled,
-  });
-
-  /// Gets the nearest NakedSelectInherited ancestor of the given context.
-  static NakedSelectInherited<T>? maybeOf<T>(BuildContext context) {
-    return context
-        .dependOnInheritedWidgetOfExactType<NakedSelectInherited<T>>();
-  }
-
-  static NakedSelectInherited<T> of<T>(BuildContext context) {
-    final inherited = maybeOf<T>(context);
-    if (inherited == null) {
-      throw StateError(
-        'NakedSelectInherited<$T> not found in context.\n'
-        'Make sure NakedSelectInherited is an ancestor of the current widget.',
-      );
-    }
-    return inherited;
-  }
-
   bool isSelected(BuildContext context, T value) {
     final inheritedValues = NakedSelectInherited.of<T>(context);
+
     if (inheritedValues.allowMultiple) {
       return inheritedValues.selectedValues?.contains(value) ?? false;
-    } else {
-      return inheritedValues.selectedValue == value;
     }
+
+    return inheritedValues.selectedValue == value;
   }
 
   @override
   bool updateShouldNotify(NakedSelectInherited<T> oldWidget) {
     return selectedValue != oldWidget.selectedValue ||
-        selectedValues != oldWidget.selectedValues ||
+        !setEquals(selectedValues, oldWidget.selectedValues) ||
+        enabled != oldWidget.enabled ||
         allowMultiple != oldWidget.allowMultiple;
   }
 }
@@ -396,7 +402,7 @@ class _SelectItemInfo<T> {
   final T value;
   final FocusNode focusNode;
 
-  _SelectItemInfo({required this.value, required this.focusNode});
+  const _SelectItemInfo({required this.value, required this.focusNode});
 }
 
 /// A customizable trigger button that controls the select dropdown.
@@ -421,7 +427,20 @@ class _SelectItemInfo<T> {
 ///   ),
 /// )
 /// ```
-class NakedSelectTrigger extends StatefulWidget {
+class NakedSelectTrigger extends StatelessWidget {
+  const NakedSelectTrigger({
+    super.key,
+    required this.child,
+    this.onHoverState,
+    this.onPressedState,
+    this.onFocusState,
+    this.semanticLabel,
+    this.cursor = SystemMouseCursors.click,
+    this.enableHapticFeedback = true,
+    this.focusNode,
+    this.autofocus = false,
+  });
+
   /// The child widget to display.
   /// This widget will be wrapped with interaction handlers.
   final Widget child;
@@ -458,24 +477,6 @@ class NakedSelectTrigger extends StatefulWidget {
   /// When true, enables immediate keyboard navigation.
   final bool autofocus;
 
-  const NakedSelectTrigger({
-    super.key,
-    required this.child,
-    this.onHoverState,
-    this.onPressedState,
-    this.onFocusState,
-    this.semanticLabel,
-    this.cursor = SystemMouseCursors.click,
-    this.enableHapticFeedback = true,
-    this.focusNode,
-    this.autofocus = false,
-  });
-
-  @override
-  State<NakedSelectTrigger> createState() => _NakedSelectTriggerState();
-}
-
-class _NakedSelectTriggerState extends State<NakedSelectTrigger> {
   @override
   Widget build(BuildContext context) {
     final state = context.findAncestorStateOfType<_NakedSelectState>();
@@ -483,7 +484,7 @@ class _NakedSelectTriggerState extends State<NakedSelectTrigger> {
     void handleTap() {
       if (state?.isEnabled == false) return;
 
-      if (widget.enableHapticFeedback) {
+      if (enableHapticFeedback) {
         HapticFeedback.lightImpact();
       }
 
@@ -491,18 +492,18 @@ class _NakedSelectTriggerState extends State<NakedSelectTrigger> {
     }
 
     return NakedButton(
-      isSemanticButton: true,
-      enabled: state?.isEnabled ?? true,
-      focusNode: widget.focusNode,
-      autofocus: widget.autofocus,
-      onFocusState: widget.onFocusState,
-      onPressedState: widget.onPressedState,
-      onHoverState: widget.onHoverState,
       onPressed: handleTap,
-      semanticLabel: widget.semanticLabel,
-      cursor: widget.cursor,
-      enableHapticFeedback: widget.enableHapticFeedback,
-      child: widget.child,
+      onHoverState: onHoverState,
+      onPressedState: onPressedState,
+      onFocusState: onFocusState,
+      enabled: state?.isEnabled ?? true,
+      isSemanticButton: true,
+      semanticLabel: semanticLabel,
+      cursor: cursor,
+      enableHapticFeedback: enableHapticFeedback,
+      focusNode: focusNode,
+      autofocus: autofocus,
+      child: child,
     );
   }
 }
@@ -532,6 +533,22 @@ class _NakedSelectTriggerState extends State<NakedSelectTrigger> {
 /// )
 /// ```
 class NakedSelectItem<T> extends StatefulWidget {
+  const NakedSelectItem({
+    super.key,
+    required this.child,
+    required this.value,
+    this.onHoverState,
+    this.onPressedState,
+    this.onFocusState,
+    this.onSelectState,
+    this.enabled = true,
+    this.semanticLabel,
+    this.cursor = SystemMouseCursors.click,
+    this.enableHapticFeedback = true,
+    this.focusNode,
+    this.autofocus = false,
+  });
+
   /// The child widget to display.
   /// This widget will be wrapped with interaction handlers.
   final Widget child;
@@ -578,22 +595,6 @@ class NakedSelectItem<T> extends StatefulWidget {
 
   final bool autofocus;
 
-  const NakedSelectItem({
-    super.key,
-    required this.child,
-    required this.value,
-    this.onHoverState,
-    this.onPressedState,
-    this.onFocusState,
-    this.onSelectState,
-    this.enabled = true,
-    this.semanticLabel,
-    this.cursor = SystemMouseCursors.click,
-    this.enableHapticFeedback = true,
-    this.focusNode,
-    this.autofocus = false,
-  });
-
   @override
   State<NakedSelectItem<T>> createState() => _NakedSelectItemState<T>();
 }
@@ -610,6 +611,16 @@ class _NakedSelectItemState<T> extends State<NakedSelectItem<T>> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _registerWithSelect();
     });
+  }
+
+  void _registerWithSelect() {
+    if (_isRegistered) return;
+
+    final state = context.findAncestorStateOfType<_NakedSelectState<T>>();
+    if (state != null) {
+      state._registerSelectableItem(widget.value, _focusNode);
+      _isRegistered = true;
+    }
   }
 
   @override
@@ -636,16 +647,6 @@ class _NakedSelectItemState<T> extends State<NakedSelectItem<T>> {
     super.dispose();
   }
 
-  void _registerWithSelect() {
-    if (_isRegistered) return;
-
-    final state = context.findAncestorStateOfType<_NakedSelectState<T>>();
-    if (state != null) {
-      state._registerSelectableItem(widget.value, _focusNode);
-      _isRegistered = true;
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final state = context.findAncestorStateOfType<_NakedSelectState<T>>();
@@ -670,21 +671,21 @@ class _NakedSelectItemState<T> extends State<NakedSelectItem<T>> {
     });
 
     return Semantics(
+      excludeSemantics: true,
       enabled: isEffectivelyEnabled,
       selected: isSelected,
-      excludeSemantics: true,
       child: NakedButton(
-        isSemanticButton: true,
-        focusNode: _focusNode,
-        onFocusState: widget.onFocusState,
-        onPressedState: widget.onPressedState,
+        onPressed: handleSelect,
         onHoverState: widget.onHoverState,
-        autofocus: widget.autofocus,
+        onPressedState: widget.onPressedState,
+        onFocusState: widget.onFocusState,
+        enabled: isEffectivelyEnabled,
+        isSemanticButton: true,
+        semanticLabel: widget.semanticLabel ?? widget.value.toString(),
         cursor: widget.cursor,
         enableHapticFeedback: widget.enableHapticFeedback,
-        enabled: isEffectivelyEnabled,
-        onPressed: handleSelect,
-        semanticLabel: widget.semanticLabel ?? widget.value.toString(),
+        focusNode: _focusNode,
+        autofocus: widget.autofocus,
         child: widget.child,
       ),
     );

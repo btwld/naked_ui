@@ -14,20 +14,6 @@ import 'utilities/pressed_state_region.dart';
 /// When a radio button is focused, arrow keys will move focus to the next/previous
 /// enabled radio button in reading order. Selection follows focus.
 class NakedRadioGroup<T> extends StatefulWidget {
-  /// The currently selected value within the group.
-  final T? groupValue;
-
-  /// Called when a selection changes.
-  final ValueChanged<T?>? onChanged;
-
-  /// Child widgets (typically containing NakedRadioButtons).
-  final Widget child;
-
-  /// Whether the entire group is disabled.
-  ///
-  /// When true, all radio buttons in the group will not respond to user interaction.
-  final bool enabled;
-
   /// Creates a naked radio group.
   ///
   /// The [child] parameter is required, which typically contains NakedRadioButton widgets.
@@ -42,6 +28,20 @@ class NakedRadioGroup<T> extends StatefulWidget {
     this.enabled = true,
   });
 
+  /// The currently selected value within the group.
+  final T? groupValue;
+
+  /// Called when a selection changes.
+  final ValueChanged<T?>? onChanged;
+
+  /// Child widgets (typically containing NakedRadioButtons).
+  final Widget child;
+
+  /// Whether the entire group is disabled.
+  ///
+  /// When true, all radio buttons in the group will not respond to user interaction.
+  final bool enabled;
+
   @override
   State<NakedRadioGroup<T>> createState() => NakedRadioGroupState<T>();
 }
@@ -52,30 +52,32 @@ class NakedRadioGroupState<T> extends State<NakedRadioGroup<T>> {
 
   late final Map<ShortcutActivator, Intent> _radioGroupShortcuts =
       <ShortcutActivator, Intent>{
-    const SingleActivator(LogicalKeyboardKey.arrowLeft):
-        VoidCallbackIntent(_selectPreviousRadio),
-    const SingleActivator(LogicalKeyboardKey.arrowRight):
-        VoidCallbackIntent(_selectNextRadio),
-    const SingleActivator(LogicalKeyboardKey.arrowDown):
-        VoidCallbackIntent(_selectNextRadio),
-    const SingleActivator(LogicalKeyboardKey.arrowUp):
-        VoidCallbackIntent(_selectPreviousRadio),
-  };
+        const SingleActivator(LogicalKeyboardKey.arrowLeft): VoidCallbackIntent(
+          _selectPreviousRadio,
+        ),
+        const SingleActivator(LogicalKeyboardKey.arrowRight):
+            VoidCallbackIntent(_selectNextRadio),
+        const SingleActivator(LogicalKeyboardKey.arrowDown): VoidCallbackIntent(
+          _selectNextRadio,
+        ),
+        const SingleActivator(LogicalKeyboardKey.arrowUp): VoidCallbackIntent(
+          _selectPreviousRadio,
+        ),
+      };
 
   void _registerRadioButton(_NakedRadioState<T> radio) {
     _radios.add(radio);
   }
 
   void _selectRadioInDirection(bool forward) {
-    final enabledRadios =
-        _radios.where((radio) => radio._getInterative(this)).toList();
+    final enabledRadios = _radios
+        .where((radio) => radio._getInterative(this))
+        .toList();
     if (enabledRadios.length <= 1) {
       return;
     }
-    final (int, _NakedRadioState<T>)? selected =
-        enabledRadios.indexed.firstWhereOrNull(
-      (e) => e.$2._focusNode.hasFocus,
-    );
+    final (int, _NakedRadioState<T>)? selected = enabledRadios.indexed
+        .firstWhereOrNull((e) => e.$2._focusNode.hasFocus);
     if (selected == null) {
       // The focused node is either a non interactive radio or other controls.
       return;
@@ -122,9 +124,6 @@ class NakedRadioGroupState<T> extends State<NakedRadioGroup<T>> {
 
 /// Internal InheritedWidget that provides radio group state to child radio buttons.
 class NakedRadioGroupScope<T> extends InheritedWidget {
-  final NakedRadioGroupState<T> state;
-  final T? groupValue;
-
   /// Creates a radio group scope.
   const NakedRadioGroupScope({
     super.key,
@@ -142,14 +141,18 @@ class NakedRadioGroupScope<T> extends InheritedWidget {
         'No NakedRadioGroup ancestor could be found for a NakedRadioButton',
       );
     }
+
     return group;
   }
 
   /// Allows radio buttons to access their parent group without throwing an error.
   static NakedRadioGroupScope<T>? maybeOf<T>(BuildContext context) {
-    return context
-        .dependOnInheritedWidgetOfExactType<NakedRadioGroupScope<T>>();
+    return context.dependOnInheritedWidgetOfExactType();
   }
+
+  final NakedRadioGroupState<T> state;
+
+  final T? groupValue;
 
   @override
   bool updateShouldNotify(NakedRadioGroupScope<T> oldWidget) {
@@ -196,6 +199,25 @@ class NakedRadioGroupScope<T> extends InheritedWidget {
 /// )
 /// ```
 class NakedRadio<T> extends StatefulWidget {
+  /// Creates a naked radio button.
+  ///
+  /// The [child] and [value] parameters are required.
+  /// This component must be used within a NakedRadioGroup.
+  const NakedRadio({
+    super.key,
+    required this.child,
+    required this.value,
+    this.onHoverState,
+    this.onPressedState,
+    this.onSelectState,
+    this.onFocusState,
+    this.enabled = true,
+    this.cursor = SystemMouseCursors.click,
+    this.enableHapticFeedback = true,
+    this.focusNode,
+    this.autofocus = false,
+  });
+
   /// The child widget that represents the radio button visually.
   final Widget child;
 
@@ -249,39 +271,18 @@ class NakedRadio<T> extends StatefulWidget {
   /// Whether to automatically focus this radio button when first built.
   final bool autofocus;
 
-  /// Creates a naked radio button.
-  ///
-  /// The [child] and [value] parameters are required.
-  /// This component must be used within a NakedRadioGroup.
-  const NakedRadio({
-    super.key,
-    required this.child,
-    required this.value,
-    this.onHoverState,
-    this.onPressedState,
-    this.onSelectState,
-    this.onFocusState,
-    this.enabled = true,
-    this.cursor = SystemMouseCursors.click,
-    this.enableHapticFeedback = true,
-    this.focusNode,
-    this.autofocus = false,
-  });
-
   @override
   State<NakedRadio<T>> createState() => _NakedRadioState<T>();
 }
 
 class _NakedRadioState<T> extends State<NakedRadio<T>> {
   late final FocusNode _focusNode = widget.focusNode ?? FocusNode();
-  NakedRadioGroupScope<T> get _group => NakedRadioGroupScope.of<T>(context);
-  ValueChanged<T?>? get onChanged => _group.state.widget.onChanged;
+  late final Map<Type, Action<Intent>> _actionMap = <Type, Action<Intent>>{
+    ActivateIntent: CallbackAction<ActivateIntent>(onInvoke: _handleTap),
+  };
+  NakedRadioGroupScope<T> get _group => NakedRadioGroupScope.of(context);
 
-  @override
-  void dispose() {
-    _focusNode.dispose();
-    super.dispose();
-  }
+  ValueChanged<T?>? get onChanged => _group.state.widget.onChanged;
 
   void _handleTap([Intent? intent]) {
     // If group is already set to this value, do nothing
@@ -298,6 +299,15 @@ class _NakedRadioState<T> extends State<NakedRadio<T>> {
     }
   }
 
+  bool _getInterative(NakedRadioGroupState<T> group) =>
+      widget.enabled && group.widget.enabled && group.widget.onChanged != null;
+
+  @override
+  void dispose() {
+    _focusNode.dispose();
+    super.dispose();
+  }
+
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
@@ -305,15 +315,6 @@ class _NakedRadioState<T> extends State<NakedRadio<T>> {
     // Register this radio button with the group
     group.state._registerRadioButton(this);
   }
-
-  late final Map<Type, Action<Intent>> _actionMap = <Type, Action<Intent>>{
-    ActivateIntent: CallbackAction<ActivateIntent>(onInvoke: _handleTap),
-  };
-
-  bool _getInterative(
-    NakedRadioGroupState<T> group,
-  ) =>
-      widget.enabled && group.widget.enabled && group.widget.onChanged != null;
 
   @override
   Widget build(BuildContext context) {
@@ -336,29 +337,28 @@ class _NakedRadioState<T> extends State<NakedRadio<T>> {
     });
 
     return Semantics(
+      enabled: isInteractive,
       checked: isSelected,
       selected: accessibilitySelected,
-      enabled: isInteractive,
       child: FocusableActionDetector(
-        actions: _actionMap,
         enabled: isInteractive,
-        onShowHoverHighlight: widget.onHoverState,
-        onShowFocusHighlight: widget.onFocusState,
-        mouseCursor:
-            isInteractive ? widget.cursor : SystemMouseCursors.forbidden,
         focusNode: _focusNode,
+        autofocus: widget.autofocus,
+        actions: _actionMap,
+        onShowFocusHighlight: widget.onFocusState,
+        onShowHoverHighlight: widget.onHoverState,
         onFocusChange: (hasFocus) {
           onChanged?.call(widget.value);
           widget.onFocusState?.call(hasFocus);
         },
-        autofocus: widget.autofocus,
+        mouseCursor: isInteractive
+            ? widget.cursor
+            : SystemMouseCursors.forbidden,
         child: PressedStateRegion(
           onPressedState: widget.onPressedState,
-          enabled: isInteractive,
           onTap: _handleTap,
-          child: Builder(
-            builder: (context) => widget.child,
-          ),
+          enabled: isInteractive,
+          child: Builder(builder: (context) => widget.child),
         ),
       ),
     );
@@ -372,17 +372,20 @@ extension _IterableExt<T> on Iterable<T> {
         return element;
       }
     }
+
     return null;
   }
 }
 
 class _SkipUnselectedRadioPolicy<T> extends ReadingOrderTraversalPolicy {
-  _SkipUnselectedRadioPolicy(this.radios, this.groupValue);
   final Set<_NakedRadioState<T>> radios;
   final T? groupValue;
+  _SkipUnselectedRadioPolicy(this.radios, this.groupValue);
   @override
   Iterable<FocusNode> sortDescendants(
-      Iterable<FocusNode> descendants, FocusNode currentNode) {
+    Iterable<FocusNode> descendants,
+    FocusNode currentNode,
+  ) {
     if (radios.every((radio) => groupValue != radio.widget.value)) {
       // None of the radio are selected. Defaults to ReadingOrderTraversalPolicy.
       return super.sortDescendants(descendants, currentNode);
@@ -390,13 +393,17 @@ class _SkipUnselectedRadioPolicy<T> extends ReadingOrderTraversalPolicy {
     // Nodes that are not selected AND not currently focused, since we can't
     // remove the focused node from the sorted result.
     final Set<FocusNode> nodeToSkip = radios
-        .where((_NakedRadioState<T> radio) =>
-            groupValue != radio.widget.value && radio._focusNode != currentNode)
+        .where(
+          (_NakedRadioState<T> radio) =>
+              groupValue != radio.widget.value &&
+              radio._focusNode != currentNode,
+        )
         .map<FocusNode>((_NakedRadioState<T> radio) => radio._focusNode)
         .toSet();
     final Iterable<FocusNode> skipsNonSelected = descendants.where(
       (FocusNode node) => !nodeToSkip.contains(node),
     );
+
     return super.sortDescendants(skipsNonSelected, currentNode);
   }
 }
