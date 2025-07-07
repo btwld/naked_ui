@@ -31,17 +31,6 @@ class NakedMenuPosition {
 }
 
 class NakedMenuAnchor extends StatefulWidget {
-  final MenuController controller;
-  final WidgetBuilder overlayBuilder;
-  final bool useRootOverlay;
-  final bool consumeOutsideTaps;
-  final Widget? child;
-  final NakedMenuPosition position;
-  final List<NakedMenuPosition> fallbackPositions;
-  final VoidCallback? onClose;
-  final VoidCallback? onOpen;
-  final void Function(KeyEvent)? onKeyEvent;
-
   const NakedMenuAnchor({
     super.key,
     required this.controller,
@@ -58,6 +47,17 @@ class NakedMenuAnchor extends StatefulWidget {
     this.onOpen,
     this.onKeyEvent,
   });
+  final MenuController controller;
+  final WidgetBuilder overlayBuilder;
+  final bool useRootOverlay;
+  final bool consumeOutsideTaps;
+  final Widget? child;
+  final NakedMenuPosition position;
+  final List<NakedMenuPosition> fallbackPositions;
+  final VoidCallback? onClose;
+  final VoidCallback? onOpen;
+
+  final void Function(KeyEvent)? onKeyEvent;
 
   @override
   State<NakedMenuAnchor> createState() => _NakedMenuAnchorState();
@@ -66,23 +66,17 @@ class NakedMenuAnchor extends StatefulWidget {
 class _NakedMenuAnchorState extends State<NakedMenuAnchor> {
   final _focusScopeNode = FocusScopeNode();
 
-  @override
-  void dispose() {
-    _focusScopeNode.dispose();
-    super.dispose();
-  }
-
   Widget _overlayBuilder(BuildContext context, RawMenuOverlayInfo info) {
     return Positioned.fill(
       bottom: MediaQuery.of(context).viewInsets.bottom,
       child: Semantics(
-        scopesRoute: true,
         explicitChildNodes: true,
+        scopesRoute: true,
         child: TapRegion(
-          groupId: info.tapRegionGroupId,
           onTapOutside: (PointerDownEvent event) {
             widget.controller.close();
           },
+          groupId: info.tapRegionGroupId,
           child: CustomSingleChildLayout(
             delegate: _NakedPositionDelegate(
               target: info.anchorRect.topLeft,
@@ -93,8 +87,8 @@ class _NakedMenuAnchorState extends State<NakedMenuAnchor> {
             child: Shortcuts(
               shortcuts: _shortcuts,
               child: KeyboardListener(
-                autofocus: true,
                 focusNode: _focusScopeNode,
+                autofocus: true,
                 onKeyEvent: widget.onKeyEvent,
                 child: widget.overlayBuilder(context),
               ),
@@ -106,13 +100,19 @@ class _NakedMenuAnchorState extends State<NakedMenuAnchor> {
   }
 
   @override
+  void dispose() {
+    _focusScopeNode.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return RawMenuAnchor(
-      controller: widget.controller,
-      useRootOverlay: widget.useRootOverlay,
       consumeOutsideTaps: widget.consumeOutsideTaps,
-      onClose: widget.onClose,
       onOpen: widget.onOpen,
+      onClose: widget.onClose,
+      useRootOverlay: widget.useRootOverlay,
+      controller: widget.controller,
       overlayBuilder: _overlayBuilder,
       child: widget.child,
     );
@@ -124,7 +124,7 @@ abstract class OverlayChildLifecycle {
 
   final OverlayChildLifecycleCallback? onStateChange;
 
-  OverlayChildLifecycle({
+  const OverlayChildLifecycle({
     this.onStateChange,
     this.removalDelay = Duration.zero,
   });
@@ -175,14 +175,6 @@ mixin MenuAnchorChildLifecycleMixin<T extends StatefulWidget> on State<T> {
 }
 
 class _NakedPositionDelegate extends SingleChildLayoutDelegate {
-  /// Creates a delegate for computing the layout of a tooltip.
-  _NakedPositionDelegate({
-    required this.target,
-    required this.targetSize,
-    required this.alignment,
-    required this.fallbackAlignments,
-  });
-
   /// The offset of the target the tooltip is positioned near in the global
   /// coordinate system.
   final Offset target;
@@ -195,26 +187,14 @@ class _NakedPositionDelegate extends SingleChildLayoutDelegate {
 
   final List<NakedMenuPosition> fallbackAlignments;
 
-  @override
-  BoxConstraints getConstraintsForChild(BoxConstraints constraints) =>
-      constraints.loosen();
-
-  @override
-  Offset getPositionForChild(Size size, Size childSize) {
-    return _calculateOverlayPosition(
-      screenSize: size,
-      targetSize: targetSize,
-      targetPosition: target,
-      overlaySize: childSize,
-      alignment: alignment,
-      fallbackAlignments: fallbackAlignments,
-    );
-  }
-
-  @override
-  bool shouldRelayout(_NakedPositionDelegate oldDelegate) {
-    return target != oldDelegate.target || targetSize != oldDelegate.targetSize;
-  }
+  const
+  /// Creates a delegate for computing the layout of a tooltip.
+  _NakedPositionDelegate({
+    required this.target,
+    required this.targetSize,
+    required this.alignment,
+    required this.fallbackAlignments,
+  });
 
   Offset _calculateOverlayPosition({
     required Size screenSize,
@@ -269,6 +249,27 @@ class _NakedPositionDelegate extends SingleChildLayoutDelegate {
         overlayTopLeft.dy >= 0 &&
         overlayTopLeft.dx + overlaySize.width <= screenSize.width &&
         overlayTopLeft.dy + overlaySize.height <= screenSize.height;
+  }
+
+  @override
+  BoxConstraints getConstraintsForChild(BoxConstraints constraints) =>
+      constraints.loosen();
+
+  @override
+  Offset getPositionForChild(Size size, Size childSize) {
+    return _calculateOverlayPosition(
+      screenSize: size,
+      targetSize: targetSize,
+      targetPosition: target,
+      overlaySize: childSize,
+      alignment: alignment,
+      fallbackAlignments: fallbackAlignments,
+    );
+  }
+
+  @override
+  bool shouldRelayout(_NakedPositionDelegate oldDelegate) {
+    return target != oldDelegate.target || targetSize != oldDelegate.targetSize;
   }
 }
 

@@ -58,6 +58,27 @@ import 'utilities/pressed_state_region.dart';
 /// }
 /// ```
 class NakedButton extends StatefulWidget {
+  /// Creates a naked button.
+  ///
+  /// The [child] parameter is required and represents the visual appearance
+  /// of the button in all states.
+  const NakedButton({
+    super.key,
+    required this.child,
+    this.onPressed,
+    this.onHoverState,
+    this.onPressedState,
+    this.onFocusState,
+    this.onDisabledState,
+    this.enabled = true,
+    this.isSemanticButton = true,
+    this.semanticLabel,
+    this.cursor = SystemMouseCursors.click,
+    this.enableHapticFeedback = true,
+    this.focusNode,
+    this.autofocus = false,
+  });
+
   /// The child widget to display.
   ///
   /// This widget should represent the visual appearance of the button.
@@ -135,27 +156,6 @@ class NakedButton extends StatefulWidget {
   /// This is useful for making the button the initial focus target in a form or dialog.
   final bool autofocus;
 
-  /// Creates a naked button.
-  ///
-  /// The [child] parameter is required and represents the visual appearance
-  /// of the button in all states.
-  const NakedButton({
-    super.key,
-    required this.child,
-    this.onPressed,
-    this.onHoverState,
-    this.onPressedState,
-    this.onFocusState,
-    this.onDisabledState,
-    this.enabled = true,
-    this.isSemanticButton = true,
-    this.semanticLabel,
-    this.cursor = SystemMouseCursors.click,
-    this.enableHapticFeedback = true,
-    this.focusNode,
-    this.autofocus = false,
-  });
-
   bool get _isEnabled => enabled && onPressed != null;
 
   @override
@@ -165,8 +165,9 @@ class NakedButton extends StatefulWidget {
 class _NakedButtonState extends State<NakedButton> {
   late final Map<Type, Action<Intent>> _actionMap = <Type, Action<Intent>>{
     ActivateIntent: CallbackAction<ActivateIntent>(onInvoke: handleTap),
-    ButtonActivateIntent:
-        CallbackAction<ButtonActivateIntent>(onInvoke: handleTap),
+    ButtonActivateIntent: CallbackAction<ButtonActivateIntent>(
+      onInvoke: handleTap,
+    ),
   };
 
   void handleTap([Intent? intent]) {
@@ -178,14 +179,6 @@ class _NakedButtonState extends State<NakedButton> {
   }
 
   @override
-  void didUpdateWidget(NakedButton oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget._isEnabled != widget._isEnabled) {
-      widget.onDisabledState?.call(!widget._isEnabled);
-    }
-  }
-
-  @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -194,26 +187,35 @@ class _NakedButtonState extends State<NakedButton> {
   }
 
   @override
+  void didUpdateWidget(NakedButton oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget._isEnabled != widget._isEnabled) {
+      widget.onDisabledState?.call(!widget._isEnabled);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Semantics(
-      label: widget.semanticLabel,
-      enabled: widget._isEnabled,
       container: true,
-      button: widget.isSemanticButton,
       excludeSemantics: true,
+      enabled: widget._isEnabled,
+      button: widget.isSemanticButton,
+      label: widget.semanticLabel,
       child: FocusableActionDetector(
-        actions: _actionMap,
-        onFocusChange: widget.onFocusState,
-        focusNode: widget.focusNode,
         enabled: widget._isEnabled,
+        focusNode: widget.focusNode,
         autofocus: widget.autofocus,
+        actions: _actionMap,
         onShowHoverHighlight: widget.onHoverState,
-        mouseCursor:
-            widget._isEnabled ? widget.cursor : SystemMouseCursors.forbidden,
+        onFocusChange: widget.onFocusState,
+        mouseCursor: widget._isEnabled
+            ? widget.cursor
+            : SystemMouseCursors.forbidden,
         child: PressedStateRegion(
-          enabled: widget._isEnabled,
           onPressedState: widget.onPressedState,
           onTap: handleTap,
+          enabled: widget._isEnabled,
           child: widget.child,
         ),
       ),

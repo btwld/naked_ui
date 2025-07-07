@@ -23,22 +23,22 @@ Future<T?> showNakedDialog<T>({
 
   return navigator.push<T>(
     RawDialogRoute<T>(
-      transitionDuration: transitionDuration,
-      barrierColor: barrierColor,
+      pageBuilder:
+          (
+            BuildContext context,
+            Animation<double> animation,
+            Animation<double> secondaryAnimation,
+          ) => themes.wrap(builder(context)),
       barrierDismissible: barrierDismissible,
+      barrierColor: barrierColor,
       barrierLabel: barrierLabel,
+      transitionDuration: transitionDuration,
+      transitionBuilder: transitionBuilder,
       settings: routeSettings,
+      requestFocus: requestFocus,
       anchorPoint: anchorPoint,
       traversalEdgeBehavior:
           traversalEdgeBehavior ?? TraversalEdgeBehavior.closedLoop,
-      transitionBuilder: transitionBuilder,
-      requestFocus: requestFocus,
-      pageBuilder: (
-        BuildContext context,
-        Animation<double> animation,
-        Animation<double> secondaryAnimation,
-      ) =>
-          themes.wrap(builder(context)),
     ),
   );
 }

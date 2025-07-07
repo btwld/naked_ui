@@ -101,6 +101,32 @@ import 'package:flutter/services.dart';
 /// }
 /// ```
 class NakedSlider extends StatefulWidget {
+  /// Creates a naked slider.
+  ///
+  /// The [child] and [value] parameters are required.
+  /// The [min] must be less than [max].
+  const NakedSlider({
+    super.key,
+    required this.child,
+    required this.value,
+    this.min = 0.0,
+    this.max = 1.0,
+    this.onChanged,
+    this.onDragStart,
+    this.onDragEnd,
+    this.onHoverState,
+    this.onDraggingState,
+    this.onFocusState,
+    this.enabled = true,
+    this.semanticLabel,
+    this.cursor = SystemMouseCursors.click,
+    this.focusNode,
+    this.direction = Axis.horizontal,
+    this.divisions,
+    this.keyboardStep = 0.01,
+    this.largeKeyboardStep = 0.1,
+  }) : assert(min < max, 'min must be less than max');
+
   /// The child widget to display.
   ///
   /// Typically includes a track and thumb visualization.
@@ -171,32 +197,6 @@ class NakedSlider extends StatefulWidget {
   /// Default is 0.1 (10% of the slider range).
   final double largeKeyboardStep;
 
-  /// Creates a naked slider.
-  ///
-  /// The [child] and [value] parameters are required.
-  /// The [min] must be less than [max].
-  const NakedSlider({
-    super.key,
-    required this.child,
-    required this.value,
-    this.min = 0.0,
-    this.max = 1.0,
-    this.onChanged,
-    this.onDragStart,
-    this.onDragEnd,
-    this.onHoverState,
-    this.onDraggingState,
-    this.onFocusState,
-    this.enabled = true,
-    this.semanticLabel,
-    this.cursor = SystemMouseCursors.click,
-    this.focusNode,
-    this.direction = Axis.horizontal,
-    this.divisions,
-    this.keyboardStep = 0.01,
-    this.largeKeyboardStep = 0.1,
-  }) : assert(min < max, 'min must be less than max');
-
   @override
   State<NakedSlider> createState() => _NakedSliderState();
 }
@@ -219,10 +219,14 @@ class _NakedSliderState extends State<NakedSlider> {
     final decrementIntent = SingleActivator(isRTL ? arrowRight : arrowLeft);
     final incrementIntent = SingleActivator(isRTL ? arrowLeft : arrowRight);
 
-    final shiftDecrementIntent =
-        SingleActivator(isRTL ? arrowRight : arrowLeft, shift: true);
-    final shiftIncrementIntent =
-        SingleActivator(isRTL ? arrowLeft : arrowRight, shift: true);
+    final shiftDecrementIntent = SingleActivator(
+      isRTL ? arrowRight : arrowLeft,
+      shift: true,
+    );
+    final shiftIncrementIntent = SingleActivator(
+      isRTL ? arrowLeft : arrowRight,
+      shift: true,
+    );
 
     return {
       // Horizontal
@@ -250,10 +254,14 @@ class _NakedSliderState extends State<NakedSlider> {
     return {
       _SliderIncrementIntent: _SliderIncrementAction(this),
       _SliderDecrementIntent: _SliderDecrementAction(this),
-      _SliderShiftDecrementIntent:
-          _SliderDecrementAction(this, isShiftPressed: true),
-      _SliderShiftIncrementIntent:
-          _SliderIncrementAction(this, isShiftPressed: true),
+      _SliderShiftDecrementIntent: _SliderDecrementAction(
+        this,
+        isShiftPressed: true,
+      ),
+      _SliderShiftIncrementIntent: _SliderIncrementAction(
+        this,
+        isShiftPressed: true,
+      ),
       _SliderSetToMinIntent: _SliderSetToMinAction(this),
       _SliderSetToMaxIntent: _SliderSetToMaxAction(this),
     };
@@ -304,8 +312,9 @@ class _NakedSliderState extends State<NakedSlider> {
     if (box == null) return;
 
     // Convert the drag delta to a value change
-    double dragExtent =
-        widget.direction == Axis.horizontal ? box.size.width : box.size.height;
+    double dragExtent = widget.direction == Axis.horizontal
+        ? box.size.width
+        : box.size.height;
 
     double dragDistance = widget.direction == Axis.horizontal
         ? dragDelta.dx
@@ -354,6 +363,8 @@ class _NakedSliderState extends State<NakedSlider> {
     final double decreasedValue = _normalizeValue(widget.value - step);
 
     return Semantics(
+      excludeSemantics: true,
+      enabled: isInteractive,
       slider: true,
       label: widget.semanticLabel,
       value: '${percentage.round()}%',
@@ -361,43 +372,42 @@ class _NakedSliderState extends State<NakedSlider> {
           '${((increasedValue - widget.min) / (widget.max - widget.min) * 100).round()}%',
       decreasedValue:
           '${((decreasedValue - widget.min) / (widget.max - widget.min) * 100).round()}%',
-      enabled: isInteractive,
-      excludeSemantics: true,
       child: FocusableActionDetector(
+        enabled: isInteractive,
+        focusNode: widget.focusNode,
+        descendantsAreTraversable: false,
         shortcuts: _shortcuts,
         actions: _actions,
-        descendantsAreTraversable: false,
-        focusNode: widget.focusNode,
-        onFocusChange: widget.onFocusState,
-        enabled: isInteractive,
-        mouseCursor:
-            isInteractive ? widget.cursor : SystemMouseCursors.forbidden,
         onShowHoverHighlight: widget.onHoverState,
+        onFocusChange: widget.onFocusState,
+        mouseCursor: isInteractive
+            ? widget.cursor
+            : SystemMouseCursors.forbidden,
         child: GestureDetector(
-          behavior: HitTestBehavior.opaque,
-          onHorizontalDragStart:
-              widget.direction == Axis.horizontal && isInteractive
-                  ? _handleDragStart
-                  : null,
-          onHorizontalDragUpdate:
-              widget.direction == Axis.horizontal && isInteractive
-                  ? _handleDragUpdate
-                  : null,
-          onHorizontalDragEnd:
-              widget.direction == Axis.horizontal && isInteractive
-                  ? _handleDragEnd
-                  : null,
           onVerticalDragStart:
               widget.direction == Axis.vertical && isInteractive
-                  ? _handleDragStart
-                  : null,
+              ? _handleDragStart
+              : null,
           onVerticalDragUpdate:
               widget.direction == Axis.vertical && isInteractive
-                  ? _handleDragUpdate
-                  : null,
+              ? _handleDragUpdate
+              : null,
           onVerticalDragEnd: widget.direction == Axis.vertical && isInteractive
               ? _handleDragEnd
               : null,
+          onHorizontalDragStart:
+              widget.direction == Axis.horizontal && isInteractive
+              ? _handleDragStart
+              : null,
+          onHorizontalDragUpdate:
+              widget.direction == Axis.horizontal && isInteractive
+              ? _handleDragUpdate
+              : null,
+          onHorizontalDragEnd:
+              widget.direction == Axis.horizontal && isInteractive
+              ? _handleDragEnd
+              : null,
+          behavior: HitTestBehavior.opaque,
           child: widget.child,
         ),
       ),
@@ -432,10 +442,10 @@ class _SliderSetToMaxIntent extends Intent {
 // Create actions that respond to these intents
 
 class _SliderIncrementAction extends Action<_SliderIncrementIntent> {
-  _SliderIncrementAction(this.state, {this.isShiftPressed = false});
-
   final _NakedSliderState state;
+
   final bool isShiftPressed;
+  _SliderIncrementAction(this.state, {this.isShiftPressed = false});
 
   @override
   void invoke(_SliderIncrementIntent intent) {
@@ -447,10 +457,11 @@ class _SliderIncrementAction extends Action<_SliderIncrementIntent> {
 }
 
 class _SliderDecrementAction extends Action<_SliderDecrementIntent> {
+  final _NakedSliderState state;
+
+  final bool isShiftPressed;
   _SliderDecrementAction(this.state, {this.isShiftPressed = false});
 
-  final _NakedSliderState state;
-  final bool isShiftPressed;
   @override
   void invoke(_SliderDecrementIntent intent) {
     final step = state._calculateStep(isShiftPressed);
@@ -461,9 +472,9 @@ class _SliderDecrementAction extends Action<_SliderDecrementIntent> {
 }
 
 class _SliderSetToMinAction extends Action<_SliderSetToMinIntent> {
-  _SliderSetToMinAction(this.state);
-
   final _NakedSliderState state;
+
+  _SliderSetToMinAction(this.state);
 
   @override
   void invoke(_SliderSetToMinIntent intent) {
@@ -472,9 +483,9 @@ class _SliderSetToMinAction extends Action<_SliderSetToMinIntent> {
 }
 
 class _SliderSetToMaxAction extends Action<_SliderSetToMaxIntent> {
-  _SliderSetToMaxAction(this.state);
-
   final _NakedSliderState state;
+
+  _SliderSetToMaxAction(this.state);
 
   @override
   void invoke(_SliderSetToMaxIntent intent) {

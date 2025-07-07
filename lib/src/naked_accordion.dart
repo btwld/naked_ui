@@ -183,6 +183,7 @@ class _NakedAccordionState<T> extends State<NakedAccordion<T>> {
 }
 
 typedef NakedAccordionTriggerBuilder =
+    // ignore: prefer-named-boolean-parameters
     Widget Function(BuildContext context, bool isExpanded, VoidCallback toggle);
 
 /// An individual item in a [NakedAccordion].
