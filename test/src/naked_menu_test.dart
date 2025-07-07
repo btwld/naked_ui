@@ -343,9 +343,18 @@ void main() {
   group('NakedMenuItem', () {
     group('Basic Functionality', () {
       testWidgets('Renders child widget', (WidgetTester tester) async {
+        final controller = MenuController();
         await tester.pumpMaterialWidget(
-          const NakedMenuItem(child: Text('Menu Item')),
+          NakedMenu(
+            controller: controller,
+            builder: (_) => const Text('Menu Content'),
+            overlayBuilder: (_) =>
+                NakedMenuItem(onPressed: () {}, child: const Text('Menu Item')),
+          ),
         );
+
+        controller.open();
+        await tester.pump();
 
         expect(find.text('Menu Item'), findsOneWidget);
       });
@@ -354,13 +363,21 @@ void main() {
         WidgetTester tester,
       ) async {
         bool pressed = false;
+        final controller = MenuController();
 
         await tester.pumpMaterialWidget(
-          NakedMenuItem(
-            onPressed: () => pressed = true,
-            child: const Text('Menu Item'),
+          NakedMenu(
+            controller: controller,
+            builder: (_) => const Text('Menu Content'),
+            overlayBuilder: (_) => NakedMenuItem(
+              onPressed: () => pressed = true,
+              child: const Text('Menu Item'),
+            ),
           ),
         );
+
+        controller.open();
+        await tester.pump();
 
         await tester.tap(find.text('Menu Item'));
         expect(pressed, true);
@@ -370,14 +387,22 @@ void main() {
         WidgetTester tester,
       ) async {
         bool pressed = false;
+        final controller = MenuController();
 
         await tester.pumpMaterialWidget(
-          NakedMenuItem(
-            enabled: false,
-            onPressed: () => pressed = true,
-            child: const Text('Menu Item'),
+          NakedMenu(
+            controller: controller,
+            builder: (_) => const Text('Menu Content'),
+            overlayBuilder: (_) => NakedMenuItem(
+              enabled: false,
+              onPressed: () => pressed = true,
+              child: const Text('Menu Item'),
+            ),
           ),
         );
+
+        controller.open();
+        await tester.pump();
 
         await tester.tap(find.text('Menu Item'));
         expect(pressed, false);
@@ -390,17 +415,26 @@ void main() {
             FocusHighlightStrategy.alwaysTraditional;
         bool hovered = false;
         const key = Key('menuItem');
+        final controller = MenuController();
+
         await tester.pumpMaterialWidget(
-          Padding(
-            padding: const EdgeInsets.all(1),
-            child: NakedMenuItem(
-              key: key,
-              onPressed: () {},
-              onHoverState: (value) => hovered = value,
-              child: const Text('Menu Item'),
+          NakedMenu(
+            controller: controller,
+            builder: (_) => const Text('Menu Content'),
+            overlayBuilder: (_) => Padding(
+              padding: const EdgeInsets.all(1),
+              child: NakedMenuItem(
+                key: key,
+                onPressed: () {},
+                onHoverState: (value) => hovered = value,
+                child: const Text('Menu Item'),
+              ),
             ),
           ),
         );
+
+        controller.open();
+        await tester.pump();
 
         await tester.simulateHover(
           key,
@@ -414,14 +448,23 @@ void main() {
       testWidgets('Calls pressed state callback', (WidgetTester tester) async {
         bool pressed = false;
         const key = Key('menuItem');
+        final controller = MenuController();
+
         await tester.pumpMaterialWidget(
-          NakedMenuItem(
-            key: key,
-            onPressed: () {},
-            onPressedState: (value) => pressed = value,
-            child: const Text('Menu Item'),
+          NakedMenu(
+            controller: controller,
+            builder: (_) => const Text('Menu Content'),
+            overlayBuilder: (_) => NakedMenuItem(
+              key: key,
+              onPressed: () {},
+              onPressedState: (value) => pressed = value,
+              child: const Text('Menu Item'),
+            ),
           ),
         );
+
+        controller.open();
+        await tester.pump();
 
         await tester.simulatePress(
           key,
@@ -437,15 +480,23 @@ void main() {
             FocusHighlightStrategy.alwaysTraditional;
         bool focused = false;
         final focusNode = FocusNode();
+        final controller = MenuController();
 
         await tester.pumpMaterialWidget(
-          NakedMenuItem(
-            onPressed: () {},
-            focusNode: focusNode,
-            onFocusState: (value) => focused = value,
-            child: const Text('Menu Item'),
+          NakedMenu(
+            controller: controller,
+            builder: (_) => const Text('Menu Content'),
+            overlayBuilder: (_) => NakedMenuItem(
+              onPressed: () {},
+              focusNode: focusNode,
+              onFocusState: (value) => focused = value,
+              child: const Text('Menu Item'),
+            ),
           ),
         );
+
+        controller.open();
+        await tester.pump();
         expect(focused, false);
 
         focusNode.requestFocus();
@@ -459,16 +510,23 @@ void main() {
         WidgetTester tester,
       ) async {
         bool pressed = false;
-
         final focusNode = FocusNode();
+        final controller = MenuController();
 
         await tester.pumpMaterialWidget(
-          NakedMenuItem(
-            focusNode: focusNode,
-            onPressed: () => pressed = true,
-            child: const Text('Menu Item'),
+          NakedMenu(
+            controller: controller,
+            builder: (_) => const Text('Menu Content'),
+            overlayBuilder: (_) => NakedMenuItem(
+              focusNode: focusNode,
+              onPressed: () => pressed = true,
+              child: const Text('Menu Item'),
+            ),
           ),
         );
+
+        controller.open();
+        await tester.pump();
 
         // Focus the item
         focusNode.requestFocus();
