@@ -131,7 +131,21 @@ import 'package:flutter/services.dart';
 ///   }
 /// }
 /// ```
-class NakedTabGroup extends StatefulWidget {
+class NakedTabGroup extends StatelessWidget {
+  /// Creates a naked tabs component.
+  ///
+  /// The [child] parameter is required.
+  const NakedTabGroup({
+    super.key,
+    required this.child,
+    required this.selectedTabId,
+    this.onSelectedTabIdChanged,
+    this.orientation = Axis.horizontal,
+    this.enabled = true,
+    this.semanticLabel,
+    this.onEscapePressed,
+  });
+
   /// The child widget to display.
   final Widget child;
 
@@ -161,49 +175,25 @@ class NakedTabGroup extends StatefulWidget {
   /// This is called when the escape key is pressed while the tabs component has focus.
   final VoidCallback? onEscapePressed;
 
-  /// Creates a naked tabs component.
-  ///
-  /// The [child] parameter is required.
-  const NakedTabGroup({
-    super.key,
-    required this.child,
-    required this.selectedTabId,
-    this.onSelectedTabIdChanged,
-    this.orientation = Axis.horizontal,
-    this.enabled = true,
-    this.semanticLabel,
-    this.onEscapePressed,
-  });
-
-  @override
-  State<NakedTabGroup> createState() => _NakedTabGroupState();
-}
-
-class _NakedTabGroupState extends State<NakedTabGroup> {
-  @override
-  void dispose() {
-    super.dispose();
-  }
-
   void _selectTab(String tabId) {
-    if (!widget.enabled) return;
-    if (tabId == widget.selectedTabId) return;
+    if (!enabled) return;
+    if (tabId == selectedTabId) return;
 
-    widget.onSelectedTabIdChanged?.call(tabId);
+    onSelectedTabIdChanged?.call(tabId);
   }
 
   @override
   Widget build(BuildContext context) {
     return Semantics(
       container: true,
-      label: widget.semanticLabel,
       explicitChildNodes: true,
+      label: semanticLabel,
       child: NakedTabsScope(
-        selectedTabId: widget.selectedTabId,
+        selectedTabId: selectedTabId,
         onSelectedTabIdChanged: _selectTab,
-        orientation: widget.orientation,
-        enabled: widget.enabled,
-        child: widget.child,
+        orientation: orientation,
+        enabled: enabled,
+        child: child,
       ),
     );
   }
@@ -211,6 +201,29 @@ class _NakedTabGroupState extends State<NakedTabGroup> {
 
 /// The scope that provides tabs state to its descendants.
 class NakedTabsScope extends InheritedWidget {
+  const NakedTabsScope({
+    super.key,
+    required this.selectedTabId,
+    required this.onSelectedTabIdChanged,
+    required this.orientation,
+    required this.enabled,
+    required super.child,
+  });
+
+  static NakedTabsScope of(BuildContext context) {
+    if (context.findAncestorWidgetOfExactType<NakedTabsScope>() == null) {
+      throw FlutterError(
+        'NakedTabsScope.of() was called with a context that does not contain a NakedTabsScope widget.\n'
+        'No NakedTabsScope ancestor could be found starting from the context that was passed.\n'
+        'This can happen when a NakedTab or NakedTabPanel is used outside of a NakedTabGroup.\n'
+        'The context used was:\n'
+        '  $context',
+      );
+    }
+
+    return context.dependOnInheritedWidgetOfExactType<NakedTabsScope>()!;
+  }
+
   /// The ID of the currently selected tab.
   final String selectedTabId;
 
@@ -223,15 +236,6 @@ class NakedTabsScope extends InheritedWidget {
   /// Whether the tabs component is enabled.
   final bool enabled;
 
-  const NakedTabsScope({
-    super.key,
-    required this.selectedTabId,
-    required this.onSelectedTabIdChanged,
-    required this.orientation,
-    required this.enabled,
-    required super.child,
-  });
-
   /// Whether a tab is currently selected.
   bool isTabSelected(String tabId) {
     return selectedTabId == tabId;
@@ -242,18 +246,6 @@ class NakedTabsScope extends InheritedWidget {
     if (onSelectedTabIdChanged != null) {
       onSelectedTabIdChanged!(tabId);
     }
-  }
-
-  static NakedTabsScope of(BuildContext context) {
-    if (context.findAncestorWidgetOfExactType<NakedTabsScope>() == null) {
-      throw FlutterError(
-          'NakedTabsScope.of() was called with a context that does not contain a NakedTabsScope widget.\n'
-          'No NakedTabsScope ancestor could be found starting from the context that was passed.\n'
-          'This can happen when a NakedTab or NakedTabPanel is used outside of a NakedTabGroup.\n'
-          'The context used was:\n'
-          '  $context');
-    }
-    return context.dependOnInheritedWidgetOfExactType<NakedTabsScope>()!;
   }
 
   @override
@@ -268,6 +260,11 @@ class NakedTabsScope extends InheritedWidget {
 ///
 /// This component is used to group tab triggers and handles keyboard navigation.
 class NakedTabList extends StatelessWidget {
+  /// Creates a naked tab list.
+  ///
+  /// The [child] parameter is required.
+  const NakedTabList({super.key, required this.child, this.semanticLabel});
+
   /// The child widget to display.
   final Widget child;
 
@@ -275,15 +272,6 @@ class NakedTabList extends StatelessWidget {
   ///
   /// This is used by screen readers to describe the tab list.
   final String? semanticLabel;
-
-  /// Creates a naked tab list.
-  ///
-  /// The [child] parameter is required.
-  const NakedTabList({
-    super.key,
-    required this.child,
-    this.semanticLabel,
-  });
 
   @override
   Widget build(BuildContext context) {
@@ -303,6 +291,23 @@ class NakedTabList extends StatelessWidget {
 ///
 /// This component represents a selectable tab within a tab list.
 class NakedTab extends StatefulWidget {
+  /// Creates a naked tab.
+  ///
+  /// The [child] and [tabId] parameters are required.
+  const NakedTab({
+    super.key,
+    required this.child,
+    required this.tabId,
+    this.onHoverState,
+    this.onPressedState,
+    this.onFocusState,
+    this.enabled = true,
+    this.semanticLabel,
+    this.cursor = SystemMouseCursors.click,
+    this.enableHapticFeedback = true,
+    this.focusNode,
+  });
+
   /// The child widget to display.
   final Widget child;
 
@@ -338,23 +343,6 @@ class NakedTab extends StatefulWidget {
   /// Optional focus node to control focus behavior.
   final FocusNode? focusNode;
 
-  /// Creates a naked tab.
-  ///
-  /// The [child] and [tabId] parameters are required.
-  const NakedTab({
-    super.key,
-    required this.child,
-    required this.tabId,
-    this.onHoverState,
-    this.onPressedState,
-    this.onFocusState,
-    this.enabled = true,
-    this.semanticLabel,
-    this.cursor = SystemMouseCursors.click,
-    this.enableHapticFeedback = true,
-    this.focusNode,
-  });
-
   @override
   State<NakedTab> createState() => _NakedTabState();
 }
@@ -366,28 +354,6 @@ class _NakedTabState extends State<NakedTab> {
   void initState() {
     super.initState();
     _focusNode = widget.focusNode ?? FocusNode();
-  }
-
-  @override
-  void didUpdateWidget(NakedTab oldWidget) {
-    super.didUpdateWidget(oldWidget);
-
-    // Update focus node if it changed
-    if (widget.focusNode != oldWidget.focusNode) {
-      if (oldWidget.focusNode == null) {
-        _focusNode.dispose();
-      }
-      _focusNode = widget.focusNode ?? FocusNode();
-    }
-  }
-
-  @override
-  void dispose() {
-    // Only dispose the focus node if we created it
-    if (widget.focusNode == null) {
-      _focusNode.dispose();
-    }
-    super.dispose();
   }
 
   void _handleTap() {
@@ -417,6 +383,7 @@ class _NakedTabState extends State<NakedTab> {
     if (event is KeyUpEvent && event.logicalKey.isConfirmationKey) {
       widget.onPressedState?.call(false);
       _handleTap();
+
       return KeyEventResult.handled;
     }
 
@@ -425,30 +392,58 @@ class _NakedTabState extends State<NakedTab> {
         case Axis.horizontal:
           if (event.logicalKey == LogicalKeyboardKey.arrowLeft) {
             FocusTraversalGroup.of(context).previous(_focusNode);
+
             return KeyEventResult.handled;
           }
           if (event.logicalKey == LogicalKeyboardKey.arrowRight) {
             FocusTraversalGroup.of(context).next(_focusNode);
+
             return KeyEventResult.handled;
           }
           break;
         case Axis.vertical:
           if (event.logicalKey == LogicalKeyboardKey.arrowDown) {
             FocusTraversalGroup.of(context).next(_focusNode);
+
             return KeyEventResult.handled;
           }
           if (event.logicalKey == LogicalKeyboardKey.arrowUp) {
             FocusTraversalGroup.of(context).previous(_focusNode);
+
             return KeyEventResult.handled;
           }
           break;
       }
       if (event.logicalKey.isConfirmationKey) {
         widget.onPressedState?.call(true);
+
         return KeyEventResult.handled;
       }
     }
+
     return KeyEventResult.ignored;
+  }
+
+  @override
+  void didUpdateWidget(NakedTab oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    // Update focus node if it changed
+    if (widget.focusNode != oldWidget.focusNode) {
+      if (oldWidget.focusNode == null) {
+        _focusNode.dispose();
+      }
+      _focusNode = widget.focusNode ?? FocusNode();
+    }
+  }
+
+  @override
+  void dispose() {
+    // Only dispose the focus node if we created it
+    if (widget.focusNode == null) {
+      _focusNode.dispose();
+    }
+    super.dispose();
   }
 
   @override
@@ -459,32 +454,36 @@ class _NakedTabState extends State<NakedTab> {
 
     return Semantics(
       container: true,
-      enabled: isInteractive,
-      label: widget.semanticLabel ?? 'Tab ${widget.tabId}',
-      selected: isSelected,
       excludeSemantics: true,
+      enabled: isInteractive,
+      selected: isSelected,
+      label: widget.semanticLabel ?? 'Tab ${widget.tabId}',
       onTap: isInteractive ? _handleTap : null,
       child: Focus(
         focusNode: _focusNode,
-        canRequestFocus: isInteractive,
         onFocusChange: widget.onFocusState,
         onKeyEvent: _handleKeyEvent,
+        canRequestFocus: isInteractive,
         child: MouseRegion(
+          onEnter: isInteractive
+              ? (_) => widget.onHoverState?.call(true)
+              : null,
+          onExit: isInteractive
+              ? (_) => widget.onHoverState?.call(false)
+              : null,
           cursor: isInteractive ? widget.cursor : SystemMouseCursors.forbidden,
-          onEnter:
-              isInteractive ? (_) => widget.onHoverState?.call(true) : null,
-          onExit:
-              isInteractive ? (_) => widget.onHoverState?.call(false) : null,
           child: GestureDetector(
-            behavior: HitTestBehavior.opaque,
-            onTapDown:
-                isInteractive ? (_) => widget.onPressedState?.call(true) : null,
+            onTapDown: isInteractive
+                ? (_) => widget.onPressedState?.call(true)
+                : null,
             onTapUp: isInteractive
                 ? (_) => widget.onPressedState?.call(false)
                 : null,
-            onTapCancel:
-                isInteractive ? () => widget.onPressedState?.call(false) : null,
             onTap: isInteractive ? _handleTap : null,
+            onTapCancel: isInteractive
+                ? () => widget.onPressedState?.call(false)
+                : null,
+            behavior: HitTestBehavior.opaque,
             child: widget.child,
           ),
         ),
@@ -498,6 +497,17 @@ class _NakedTabState extends State<NakedTab> {
 /// This component is associated with a specific tab and displays its content
 /// when that tab is selected.
 class NakedTabPanel extends StatelessWidget {
+  /// Creates a naked tab panel.
+  ///
+  /// The [child] and [tabId] parameters are required.
+  const NakedTabPanel({
+    super.key,
+    required this.child,
+    required this.tabId,
+    this.semanticLabel,
+    this.maintainState = true,
+  });
+
   /// The child widget to display when this panel is active.
   final Widget child;
 
@@ -514,17 +524,6 @@ class NakedTabPanel extends StatelessWidget {
   /// When true, the panel will remain in the widget tree but be invisible when inactive.
   /// When false, the panel will be removed from the widget tree when inactive.
   final bool maintainState;
-
-  /// Creates a naked tab panel.
-  ///
-  /// The [child] and [tabId] parameters are required.
-  const NakedTabPanel({
-    super.key,
-    required this.child,
-    required this.tabId,
-    this.semanticLabel,
-    this.maintainState = true,
-  });
 
   @override
   Widget build(BuildContext context) {

@@ -1,41 +1,61 @@
-include: package:flutter_lints/flutter.yaml
+dart_code_metrics:
+  extends:
+    - package:dart_code_metrics_presets/recommended.yaml
+    - package:dart_code_metrics_presets/metrics_recommended.yaml
+  metrics-exclude:
+    - test/**
+  rules-exclude:
+    - test/**
+  rules:
+    # avoid-collection-mutating-methods: true
+    newline-before-return: true
+    avoid-importing-entrypoint-exports:
+      only-in-src: true
+    prefer-match-file-name: false
+    avoid-suspicious-super-overrides: false
+    prefer-overriding-parent-equality: false
+    prefer-correct-callback-field-name: false
+    prefer-single-widget-per-file: false
+    match-getter-setter-field-names: false
+    prefer-dedicated-media-query-methods: false
+    avoid-shadowing: false
+    enum-constants-ordering: false
+    avoid-unsafe-collection-methods: false
+    prefer-prefixed-global-constants: false
+    avoid-returning-widgets: false
+    avoid-unnecessary-overrides: false
+    arguments-ordering:
+      first:
+        - key
+        - spec
+      last:
+        - child
+        - children
+    avoid-nested-conditional-expressions:
+      acceptable-level: 3
+    member-ordering:
+      order:
+        - public-fields
+        - private-fields
+        - constructors
+        - static-methods
+        - private-methods
+        - private-getters
+        - private-setters
+        - public-getters
+        - public-setters
+        - public-methods
+        - overridden-public-methods
+        - overridden-public-getters
+        - build-method
+    prefer-named-boolean-parameters:
+      ignore-single: true
+analyzer:
+  errors:
+    non_constant_identifier_names: ignore
 
 linter:
   rules:
-    - always_declare_return_types
-    - avoid_empty_else
-    - avoid_relative_lib_imports
-    - avoid_types_as_parameter_names
-    - cancel_subscriptions
-    - close_sinks
-    - directives_ordering
-    - empty_statements
-    - hash_and_equals
-    - package_prefixed_library_names
-    - prefer_final_fields
-    - prefer_single_quotes
-    - test_types_in_equals
-    - throw_in_finally
-    - unawaited_futures
-    # Rules that enforce Naked Component conventions
-    - camel_case_types
-    - library_prefixes
-    - avoid_bool_literals_in_conditional_expressions
-    - prefer_is_empty
-    - prefer_is_not_empty
-
-# Custom lint rules
-# Note: These comments serve as documentation since we don't have a formal way
-# to enforce these in standard lint rules
-#
-# Property naming conventions:
-# - Boolean state properties should use 'is' prefix (e.g., isDisabled, isChecked)
-# - Callbacks should use 'on' prefix (e.g., onPressed, onHoverState)
-# - State callbacks should use 'on{State}State' prefix (e.g., onHoverState, onFocusState)
-
-analyzer:
-  errors:
-    missing_required_param: error
-    missing_return: error
-    must_be_immutable: error
-    sort_unnamed_constructors_first: ignore
+    # TODO: Turn this to true when all public apis are documented 
+    public_member_api_docs: false
+    prefer_relative_imports: true
