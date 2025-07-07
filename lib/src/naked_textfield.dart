@@ -455,9 +455,7 @@ class _NakedTextFieldState extends State<NakedTextField>
   void _createLocalController([TextEditingValue? value]) {
     assert(_controller == null);
     _controller = value == null
-        // ignore: avoid-undisposed-instances
         ? RestorableTextEditingController()
-        // ignore: avoid-undisposed-instances
         : RestorableTextEditingController.fromValue(value);
 
     if (!restorePending) {
