@@ -29,7 +29,7 @@ class MenuExample extends StatefulWidget {
 }
 
 class _MenuExampleState extends State<MenuExample> {
-  final _controller = OverlayPortalController();
+  final _controller = MenuController();
 
   void _onItemPressed(String item) {
     ScaffoldMessenger.of(context).showSnackBar(
@@ -41,7 +41,7 @@ class _MenuExampleState extends State<MenuExample> {
   Widget build(BuildContext context) {
     return NakedMenu(
       builder: (context) => NakedButton(
-        onPressed: () => _controller.show(),
+        onPressed: () => _controller.open(),
         child: Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
@@ -88,7 +88,7 @@ class _MenuExampleState extends State<MenuExample> {
         ),
       ),
       controller: _controller,
-      onClose: () => _controller.hide(),
+      onClose: () => _controller.close(),
     );
   }
 }

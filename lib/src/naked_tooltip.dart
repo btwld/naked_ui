@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
-import 'utilities/naked_portal.dart';
+import 'utilities/utilities.dart';
 
 /// A fully customizable tooltip with no default styling.
 ///
@@ -103,14 +103,8 @@ class NakedTooltip extends StatefulWidget implements OverlayChildLifecycle {
   /// The widget to display in the tooltip.
   final WidgetBuilder tooltipBuilder;
 
-  /// The anchor point on the tooltip that should be aligned with the target.
-  final Alignment followerAnchor;
-
-  /// The anchor point on the target that the tooltip should be aligned to.
-  final Alignment targetAnchor;
-
-  /// The offset of the tooltip from the target widget.
-  final Offset offset;
+  /// The position of the tooltip relative to the target.
+  final NakedMenuPosition position;
 
   /// Optional semantic label for accessibility.
   final String? tooltipSemantics;
@@ -119,7 +113,7 @@ class NakedTooltip extends StatefulWidget implements OverlayChildLifecycle {
   final bool excludeFromSemantics;
 
   /// The fallback alignments for the tooltip.
-  final List<PositionConfig> fallbackAlignments;
+  final List<NakedMenuPosition> fallbackPositions;
 
   /// The duration for which the tooltip remains visible.
   final Duration showDuration;
@@ -144,12 +138,13 @@ class NakedTooltip extends StatefulWidget implements OverlayChildLifecycle {
     required this.tooltipBuilder,
     this.showDuration = const Duration(seconds: 2),
     this.waitDuration = const Duration(seconds: 1),
-    this.followerAnchor = Alignment.bottomCenter,
-    this.targetAnchor = Alignment.topCenter,
-    this.offset = const Offset(0, -8),
+    this.position = const NakedMenuPosition(
+      target: Alignment.topCenter,
+      follower: Alignment.bottomCenter,
+    ),
     this.tooltipSemantics,
     this.excludeFromSemantics = false,
-    this.fallbackAlignments = const [],
+    this.fallbackPositions = const [],
     this.removalDelay = Duration.zero,
     this.onStateChange,
   });
@@ -159,7 +154,7 @@ class NakedTooltip extends StatefulWidget implements OverlayChildLifecycle {
 }
 
 class _NakedTooltipState extends State<NakedTooltip>
-    with OverlayChildLifecycleMixin {
+    with MenuAnchorChildLifecycleMixin {
   Timer? _showTimer;
   Timer? _waitTimer;
 
@@ -179,13 +174,9 @@ class _NakedTooltipState extends State<NakedTooltip>
       child: ListenableBuilder(
         listenable: showNotifier,
         builder: (context, child) {
-          return NakedPortal(
-            alignment: PositionConfig(
-              target: widget.targetAnchor,
-              follower: widget.followerAnchor,
-              offset: widget.offset,
-            ),
-            fallbackAlignments: widget.fallbackAlignments,
+          return NakedMenuAnchor(
+            position: widget.position,
+            fallbackPositions: widget.fallbackPositions,
             overlayBuilder: widget.tooltipBuilder,
             controller: controller,
             child: MouseRegion(

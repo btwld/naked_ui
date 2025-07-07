@@ -118,7 +118,7 @@ class _AnimatedMenuExampleState extends State<AnimatedMenuExample>
           ),
         ),
       ),
-      controller: _controller,
+      controller: MenuController(),
       onClose: () => _isOpened.value = false,
     );
   }
