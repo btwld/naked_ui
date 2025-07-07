@@ -49,8 +49,6 @@ jobs:
 
       - name: Install DCM
         uses: CQLabs/setup-dcm@v2
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Run DCM
         run: dcm analyze .
