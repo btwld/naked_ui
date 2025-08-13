@@ -348,13 +348,11 @@ class NakedTab extends StatefulWidget {
 }
 
 class _NakedTabState extends State<NakedTab> {
-  late FocusNode _focusNode;
+  FocusNode? _ownedFocusNode;
+  
+  FocusNode get _focusNode => 
+    widget.focusNode ?? (_ownedFocusNode ??= FocusNode());
 
-  @override
-  void initState() {
-    super.initState();
-    _focusNode = widget.focusNode ?? FocusNode();
-  }
 
   void _handleTap() {
     if (!widget.enabled) return;
@@ -424,25 +422,10 @@ class _NakedTabState extends State<NakedTab> {
     return KeyEventResult.ignored;
   }
 
-  @override
-  void didUpdateWidget(NakedTab oldWidget) {
-    super.didUpdateWidget(oldWidget);
-
-    // Update focus node if it changed
-    if (widget.focusNode != oldWidget.focusNode) {
-      if (oldWidget.focusNode == null) {
-        _focusNode.dispose();
-      }
-      _focusNode = widget.focusNode ?? FocusNode();
-    }
-  }
 
   @override
   void dispose() {
-    // Only dispose the focus node if we created it
-    if (widget.focusNode == null) {
-      _focusNode.dispose();
-    }
+    _ownedFocusNode?.dispose();
     super.dispose();
   }
 
