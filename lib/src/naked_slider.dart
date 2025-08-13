@@ -38,9 +38,9 @@ import 'package:flutter/services.dart';
 ///           _value = newValue;
 ///         });
 ///       },
-///       onHoverState: (isHovered) => setState(() => _isHovered = isHovered),
-///       onDraggingState: (isDragging) => setState(() => _isDragging = isDragging),
-///       onFocusState: (isFocused) => setState(() => _isFocused = isFocused),
+///       onHoveredState: (isHovered) => setState(() => _isHovered = isHovered),
+///       onDraggedState: (isDragging) => setState(() => _isDragging = isDragging),
+///       onFocusedState: (isFocused) => setState(() => _isFocused = isFocused),
 ///       child: Container(
 ///         height: 40,
 ///         width: 200,
@@ -114,9 +114,9 @@ class NakedSlider extends StatefulWidget {
     this.onChanged,
     this.onDragStart,
     this.onDragEnd,
-    this.onHoverState,
-    this.onDraggingState,
-    this.onFocusState,
+    this.onHoveredState,
+    this.onDraggedState,
+    this.onFocusedState,
     this.enabled = true,
     this.semanticLabel,
     this.cursor = SystemMouseCursors.click,
@@ -151,13 +151,13 @@ class NakedSlider extends StatefulWidget {
   final ValueChanged<double>? onDragEnd;
 
   /// Called when hover state changes.
-  final ValueChanged<bool>? onHoverState;
+  final ValueChanged<bool>? onHoveredState;
 
   /// Called when dragging state changes.
-  final ValueChanged<bool>? onDraggingState;
+  final ValueChanged<bool>? onDraggedState;
 
   /// Called when focus state changes.
-  final ValueChanged<bool>? onFocusState;
+  final ValueChanged<bool>? onFocusedState;
 
   /// Whether the slider is disabled.
   ///
@@ -296,7 +296,7 @@ class _NakedSliderState extends State<NakedSlider> {
       _dragStartValue = widget.value;
     });
 
-    widget.onDraggingState?.call(true);
+    widget.onDraggedState?.call(true);
     widget.onDragStart?.call();
   }
 
@@ -337,7 +337,7 @@ class _NakedSliderState extends State<NakedSlider> {
       _dragStartValue = null;
     });
 
-    widget.onDraggingState?.call(false);
+    widget.onDraggedState?.call(false);
     widget.onDragEnd?.call(widget.value);
   }
 
@@ -378,8 +378,8 @@ class _NakedSliderState extends State<NakedSlider> {
         descendantsAreTraversable: false,
         shortcuts: _shortcuts,
         actions: _actions,
-        onShowHoverHighlight: widget.onHoverState,
-        onFocusChange: widget.onFocusState,
+        onShowHoverHighlight: widget.onHoveredState,
+        onFocusChange: widget.onFocusedState,
         mouseCursor: isInteractive
             ? widget.cursor
             : SystemMouseCursors.forbidden,

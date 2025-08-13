@@ -81,9 +81,9 @@ void main() {
           value: false,
           onChanged: (_) {},
           enabled: false,
-          onHoverState: (value) => isHovered = value,
+          onHoveredState: (value) => isHovered = value,
           onPressedState: (value) => isPressed = value,
-          onFocusState: (value) => isFocused = value,
+          onFocusedState: (value) => isFocused = value,
           child: const Text('Checkbox Label'),
         ),
       );
@@ -113,7 +113,7 @@ void main() {
       expect(isFocused, false);
     });
 
-    testWidgets('calls onHoverState when hovered', (WidgetTester tester) async {
+    testWidgets('calls onHoveredState when hovered', (WidgetTester tester) async {
       FocusManager.instance.highlightStrategy =
           FocusHighlightStrategy.alwaysTraditional;
 
@@ -126,7 +126,7 @@ void main() {
           child: NakedCheckbox(
             value: false,
             onChanged: (_) {},
-            onHoverState: (value) => isHovered = value,
+            onHoveredState: (value) => isHovered = value,
             child: Text('Checkbox Label', key: textKey),
           ),
         ),
@@ -170,7 +170,7 @@ void main() {
       expect(isPressed, false);
     });
 
-    testWidgets('calls onFocusState when focused/unfocused',
+    testWidgets('calls onFocusedState when focused/unfocused',
         (WidgetTester tester) async {
       bool isFocused = false;
       final focusNode = FocusNode();
@@ -180,7 +180,7 @@ void main() {
           value: false,
           onChanged: (_) {},
           focusNode: focusNode,
-          onFocusState: (value) => isFocused = value,
+          onFocusedState: (value) => isFocused = value,
           child: const Text('Checkbox Label'),
         ),
       );
@@ -200,7 +200,7 @@ void main() {
               value: false,
               onChanged: (_) {},
               focusNode: focusNodeCheckbox,
-              onFocusState: (value) => isFocused = value,
+              onFocusedState: (value) => isFocused = value,
               child: const Text('Checkbox Label'),
             ),
             m.TextButton(

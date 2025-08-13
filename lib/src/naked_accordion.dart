@@ -80,11 +80,40 @@ class NakedAccordionController<T> with ChangeNotifier {
     notifyListeners();
   }
 
-  /// Opens all accordion items with the given [newValues].
-  ///
-  /// Note that if [max] is specified, only the first [max] items will be opened.
+  /// Opens accordion items with the given [newValues].
+  /// 
+  /// If [max] is specified, only opens as many items as allowed
+  /// by the constraint, preserving existing open items.
   void openAll(List<T> newValues) {
-    values.addAll(newValues);
+    if (max != null) {
+      final availableSlots = max! - values.length;
+      if (availableSlots > 0) {
+        values.addAll(newValues.take(availableSlots));
+      }
+      // If no available slots, do nothing
+    } else {
+      values.addAll(newValues);
+    }
+    notifyListeners();
+  }
+  
+  /// Replaces all expanded values with a new set.
+  /// 
+  /// This method clears all existing expanded values and replaces them
+  /// with [newValues], respecting the [max] constraint if specified.
+  /// 
+  /// This is useful for programmatically setting the entire accordion state,
+  /// such as when responding to external state changes.
+  void replaceAll(List<T> newValues) {
+    values.clear();
+    
+    // Respect the max constraint
+    if (max != null && newValues.length > max!) {
+      values.addAll(newValues.take(max!));
+    } else {
+      values.addAll(newValues);
+    }
+    
     notifyListeners();
   }
 
@@ -159,20 +188,26 @@ class _NakedAccordionState<T> extends State<NakedAccordion<T>> {
   @override
   void initState() {
     super.initState();
-    _controller.values.addAll(widget.initialExpandedValues);
+    // Only set initial values if provided and controller is empty
+    // This preserves any pre-existing values set on the controller
+    if (widget.initialExpandedValues.isNotEmpty && _controller.values.isEmpty) {
+      _controller.replaceAll(widget.initialExpandedValues);
+    }
   }
 
   @override
   void didUpdateWidget(covariant NakedAccordion<T> oldWidget) {
     super.didUpdateWidget(oldWidget);
+    
+    // Use deep equality check for lists
     final areEqual = listEquals(
       oldWidget.initialExpandedValues,
       widget.initialExpandedValues,
     );
-
+    
     if (!areEqual) {
-      _controller.clear();
-      _controller.openAll(widget.initialExpandedValues);
+      // Use the new encapsulated method
+      _controller.replaceAll(widget.initialExpandedValues);
     }
   }
 
@@ -205,7 +240,7 @@ class NakedAccordionItem<T> extends StatelessWidget {
     required this.child,
     this.transitionBuilder,
     this.semanticLabel,
-    this.onFocusState,
+    this.onFocusedState,
     this.autoFocus = false,
     this.focusNode,
   });
@@ -235,7 +270,7 @@ class NakedAccordionItem<T> extends StatelessWidget {
   final String? semanticLabel;
 
   /// Optional callback to handle focus state changes.
-  final ValueChanged<bool>? onFocusState;
+  final ValueChanged<bool>? onFocusedState;
 
   /// Whether the item should be focused when the accordion is opened.
   final bool autoFocus;
@@ -250,7 +285,7 @@ class NakedAccordionItem<T> extends StatelessWidget {
     return FocusableActionDetector(
       focusNode: focusNode,
       autofocus: autoFocus,
-      onFocusChange: onFocusState,
+      onFocusChange: onFocusedState,
       child: ListenableBuilder(
         listenable: state!._controller,
         builder: (context, child) {

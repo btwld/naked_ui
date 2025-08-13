@@ -419,7 +419,7 @@ class _SelectItemInfo<T> {
 /// Example:
 /// ```dart
 /// NakedSelectTrigger(
-///   onHoverState: (isHovered) => setState(() => _isHovered = isHovered),
+///   onHoveredState: (isHovered) => setState(() => _isHovered = isHovered),
 ///   onPressedState: (isPressed) => setState(() => _isPressed = isPressed),
 ///   child: Container(
 ///     color: _isHovered ? Colors.blue[100] : Colors.white,
@@ -431,9 +431,9 @@ class NakedSelectTrigger extends StatelessWidget {
   const NakedSelectTrigger({
     super.key,
     required this.child,
-    this.onHoverState,
+    this.onHoveredState,
     this.onPressedState,
-    this.onFocusState,
+    this.onFocusedState,
     this.semanticLabel,
     this.cursor = SystemMouseCursors.click,
     this.enableHapticFeedback = true,
@@ -447,7 +447,7 @@ class NakedSelectTrigger extends StatelessWidget {
 
   /// Called when the hover state changes.
   /// Use this to update the visual appearance on hover.
-  final ValueChanged<bool>? onHoverState;
+  final ValueChanged<bool>? onHoveredState;
 
   /// Called when the pressed state changes.
   /// Use this to update the visual appearance while pressed.
@@ -455,7 +455,7 @@ class NakedSelectTrigger extends StatelessWidget {
 
   /// Called when the focus state changes.
   /// Use this to update the visual appearance when focused.
-  final ValueChanged<bool>? onFocusState;
+  final ValueChanged<bool>? onFocusedState;
 
   /// Semantic label for accessibility.
   /// Used by screen readers to identify the trigger.
@@ -493,9 +493,9 @@ class NakedSelectTrigger extends StatelessWidget {
 
     return NakedButton(
       onPressed: handleTap,
-      onHoverState: onHoverState,
+      onHoveredState: onHoveredState,
       onPressedState: onPressedState,
-      onFocusState: onFocusState,
+      onFocusedState: onFocusedState,
       enabled: state?.isEnabled ?? true,
       isSemanticButton: true,
       semanticLabel: semanticLabel,
@@ -524,7 +524,7 @@ class NakedSelectTrigger extends StatelessWidget {
 /// ```dart
 /// NakedSelectItem<int>(
 ///   value: 1,
-///   onHoverState: (isHovered) => setState(() => _isHovered = isHovered),
+///   onHoveredState: (isHovered) => setState(() => _isHovered = isHovered),
 ///   onSelectState: (isSelected) => setState(() => _isSelected = isSelected),
 ///   child: Container(
 ///     color: _isSelected ? Colors.blue : (_isHovered ? Colors.blue[100] : Colors.white),
@@ -537,9 +537,9 @@ class NakedSelectItem<T> extends StatefulWidget {
     super.key,
     required this.child,
     required this.value,
-    this.onHoverState,
+    this.onHoveredState,
     this.onPressedState,
-    this.onFocusState,
+    this.onFocusedState,
     this.onSelectState,
     this.enabled = true,
     this.semanticLabel,
@@ -559,7 +559,7 @@ class NakedSelectItem<T> extends StatefulWidget {
 
   /// Called when the hover state changes.
   /// Use this to update the visual appearance on hover.
-  final ValueChanged<bool>? onHoverState;
+  final ValueChanged<bool>? onHoveredState;
 
   /// Called when the pressed state changes.
   /// Use this to update the visual appearance while pressed.
@@ -567,7 +567,7 @@ class NakedSelectItem<T> extends StatefulWidget {
 
   /// Called when the focus state changes.
   /// Use this to update the visual appearance when focused.
-  final ValueChanged<bool>? onFocusState;
+  final ValueChanged<bool>? onFocusedState;
 
   /// Called when the select state changes.
   /// Use this to update the visual appearance when selected.
@@ -602,6 +602,7 @@ class NakedSelectItem<T> extends StatefulWidget {
 class _NakedSelectItemState<T> extends State<NakedSelectItem<T>> {
   late FocusNode _focusNode;
   bool _isRegistered = false;
+  bool? _lastReportedSelection;
 
   @override
   void initState() {
@@ -638,6 +639,21 @@ class _NakedSelectItemState<T> extends State<NakedSelectItem<T>> {
       _registerWithSelect();
     }
   }
+  
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Check if selection state has changed and notify
+    final inherited = NakedSelectInherited.maybeOf<T>(context);
+    if (inherited != null) {
+      final isSelected = inherited.isSelected(context, widget.value);
+      if (_lastReportedSelection != isSelected) {
+        _lastReportedSelection = isSelected;
+        // Safe to call synchronously in didChangeDependencies
+        widget.onSelectState?.call(isSelected);
+      }
+    }
+  }
 
   @override
   void dispose() {
@@ -666,9 +682,14 @@ class _NakedSelectItemState<T> extends State<NakedSelectItem<T>> {
 
     final inherited = NakedSelectInherited.of<T>(context);
     final isSelected = inherited.isSelected(context, widget.value);
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      widget.onSelectState?.call(isSelected);
-    });
+    // State change notification is now handled in didChangeDependencies
+    // Only use addPostFrameCallback if state changed during build (edge case)
+    if (_lastReportedSelection != isSelected) {
+      _lastReportedSelection = isSelected;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        widget.onSelectState?.call(isSelected);
+      });
+    }
 
     return Semantics(
       excludeSemantics: true,
@@ -676,9 +697,9 @@ class _NakedSelectItemState<T> extends State<NakedSelectItem<T>> {
       selected: isSelected,
       child: NakedButton(
         onPressed: handleSelect,
-        onHoverState: widget.onHoverState,
+        onHoveredState: widget.onHoveredState,
         onPressedState: widget.onPressedState,
-        onFocusState: widget.onFocusState,
+        onFocusedState: widget.onFocusedState,
         enabled: isEffectivelyEnabled,
         isSemanticButton: true,
         semanticLabel: widget.semanticLabel ?? widget.value.toString(),

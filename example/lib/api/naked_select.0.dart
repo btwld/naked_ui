@@ -96,8 +96,8 @@ class _SelectExampleState extends State<SelectExample>
           ),
         ),
         child: NakedSelectTrigger(
-          onHoverState: (isHovered) => setState(() => _isHovered = isHovered),
-          onFocusState: (isFocused) => setState(() => _isFocused = isFocused),
+          onHoveredState: (isHovered) => setState(() => _isHovered = isHovered),
+          onFocusedState: (isFocused) => setState(() => _isFocused = isFocused),
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(

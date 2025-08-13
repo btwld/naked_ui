@@ -190,9 +190,9 @@ void main() {
           value: 0.5,
           enabled: false,
           onChanged: (_) {},
-          onHoverState: (value) => isHovered = value,
-          onDraggingState: (value) => isDragging = value,
-          onFocusState: (value) => isFocused = value,
+          onHoveredState: (value) => isHovered = value,
+          onDraggedState: (value) => isDragging = value,
+          onFocusedState: (value) => isFocused = value,
           child: _anyWidget(),
         ),
       );
@@ -220,7 +220,7 @@ void main() {
           enabled: false,
           focusNode: focusNode,
           onChanged: (_) {},
-          onFocusState: (value) => isFocused = value,
+          onFocusedState: (value) => isFocused = value,
           child: _anyWidget(),
         ),
       );
@@ -230,7 +230,7 @@ void main() {
       expect(isFocused, false);
     });
 
-    testWidgets('calls onHoverState when hovered', (WidgetTester tester) async {
+    testWidgets('calls onHoveredState when hovered', (WidgetTester tester) async {
       FocusManager.instance.highlightStrategy =
           FocusHighlightStrategy.alwaysTraditional;
 
@@ -242,7 +242,7 @@ void main() {
             key: testKey,
             value: 0.5,
             onChanged: (_) {},
-            onHoverState: (value) => isHovered = value,
+            onHoveredState: (value) => isHovered = value,
             child: _anyWidget(),
           ),
         ),
@@ -255,7 +255,7 @@ void main() {
       expect(isHovered, false);
     });
 
-    testWidgets('calls onDraggingState when dragged',
+    testWidgets('calls onDraggedState when dragged',
         (WidgetTester tester) async {
       bool isDragging = false;
       await tester.pumpMaterialWidget(
@@ -263,7 +263,7 @@ void main() {
           key: testKey,
           value: 0.5,
           onChanged: (_) {},
-          onDraggingState: (value) => isDragging = value,
+          onDraggedState: (value) => isDragging = value,
           child: _anyWidget(),
         ),
       );
@@ -281,7 +281,7 @@ void main() {
       expect(isDragging, false);
     });
 
-    testWidgets('calls onFocusState when focused/unfocused',
+    testWidgets('calls onFocusedState when focused/unfocused',
         (WidgetTester tester) async {
       bool isFocused = false;
       final focusNode = FocusNode();
@@ -292,7 +292,7 @@ void main() {
           value: 0.5,
           focusNode: focusNode,
           onChanged: (_) {},
-          onFocusState: (value) => isFocused = value,
+          onFocusedState: (value) => isFocused = value,
           child: _anyWidget(),
         ),
       );

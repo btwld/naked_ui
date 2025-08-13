@@ -217,14 +217,14 @@ void main() {
                 children: [
                   NakedMenuItem(
                     onPressed: () {},
-                    onFocusState: (value) {
+                    onFocusedState: (value) {
                       item1Focused = value;
                     },
                     child: const Text('Item 1'),
                   ),
                   NakedMenuItem(
                     onPressed: () {},
-                    onFocusState: (value) {
+                    onFocusedState: (value) {
                       item2Focused = value;
                     },
                     child: const Text('Item 2'),
@@ -410,7 +410,7 @@ void main() {
     });
 
     group('State Callbacks', () {
-      testWidgets('Calls hover state callback', (WidgetTester tester) async {
+      testWidgets('Calls hovered state callback', (WidgetTester tester) async {
         FocusManager.instance.highlightStrategy =
             FocusHighlightStrategy.alwaysTraditional;
         bool hovered = false;
@@ -426,7 +426,7 @@ void main() {
               child: NakedMenuItem(
                 key: key,
                 onPressed: () {},
-                onHoverState: (value) => hovered = value,
+                onHoveredState: (value) => hovered = value,
                 child: const Text('Menu Item'),
               ),
             ),
@@ -475,7 +475,7 @@ void main() {
         expect(pressed, false);
       });
 
-      testWidgets('Calls focus state callback', (WidgetTester tester) async {
+      testWidgets('Calls focused state callback', (WidgetTester tester) async {
         FocusManager.instance.highlightStrategy =
             FocusHighlightStrategy.alwaysTraditional;
         bool focused = false;
@@ -489,7 +489,7 @@ void main() {
             overlayBuilder: (_) => NakedMenuItem(
               onPressed: () {},
               focusNode: focusNode,
-              onFocusState: (value) => focused = value,
+              onFocusedState: (value) => focused = value,
               child: const Text('Menu Item'),
             ),
           ),

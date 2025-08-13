@@ -287,7 +287,7 @@ void main() {
   });
 
   group('State Callbacks', () {
-    testWidgets('calls onHoverState when hovered', (WidgetTester tester) async {
+    testWidgets('calls onHoveredState when hovered', (WidgetTester tester) async {
       bool isHovered = false;
       final key = GlobalKey();
       await tester.pumpMaterialWidget(
@@ -303,7 +303,7 @@ void main() {
                       NakedTab(
                         key: key,
                         tabId: 'tab1',
-                        onHoverState: (value) => isHovered = value,
+                        onHoveredState: (value) => isHovered = value,
                         child: const Text('Tab 1'),
                       ),
                     ],
@@ -363,7 +363,7 @@ void main() {
       expect(isPressed, false);
     });
 
-    testWidgets('calls onFocusState when focused/unfocused',
+    testWidgets('calls onFocusedState when focused/unfocused',
         (WidgetTester tester) async {
       bool isFocused = false;
       final focusNode = FocusNode();
@@ -379,7 +379,7 @@ void main() {
                     NakedTab(
                       tabId: 'tab1',
                       focusNode: focusNode,
-                      onFocusState: (value) => isFocused = value,
+                      onFocusedState: (value) => isFocused = value,
                       child: const Text('Tab 1'),
                     ),
                   ],

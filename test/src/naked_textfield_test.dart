@@ -102,13 +102,13 @@ void main() {
   });
 
   group('State Callbacks', () {
-    testWidgets('calls onHoverState when hovered', (WidgetTester tester) async {
+    testWidgets('calls onHoveredState when hovered', (WidgetTester tester) async {
       bool isHovered = false;
       await tester.pumpTextField(
         Padding(
           padding: const EdgeInsets.all(1),
           child: NakedTextField(
-            onHoverState: (value) => isHovered = value,
+            onHoveredState: (value) => isHovered = value,
             builder: (context, child) => child,
           ),
         ),
@@ -142,7 +142,7 @@ void main() {
       expect(isPressed, false);
     });
 
-    testWidgets('calls onFocusState when focused/unfocused', (
+    testWidgets('calls onFocusedState when focused/unfocused', (
       WidgetTester tester,
     ) async {
       bool isFocused = false;
@@ -151,7 +151,7 @@ void main() {
       await tester.pumpTextField(
         NakedTextField(
           focusNode: focusNode,
-          onFocusState: (value) => isFocused = value,
+          onFocusedState: (value) => isFocused = value,
           builder: (context, child) => child,
         ),
       );

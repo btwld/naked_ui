@@ -35,9 +35,9 @@ import 'utilities/pressed_state_region.dart';
 ///           _isChecked = value!;
 ///         });
 ///       },
-///       onHoverState: (isHovered) => setState(() => _isHovered = isHovered),
+///       onHoveredState: (isHovered) => setState(() => _isHovered = isHovered),
 ///       onPressedState: (isPressed) => setState(() => _isPressed = isPressed),
-///       onFocusState: (isFocused) => setState(() => _isFocused = isFocused),
+///       onFocusedState: (isFocused) => setState(() => _isFocused = isFocused),
 ///       child: Container(
 ///         height: 20,
 ///         width: 20,
@@ -83,9 +83,9 @@ class NakedCheckbox extends StatefulWidget {
     this.value = false,
     this.tristate = false,
     this.onChanged,
-    this.onHoverState,
+    this.onHoveredState,
     this.onPressedState,
-    this.onFocusState,
+    this.onFocusedState,
     this.enabled = true,
     this.semanticLabel,
     this.cursor = SystemMouseCursors.click,
@@ -101,7 +101,7 @@ class NakedCheckbox extends StatefulWidget {
   ///
   /// This widget should represent the visual appearance of the checkbox.
   /// You're responsible for rendering different visual states based on
-  /// the callback properties (value, onHoverState, etc.).
+  /// the callback properties (value, onHoveredState, etc.).
   final Widget child;
 
   /// Whether this checkbox is checked.
@@ -130,7 +130,7 @@ class NakedCheckbox extends StatefulWidget {
   ///
   /// Passes `true` when the pointer enters the checkbox bounds, and `false`
   /// when it exits. Useful for implementing hover effects.
-  final ValueChanged<bool>? onHoverState;
+  final ValueChanged<bool>? onHoveredState;
 
   /// Callback triggered when the checkbox is pressed or released.
   ///
@@ -142,7 +142,7 @@ class NakedCheckbox extends StatefulWidget {
   ///
   /// Passes `true` when the checkbox gains focus, and `false` when it loses focus.
   /// Useful for implementing focus indicators.
-  final ValueChanged<bool>? onFocusState;
+  final ValueChanged<bool>? onFocusedState;
 
   /// Whether the checkbox is disabled.
   ///
@@ -218,9 +218,9 @@ class _NakedCheckboxState extends State<NakedCheckbox> {
         focusNode: widget.focusNode,
         autofocus: widget.autofocus,
         actions: _actionMap,
-        onShowFocusHighlight: widget.onFocusState,
-        onShowHoverHighlight: widget.onHoverState,
-        onFocusChange: widget.onFocusState,
+        onShowFocusHighlight: widget.onFocusedState,
+        onShowHoverHighlight: widget.onHoveredState,
+        onFocusChange: widget.onFocusedState,
         mouseCursor: _isInteractive
             ? widget.cursor
             : SystemMouseCursors.forbidden,

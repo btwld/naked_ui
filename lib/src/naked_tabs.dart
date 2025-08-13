@@ -83,8 +83,8 @@ import 'package:flutter/services.dart';
 ///
 ///     return NakedTab(
 ///       tabId: tabId,
-///       onHoverState: (isHovered) => setState(() => _tabHoverStates[tabId] = isHovered),
-///       onFocusState: (isFocused) => setState(() => _tabFocusStates[tabId] = isFocused),
+///       onHoveredState: (isHovered) => setState(() => _tabHoverStates[tabId] = isHovered),
+///       onFocusedState: (isFocused) => setState(() => _tabFocusStates[tabId] = isFocused),
 ///       onPressedState: (isPressed) => setState(() => _tabPressStates[tabId] = isPressed),
 ///       child: Container(
 ///         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -298,9 +298,9 @@ class NakedTab extends StatefulWidget {
     super.key,
     required this.child,
     required this.tabId,
-    this.onHoverState,
+    this.onHoveredState,
     this.onPressedState,
-    this.onFocusState,
+    this.onFocusedState,
     this.enabled = true,
     this.semanticLabel,
     this.cursor = SystemMouseCursors.click,
@@ -315,13 +315,13 @@ class NakedTab extends StatefulWidget {
   final String tabId;
 
   /// Called when hover state changes.
-  final ValueChanged<bool>? onHoverState;
+  final ValueChanged<bool>? onHoveredState;
 
   /// Called when pressed state changes.
   final ValueChanged<bool>? onPressedState;
 
   /// Called when focus state changes.
-  final ValueChanged<bool>? onFocusState;
+  final ValueChanged<bool>? onFocusedState;
 
   /// Whether this tab is enabled.
   ///
@@ -461,15 +461,15 @@ class _NakedTabState extends State<NakedTab> {
       onTap: isInteractive ? _handleTap : null,
       child: Focus(
         focusNode: _focusNode,
-        onFocusChange: widget.onFocusState,
+        onFocusChange: widget.onFocusedState,
         onKeyEvent: _handleKeyEvent,
         canRequestFocus: isInteractive,
         child: MouseRegion(
           onEnter: isInteractive
-              ? (_) => widget.onHoverState?.call(true)
+              ? (_) => widget.onHoveredState?.call(true)
               : null,
           onExit: isInteractive
-              ? (_) => widget.onHoverState?.call(false)
+              ? (_) => widget.onHoveredState?.call(false)
               : null,
           cursor: isInteractive ? widget.cursor : SystemMouseCursors.forbidden,
           child: GestureDetector(

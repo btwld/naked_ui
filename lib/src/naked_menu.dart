@@ -182,13 +182,13 @@ class NakedMenuItem extends StatelessWidget {
   ///
   /// The [child] parameter is required and represents the item's content.
   /// Use [onPressed] to handle selection, and the state callbacks
-  /// ([onHoverState], [onPressedState], [onFocusState]) to customize appearance.
+  /// ([onHoveredState], [onPressedState], [onFocusedState]) to customize appearance.
   const NakedMenuItem({
     super.key,
     required this.child,
-    this.onHoverState,
+    this.onHoveredState,
     this.onPressedState,
-    this.onFocusState,
+    this.onFocusedState,
     this.onPressed,
     this.enabled = true,
     this.onDisabledState,
@@ -203,7 +203,7 @@ class NakedMenuItem extends StatelessWidget {
 
   /// Called when the hover state changes.
   /// Can be used to update visual feedback.
-  final ValueChanged<bool>? onHoverState;
+  final ValueChanged<bool>? onHoveredState;
 
   /// Called when the pressed state changes.
   /// Can be used to update visual feedback.
@@ -211,7 +211,7 @@ class NakedMenuItem extends StatelessWidget {
 
   /// Called when the focus state changes.
   /// Can be used to update visual feedback.
-  final ValueChanged<bool>? onFocusState;
+  final ValueChanged<bool>? onFocusedState;
 
   /// Called when the item is selected.
   final VoidCallback? onPressed;
@@ -253,9 +253,9 @@ class NakedMenuItem extends StatelessWidget {
 
     return NakedButton(
       onPressed: onPressed != null ? onPress : null,
-      onHoverState: onHoverState,
+      onHoveredState: onHoveredState,
       onPressedState: onPressedState,
-      onFocusState: onFocusState,
+      onFocusedState: onFocusedState,
       onDisabledState: onDisabledState,
       enabled: enabled,
       semanticLabel: semanticLabel,

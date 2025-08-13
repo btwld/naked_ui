@@ -75,9 +75,9 @@ void main() {
           key: key,
           onPressed: () {},
           enabled: false,
-          onHoverState: (value) => isHovered = value,
+          onHoveredState: (value) => isHovered = value,
           onPressedState: (value) => isPressed = value,
-          onFocusState: (value) => isFocused = value,
+          onFocusedState: (value) => isFocused = value,
           child: const Text('Test Button'),
         ),
       );
@@ -105,7 +105,7 @@ void main() {
       expect(isFocused, false);
     });
 
-    testWidgets('calls onHoverState when hovered', (WidgetTester tester) async {
+    testWidgets('calls onHoveredState when hovered', (WidgetTester tester) async {
       FocusManager.instance.highlightStrategy =
           FocusHighlightStrategy.alwaysTraditional;
       bool isHovered = false;
@@ -118,7 +118,7 @@ void main() {
           child: NakedButton(
             key: key,
             onPressed: () {},
-            onHoverState: (value) => isHovered = value,
+            onHoveredState: (value) => isHovered = value,
             child: const Text('Test Button'),
           ),
         ),
@@ -151,7 +151,7 @@ void main() {
       expect(isPressed, false);
     });
 
-    testWidgets('calls onFocusState when focused/unfocused',
+    testWidgets('calls onFocusedState when focused/unfocused',
         (WidgetTester tester) async {
       FocusManager.instance.highlightStrategy =
           FocusHighlightStrategy.alwaysTraditional;
@@ -162,7 +162,7 @@ void main() {
         NakedButton(
           onPressed: () {},
           focusNode: focusNode,
-          onFocusState: (value) => isFocused = value,
+          onFocusedState: (value) => isFocused = value,
           child: const Text('Test Button'),
         ),
       );
@@ -181,7 +181,7 @@ void main() {
             NakedButton(
               onPressed: () {},
               focusNode: focusNodeNakedButton,
-              onFocusState: (value) => isFocused = value,
+              onFocusedState: (value) => isFocused = value,
               child: const Text('Test Button'),
             ),
             m.TextButton(

@@ -89,7 +89,7 @@ class _AccordionItemState extends State<AccordionItem> {
         trigger: (context, isExpanded, toggle) {
           return NakedButton(
             onPressed: toggle,
-            onHoverState: (isHovering) =>
+            onHoveredState: (isHovering) =>
                 setState(() => _isHovering = isHovering),
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 200),

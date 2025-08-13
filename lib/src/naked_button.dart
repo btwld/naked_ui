@@ -31,9 +31,9 @@ import 'utilities/pressed_state_region.dart';
 ///       onPressed: () {
 ///         print('Button pressed!');
 ///       },
-///       onHoverState: (isHovered) => setState(() => _isHovered = isHovered),
+///       onHoveredState: (isHovered) => setState(() => _isHovered = isHovered),
 ///       onPressedState: (isPressed) => setState(() => _isPressed = isPressed),
-///       onFocusState: (isFocused) => setState(() => _isFocused = isFocused),
+///       onFocusedState: (isFocused) => setState(() => _isFocused = isFocused),
 ///       child: Container(
 ///         padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
 ///         decoration: BoxDecoration(
@@ -66,9 +66,9 @@ class NakedButton extends StatefulWidget {
     super.key,
     required this.child,
     this.onPressed,
-    this.onHoverState,
+    this.onHoveredState,
     this.onPressedState,
-    this.onFocusState,
+    this.onFocusedState,
     this.onDisabledState,
     this.enabled = true,
     this.isSemanticButton = true,
@@ -96,7 +96,7 @@ class NakedButton extends StatefulWidget {
   ///
   /// Provides the current hover state (true when hovered, false otherwise).
   /// Use this to update the visual appearance when the user hovers over the button.
-  final ValueChanged<bool>? onHoverState;
+  final ValueChanged<bool>? onHoveredState;
 
   /// Called when pressed state changes.
   ///
@@ -108,7 +108,7 @@ class NakedButton extends StatefulWidget {
   ///
   /// Provides the current focus state (true when focused, false otherwise).
   /// Use this to update the visual appearance when the button receives or loses focus.
-  final ValueChanged<bool>? onFocusState;
+  final ValueChanged<bool>? onFocusedState;
 
   /// Called when disabled state changes.
   ///
@@ -181,9 +181,8 @@ class _NakedButtonState extends State<NakedButton> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      widget.onDisabledState?.call(!widget._isEnabled);
-    });
+    // Safe to call synchronously in initState
+    widget.onDisabledState?.call(!widget._isEnabled);
   }
 
   @override
@@ -207,8 +206,8 @@ class _NakedButtonState extends State<NakedButton> {
         focusNode: widget.focusNode,
         autofocus: widget.autofocus,
         actions: _actionMap,
-        onShowHoverHighlight: widget.onHoverState,
-        onFocusChange: widget.onFocusState,
+        onShowHoverHighlight: widget.onHoveredState,
+        onFocusChange: widget.onFocusedState,
         mouseCursor: widget._isEnabled
             ? widget.cursor
             : SystemMouseCursors.forbidden,

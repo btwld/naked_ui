@@ -314,7 +314,7 @@ void main() {
   });
 
   group('Interaction States', () {
-    testWidgets('calls onHoverState when trigger hovered',
+    testWidgets('calls onHoveredState when trigger hovered',
         (WidgetTester tester) async {
       FocusManager.instance.highlightStrategy =
           FocusHighlightStrategy.alwaysTraditional;
@@ -329,7 +329,7 @@ void main() {
             menu: const SizedBox(),
             child: NakedSelectTrigger(
               key: key,
-              onHoverState: (value) => isHovered = value,
+              onHoveredState: (value) => isHovered = value,
               child: const Text('Select option'),
             ),
           ),
@@ -366,7 +366,7 @@ void main() {
       expect(isPressed, false);
     });
 
-    testWidgets('calls onFocusState when trigger focused',
+    testWidgets('calls onFocusedState when trigger focused',
         (WidgetTester tester) async {
       bool isFocused = false;
       final focusNode = FocusNode();
@@ -379,7 +379,7 @@ void main() {
           menu: const SizedBox(),
           child: NakedSelectTrigger(
             focusNode: focusNode,
-            onFocusState: (value) => isFocused = value,
+            onFocusedState: (value) => isFocused = value,
             child: const Text('Select option'),
           ),
         ),
@@ -414,7 +414,7 @@ void main() {
               child: NakedSelectItem<String>(
                 key: key,
                 value: 'test',
-                onHoverState: (value) => itemHovered = value,
+                onHoveredState: (value) => itemHovered = value,
                 onPressedState: (value) => itemPressed = value,
                 child: const Text('Apple'),
               ),

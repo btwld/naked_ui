@@ -17,9 +17,9 @@ import 'package:flutter/services.dart';
 /// through the required [builder] parameter.
 ///
 /// The widget handles various interaction states and provides callbacks:
-/// - [onHoverState]: Called when mouse hover state changes (true when hovered)
+/// - [onHoveredState]: Called when mouse hover state changes (true when hovered)
 /// - [onPressedState]: Called when pressed state changes (true when pressed)
-/// - [onFocusState]: Called when focus state changes (true when focused)
+/// - [onFocusedState]: Called when focus state changes (true when focused)
 ///
 /// Example usage:
 /// ```dart
@@ -49,9 +49,9 @@ import 'package:flutter/services.dart';
 ///     return NakedTextField(
 ///       controller: widget.controller,
 ///       onChanged: widget.onChanged,
-///       onHoverState: (isHovered) => setState(() => _isHovered = isHovered),
+///       onHoveredState: (isHovered) => setState(() => _isHovered = isHovered),
 ///       onPressedState: (isPressed) => setState(() => _isPressed = isPressed),
-///       onFocusState: (isFocused) => setState(() => _isFocused = isFocused),
+///       onFocusedState: (isFocused) => setState(() => _isFocused = isFocused),
 ///       builder: (context, child) {
 ///         return Container(
 ///           height: 40,
@@ -154,8 +154,8 @@ class NakedTextField extends StatefulWidget {
     this.canRequestFocus = true,
     this.spellCheckConfiguration,
     this.magnifierConfiguration,
-    this.onHoverState,
-    this.onFocusState,
+    this.onHoveredState,
+    this.onFocusedState,
     this.style,
     required this.builder,
     this.ignorePointers,
@@ -361,14 +361,14 @@ class NakedTextField extends StatefulWidget {
   /// The callback provides the current hover state as a boolean parameter:
   /// - `true` when the mouse pointer enters the text field
   /// - `false` when the mouse pointer exits the text field
-  final ValueChanged<bool>? onHoverState;
+  final ValueChanged<bool>? onHoveredState;
 
   /// Called when the focus state changes.
   ///
   /// The callback provides the current focus state as a boolean parameter:
   /// - `true` when the text field gains focus
   /// - `false` when the text field loses focus
-  final ValueChanged<bool>? onFocusState;
+  final ValueChanged<bool>? onFocusedState;
 
   /// The group ID for the text field.
   final Object groupId;
@@ -504,7 +504,7 @@ class _NakedTextFieldState extends State<NakedTextField>
     setState(() {
       // Rebuild the widget on focus change to show/hide the text selection highlight.
     });
-    widget.onFocusState?.call(_effectiveFocusNode.hasFocus);
+    widget.onFocusedState?.call(_effectiveFocusNode.hasFocus);
   }
 
   void _handleSelectionChanged(
@@ -819,9 +819,9 @@ class _NakedTextFieldState extends State<NakedTextField>
       child: widget.enabled
           ? MouseRegion(
               onEnter: (PointerEnterEvent event) =>
-                  widget.onHoverState?.call(true),
+                  widget.onHoveredState?.call(true),
               onExit: (PointerExitEvent event) =>
-                  widget.onHoverState?.call(false),
+                  widget.onHoveredState?.call(false),
               cursor: SystemMouseCursors.text,
               child: _selectionGestureDetectorBuilder.buildGestureDetector(
                 behavior: HitTestBehavior.translucent,

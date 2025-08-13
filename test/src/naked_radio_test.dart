@@ -88,7 +88,7 @@ void main() {
   });
 
   group('State Callback Tests', () {
-    testWidgets('reports hover state changes', (WidgetTester tester) async {
+    testWidgets('reports hovered state changes', (WidgetTester tester) async {
       FocusManager.instance.highlightStrategy =
           FocusHighlightStrategy.alwaysTraditional;
       bool isHovered = false;
@@ -102,7 +102,7 @@ void main() {
             child: NakedRadio<String>(
               key: _key,
               value: 'test',
-              onHoverState: (value) => isHovered = value,
+              onHoveredState: (value) => isHovered = value,
               child: Container(
                 width: 24,
                 height: 24,
@@ -143,7 +143,7 @@ void main() {
       expect(isPressed, false);
     });
 
-    testWidgets('reports focus state changes', (WidgetTester tester) async {
+    testWidgets('reports focused state changes', (WidgetTester tester) async {
       bool isFocused = false;
       final focusNode = FocusNode();
 
@@ -153,7 +153,7 @@ void main() {
           onChanged: (_) {},
           child: NakedRadio<String>(
             value: 'test',
-            onFocusState: (value) => isFocused = value,
+            onFocusedState: (value) => isFocused = value,
             focusNode: focusNode,
             child: const SizedBox(width: 24, height: 24),
           ),
@@ -230,7 +230,7 @@ void main() {
           child: NakedRadio<String>(
             value: 'test',
             focusNode: focusNode,
-            onFocusState: (value) => isFocused = value,
+            onFocusedState: (value) => isFocused = value,
             child: const SizedBox(width: 24, height: 24),
           ),
         ),

@@ -207,10 +207,10 @@ class NakedRadio<T> extends StatefulWidget {
     super.key,
     required this.child,
     required this.value,
-    this.onHoverState,
+    this.onHoveredState,
     this.onPressedState,
-    this.onSelectState,
-    this.onFocusState,
+    this.onSelectedState,
+    this.onFocusedState,
     this.enabled = true,
     this.cursor = SystemMouseCursors.click,
     this.enableHapticFeedback = true,
@@ -229,7 +229,7 @@ class NakedRadio<T> extends StatefulWidget {
   /// Called when hover state changes.
   ///
   /// Can be used to update visual feedback when the user hovers over the radio button.
-  final ValueChanged<bool>? onHoverState;
+  final ValueChanged<bool>? onHoveredState;
 
   /// Called when pressed state changes.
   ///
@@ -239,13 +239,13 @@ class NakedRadio<T> extends StatefulWidget {
   /// Called when select state changes.
   ///
   /// Can be used to update visual feedback when the radio button is selected.
-  final ValueChanged<bool>? onSelectState;
+  final ValueChanged<bool>? onSelectedState;
 
   /// Called when focus state changes.
   ///
   /// Can be used to update visual feedback when the radio button gains or loses focus.
   /// Selection automatically follows focus.
-  final ValueChanged<bool>? onFocusState;
+  final ValueChanged<bool>? onFocusedState;
 
   /// Whether this radio button is enabled.
   ///
@@ -281,6 +281,7 @@ class _NakedRadioState<T> extends State<NakedRadio<T>> {
     ActivateIntent: CallbackAction<ActivateIntent>(onInvoke: _handleTap),
   };
   NakedRadioGroupScope<T> get _group => NakedRadioGroupScope.of(context);
+  bool? _lastReportedSelection;
 
   ValueChanged<T?>? get onChanged => _group.state.widget.onChanged;
 
@@ -314,6 +315,14 @@ class _NakedRadioState<T> extends State<NakedRadio<T>> {
     final group = NakedRadioGroupScope.of<T>(context);
     // Register this radio button with the group
     group.state._registerRadioButton(this);
+    
+    // Check if selection state has changed and notify
+    final isSelected = group.groupValue == widget.value;
+    if (_lastReportedSelection != isSelected) {
+      _lastReportedSelection = isSelected;
+      // Safe to call synchronously in didChangeDependencies
+      widget.onSelectedState?.call(isSelected);
+    }
   }
 
   @override
@@ -332,9 +341,14 @@ class _NakedRadioState<T> extends State<NakedRadio<T>> {
       case TargetPlatform.macOS:
         accessibilitySelected = isSelected;
     }
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      widget.onSelectState?.call(isSelected);
-    });
+    // State change notification is now handled in didChangeDependencies
+    // Only use addPostFrameCallback if state changed during build (edge case)
+    if (_lastReportedSelection != isSelected) {
+      _lastReportedSelection = isSelected;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        widget.onSelectedState?.call(isSelected);
+      });
+    }
 
     return Semantics(
       enabled: isInteractive,
@@ -345,11 +359,11 @@ class _NakedRadioState<T> extends State<NakedRadio<T>> {
         focusNode: _focusNode,
         autofocus: widget.autofocus,
         actions: _actionMap,
-        onShowFocusHighlight: widget.onFocusState,
-        onShowHoverHighlight: widget.onHoverState,
+        onShowFocusHighlight: widget.onFocusedState,
+        onShowHoverHighlight: widget.onHoveredState,
         onFocusChange: (hasFocus) {
           onChanged?.call(widget.value);
-          widget.onFocusState?.call(hasFocus);
+          widget.onFocusedState?.call(hasFocus);
         },
         mouseCursor: isInteractive
             ? widget.cursor
