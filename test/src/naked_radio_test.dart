@@ -26,8 +26,9 @@ void main() {
       expect(find.text('Test Radio'), findsOneWidget);
     });
 
-    testWidgets('throws FlutterError when used outside NakedRadioGroup',
-        (WidgetTester tester) async {
+    testWidgets('throws FlutterError when used outside NakedRadioGroup', (
+      WidgetTester tester,
+    ) async {
       FlutterErrorDetails? errorDetails;
       FlutterError.onError = (FlutterErrorDetails details) {
         errorDetails = details;
@@ -65,8 +66,9 @@ void main() {
       expect(selectedValue, 'test');
     });
 
-    testWidgets('maintains selected state when matching group value',
-        (WidgetTester tester) async {
+    testWidgets('maintains selected state when matching group value', (
+      WidgetTester tester,
+    ) async {
       String? selectedValue = 'test';
       bool wasChanged = false;
 
@@ -82,8 +84,10 @@ void main() {
       );
 
       await tester.tap(find.byType(NakedRadio<String>));
-      expect(wasChanged,
-          isFalse); // Should not call onChanged when already selected
+      expect(
+        wasChanged,
+        isFalse,
+      ); // Should not call onChanged when already selected
     });
   });
 
@@ -103,19 +107,18 @@ void main() {
               key: _key,
               value: 'test',
               onHoveredState: (value) => isHovered = value,
-              child: Container(
-                width: 24,
-                height: 24,
-                color: Colors.red,
-              ),
+              child: Container(width: 24, height: 24, color: Colors.red),
             ),
           ),
         ),
       );
 
-      await tester.simulateHover(_key, onHover: () {
-        expect(isHovered, true);
-      });
+      await tester.simulateHover(
+        _key,
+        onHover: () {
+          expect(isHovered, true);
+        },
+      );
       expect(isHovered, false);
     });
 
@@ -171,8 +174,9 @@ void main() {
   });
 
   group('Accessibility Tests', () {
-    testWidgets('provides correct semantic properties',
-        (WidgetTester tester) async {
+    testWidgets('provides correct semantic properties', (
+      WidgetTester tester,
+    ) async {
       final key = GlobalKey();
       await tester.pumpMaterialWidget(
         NakedRadioGroup<String>(
@@ -191,8 +195,9 @@ void main() {
       expect(semantics.hasFlag(SemanticsFlag.isEnabled), true);
     });
 
-    testWidgets('handles keyboard selection with Space and Enter keys',
-        (WidgetTester tester) async {
+    testWidgets('handles keyboard selection with Space and Enter keys', (
+      WidgetTester tester,
+    ) async {
       String? selectedValue;
       final focusNode = FocusNode();
 
@@ -242,8 +247,9 @@ void main() {
       expect(focusNode.hasFocus, true);
     });
 
-    testWidgets('uses custom focus node when provided',
-        (WidgetTester tester) async {
+    testWidgets('uses custom focus node when provided', (
+      WidgetTester tester,
+    ) async {
       final customFocusNode = FocusNode();
 
       await tester.pumpMaterialWidget(
@@ -265,8 +271,9 @@ void main() {
   });
 
   group('Interactivity Tests', () {
-    testWidgets('disables interaction when RadioButton is disabled',
-        (WidgetTester tester) async {
+    testWidgets('disables interaction when RadioButton is disabled', (
+      WidgetTester tester,
+    ) async {
       bool wasChanged = false;
 
       await tester.pumpMaterialWidget(
@@ -285,8 +292,9 @@ void main() {
       expect(wasChanged, false);
     });
 
-    testWidgets('disables interaction when group is disabled',
-        (WidgetTester tester) async {
+    testWidgets('disables interaction when group is disabled', (
+      WidgetTester tester,
+    ) async {
       bool wasChanged = false;
 
       await tester.pumpMaterialWidget(
@@ -305,8 +313,9 @@ void main() {
       expect(wasChanged, false);
     });
 
-    testWidgets('shows forbidden cursor when disabled',
-        (WidgetTester tester) async {
+    testWidgets('shows forbidden cursor when disabled', (
+      WidgetTester tester,
+    ) async {
       await tester.pumpMaterialWidget(
         NakedRadioGroup<String>(
           groupValue: null,
@@ -320,14 +329,115 @@ void main() {
         ),
       );
 
-      tester.expectCursor(
-        SystemMouseCursors.forbidden,
-        on: _key,
-      );
+      tester.expectCursor(SystemMouseCursors.forbidden, on: _key);
     });
 
-    testWidgets('uses custom cursor when specified',
-        (WidgetTester tester) async {
+    testWidgets(
+      'keyboard traversal moves focus and selection (horizontal)',
+      (tester) async {
+        String? selected;
+
+        final focusNodes = [FocusNode(), FocusNode(), FocusNode()];
+
+        await tester.pumpMaterialWidget(
+          NakedRadioGroup<String>(
+            groupValue: null,
+            onChanged: (v) => selected = v,
+            child: Row(
+              children: [
+                NakedRadio<String>(
+                  value: 'a',
+                  focusNode: focusNodes[0],
+                  child: const SizedBox(width: 20, height: 20),
+                ),
+                NakedRadio<String>(
+                  value: 'b',
+                  focusNode: focusNodes[1],
+                  child: const SizedBox(width: 20, height: 20),
+                ),
+                NakedRadio<String>(
+                  value: 'c',
+                  focusNode: focusNodes[2],
+                  child: const SizedBox(width: 20, height: 20),
+                ),
+              ],
+            ),
+          ),
+        );
+
+        // Focus first, then use arrow keys
+        focusNodes[0].requestFocus();
+        await tester.pump();
+        // Selection follows focus
+        expect(selected, 'a');
+
+        await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
+        await tester.pump();
+        expect(selected, 'b');
+
+        await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
+        await tester.pump();
+        expect(selected, 'c');
+
+        // Wrap-around to first
+        await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
+        await tester.pump();
+        expect(selected, 'a');
+      },
+      timeout: Timeout(Duration(seconds: 20)),
+    );
+
+    testWidgets(
+      'keyboard traversal moves focus and selection (vertical)',
+      (tester) async {
+        String? selected;
+
+        final focusNodes = [FocusNode(), FocusNode(), FocusNode()];
+
+        await tester.pumpMaterialWidget(
+          NakedRadioGroup<String>(
+            groupValue: null,
+            onChanged: (v) => selected = v,
+            child: Column(
+              children: [
+                NakedRadio<String>(
+                  value: 'a',
+                  focusNode: focusNodes[0],
+                  child: const SizedBox(width: 20, height: 20),
+                ),
+                NakedRadio<String>(
+                  value: 'b',
+                  focusNode: focusNodes[1],
+                  child: const SizedBox(width: 20, height: 20),
+                ),
+                NakedRadio<String>(
+                  value: 'c',
+                  focusNode: focusNodes[2],
+                  child: const SizedBox(width: 20, height: 20),
+                ),
+              ],
+            ),
+          ),
+        );
+
+        focusNodes[0].requestFocus();
+        await tester.pump();
+        expect(selected, 'a');
+
+        await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
+        await tester.pump();
+        expect(selected, 'b');
+
+        await tester.sendKeyEvent(LogicalKeyboardKey.arrowUp);
+        await tester.pump();
+        expect(selected, 'a');
+      },
+      timeout: Timeout(Duration(seconds: 20)),
+    );
+
+    testWidgets('uses custom cursor when specified', (
+      WidgetTester tester,
+    ) async {
       await tester.pumpMaterialWidget(
         NakedRadioGroup<String>(
           key: _key,
@@ -341,10 +451,7 @@ void main() {
         ),
       );
 
-      tester.expectCursor(
-        SystemMouseCursors.help,
-        on: _key,
-      );
+      tester.expectCursor(SystemMouseCursors.help, on: _key);
     });
   });
 }

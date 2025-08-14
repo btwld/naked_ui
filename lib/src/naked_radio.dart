@@ -2,7 +2,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-
 /// A context provider for a radio group that manages a single selection
 /// across multiple radio buttons.
 ///
@@ -95,9 +94,9 @@ class NakedRadioGroupState<T> extends State<NakedRadioGroup<T>> {
         )
         .toList();
 
-    final index = selected.$1;
-
-    final nextIndex = (index + (forward ? 1 : -1)) % enabledRadios.length;
+    final currentIndex = sorted.indexOf(selected.$2._focusNode);
+    final nextIndex =
+        (currentIndex + (forward ? 1 : -1) + sorted.length) % sorted.length;
     final nextFocus = sorted[nextIndex];
 
     nextFocus.requestFocus();
@@ -197,10 +196,10 @@ class NakedRadioGroupScope<T> extends InheritedWidget {
 ///       ? Center(child: Icon(Icons.check, size: 16))
 ///       : null,
 ///   ),
-///   onHoverState: (isHovered) => print('Hover: $isHovered'),
+///   onHoveredState: (isHovered) => print('Hover: $isHovered'),
 ///   onPressedState: (isPressed) => print('Pressed: $isPressed'),
-///   onSelectState: (isSelected) => print('Selected: $isSelected'),
-///   onFocusState: (isFocused) => print('Focus: $isFocused'),
+///   onSelectedState: (isSelected) => print('Selected: $isSelected'),
+///   onFocusedState: (isFocused) => print('Focus: $isFocused'),
 /// )
 /// ```
 class NakedRadio<T> extends StatefulWidget {
@@ -281,12 +280,15 @@ class NakedRadio<T> extends StatefulWidget {
 }
 
 class _NakedRadioState<T> extends State<NakedRadio<T>> {
-  late final FocusNode _focusNode = widget.focusNode ?? FocusNode();
+  FocusNode? _internalFocusNode;
+  FocusNode get _focusNode =>
+      widget.focusNode ?? (_internalFocusNode ??= FocusNode());
   late final Map<Type, Action<Intent>> _actionMap = <Type, Action<Intent>>{
     ActivateIntent: CallbackAction<ActivateIntent>(onInvoke: _handleTap),
   };
   NakedRadioGroupScope<T> get _group => NakedRadioGroupScope.of(context);
   bool? _lastReportedSelection;
+  NakedRadioGroupState<T>? _groupState;
 
   ValueChanged<T?>? get onChanged => _group.state.widget.onChanged;
 
@@ -306,14 +308,17 @@ class _NakedRadioState<T> extends State<NakedRadio<T>> {
   }
 
   bool get _isInteractive =>
-      widget.enabled && _group.state.widget.enabled && _group.state.widget.onChanged != null;
+      widget.enabled &&
+      _group.state.widget.enabled &&
+      _group.state.widget.onChanged != null;
 
   bool _getInteractive(NakedRadioGroupState<T> group) =>
       widget.enabled && group.widget.enabled && group.widget.onChanged != null;
 
   @override
   void dispose() {
-    _focusNode.dispose();
+    _groupState?._radios.remove(this);
+    _internalFocusNode?.dispose();
     super.dispose();
   }
 
@@ -321,9 +326,13 @@ class _NakedRadioState<T> extends State<NakedRadio<T>> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     final group = NakedRadioGroupScope.of<T>(context);
-    // Register this radio button with the group
-    group.state._registerRadioButton(this);
-    
+    final newState = group.state;
+    if (!identical(_groupState, newState)) {
+      _groupState?._radios.remove(this);
+      _groupState = newState;
+    }
+    _groupState!._registerRadioButton(this);
+
     // Check if selection state has changed and notify
     final isSelected = group.groupValue == widget.value;
     if (_lastReportedSelection != isSelected) {
@@ -348,14 +357,7 @@ class _NakedRadioState<T> extends State<NakedRadio<T>> {
       case TargetPlatform.macOS:
         accessibilitySelected = isSelected;
     }
-    // State change notification is now handled in didChangeDependencies
-    // Only use addPostFrameCallback if state changed during build (edge case)
-    if (_lastReportedSelection != isSelected) {
-      _lastReportedSelection = isSelected;
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        widget.onSelectedState?.call(isSelected);
-      });
-    }
+    // State change notification is handled in didChangeDependencies
 
     return Semantics(
       enabled: _isInteractive,
@@ -369,25 +371,32 @@ class _NakedRadioState<T> extends State<NakedRadio<T>> {
         onShowFocusHighlight: widget.onFocusedState,
         onShowHoverHighlight: widget.onHoveredState,
         onFocusChange: (hasFocus) {
-          onChanged?.call(widget.value);
+          if (hasFocus && _isInteractive && _group.groupValue != widget.value) {
+            onChanged?.call(widget.value);
+          }
           widget.onFocusedState?.call(hasFocus);
         },
         mouseCursor: _isInteractive
             ? widget.cursor
             : SystemMouseCursors.forbidden,
         child: GestureDetector(
-          onTapDown: _isInteractive ? (_) => widget.onPressedState?.call(true) : null,
-          onTapUp: _isInteractive ? (_) => widget.onPressedState?.call(false) : null,
+          onTapDown: _isInteractive
+              ? (_) => widget.onPressedState?.call(true)
+              : null,
+          onTapUp: _isInteractive
+              ? (_) => widget.onPressedState?.call(false)
+              : null,
           onTap: _isInteractive ? _handleTap : null,
-          onTapCancel: _isInteractive ? () => widget.onPressedState?.call(false) : null,
+          onTapCancel: _isInteractive
+              ? () => widget.onPressedState?.call(false)
+              : null,
           behavior: HitTestBehavior.opaque,
-          child: Builder(builder: (context) => widget.child),
+          child: widget.child,
         ),
       ),
     );
   }
 }
-
 
 class _SkipUnselectedRadioPolicy<T> extends ReadingOrderTraversalPolicy {
   final Set<_NakedRadioState<T>> radios;

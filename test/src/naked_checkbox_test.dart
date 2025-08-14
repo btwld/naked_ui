@@ -51,8 +51,9 @@ void main() {
       expect(isChecked, isFalse);
     });
 
-    testWidgets('does not respond when onChanged is null',
-        (WidgetTester tester) async {
+    testWidgets('does not respond when onChanged is null', (
+      WidgetTester tester,
+    ) async {
       await tester.pumpMaterialWidget(
         const NakedCheckbox(
           value: false,
@@ -67,8 +68,9 @@ void main() {
   });
 
   group('State Callbacks', () {
-    testWidgets('does not call state callbacks when disabled',
-        (WidgetTester tester) async {
+    testWidgets('does not call state callbacks when disabled', (
+      WidgetTester tester,
+    ) async {
       final key = UniqueKey();
 
       bool isHovered = false;
@@ -89,9 +91,12 @@ void main() {
       );
 
       // Test hover
-      await tester.simulateHover(key, onHover: () {
-        expect(isHovered, false);
-      });
+      await tester.simulateHover(
+        key,
+        onHover: () {
+          expect(isHovered, false);
+        },
+      );
 
       expect(isHovered, false);
 
@@ -113,7 +118,9 @@ void main() {
       expect(isFocused, false);
     });
 
-    testWidgets('calls onHoveredState when hovered', (WidgetTester tester) async {
+    testWidgets('calls onHoveredState when hovered', (
+      WidgetTester tester,
+    ) async {
       FocusManager.instance.highlightStrategy =
           FocusHighlightStrategy.alwaysTraditional;
 
@@ -149,8 +156,9 @@ void main() {
       expect(isHovered, isFalse);
     });
 
-    testWidgets('calls onPressedState on tap down/up',
-        (WidgetTester tester) async {
+    testWidgets('calls onPressedState on tap down/up', (
+      WidgetTester tester,
+    ) async {
       bool isPressed = false;
       await tester.pumpMaterialWidget(
         NakedCheckbox(
@@ -170,8 +178,42 @@ void main() {
       expect(isPressed, false);
     });
 
-    testWidgets('calls onFocusedState when focused/unfocused',
-        (WidgetTester tester) async {
+    testWidgets(
+      'calls onPressedState on tap cancel when gesture leaves and releases',
+      (tester) async {
+        bool? lastPressedState;
+        final key = UniqueKey();
+
+        await tester.pumpMaterialWidget(
+          NakedCheckbox(
+            key: key,
+            value: false,
+            onChanged: (_) {},
+            onPressedState: (value) => lastPressedState = value,
+            child: const Text('Checkbox Label'),
+          ),
+        );
+
+        final center = tester.getCenter(find.byKey(key));
+        final gesture = await tester.startGesture(center);
+        await tester.pump();
+        expect(lastPressedState, true);
+
+        // Drag off the checkbox to trigger cancel
+        await gesture.moveTo(Offset.zero);
+        await tester.pump();
+
+        await gesture.up();
+        await tester.pump();
+
+        expect(lastPressedState, false);
+      },
+      timeout: Timeout(Duration(seconds: 15)),
+    );
+
+    testWidgets('calls onFocusedState when focused/unfocused', (
+      WidgetTester tester,
+    ) async {
       bool isFocused = false;
       final focusNode = FocusNode();
 
@@ -268,55 +310,60 @@ void main() {
 
   group('Tristate', () {
     testWidgets(
-        'cycles through states false -> true -> null when tristate is enabled',
-        (WidgetTester tester) async {
-      bool? value = false;
+      'cycles through states false -> true -> null when tristate is enabled',
+      (WidgetTester tester) async {
+        bool? value = false;
 
-      await tester.pumpMaterialWidget(
-        StatefulBuilder(builder: (context, setState) {
-          return NakedCheckbox(
-            value: value,
-            tristate: true,
-            onChanged: (newValue) {
-              setState(() {
-                value = newValue;
-              });
+        await tester.pumpMaterialWidget(
+          StatefulBuilder(
+            builder: (context, setState) {
+              return NakedCheckbox(
+                value: value,
+                tristate: true,
+                onChanged: (newValue) {
+                  setState(() {
+                    value = newValue;
+                  });
+                },
+                child: const Text('Checkbox Label'),
+              );
             },
-            child: const Text('Checkbox Label'),
-          );
-        }),
-      );
+          ),
+        );
 
-      await tester.tap(find.byType(NakedCheckbox));
-      expect(value, true);
+        await tester.tap(find.byType(NakedCheckbox));
+        expect(value, true);
 
-      await tester.pump();
-      await tester.tap(find.byType(NakedCheckbox));
-      expect(value, null);
+        await tester.pump();
+        await tester.tap(find.byType(NakedCheckbox));
+        expect(value, null);
 
-      await tester.pump();
-      await tester.tap(find.byType(NakedCheckbox));
-      expect(value, false);
-    });
+        await tester.pump();
+        await tester.tap(find.byType(NakedCheckbox));
+        expect(value, false);
+      },
+    );
 
     testWidgets(
-        'throws assertion error when value is null but tristate is false, since null values are only allowed in tristate mode',
-        (WidgetTester tester) async {
-      expect(
-        () => NakedCheckbox(
-          value: null,
-          tristate: false,
-          onChanged: (_) {},
-          child: const Text('Checkbox Label'),
-        ),
-        throwsAssertionError,
-      );
-    });
+      'throws assertion error when value is null but tristate is false, since null values are only allowed in tristate mode',
+      (WidgetTester tester) async {
+        expect(
+          () => NakedCheckbox(
+            value: null,
+            tristate: false,
+            onChanged: (_) {},
+            child: const Text('Checkbox Label'),
+          ),
+          throwsAssertionError,
+        );
+      },
+    );
   });
 
   group('Accessibility', () {
-    testWidgets('provides semantic checkbox property',
-        (WidgetTester tester) async {
+    testWidgets('provides semantic checkbox property', (
+      WidgetTester tester,
+    ) async {
       final key = UniqueKey();
       await tester.pumpMaterialWidget(
         NakedCheckbox(
@@ -348,8 +395,9 @@ void main() {
       expect(semantics.hasFlag(SemanticsFlag.isCheckStateMixed), false);
     });
 
-    testWidgets('applies custom semantic label when provided',
-        (WidgetTester tester) async {
+    testWidgets('applies custom semantic label when provided', (
+      WidgetTester tester,
+    ) async {
       final key = UniqueKey();
       await tester.pumpMaterialWidget(
         NakedCheckbox(
@@ -357,9 +405,7 @@ void main() {
           value: false,
           onChanged: (_) {},
           semanticLabel: 'Custom Checkbox Label',
-          child: const SizedBox.square(
-            dimension: 10,
-          ),
+          child: const SizedBox.square(dimension: 10),
         ),
       );
 
@@ -367,8 +413,9 @@ void main() {
       expect(semantics.label, 'Custom Checkbox Label');
     });
 
-    testWidgets('shows correct enabled/disabled state',
-        (WidgetTester tester) async {
+    testWidgets('shows correct enabled/disabled state', (
+      WidgetTester tester,
+    ) async {
       final key = UniqueKey();
       for (var enabled in [true, false]) {
         await tester.pumpMaterialWidget(
@@ -377,9 +424,7 @@ void main() {
             value: false,
             onChanged: (_) {},
             enabled: enabled,
-            child: const SizedBox.square(
-              dimension: 10,
-            ),
+            child: const SizedBox.square(dimension: 10),
           ),
         );
 
@@ -390,8 +435,9 @@ void main() {
   });
 
   group('Cursor', () {
-    testWidgets('shows appropriate cursor based on interactive state',
-        (WidgetTester tester) async {
+    testWidgets('shows appropriate cursor based on interactive state', (
+      WidgetTester tester,
+    ) async {
       final keyEnabled = UniqueKey();
       final keyDisabled = UniqueKey();
 
@@ -415,15 +461,9 @@ void main() {
         ),
       );
 
-      tester.expectCursor(
-        SystemMouseCursors.click,
-        on: keyEnabled,
-      );
+      tester.expectCursor(SystemMouseCursors.click, on: keyEnabled);
 
-      tester.expectCursor(
-        SystemMouseCursors.forbidden,
-        on: keyDisabled,
-      );
+      tester.expectCursor(SystemMouseCursors.forbidden, on: keyDisabled);
     });
 
     testWidgets('supports custom cursor', (WidgetTester tester) async {
@@ -439,10 +479,7 @@ void main() {
         ),
       );
 
-      tester.expectCursor(
-        SystemMouseCursors.help,
-        on: key,
-      );
+      tester.expectCursor(SystemMouseCursors.help, on: key);
     });
   });
 }

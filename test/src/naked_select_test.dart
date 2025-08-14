@@ -9,12 +9,7 @@ import 'helpers/simulate_hover.dart';
 extension _WidgetTesterX on WidgetTester {
   SemanticsNode findSemantics(Finder finder) {
     return getSemantics(
-      find
-          .descendant(
-            of: finder,
-            matching: find.byType(Semantics),
-          )
-          .first,
+      find.descendant(of: finder, matching: find.byType(Semantics)).first,
     );
   }
 }
@@ -40,24 +35,13 @@ void main() {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          NakedSelectItem<T>(
-            value: 'apple' as T,
-            child: const Text('Apple'),
-          ),
-          NakedSelectItem<T>(
-            value: 'banana' as T,
-            child: const Text('Banana'),
-          ),
-          NakedSelectItem<T>(
-            value: 'orange' as T,
-            child: const Text('Orange'),
-          ),
+          NakedSelectItem<T>(value: 'apple' as T, child: const Text('Apple')),
+          NakedSelectItem<T>(value: 'banana' as T, child: const Text('Banana')),
+          NakedSelectItem<T>(value: 'orange' as T, child: const Text('Orange')),
         ],
       ),
     );
-    const child = NakedSelectTrigger(
-      child: Text('Select option'),
-    );
+    const child = NakedSelectTrigger(child: Text('Select option'));
     return Center(
       child: allowMultiple
           ? NakedSelect.multiple(
@@ -84,11 +68,10 @@ void main() {
   }
 
   group('Core Functionality', () {
-    testWidgets('renders trigger and menu when opened',
-        (WidgetTester tester) async {
-      await tester.pumpMaterialWidget(
-        buildSelect<String>(),
-      );
+    testWidgets('renders trigger and menu when opened', (
+      WidgetTester tester,
+    ) async {
+      await tester.pumpMaterialWidget(buildSelect<String>());
 
       await tester.tap(find.text('Select option'));
       await tester.pumpAndSettle();
@@ -119,8 +102,9 @@ void main() {
       expect(selectedValue, 'banana');
     });
 
-    testWidgets('supports multiple selection mode',
-        (WidgetTester tester) async {
+    testWidgets('supports multiple selection mode', (
+      WidgetTester tester,
+    ) async {
       final selectedValues = <String>{};
 
       await tester.pumpMaterialWidget(
@@ -148,9 +132,7 @@ void main() {
     });
 
     testWidgets('toggle menu visibility', (WidgetTester tester) async {
-      await tester.pumpMaterialWidget(
-        buildSelect<String>(),
-      );
+      await tester.pumpMaterialWidget(buildSelect<String>());
 
       // Initially menu is closed
       expect(find.text('Apple'), findsNothing);
@@ -192,9 +174,7 @@ void main() {
 
   group('Keyboard Navigation', () {
     testWidgets('closes menu with Escape key', (WidgetTester tester) async {
-      await tester.pumpMaterialWidget(
-        buildSelect<String>(),
-      );
+      await tester.pumpMaterialWidget(buildSelect<String>());
 
       // Open menu
       await tester.tap(find.text('Select option'));
@@ -204,7 +184,45 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Apple'), findsNothing);
-    });
+    }, timeout: Timeout(Duration(seconds: 20)));
+
+    testWidgets(
+      'restores focus to trigger after closing with Escape',
+      (tester) async {
+        final triggerFocusNode = FocusNode();
+
+        await tester.pumpMaterialWidget(
+          Center(
+            child: NakedSelect<String>(
+              menu: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: const [
+                  NakedSelectItem<String>(value: 'apple', child: Text('Apple')),
+                ],
+              ),
+              child: NakedSelectTrigger(
+                focusNode: triggerFocusNode,
+                child: const Text('Select option'),
+              ),
+            ),
+          ),
+        );
+
+        // Focus the trigger, then open menu
+        triggerFocusNode.requestFocus();
+        await tester.pump();
+        await tester.tap(find.text('Select option'));
+        await tester.pumpAndSettle();
+
+        // Overlay should have focus; now close with Escape
+        await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+        await tester.pumpAndSettle();
+
+        // Expect focus to be back on the trigger
+        expect(triggerFocusNode.hasFocus, isTrue);
+      },
+      timeout: Timeout(Duration(seconds: 20)),
+    );
 
     testWidgets('selects item with Enter key', (WidgetTester tester) async {
       String? selectedValue;
@@ -232,53 +250,86 @@ void main() {
   });
 
   group('Type-ahead Selection', () {
-    testWidgets('focuses item matching typed character',
-        (WidgetTester tester) async {
-      String? selectedValue;
+    testWidgets(
+      'focuses item matching typed character',
+      (WidgetTester tester) async {
+        String? selectedValue;
 
-      await tester.pumpMaterialWidget(
-        buildSelect<String>(
-          selectedValue: selectedValue,
-          onSelectedValueChanged: (value) => selectedValue = value,
-          enableTypeAhead: true,
-        ),
-      );
+        await tester.pumpMaterialWidget(
+          buildSelect<String>(
+            selectedValue: selectedValue,
+            onSelectedValueChanged: (value) => selectedValue = value,
+            enableTypeAhead: true,
+          ),
+        );
 
-      // Open menu
-      await tester.tap(find.text('Select option'));
-      await tester.pumpAndSettle();
+        // Open menu
+        await tester.tap(find.text('Select option'));
+        await tester.pumpAndSettle();
 
-      // Type 'b' to focus 'Banana'
-      await tester.sendKeyEvent(LogicalKeyboardKey.keyB);
-      await tester.pumpAndSettle();
+        // Type 'b' to focus 'Banana'
+        await tester.sendKeyEvent(LogicalKeyboardKey.keyB);
+        await tester.pumpAndSettle();
 
-      await tester.sendKeyEvent(LogicalKeyboardKey.enter);
-      await tester.pumpAndSettle();
+        await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+        await tester.pumpAndSettle();
 
-      expect(selectedValue, 'banana');
-    });
+        expect(selectedValue, 'banana');
+      },
+      timeout: Timeout(Duration(seconds: 20)),
+    );
+
+    testWidgets(
+      'typeahead non-match does not change focus',
+      (tester) async {
+        String? selectedValue;
+
+        await tester.pumpMaterialWidget(
+          buildSelect<String>(
+            selectedValue: selectedValue,
+            onSelectedValueChanged: (v) => selectedValue = v,
+            enableTypeAhead: true,
+          ),
+        );
+
+        // Open menu
+        await tester.tap(find.text('Select option'));
+        await tester.pumpAndSettle();
+
+        // Focus Banana via typeahead 'b'
+        await tester.sendKeyEvent(LogicalKeyboardKey.keyB);
+        await tester.pumpAndSettle();
+
+        // Send a non-matching char 'z' — focus should remain on Banana
+        await tester.sendKeyEvent(LogicalKeyboardKey.keyZ);
+        await tester.pumpAndSettle();
+
+        // Enter should still select Banana
+        await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+        await tester.pumpAndSettle();
+
+        expect(selectedValue, 'banana');
+      },
+      timeout: Timeout(Duration(seconds: 20)),
+    );
   });
 
   group('Accessibility', () {
-    testWidgets('provides semantic button property for trigger',
-        (WidgetTester tester) async {
-      await tester.pumpMaterialWidget(
-        buildSelect<String>(),
-      );
+    testWidgets('provides semantic button property for trigger', (
+      WidgetTester tester,
+    ) async {
+      await tester.pumpMaterialWidget(buildSelect<String>());
 
-      final semantics = tester.findSemantics(
-        find.byType(NakedSelectTrigger),
-      );
+      final semantics = tester.findSemantics(find.byType(NakedSelectTrigger));
 
       expect(semantics.hasFlag(SemanticsFlag.isButton), true);
     });
 
-    testWidgets('marks items as selected in semantics',
-        (WidgetTester tester) async {
+    testWidgets('marks items as selected in semantics', (
+      WidgetTester tester,
+    ) async {
       await tester.pumpMaterialWidget(
-        buildSelect<String>(
-          selectedValue: 'apple',
-        ),
+        buildSelect<String>(selectedValue: 'apple'),
       );
 
       // Open menu
@@ -293,18 +344,13 @@ void main() {
       expect(semantics.hasFlag(SemanticsFlag.isSelected), true);
     });
 
-    testWidgets('shows correct enabled/disabled state',
-        (WidgetTester tester) async {
+    testWidgets('shows correct enabled/disabled state', (
+      WidgetTester tester,
+    ) async {
       for (var enabled in [true, false]) {
-        await tester.pumpMaterialWidget(
-          buildSelect<String>(
-            enabled: enabled,
-          ),
-        );
+        await tester.pumpMaterialWidget(buildSelect<String>(enabled: enabled));
 
-        final semantics = tester.findSemantics(
-          find.byType(NakedSelectTrigger),
-        );
+        final semantics = tester.findSemantics(find.byType(NakedSelectTrigger));
 
         expect(semantics.hasFlag(SemanticsFlag.isEnabled), enabled);
 
@@ -314,8 +360,9 @@ void main() {
   });
 
   group('Interaction States', () {
-    testWidgets('calls onHoveredState when trigger hovered',
-        (WidgetTester tester) async {
+    testWidgets('calls onHoveredState when trigger hovered', (
+      WidgetTester tester,
+    ) async {
       FocusManager.instance.highlightStrategy =
           FocusHighlightStrategy.alwaysTraditional;
 
@@ -336,15 +383,19 @@ void main() {
         ),
       );
 
-      await tester.simulateHover(key, onHover: () {
-        expect(isHovered, true);
-      });
+      await tester.simulateHover(
+        key,
+        onHover: () {
+          expect(isHovered, true);
+        },
+      );
 
       expect(isHovered, false);
     });
 
-    testWidgets('calls onPressedState when trigger pressed',
-        (WidgetTester tester) async {
+    testWidgets('calls onPressedState when trigger pressed', (
+      WidgetTester tester,
+    ) async {
       bool isPressed = false;
 
       await tester.pumpMaterialWidget(
@@ -366,8 +417,9 @@ void main() {
       expect(isPressed, false);
     });
 
-    testWidgets('calls onFocusedState when trigger focused',
-        (WidgetTester tester) async {
+    testWidgets('calls onFocusedState when trigger focused', (
+      WidgetTester tester,
+    ) async {
       bool isFocused = false;
       final focusNode = FocusNode();
       final overlayPortalController = OverlayPortalController();
@@ -394,8 +446,9 @@ void main() {
       expect(isFocused, false);
     });
 
-    testWidgets('calls item states when hovered/pressed',
-        (WidgetTester tester) async {
+    testWidgets('calls item states when hovered/pressed', (
+      WidgetTester tester,
+    ) async {
       FocusManager.instance.highlightStrategy =
           FocusHighlightStrategy.alwaysTraditional;
 
@@ -419,9 +472,7 @@ void main() {
                 child: const Text('Apple'),
               ),
             ),
-            child: const NakedSelectTrigger(
-              child: Text('Select option'),
-            ),
+            child: const NakedSelectTrigger(child: Text('Select option')),
           ),
         ),
       );
@@ -431,9 +482,12 @@ void main() {
       await tester.pumpAndSettle();
 
       // Test hover
-      await tester.simulateHover(key, onHover: () {
-        expect(itemHovered, true);
-      });
+      await tester.simulateHover(
+        key,
+        onHover: () {
+          expect(itemHovered, true);
+        },
+      );
       expect(itemHovered, false);
 
       // Test press
@@ -449,9 +503,7 @@ void main() {
 
   group('Menu Positioning', () {
     testWidgets('renders menu in overlay', (WidgetTester tester) async {
-      await tester.pumpMaterialWidget(
-        buildSelect<String>(),
-      );
+      await tester.pumpMaterialWidget(buildSelect<String>());
 
       // Open menu
       await tester.tap(find.text('Select option'));
@@ -463,8 +515,9 @@ void main() {
   });
 
   group('Selection Behavior', () {
-    testWidgets('keeps menu open when closeOnSelect is false',
-        (WidgetTester tester) async {
+    testWidgets('keeps menu open when closeOnSelect is false', (
+      WidgetTester tester,
+    ) async {
       String? selectedValue;
       bool menuClosed = false;
 
@@ -488,8 +541,9 @@ void main() {
       expect(menuClosed, false);
     });
 
-    testWidgets('closes menu when closeOnSelect is true',
-        (WidgetTester tester) async {
+    testWidgets('closes menu when closeOnSelect is true', (
+      WidgetTester tester,
+    ) async {
       String? selectedValue;
 
       await tester.pumpMaterialWidget(
@@ -513,8 +567,9 @@ void main() {
   });
 
   group('Cursor', () {
-    testWidgets('shows appropriate cursor based on interactive state',
-        (WidgetTester tester) async {
+    testWidgets('shows appropriate cursor based on interactive state', (
+      WidgetTester tester,
+    ) async {
       const keyEnabledTrigger = Key('enabledTrigger');
       const keyDisabledTrigger = Key('disabledTrigger');
 
@@ -540,15 +595,9 @@ void main() {
         ),
       );
 
-      tester.expectCursor(
-        SystemMouseCursors.click,
-        on: keyEnabledTrigger,
-      );
+      tester.expectCursor(SystemMouseCursors.click, on: keyEnabledTrigger);
 
-      tester.expectCursor(
-        SystemMouseCursors.forbidden,
-        on: keyDisabledTrigger,
-      );
+      tester.expectCursor(SystemMouseCursors.forbidden, on: keyDisabledTrigger);
     });
   });
 }

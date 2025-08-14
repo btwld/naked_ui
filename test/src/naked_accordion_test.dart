@@ -333,4 +333,89 @@ void main() {
       expect(find.text('Content 2'), findsOneWidget);
     });
   });
+
+  group('Maintain state behavior', () {
+    late NakedAccordionController<String> controller;
+
+    Widget buildTriggeredAccordion() {
+      return NakedAccordion<String>(
+        controller: controller,
+        children: [
+          NakedAccordionItem<String>(
+            value: 'item1',
+            trigger: (context, isExpanded, toggle) => GestureDetector(
+              onTap: toggle,
+              child: Text(isExpanded ? 'Close 1' : 'Open 1'),
+            ),
+            child: const Text('Content 1'),
+          ),
+          NakedAccordionItem<String>(
+            value: 'item2',
+            trigger: (context, isExpanded, toggle) => GestureDetector(
+              onTap: toggle,
+              child: Text(isExpanded ? 'Close 2' : 'Open 2'),
+            ),
+            child: const Text('Content 2'),
+          ),
+        ],
+      );
+    }
+
+    testWidgets(
+      'non-exclusive: both panels can remain open (max unspecified)',
+      (tester) async {
+        controller =
+            NakedAccordionController<String>(); // no max => non-exclusive
+
+        await tester.pumpMaterialWidget(buildTriggeredAccordion());
+
+        // Initially both closed
+        expect(find.text('Open 1'), findsOneWidget);
+        expect(find.text('Open 2'), findsOneWidget);
+        expect(find.text('Content 1'), findsNothing);
+        expect(find.text('Content 2'), findsNothing);
+
+        // Open first
+        await tester.tap(find.text('Open 1'));
+        await tester.pump();
+        expect(find.text('Close 1'), findsOneWidget);
+        expect(find.text('Content 1'), findsOneWidget);
+
+        // Open second — first should remain open
+        await tester.tap(find.text('Open 2'));
+        await tester.pump();
+        expect(find.text('Close 1'), findsOneWidget);
+        expect(find.text('Close 2'), findsOneWidget);
+        expect(find.text('Content 1'), findsOneWidget);
+        expect(find.text('Content 2'), findsOneWidget);
+      },
+      timeout: Timeout(Duration(seconds: 20)),
+    );
+
+    testWidgets(
+      'exclusive: opening one panel closes the other (max=1)',
+      (tester) async {
+        controller = NakedAccordionController<String>(max: 1);
+
+        await tester.pumpMaterialWidget(buildTriggeredAccordion());
+
+        // Open first
+        await tester.tap(find.text('Open 1'));
+        await tester.pump();
+        expect(find.text('Close 1'), findsOneWidget);
+        expect(find.text('Content 1'), findsOneWidget);
+        expect(find.text('Open 2'), findsOneWidget);
+        expect(find.text('Content 2'), findsNothing);
+
+        // Open second — first should close
+        await tester.tap(find.text('Open 2'));
+        await tester.pump();
+        expect(find.text('Open 1'), findsOneWidget);
+        expect(find.text('Content 1'), findsNothing);
+        expect(find.text('Close 2'), findsOneWidget);
+        expect(find.text('Content 2'), findsOneWidget);
+      },
+      timeout: Timeout(Duration(seconds: 20)),
+    );
+  });
 }

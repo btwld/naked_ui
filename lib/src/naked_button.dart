@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-
 /// A fully customizable button with no default styling.
 ///
 /// NakedButton provides interaction behavior and accessibility features
@@ -135,6 +134,9 @@ class NakedButton extends StatefulWidget {
 }
 
 class _NakedButtonState extends State<NakedButton> {
+  FocusNode? _internalFocusNode;
+  FocusNode get _focusNode =>
+      widget.focusNode ?? (_internalFocusNode ??= FocusNode());
   late final Map<Type, Action<Intent>> _actionMap = <Type, Action<Intent>>{
     ActivateIntent: CallbackAction<ActivateIntent>(onInvoke: handleTap),
     ButtonActivateIntent: CallbackAction<ButtonActivateIntent>(
@@ -166,6 +168,12 @@ class _NakedButtonState extends State<NakedButton> {
   }
 
   @override
+  void dispose() {
+    _internalFocusNode?.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Semantics(
       container: true,
@@ -175,7 +183,7 @@ class _NakedButtonState extends State<NakedButton> {
       label: widget.semanticLabel,
       child: FocusableActionDetector(
         enabled: widget._isInteractive,
-        focusNode: widget.focusNode,
+        focusNode: _focusNode,
         autofocus: widget.autofocus,
         actions: _actionMap,
         onShowHoverHighlight: widget.onHoveredState,
@@ -184,10 +192,16 @@ class _NakedButtonState extends State<NakedButton> {
             ? widget.cursor
             : SystemMouseCursors.forbidden,
         child: GestureDetector(
-          onTapDown: widget._isInteractive ? (_) => widget.onPressedState?.call(true) : null,
-          onTapUp: widget._isInteractive ? (_) => widget.onPressedState?.call(false) : null,
+          onTapDown: widget._isInteractive
+              ? (_) => widget.onPressedState?.call(true)
+              : null,
+          onTapUp: widget._isInteractive
+              ? (_) => widget.onPressedState?.call(false)
+              : null,
           onTap: widget._isInteractive ? handleTap : null,
-          onTapCancel: widget._isInteractive ? () => widget.onPressedState?.call(false) : null,
+          onTapCancel: widget._isInteractive
+              ? () => widget.onPressedState?.call(false)
+              : null,
           behavior: HitTestBehavior.opaque,
           child: widget.child,
         ),

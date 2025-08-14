@@ -79,9 +79,9 @@ class _MyCustomButtonState extends State<MyCustomButton> {
   Widget build(BuildContext context) {
     return NakedButton(
       onPressed: widget.onPressed,
-      onHoverState: (isHovered) => setState(() => _isHovered = isHovered),
+      onHoveredState: (isHovered) => setState(() => _isHovered = isHovered),
       onPressedState: (isPressed) => setState(() => _isPressed = isPressed),
-      onFocusState: (isFocused) => setState(() => _isFocused = isFocused),
+      onFocusedState: (isFocused) => setState(() => _isFocused = isFocused),
       child: Container(
         padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         decoration: BoxDecoration(
@@ -116,9 +116,9 @@ Most components provide state callbacks that notify you when the component's sta
 
 ```dart
 NakedButton(
-  onHoverState: (isHovered) => handleHover(isHovered),
+  onHoveredState: (isHovered) => handleHover(isHovered),
   onPressedState: (isPressed) => handlePress(isPressed),
-  onFocusState: (isFocused) => handleFocus(isFocused),
+  onFocusedState: (isFocused) => handleFocus(isFocused),
   // Other properties...
 )
 ```

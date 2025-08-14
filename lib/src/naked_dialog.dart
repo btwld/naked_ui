@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-/// Displays a customizable dialog without default styling.
+/// A fully customizable dialog with no default styling.
 ///
 /// Unlike [showDialog], this function provides complete control over dialog
 /// appearance through the [builder] callback. The dialog has no default

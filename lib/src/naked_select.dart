@@ -522,7 +522,7 @@ class NakedSelectTrigger extends StatelessWidget {
 /// NakedSelectItem<int>(
 ///   value: 1,
 ///   onHoveredState: (isHovered) => setState(() => _isHovered = isHovered),
-///   onSelectState: (isSelected) => setState(() => _isSelected = isSelected),
+///   onSelectedState: (isSelected) => setState(() => _isSelected = isSelected),
 ///   child: Container(
 ///     color: _isSelected ? Colors.blue : (_isHovered ? Colors.blue[100] : Colors.white),
 ///     child: Text('Option 1'),
@@ -537,7 +537,7 @@ class NakedSelectItem<T> extends StatefulWidget {
     this.onHoveredState,
     this.onPressedState,
     this.onFocusedState,
-    this.onSelectState,
+    this.onSelectedState,
     this.enabled = true,
     this.semanticLabel,
     this.cursor = SystemMouseCursors.click,
@@ -564,7 +564,7 @@ class NakedSelectItem<T> extends StatefulWidget {
   final ValueChanged<bool>? onFocusedState;
 
   /// Called when the select state changes.
-  final ValueChanged<bool>? onSelectState;
+  final ValueChanged<bool>? onSelectedState;
 
   /// Whether this item is enabled and can be selected.
   /// When false, all interaction is disabled.
@@ -643,7 +643,7 @@ class _NakedSelectItemState<T> extends State<NakedSelectItem<T>> {
       if (_lastReportedSelection != isSelected) {
         _lastReportedSelection = isSelected;
         // Safe to call synchronously in didChangeDependencies
-        widget.onSelectState?.call(isSelected);
+        widget.onSelectedState?.call(isSelected);
       }
     }
   }
@@ -680,7 +680,7 @@ class _NakedSelectItemState<T> extends State<NakedSelectItem<T>> {
     if (_lastReportedSelection != isSelected) {
       _lastReportedSelection = isSelected;
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        widget.onSelectState?.call(isSelected);
+        widget.onSelectedState?.call(isSelected);
       });
     }
 

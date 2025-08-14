@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-
 /// A fully customizable checkbox with no default styling.
 ///
 /// NakedCheckbox provides core interaction behavior and accessibility
@@ -93,7 +92,7 @@ class NakedCheckbox extends StatefulWidget {
     this.autofocus = false,
   }) : assert(
          (tristate || value != null),
-         'Checkbox cannot be both checked and indeterminate',
+         'Non-tristate checkbox must have a non-null value',
        );
 
   /// Visual representation of the checkbox.
@@ -181,6 +180,18 @@ class NakedCheckbox extends StatefulWidget {
 }
 
 class _NakedCheckboxState extends State<NakedCheckbox> {
+  FocusNode? _internalFocusNode;
+  FocusNode get _focusNode =>
+      widget.focusNode ?? (_internalFocusNode ??= FocusNode());
+  late final Map<Type, Action<Intent>> _actionMap = <Type, Action<Intent>>{
+    ActivateIntent: CallbackAction<ActivateIntent>(onInvoke: toggleValue),
+  };
+  @override
+  void dispose() {
+    _internalFocusNode?.dispose();
+    super.dispose();
+  }
+
   void toggleValue([Intent? _]) {
     if (!_isInteractive) return;
 
@@ -200,10 +211,6 @@ class _NakedCheckboxState extends State<NakedCheckbox> {
 
   bool get _isInteractive => widget.enabled && widget.onChanged != null;
 
-  late final Map<Type, Action<Intent>> _actionMap = <Type, Action<Intent>>{
-    ActivateIntent: CallbackAction<ActivateIntent>(onInvoke: toggleValue),
-  };
-
   @override
   Widget build(BuildContext context) {
     return Semantics(
@@ -213,7 +220,7 @@ class _NakedCheckboxState extends State<NakedCheckbox> {
       label: widget.semanticLabel,
       child: FocusableActionDetector(
         enabled: _isInteractive,
-        focusNode: widget.focusNode,
+        focusNode: _focusNode,
         autofocus: widget.autofocus,
         actions: _actionMap,
         onShowFocusHighlight: widget.onFocusedState,
@@ -223,10 +230,16 @@ class _NakedCheckboxState extends State<NakedCheckbox> {
             ? widget.cursor
             : SystemMouseCursors.forbidden,
         child: GestureDetector(
-          onTapDown: _isInteractive ? (_) => widget.onPressedState?.call(true) : null,
-          onTapUp: _isInteractive ? (_) => widget.onPressedState?.call(false) : null,
+          onTapDown: _isInteractive
+              ? (_) => widget.onPressedState?.call(true)
+              : null,
+          onTapUp: _isInteractive
+              ? (_) => widget.onPressedState?.call(false)
+              : null,
           onTap: _isInteractive ? toggleValue : null,
-          onTapCancel: _isInteractive ? () => widget.onPressedState?.call(false) : null,
+          onTapCancel: _isInteractive
+              ? () => widget.onPressedState?.call(false)
+              : null,
           behavior: HitTestBehavior.opaque,
           child: widget.child,
         ),

@@ -12,10 +12,7 @@ void main() {
   group('Basic Functionality', () {
     testWidgets('renders child widget', (WidgetTester tester) async {
       await tester.pumpMaterialWidget(
-        NakedButton(
-          child: const Text('Test Button'),
-          onPressed: () {},
-        ),
+        NakedButton(child: const Text('Test Button'), onPressed: () {}),
       );
 
       expect(find.text('Test Button'), findsOneWidget);
@@ -48,13 +45,11 @@ void main() {
       expect(wasPressed, isFalse);
     });
 
-    testWidgets('does not respond when onPressed is null',
-        (WidgetTester tester) async {
+    testWidgets('does not respond when onPressed is null', (
+      WidgetTester tester,
+    ) async {
       await tester.pumpMaterialWidget(
-        const NakedButton(
-          onPressed: null,
-          child: Text('Test Button'),
-        ),
+        const NakedButton(onPressed: null, child: Text('Test Button')),
       );
 
       await tester.tap(find.byType(NakedButton));
@@ -63,8 +58,9 @@ void main() {
   });
 
   group('State Callbacks', () {
-    testWidgets('does not call state callbacks when disabled',
-        (WidgetTester tester) async {
+    testWidgets('does not call state callbacks when disabled', (
+      WidgetTester tester,
+    ) async {
       bool isHovered = false;
       bool isPressed = false;
       bool isFocused = false;
@@ -83,15 +79,21 @@ void main() {
       );
 
       // Test hover
-      await tester.simulateHover(key, onHover: () {
-        expect(isHovered, false);
-      });
+      await tester.simulateHover(
+        key,
+        onHover: () {
+          expect(isHovered, false);
+        },
+      );
 
       expect(isHovered, false);
 
-      await tester.simulatePress(key, onPressed: () {
-        expect(isPressed, false);
-      });
+      await tester.simulatePress(
+        key,
+        onPressed: () {
+          expect(isPressed, false);
+        },
+      );
 
       expect(isPressed, false);
 
@@ -105,7 +107,9 @@ void main() {
       expect(isFocused, false);
     });
 
-    testWidgets('calls onHoveredState when hovered', (WidgetTester tester) async {
+    testWidgets('calls onHoveredState when hovered', (
+      WidgetTester tester,
+    ) async {
       FocusManager.instance.highlightStrategy =
           FocusHighlightStrategy.alwaysTraditional;
       bool isHovered = false;
@@ -124,15 +128,19 @@ void main() {
         ),
       );
 
-      await tester.simulateHover(key, onHover: () {
-        expect(isHovered, true);
-      });
+      await tester.simulateHover(
+        key,
+        onHover: () {
+          expect(isHovered, true);
+        },
+      );
 
       expect(isHovered, false);
     });
 
-    testWidgets('calls onPressedState on tap down/up',
-        (WidgetTester tester) async {
+    testWidgets('calls onPressedState on tap down/up', (
+      WidgetTester tester,
+    ) async {
       bool isPressed = false;
       final key = UniqueKey();
       await tester.pumpMaterialWidget(
@@ -144,15 +152,51 @@ void main() {
         ),
       );
 
-      await tester.simulatePress(key, onPressed: () {
-        expect(isPressed, true);
-      });
+      await tester.simulatePress(
+        key,
+        onPressed: () {
+          expect(isPressed, true);
+        },
+      );
 
       expect(isPressed, false);
     });
 
-    testWidgets('calls onFocusedState when focused/unfocused',
-        (WidgetTester tester) async {
+    testWidgets(
+      'calls onPressedState on tap cancel when gesture leaves and releases',
+      (tester) async {
+        bool? lastPressedState;
+        final key = UniqueKey();
+
+        await tester.pumpMaterialWidget(
+          NakedButton(
+            key: key,
+            onPressed: () {},
+            onPressedState: (value) => lastPressedState = value,
+            child: const Text('Test Button'),
+          ),
+        );
+
+        final center = tester.getCenter(find.byKey(key));
+        final gesture = await tester.startGesture(center);
+        await tester.pump();
+        expect(lastPressedState, true);
+
+        // Drag off the button to trigger cancel
+        await gesture.moveTo(Offset.zero);
+        await tester.pump();
+
+        await gesture.up();
+        await tester.pump();
+
+        expect(lastPressedState, false);
+      },
+      timeout: Timeout(Duration(seconds: 15)),
+    );
+
+    testWidgets('calls onFocusedState when focused/unfocused', (
+      WidgetTester tester,
+    ) async {
       FocusManager.instance.highlightStrategy =
           FocusHighlightStrategy.alwaysTraditional;
       bool isFocused = false;
@@ -241,8 +285,9 @@ void main() {
   });
 
   group('Accessibility', () {
-    testWidgets('provides semantic button property',
-        (WidgetTester tester) async {
+    testWidgets('provides semantic button property', (
+      WidgetTester tester,
+    ) async {
       final key = UniqueKey();
       await tester.pumpMaterialWidget(
         NakedButton(
@@ -256,8 +301,9 @@ void main() {
       expect(semantics.hasFlag(SemanticsFlag.isButton), true);
     });
 
-    testWidgets('shows correct enabled/disabled state',
-        (WidgetTester tester) async {
+    testWidgets('shows correct enabled/disabled state', (
+      WidgetTester tester,
+    ) async {
       final key = UniqueKey();
       for (var enabled in [true, false]) {
         await tester.pumpMaterialWidget(
@@ -276,8 +322,9 @@ void main() {
   });
 
   group('Cursor', () {
-    testWidgets('shows appropriate cursor based on interactive state',
-        (WidgetTester tester) async {
+    testWidgets('shows appropriate cursor based on interactive state', (
+      WidgetTester tester,
+    ) async {
       final keyEnabled = UniqueKey();
       final keyDisabled = UniqueKey();
 
@@ -299,15 +346,9 @@ void main() {
         ),
       );
 
-      tester.expectCursor(
-        SystemMouseCursors.click,
-        on: keyEnabled,
-      );
+      tester.expectCursor(SystemMouseCursors.click, on: keyEnabled);
 
-      tester.expectCursor(
-        SystemMouseCursors.forbidden,
-        on: keyDisabled,
-      );
+      tester.expectCursor(SystemMouseCursors.forbidden, on: keyDisabled);
     });
   });
 }

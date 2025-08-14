@@ -202,70 +202,13 @@ class NakedSlider extends StatefulWidget {
 }
 
 class _NakedSliderState extends State<NakedSlider> {
+  FocusNode? _internalFocusNode;
+  FocusNode get _focusNode =>
+      widget.focusNode ?? (_internalFocusNode ??= FocusNode());
   bool _isDragging = false;
 
   Offset? _dragStartPosition;
   double? _dragStartValue;
-
-  Map<ShortcutActivator, Intent> get _shortcuts {
-    final bool isRTL = Directionality.of(context) == TextDirection.rtl;
-    const arrowLeft = LogicalKeyboardKey.arrowLeft;
-    const arrowRight = LogicalKeyboardKey.arrowRight;
-    const arrowUp = LogicalKeyboardKey.arrowUp;
-    const arrowDown = LogicalKeyboardKey.arrowDown;
-    const home = LogicalKeyboardKey.home;
-    const end = LogicalKeyboardKey.end;
-
-    final decrementIntent = SingleActivator(isRTL ? arrowRight : arrowLeft);
-    final incrementIntent = SingleActivator(isRTL ? arrowLeft : arrowRight);
-
-    final shiftDecrementIntent = SingleActivator(
-      isRTL ? arrowRight : arrowLeft,
-      shift: true,
-    );
-    final shiftIncrementIntent = SingleActivator(
-      isRTL ? arrowLeft : arrowRight,
-      shift: true,
-    );
-
-    return {
-      // Horizontal
-      incrementIntent: const _SliderIncrementIntent(),
-      decrementIntent: const _SliderDecrementIntent(),
-      shiftDecrementIntent: const _SliderShiftDecrementIntent(),
-      shiftIncrementIntent: const _SliderShiftIncrementIntent(),
-
-      // Vertical
-      const SingleActivator(arrowUp): const _SliderIncrementIntent(),
-      const SingleActivator(arrowUp, shift: true):
-          const _SliderShiftIncrementIntent(),
-
-      const SingleActivator(arrowDown): const _SliderDecrementIntent(),
-      const SingleActivator(arrowDown, shift: true):
-          const _SliderShiftDecrementIntent(),
-
-      // Home/End
-      const SingleActivator(home): const _SliderSetToMinIntent(),
-      const SingleActivator(end): const _SliderSetToMaxIntent(),
-    };
-  }
-
-  Map<Type, Action<Intent>> get _actions {
-    return {
-      _SliderIncrementIntent: _SliderIncrementAction(this),
-      _SliderDecrementIntent: _SliderDecrementAction(this),
-      _SliderShiftDecrementIntent: _SliderDecrementAction(
-        this,
-        isShiftPressed: true,
-      ),
-      _SliderShiftIncrementIntent: _SliderIncrementAction(
-        this,
-        isShiftPressed: true,
-      ),
-      _SliderSetToMinIntent: _SliderSetToMinAction(this),
-      _SliderSetToMaxIntent: _SliderSetToMaxAction(this),
-    };
-  }
 
   void _callOnChangeIfNeeded(double value) {
     if (value != widget.value) {
@@ -348,11 +291,76 @@ class _NakedSliderState extends State<NakedSlider> {
     return isShiftPressed ? widget.largeKeyboardStep : widget.keyboardStep;
   }
 
+  @override
+  void dispose() {
+    _internalFocusNode?.dispose();
+    super.dispose();
+  }
+
   bool get _isInteractive => widget.enabled && widget.onChanged != null;
+
+  Map<ShortcutActivator, Intent> get _shortcuts {
+    final bool isRTL = Directionality.of(context) == TextDirection.rtl;
+    const arrowLeft = LogicalKeyboardKey.arrowLeft;
+    const arrowRight = LogicalKeyboardKey.arrowRight;
+    const arrowUp = LogicalKeyboardKey.arrowUp;
+    const arrowDown = LogicalKeyboardKey.arrowDown;
+    const home = LogicalKeyboardKey.home;
+    const end = LogicalKeyboardKey.end;
+
+    final decrementIntent = SingleActivator(isRTL ? arrowRight : arrowLeft);
+    final incrementIntent = SingleActivator(isRTL ? arrowLeft : arrowRight);
+
+    final shiftDecrementIntent = SingleActivator(
+      isRTL ? arrowRight : arrowLeft,
+      shift: true,
+    );
+    final shiftIncrementIntent = SingleActivator(
+      isRTL ? arrowLeft : arrowRight,
+      shift: true,
+    );
+
+    return {
+      // Horizontal
+      incrementIntent: const _SliderIncrementIntent(),
+      decrementIntent: const _SliderDecrementIntent(),
+      shiftDecrementIntent: const _SliderShiftDecrementIntent(),
+      shiftIncrementIntent: const _SliderShiftIncrementIntent(),
+
+      // Vertical
+      const SingleActivator(arrowUp): const _SliderIncrementIntent(),
+      const SingleActivator(arrowUp, shift: true):
+          const _SliderShiftIncrementIntent(),
+
+      const SingleActivator(arrowDown): const _SliderDecrementIntent(),
+      const SingleActivator(arrowDown, shift: true):
+          const _SliderShiftDecrementIntent(),
+
+      // Home/End
+      const SingleActivator(home): const _SliderSetToMinIntent(),
+      const SingleActivator(end): const _SliderSetToMaxIntent(),
+    };
+  }
+
+  Map<Type, Action<Intent>> get _actions {
+    return {
+      _SliderIncrementIntent: _SliderIncrementAction(this),
+      _SliderDecrementIntent: _SliderDecrementAction(this),
+      _SliderShiftDecrementIntent: _SliderDecrementAction(
+        this,
+        isShiftPressed: true,
+      ),
+      _SliderShiftIncrementIntent: _SliderIncrementAction(
+        this,
+        isShiftPressed: true,
+      ),
+      _SliderSetToMinIntent: _SliderSetToMinAction(this),
+      _SliderSetToMaxIntent: _SliderSetToMaxAction(this),
+    };
+  }
 
   @override
   Widget build(BuildContext context) {
-
     // Calculate percentage for accessibility
     final double percentage = widget.max > widget.min
         ? ((widget.value - widget.min) / (widget.max - widget.min)) * 100
@@ -375,7 +383,7 @@ class _NakedSliderState extends State<NakedSlider> {
           '${((decreasedValue - widget.min) / (widget.max - widget.min) * 100).round()}%',
       child: FocusableActionDetector(
         enabled: _isInteractive,
-        focusNode: widget.focusNode,
+        focusNode: _focusNode,
         descendantsAreTraversable: false,
         shortcuts: _shortcuts,
         actions: _actions,
