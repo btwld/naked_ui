@@ -2,7 +2,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import 'utilities/pressed_state_region.dart';
 
 /// A context provider for a radio group that manages a single selection
 /// across multiple radio buttons.
@@ -71,13 +70,19 @@ class NakedRadioGroupState<T> extends State<NakedRadioGroup<T>> {
 
   void _selectRadioInDirection(bool forward) {
     final enabledRadios = _radios
-        .where((radio) => radio._getInterative(this))
+        .where((radio) => radio._getInteractive(this))
         .toList();
     if (enabledRadios.length <= 1) {
       return;
     }
-    final (int, _NakedRadioState<T>)? selected = enabledRadios.indexed
-        .firstWhereOrNull((e) => e.$2._focusNode.hasFocus);
+    // Find the currently focused radio button
+    (int, _NakedRadioState<T>)? selected;
+    for (final (index, state) in enabledRadios.indexed) {
+      if (state._focusNode.hasFocus) {
+        selected = (index, state);
+        break;
+      }
+    }
     if (selected == null) {
       // The focused node is either a non interactive radio or other controls.
       return;
@@ -300,7 +305,10 @@ class _NakedRadioState<T> extends State<NakedRadio<T>> {
     }
   }
 
-  bool _getInterative(NakedRadioGroupState<T> group) =>
+  bool get _isInteractive =>
+      widget.enabled && _group.state.widget.enabled && _group.state.widget.onChanged != null;
+
+  bool _getInteractive(NakedRadioGroupState<T> group) =>
       widget.enabled && group.widget.enabled && group.widget.onChanged != null;
 
   @override
@@ -328,7 +336,6 @@ class _NakedRadioState<T> extends State<NakedRadio<T>> {
   @override
   Widget build(BuildContext context) {
     final isSelected = _group.groupValue == widget.value;
-    final isInteractive = _getInterative(_group.state);
 
     final bool? accessibilitySelected;
     switch (defaultTargetPlatform) {
@@ -351,11 +358,11 @@ class _NakedRadioState<T> extends State<NakedRadio<T>> {
     }
 
     return Semantics(
-      enabled: isInteractive,
+      enabled: _isInteractive,
       checked: isSelected,
       selected: accessibilitySelected,
       child: FocusableActionDetector(
-        enabled: isInteractive,
+        enabled: _isInteractive,
         focusNode: _focusNode,
         autofocus: widget.autofocus,
         actions: _actionMap,
@@ -365,13 +372,15 @@ class _NakedRadioState<T> extends State<NakedRadio<T>> {
           onChanged?.call(widget.value);
           widget.onFocusedState?.call(hasFocus);
         },
-        mouseCursor: isInteractive
+        mouseCursor: _isInteractive
             ? widget.cursor
             : SystemMouseCursors.forbidden,
-        child: PressedStateRegion(
-          onPressedState: widget.onPressedState,
-          onTap: _handleTap,
-          enabled: isInteractive,
+        child: GestureDetector(
+          onTapDown: _isInteractive ? (_) => widget.onPressedState?.call(true) : null,
+          onTapUp: _isInteractive ? (_) => widget.onPressedState?.call(false) : null,
+          onTap: _isInteractive ? _handleTap : null,
+          onTapCancel: _isInteractive ? () => widget.onPressedState?.call(false) : null,
+          behavior: HitTestBehavior.opaque,
           child: Builder(builder: (context) => widget.child),
         ),
       ),
@@ -379,17 +388,6 @@ class _NakedRadioState<T> extends State<NakedRadio<T>> {
   }
 }
 
-extension _IterableExt<T> on Iterable<T> {
-  T? firstWhereOrNull(bool Function(T) test) {
-    for (final element in this) {
-      if (test(element)) {
-        return element;
-      }
-    }
-
-    return null;
-  }
-}
 
 class _SkipUnselectedRadioPolicy<T> extends ReadingOrderTraversalPolicy {
   final Set<_NakedRadioState<T>> radios;

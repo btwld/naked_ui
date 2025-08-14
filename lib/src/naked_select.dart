@@ -19,7 +19,7 @@ import 'utilities/utilities.dart';
 /// - Automatic positioning with fallback alignments
 /// - ARIA-compliant accessibility support
 ///
-/// The component uses [NakedPortal] to render the dropdown content in the app overlay,
+/// The component uses Flutter's OverlayPortal to render the dropdown content in the app overlay,
 /// ensuring proper z-indexing and maintaining context inheritance.
 ///
 /// Example usage:
@@ -302,7 +302,7 @@ class _NakedSelectState<T> extends State<NakedSelect<T>>
 
   @override
   Widget build(BuildContext context) {
-    return NakedSelectInherited<T>(
+    return NakedSelectScope<T>(
       selectedValue: widget.selectedValue,
       selectedValues: widget.selectedValues,
       allowMultiple: widget.allowMultiple,
@@ -340,8 +340,8 @@ class _NakedSelectState<T> extends State<NakedSelect<T>>
 ///
 /// This allows descendant widgets to efficiently access the current selection state
 /// without passing it explicitly through the widget tree.
-class NakedSelectInherited<T> extends InheritedWidget {
-  const NakedSelectInherited({
+class NakedSelectScope<T> extends InheritedWidget {
+  const NakedSelectScope({
     super.key,
     required super.child,
     required this.selectedValue,
@@ -350,17 +350,17 @@ class NakedSelectInherited<T> extends InheritedWidget {
     required this.enabled,
   });
 
-  /// Gets the nearest NakedSelectInherited ancestor of the given context.
-  static NakedSelectInherited<T>? maybeOf<T>(BuildContext context) {
+  /// Gets the nearest NakedSelectScope ancestor of the given context.
+  static NakedSelectScope<T>? maybeOf<T>(BuildContext context) {
     return context.dependOnInheritedWidgetOfExactType();
   }
 
-  static NakedSelectInherited<T> of<T>(BuildContext context) {
+  static NakedSelectScope<T> of<T>(BuildContext context) {
     final inherited = maybeOf<T>(context);
     if (inherited == null) {
       throw StateError(
-        'NakedSelectInherited<$T> not found in context.\n'
-        'Make sure NakedSelectInherited is an ancestor of the current widget.',
+        'NakedSelectScope<$T> not found in context.\n'
+        'Make sure NakedSelectScope is an ancestor of the current widget.',
       );
     }
 
@@ -380,7 +380,7 @@ class NakedSelectInherited<T> extends InheritedWidget {
   final bool enabled;
 
   bool isSelected(BuildContext context, T value) {
-    final inheritedValues = NakedSelectInherited.of<T>(context);
+    final inheritedValues = NakedSelectScope.of<T>(context);
 
     if (inheritedValues.allowMultiple) {
       return inheritedValues.selectedValues?.contains(value) ?? false;
@@ -390,7 +390,7 @@ class NakedSelectInherited<T> extends InheritedWidget {
   }
 
   @override
-  bool updateShouldNotify(NakedSelectInherited<T> oldWidget) {
+  bool updateShouldNotify(NakedSelectScope<T> oldWidget) {
     return selectedValue != oldWidget.selectedValue ||
         !setEquals(selectedValues, oldWidget.selectedValues) ||
         enabled != oldWidget.enabled ||
@@ -446,15 +446,12 @@ class NakedSelectTrigger extends StatelessWidget {
   final Widget child;
 
   /// Called when the hover state changes.
-  /// Use this to update the visual appearance on hover.
   final ValueChanged<bool>? onHoveredState;
 
   /// Called when the pressed state changes.
-  /// Use this to update the visual appearance while pressed.
   final ValueChanged<bool>? onPressedState;
 
   /// Called when the focus state changes.
-  /// Use this to update the visual appearance when focused.
   final ValueChanged<bool>? onFocusedState;
 
   /// Semantic label for accessibility.
@@ -558,19 +555,15 @@ class NakedSelectItem<T> extends StatefulWidget {
   final T value;
 
   /// Called when the hover state changes.
-  /// Use this to update the visual appearance on hover.
   final ValueChanged<bool>? onHoveredState;
 
   /// Called when the pressed state changes.
-  /// Use this to update the visual appearance while pressed.
   final ValueChanged<bool>? onPressedState;
 
   /// Called when the focus state changes.
-  /// Use this to update the visual appearance when focused.
   final ValueChanged<bool>? onFocusedState;
 
   /// Called when the select state changes.
-  /// Use this to update the visual appearance when selected.
   final ValueChanged<bool>? onSelectState;
 
   /// Whether this item is enabled and can be selected.
@@ -644,7 +637,7 @@ class _NakedSelectItemState<T> extends State<NakedSelectItem<T>> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     // Check if selection state has changed and notify
-    final inherited = NakedSelectInherited.maybeOf<T>(context);
+    final inherited = NakedSelectScope.maybeOf<T>(context);
     if (inherited != null) {
       final isSelected = inherited.isSelected(context, widget.value);
       if (_lastReportedSelection != isSelected) {
@@ -674,13 +667,13 @@ class _NakedSelectItemState<T> extends State<NakedSelectItem<T>> {
       if (!isEffectivelyEnabled) return;
 
       if (widget.enableHapticFeedback) {
-        HapticFeedback.lightImpact();
+        HapticFeedback.selectionClick();
       }
 
       state?._selectValue(widget.value);
     }
 
-    final inherited = NakedSelectInherited.of<T>(context);
+    final inherited = NakedSelectScope.of<T>(context);
     final isSelected = inherited.isSelected(context, widget.value);
     // State change notification is now handled in didChangeDependencies
     // Only use addPostFrameCallback if state changed during build (edge case)

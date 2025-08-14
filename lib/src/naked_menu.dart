@@ -10,7 +10,7 @@ import 'utilities/utilities.dart';
 /// for a dropdown menu without imposing any visual styling,
 /// giving consumers complete control over appearance through direct state callbacks.
 ///
-/// This component uses [NakedPortal] to render menu content in the app overlay,
+/// This component uses Flutter's OverlayPortal to render menu content in the app overlay,
 /// ensuring proper z-index and maintaining context inheritance across the component tree.
 ///
 /// Example:

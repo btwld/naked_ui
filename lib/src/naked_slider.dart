@@ -348,9 +348,10 @@ class _NakedSliderState extends State<NakedSlider> {
     return isShiftPressed ? widget.largeKeyboardStep : widget.keyboardStep;
   }
 
+  bool get _isInteractive => widget.enabled && widget.onChanged != null;
+
   @override
   Widget build(BuildContext context) {
-    final isInteractive = widget.enabled && widget.onChanged != null;
 
     // Calculate percentage for accessibility
     final double percentage = widget.max > widget.min
@@ -364,7 +365,7 @@ class _NakedSliderState extends State<NakedSlider> {
 
     return Semantics(
       excludeSemantics: true,
-      enabled: isInteractive,
+      enabled: _isInteractive,
       slider: true,
       label: widget.semanticLabel,
       value: '${percentage.round()}%',
@@ -373,38 +374,38 @@ class _NakedSliderState extends State<NakedSlider> {
       decreasedValue:
           '${((decreasedValue - widget.min) / (widget.max - widget.min) * 100).round()}%',
       child: FocusableActionDetector(
-        enabled: isInteractive,
+        enabled: _isInteractive,
         focusNode: widget.focusNode,
         descendantsAreTraversable: false,
         shortcuts: _shortcuts,
         actions: _actions,
         onShowHoverHighlight: widget.onHoveredState,
         onFocusChange: widget.onFocusedState,
-        mouseCursor: isInteractive
+        mouseCursor: _isInteractive
             ? widget.cursor
             : SystemMouseCursors.forbidden,
         child: GestureDetector(
           onVerticalDragStart:
-              widget.direction == Axis.vertical && isInteractive
+              widget.direction == Axis.vertical && _isInteractive
               ? _handleDragStart
               : null,
           onVerticalDragUpdate:
-              widget.direction == Axis.vertical && isInteractive
+              widget.direction == Axis.vertical && _isInteractive
               ? _handleDragUpdate
               : null,
-          onVerticalDragEnd: widget.direction == Axis.vertical && isInteractive
+          onVerticalDragEnd: widget.direction == Axis.vertical && _isInteractive
               ? _handleDragEnd
               : null,
           onHorizontalDragStart:
-              widget.direction == Axis.horizontal && isInteractive
+              widget.direction == Axis.horizontal && _isInteractive
               ? _handleDragStart
               : null,
           onHorizontalDragUpdate:
-              widget.direction == Axis.horizontal && isInteractive
+              widget.direction == Axis.horizontal && _isInteractive
               ? _handleDragUpdate
               : null,
           onHorizontalDragEnd:
-              widget.direction == Axis.horizontal && isInteractive
+              widget.direction == Axis.horizontal && _isInteractive
               ? _handleDragEnd
               : null,
           behavior: HitTestBehavior.opaque,

@@ -7,6 +7,13 @@ import 'package:flutter/widgets.dart';
 /// and provides methods to open, close, or toggle items. It can also enforce
 /// minimum and maximum limits on the number of expanded items.
 ///
+/// **Architecture Decision**: Unlike other Naked components that use pure callback patterns,
+/// the accordion uses a controller-based approach because it requires:
+/// - Complex state constraints (min/max expanded items)
+/// - Batch operations (openAll, replaceAll)
+/// - Business logic encapsulation (preventing invalid states)
+/// - External programmatic control beyond simple selection callbacks
+///
 /// Generic type [T] represents the unique identifier for each accordion item.
 /// This could be a String, int, or any other type that can uniquely identify sections.
 class NakedAccordionController<T> with ChangeNotifier {

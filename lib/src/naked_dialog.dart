@@ -1,6 +1,32 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 
+/// Displays a customizable dialog without default styling.
+///
+/// Unlike [showDialog], this function provides complete control over dialog
+/// appearance through the [builder] callback. The dialog has no default
+/// background, border radius, or padding, allowing custom designs.
+///
+/// Returns a [Future] that resolves to the value passed to [Navigator.pop]
+/// when the dialog is closed, or null if dismissed.
+///
+/// The [barrierColor] must be specified to define the overlay background.
+/// Set [barrierDismissible] to control whether tapping outside closes the dialog.
+///
+/// Example:
+/// ```dart
+/// final result = await showNakedDialog<String>(
+///   context: context,
+///   barrierColor: Colors.black54,
+///   builder: (context) => Container(
+///     margin: EdgeInsets.all(40),
+///     decoration: BoxDecoration(
+///       color: Colors.white,
+///       borderRadius: BorderRadius.circular(8),
+///     ),
+///     child: Text('Custom Dialog'),
+///   ),
+/// );
+/// ```
 Future<T?> showNakedDialog<T>({
   required BuildContext context,
   required WidgetBuilder builder,

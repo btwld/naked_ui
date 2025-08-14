@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import 'utilities/pressed_state_region.dart';
 
 /// A fully customizable checkbox with no default styling.
 ///
@@ -97,11 +96,10 @@ class NakedCheckbox extends StatefulWidget {
          'Checkbox cannot be both checked and indeterminate',
        );
 
-  /// The child widget to display.
+  /// Visual representation of the checkbox.
   ///
-  /// This widget should represent the visual appearance of the checkbox.
-  /// You're responsible for rendering different visual states based on
-  /// the callback properties (value, onHoveredState, etc.).
+  /// Render different visual states based on the callback properties
+  /// (value, onHoveredState, etc.).
   final Widget child;
 
   /// Whether this checkbox is checked.
@@ -224,10 +222,12 @@ class _NakedCheckboxState extends State<NakedCheckbox> {
         mouseCursor: _isInteractive
             ? widget.cursor
             : SystemMouseCursors.forbidden,
-        child: PressedStateRegion(
-          onPressedState: widget.onPressedState,
-          onTap: toggleValue,
-          enabled: _isInteractive,
+        child: GestureDetector(
+          onTapDown: _isInteractive ? (_) => widget.onPressedState?.call(true) : null,
+          onTapUp: _isInteractive ? (_) => widget.onPressedState?.call(false) : null,
+          onTap: _isInteractive ? toggleValue : null,
+          onTapCancel: _isInteractive ? () => widget.onPressedState?.call(false) : null,
+          behavior: HitTestBehavior.opaque,
           child: widget.child,
         ),
       ),

@@ -146,7 +146,6 @@ class NakedTabGroup extends StatelessWidget {
     this.onEscapePressed,
   });
 
-  /// The child widget to display.
   final Widget child;
 
   /// The ID of the currently selected tab.
@@ -265,7 +264,6 @@ class NakedTabList extends StatelessWidget {
   /// The [child] parameter is required.
   const NakedTabList({super.key, required this.child, this.semanticLabel});
 
-  /// The child widget to display.
   final Widget child;
 
   /// Optional semantic label for accessibility.
@@ -308,7 +306,6 @@ class NakedTab extends StatefulWidget {
     this.focusNode,
   });
 
-  /// The child widget to display.
   final Widget child;
 
   /// The unique ID for this tab.
@@ -433,7 +430,7 @@ class _NakedTabState extends State<NakedTab> {
   Widget build(BuildContext context) {
     final tabsScope = NakedTabsScope.of(context);
     final isSelected = tabsScope.isTabSelected(widget.tabId);
-    final isInteractive = widget.enabled && (tabsScope.enabled);
+    final isInteractive = widget.enabled && tabsScope.enabled;
 
     return Semantics(
       container: true,
@@ -491,7 +488,7 @@ class NakedTabPanel extends StatelessWidget {
     this.maintainState = true,
   });
 
-  /// The child widget to display when this panel is active.
+  /// Content displayed when this panel is active.
   final Widget child;
 
   /// The ID of the tab this panel is associated with.

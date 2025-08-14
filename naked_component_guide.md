@@ -231,6 +231,36 @@ Naked components follow these property naming conventions:
 
 ## State Management Patterns
 
+This library uses two distinct state management patterns, each chosen for specific use cases:
+
+### Pattern 1: Pure Callback-Driven (Recommended for Most Components)
+
+**Used by**: NakedButton, NakedCheckbox, NakedSelect, NakedTabs, NakedRadio
+
+**Characteristics**:
+- Direct callbacks for state changes (`onStateHover`, `onStateFocus`, etc.)
+- InheritedWidget for sharing read-only context (current selection, enabled state)
+- Consumer manages all mutable state
+- Simpler mental model, aligns with Flutter patterns
+
+**When to use**: For most interactive components where state is primarily visual (hover, focus, selection) and doesn't require complex state operations.
+
+### Pattern 2: Controller-Based (For Complex State Management)
+
+**Used by**: NakedAccordion
+
+**Characteristics**:
+- Dedicated controller class (e.g., `NakedAccordionController`)
+- Controller encapsulates complex business logic (min/max constraints, batch operations)
+- Notifies listeners of state changes
+- Provides programmatic API for external control
+
+**When to use**: When components need:
+- Complex state constraints (min/max expanded items)
+- Batch operations (open/close multiple items)
+- External programmatic control beyond simple callbacks
+- State that benefits from encapsulation with business rules
+
 ### Individual Component State
 
 For individual components, the state management pattern is straightforward:

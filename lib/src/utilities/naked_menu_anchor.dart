@@ -13,10 +13,10 @@ const Map<ShortcutActivator, Intent> _shortcuts = <ShortcutActivator, Intent>{
     TraversalDirection.up,
   ),
   SingleActivator(LogicalKeyboardKey.arrowLeft): DirectionalFocusIntent(
-    TraversalDirection.up,
+    TraversalDirection.left,
   ),
   SingleActivator(LogicalKeyboardKey.arrowRight): DirectionalFocusIntent(
-    TraversalDirection.down,
+    TraversalDirection.right,
   ),
 };
 

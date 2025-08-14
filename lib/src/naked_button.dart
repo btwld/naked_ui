@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import 'utilities/pressed_state_region.dart';
 
 /// A fully customizable button with no default styling.
 ///
@@ -59,9 +58,6 @@ import 'utilities/pressed_state_region.dart';
 /// ```
 class NakedButton extends StatefulWidget {
   /// Creates a naked button.
-  ///
-  /// The [child] parameter is required and represents the visual appearance
-  /// of the button in all states.
   const NakedButton({
     super.key,
     required this.child,
@@ -93,39 +89,21 @@ class NakedButton extends StatefulWidget {
   final VoidCallback? onPressed;
 
   /// Called when hover state changes.
-  ///
-  /// Provides the current hover state (true when hovered, false otherwise).
-  /// Use this to update the visual appearance when the user hovers over the button.
   final ValueChanged<bool>? onHoveredState;
 
   /// Called when pressed state changes.
-  ///
-  /// Provides the current pressed state (true when pressed, false otherwise).
-  /// Use this to update the visual appearance when the user presses the button.
   final ValueChanged<bool>? onPressedState;
 
   /// Called when focus state changes.
-  ///
-  /// Provides the current focus state (true when focused, false otherwise).
-  /// Use this to update the visual appearance when the button receives or loses focus.
   final ValueChanged<bool>? onFocusedState;
 
   /// Called when disabled state changes.
-  ///
-  /// Provides the current disabled state (true when disabled, false otherwise).
-  /// Use this to update the visual appearance when the button is disabled.
   final ValueChanged<bool>? onDisabledState;
 
-  /// Whether the button is disabled.
-  ///
-  /// When true, the button will not respond to user interaction regardless of
-  /// whether [onPressed] is provided.
+  /// Whether the button is enabled.
   final bool enabled;
 
   /// Whether the button should be treated as a semantic button.
-  ///
-  /// When true, the button will be treated as a semantic button and will
-  /// have a semantic label and hint.
   final bool isSemanticButton;
 
   /// The semantic label for the button.
@@ -140,9 +118,6 @@ class NakedButton extends StatefulWidget {
   final MouseCursor cursor;
 
   /// Whether to provide haptic feedback on press.
-  ///
-  /// When true (the default), the device will produce a haptic feedback
-  /// effect when the button is pressed.
   final bool enableHapticFeedback;
 
   /// Optional focus node to control focus behavior.
@@ -151,12 +126,9 @@ class NakedButton extends StatefulWidget {
   final FocusNode? focusNode;
 
   /// Whether the button should be focused when first built.
-  ///
-  /// When true, the button will receive focus when it is first built.
-  /// This is useful for making the button the initial focus target in a form or dialog.
   final bool autofocus;
 
-  bool get _isEnabled => enabled && onPressed != null;
+  bool get _isInteractive => enabled && onPressed != null;
 
   @override
   State<NakedButton> createState() => _NakedButtonState();
@@ -171,7 +143,7 @@ class _NakedButtonState extends State<NakedButton> {
   };
 
   void handleTap([Intent? intent]) {
-    if (!widget._isEnabled) return;
+    if (!widget._isInteractive) return;
     if (widget.enableHapticFeedback) {
       HapticFeedback.lightImpact();
     }
@@ -182,14 +154,14 @@ class _NakedButtonState extends State<NakedButton> {
   void initState() {
     super.initState();
     // Safe to call synchronously in initState
-    widget.onDisabledState?.call(!widget._isEnabled);
+    widget.onDisabledState?.call(!widget._isInteractive);
   }
 
   @override
   void didUpdateWidget(NakedButton oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget._isEnabled != widget._isEnabled) {
-      widget.onDisabledState?.call(!widget._isEnabled);
+    if (oldWidget._isInteractive != widget._isInteractive) {
+      widget.onDisabledState?.call(!widget._isInteractive);
     }
   }
 
@@ -198,23 +170,25 @@ class _NakedButtonState extends State<NakedButton> {
     return Semantics(
       container: true,
       excludeSemantics: true,
-      enabled: widget._isEnabled,
+      enabled: widget._isInteractive,
       button: widget.isSemanticButton,
       label: widget.semanticLabel,
       child: FocusableActionDetector(
-        enabled: widget._isEnabled,
+        enabled: widget._isInteractive,
         focusNode: widget.focusNode,
         autofocus: widget.autofocus,
         actions: _actionMap,
         onShowHoverHighlight: widget.onHoveredState,
         onFocusChange: widget.onFocusedState,
-        mouseCursor: widget._isEnabled
+        mouseCursor: widget._isInteractive
             ? widget.cursor
             : SystemMouseCursors.forbidden,
-        child: PressedStateRegion(
-          onPressedState: widget.onPressedState,
-          onTap: handleTap,
-          enabled: widget._isEnabled,
+        child: GestureDetector(
+          onTapDown: widget._isInteractive ? (_) => widget.onPressedState?.call(true) : null,
+          onTapUp: widget._isInteractive ? (_) => widget.onPressedState?.call(false) : null,
+          onTap: widget._isInteractive ? handleTap : null,
+          onTapCancel: widget._isInteractive ? () => widget.onPressedState?.call(false) : null,
+          behavior: HitTestBehavior.opaque,
           child: widget.child,
         ),
       ),

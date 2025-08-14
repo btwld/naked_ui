@@ -1,10 +1,10 @@
-# Headless Widgets Example App
+# Naked UI Example App
 
-A showcase application demonstrating the Headless Widgets library.
+A showcase application demonstrating the Naked UI library.
 
 ## Getting Started
 
-This project demonstrates how to use the Headless Widgets library to create customizable UI components with separation of concerns between behavior and appearance.
+This project demonstrates how to use the Naked UI library to create customizable UI components with separation of concerns between behavior and appearance.
 
 A few resources to get you started if this is your first Flutter project:
 
