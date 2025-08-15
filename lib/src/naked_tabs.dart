@@ -156,9 +156,9 @@ class NakedTab extends StatefulWidget {
     super.key,
     required this.child,
     required this.tabId,
-    this.onHoveredState,
-    this.onPressedState,
-    this.onFocusedState,
+    this.onHoverChange,
+    this.onPressChange,
+    this.onFocusChange,
     this.enabled = true,
     this.semanticLabel,
     this.cursor = SystemMouseCursors.click,
@@ -173,13 +173,13 @@ class NakedTab extends StatefulWidget {
   final String tabId;
 
   /// Called when hover state changes.
-  final ValueChanged<bool>? onHoveredState;
+  final ValueChanged<bool>? onHoverChange;
 
   /// Called when pressed state changes.
-  final ValueChanged<bool>? onPressedState;
+  final ValueChanged<bool>? onPressChange;
 
   /// Called when focus state changes.
-  final ValueChanged<bool>? onFocusedState;
+  final ValueChanged<bool>? onFocusChange;
 
   /// Whether this tab is enabled.
   final bool enabled;
@@ -205,10 +205,9 @@ class NakedTab extends StatefulWidget {
 
 class _NakedTabState extends State<NakedTab> {
   FocusNode? _ownedFocusNode;
-  
-  FocusNode get _focusNode => 
-    widget.focusNode ?? (_ownedFocusNode ??= FocusNode());
 
+  FocusNode get _focusNode =>
+      widget.focusNode ?? (_ownedFocusNode ??= FocusNode());
 
   void _handleTap() {
     if (!widget.enabled) return;
@@ -235,7 +234,7 @@ class _NakedTabState extends State<NakedTab> {
     }
 
     if (event is KeyUpEvent && event.logicalKey.isConfirmationKey) {
-      widget.onPressedState?.call(false);
+      widget.onPressChange?.call(false);
       _handleTap();
 
       return KeyEventResult.handled;
@@ -269,7 +268,7 @@ class _NakedTabState extends State<NakedTab> {
           break;
       }
       if (event.logicalKey.isConfirmationKey) {
-        widget.onPressedState?.call(true);
+        widget.onPressChange?.call(true);
 
         return KeyEventResult.handled;
       }
@@ -277,7 +276,6 @@ class _NakedTabState extends State<NakedTab> {
 
     return KeyEventResult.ignored;
   }
-
 
   @override
   void dispose() {
@@ -300,27 +298,27 @@ class _NakedTabState extends State<NakedTab> {
       onTap: isInteractive ? _handleTap : null,
       child: Focus(
         focusNode: _focusNode,
-        onFocusChange: widget.onFocusedState,
+        onFocusChange: widget.onFocusChange,
         onKeyEvent: _handleKeyEvent,
         canRequestFocus: isInteractive,
         child: MouseRegion(
           onEnter: isInteractive
-              ? (_) => widget.onHoveredState?.call(true)
+              ? (_) => widget.onHoverChange?.call(true)
               : null,
           onExit: isInteractive
-              ? (_) => widget.onHoveredState?.call(false)
+              ? (_) => widget.onHoverChange?.call(false)
               : null,
           cursor: isInteractive ? widget.cursor : SystemMouseCursors.forbidden,
           child: GestureDetector(
             onTapDown: isInteractive
-                ? (_) => widget.onPressedState?.call(true)
+                ? (_) => widget.onPressChange?.call(true)
                 : null,
             onTapUp: isInteractive
-                ? (_) => widget.onPressedState?.call(false)
+                ? (_) => widget.onPressChange?.call(false)
                 : null,
             onTap: isInteractive ? _handleTap : null,
             onTapCancel: isInteractive
-                ? () => widget.onPressedState?.call(false)
+                ? () => widget.onPressChange?.call(false)
                 : null,
             behavior: HitTestBehavior.opaque,
             child: widget.child,

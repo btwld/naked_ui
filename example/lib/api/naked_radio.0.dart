@@ -91,10 +91,10 @@ class _RadioState extends State<Radio> {
   Widget build(BuildContext context) {
     return NakedRadio<RadioOption>(
       value: widget.value,
-      onFocusedState: (focused) => setState(() => _isFocused = focused),
-      onHoveredState: (hovered) => setState(() => _isHovered = hovered),
-      onSelectedState: (selected) => setState(() => _isSelected = selected),
-      onPressedState: (pressed) => setState(() => _isPressed = pressed),
+      onFocusChange: (focused) => setState(() => _isFocused = focused),
+      onHoverChange: (hovered) => setState(() => _isHovered = hovered),
+      onSelectChange: (selected) => setState(() => _isSelected = selected),
+      onPressChange: (pressed) => setState(() => _isPressed = pressed),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 100),
         width: 20,

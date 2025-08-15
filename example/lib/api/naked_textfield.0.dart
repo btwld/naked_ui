@@ -55,9 +55,9 @@ class _TextFieldExampleState extends State<TextFieldExample> {
           fontSize: 14,
           fontWeight: FontWeight.w400,
         ),
-        onHoveredState: (isHovered) => setState(() => _isHovered = isHovered),
-        onPressedState: (isPressed) => setState(() => _isPressed = isPressed),
-        onFocusedState: (isFocused) => setState(() => _isFocused = isFocused),
+        onHoverChange: (isHovered) => setState(() => _isHovered = isHovered),
+        onPressChange: (isPressed) => setState(() => _isPressed = isPressed),
+        onFocusChange: (isFocused) => setState(() => _isFocused = isFocused),
         builder: (context, textArea) {
           return AnimatedContainer(
             duration: const Duration(milliseconds: 200),

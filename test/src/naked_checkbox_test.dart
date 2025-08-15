@@ -83,9 +83,9 @@ void main() {
           value: false,
           onChanged: (_) {},
           enabled: false,
-          onHoveredState: (value) => isHovered = value,
-          onPressedState: (value) => isPressed = value,
-          onFocusedState: (value) => isFocused = value,
+          onHoverChange: (value) => isHovered = value,
+          onPressChange: (value) => isPressed = value,
+          onFocusChange: (value) => isFocused = value,
           child: const Text('Checkbox Label'),
         ),
       );
@@ -118,7 +118,7 @@ void main() {
       expect(isFocused, false);
     });
 
-    testWidgets('calls onHoveredState when hovered', (
+    testWidgets('calls onHoverChange when hovered', (
       WidgetTester tester,
     ) async {
       FocusManager.instance.highlightStrategy =
@@ -133,7 +133,7 @@ void main() {
           child: NakedCheckbox(
             value: false,
             onChanged: (_) {},
-            onHoveredState: (value) => isHovered = value,
+            onHoverChange: (value) => isHovered = value,
             child: Text('Checkbox Label', key: textKey),
           ),
         ),
@@ -156,7 +156,7 @@ void main() {
       expect(isHovered, isFalse);
     });
 
-    testWidgets('calls onPressedState on tap down/up', (
+    testWidgets('calls onPressChange on tap down/up', (
       WidgetTester tester,
     ) async {
       bool isPressed = false;
@@ -164,7 +164,7 @@ void main() {
         NakedCheckbox(
           value: false,
           onChanged: (_) {},
-          onPressedState: (value) => isPressed = value,
+          onPressChange: (value) => isPressed = value,
           child: const Text('Checkbox Label'),
         ),
       );
@@ -179,7 +179,7 @@ void main() {
     });
 
     testWidgets(
-      'calls onPressedState on tap cancel when gesture leaves and releases',
+      'calls onPressChange on tap cancel when gesture leaves and releases',
       (tester) async {
         bool? lastPressedState;
         final key = UniqueKey();
@@ -189,7 +189,7 @@ void main() {
             key: key,
             value: false,
             onChanged: (_) {},
-            onPressedState: (value) => lastPressedState = value,
+            onPressChange: (value) => lastPressedState = value,
             child: const Text('Checkbox Label'),
           ),
         );
@@ -211,7 +211,7 @@ void main() {
       timeout: Timeout(Duration(seconds: 15)),
     );
 
-    testWidgets('calls onFocusedState when focused/unfocused', (
+    testWidgets('calls onFocusChange when focused/unfocused', (
       WidgetTester tester,
     ) async {
       bool isFocused = false;
@@ -222,7 +222,7 @@ void main() {
           value: false,
           onChanged: (_) {},
           focusNode: focusNode,
-          onFocusedState: (value) => isFocused = value,
+          onFocusChange: (value) => isFocused = value,
           child: const Text('Checkbox Label'),
         ),
       );
@@ -242,7 +242,7 @@ void main() {
               value: false,
               onChanged: (_) {},
               focusNode: focusNodeCheckbox,
-              onFocusedState: (value) => isFocused = value,
+              onFocusChange: (value) => isFocused = value,
               child: const Text('Checkbox Label'),
             ),
             m.TextButton(

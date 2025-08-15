@@ -3,7 +3,11 @@ import 'dart:ui' as ui show BoxHeightStyle, BoxWidthStyle;
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
-import 'package:flutter/material.dart' show materialTextSelectionHandleControls, desktopTextSelectionHandleControls, TextMagnifier;
+import 'package:flutter/material.dart'
+    show
+        materialTextSelectionHandleControls,
+        desktopTextSelectionHandleControls,
+        TextMagnifier;
 import 'package:flutter/services.dart';
 
 /// A customizable text field with no default styling or decoration.
@@ -57,7 +61,7 @@ class NakedTextField extends StatefulWidget {
     this.selectionControls,
     this.onPressed,
     this.onTapAlwaysCalled = false,
-    this.onPressedState,
+    this.onPressChange,
     this.onTapOutside,
     this.scrollController,
     this.scrollPhysics,
@@ -72,8 +76,8 @@ class NakedTextField extends StatefulWidget {
     this.canRequestFocus = true,
     this.spellCheckConfiguration,
     this.magnifierConfiguration,
-    this.onHoveredState,
-    this.onFocusedState,
+    this.onHoverChange,
+    this.onFocusChange,
     this.style,
     required this.builder,
     this.ignorePointers,
@@ -231,7 +235,7 @@ class NakedTextField extends StatefulWidget {
   /// The callback provides the current pressed state as a boolean parameter:
   /// - `true` when the text field is pressed
   /// - `false` when the text field is released
-  final ValueChanged<bool>? onPressedState;
+  final ValueChanged<bool>? onPressChange;
 
   /// Called when a tap is detected outside of the field.
   final TapRegionCallback? onTapOutside;
@@ -279,14 +283,14 @@ class NakedTextField extends StatefulWidget {
   /// The callback provides the current hover state as a boolean parameter:
   /// - `true` when the mouse pointer enters the text field
   /// - `false` when the mouse pointer exits the text field
-  final ValueChanged<bool>? onHoveredState;
+  final ValueChanged<bool>? onHoverChange;
 
   /// Called when the focus state changes.
   ///
   /// The callback provides the current focus state as a boolean parameter:
   /// - `true` when the text field gains focus
   /// - `false` when the text field loses focus
-  final ValueChanged<bool>? onFocusedState;
+  final ValueChanged<bool>? onFocusChange;
 
   /// The group ID for the text field.
   final Object groupId;
@@ -315,10 +319,10 @@ class _NakedTextFieldState extends State<NakedTextField>
   static const Color _defaultTextColor = Color(0xFF000000);
   static const Color _defaultDisabledColor = Color(0xFF9E9E9E);
   static const Color _androidCursorColor = Color(0xFF2196F3);
-  
+
   // iOS cursor offset constant (from Material library)
   static const int _iOSHorizontalOffset = -2;
-  
+
   RestorableTextEditingController? _controller;
   TextEditingController get _effectiveController =>
       widget.controller ?? _controller!.value;
@@ -430,7 +434,7 @@ class _NakedTextFieldState extends State<NakedTextField>
     setState(() {
       // Rebuild the widget on focus change to show/hide the text selection highlight.
     });
-    widget.onFocusedState?.call(_effectiveFocusNode.hasFocus);
+    widget.onFocusChange?.call(_effectiveFocusNode.hasFocus);
   }
 
   void _handleSelectionChanged(
@@ -563,7 +567,8 @@ class _NakedTextFieldState extends State<NakedTextField>
   Widget build(BuildContext context) {
     assert(debugCheckHasDirectionality(context));
 
-    final TextStyle style = widget.style ??
+    final TextStyle style =
+        widget.style ??
         TextStyle(
           color: widget.enabled ? _defaultTextColor : _defaultDisabledColor,
           fontSize: 16.0,
@@ -743,9 +748,9 @@ class _NakedTextFieldState extends State<NakedTextField>
       child: widget.enabled
           ? MouseRegion(
               onEnter: (PointerEnterEvent event) =>
-                  widget.onHoveredState?.call(true),
+                  widget.onHoverChange?.call(true),
               onExit: (PointerExitEvent event) =>
-                  widget.onHoveredState?.call(false),
+                  widget.onHoverChange?.call(false),
               cursor: SystemMouseCursors.text,
               child: _selectionGestureDetectorBuilder.buildGestureDetector(
                 behavior: HitTestBehavior.translucent,
@@ -777,13 +782,13 @@ class _TextFieldSelectionGestureDetectorBuilder
   @override
   void onTapDown(TapDragDownDetails details) {
     super.onTapDown(details);
-    _state.widget.onPressedState?.call(true);
+    _state.widget.onPressChange?.call(true);
   }
 
   @override
   void onSingleTapUp(TapDragUpDetails details) {
     super.onSingleTapUp(details);
-    _state.widget.onPressedState?.call(false);
+    _state.widget.onPressChange?.call(false);
   }
 
   @override

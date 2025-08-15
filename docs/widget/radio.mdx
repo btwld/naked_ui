@@ -79,10 +79,10 @@ class _RadioButtonState extends State<RadioButton> {
   Widget build(BuildContext context) {
     return NakedRadio<RadioOption>(
       value: widget.value,
-      onFocusState: (focused) => setState(() => _isFocused = focused),
+      onFocusChange: (focused) => setState(() => _isFocused = focused),
       onHoverState: (hovered) => setState(() => _isHovered = hovered),
-      onPressedState: (pressed) => setState(() => _isPressed = pressed),
-      onSelectState: (selected) => setState(() => _isSelected = selected),
+      onPressChange: (pressed) => setState(() => _isPressed = pressed),
+      onSelectChange: (selected) => setState(() => _isSelected = selected),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 100),
         width: 20,
@@ -149,8 +149,8 @@ const NakedRadioButton({
   required this.builder,
   required this.value,
   this.onHoverState,
-  this.onPressedState,
-  this.onFocusState,
+  this.onPressChange,
+  this.onFocusChange,
   this.enabled = true,
   this.cursor = SystemMouseCursors.click,
   this.enableHapticFeedback = true,
@@ -170,10 +170,10 @@ The value this radio button represents. When this value matches the group's valu
 #### onHoverState → `ValueChanged<bool>?`
 Called when hover state changes. Can be used to update visual feedback when the user hovers over the radio button.
 
-#### onPressedState → `ValueChanged<bool>?`
+#### onPressChange → `ValueChanged<bool>?`
 Called when pressed state changes. Can be used to update visual feedback when the user presses the radio button.
 
-#### onFocusState → `ValueChanged<bool>?`
+#### onFocusChange → `ValueChanged<bool>?`
 Called when focus state changes. Can be used to update visual feedback when the radio button gains or loses focus.
 
 #### enabled → `bool`

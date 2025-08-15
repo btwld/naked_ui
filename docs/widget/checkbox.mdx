@@ -48,8 +48,8 @@ class _CheckboxExampleState extends State<CheckboxExample> {
         });
       },
       onHoverState: (isHovered) => setState(() => _isHovered = isHovered),
-      onPressedState: (isPressed) => setState(() => _isPressed = isPressed),
-      onFocusState: (isFocused) => setState(() => _isFocused = isFocused),
+      onPressChange: (isPressed) => setState(() => _isPressed = isPressed),
+      onFocusChange: (isFocused) => setState(() => _isFocused = isFocused),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         spacing: 8,
@@ -106,8 +106,8 @@ const NakedCheckbox({
   this.tristate = false,
   this.onChanged,
   this.onHoverState,
-  this.onPressedState,
-  this.onFocusState,
+  this.onPressChange,
+  this.onFocusChange,
   this.enabled = true,
   this.semanticLabel,
   this.cursor = SystemMouseCursors.click,
@@ -134,10 +134,10 @@ Called when the checkbox is toggled. The callback provides the new state of the 
 #### onHoverState → `ValueChanged<bool>?`
 Called when hover state changes. Provides the current hover state (true when hovered, false otherwise).
 
-#### onPressedState → `ValueChanged<bool>?`
+#### onPressChange → `ValueChanged<bool>?`
 Called when pressed state changes. Provides the current pressed state (true when pressed, false otherwise).
 
-#### onFocusState → `ValueChanged<bool>?`
+#### onFocusChange → `ValueChanged<bool>?`
 Called when focus state changes. Provides the current focus state (true when focused, false otherwise).
 
 #### enabled → `bool`

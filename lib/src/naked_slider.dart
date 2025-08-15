@@ -16,9 +16,9 @@ class NakedSlider extends StatefulWidget {
     this.onChanged,
     this.onDragStart,
     this.onDragEnd,
-    this.onHoveredState,
-    this.onDraggedState,
-    this.onFocusedState,
+    this.onHoverChange,
+    this.onDragChange,
+    this.onFocusChange,
     this.enabled = true,
     this.semanticLabel,
     this.cursor = SystemMouseCursors.click,
@@ -52,13 +52,13 @@ class NakedSlider extends StatefulWidget {
   final ValueChanged<double>? onDragEnd;
 
   /// Called when hover state changes.
-  final ValueChanged<bool>? onHoveredState;
+  final ValueChanged<bool>? onHoverChange;
 
   /// Called when dragging state changes.
-  final ValueChanged<bool>? onDraggedState;
+  final ValueChanged<bool>? onDragChange;
 
   /// Called when focus state changes.
-  final ValueChanged<bool>? onFocusedState;
+  final ValueChanged<bool>? onFocusChange;
 
   /// Whether the slider is disabled.
   ///
@@ -133,7 +133,7 @@ class _NakedSliderState extends State<NakedSlider> {
       _dragStartValue = widget.value;
     });
 
-    widget.onDraggedState?.call(true);
+    widget.onDragChange?.call(true);
     widget.onDragStart?.call();
   }
 
@@ -174,7 +174,7 @@ class _NakedSliderState extends State<NakedSlider> {
       _dragStartValue = null;
     });
 
-    widget.onDraggedState?.call(false);
+    widget.onDragChange?.call(false);
     widget.onDragEnd?.call(widget.value);
   }
 
@@ -281,8 +281,8 @@ class _NakedSliderState extends State<NakedSlider> {
         descendantsAreTraversable: false,
         shortcuts: _shortcuts,
         actions: _actions,
-        onShowHoverHighlight: widget.onHoveredState,
-        onFocusChange: widget.onFocusedState,
+        onShowHoverHighlight: widget.onHoverChange,
+        onFocusChange: widget.onFocusChange,
         mouseCursor: _isInteractive
             ? widget.cursor
             : SystemMouseCursors.forbidden,

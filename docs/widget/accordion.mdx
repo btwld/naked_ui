@@ -220,7 +220,7 @@ const NakedAccordionItem({
   required this.child,
   this.transitionBuilder,
   this.semanticLabel,
-  this.onFocusState,
+  this.onFocusChange,
   this.autoFocus = false,
   this.focusNode,
 })
@@ -243,7 +243,7 @@ Optional builder to customize the transition when expanding/collapsing. If not p
 #### semanticLabel → `String?`
 Optional semantic label describing the section for screen readers.
 
-#### onFocusState → `ValueChanged<bool>?`
+#### onFocusChange → `ValueChanged<bool>?`
 Optional callback to handle focus state changes.
 
 #### autoFocus → `bool`

@@ -360,7 +360,7 @@ void main() {
   });
 
   group('Interaction States', () {
-    testWidgets('calls onHoveredState when trigger hovered', (
+    testWidgets('calls onHoverChange when trigger hovered', (
       WidgetTester tester,
     ) async {
       FocusManager.instance.highlightStrategy =
@@ -376,7 +376,7 @@ void main() {
             menu: const SizedBox(),
             child: NakedSelectTrigger(
               key: key,
-              onHoveredState: (value) => isHovered = value,
+              onHoverChange: (value) => isHovered = value,
               child: const Text('Select option'),
             ),
           ),
@@ -393,7 +393,7 @@ void main() {
       expect(isHovered, false);
     });
 
-    testWidgets('calls onPressedState when trigger pressed', (
+    testWidgets('calls onPressChange when trigger pressed', (
       WidgetTester tester,
     ) async {
       bool isPressed = false;
@@ -402,7 +402,7 @@ void main() {
         NakedSelect<String>(
           menu: const SizedBox(),
           child: NakedSelectTrigger(
-            onPressedState: (value) => isPressed = value,
+            onPressChange: (value) => isPressed = value,
             child: const Text('Select option'),
           ),
         ),
@@ -417,7 +417,7 @@ void main() {
       expect(isPressed, false);
     });
 
-    testWidgets('calls onFocusedState when trigger focused', (
+    testWidgets('calls onFocusChange when trigger focused', (
       WidgetTester tester,
     ) async {
       bool isFocused = false;
@@ -431,7 +431,7 @@ void main() {
           menu: const SizedBox(),
           child: NakedSelectTrigger(
             focusNode: focusNode,
-            onFocusedState: (value) => isFocused = value,
+            onFocusChange: (value) => isFocused = value,
             child: const Text('Select option'),
           ),
         ),
@@ -467,8 +467,8 @@ void main() {
               child: NakedSelectItem<String>(
                 key: key,
                 value: 'test',
-                onHoveredState: (value) => itemHovered = value,
-                onPressedState: (value) => itemPressed = value,
+                onHoverChange: (value) => itemHovered = value,
+                onPressChange: (value) => itemPressed = value,
                 child: const Text('Apple'),
               ),
             ),
@@ -709,7 +709,9 @@ void main() {
         ),
       );
 
-      final selectSemantics = tester.getSemantics(find.byType(NakedSelect<String>));
+      final selectSemantics = tester.getSemantics(
+        find.byType(NakedSelect<String>),
+      );
       expect(selectSemantics.label, equals('Fruit picker'));
     });
 
@@ -725,10 +727,7 @@ void main() {
                 semanticLabel: 'Apple fruit',
                 child: Text('Apple'),
               ),
-              NakedSelectItem<String>(
-                value: 'banana',
-                child: Text('Banana'),
-              ),
+              NakedSelectItem<String>(value: 'banana', child: Text('Banana')),
             ],
           ),
           child: const NakedSelectTrigger(child: Text('Select fruit')),

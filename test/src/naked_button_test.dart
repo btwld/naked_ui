@@ -71,9 +71,9 @@ void main() {
           key: key,
           onPressed: () {},
           enabled: false,
-          onHoveredState: (value) => isHovered = value,
-          onPressedState: (value) => isPressed = value,
-          onFocusedState: (value) => isFocused = value,
+          onHoverChange: (value) => isHovered = value,
+          onPressChange: (value) => isPressed = value,
+          onFocusChange: (value) => isFocused = value,
           child: const Text('Test Button'),
         ),
       );
@@ -107,7 +107,7 @@ void main() {
       expect(isFocused, false);
     });
 
-    testWidgets('calls onHoveredState when hovered', (
+    testWidgets('calls onHoverChange when hovered', (
       WidgetTester tester,
     ) async {
       FocusManager.instance.highlightStrategy =
@@ -122,7 +122,7 @@ void main() {
           child: NakedButton(
             key: key,
             onPressed: () {},
-            onHoveredState: (value) => isHovered = value,
+            onHoverChange: (value) => isHovered = value,
             child: const Text('Test Button'),
           ),
         ),
@@ -138,7 +138,7 @@ void main() {
       expect(isHovered, false);
     });
 
-    testWidgets('calls onPressedState on tap down/up', (
+    testWidgets('calls onPressChange on tap down/up', (
       WidgetTester tester,
     ) async {
       bool isPressed = false;
@@ -147,7 +147,7 @@ void main() {
         NakedButton(
           key: key,
           onPressed: () {},
-          onPressedState: (value) => isPressed = value,
+          onPressChange: (value) => isPressed = value,
           child: const Text('Test Button'),
         ),
       );
@@ -163,7 +163,7 @@ void main() {
     });
 
     testWidgets(
-      'calls onPressedState on tap cancel when gesture leaves and releases',
+      'calls onPressChange on tap cancel when gesture leaves and releases',
       (tester) async {
         bool? lastPressedState;
         final key = UniqueKey();
@@ -172,7 +172,7 @@ void main() {
           NakedButton(
             key: key,
             onPressed: () {},
-            onPressedState: (value) => lastPressedState = value,
+            onPressChange: (value) => lastPressedState = value,
             child: const Text('Test Button'),
           ),
         );
@@ -194,7 +194,7 @@ void main() {
       timeout: Timeout(Duration(seconds: 15)),
     );
 
-    testWidgets('calls onFocusedState when focused/unfocused', (
+    testWidgets('calls onFocusChange when focused/unfocused', (
       WidgetTester tester,
     ) async {
       FocusManager.instance.highlightStrategy =
@@ -206,7 +206,7 @@ void main() {
         NakedButton(
           onPressed: () {},
           focusNode: focusNode,
-          onFocusedState: (value) => isFocused = value,
+          onFocusChange: (value) => isFocused = value,
           child: const Text('Test Button'),
         ),
       );
@@ -225,7 +225,7 @@ void main() {
             NakedButton(
               onPressed: () {},
               focusNode: focusNodeNakedButton,
-              onFocusedState: (value) => isFocused = value,
+              onFocusChange: (value) => isFocused = value,
               child: const Text('Test Button'),
             ),
             m.TextButton(
@@ -369,9 +369,7 @@ void main() {
       expect(semantics.hasFlag(SemanticsFlag.isButton), true);
     });
 
-    testWidgets('respects isSemanticButton flag', (
-      WidgetTester tester,
-    ) async {
+    testWidgets('respects isSemanticButton flag', (WidgetTester tester) async {
       await tester.pumpMaterialWidget(
         NakedButton(
           isSemanticButton: false,

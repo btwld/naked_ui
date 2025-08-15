@@ -164,10 +164,10 @@ class NakedRadio<T> extends StatefulWidget {
     super.key,
     required this.child,
     required this.value,
-    this.onHoveredState,
-    this.onPressedState,
-    this.onSelectedState,
-    this.onFocusedState,
+    this.onHoverChange,
+    this.onPressChange,
+    this.onSelectChange,
+    this.onFocusChange,
     this.enabled = true,
     this.cursor = SystemMouseCursors.click,
     this.enableHapticFeedback = true,
@@ -186,23 +186,23 @@ class NakedRadio<T> extends StatefulWidget {
   /// Called when hover state changes.
   ///
   /// Can be used to update visual feedback when the user hovers over the radio button.
-  final ValueChanged<bool>? onHoveredState;
+  final ValueChanged<bool>? onHoverChange;
 
   /// Called when pressed state changes.
   ///
   /// Can be used to update visual feedback when the user presses the radio button.
-  final ValueChanged<bool>? onPressedState;
+  final ValueChanged<bool>? onPressChange;
 
   /// Called when select state changes.
   ///
   /// Can be used to update visual feedback when the radio button is selected.
-  final ValueChanged<bool>? onSelectedState;
+  final ValueChanged<bool>? onSelectChange;
 
   /// Called when focus state changes.
   ///
   /// Can be used to update visual feedback when the radio button gains or loses focus.
   /// Selection automatically follows focus.
-  final ValueChanged<bool>? onFocusedState;
+  final ValueChanged<bool>? onFocusChange;
 
   /// Whether this radio button is enabled.
   ///
@@ -291,7 +291,7 @@ class _NakedRadioState<T> extends State<NakedRadio<T>> {
     if (_lastReportedSelection != isSelected) {
       _lastReportedSelection = isSelected;
       // Safe to call synchronously in didChangeDependencies
-      widget.onSelectedState?.call(isSelected);
+      widget.onSelectChange?.call(isSelected);
     }
   }
 
@@ -321,27 +321,27 @@ class _NakedRadioState<T> extends State<NakedRadio<T>> {
         focusNode: _focusNode,
         autofocus: widget.autofocus,
         actions: _actionMap,
-        onShowFocusHighlight: widget.onFocusedState,
-        onShowHoverHighlight: widget.onHoveredState,
+        onShowFocusHighlight: widget.onFocusChange,
+        onShowHoverHighlight: widget.onHoverChange,
         onFocusChange: (hasFocus) {
           if (hasFocus && _isInteractive && _group.groupValue != widget.value) {
             onChanged?.call(widget.value);
           }
-          widget.onFocusedState?.call(hasFocus);
+          widget.onFocusChange?.call(hasFocus);
         },
         mouseCursor: _isInteractive
             ? widget.cursor
             : SystemMouseCursors.forbidden,
         child: GestureDetector(
           onTapDown: _isInteractive
-              ? (_) => widget.onPressedState?.call(true)
+              ? (_) => widget.onPressChange?.call(true)
               : null,
           onTapUp: _isInteractive
-              ? (_) => widget.onPressedState?.call(false)
+              ? (_) => widget.onPressChange?.call(false)
               : null,
           onTap: _isInteractive ? _handleTap : null,
           onTapCancel: _isInteractive
-              ? () => widget.onPressedState?.call(false)
+              ? () => widget.onPressChange?.call(false)
               : null,
           behavior: HitTestBehavior.opaque,
           child: widget.child,

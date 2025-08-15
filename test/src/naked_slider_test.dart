@@ -7,10 +7,7 @@ import 'package:naked_ui/naked_ui.dart';
 
 import 'helpers/simulate_hover.dart';
 
-Widget _anyWidget() => const SizedBox(
-      width: 200,
-      height: 40,
-    );
+Widget _anyWidget() => const SizedBox(width: 200, height: 40);
 
 void main() {
   const testKey = Key('test-slider');
@@ -29,8 +26,9 @@ void main() {
       expect(find.text('Hello, world!'), findsOneWidget);
     });
 
-    testWidgets('value changes when dragged horizontally',
-        (WidgetTester tester) async {
+    testWidgets('value changes when dragged horizontally', (
+      WidgetTester tester,
+    ) async {
       double value = 0.5;
       await tester.pumpMaterialWidget(
         NakedSlider(
@@ -54,8 +52,9 @@ void main() {
       expect(value, lessThan(0.5));
     });
 
-    testWidgets('value changes when dragged vertically',
-        (WidgetTester tester) async {
+    testWidgets('value changes when dragged vertically', (
+      WidgetTester tester,
+    ) async {
       double value = 0.5;
       await tester.pumpMaterialWidget(
         NakedSlider(
@@ -80,8 +79,9 @@ void main() {
       expect(value, lessThan(0.5));
     });
 
-    testWidgets('constrains value between min and max',
-        (WidgetTester tester) async {
+    testWidgets('constrains value between min and max', (
+      WidgetTester tester,
+    ) async {
       double value = 0.5;
       await tester.pumpMaterialWidget(
         NakedSlider(
@@ -129,8 +129,9 @@ void main() {
       expect(value, 0.5);
     });
 
-    testWidgets('does not respond when onChanged is null',
-        (WidgetTester tester) async {
+    testWidgets('does not respond when onChanged is null', (
+      WidgetTester tester,
+    ) async {
       double value = 0.5;
       await tester.pumpMaterialWidget(
         NakedSlider(
@@ -178,8 +179,9 @@ void main() {
   });
 
   group('State Callbacks', () {
-    testWidgets('does not call state callbacks when disabled',
-        (WidgetTester tester) async {
+    testWidgets('does not call state callbacks when disabled', (
+      WidgetTester tester,
+    ) async {
       bool isHovered = false;
       bool isDragging = false;
       bool isFocused = false;
@@ -190,21 +192,25 @@ void main() {
           value: 0.5,
           enabled: false,
           onChanged: (_) {},
-          onHoveredState: (value) => isHovered = value,
-          onDraggedState: (value) => isDragging = value,
-          onFocusedState: (value) => isFocused = value,
+          onHoverChange: (value) => isHovered = value,
+          onDragChange: (value) => isDragging = value,
+          onFocusChange: (value) => isFocused = value,
           child: _anyWidget(),
         ),
       );
 
       // Test hover
-      await tester.simulateHover(testKey, onHover: () {
-        expect(isHovered, false);
-      });
+      await tester.simulateHover(
+        testKey,
+        onHover: () {
+          expect(isHovered, false);
+        },
+      );
 
       // Test drag
-      final gesture =
-          await tester.startGesture(tester.getCenter(find.byKey(testKey)));
+      final gesture = await tester.startGesture(
+        tester.getCenter(find.byKey(testKey)),
+      );
       await tester.pump();
       expect(isDragging, false);
       await gesture.up();
@@ -220,7 +226,7 @@ void main() {
           enabled: false,
           focusNode: focusNode,
           onChanged: (_) {},
-          onFocusedState: (value) => isFocused = value,
+          onFocusChange: (value) => isFocused = value,
           child: _anyWidget(),
         ),
       );
@@ -230,7 +236,9 @@ void main() {
       expect(isFocused, false);
     });
 
-    testWidgets('calls onHoveredState when hovered', (WidgetTester tester) async {
+    testWidgets('calls onHoverChange when hovered', (
+      WidgetTester tester,
+    ) async {
       FocusManager.instance.highlightStrategy =
           FocusHighlightStrategy.alwaysTraditional;
 
@@ -242,28 +250,30 @@ void main() {
             key: testKey,
             value: 0.5,
             onChanged: (_) {},
-            onHoveredState: (value) => isHovered = value,
+            onHoverChange: (value) => isHovered = value,
             child: _anyWidget(),
           ),
         ),
       );
 
-      await tester.simulateHover(testKey, onHover: () {
-        expect(isHovered, true);
-      });
+      await tester.simulateHover(
+        testKey,
+        onHover: () {
+          expect(isHovered, true);
+        },
+      );
 
       expect(isHovered, false);
     });
 
-    testWidgets('calls onDraggedState when dragged',
-        (WidgetTester tester) async {
+    testWidgets('calls onDragChange when dragged', (WidgetTester tester) async {
       bool isDragging = false;
       await tester.pumpMaterialWidget(
         NakedSlider(
           key: testKey,
           value: 0.5,
           onChanged: (_) {},
-          onDraggedState: (value) => isDragging = value,
+          onDragChange: (value) => isDragging = value,
           child: _anyWidget(),
         ),
       );
@@ -281,8 +291,9 @@ void main() {
       expect(isDragging, false);
     });
 
-    testWidgets('calls onFocusedState when focused/unfocused',
-        (WidgetTester tester) async {
+    testWidgets('calls onFocusChange when focused/unfocused', (
+      WidgetTester tester,
+    ) async {
       bool isFocused = false;
       final focusNode = FocusNode();
 
@@ -292,7 +303,7 @@ void main() {
           value: 0.5,
           focusNode: focusNode,
           onChanged: (_) {},
-          onFocusedState: (value) => isFocused = value,
+          onFocusChange: (value) => isFocused = value,
           child: _anyWidget(),
         ),
       );
@@ -308,8 +319,9 @@ void main() {
       expect(isFocused, false);
     });
 
-    testWidgets('fires onDragStart and onDragEnd callbacks',
-        (WidgetTester tester) async {
+    testWidgets('fires onDragStart and onDragEnd callbacks', (
+      WidgetTester tester,
+    ) async {
       bool dragStarted = false;
       double? endValue;
 
@@ -337,58 +349,64 @@ void main() {
 
   group('Keyboard Interaction', () {
     testWidgets(
-        'responds to (right/left) and (up/down) keys in (horizontal/vertical) mode',
-        (WidgetTester tester) async {
-      for (final direction in [Axis.horizontal, Axis.vertical]) {
-        double value = 0.5;
-        final focusNode = FocusNode();
+      'responds to (right/left) and (up/down) keys in (horizontal/vertical) mode',
+      (WidgetTester tester) async {
+        for (final direction in [Axis.horizontal, Axis.vertical]) {
+          double value = 0.5;
+          final focusNode = FocusNode();
 
-        await tester.pumpMaterialWidget(
-          StatefulBuilder(builder: (context, setState) {
-            return NakedSlider(
-              key: testKey,
-              value: value,
-              keyboardStep: 0.1,
-              focusNode: focusNode,
-              direction: direction,
-              onChanged: (newValue) => setState(() => value = newValue),
-              child: _anyWidget(),
-            );
-          }),
-        );
+          await tester.pumpMaterialWidget(
+            StatefulBuilder(
+              builder: (context, setState) {
+                return NakedSlider(
+                  key: testKey,
+                  value: value,
+                  keyboardStep: 0.1,
+                  focusNode: focusNode,
+                  direction: direction,
+                  onChanged: (newValue) => setState(() => value = newValue),
+                  child: _anyWidget(),
+                );
+              },
+            ),
+          );
 
-        // Focus the slider
-        focusNode.requestFocus();
-        await tester.pump();
-
-        for (final keyTest in [
-          (key: LogicalKeyboardKey.arrowRight, expectedValue: 0.6),
-          (key: LogicalKeyboardKey.arrowLeft, expectedValue: 0.5),
-          (key: LogicalKeyboardKey.arrowUp, expectedValue: 0.6),
-          (key: LogicalKeyboardKey.arrowDown, expectedValue: 0.5),
-        ]) {
-          await tester.sendKeyEvent(keyTest.key);
+          // Focus the slider
+          focusNode.requestFocus();
           await tester.pump();
-          expect(value, keyTest.expectedValue);
-        }
-      }
-    });
 
-    testWidgets('jumps to next division when dragged with divisions enabled',
-        (WidgetTester tester) async {
+          for (final keyTest in [
+            (key: LogicalKeyboardKey.arrowRight, expectedValue: 0.6),
+            (key: LogicalKeyboardKey.arrowLeft, expectedValue: 0.5),
+            (key: LogicalKeyboardKey.arrowUp, expectedValue: 0.6),
+            (key: LogicalKeyboardKey.arrowDown, expectedValue: 0.5),
+          ]) {
+            await tester.sendKeyEvent(keyTest.key);
+            await tester.pump();
+            expect(value, keyTest.expectedValue);
+          }
+        }
+      },
+    );
+
+    testWidgets('jumps to next division when dragged with divisions enabled', (
+      WidgetTester tester,
+    ) async {
       double value = 0.3;
       final focusNode = FocusNode();
       await tester.pumpMaterialWidget(
-        StatefulBuilder(builder: (context, setState) {
-          return NakedSlider(
-            key: testKey,
-            value: value,
-            divisions: 4,
-            focusNode: focusNode,
-            onChanged: (newValue) => setState(() => value = newValue),
-            child: _anyWidget(),
-          );
-        }),
+        StatefulBuilder(
+          builder: (context, setState) {
+            return NakedSlider(
+              key: testKey,
+              value: value,
+              divisions: 4,
+              focusNode: focusNode,
+              onChanged: (newValue) => setState(() => value = newValue),
+              child: _anyWidget(),
+            );
+          },
+        ),
       );
 
       // Focus the slider
@@ -437,8 +455,9 @@ void main() {
   });
 
   group('Accessibility', () {
-    testWidgets('provides semantic slider property',
-        (WidgetTester tester) async {
+    testWidgets('provides semantic slider property', (
+      WidgetTester tester,
+    ) async {
       await tester.pumpMaterialWidget(
         NakedSlider(
           key: testKey,
@@ -467,8 +486,9 @@ void main() {
       expect(semantics.label, 'Custom Label');
     });
 
-    testWidgets('shows correct enabled/disabled state',
-        (WidgetTester tester) async {
+    testWidgets('shows correct enabled/disabled state', (
+      WidgetTester tester,
+    ) async {
       for (var enabled in [true, false]) {
         await tester.pumpMaterialWidget(
           NakedSlider(
@@ -487,8 +507,9 @@ void main() {
   });
 
   group('Cursor', () {
-    testWidgets('shows appropriate cursor based on interactive state',
-        (WidgetTester tester) async {
+    testWidgets('shows appropriate cursor based on interactive state', (
+      WidgetTester tester,
+    ) async {
       const enabledKey = Key('enabled');
       const disabledKey = Key('disabled');
 
@@ -512,21 +533,16 @@ void main() {
         ),
       );
 
-      tester.expectCursor(
-        SystemMouseCursors.click,
-        on: enabledKey,
-      );
+      tester.expectCursor(SystemMouseCursors.click, on: enabledKey);
 
-      tester.expectCursor(
-        SystemMouseCursors.forbidden,
-        on: disabledKey,
-      );
+      tester.expectCursor(SystemMouseCursors.forbidden, on: disabledKey);
     });
   });
 
   group('RTL Support', () {
-    testWidgets('arrow keys work correctly in RTL mode',
-        (WidgetTester tester) async {
+    testWidgets('arrow keys work correctly in RTL mode', (
+      WidgetTester tester,
+    ) async {
       double value = 0.5;
       final focusNode = FocusNode();
 
@@ -534,16 +550,18 @@ void main() {
         Directionality(
           textDirection: TextDirection.rtl,
           child: Center(
-            child: StatefulBuilder(builder: (context, setState) {
-              return NakedSlider(
-                key: testKey,
-                value: value,
-                keyboardStep: 0.1,
-                focusNode: focusNode,
-                onChanged: (newValue) => setState(() => value = newValue),
-                child: _anyWidget(),
-              );
-            }),
+            child: StatefulBuilder(
+              builder: (context, setState) {
+                return NakedSlider(
+                  key: testKey,
+                  value: value,
+                  keyboardStep: 0.1,
+                  focusNode: focusNode,
+                  onChanged: (newValue) => setState(() => value = newValue),
+                  child: _anyWidget(),
+                );
+              },
+            ),
           ),
         ),
       );
@@ -565,8 +583,9 @@ void main() {
   });
 
   group('Additional Features', () {
-    testWidgets('uses custom cursor when provided',
-        (WidgetTester tester) async {
+    testWidgets('uses custom cursor when provided', (
+      WidgetTester tester,
+    ) async {
       await tester.pumpMaterialWidget(
         NakedSlider(
           key: testKey,
@@ -577,29 +596,29 @@ void main() {
         ),
       );
 
-      tester.expectCursor(
-        SystemMouseCursors.precise,
-        on: testKey,
-      );
+      tester.expectCursor(SystemMouseCursors.precise, on: testKey);
     });
 
-    testWidgets('large keyboard step with shift key',
-        (WidgetTester tester) async {
+    testWidgets('large keyboard step with shift key', (
+      WidgetTester tester,
+    ) async {
       double value = 0.5;
       final focusNode = FocusNode();
 
       await tester.pumpMaterialWidget(
-        StatefulBuilder(builder: (context, setState) {
-          return NakedSlider(
-            key: testKey,
-            value: value,
-            keyboardStep: 0.01,
-            largeKeyboardStep: 0.2,
-            focusNode: focusNode,
-            onChanged: (newValue) => setState(() => value = newValue),
-            child: _anyWidget(),
-          );
-        }),
+        StatefulBuilder(
+          builder: (context, setState) {
+            return NakedSlider(
+              key: testKey,
+              value: value,
+              keyboardStep: 0.01,
+              largeKeyboardStep: 0.2,
+              focusNode: focusNode,
+              onChanged: (newValue) => setState(() => value = newValue),
+              child: _anyWidget(),
+            );
+          },
+        ),
       );
 
       // Focus the slider
@@ -620,16 +639,18 @@ void main() {
       double value = 0.0;
 
       await tester.pumpMaterialWidget(
-        StatefulBuilder(builder: (context, setState) {
-          return NakedSlider(
-            key: testKey,
-            value: value,
-            min: -100.0,
-            max: 100.0,
-            onChanged: (newValue) => setState(() => value = newValue),
-            child: _anyWidget(),
-          );
-        }),
+        StatefulBuilder(
+          builder: (context, setState) {
+            return NakedSlider(
+              key: testKey,
+              value: value,
+              min: -100.0,
+              max: 100.0,
+              onChanged: (newValue) => setState(() => value = newValue),
+              child: _anyWidget(),
+            );
+          },
+        ),
       );
 
       final sliderFinder = find.byKey(testKey);
@@ -642,28 +663,31 @@ void main() {
       expect(value, lessThan(100.0));
     });
 
-    testWidgets('properly handles focus traversal',
-        (WidgetTester tester) async {
+    testWidgets('properly handles focus traversal', (
+      WidgetTester tester,
+    ) async {
       final focusNode1 = FocusNode();
       final focusNode2 = FocusNode();
       final focusNode3 = FocusNode();
 
-      await tester.pumpWidget(MaterialApp(
-        home: Scaffold(
-          body: Column(
-            children: [
-              TextField(focusNode: focusNode1),
-              NakedSlider(
-                value: 0.5,
-                focusNode: focusNode2,
-                onChanged: (_) {},
-                child: _anyWidget(),
-              ),
-              TextField(focusNode: focusNode3),
-            ],
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: Column(
+              children: [
+                TextField(focusNode: focusNode1),
+                NakedSlider(
+                  value: 0.5,
+                  focusNode: focusNode2,
+                  onChanged: (_) {},
+                  child: _anyWidget(),
+                ),
+                TextField(focusNode: focusNode3),
+              ],
+            ),
           ),
         ),
-      ));
+      );
 
       // Focus the first text field
       focusNode1.requestFocus();
@@ -709,9 +733,7 @@ void main() {
       expect(find.byType(NakedSlider), findsNWidgets(2));
     });
 
-    testWidgets('semantic label is applied', (
-      WidgetTester tester,
-    ) async {
+    testWidgets('semantic label is applied', (WidgetTester tester) async {
       await tester.pumpMaterialWidget(
         NakedSlider(
           value: 0.6,

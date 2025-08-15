@@ -1,3 +1,4 @@
+export 'mixins/naked_mixins.dart';
 export 'naked_accordion.dart';
 export 'naked_button.dart';
 export 'naked_checkbox.dart';

@@ -106,7 +106,7 @@ void main() {
             child: NakedRadio<String>(
               key: _key,
               value: 'test',
-              onHoveredState: (value) => isHovered = value,
+              onHoverChange: (value) => isHovered = value,
               child: Container(width: 24, height: 24, color: Colors.red),
             ),
           ),
@@ -131,7 +131,7 @@ void main() {
           onChanged: (_) {},
           child: NakedRadio<String>(
             value: 'test',
-            onPressedState: (value) => isPressed = value,
+            onPressChange: (value) => isPressed = value,
             child: const SizedBox(width: 24, height: 24),
           ),
         ),
@@ -156,7 +156,7 @@ void main() {
           onChanged: (_) {},
           child: NakedRadio<String>(
             value: 'test',
-            onFocusedState: (value) => isFocused = value,
+            onFocusChange: (value) => isFocused = value,
             focusNode: focusNode,
             child: const SizedBox(width: 24, height: 24),
           ),
@@ -235,7 +235,7 @@ void main() {
           child: NakedRadio<String>(
             value: 'test',
             focusNode: focusNode,
-            onFocusedState: (value) => isFocused = value,
+            onFocusChange: (value) => isFocused = value,
             child: const SizedBox(width: 24, height: 24),
           ),
         ),

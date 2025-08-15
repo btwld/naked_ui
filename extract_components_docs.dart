@@ -57,10 +57,7 @@ class ComponentDocumentationExtractor {
             name: className,
             description: currentDocComment ?? 'No description available',
             filePath: file.path,
-            constructorParams: _extractConstructorParams(
-              content,
-              className,
-            ),
+            constructorParams: _extractConstructorParams(content, className),
             examples: _extractExamples(currentDocComment ?? ''),
             features: _extractFeatures(currentDocComment ?? ''),
           );

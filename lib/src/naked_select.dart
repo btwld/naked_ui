@@ -371,8 +371,8 @@ class _SelectItemInfo<T> {
 /// Example:
 /// ```dart
 /// NakedSelectTrigger(
-///   onHoveredState: (isHovered) => setState(() => _isHovered = isHovered),
-///   onPressedState: (isPressed) => setState(() => _isPressed = isPressed),
+///   onHoverChange: (isHovered) => setState(() => _isHovered = isHovered),
+///   onPressChange: (isPressed) => setState(() => _isPressed = isPressed),
 ///   child: Container(
 ///     color: _isHovered ? Colors.blue[100] : Colors.white,
 ///     child: Text('Select an option'),
@@ -383,9 +383,9 @@ class NakedSelectTrigger extends StatelessWidget {
   const NakedSelectTrigger({
     super.key,
     required this.child,
-    this.onHoveredState,
-    this.onPressedState,
-    this.onFocusedState,
+    this.onHoverChange,
+    this.onPressChange,
+    this.onFocusChange,
     this.semanticLabel,
     this.cursor = SystemMouseCursors.click,
     this.enableHapticFeedback = true,
@@ -398,13 +398,13 @@ class NakedSelectTrigger extends StatelessWidget {
   final Widget child;
 
   /// Called when the hover state changes.
-  final ValueChanged<bool>? onHoveredState;
+  final ValueChanged<bool>? onHoverChange;
 
   /// Called when the pressed state changes.
-  final ValueChanged<bool>? onPressedState;
+  final ValueChanged<bool>? onPressChange;
 
   /// Called when the focus state changes.
-  final ValueChanged<bool>? onFocusedState;
+  final ValueChanged<bool>? onFocusChange;
 
   /// Semantic label for accessibility.
   /// Used by screen readers to identify the trigger.
@@ -442,9 +442,9 @@ class NakedSelectTrigger extends StatelessWidget {
 
     return NakedButton(
       onPressed: handleTap,
-      onHoveredState: onHoveredState,
-      onPressedState: onPressedState,
-      onFocusedState: onFocusedState,
+      onHoverChange: onHoverChange,
+      onPressChange: onPressChange,
+      onFocusChange: onFocusChange,
       enabled: state?.isEnabled ?? true,
       isSemanticButton: true,
       semanticLabel: semanticLabel,
@@ -473,8 +473,8 @@ class NakedSelectTrigger extends StatelessWidget {
 /// ```dart
 /// NakedSelectItem<int>(
 ///   value: 1,
-///   onHoveredState: (isHovered) => setState(() => _isHovered = isHovered),
-///   onSelectedState: (isSelected) => setState(() => _isSelected = isSelected),
+///   onHoverChange: (isHovered) => setState(() => _isHovered = isHovered),
+///   onSelectChange: (isSelected) => setState(() => _isSelected = isSelected),
 ///   child: Container(
 ///     color: _isSelected ? Colors.blue : (_isHovered ? Colors.blue[100] : Colors.white),
 ///     child: Text('Option 1'),
@@ -486,10 +486,10 @@ class NakedSelectItem<T> extends StatefulWidget {
     super.key,
     required this.child,
     required this.value,
-    this.onHoveredState,
-    this.onPressedState,
-    this.onFocusedState,
-    this.onSelectedState,
+    this.onHoverChange,
+    this.onPressChange,
+    this.onFocusChange,
+    this.onSelectChange,
     this.enabled = true,
     this.semanticLabel,
     this.cursor = SystemMouseCursors.click,
@@ -508,16 +508,16 @@ class NakedSelectItem<T> extends StatefulWidget {
   final T value;
 
   /// Called when the hover state changes.
-  final ValueChanged<bool>? onHoveredState;
+  final ValueChanged<bool>? onHoverChange;
 
   /// Called when the pressed state changes.
-  final ValueChanged<bool>? onPressedState;
+  final ValueChanged<bool>? onPressChange;
 
   /// Called when the focus state changes.
-  final ValueChanged<bool>? onFocusedState;
+  final ValueChanged<bool>? onFocusChange;
 
   /// Called when the select state changes.
-  final ValueChanged<bool>? onSelectedState;
+  final ValueChanged<bool>? onSelectChange;
 
   /// Whether this item is enabled and can be selected.
   /// When false, all interaction is disabled.
@@ -599,7 +599,7 @@ class _NakedSelectItemState<T> extends State<NakedSelectItem<T>> {
       if (_lastReportedSelection != isSelected) {
         _lastReportedSelection = isSelected;
         // Safe to call synchronously in didChangeDependencies
-        widget.onSelectedState?.call(isSelected);
+        widget.onSelectChange?.call(isSelected);
       }
     }
   }
@@ -636,7 +636,7 @@ class _NakedSelectItemState<T> extends State<NakedSelectItem<T>> {
     if (_lastReportedSelection != isSelected) {
       _lastReportedSelection = isSelected;
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        widget.onSelectedState?.call(isSelected);
+        widget.onSelectChange?.call(isSelected);
       });
     }
 
@@ -646,9 +646,9 @@ class _NakedSelectItemState<T> extends State<NakedSelectItem<T>> {
       selected: isSelected,
       child: NakedButton(
         onPressed: handleSelect,
-        onHoveredState: widget.onHoveredState,
-        onPressedState: widget.onPressedState,
-        onFocusedState: widget.onFocusedState,
+        onHoverChange: widget.onHoverChange,
+        onPressChange: widget.onPressChange,
+        onFocusChange: widget.onFocusChange,
         enabled: isEffectivelyEnabled,
         isSemanticButton: true,
         semanticLabel: widget.semanticLabel ?? widget.value.toString(),

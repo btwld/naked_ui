@@ -217,14 +217,14 @@ void main() {
                 children: [
                   NakedMenuItem(
                     onPressed: () {},
-                    onFocusedState: (value) {
+                    onFocusChange: (value) {
                       item1Focused = value;
                     },
                     child: const Text('Item 1'),
                   ),
                   NakedMenuItem(
                     onPressed: () {},
-                    onFocusedState: (value) {
+                    onFocusChange: (value) {
                       item2Focused = value;
                     },
                     child: const Text('Item 2'),
@@ -426,7 +426,7 @@ void main() {
               child: NakedMenuItem(
                 key: key,
                 onPressed: () {},
-                onHoveredState: (value) => hovered = value,
+                onHoverChange: (value) => hovered = value,
                 child: const Text('Menu Item'),
               ),
             ),
@@ -457,7 +457,7 @@ void main() {
             overlayBuilder: (_) => NakedMenuItem(
               key: key,
               onPressed: () {},
-              onPressedState: (value) => pressed = value,
+              onPressChange: (value) => pressed = value,
               child: const Text('Menu Item'),
             ),
           ),
@@ -489,7 +489,7 @@ void main() {
             overlayBuilder: (_) => NakedMenuItem(
               onPressed: () {},
               focusNode: focusNode,
-              onFocusedState: (value) => focused = value,
+              onFocusChange: (value) => focused = value,
               child: const Text('Menu Item'),
             ),
           ),

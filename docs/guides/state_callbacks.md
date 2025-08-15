@@ -13,11 +13,11 @@ on{State}State
 ```
 
 For example:
-- `onHoveredState`: Called when hover state changes
-- `onPressedState`: Called when pressed state changes
-- `onFocusedState`: Called when focus state changes
-- `onDraggedState`: Called when drag state changes (NakedSlider)
-- `onSelectedState`: Called when selection state changes (NakedRadio)
+- `onHoverChange`: Called when hover state changes
+- `onPressChange`: Called when pressed state changes
+- `onFocusChange`: Called when focus state changes
+- `onDragChange`: Called when drag state changes (NakedSlider)
+- `onSelectChange`: Called when selection state changes (NakedRadio)
 
 ## Common State Callbacks
 
@@ -25,16 +25,16 @@ Most interactive Naked components implement these core state callbacks:
 
 | Callback | Description | Parameter |
 |----------|-------------|-----------|
-| `onHoveredState` | Called when mouse enters or leaves the component | `bool isHovered` |
-| `onPressedState` | Called when component is pressed or released | `bool isPressed` |
-| `onFocusedState` | Called when component gains or loses focus | `bool isFocused` |
+| `onHoverChange` | Called when mouse enters or leaves the component | `bool isHovered` |
+| `onPressChange` | Called when component is pressed or released | `bool isPressed` |
+| `onFocusChange` | Called when component gains or loses focus | `bool isFocused` |
 
 Some components also implement specialized state callbacks:
 
 | Callback | Description | Used By |
 |----------|-------------|---------|
-| `onDraggedState` | Called when drag state changes | `NakedSlider` |
-| `onSelectedState` | Called when selection state changes | `NakedRadio`, `NakedSelect` |
+| `onDragChange` | Called when drag state changes | `NakedSlider` |
+| `onSelectChange` | Called when selection state changes | `NakedRadio`, `NakedSelect` |
 
 ## Usage Example
 
@@ -43,17 +43,17 @@ NakedButton(
   onPressed: () {
     // Handle button tap
   },
-  onHoveredState: (isHovered) {
+  onHoverChange: (isHovered) {
     setState(() {
       _isHovered = isHovered;
     });
   },
-  onPressedState: (isPressed) {
+  onPressChange: (isPressed) {
     setState(() {
       _isPressed = isPressed;
     });
   },
-  onFocusedState: (isFocused) {
+  onFocusChange: (isFocused) {
     setState(() {
       _isFocused = isFocused;
     });
@@ -90,6 +90,6 @@ The naming has been standardized to `on{State}State` for clarity and consistency
 
 | Old Pattern | New Pattern |
 |-------------|-------------|
-| `onStateHover` | `onHoveredState` |
-| `onStatePressed` | `onPressedState` |
-| `onStateFocus` | `onFocusedState` |
+| `onStateHover` | `onHoverChange` |
+| `onStatePressed` | `onPressChange` |
+| `onStateFocus` | `onFocusChange` |

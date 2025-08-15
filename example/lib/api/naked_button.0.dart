@@ -57,9 +57,9 @@ class _ButtonExampleState extends State<ButtonExample> {
       onPressed: () {
         debugPrint('Button pressed!');
       },
-      onHoveredState: (isHovered) => setState(() => _isHovered = isHovered),
-      onPressedState: (isPressed) => setState(() => _isPressed = isPressed),
-      onFocusedState: (isFocused) => setState(() => _isFocused = isFocused),
+      onHoverChange: (isHovered) => setState(() => _isHovered = isHovered),
+      onPressChange: (isPressed) => setState(() => _isPressed = isPressed),
+      onFocusChange: (isFocused) => setState(() => _isFocused = isFocused),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 2),
         decoration: BoxDecoration(

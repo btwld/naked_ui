@@ -69,7 +69,7 @@ void main() {
           NakedAccordionItem<String>(
             value: 'item1',
             trigger: (_, _, _) => const Text('Trigger 1'),
-            onFocusedState: (focused) => focusState = focused,
+            onFocusChange: (focused) => focusState = focused,
             autoFocus: autoFocus,
             focusNode: focusNode,
             child: const Text('Content 1'),
@@ -82,7 +82,7 @@ void main() {
       focusState = false;
     });
 
-    testWidgets('onFocusedState callback is triggered when focused', (
+    testWidgets('onFocusChange callback is triggered when focused', (
       WidgetTester tester,
     ) async {
       final focusNode = FocusNode();
@@ -109,7 +109,7 @@ void main() {
             NakedAccordionItem<String>(
               value: 'item1',
               trigger: (_, _, _) => const Text('Trigger 1'),
-              onFocusedState: (focused) => focusState = focused,
+              onFocusChange: (focused) => focusState = focused,
               autoFocus: true,
               child: const Text('Content 1'),
             ),

@@ -224,7 +224,7 @@ void main() {
   });
 
   group('State Callbacks', () {
-    testWidgets('calls onHoveredState when hovered', (
+    testWidgets('calls onHoverChange when hovered', (
       WidgetTester tester,
     ) async {
       bool isHovered = false;
@@ -242,7 +242,7 @@ void main() {
                       NakedTab(
                         key: key,
                         tabId: 'tab1',
-                        onHoveredState: (value) => isHovered = value,
+                        onHoverChange: (value) => isHovered = value,
                         child: const Text('Tab 1'),
                       ),
                     ],
@@ -265,7 +265,7 @@ void main() {
       expect(isHovered, false);
     });
 
-    testWidgets('calls onPressedState on tap down/up', (
+    testWidgets('calls onPressChange on tap down/up', (
       WidgetTester tester,
     ) async {
       bool isPressed = false;
@@ -279,7 +279,7 @@ void main() {
                   children: [
                     NakedTab(
                       tabId: 'tab1',
-                      onPressedState: (value) => isPressed = value,
+                      onPressChange: (value) => isPressed = value,
                       child: const Text('Tab 1'),
                     ),
                   ],
@@ -300,7 +300,7 @@ void main() {
       expect(isPressed, false);
     });
 
-    testWidgets('calls onFocusedState when focused/unfocused', (
+    testWidgets('calls onFocusChange when focused/unfocused', (
       WidgetTester tester,
     ) async {
       bool isFocused = false;
@@ -317,7 +317,7 @@ void main() {
                     NakedTab(
                       tabId: 'tab1',
                       focusNode: focusNode,
-                      onFocusedState: (value) => isFocused = value,
+                      onFocusChange: (value) => isFocused = value,
                       child: const Text('Tab 1'),
                     ),
                   ],

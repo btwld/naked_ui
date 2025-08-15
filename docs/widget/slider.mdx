@@ -169,7 +169,7 @@ const NakedSlider({
   this.onDragEnd,
   this.onHoverState,
   this.onDraggingState,
-  this.onFocusState,
+  this.onFocusChange,
   this.enabled = true,
   this.semanticLabel,
   this.cursor = SystemMouseCursors.click,
@@ -210,7 +210,7 @@ Called when hover state changes. Provides the current hover state (true when hov
 #### onDraggingState → `ValueChanged<bool>?`
 Called when dragging state changes. Provides the current dragging state (true when dragging, false otherwise).
 
-#### onFocusState → `ValueChanged<bool>?`
+#### onFocusChange → `ValueChanged<bool>?`
 Called when focus state changes. Provides the current focus state (true when focused, false otherwise).
 
 #### enabled → `bool`

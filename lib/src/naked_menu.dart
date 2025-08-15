@@ -182,16 +182,15 @@ class NakedMenuItem extends StatelessWidget {
   ///
   /// The [child] parameter is required and represents the item's content.
   /// Use [onPressed] to handle selection, and the state callbacks
-  /// ([onHoveredState], [onPressedState], [onFocusedState]) to customize appearance.
+  /// ([onHoverChange], [onPressChange], [onFocusChange]) to customize appearance.
   const NakedMenuItem({
     super.key,
     required this.child,
-    this.onHoveredState,
-    this.onPressedState,
-    this.onFocusedState,
+    this.onHoverChange,
+    this.onPressChange,
+    this.onFocusChange,
     this.onPressed,
     this.enabled = true,
-    this.onDisabledState,
     this.semanticLabel,
     this.cursor = SystemMouseCursors.click,
     this.enableHapticFeedback = true,
@@ -203,15 +202,15 @@ class NakedMenuItem extends StatelessWidget {
 
   /// Called when the hover state changes.
   /// Can be used to update visual feedback.
-  final ValueChanged<bool>? onHoveredState;
+  final ValueChanged<bool>? onHoverChange;
 
   /// Called when the pressed state changes.
   /// Can be used to update visual feedback.
-  final ValueChanged<bool>? onPressedState;
+  final ValueChanged<bool>? onPressChange;
 
   /// Called when the focus state changes.
   /// Can be used to update visual feedback.
-  final ValueChanged<bool>? onFocusedState;
+  final ValueChanged<bool>? onFocusChange;
 
   /// Called when the item is selected.
   final VoidCallback? onPressed;
@@ -232,9 +231,6 @@ class NakedMenuItem extends StatelessWidget {
   /// Optional focus node to control focus behavior.
   final FocusNode? focusNode;
 
-  /// Called when the disabled state changes.
-  /// Can be used to update visual feedback when the item is disabled.
-  final ValueChanged<bool>? onDisabledState;
 
   @override
   Widget build(BuildContext context) {
@@ -253,10 +249,9 @@ class NakedMenuItem extends StatelessWidget {
 
     return NakedButton(
       onPressed: onPressed != null ? onPress : null,
-      onHoveredState: onHoveredState,
-      onPressedState: onPressedState,
-      onFocusedState: onFocusedState,
-      onDisabledState: onDisabledState,
+      onHoverChange: onHoverChange,
+      onPressChange: onPressChange,
+      onFocusChange: onFocusChange,
       enabled: enabled,
       semanticLabel: semanticLabel,
       cursor: cursor,

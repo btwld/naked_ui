@@ -148,7 +148,7 @@ class _AnimatedSelectExampleState extends State<AnimatedSelectExample>
         ),
         child: NakedSelectTrigger(
           onHoverState: (isHovered) => setState(() => _isHovered = isHovered),
-          onFocusState: (isFocused) => setState(() => _isFocused = isFocused),
+          onFocusChange: (isFocused) => setState(() => _isFocused = isFocused),
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 200),
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -211,8 +211,8 @@ class _SelectItemState extends State<SelectItem> {
     return NakedSelectItem<String>(
       value: widget.value,
       onHoverState: (isHovered) => setState(() => _isHovered = isHovered),
-      onFocusState: (isFocused) => setState(() => _isFocused = isFocused),
-      onSelectState: (isSelected) => setState(() => _isSelected = isSelected),
+      onFocusChange: (isFocused) => setState(() => _isFocused = isFocused),
+      onSelectChange: (isSelected) => setState(() => _isSelected = isSelected),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
         decoration: BoxDecoration(
@@ -359,8 +359,8 @@ const NakedSelectTrigger({
   Key? key,
   required this.child,
   this.onHoverState,
-  this.onPressedState,
-  this.onFocusState,
+  this.onPressChange,
+  this.onFocusChange,
   this.semanticLabel,
   this.cursor = SystemMouseCursors.click,
   this.enableHapticFeedback = true,
@@ -377,10 +377,10 @@ The child widget to display. This widget will be wrapped with interaction handle
 #### onHoverState → `ValueChanged<bool>?`
 Called when the hover state changes. Use this to update the visual appearance on hover.
 
-#### onPressedState → `ValueChanged<bool>?`
+#### onPressChange → `ValueChanged<bool>?`
 Called when the pressed state changes. Use this to update the visual appearance while pressed.
 
-#### onFocusState → `ValueChanged<bool>?`
+#### onFocusChange → `ValueChanged<bool>?`
 Called when the focus state changes. Use this to update the visual appearance when focused.
 
 #### semanticLabel → `String?`
@@ -407,9 +407,9 @@ const NakedSelectItem({
   required this.child,
   required this.value,
   this.onHoverState,
-  this.onPressedState,
-  this.onFocusState,
-  this.onSelectState,
+  this.onPressChange,
+  this.onFocusChange,
+  this.onSelectChange,
   this.enabled = true,
   this.semanticLabel,
   this.cursor = SystemMouseCursors.click,
@@ -430,13 +430,13 @@ The value associated with this item. This value will be passed to the select's o
 #### onHoverState → `ValueChanged<bool>?`
 Called when the hover state changes. Use this to update the visual appearance on hover.
 
-#### onPressedState → `ValueChanged<bool>?`
+#### onPressChange → `ValueChanged<bool>?`
 Called when the pressed state changes. Use this to update the visual appearance while pressed.
 
-#### onFocusState → `ValueChanged<bool>?`
+#### onFocusChange → `ValueChanged<bool>?`
 Called when the focus state changes. Use this to update the visual appearance when focused.
 
-#### onSelectState → `ValueChanged<bool>?`
+#### onSelectChange → `ValueChanged<bool>?`
 Called when the selection state changes. Use this to update the visual appearance when this item is selected or deselected.
 
 #### enabled → `bool`

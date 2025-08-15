@@ -13,9 +13,9 @@ class NakedCheckbox extends StatefulWidget {
     this.value = false,
     this.tristate = false,
     this.onChanged,
-    this.onHoveredState,
-    this.onPressedState,
-    this.onFocusedState,
+    this.onHoverChange,
+    this.onPressChange,
+    this.onFocusChange,
     this.enabled = true,
     this.semanticLabel,
     this.cursor = SystemMouseCursors.click,
@@ -30,7 +30,7 @@ class NakedCheckbox extends StatefulWidget {
   /// Visual representation of the checkbox.
   ///
   /// Render different visual states based on the callback properties
-  /// (value, onHoveredState, etc.).
+  /// (value, onHoverChange, etc.).
   final Widget child;
 
   /// Whether this checkbox is checked.
@@ -59,19 +59,19 @@ class NakedCheckbox extends StatefulWidget {
   ///
   /// Passes `true` when the pointer enters the checkbox bounds, and `false`
   /// when it exits. Useful for implementing hover effects.
-  final ValueChanged<bool>? onHoveredState;
+  final ValueChanged<bool>? onHoverChange;
 
   /// Callback triggered when the checkbox is pressed or released.
   ///
   /// Passes `true` when the checkbox is pressed down, and `false` when released.
   /// Useful for implementing press effects.
-  final ValueChanged<bool>? onPressedState;
+  final ValueChanged<bool>? onPressChange;
 
   /// Callback triggered when the checkbox gains or loses focus.
   ///
   /// Passes `true` when the checkbox gains focus, and `false` when it loses focus.
   /// Useful for implementing focus indicators.
-  final ValueChanged<bool>? onFocusedState;
+  final ValueChanged<bool>? onFocusChange;
 
   /// Whether the checkbox is disabled.
   ///
@@ -155,22 +155,22 @@ class _NakedCheckboxState extends State<NakedCheckbox> {
         focusNode: _focusNode,
         autofocus: widget.autofocus,
         actions: _actionMap,
-        onShowFocusHighlight: widget.onFocusedState,
-        onShowHoverHighlight: widget.onHoveredState,
-        onFocusChange: widget.onFocusedState,
+        onShowFocusHighlight: widget.onFocusChange,
+        onShowHoverHighlight: widget.onHoverChange,
+        onFocusChange: widget.onFocusChange,
         mouseCursor: _isInteractive
             ? widget.cursor
             : SystemMouseCursors.forbidden,
         child: GestureDetector(
           onTapDown: _isInteractive
-              ? (_) => widget.onPressedState?.call(true)
+              ? (_) => widget.onPressChange?.call(true)
               : null,
           onTapUp: _isInteractive
-              ? (_) => widget.onPressedState?.call(false)
+              ? (_) => widget.onPressChange?.call(false)
               : null,
           onTap: _isInteractive ? toggleValue : null,
           onTapCancel: _isInteractive
-              ? () => widget.onPressedState?.call(false)
+              ? () => widget.onPressChange?.call(false)
               : null,
           behavior: HitTestBehavior.opaque,
           child: widget.child,

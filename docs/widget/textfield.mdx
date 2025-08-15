@@ -41,8 +41,8 @@ class _TextFieldExampleState extends State<TextFieldExample> {
         cursorColor: Colors.grey.shade700,
         
         onHoverState: (isHovered) => setState(() => _isHovered = isHovered),
-        onPressedState: (isPressed) => setState(() => _isPressed = isPressed),
-        onFocusState: (isFocused) => setState(() => _isFocused = isFocused),
+        onPressChange: (isPressed) => setState(() => _isPressed = isPressed),
+        onFocusChange: (isFocused) => setState(() => _isFocused = isFocused),
         builder: (context, child) {
           return AnimatedContainer(
             duration: const Duration(milliseconds: 200),
@@ -121,7 +121,7 @@ const NakedTextField({
   this.selectionControls,
   this.onPressed,
   this.onTapAlwaysCalled = false,
-  this.onPressedState,
+  this.onPressChange,
   this.onTapOutside,
   this.scrollController,
   this.scrollPhysics,
@@ -136,7 +136,7 @@ const NakedTextField({
   this.spellCheckConfiguration,
   this.magnifierConfiguration,
   this.onHoverState,
-  this.onFocusState,
+  this.onFocusChange,
   this.style,
   required this.builder,
   this.ignorePointers,
@@ -271,7 +271,7 @@ Triggered when the user taps on the field.
 #### onTapAlwaysCalled → `bool`
 Whether onPressed should be called for every tap. Defaults to false.
 
-#### onPressedState → `ValueChanged<bool>?`
+#### onPressChange → `ValueChanged<bool>?`
 Called when the pressed state changes. Provides the current pressed state as a boolean parameter:
 - `true` when the text field is pressed
 - `false` when the text field is released
@@ -320,7 +320,7 @@ Called when the hover state changes. Provides the current hover state as a boole
 - `true` when the mouse pointer enters the text field
 - `false` when the mouse pointer exits the text field
 
-#### onFocusState → `ValueChanged<bool>?`
+#### onFocusChange → `ValueChanged<bool>?`
 Called when the focus state changes. Provides the current focus state as a boolean parameter:
 - `true` when the text field gains focus
 - `false` when the text field loses focus

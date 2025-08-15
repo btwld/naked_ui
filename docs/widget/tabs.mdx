@@ -236,8 +236,8 @@ const NakedTab({
   required this.child,
   required this.tabId,
   this.onHoverState,
-  this.onPressedState,
-  this.onFocusState,
+  this.onPressChange,
+  this.onFocusChange,
   this.enabled = true,
   this.semanticLabel,
   this.cursor = SystemMouseCursors.click,
@@ -257,10 +257,10 @@ The unique ID for this tab.
 #### onHoverState → `ValueChanged<bool>?`
 Called when hover state changes. Provides the current hover state (true when hovered, false otherwise).
 
-#### onPressedState → `ValueChanged<bool>?`
+#### onPressChange → `ValueChanged<bool>?`
 Called when pressed state changes. Provides the current pressed state (true when pressed, false otherwise).
 
-#### onFocusState → `ValueChanged<bool>?`
+#### onFocusChange → `ValueChanged<bool>?`
 Called when focus state changes. Provides the current focus state (true when focused, false otherwise).
 
 #### enabled → `bool`
