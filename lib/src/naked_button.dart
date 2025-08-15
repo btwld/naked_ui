@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import 'primitives/naked_interactable.dart';
 
 /// A customizable button with no default styling.
 ///
 /// Provides interaction behavior and accessibility without visual styling.
 /// Exposes state callbacks for hover, press, focus, and disabled states.
-class NakedButton extends StatefulWidget {
+class NakedButton extends StatelessWidget {
   /// Creates a naked button.
   const NakedButton({
     super.key,
@@ -40,7 +41,6 @@ class NakedButton extends StatefulWidget {
   /// Called when focus state changes.
   final ValueChanged<bool>? onFocusChange;
 
-
   /// Whether the button is enabled.
   final bool enabled;
 
@@ -70,78 +70,36 @@ class NakedButton extends StatefulWidget {
   /// Whether to exclude child semantics from the semantic tree.
   final bool excludeSemantics;
 
-  bool get _isInteractive => enabled && onPressed != null;
+  bool get _effectiveEnabled => enabled && onPressed != null;
 
-  @override
-  State<NakedButton> createState() => _NakedButtonState();
-}
+  MouseCursor get _mouseCursor =>
+      _effectiveEnabled ? cursor : SystemMouseCursors.forbidden;
 
-class _NakedButtonState extends State<NakedButton> {
-  FocusNode? _focusNode;
-  FocusNode get _effectiveFocusNode => widget.focusNode ?? _focusNode!;
-
-  late final Map<Type, Action<Intent>> _actionMap = <Type, Action<Intent>>{
-    ActivateIntent: CallbackAction<ActivateIntent>(onInvoke: handleTap),
-    ButtonActivateIntent: CallbackAction<ButtonActivateIntent>(
-      onInvoke: handleTap,
-    ),
-  };
-
-  @override
-  void initState() {
-    super.initState();
-    if (widget.focusNode == null) {
-      _focusNode = FocusNode();
-    }
-  }
-
-  @override
-  void dispose() {
-    _focusNode?.dispose();
-    super.dispose();
-  }
-
-  void handleTap([Intent? intent]) {
-    if (!widget._isInteractive) return;
-    if (widget.enableHapticFeedback) {
+  void _onPressed() {
+    if (enableHapticFeedback) {
       HapticFeedback.lightImpact();
     }
-    widget.onPressed?.call();
+    onPressed!();
   }
-
 
   @override
   Widget build(BuildContext context) {
     return Semantics(
       container: true,
-      excludeSemantics: widget.excludeSemantics,
-      enabled: widget._isInteractive,
-      button: widget.isSemanticButton,
-      label: widget.semanticLabel,
-      child: FocusableActionDetector(
-        enabled: widget._isInteractive,
-        focusNode: _effectiveFocusNode,
-        autofocus: widget.autofocus,
-        actions: _actionMap,
-        onShowHoverHighlight: widget.onHoverChange,
-        onFocusChange: widget.onFocusChange,
-        mouseCursor: widget._isInteractive
-            ? widget.cursor
-            : SystemMouseCursors.forbidden,
-        child: GestureDetector(
-          onTapDown: widget._isInteractive
-              ? (_) => widget.onPressChange?.call(true)
-              : null,
-          onTapUp: widget._isInteractive
-              ? (_) => widget.onPressChange?.call(false)
-              : null,
-          onTap: widget._isInteractive ? handleTap : null,
-          onTapCancel: widget._isInteractive
-              ? () => widget.onPressChange?.call(false)
-              : null,
-          behavior: HitTestBehavior.opaque,
-          child: widget.child,
-        ),
+      excludeSemantics: excludeSemantics,
+      enabled: _effectiveEnabled,
+      button: isSemanticButton,
+      label: semanticLabel,
+      child: NakedInteractable(
+        builder: (context, states) => child,
+        onPressed: onPressed == null ? null : _onPressed,
+        enabled: _effectiveEnabled,
+        autofocus: autofocus,
+        focusNode: focusNode,
+        mouseCursor: _mouseCursor,
+        onHoverChange: onHoverChange,
+        onPressChange: onPressChange,
+        onFocusChange: onFocusChange,
       ),
     );
   }

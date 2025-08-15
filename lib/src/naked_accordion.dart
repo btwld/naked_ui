@@ -1,6 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 
+import 'naked_button.dart';
+
 /// Controller that manages the state of an accordion.
 ///
 /// This controller keeps track of which accordion items are expanded or collapsed
@@ -225,7 +227,7 @@ class _NakedAccordionState<T> extends State<NakedAccordion<T>> {
 
 typedef NakedAccordionTriggerBuilder =
     // ignore: prefer-named-boolean-parameters
-    Widget Function(BuildContext context, bool isExpanded, VoidCallback toggle);
+    Widget Function(BuildContext context, bool isExpanded);
 
 /// An individual item in a [NakedAccordion].
 ///
@@ -246,7 +248,11 @@ class NakedAccordionItem<T> extends StatelessWidget {
     required this.child,
     this.transitionBuilder,
     this.semanticLabel,
+    this.onHoverChange,
+    this.onPressChange,
     this.onFocusChange,
+    this.enabled = true,
+    this.enableHapticFeedback = true,
     this.autoFocus = false,
     this.focusNode,
   });
@@ -256,7 +262,6 @@ class NakedAccordionItem<T> extends StatelessWidget {
   /// The builder provides:
   /// - [BuildContext] for accessing theme and other data
   /// - [bool] indicating if the item is expanded
-  /// - [VoidCallback] to toggle expansion state
   final NakedAccordionTriggerBuilder trigger;
 
   /// Optional builder to customize the transition when expanding/collapsing.
@@ -275,8 +280,20 @@ class NakedAccordionItem<T> extends StatelessWidget {
   /// Optional semantic label describing the section for screen readers.
   final String? semanticLabel;
 
-  /// Optional callback to handle focus state changes.
+  /// Called when hover state changes.
+  final ValueChanged<bool>? onHoverChange;
+
+  /// Called when pressed state changes.
+  final ValueChanged<bool>? onPressChange;
+
+  /// Called when focus state changes.
   final ValueChanged<bool>? onFocusChange;
+
+  /// Whether the accordion item is enabled.
+  final bool enabled;
+
+  /// Whether to provide haptic feedback on interaction.
+  final bool enableHapticFeedback;
 
   /// Whether the item should be focused when the accordion is opened.
   final bool autoFocus;
@@ -288,33 +305,38 @@ class NakedAccordionItem<T> extends StatelessWidget {
   Widget build(BuildContext context) {
     final state = context.findAncestorStateOfType<_NakedAccordionState<T>>();
 
-    return FocusableActionDetector(
-      focusNode: focusNode,
-      autofocus: autoFocus,
-      onFocusChange: onFocusChange,
-      child: ListenableBuilder(
-        listenable: state!._controller,
-        builder: (context, child) {
-          final isExpanded = state._controller.contains(value);
-          final child = isExpanded ? this.child : const SizedBox.shrink();
+    return ListenableBuilder(
+      listenable: state!._controller,
+      builder: (context, child) {
+        final isExpanded = state._controller.contains(value);
+        final child = isExpanded ? this.child : const SizedBox.shrink();
 
-          return Semantics(
-            container: true,
-            label: semanticLabel,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                trigger(
-                  context,
-                  isExpanded,
-                  () => state._controller.toggle(value),
-                ),
-                transitionBuilder != null ? transitionBuilder!(child) : child,
-              ],
-            ),
-          );
-        },
-      ),
+        return Semantics(
+          container: true,
+          label: semanticLabel,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Use NakedButton for the trigger to handle all interaction states
+              NakedButton(
+                onPressed: enabled
+                    ? () => state._controller.toggle(value)
+                    : null,
+                onHoverChange: onHoverChange,
+                onPressChange: onPressChange,
+                onFocusChange: onFocusChange,
+                enabled: enabled,
+                isSemanticButton: false, // Already wrapped in Semantics
+                enableHapticFeedback: enableHapticFeedback,
+                focusNode: focusNode,
+                autofocus: autoFocus,
+                child: trigger(context, isExpanded),
+              ),
+              transitionBuilder != null ? transitionBuilder!(child) : child,
+            ],
+          ),
+        );
+      },
     );
   }
 }

@@ -203,7 +203,7 @@ class _NakedSelectState<T> extends State<NakedSelect<T>>
     }
   }
 
-  void _selectValue(T value) {
+  void _handleSelectValue(T value) {
     if (!widget.enabled) return;
 
     if (_isMultipleSelection) {
@@ -626,7 +626,7 @@ class _NakedSelectItemState<T> extends State<NakedSelectItem<T>> {
         HapticFeedback.selectionClick();
       }
 
-      state?._selectValue(widget.value);
+      state?._handleSelectValue(widget.value);
     }
 
     final inherited = NakedSelectScope.of<T>(context);

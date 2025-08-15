@@ -23,6 +23,7 @@ class NakedSlider extends StatefulWidget {
     this.semanticLabel,
     this.cursor = SystemMouseCursors.click,
     this.focusNode,
+    this.autofocus = false,
     this.direction = Axis.horizontal,
     this.divisions,
     this.keyboardStep = 0.01,
@@ -75,6 +76,9 @@ class NakedSlider extends StatefulWidget {
 
   /// Optional focus node to control focus behavior.
   final FocusNode? focusNode;
+
+  /// Whether the slider should automatically request focus when it is created.
+  final bool autofocus;
 
   /// Direction of the slider.
   final Axis direction;
@@ -191,7 +195,8 @@ class _NakedSliderState extends State<NakedSlider> {
     super.dispose();
   }
 
-  bool get _isInteractive => widget.enabled && widget.onChanged != null;
+  bool get _isEnabled => widget.enabled && widget.onChanged != null;
+  MouseCursor get _cursor => _isEnabled ? widget.cursor : SystemMouseCursors.forbidden;
 
   Map<ShortcutActivator, Intent> get _shortcuts {
     final bool isRTL = Directionality.of(context) == TextDirection.rtl;
@@ -267,7 +272,7 @@ class _NakedSliderState extends State<NakedSlider> {
 
     return Semantics(
       excludeSemantics: widget.excludeSemantics,
-      enabled: _isInteractive,
+      enabled: _isEnabled,
       slider: true,
       label: widget.semanticLabel,
       value: '${percentage.round()}%',
@@ -276,38 +281,34 @@ class _NakedSliderState extends State<NakedSlider> {
       decreasedValue:
           '${((decreasedValue - widget.min) / (widget.max - widget.min) * 100).round()}%',
       child: FocusableActionDetector(
-        enabled: _isInteractive,
+        enabled: _isEnabled,
         focusNode: _focusNode,
+        autofocus: widget.autofocus,
         descendantsAreTraversable: false,
         shortcuts: _shortcuts,
         actions: _actions,
         onShowHoverHighlight: widget.onHoverChange,
         onFocusChange: widget.onFocusChange,
-        mouseCursor: _isInteractive
-            ? widget.cursor
-            : SystemMouseCursors.forbidden,
+        mouseCursor: _cursor,
         child: GestureDetector(
-          onVerticalDragStart:
-              widget.direction == Axis.vertical && _isInteractive
+          onVerticalDragStart: widget.direction == Axis.vertical && _isEnabled
               ? _handleDragStart
               : null,
-          onVerticalDragUpdate:
-              widget.direction == Axis.vertical && _isInteractive
+          onVerticalDragUpdate: widget.direction == Axis.vertical && _isEnabled
               ? _handleDragUpdate
               : null,
-          onVerticalDragEnd: widget.direction == Axis.vertical && _isInteractive
+          onVerticalDragEnd: widget.direction == Axis.vertical && _isEnabled
               ? _handleDragEnd
               : null,
           onHorizontalDragStart:
-              widget.direction == Axis.horizontal && _isInteractive
+              widget.direction == Axis.horizontal && _isEnabled
               ? _handleDragStart
               : null,
           onHorizontalDragUpdate:
-              widget.direction == Axis.horizontal && _isInteractive
+              widget.direction == Axis.horizontal && _isEnabled
               ? _handleDragUpdate
               : null,
-          onHorizontalDragEnd:
-              widget.direction == Axis.horizontal && _isInteractive
+          onHorizontalDragEnd: widget.direction == Axis.horizontal && _isEnabled
               ? _handleDragEnd
               : null,
           behavior: HitTestBehavior.opaque,

@@ -115,17 +115,14 @@ class _NakedCheckboxState extends State<NakedCheckbox> {
   FocusNode? _internalFocusNode;
   FocusNode get _focusNode =>
       widget.focusNode ?? (_internalFocusNode ??= FocusNode());
-  late final Map<Type, Action<Intent>> _actionMap = <Type, Action<Intent>>{
-    ActivateIntent: CallbackAction<ActivateIntent>(onInvoke: toggleValue),
-  };
-  @override
-  void dispose() {
-    _internalFocusNode?.dispose();
-    super.dispose();
-  }
+  bool get _isEnabled => widget.enabled && widget.onChanged != null;
+  MouseCursor get _cursor => _isEnabled ? widget.cursor : SystemMouseCursors.forbidden;
 
-  void toggleValue([Intent? _]) {
-    if (!_isInteractive) return;
+  late final Map<Type, Action<Intent>> _actionMap = <Type, Action<Intent>>{
+    ActivateIntent: CallbackAction<ActivateIntent>(onInvoke: _handleOnPressed),
+  };
+  void _handleOnPressed([Intent? _]) {
+    if (!_isEnabled) return;
 
     if (widget.enableHapticFeedback) {
       HapticFeedback.selectionClick();
@@ -141,37 +138,57 @@ class _NakedCheckboxState extends State<NakedCheckbox> {
     }
   }
 
-  bool get _isInteractive => widget.enabled && widget.onChanged != null;
+  void _handlePressDown(TapDownDetails details) {
+    if (!_isEnabled) return;
+    widget.onPressChange?.call(true);
+  }
+
+  void _handlePressUp(TapUpDetails details) {
+    if (!_isEnabled) return;
+    widget.onPressChange?.call(false);
+  }
+
+  void _handlePressCancel() {
+    if (!_isEnabled) return;
+    widget.onPressChange?.call(false);
+  }
+
+  void _handleHoverChange(bool hovering) {
+    if (!_isEnabled) return;
+    widget.onHoverChange?.call(hovering);
+  }
+
+  void _handleFocusChange(bool focused) {
+    if (!_isEnabled) return;
+    widget.onFocusChange?.call(focused);
+  }
+
+  @override
+  void dispose() {
+    _internalFocusNode?.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Semantics(
-      enabled: _isInteractive,
+      enabled: _isEnabled,
       checked: widget.value ?? false,
       mixed: widget.tristate ? widget.value == null : null,
       label: widget.semanticLabel,
       child: FocusableActionDetector(
-        enabled: _isInteractive,
+        enabled: _isEnabled,
         focusNode: _focusNode,
         autofocus: widget.autofocus,
         actions: _actionMap,
-        onShowFocusHighlight: widget.onFocusChange,
-        onShowHoverHighlight: widget.onHoverChange,
-        onFocusChange: widget.onFocusChange,
-        mouseCursor: _isInteractive
-            ? widget.cursor
-            : SystemMouseCursors.forbidden,
+        onShowHoverHighlight: _handleHoverChange,
+        onFocusChange: _handleFocusChange,
+        mouseCursor: _cursor,
         child: GestureDetector(
-          onTapDown: _isInteractive
-              ? (_) => widget.onPressChange?.call(true)
-              : null,
-          onTapUp: _isInteractive
-              ? (_) => widget.onPressChange?.call(false)
-              : null,
-          onTap: _isInteractive ? toggleValue : null,
-          onTapCancel: _isInteractive
-              ? () => widget.onPressChange?.call(false)
-              : null,
+          onTapDown: _handlePressDown,
+          onTapUp: _handlePressUp,
+          onTap: _handleOnPressed,
+          onTapCancel: _handlePressCancel,
           behavior: HitTestBehavior.opaque,
           child: widget.child,
         ),

@@ -45,14 +45,20 @@ class NakedTabGroup extends StatelessWidget {
   final VoidCallback? onEscapePressed;
 
   void _selectTab(String tabId) {
+    // Delegate to NakedTabsScope.selectTab for consistent validation
     if (!enabled) return;
     if (tabId == selectedTabId) return;
-
+    
     onSelectedTabIdChanged?.call(tabId);
   }
 
   @override
   Widget build(BuildContext context) {
+    assert(
+      selectedTabId.isNotEmpty,
+      'NakedTabGroup selectedTabId cannot be empty. Provide a valid tab identifier.',
+    );
+    
     return Semantics(
       container: true,
       explicitChildNodes: true,
@@ -62,6 +68,7 @@ class NakedTabGroup extends StatelessWidget {
         onSelectedTabIdChanged: _selectTab,
         orientation: orientation,
         enabled: enabled,
+        onEscapePressed: onEscapePressed,
         child: child,
       ),
     );
@@ -76,6 +83,7 @@ class NakedTabsScope extends InheritedWidget {
     required this.onSelectedTabIdChanged,
     required this.orientation,
     required this.enabled,
+    this.onEscapePressed,
     required super.child,
   });
 
@@ -105,6 +113,9 @@ class NakedTabsScope extends InheritedWidget {
   /// Whether the tabs component is enabled.
   final bool enabled;
 
+  /// Optional escape key handler.
+  final VoidCallback? onEscapePressed;
+
   /// Whether a tab is currently selected.
   bool isTabSelected(String tabId) {
     return selectedTabId == tabId;
@@ -112,16 +123,23 @@ class NakedTabsScope extends InheritedWidget {
 
   /// Requests that a tab be selected.
   void selectTab(String tabId) {
-    if (onSelectedTabIdChanged != null) {
-      onSelectedTabIdChanged!(tabId);
-    }
+    if (!enabled) return;
+    if (tabId == selectedTabId) return;
+    
+    assert(
+      tabId.isNotEmpty,
+      'Tab ID cannot be empty. Provide a valid non-empty string identifier.',
+    );
+    
+    onSelectedTabIdChanged?.call(tabId);
   }
 
   @override
   bool updateShouldNotify(NakedTabsScope oldWidget) {
     return selectedTabId != oldWidget.selectedTabId ||
         orientation != oldWidget.orientation ||
-        enabled != oldWidget.enabled;
+        enabled != oldWidget.enabled ||
+        onEscapePressed != oldWidget.onEscapePressed;
   }
 }
 
@@ -204,34 +222,70 @@ class NakedTab extends StatefulWidget {
 }
 
 class _NakedTabState extends State<NakedTab> {
-  FocusNode? _ownedFocusNode;
+  late final FocusNode _focusNode;
 
-  FocusNode get _focusNode =>
-      widget.focusNode ?? (_ownedFocusNode ??= FocusNode());
-
-  void _handleTap() {
-    if (!widget.enabled) return;
-
+  @override
+  void initState() {
+    super.initState();
+    _focusNode = widget.focusNode ?? FocusNode(debugLabel: 'NakedTab-${widget.tabId}');
+  }
+  bool get _isEnabled {
     final tabsScope = NakedTabsScope.of(context);
-    if (!tabsScope.enabled) return;
 
-    if (widget.enableHapticFeedback) {
-      HapticFeedback.selectionClick();
-    }
+    return widget.enabled && tabsScope.enabled;
+  }
 
-    tabsScope.selectTab(widget.tabId);
-    if (_focusNode.canRequestFocus) {
-      _focusNode.requestFocus();
+  MouseCursor get _cursor =>
+      _isEnabled ? widget.cursor : SystemMouseCursors.forbidden;
+
+  /// Helper method to guard event handlers with enabled check
+  void _ifEnabled(VoidCallback callback) {
+    if (_isEnabled) {
+      callback();
     }
   }
 
-  KeyEventResult _handleKeyEvent(FocusNode node, KeyEvent event) {
-    if (!widget.enabled) return KeyEventResult.ignored;
+  void _handleTap() {
+    _ifEnabled(() {
+      final tabsScope = NakedTabsScope.of(context);
 
-    final tabsScope = NakedTabsScope.of(context);
-    if (!tabsScope.enabled) {
-      return KeyEventResult.ignored;
-    }
+      if (widget.enableHapticFeedback) {
+        HapticFeedback.selectionClick();
+      }
+
+      tabsScope.selectTab(widget.tabId);
+      if (_focusNode.canRequestFocus) {
+        _focusNode.requestFocus();
+      }
+    });
+  }
+
+  void _handlePressDown(TapDownDetails details) {
+    _ifEnabled(() => widget.onPressChange?.call(true));
+  }
+
+  void _handlePressUp(TapUpDetails details) {
+    _ifEnabled(() => widget.onPressChange?.call(false));
+  }
+
+  void _handlePressCancel() {
+    _ifEnabled(() => widget.onPressChange?.call(false));
+  }
+
+  void _handleHoverEnter(PointerEnterEvent event) {
+    _ifEnabled(() => widget.onHoverChange?.call(true));
+  }
+
+  void _handleHoverExit(PointerExitEvent event) {
+    _ifEnabled(() => widget.onHoverChange?.call(false));
+  }
+
+  void _handleFocusChange(bool focused) {
+    widget.onFocusChange?.call(focused);
+  }
+
+  KeyEventResult _handleKeyEvent(FocusNode node, KeyEvent event) {
+    if (!_isEnabled) return KeyEventResult.ignored;
 
     if (event is KeyUpEvent && event.logicalKey.isConfirmationKey) {
       widget.onPressChange?.call(false);
@@ -241,6 +295,7 @@ class _NakedTabState extends State<NakedTab> {
     }
 
     if (event is KeyDownEvent) {
+      final tabsScope = NakedTabsScope.of(context);
       switch (tabsScope.orientation) {
         case Axis.horizontal:
           if (event.logicalKey == LogicalKeyboardKey.arrowLeft) {
@@ -272,6 +327,11 @@ class _NakedTabState extends State<NakedTab> {
 
         return KeyEventResult.handled;
       }
+      if (event.logicalKey == LogicalKeyboardKey.escape) {
+        tabsScope.onEscapePressed?.call();
+        
+        return KeyEventResult.handled;
+      }
     }
 
     return KeyEventResult.ignored;
@@ -279,7 +339,9 @@ class _NakedTabState extends State<NakedTab> {
 
   @override
   void dispose() {
-    _ownedFocusNode?.dispose();
+    if (widget.focusNode == null) {
+      _focusNode.dispose();
+    }
     super.dispose();
   }
 
@@ -287,39 +349,33 @@ class _NakedTabState extends State<NakedTab> {
   Widget build(BuildContext context) {
     final tabsScope = NakedTabsScope.of(context);
     final isSelected = tabsScope.isTabSelected(widget.tabId);
-    final isInteractive = widget.enabled && tabsScope.enabled;
+    
+    assert(
+      widget.tabId.isNotEmpty,
+      'NakedTab tabId cannot be empty. Each tab must have a unique identifier.',
+    );
 
     return Semantics(
       container: true,
       excludeSemantics: widget.excludeSemantics,
-      enabled: isInteractive,
+      enabled: _isEnabled,
       selected: isSelected,
       label: widget.semanticLabel ?? 'Tab ${widget.tabId}',
-      onTap: isInteractive ? _handleTap : null,
+      onTap: _handleTap,
       child: Focus(
         focusNode: _focusNode,
-        onFocusChange: widget.onFocusChange,
+        onFocusChange: _handleFocusChange,
         onKeyEvent: _handleKeyEvent,
-        canRequestFocus: isInteractive,
+        canRequestFocus: _isEnabled,
         child: MouseRegion(
-          onEnter: isInteractive
-              ? (_) => widget.onHoverChange?.call(true)
-              : null,
-          onExit: isInteractive
-              ? (_) => widget.onHoverChange?.call(false)
-              : null,
-          cursor: isInteractive ? widget.cursor : SystemMouseCursors.forbidden,
+          onEnter: _handleHoverEnter,
+          onExit: _handleHoverExit,
+          cursor: _cursor,
           child: GestureDetector(
-            onTapDown: isInteractive
-                ? (_) => widget.onPressChange?.call(true)
-                : null,
-            onTapUp: isInteractive
-                ? (_) => widget.onPressChange?.call(false)
-                : null,
-            onTap: isInteractive ? _handleTap : null,
-            onTapCancel: isInteractive
-                ? () => widget.onPressChange?.call(false)
-                : null,
+            onTapDown: _handlePressDown,
+            onTapUp: _handlePressUp,
+            onTap: _handleTap,
+            onTapCancel: _handlePressCancel,
             behavior: HitTestBehavior.opaque,
             child: widget.child,
           ),
@@ -361,9 +417,14 @@ class NakedTabPanel extends StatelessWidget {
   Widget build(BuildContext context) {
     final tabsScope = NakedTabsScope.of(context);
     final isSelected = tabsScope.isTabSelected(tabId);
+    
+    assert(
+      tabId.isNotEmpty,
+      'NakedTabPanel tabId cannot be empty. Each panel must have a unique identifier.',
+    );
 
     if (!isSelected && !maintainState) {
-      return const SizedBox();
+      return const SizedBox.shrink();
     }
 
     return ExcludeFocus(

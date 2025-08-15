@@ -59,7 +59,7 @@ class NakedRadioGroupState<T> extends State<NakedRadioGroup<T>> {
 
   void _selectRadioInDirection(bool forward) {
     final enabledRadios = _radios
-        .where((radio) => radio._getInteractive(this))
+        .where((radio) => radio._isEnabled)
         .toList();
     if (enabledRadios.length <= 1) {
       return;
@@ -236,8 +236,14 @@ class _NakedRadioState<T> extends State<NakedRadio<T>> {
   FocusNode? _internalFocusNode;
   FocusNode get _focusNode =>
       widget.focusNode ?? (_internalFocusNode ??= FocusNode());
+  bool get _isEnabled =>
+      widget.enabled &&
+      _group.state.widget.enabled &&
+      _group.state.widget.onChanged != null;
+  MouseCursor get _cursor => _isEnabled ? widget.cursor : SystemMouseCursors.forbidden;
+
   late final Map<Type, Action<Intent>> _actionMap = <Type, Action<Intent>>{
-    ActivateIntent: CallbackAction<ActivateIntent>(onInvoke: _handleTap),
+    ActivateIntent: CallbackAction<ActivateIntent>(onInvoke: _handleOnPressed),
   };
   NakedRadioGroupScope<T> get _group => NakedRadioGroupScope.of(context);
   bool? _lastReportedSelection;
@@ -245,7 +251,9 @@ class _NakedRadioState<T> extends State<NakedRadio<T>> {
 
   ValueChanged<T?>? get onChanged => _group.state.widget.onChanged;
 
-  void _handleTap([Intent? intent]) {
+  void _handleOnPressed([Intent? intent]) {
+    if (!_isEnabled) return;
+    
     // If group is already set to this value, do nothing
     if (_group.groupValue == widget.value) {
       return;
@@ -260,13 +268,34 @@ class _NakedRadioState<T> extends State<NakedRadio<T>> {
     }
   }
 
-  bool get _isInteractive =>
-      widget.enabled &&
-      _group.state.widget.enabled &&
-      _group.state.widget.onChanged != null;
+  void _handlePressDown(TapDownDetails details) {
+    if (!_isEnabled) return;
+    widget.onPressChange?.call(true);
+  }
 
-  bool _getInteractive(NakedRadioGroupState<T> group) =>
-      widget.enabled && group.widget.enabled && group.widget.onChanged != null;
+  void _handlePressUp(TapUpDetails details) {
+    if (!_isEnabled) return;
+    widget.onPressChange?.call(false);
+  }
+
+  void _handlePressCancel() {
+    if (!_isEnabled) return;
+    widget.onPressChange?.call(false);
+  }
+
+  void _handleHoverChange(bool hovering) {
+    if (!_isEnabled) return;
+    widget.onHoverChange?.call(hovering);
+  }
+
+  void _handleFocusChange(bool focused) {
+    if (!_isEnabled) return;
+    if (focused && _group.groupValue != widget.value) {
+      onChanged?.call(widget.value);
+    }
+    widget.onFocusChange?.call(focused);
+  }
+
 
   @override
   void dispose() {
@@ -313,36 +342,22 @@ class _NakedRadioState<T> extends State<NakedRadio<T>> {
     // State change notification is handled in didChangeDependencies
 
     return Semantics(
-      enabled: _isInteractive,
+      enabled: _isEnabled,
       checked: isSelected,
       selected: accessibilitySelected,
       child: FocusableActionDetector(
-        enabled: _isInteractive,
+        enabled: _isEnabled,
         focusNode: _focusNode,
         autofocus: widget.autofocus,
         actions: _actionMap,
-        onShowFocusHighlight: widget.onFocusChange,
-        onShowHoverHighlight: widget.onHoverChange,
-        onFocusChange: (hasFocus) {
-          if (hasFocus && _isInteractive && _group.groupValue != widget.value) {
-            onChanged?.call(widget.value);
-          }
-          widget.onFocusChange?.call(hasFocus);
-        },
-        mouseCursor: _isInteractive
-            ? widget.cursor
-            : SystemMouseCursors.forbidden,
+        onShowHoverHighlight: _handleHoverChange,
+        onFocusChange: _handleFocusChange,
+        mouseCursor: _cursor,
         child: GestureDetector(
-          onTapDown: _isInteractive
-              ? (_) => widget.onPressChange?.call(true)
-              : null,
-          onTapUp: _isInteractive
-              ? (_) => widget.onPressChange?.call(false)
-              : null,
-          onTap: _isInteractive ? _handleTap : null,
-          onTapCancel: _isInteractive
-              ? () => widget.onPressChange?.call(false)
-              : null,
+          onTapDown: _handlePressDown,
+          onTapUp: _handlePressUp,
+          onTap: _handleOnPressed,
+          onTapCancel: _handlePressCancel,
           behavior: HitTestBehavior.opaque,
           child: widget.child,
         ),
