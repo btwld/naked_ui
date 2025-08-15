@@ -6,92 +6,10 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart' show materialTextSelectionHandleControls, desktopTextSelectionHandleControls, TextMagnifier;
 import 'package:flutter/services.dart';
 
-/// A fully customizable text field with no default styling or decoration.
+/// A customizable text field with no default styling or decoration.
 ///
-/// NakedTextField provides all the core functionality of a TextField without imposing
-/// any visual styling or decoration features of the standard Material TextField,
-/// giving developers complete design freedom.
-///
-/// This component maintains all behavior including text editing, keyboard input,
-/// selection, and accessibility features while allowing custom visual representation
-/// through the required [builder] parameter.
-///
-/// The widget handles various interaction states and provides callbacks:
-/// - [onHoveredState]: Called when mouse hover state changes (true when hovered)
-/// - [onPressedState]: Called when pressed state changes (true when pressed)
-/// - [onFocusedState]: Called when focus state changes (true when focused)
-///
-/// Example usage:
-/// ```dart
-/// class MyCustomTextField extends StatefulWidget {
-///   final TextEditingController controller;
-///   final String? hintText;
-///   final ValueChanged<String>? onChanged;
-///
-///   const MyCustomTextField({
-///     Key? key,
-///     required this.controller,
-///     this.hintText,
-///     this.onChanged,
-///   }) : super(key: key);
-///
-///   @override
-///   _MyCustomTextFieldState createState() => _MyCustomTextFieldState();
-/// }
-///
-/// class _MyCustomTextFieldState extends State<MyCustomTextField> {
-///   bool _isHovered = false;
-///   bool _isPressed = false;
-///   bool _isFocused = false;
-///
-///   @override
-///   Widget build(BuildContext context) {
-///     return NakedTextField(
-///       controller: widget.controller,
-///       onChanged: widget.onChanged,
-///       onHoveredState: (isHovered) => setState(() => _isHovered = isHovered),
-///       onPressedState: (isPressed) => setState(() => _isPressed = isPressed),
-///       onFocusedState: (isFocused) => setState(() => _isFocused = isFocused),
-///       builder: (context, child) {
-///         return Container(
-///           height: 40,
-///           decoration: BoxDecoration(
-///             border: Border.all(
-///               color: _isFocused
-///                   ? Colors.blue
-///                   : _isHovered
-///                       ? Colors.grey.shade400
-///                       : Colors.grey.shade300,
-///               width: _isFocused ? 2 : 1,
-///             ),
-///             borderRadius: BorderRadius.circular(4),
-///           ),
-///           padding: EdgeInsets.symmetric(horizontal: 12),
-///           child: Stack(
-///             alignment: Alignment.centerLeft,
-///             children: [
-///               if (widget.controller.text.isEmpty && widget.hintText != null)
-///                 Text(
-///                   widget.hintText!,
-///                   style: TextStyle(color: Colors.grey.shade500),
-///                 ),
-///               child, // This is the EditableText from NakedTextField
-///             ],
-///           ),
-///         );
-///       },
-///     );
-///   }
-/// }
-/// ```
-///
-/// The widget provides a simplified text field that:
-/// - Maintains all core text editing functionality
-/// - Removes default Material styling and decoration
-/// - Allows complete customization through the builder pattern
-/// - Handles all standard text field interactions
-/// - Supports accessibility features
-/// - Provides state callbacks for hover, press and focus
+/// Provides text editing functionality and interaction callbacks without visual styling.
+/// Uses a builder pattern for complete customization of the text field appearance.
 class NakedTextField extends StatefulWidget {
   /// Creates a simplified text field.
   const NakedTextField({

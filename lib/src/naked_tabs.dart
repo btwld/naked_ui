@@ -1,140 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-/// A fully customizable tabs component with no default styling.
+/// A customizable tabs component with no default styling.
 ///
-/// NakedTabs provides interaction behavior and accessibility features
-/// for a tabbed interface without imposing any visual styling,
-/// giving consumers complete control over appearance through direct state callbacks.
-///
-/// Focus management is handled through NakedFocusManager which provides:
-/// - Keyboard navigation between tabs using arrow keys
-/// - Home/End keys for navigating to first/last tab
-/// - Proper focus handling for accessibility
-///
-/// Example:
-/// ```dart
-/// class MyTabs extends StatefulWidget {
-///   @override
-///   _MyTabsState createState() => _MyTabsState();
-/// }
-///
-/// class _MyTabsState extends State<MyTabs> {
-///   String _selectedTabId = 'tab1';
-///
-///   // State variables for styling
-///   Map<String, bool> _tabHoverStates = {'tab1': false, 'tab2': false, 'tab3': false};
-///   Map<String, bool> _tabFocusStates = {'tab1': false, 'tab2': false, 'tab3': false};
-///   Map<String, bool> _tabPressStates = {'tab1': false, 'tab2': false, 'tab3': false};
-///
-///   @override
-///   Widget build(BuildContext context) {
-///     return NakedTabGroup(
-///       selectedTabId: _selectedTabId,
-///       onSelectedTabIdChanged: (tabId) => setState(() => _selectedTabId = tabId),
-///       child: Column(
-///         children: [
-///           NakedTabList(
-///             child: Row(
-///               children: [
-///                 _buildTab('tab1', 'Tab 1'),
-///                 const SizedBox(width: 8),
-///                 _buildTab('tab2', 'Tab 2'),
-///                 const SizedBox(width: 8),
-///                 _buildTab('tab3', 'Tab 3'),
-///               ],
-///             ),
-///           ),
-///           const SizedBox(height: 16),
-///           NakedTabPanel(
-///             tabId: 'tab1',
-///             child: Container(
-///               padding: const EdgeInsets.all(16),
-///               color: Colors.blue.shade50,
-///               child: const Text('Content for Tab 1'),
-///             ),
-///           ),
-///           NakedTabPanel(
-///             tabId: 'tab2',
-///             child: Container(
-///               padding: const EdgeInsets.all(16),
-///               color: Colors.green.shade50,
-///               child: const Text('Content for Tab 2'),
-///             ),
-///           ),
-///           NakedTabPanel(
-///             tabId: 'tab3',
-///             child: Container(
-///               padding: const EdgeInsets.all(16),
-///               color: Colors.orange.shade50,
-///               child: const Text('Content for Tab 3'),
-///             ),
-///           ),
-///         ],
-///       ),
-///     );
-///   }
-///
-///   Widget _buildTab(String tabId, String label) {
-///     final isSelected = _selectedTabId == tabId;
-///     final isHovered = _tabHoverStates[tabId] ?? false;
-///     final isFocused = _tabFocusStates[tabId] ?? false;
-///     final isPressed = _tabPressStates[tabId] ?? false;
-///
-///     return NakedTab(
-///       tabId: tabId,
-///       onHoveredState: (isHovered) => setState(() => _tabHoverStates[tabId] = isHovered),
-///       onFocusedState: (isFocused) => setState(() => _tabFocusStates[tabId] = isFocused),
-///       onPressedState: (isPressed) => setState(() => _tabPressStates[tabId] = isPressed),
-///       child: Container(
-///         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-///         decoration: BoxDecoration(
-///           color: isSelected
-///               ? Colors.white
-///               : isPressed
-///                   ? Colors.grey.shade300
-///                   : isHovered
-///                       ? Colors.grey.shade200
-///                       : Colors.grey.shade100,
-///           borderRadius: const BorderRadius.only(
-///             topLeft: Radius.circular(4),
-///             topRight: Radius.circular(4),
-///           ),
-///           border: Border.all(
-///             color: isSelected
-///                 ? Colors.blue
-///                 : isFocused
-///                     ? Colors.blue.withOpacity(0.5)
-///                     : Colors.grey,
-///             width: isFocused ? 2 : 1,
-///           ),
-///           // Only show a bottom border if the tab is not selected
-///           boxShadow: isSelected
-///               ? [
-///                   BoxShadow(
-///                     color: Colors.blue.withOpacity(0.3),
-///                     blurRadius: 4,
-///                     offset: const Offset(0, 2),
-///                   ),
-///                 ]
-///               : null,
-///         ),
-///         child: Text(
-///           label,
-///           style: TextStyle(
-///             color: isSelected ? Colors.blue : Colors.black87,
-///             fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-///           ),
-///         ),
-///       ),
-///     );
-///   }
-/// }
-/// ```
+/// Provides interaction behavior and keyboard navigation for tabbed interfaces.
+/// Includes tab groups, tab lists, individual tabs, and tab panels.
 class NakedTabGroup extends StatelessWidget {
   /// Creates a naked tabs component.
-  ///
-  /// The [child] parameter is required.
   const NakedTabGroup({
     super.key,
     required this.child,
@@ -155,8 +27,6 @@ class NakedTabGroup extends StatelessWidget {
   final ValueChanged<String>? onSelectedTabIdChanged;
 
   /// Whether the tabs component is enabled.
-  ///
-  /// When false, the tabs will not respond to user interaction.
   final bool enabled;
 
   /// Optional semantic label for accessibility.
@@ -256,19 +126,13 @@ class NakedTabsScope extends InheritedWidget {
 }
 
 /// A container for tab triggers in a NakedTabs component.
-///
-/// This component is used to group tab triggers and handles keyboard navigation.
 class NakedTabList extends StatelessWidget {
   /// Creates a naked tab list.
-  ///
-  /// The [child] parameter is required.
   const NakedTabList({super.key, required this.child, this.semanticLabel});
 
   final Widget child;
 
   /// Optional semantic label for accessibility.
-  ///
-  /// This is used by screen readers to describe the tab list.
   final String? semanticLabel;
 
   @override
@@ -286,12 +150,8 @@ class NakedTabList extends StatelessWidget {
 }
 
 /// An individual tab trigger in a NakedTabs component.
-///
-/// This component represents a selectable tab within a tab list.
 class NakedTab extends StatefulWidget {
   /// Creates a naked tab.
-  ///
-  /// The [child] and [tabId] parameters are required.
   const NakedTab({
     super.key,
     required this.child,
@@ -304,6 +164,7 @@ class NakedTab extends StatefulWidget {
     this.cursor = SystemMouseCursors.click,
     this.enableHapticFeedback = true,
     this.focusNode,
+    this.excludeSemantics = false,
   });
 
   final Widget child;
@@ -321,14 +182,9 @@ class NakedTab extends StatefulWidget {
   final ValueChanged<bool>? onFocusedState;
 
   /// Whether this tab is enabled.
-  ///
-  /// When false, the tab will not respond to user interaction,
-  /// regardless of the tabs component's enabled state.
   final bool enabled;
 
   /// Optional semantic label for accessibility.
-  ///
-  /// This is used by screen readers to describe the tab.
   final String? semanticLabel;
 
   /// The cursor to show when hovering over the tab.
@@ -339,6 +195,9 @@ class NakedTab extends StatefulWidget {
 
   /// Optional focus node to control focus behavior.
   final FocusNode? focusNode;
+
+  /// Whether to exclude child semantics from the semantic tree.
+  final bool excludeSemantics;
 
   @override
   State<NakedTab> createState() => _NakedTabState();
@@ -434,7 +293,7 @@ class _NakedTabState extends State<NakedTab> {
 
     return Semantics(
       container: true,
-      excludeSemantics: true,
+      excludeSemantics: widget.excludeSemantics,
       enabled: isInteractive,
       selected: isSelected,
       label: widget.semanticLabel ?? 'Tab ${widget.tabId}',
@@ -473,13 +332,8 @@ class _NakedTabState extends State<NakedTab> {
 }
 
 /// A panel that displays content for a specific tab in a NakedTabs component.
-///
-/// This component is associated with a specific tab and displays its content
-/// when that tab is selected.
 class NakedTabPanel extends StatelessWidget {
   /// Creates a naked tab panel.
-  ///
-  /// The [child] and [tabId] parameters are required.
   const NakedTabPanel({
     super.key,
     required this.child,

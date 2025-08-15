@@ -1,80 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-/// A fully customizable checkbox with no default styling.
+/// A customizable checkbox with no default styling.
 ///
-/// NakedCheckbox provides core interaction behavior and accessibility
-/// without imposing any visual styling, giving consumers complete design freedom.
-/// It integrates with [FocusableActionDetector] to provide enhanced keyboard accessibility,
-/// hover detection, and focus management.
-///
-/// This component uses direct callbacks for state changes instead of managing its
-/// own state, giving consumers control over their state management approach.
-///
-/// Example:
-/// ```dart
-/// class MyCheckbox extends StatefulWidget {
-///   @override
-///   _MyCheckboxState createState() => _MyCheckboxState();
-/// }
-///
-/// class _MyCheckboxState extends State<MyCheckbox> {
-///   bool _isChecked = false;
-///   bool _isHovered = false;
-///   bool _isPressed = false;
-///   bool _isFocused = false;
-///
-///   @override
-///   Widget build(BuildContext context) {
-///     return NakedCheckbox(
-///       value: _isChecked,
-///       onChanged: (value) {
-///         setState(() {
-///           _isChecked = value!;
-///         });
-///       },
-///       onHoveredState: (isHovered) => setState(() => _isHovered = isHovered),
-///       onPressedState: (isPressed) => setState(() => _isPressed = isPressed),
-///       onFocusedState: (isFocused) => setState(() => _isFocused = isFocused),
-///       child: Container(
-///         height: 20,
-///         width: 20,
-///         decoration: BoxDecoration(
-///           border: Border.all(
-///             color: _isFocused
-///                 ? Colors.blue.shade400
-///                 : _isHovered || _isPressed
-///                     ? Colors.blue.shade300
-///                     : Colors.grey.shade300,
-///             width: 2,
-///           ),
-///           borderRadius: BorderRadius.circular(4),
-///           color: _isChecked ? Colors.blue.shade500 : Colors.transparent,
-///         ),
-///         child: _isChecked
-///             ? Icon(
-///                 Icons.check,
-///                 size: 16,
-///                 color: Colors.white,
-///               )
-///             : null,
-///       ),
-///     );
-///   }
-/// }
-/// ```
-///
-/// See also:
-///
-///  * [NakedButton], a component that allows users to trigger actions.
-///  * The Flutter `Checkbox` widget, which provides a similar functionality with
-///    Material Design styling.
-///  * The Naked library documentation for more examples and customization options.
+/// Provides interaction behavior and accessibility without visual styling.
+/// Supports checked, unchecked, and tristate (indeterminate) values.
 class NakedCheckbox extends StatefulWidget {
   /// Creates a naked checkbox.
-  ///
-  /// The [child] parameter is required and represents the visual appearance
-  /// of the checkbox in all states.
   const NakedCheckbox({
     super.key,
     required this.child,

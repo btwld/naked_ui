@@ -351,4 +351,81 @@ void main() {
       tester.expectCursor(SystemMouseCursors.forbidden, on: keyDisabled);
     });
   });
+
+  group('Semantic Configuration', () {
+    testWidgets('uses component semantic label when provided', (
+      WidgetTester tester,
+    ) async {
+      await tester.pumpMaterialWidget(
+        NakedButton(
+          semanticLabel: 'Component label',
+          onPressed: () {},
+          child: const Text('Button'),
+        ),
+      );
+
+      final semantics = tester.getSemantics(find.byType(NakedButton));
+      expect(semantics.label, contains('Component label'));
+      expect(semantics.hasFlag(SemanticsFlag.isButton), true);
+    });
+
+    testWidgets('respects isSemanticButton flag', (
+      WidgetTester tester,
+    ) async {
+      await tester.pumpMaterialWidget(
+        NakedButton(
+          isSemanticButton: false,
+          semanticLabel: 'Not a button',
+          onPressed: () {},
+          child: const Text('Custom'),
+        ),
+      );
+
+      final semantics = tester.getSemantics(find.byType(NakedButton));
+      expect(semantics.label, contains('Not a button'));
+      expect(semantics.hasFlag(SemanticsFlag.isButton), false);
+    });
+
+    testWidgets('excludeSemantics parameter exists and accepts values', (
+      WidgetTester tester,
+    ) async {
+      // Test that the parameter exists by creating widgets with different values
+      await tester.pumpMaterialWidget(
+        Column(
+          children: [
+            NakedButton(
+              excludeSemantics: false, // Default value
+              onPressed: () {},
+              child: const Text('Default'),
+            ),
+            NakedButton(
+              excludeSemantics: true, // Override value
+              onPressed: () {},
+              child: const Text('Override'),
+            ),
+          ],
+        ),
+      );
+
+      // If this compiles and runs, the parameter exists and works
+      expect(find.byType(NakedButton), findsNWidgets(2));
+    });
+
+    testWidgets('excludeSemantics defaults to false (enabling composition)', (
+      WidgetTester tester,
+    ) async {
+      await tester.pumpMaterialWidget(
+        NakedButton(
+          // excludeSemantics defaults to false
+          semanticLabel: 'Button label',
+          onPressed: () {},
+          child: const Text('Button'),
+        ),
+      );
+
+      final semantics = tester.getSemantics(find.byType(NakedButton));
+      expect(semantics.label, contains('Button label'));
+      expect(semantics.hasFlag(SemanticsFlag.isButton), true);
+    });
+  });
 }

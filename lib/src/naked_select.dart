@@ -7,55 +7,12 @@ import 'package:flutter/services.dart';
 import 'naked_button.dart';
 import 'utilities/utilities.dart';
 
-/// A fully customizable select/dropdown widget with no default styling.
+/// A customizable select/dropdown widget with no default styling.
 ///
-/// NakedSelect provides complete control over the appearance and behavior of a dropdown menu
-/// while handling all the complex interaction patterns and accessibility requirements.
-///
-/// Key features:
-/// - Full styling control through callbacks for hover, press, and focus states
-/// - Support for single and multiple selection modes
-/// - Keyboard navigation and type-ahead functionality
-/// - Automatic positioning with fallback alignments
-/// - ARIA-compliant accessibility support
-///
-/// The component uses Flutter's OverlayPortal to render the dropdown content in the app overlay,
-/// ensuring proper z-indexing and maintaining context inheritance.
-///
-/// Example usage:
-/// ```dart
-/// NakedSelect<String>(
-///   selectedValue: selectedValue,
-///   onSelectedValueChanged: (value) => setState(() => selectedValue = value),
-///   child: NakedSelectTrigger(
-///     child: Text(selectedValue ?? 'Select an option'),
-///   ),
-///   menu: NakedSelectMenu(
-///     child: Column(
-///       children: [
-///         NakedSelectItem(
-///           value: 'apple',
-///           child: Text('Apple'),
-///         ),
-///         NakedSelectItem(
-///           value: 'banana',
-///           child: Text('Banana'),
-///         ),
-///         NakedSelectItem(
-///           value: 'orange',
-///           child: Text('Orange'),
-///         ),
-///       ],
-///     ),
-///   ),
-///   onMenuClose: () => {},
-/// )
-/// ```
+/// Supports single and multiple selection with keyboard navigation.
+/// Renders menu content in the overlay with automatic positioning.
 class NakedSelect<T> extends StatefulWidget implements OverlayChildLifecycle {
   /// Creates a naked select dropdown.
-  ///
-  /// The [child] and [menu] parameters are required.
-  /// When [allowMultiple] is true, [selectedValues] must be provided.
   const NakedSelect({
     super.key,
     required this.child,
@@ -83,6 +40,7 @@ class NakedSelect<T> extends StatefulWidget implements OverlayChildLifecycle {
       ),
     ],
     this.closeOnClickOutside = true,
+    this.excludeSemantics = false,
   }) : allowMultiple = false,
        selectedValues = null,
        onSelectedValuesChanged = null;
@@ -114,6 +72,7 @@ class NakedSelect<T> extends StatefulWidget implements OverlayChildLifecycle {
       ),
     ],
     this.closeOnClickOutside = true,
+    this.excludeSemantics = false,
   }) : allowMultiple = true,
        selectedValue = null,
        onSelectedValueChanged = null;
@@ -130,47 +89,36 @@ class NakedSelect<T> extends StatefulWidget implements OverlayChildLifecycle {
   final VoidCallback? onClose;
 
   /// The currently selected value in single selection mode.
-  /// Only used when [allowMultiple] is false.
   final T? selectedValue;
 
   /// Called when the selected value changes in single selection mode.
-  /// Only used when [allowMultiple] is false.
   final ValueChanged<T?>? onSelectedValueChanged;
 
   /// The set of currently selected values in multiple selection mode.
-  /// Required when [allowMultiple] is true.
   final Set<T>? selectedValues;
 
   /// Called when selected values change in multiple selection mode.
-  /// Only used when [allowMultiple] is true.
   final ValueChanged<Set<T>>? onSelectedValuesChanged;
 
   /// Whether to allow selecting multiple items.
-  /// When true, [selectedValues] and [onSelectedValuesChanged] must be provided.
   final bool allowMultiple;
 
   /// Whether the select is enabled and can be interacted with.
-  /// When false, all interaction is disabled and the trigger shows a forbidden cursor.
   final bool enabled;
 
   /// Semantic label for accessibility.
-  /// Used by screen readers to identify the select component.
   final String? semanticLabel;
 
   /// Whether to automatically close the dropdown when an item is selected.
-  /// Set to false to keep the menu open after selection, useful for multiple selection.
   final bool closeOnSelect;
 
   /// Whether to automatically focus the menu when opened.
-  /// When true, enables immediate keyboard navigation.
   final bool autofocus;
 
   /// Whether to enable type-ahead selection for quick keyboard navigation.
-  /// When true, typing characters will focus matching items.
   final bool enableTypeAhead;
 
   /// Duration before resetting the type-ahead search buffer.
-  /// Controls how long to wait between keystrokes when matching items.
   final Duration typeAheadDebounceTime;
 
   /// The alignment of the menu relative to its trigger.
@@ -186,6 +134,9 @@ class NakedSelect<T> extends StatefulWidget implements OverlayChildLifecycle {
 
   /// Whether to close the menu when clicking outside.
   final bool closeOnClickOutside;
+
+  /// Whether to exclude child semantics from the semantic tree.
+  final bool excludeSemantics;
 
   /// The duration to wait before removing the Widget from the Overlay after the menu is closed.
   @override
@@ -310,6 +261,7 @@ class _NakedSelectState<T> extends State<NakedSelect<T>>
       child: Semantics(
         container: true,
         explicitChildNodes: true,
+        excludeSemantics: widget.excludeSemantics,
         label: widget.semanticLabel,
         child: NakedMenuAnchor(
           controller: controller,
@@ -544,6 +496,7 @@ class NakedSelectItem<T> extends StatefulWidget {
     this.enableHapticFeedback = true,
     this.focusNode,
     this.autofocus = false,
+    this.excludeSemantics = false,
   });
 
   /// The child widget to display.
@@ -587,6 +540,9 @@ class NakedSelectItem<T> extends StatefulWidget {
   final FocusNode? focusNode;
 
   final bool autofocus;
+
+  /// Whether to exclude child semantics from the semantic tree.
+  final bool excludeSemantics;
 
   @override
   State<NakedSelectItem<T>> createState() => _NakedSelectItemState<T>();
@@ -632,7 +588,7 @@ class _NakedSelectItemState<T> extends State<NakedSelectItem<T>> {
       _registerWithSelect();
     }
   }
-  
+
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
@@ -685,7 +641,7 @@ class _NakedSelectItemState<T> extends State<NakedSelectItem<T>> {
     }
 
     return Semantics(
-      excludeSemantics: true,
+      excludeSemantics: widget.excludeSemantics,
       enabled: isEffectivelyEnabled,
       selected: isSelected,
       child: NakedButton(

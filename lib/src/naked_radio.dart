@@ -5,19 +5,9 @@ import 'package:flutter/services.dart';
 /// A context provider for a radio group that manages a single selection
 /// across multiple radio buttons.
 ///
-/// This widget provides a simple callback-based API for managing radio button groups
-/// without imposing any visual styling.
-///
-/// The radio group handles keyboard navigation between radio buttons using arrow keys.
-/// When a radio button is focused, arrow keys will move focus to the next/previous
-/// enabled radio button in reading order. Selection follows focus.
+/// Provides keyboard navigation and manages focus between radio buttons.
 class NakedRadioGroup<T> extends StatefulWidget {
   /// Creates a naked radio group.
-  ///
-  /// The [child] parameter is required, which typically contains NakedRadioButton widgets.
-  /// The [groupValue] parameter represents the currently selected value within the group.
-  /// The [onChanged] callback is called when a radio button is selected.
-  /// The [enabled] parameter controls whether the entire group is interactive.
   const NakedRadioGroup({
     super.key,
     required this.groupValue,
@@ -164,49 +154,12 @@ class NakedRadioGroupScope<T> extends InheritedWidget {
   }
 }
 
-/// A fully customizable radio button with no default styling.
+/// A customizable radio button with no default styling.
 ///
-/// NakedRadio provides interaction behavior and accessibility
-/// without imposing any visual styling, allowing complete design freedom.
-/// It must be used within a NakedRadioGroup to function properly.
-///
-/// Features:
-/// - Customizable appearance through child widget
-/// - Hover, pressed, select and focus state callbacks
-/// - Keyboard navigation support via arrow keys
-/// - Selection follows focus
-/// - Haptic feedback on selection
-/// - Accessibility support
-/// - Disabled state handling
-///
-/// Example:
-/// ```dart
-/// NakedRadio<String>(
-///   value: 'option1',
-///   child: Container(
-///     width: 20,
-///     height: 20,
-///     decoration: BoxDecoration(
-///       shape: BoxShape.circle,
-///       border: Border.all(
-///         color: selected ? Colors.blue : Colors.grey,
-///       ),
-///     ),
-///     child: selected
-///       ? Center(child: Icon(Icons.check, size: 16))
-///       : null,
-///   ),
-///   onHoveredState: (isHovered) => print('Hover: $isHovered'),
-///   onPressedState: (isPressed) => print('Pressed: $isPressed'),
-///   onSelectedState: (isSelected) => print('Selected: $isSelected'),
-///   onFocusedState: (isFocused) => print('Focus: $isFocused'),
-/// )
-/// ```
+/// Provides interaction behavior and keyboard navigation without visual styling.
+/// Must be used within a NakedRadioGroup to function properly.
 class NakedRadio<T> extends StatefulWidget {
   /// Creates a naked radio button.
-  ///
-  /// The [child] and [value] parameters are required.
-  /// This component must be used within a NakedRadioGroup.
   const NakedRadio({
     super.key,
     required this.child,

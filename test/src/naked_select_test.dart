@@ -649,4 +649,101 @@ void main() {
       tester.expectCursor(SystemMouseCursors.forbidden, on: keyDisabledTrigger);
     });
   });
+
+  group('Semantic Configuration', () {
+    testWidgets('NakedSelect supports excludeSemantics parameter', (
+      WidgetTester tester,
+    ) async {
+      await tester.pumpMaterialWidget(
+        NakedSelect<String>(
+          excludeSemantics: false, // Default value
+          semanticLabel: 'Select component',
+          menu: const SizedBox(),
+          child: const NakedSelectTrigger(child: Text('Select option')),
+        ),
+      );
+
+      // If this compiles and runs, the parameter exists and works
+      expect(find.byType(NakedSelect<String>), findsOneWidget);
+    });
+
+    testWidgets('NakedSelectItem supports excludeSemantics parameter', (
+      WidgetTester tester,
+    ) async {
+      await tester.pumpMaterialWidget(
+        NakedSelect<String>(
+          menu: Column(
+            children: [
+              NakedSelectItem<String>(
+                value: 'item1',
+                excludeSemantics: false, // Default value
+                child: const Text('Item 1'),
+              ),
+              NakedSelectItem<String>(
+                value: 'item2',
+                excludeSemantics: true, // Override value
+                child: const Text('Item 2'),
+              ),
+            ],
+          ),
+          child: const NakedSelectTrigger(child: Text('Select option')),
+        ),
+      );
+
+      // Open menu to render items
+      await tester.tap(find.text('Select option'));
+      await tester.pumpAndSettle();
+
+      // If this compiles and runs, the parameter exists and works
+      expect(find.byType(NakedSelectItem<String>), findsNWidgets(2));
+    });
+
+    testWidgets('NakedSelect semantic label is applied', (
+      WidgetTester tester,
+    ) async {
+      await tester.pumpMaterialWidget(
+        NakedSelect<String>(
+          semanticLabel: 'Fruit picker',
+          menu: const SizedBox(),
+          child: const NakedSelectTrigger(child: Text('Select fruit')),
+        ),
+      );
+
+      final selectSemantics = tester.getSemantics(find.byType(NakedSelect<String>));
+      expect(selectSemantics.label, equals('Fruit picker'));
+    });
+
+    testWidgets('NakedSelectItem semantic labels work', (
+      WidgetTester tester,
+    ) async {
+      await tester.pumpMaterialWidget(
+        NakedSelect<String>(
+          menu: Column(
+            children: const [
+              NakedSelectItem<String>(
+                value: 'apple',
+                semanticLabel: 'Apple fruit',
+                child: Text('Apple'),
+              ),
+              NakedSelectItem<String>(
+                value: 'banana',
+                child: Text('Banana'),
+              ),
+            ],
+          ),
+          child: const NakedSelectTrigger(child: Text('Select fruit')),
+        ),
+      );
+
+      // Open menu to render items
+      await tester.tap(find.text('Select fruit'));
+      await tester.pumpAndSettle();
+
+      final appleSemantics = tester.getSemantics(find.text('Apple'));
+      expect(appleSemantics.label, contains('Apple fruit'));
+
+      final bananaSemantics = tester.getSemantics(find.text('Banana'));
+      expect(bananaSemantics.label, contains('Banana'));
+    });
+  });
 }

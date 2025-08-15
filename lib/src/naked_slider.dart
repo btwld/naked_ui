@@ -1,110 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-/// A fully customizable slider with no default styling.
+/// A customizable slider with no default styling.
 ///
-/// NakedSlider provides interaction behavior and accessibility
-/// without imposing any visual styling, allowing complete design freedom.
-/// It uses direct callbacks for state changes, giving consumers control over
-/// their own state management.
-///
-/// The component provides enhanced keyboard navigation and focus handling:
-/// - Arrow keys for small value adjustments (using [keyboardStep])
-/// - Shift + Arrow keys for larger adjustments (using [largeKeyboardStep])
-/// - Home/End keys to jump to min/max values
-/// - RTL (right-to-left) language support for horizontal sliders
-/// - Vertical direction support with appropriate key mappings (up/down arrows)
-/// - Vertical sliders use up arrow to increase and down arrow to decrease values
-///
-/// Example:
-/// ```dart
-/// class MySlider extends StatefulWidget {
-///   @override
-///   _MySliderState createState() => _MySliderState();
-/// }
-///
-/// class _MySliderState extends State<MySlider> {
-///   double _value = 0.5;
-///   bool _isDragging = false;
-///   bool _isHovered = false;
-///   bool _isFocused = false;
-///
-///   @override
-///   Widget build(BuildContext context) {
-///     return NakedSlider(
-///       value: _value,
-///       onChanged: (newValue) {
-///         setState(() {
-///           _value = newValue;
-///         });
-///       },
-///       onHoveredState: (isHovered) => setState(() => _isHovered = isHovered),
-///       onDraggedState: (isDragging) => setState(() => _isDragging = isDragging),
-///       onFocusedState: (isFocused) => setState(() => _isFocused = isFocused),
-///       child: Container(
-///         height: 40,
-///         width: 200,
-///         color: Colors.transparent,
-///         child: Stack(
-///           children: [
-///             // Track
-///             Container(
-///               margin: EdgeInsets.symmetric(vertical: 18),
-///               decoration: BoxDecoration(
-///                 color: Colors.grey.shade300,
-///                 borderRadius: BorderRadius.circular(2),
-///               ),
-///               height: 4,
-///             ),
-///             // Active Track
-///             FractionallySizedBox(
-///               widthFactor: _value,
-///               child: Container(
-///                 margin: EdgeInsets.symmetric(vertical: 18),
-///                 decoration: BoxDecoration(
-///                   color: Colors.blue.shade600,
-///                   borderRadius: BorderRadius.circular(2),
-///                 ),
-///                 height: 4,
-///               ),
-///             ),
-///             // Thumb
-///             Positioned(
-///               left: _value * 200 - 10,
-///               top: 0,
-///               child: Container(
-///                 height: 20,
-///                 width: 20,
-///                 decoration: BoxDecoration(
-///                   color: _isDragging ? Colors.blue.shade700 :
-///                         _isHovered ? Colors.blue.shade600 : Colors.blue.shade500,
-///                   borderRadius: BorderRadius.circular(10),
-///                   border: Border.all(
-///                     color: _isFocused ? Colors.white : Colors.transparent,
-///                     width: 2,
-///                   ),
-///                   boxShadow: [
-///                     BoxShadow(
-///                       color: Colors.black.withValues(alpha: 0.1),
-///                       blurRadius: 4,
-///                       offset: Offset(0, 2),
-///                     ),
-///                   ],
-///                 ),
-///               ),
-///             ),
-///           ],
-///         ),
-///       ),
-///     );
-///   }
-/// }
-/// ```
+/// Provides interaction behavior and keyboard navigation without visual styling.
+/// Supports discrete divisions and both horizontal and vertical orientation.
 class NakedSlider extends StatefulWidget {
   /// Creates a naked slider.
-  ///
-  /// The [child] and [value] parameters are required.
-  /// The [min] must be less than [max].
   const NakedSlider({
     super.key,
     required this.child,
@@ -125,11 +27,10 @@ class NakedSlider extends StatefulWidget {
     this.divisions,
     this.keyboardStep = 0.01,
     this.largeKeyboardStep = 0.1,
+    this.excludeSemantics = false,
   }) : assert(min < max, 'min must be less than max');
 
   /// The child widget to display.
-  ///
-  /// Typically includes a track and thumb visualization.
   final Widget child;
 
   /// The current value of the slider.
@@ -176,26 +77,19 @@ class NakedSlider extends StatefulWidget {
   final FocusNode? focusNode;
 
   /// Direction of the slider.
-  ///
-  /// Can be horizontal (left to right) or vertical (bottom to top).
   final Axis direction;
 
   /// Number of discrete divisions.
-  ///
-  /// If null, the slider will be continuous.
   final int? divisions;
 
   /// Step size for keyboard navigation.
-  ///
-  /// This value is used when arrow keys are pressed to increment or decrement
-  /// the slider value. Default is 0.01 (1% of the slider range).
   final double keyboardStep;
 
   /// Step size for large keyboard navigation.
-  ///
-  /// This value is used when arrow keys are pressed while holding Shift.
-  /// Default is 0.1 (10% of the slider range).
   final double largeKeyboardStep;
+
+  /// Whether to exclude child semantics from the semantic tree.
+  final bool excludeSemantics;
 
   @override
   State<NakedSlider> createState() => _NakedSliderState();
@@ -372,7 +266,7 @@ class _NakedSliderState extends State<NakedSlider> {
     final double decreasedValue = _normalizeValue(widget.value - step);
 
     return Semantics(
-      excludeSemantics: true,
+      excludeSemantics: widget.excludeSemantics,
       enabled: _isInteractive,
       slider: true,
       label: widget.semanticLabel,

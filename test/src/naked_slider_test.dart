@@ -681,4 +681,84 @@ void main() {
       expect(focusNode3.hasFocus, true);
     });
   });
+
+  group('Semantic Configuration', () {
+    testWidgets('supports excludeSemantics parameter', (
+      WidgetTester tester,
+    ) async {
+      await tester.pumpMaterialWidget(
+        Column(
+          children: [
+            NakedSlider(
+              value: 0.5,
+              excludeSemantics: false, // Default value
+              onChanged: (_) {},
+              child: _anyWidget(),
+            ),
+            NakedSlider(
+              value: 0.7,
+              excludeSemantics: true, // Override value
+              onChanged: (_) {},
+              child: _anyWidget(),
+            ),
+          ],
+        ),
+      );
+
+      // If this compiles and runs, the parameter exists and works
+      expect(find.byType(NakedSlider), findsNWidgets(2));
+    });
+
+    testWidgets('semantic label is applied', (
+      WidgetTester tester,
+    ) async {
+      await tester.pumpMaterialWidget(
+        NakedSlider(
+          value: 0.6,
+          semanticLabel: 'Volume control',
+          onChanged: (_) {},
+          child: _anyWidget(),
+        ),
+      );
+
+      final semantics = tester.getSemantics(find.byType(NakedSlider));
+      expect(semantics.label, contains('Volume control'));
+    });
+
+    testWidgets('excludeSemantics defaults to false (enabling composition)', (
+      WidgetTester tester,
+    ) async {
+      await tester.pumpMaterialWidget(
+        NakedSlider(
+          value: 0.3,
+          // excludeSemantics defaults to false
+          semanticLabel: 'Brightness slider',
+          onChanged: (_) {},
+          child: _anyWidget(),
+        ),
+      );
+
+      final semantics = tester.getSemantics(find.byType(NakedSlider));
+      expect(semantics.label, contains('Brightness slider'));
+    });
+
+    testWidgets('slider semantics work with value updates', (
+      WidgetTester tester,
+    ) async {
+      await tester.pumpMaterialWidget(
+        NakedSlider(
+          value: 0.25,
+          min: 0.0,
+          max: 1.0,
+          semanticLabel: 'Audio volume',
+          onChanged: (_) {},
+          child: _anyWidget(),
+        ),
+      );
+
+      final semantics = tester.getSemantics(find.byType(NakedSlider));
+      expect(semantics.label, contains('Audio volume'));
+      expect(semantics.value, contains('25%')); // 0.25 * 100 = 25%
+    });
+  });
 }

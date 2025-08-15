@@ -1,60 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-/// A fully customizable button with no default styling.
+/// A customizable button with no default styling.
 ///
-/// NakedButton provides interaction behavior and accessibility features
-/// without imposing any visual styling, giving consumers complete design freedom.
-/// It integrates with [FocusableActionDetector] to provide enhanced keyboard accessibility,
-/// hover detection, and focus management.
-///
-/// This component handles various interaction states (hover, pressed, focused, disabled, loading)
-/// and provides direct callbacks to allow consumers to manage their own visual state.
-///
-/// Example:
-/// ```dart
-/// class MyButton extends StatefulWidget {
-///   @override
-///   _MyButtonState createState() => _MyButtonState();
-/// }
-///
-/// class _MyButtonState extends State<MyButton> {
-///   bool _isHovered = false;
-///   bool _isPressed = false;
-///   bool _isFocused = false;
-///
-///   @override
-///   Widget build(BuildContext context) {
-///     return NakedButton(
-///       onPressed: () {
-///         print('Button pressed!');
-///       },
-///       onHoveredState: (isHovered) => setState(() => _isHovered = isHovered),
-///       onPressedState: (isPressed) => setState(() => _isPressed = isPressed),
-///       onFocusedState: (isFocused) => setState(() => _isFocused = isFocused),
-///       child: Container(
-///         padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-///         decoration: BoxDecoration(
-///           color: _isPressed
-///               ? Colors.blue.shade700
-///               : _isHovered
-///                   ? Colors.blue.shade600
-///                   : Colors.blue.shade500,
-///           borderRadius: BorderRadius.circular(4),
-///           border: Border.all(
-///             color: _isFocused ? Colors.white : Colors.transparent,
-///             width: 2,
-///           ),
-///         ),
-///         child: Text(
-///           'Click Me',
-///           style: TextStyle(color: Colors.white),
-///         ),
-///       ),
-///     );
-///   }
-/// }
-/// ```
+/// Provides interaction behavior and accessibility without visual styling.
+/// Exposes state callbacks for hover, press, focus, and disabled states.
 class NakedButton extends StatefulWidget {
   /// Creates a naked button.
   const NakedButton({
@@ -72,19 +22,13 @@ class NakedButton extends StatefulWidget {
     this.enableHapticFeedback = true,
     this.focusNode,
     this.autofocus = false,
+    this.excludeSemantics = false,
   });
 
   /// The child widget to display.
-  ///
-  /// This widget should represent the visual appearance of the button.
-  /// You're responsible for styling this widget based on the button's state
-  /// using the provided callback properties.
   final Widget child;
 
   /// Called when the button is tapped or activated via keyboard.
-  ///
-  /// If null, the button will be considered disabled and will not respond
-  /// to user interaction.
   final VoidCallback? onPressed;
 
   /// Called when hover state changes.
@@ -106,8 +50,6 @@ class NakedButton extends StatefulWidget {
   final bool isSemanticButton;
 
   /// The semantic label for the button.
-  ///
-  /// This label will be used to describe the button to users of assistive technologies.
   final String? semanticLabel;
 
   /// The cursor to show when hovering over the button.
@@ -126,6 +68,9 @@ class NakedButton extends StatefulWidget {
 
   /// Whether the button should be focused when first built.
   final bool autofocus;
+
+  /// Whether to exclude child semantics from the semantic tree.
+  final bool excludeSemantics;
 
   bool get _isInteractive => enabled && onPressed != null;
 
@@ -177,7 +122,7 @@ class _NakedButtonState extends State<NakedButton> {
   Widget build(BuildContext context) {
     return Semantics(
       container: true,
-      excludeSemantics: true,
+      excludeSemantics: widget.excludeSemantics,
       enabled: widget._isInteractive,
       button: widget.isSemanticButton,
       label: widget.semanticLabel,
