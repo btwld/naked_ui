@@ -10,10 +10,7 @@ extension _WidgetTesterX on WidgetTester {
   SemanticsNode getSemanticsNode({required Type of, required Type matching}) {
     return getSemantics(
       find
-          .descendant(
-            of: find.byType(of),
-            matching: find.byType(matching),
-          )
+          .descendant(of: find.byType(of), matching: find.byType(matching))
           .first,
     );
   }
@@ -40,10 +37,7 @@ class _CounterState extends State<_Counter> {
       mainAxisSize: MainAxisSize.min,
       children: [
         Text('Count: $_count'),
-        ElevatedButton(
-          onPressed: _increment,
-          child: const Text('Increment'),
-        ),
+        ElevatedButton(onPressed: _increment, child: const Text('Increment')),
       ],
     );
   }
@@ -59,18 +53,10 @@ void main() {
             children: [
               NakedTabList(
                 child: Row(
-                  children: [
-                    NakedTab(
-                      tabId: 'tab1',
-                      child: Text('Tab 1'),
-                    ),
-                  ],
+                  children: [NakedTab(tabId: 'tab1', child: Text('Tab 1'))],
                 ),
               ),
-              NakedTabPanel(
-                tabId: 'tab1',
-                child: Text('Panel 1'),
-              ),
+              NakedTabPanel(tabId: 'tab1', child: Text('Panel 1')),
             ],
           ),
         ),
@@ -89,25 +75,13 @@ void main() {
               NakedTabList(
                 child: Row(
                   children: [
-                    NakedTab(
-                      tabId: 'tab1',
-                      child: Text('Tab 1'),
-                    ),
-                    NakedTab(
-                      tabId: 'tab2',
-                      child: Text('Tab 2'),
-                    ),
+                    NakedTab(tabId: 'tab1', child: Text('Tab 1')),
+                    NakedTab(tabId: 'tab2', child: Text('Tab 2')),
                   ],
                 ),
               ),
-              NakedTabPanel(
-                tabId: 'tab1',
-                child: Text('Panel 1'),
-              ),
-              NakedTabPanel(
-                tabId: 'tab2',
-                child: Text('Panel 2'),
-              ),
+              NakedTabPanel(tabId: 'tab1', child: Text('Panel 1')),
+              NakedTabPanel(tabId: 'tab2', child: Text('Panel 2')),
             ],
           ),
         ),
@@ -131,25 +105,13 @@ void main() {
                   NakedTabList(
                     child: Row(
                       children: [
-                        NakedTab(
-                          tabId: 'tab1',
-                          child: Text('Tab 1'),
-                        ),
-                        NakedTab(
-                          tabId: 'tab2',
-                          child: Text('Tab 2'),
-                        ),
+                        NakedTab(tabId: 'tab1', child: Text('Tab 1')),
+                        NakedTab(tabId: 'tab2', child: Text('Tab 2')),
                       ],
                     ),
                   ),
-                  NakedTabPanel(
-                    tabId: 'tab1',
-                    child: Text('Panel 1'),
-                  ),
-                  NakedTabPanel(
-                    tabId: 'tab2',
-                    child: Text('Panel 2'),
-                  ),
+                  NakedTabPanel(tabId: 'tab1', child: Text('Panel 1')),
+                  NakedTabPanel(tabId: 'tab2', child: Text('Panel 2')),
                 ],
               ),
             );
@@ -167,8 +129,9 @@ void main() {
       expect(find.text('Panel 2'), findsOneWidget);
     });
 
-    testWidgets('ignores tab selection when NakedTabs is disabled',
-        (WidgetTester tester) async {
+    testWidgets('ignores tab selection when NakedTabs is disabled', (
+      WidgetTester tester,
+    ) async {
       String selectedTabId = 'tab1';
       await tester.pumpMaterialWidget(
         StatefulBuilder(
@@ -183,25 +146,13 @@ void main() {
                   NakedTabList(
                     child: Row(
                       children: [
-                        NakedTab(
-                          tabId: 'tab1',
-                          child: Text('Tab 1'),
-                        ),
-                        NakedTab(
-                          tabId: 'tab2',
-                          child: Text('Tab 2'),
-                        ),
+                        NakedTab(tabId: 'tab1', child: Text('Tab 1')),
+                        NakedTab(tabId: 'tab2', child: Text('Tab 2')),
                       ],
                     ),
                   ),
-                  NakedTabPanel(
-                    tabId: 'tab1',
-                    child: Text('Panel 1'),
-                  ),
-                  NakedTabPanel(
-                    tabId: 'tab2',
-                    child: Text('Panel 2'),
-                  ),
+                  NakedTabPanel(tabId: 'tab1', child: Text('Panel 1')),
+                  NakedTabPanel(tabId: 'tab2', child: Text('Panel 2')),
                 ],
               ),
             );
@@ -216,8 +167,9 @@ void main() {
       expect(find.text('Panel 2'), findsNothing);
     });
 
-    testWidgets('ignores tab selection when individual tab is disabled',
-        (WidgetTester tester) async {
+    testWidgets('ignores tab selection when individual tab is disabled', (
+      WidgetTester tester,
+    ) async {
       String selectedTabId = 'tab1';
       await tester.pumpMaterialWidget(
         StatefulBuilder(
@@ -231,34 +183,19 @@ void main() {
                   NakedTabList(
                     child: Row(
                       children: [
-                        NakedTab(
-                          tabId: 'tab1',
-                          child: Text('Tab 1'),
-                        ),
+                        NakedTab(tabId: 'tab1', child: Text('Tab 1')),
                         NakedTab(
                           tabId: 'tab2',
                           enabled: false,
                           child: Text('Tab 2'),
                         ),
-                        NakedTab(
-                          tabId: 'tab3',
-                          child: Text('Tab 3'),
-                        ),
+                        NakedTab(tabId: 'tab3', child: Text('Tab 3')),
                       ],
                     ),
                   ),
-                  NakedTabPanel(
-                    tabId: 'tab1',
-                    child: Text('Panel 1'),
-                  ),
-                  NakedTabPanel(
-                    tabId: 'tab2',
-                    child: Text('Panel 2'),
-                  ),
-                  NakedTabPanel(
-                    tabId: 'tab3',
-                    child: Text('Panel 3'),
-                  ),
+                  NakedTabPanel(tabId: 'tab1', child: Text('Panel 1')),
+                  NakedTabPanel(tabId: 'tab2', child: Text('Panel 2')),
+                  NakedTabPanel(tabId: 'tab3', child: Text('Panel 3')),
                 ],
               ),
             );
@@ -287,7 +224,9 @@ void main() {
   });
 
   group('State Callbacks', () {
-    testWidgets('calls onHoveredState when hovered', (WidgetTester tester) async {
+    testWidgets('calls onHoveredState when hovered', (
+      WidgetTester tester,
+    ) async {
       bool isHovered = false;
       final key = GlobalKey();
       await tester.pumpMaterialWidget(
@@ -309,25 +248,26 @@ void main() {
                     ],
                   ),
                 ),
-                const NakedTabPanel(
-                  tabId: 'tab1',
-                  child: Text('Panel 1'),
-                ),
+                const NakedTabPanel(tabId: 'tab1', child: Text('Panel 1')),
               ],
             ),
           ),
         ),
       );
 
-      await tester.simulateHover(key, onHover: () {
-        expect(isHovered, true);
-      });
+      await tester.simulateHover(
+        key,
+        onHover: () {
+          expect(isHovered, true);
+        },
+      );
 
       expect(isHovered, false);
     });
 
-    testWidgets('calls onPressedState on tap down/up',
-        (WidgetTester tester) async {
+    testWidgets('calls onPressedState on tap down/up', (
+      WidgetTester tester,
+    ) async {
       bool isPressed = false;
       await tester.pumpMaterialWidget(
         NakedTabGroup(
@@ -345,10 +285,7 @@ void main() {
                   ],
                 ),
               ),
-              const NakedTabPanel(
-                tabId: 'tab1',
-                child: Text('Panel 1'),
-              ),
+              const NakedTabPanel(tabId: 'tab1', child: Text('Panel 1')),
             ],
           ),
         ),
@@ -363,8 +300,9 @@ void main() {
       expect(isPressed, false);
     });
 
-    testWidgets('calls onFocusedState when focused/unfocused',
-        (WidgetTester tester) async {
+    testWidgets('calls onFocusedState when focused/unfocused', (
+      WidgetTester tester,
+    ) async {
       bool isFocused = false;
       final focusNode = FocusNode();
 
@@ -385,10 +323,7 @@ void main() {
                   ],
                 ),
               ),
-              const NakedTabPanel(
-                tabId: 'tab1',
-                child: Text('Panel 1'),
-              ),
+              const NakedTabPanel(tabId: 'tab1', child: Text('Panel 1')),
             ],
           ),
         ),
@@ -421,10 +356,7 @@ void main() {
                   NakedTabList(
                     child: Row(
                       children: [
-                        const NakedTab(
-                          tabId: 'tab1',
-                          child: Text('Tab 1'),
-                        ),
+                        const NakedTab(tabId: 'tab1', child: Text('Tab 1')),
                         NakedTab(
                           tabId: 'tab2',
                           focusNode: focusNode,
@@ -433,14 +365,8 @@ void main() {
                       ],
                     ),
                   ),
-                  const NakedTabPanel(
-                    tabId: 'tab1',
-                    child: Text('Panel 1'),
-                  ),
-                  const NakedTabPanel(
-                    tabId: 'tab2',
-                    child: Text('Panel 2'),
-                  ),
+                  const NakedTabPanel(tabId: 'tab1', child: Text('Panel 1')),
+                  const NakedTabPanel(tabId: 'tab2', child: Text('Panel 2')),
                 ],
               ),
             );
@@ -456,8 +382,9 @@ void main() {
       expect(selectedTabId, 'tab2');
     });
 
-    testWidgets('navigates tabs with arrow keys in horizontal orientation',
-        (WidgetTester tester) async {
+    testWidgets('navigates tabs with arrow keys in horizontal orientation', (
+      WidgetTester tester,
+    ) async {
       String selectedTabId = 'tab1';
       await tester.pumpMaterialWidget(
         StatefulBuilder(
@@ -471,33 +398,15 @@ void main() {
                   NakedTabList(
                     child: Row(
                       children: [
-                        NakedTab(
-                          tabId: 'tab1',
-                          child: Text('Tab 1'),
-                        ),
-                        NakedTab(
-                          tabId: 'tab2',
-                          child: Text('Tab 2'),
-                        ),
-                        NakedTab(
-                          tabId: 'tab3',
-                          child: Text('Tab 3'),
-                        ),
+                        NakedTab(tabId: 'tab1', child: Text('Tab 1')),
+                        NakedTab(tabId: 'tab2', child: Text('Tab 2')),
+                        NakedTab(tabId: 'tab3', child: Text('Tab 3')),
                       ],
                     ),
                   ),
-                  NakedTabPanel(
-                    tabId: 'tab1',
-                    child: Text('Panel 1'),
-                  ),
-                  NakedTabPanel(
-                    tabId: 'tab2',
-                    child: Text('Panel 2'),
-                  ),
-                  NakedTabPanel(
-                    tabId: 'tab3',
-                    child: Text('Panel 3'),
-                  ),
+                  NakedTabPanel(tabId: 'tab1', child: Text('Panel 1')),
+                  NakedTabPanel(tabId: 'tab2', child: Text('Panel 2')),
+                  NakedTabPanel(tabId: 'tab3', child: Text('Panel 3')),
                 ],
               ),
             );
@@ -529,86 +438,70 @@ void main() {
     });
 
     testWidgets(
-        'navigates tabs with arrow keys in horizontal orientation with MaterialApp',
-        (WidgetTester tester) async {
-      String selectedTabId = 'tab1';
-      await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: StatefulBuilder(
-              builder: (context, setState) {
-                return NakedTabGroup(
-                  selectedTabId: selectedTabId,
-                  onSelectedTabIdChanged: (id) =>
-                      setState(() => selectedTabId = id),
-                  child: const Column(
-                    children: [
-                      NakedTabList(
-                        child: Row(
-                          children: [
-                            NakedTab(
-                              tabId: 'tab1',
-                              child: Text('Tab 1'),
-                            ),
-                            NakedTab(
-                              tabId: 'tab2',
-                              child: Text('Tab 2'),
-                            ),
-                            NakedTab(
-                              tabId: 'tab3',
-                              child: Text('Tab 3'),
-                            ),
-                          ],
+      'navigates tabs with arrow keys in horizontal orientation with MaterialApp',
+      (WidgetTester tester) async {
+        String selectedTabId = 'tab1';
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: StatefulBuilder(
+                builder: (context, setState) {
+                  return NakedTabGroup(
+                    selectedTabId: selectedTabId,
+                    onSelectedTabIdChanged: (id) =>
+                        setState(() => selectedTabId = id),
+                    child: const Column(
+                      children: [
+                        NakedTabList(
+                          child: Row(
+                            children: [
+                              NakedTab(tabId: 'tab1', child: Text('Tab 1')),
+                              NakedTab(tabId: 'tab2', child: Text('Tab 2')),
+                              NakedTab(tabId: 'tab3', child: Text('Tab 3')),
+                            ],
+                          ),
                         ),
-                      ),
-                      NakedTabPanel(
-                        tabId: 'tab1',
-                        child: Text('Panel 1'),
-                      ),
-                      NakedTabPanel(
-                        tabId: 'tab2',
-                        child: Text('Panel 2'),
-                      ),
-                      NakedTabPanel(
-                        tabId: 'tab3',
-                        child: Text('Panel 3'),
-                      ),
-                    ],
-                  ),
-                );
-              },
+                        NakedTabPanel(tabId: 'tab1', child: Text('Panel 1')),
+                        NakedTabPanel(tabId: 'tab2', child: Text('Panel 2')),
+                        NakedTabPanel(tabId: 'tab3', child: Text('Panel 3')),
+                      ],
+                    ),
+                  );
+                },
+              ),
             ),
           ),
-        ),
-      );
+        );
 
-      // Focus the component
-      await tester.tap(find.text('Tab 1'));
-      await tester.pump();
+        // Focus the component
+        await tester.tap(find.text('Tab 1'));
+        await tester.pump();
 
-      // Navigate to next tab with right arrow
-      await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
-      await tester.sendKeyEvent(LogicalKeyboardKey.space);
-      await tester.pump();
-      expect(selectedTabId, 'tab2');
+        // Navigate to next tab with right arrow
+        await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
+        await tester.sendKeyEvent(LogicalKeyboardKey.space);
+        await tester.pump();
+        expect(selectedTabId, 'tab2');
 
-      // Navigate to next tab with right arrow
-      await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
-      await tester.sendKeyEvent(LogicalKeyboardKey.space);
-      await tester.pump();
-      expect(selectedTabId, 'tab3');
+        // Navigate to next tab with right arrow
+        await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
+        await tester.sendKeyEvent(LogicalKeyboardKey.space);
+        await tester.pump();
+        expect(selectedTabId, 'tab3');
 
-      // Navigate to first tab with left arrow from last tab
-      await tester.sendKeyEvent(LogicalKeyboardKey.arrowLeft);
-      await tester.sendKeyEvent(LogicalKeyboardKey.space);
-      await tester.pump();
-      expect(selectedTabId, 'tab2');
-    });
+        // Navigate to first tab with left arrow from last tab
+        await tester.sendKeyEvent(LogicalKeyboardKey.arrowLeft);
+        await tester.sendKeyEvent(LogicalKeyboardKey.space);
+        await tester.pump();
+        expect(selectedTabId, 'tab2');
+      },
+    );
   });
 
   group('Accessibility', () {
-    testWidgets('provides correct semantics for tab list',
-        (WidgetTester tester) async {
+    testWidgets('provides correct semantics for tab list', (
+      WidgetTester tester,
+    ) async {
       await tester.pumpMaterialWidget(
         const NakedTabGroup(
           selectedTabId: 'tab1',
@@ -617,18 +510,10 @@ void main() {
               NakedTabList(
                 semanticLabel: 'Custom Tab List',
                 child: Row(
-                  children: [
-                    NakedTab(
-                      tabId: 'tab1',
-                      child: Text('Tab 1'),
-                    ),
-                  ],
+                  children: [NakedTab(tabId: 'tab1', child: Text('Tab 1'))],
                 ),
               ),
-              NakedTabPanel(
-                tabId: 'tab1',
-                child: Text('Panel 1'),
-              ),
+              NakedTabPanel(tabId: 'tab1', child: Text('Panel 1')),
             ],
           ),
         ),
@@ -641,8 +526,9 @@ void main() {
       expect(semantics.label, 'Custom Tab List');
     });
 
-    testWidgets('provides correct semantics for tab',
-        (WidgetTester tester) async {
+    testWidgets('provides correct semantics for tab', (
+      WidgetTester tester,
+    ) async {
       await tester.pumpMaterialWidget(
         const NakedTabGroup(
           selectedTabId: 'tab1',
@@ -659,10 +545,7 @@ void main() {
                   ],
                 ),
               ),
-              NakedTabPanel(
-                tabId: 'tab1',
-                child: Text('Panel 1'),
-              ),
+              NakedTabPanel(tabId: 'tab1', child: Text('Panel 1')),
             ],
           ),
         ),
@@ -676,8 +559,9 @@ void main() {
       expect(semantics.hasFlag(SemanticsFlag.isSelected), true);
     });
 
-    testWidgets('provides selected state for selected tab',
-        (WidgetTester tester) async {
+    testWidgets('provides selected state for selected tab', (
+      WidgetTester tester,
+    ) async {
       await tester.pumpMaterialWidget(
         const NakedTabGroup(
           selectedTabId: 'tab1',
@@ -686,25 +570,13 @@ void main() {
               NakedTabList(
                 child: Row(
                   children: [
-                    NakedTab(
-                      tabId: 'tab1',
-                      child: Text('Tab 1'),
-                    ),
-                    NakedTab(
-                      tabId: 'tab2',
-                      child: Text('Tab 2'),
-                    ),
+                    NakedTab(tabId: 'tab1', child: Text('Tab 1')),
+                    NakedTab(tabId: 'tab2', child: Text('Tab 2')),
                   ],
                 ),
               ),
-              NakedTabPanel(
-                tabId: 'tab1',
-                child: Text('Panel 1'),
-              ),
-              NakedTabPanel(
-                tabId: 'tab2',
-                child: Text('Panel 2'),
-              ),
+              NakedTabPanel(tabId: 'tab1', child: Text('Panel 1')),
+              NakedTabPanel(tabId: 'tab2', child: Text('Panel 2')),
             ],
           ),
         ),
@@ -734,28 +606,16 @@ void main() {
                   NakedTabList(
                     child: Column(
                       children: [
-                        NakedTab(
-                          tabId: 'tab1',
-                          child: Text('Tab 1'),
-                        ),
-                        NakedTab(
-                          tabId: 'tab2',
-                          child: Text('Tab 2'),
-                        ),
+                        NakedTab(tabId: 'tab1', child: Text('Tab 1')),
+                        NakedTab(tabId: 'tab2', child: Text('Tab 2')),
                       ],
                     ),
                   ),
                   Expanded(
                     child: Column(
                       children: [
-                        NakedTabPanel(
-                          tabId: 'tab1',
-                          child: Text('Panel 1'),
-                        ),
-                        NakedTabPanel(
-                          tabId: 'tab2',
-                          child: Text('Panel 2'),
-                        ),
+                        NakedTabPanel(tabId: 'tab1', child: Text('Panel 1')),
+                        NakedTabPanel(tabId: 'tab2', child: Text('Panel 2')),
                       ],
                     ),
                   ),
@@ -784,8 +644,9 @@ void main() {
   });
 
   group('Panel Behavior', () {
-    testWidgets('maintains state based on maintainState value',
-        (WidgetTester tester) async {
+    testWidgets('maintains state based on maintainState value', (
+      WidgetTester tester,
+    ) async {
       String selectedTabId = 'tab1';
 
       for (final conditions in [
@@ -806,14 +667,8 @@ void main() {
                         const NakedTabList(
                           child: Row(
                             children: [
-                              NakedTab(
-                                tabId: 'tab1',
-                                child: Text('Tab 1'),
-                              ),
-                              NakedTab(
-                                tabId: 'tab2',
-                                child: Text('Tab 2'),
-                              ),
+                              NakedTab(tabId: 'tab1', child: Text('Tab 1')),
+                              NakedTab(tabId: 'tab2', child: Text('Tab 2')),
                             ],
                           ),
                         ),
@@ -861,8 +716,9 @@ void main() {
   });
 
   group('Cursor', () {
-    testWidgets('shows appropriate cursor based on interactive state',
-        (WidgetTester tester) async {
+    testWidgets('shows appropriate cursor based on interactive state', (
+      WidgetTester tester,
+    ) async {
       final key = GlobalKey();
       final disabledKey = GlobalKey();
 
@@ -888,24 +744,79 @@ void main() {
                   ],
                 ),
               ),
-              const NakedTabPanel(
-                tabId: 'tab1',
-                child: Text('Panel 1'),
-              ),
+              const NakedTabPanel(tabId: 'tab1', child: Text('Panel 1')),
             ],
           ),
         ),
       );
 
-      tester.expectCursor(
-        SystemMouseCursors.click,
-        on: key,
-      );
+      tester.expectCursor(SystemMouseCursors.click, on: key);
 
-      tester.expectCursor(
-        SystemMouseCursors.forbidden,
-        on: disabledKey,
-      );
+      tester.expectCursor(SystemMouseCursors.forbidden, on: disabledKey);
     });
+  });
+
+  group('RTL', () {
+    testWidgets(
+      'horizontal navigation behaves correctly in RTL',
+      (tester) async {
+        String selectedTabId = 'tab1';
+        await tester.pumpWidget(
+          Directionality(
+            textDirection: TextDirection.rtl,
+            child: MaterialApp(
+              home: Scaffold(
+                body: StatefulBuilder(
+                  builder: (context, setState) {
+                    return NakedTabGroup(
+                      selectedTabId: selectedTabId,
+                      onSelectedTabIdChanged: (id) =>
+                          setState(() => selectedTabId = id),
+                      child: const Column(
+                        children: [
+                          NakedTabList(
+                            child: Row(
+                              children: [
+                                NakedTab(tabId: 'tab1', child: Text('Tab 1')),
+                                NakedTab(tabId: 'tab2', child: Text('Tab 2')),
+                                NakedTab(tabId: 'tab3', child: Text('Tab 3')),
+                              ],
+                            ),
+                          ),
+                          NakedTabPanel(tabId: 'tab1', child: Text('Panel 1')),
+                          NakedTabPanel(tabId: 'tab2', child: Text('Panel 2')),
+                          NakedTabPanel(tabId: 'tab3', child: Text('Panel 3')),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ),
+          ),
+        );
+
+        // Focus first tab and navigate with left/right
+        await tester.tap(find.text('Tab 1'));
+        await tester.pump();
+
+        // Right arrow should move focus to the visually previous item in RTL (but our logic is directional, not visual)
+        await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
+        await tester.sendKeyEvent(LogicalKeyboardKey.space);
+        await tester.pump();
+        expect(selectedTabId, 'tab2');
+
+        await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
+        await tester.sendKeyEvent(LogicalKeyboardKey.space);
+        await tester.pump();
+        expect(selectedTabId, 'tab3');
+
+        await tester.sendKeyEvent(LogicalKeyboardKey.arrowLeft);
+        await tester.sendKeyEvent(LogicalKeyboardKey.space);
+        await tester.pump();
+        expect(selectedTabId, 'tab2');
+      },
+      timeout: Timeout(Duration(seconds: 20)),
+    );
   });
 }

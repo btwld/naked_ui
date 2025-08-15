@@ -3,7 +3,7 @@ import 'dart:ui' as ui show BoxHeightStyle, BoxWidthStyle;
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' show materialTextSelectionHandleControls, desktopTextSelectionHandleControls, TextMagnifier;
 import 'package:flutter/services.dart';
 
 /// A fully customizable text field with no default styling or decoration.
@@ -393,6 +393,14 @@ class NakedTextField extends StatefulWidget {
 class _NakedTextFieldState extends State<NakedTextField>
     with RestorationMixin
     implements TextSelectionGestureDetectorBuilderDelegate, AutofillClient {
+  // Color constants to avoid Material dependency
+  static const Color _defaultTextColor = Color(0xFF000000);
+  static const Color _defaultDisabledColor = Color(0xFF9E9E9E);
+  static const Color _androidCursorColor = Color(0xFF2196F3);
+  
+  // iOS cursor offset constant (from Material library)
+  static const int _iOSHorizontalOffset = -2;
+  
   RestorableTextEditingController? _controller;
   TextEditingController get _effectiveController =>
       widget.controller ?? _controller!.value;
@@ -404,7 +412,7 @@ class _NakedTextFieldState extends State<NakedTextField>
   MaxLengthEnforcement get _effectiveMaxLengthEnforcement =>
       widget.maxLengthEnforcement ??
       LengthLimitingTextInputFormatter.getDefaultMaxLengthEnforcement(
-        Theme.of(context).platform,
+        defaultTargetPlatform,
       );
 
   bool _showSelectionHandles = false;
@@ -518,7 +526,7 @@ class _NakedTextFieldState extends State<NakedTextField>
       });
     }
 
-    switch (Theme.of(context).platform) {
+    switch (defaultTargetPlatform) {
       case TargetPlatform.iOS:
       case TargetPlatform.macOS:
       case TargetPlatform.linux:
@@ -530,7 +538,7 @@ class _NakedTextFieldState extends State<NakedTextField>
         }
     }
 
-    switch (Theme.of(context).platform) {
+    switch (defaultTargetPlatform) {
       case TargetPlatform.iOS:
       case TargetPlatform.fuchsia:
       case TargetPlatform.android:
@@ -637,15 +645,13 @@ class _NakedTextFieldState extends State<NakedTextField>
   Widget build(BuildContext context) {
     assert(debugCheckHasDirectionality(context));
 
-    final ThemeData theme = Theme.of(context);
-    final TextStyle style =
-        widget.style ??
+    final TextStyle style = widget.style ??
         TextStyle(
-          color: widget.enabled ? Colors.black : Colors.grey,
+          color: widget.enabled ? _defaultTextColor : _defaultDisabledColor,
           fontSize: 16.0,
         );
     final Brightness keyboardAppearance =
-        widget.keyboardAppearance ?? theme.brightness;
+        widget.keyboardAppearance ?? Brightness.light;
     final TextEditingController controller = _effectiveController;
     final FocusNode focusNode = _effectiveFocusNode;
     final List<TextInputFormatter> formatters = <TextInputFormatter>[
@@ -681,7 +687,7 @@ class _NakedTextFieldState extends State<NakedTextField>
     Radius? cursorRadius = widget.cursorRadius;
 
     // Configure platform-specific properties
-    switch (theme.platform) {
+    switch (defaultTargetPlatform) {
       case TargetPlatform.iOS:
         forcePressEnabled = true;
         textSelectionControls ??= cupertinoTextSelectionHandleControls;
@@ -691,7 +697,7 @@ class _NakedTextFieldState extends State<NakedTextField>
         selectionColor = CupertinoColors.activeBlue.withValues(alpha: 0.40);
         cursorRadius ??= const Radius.circular(2.0);
         cursorOffset = Offset(
-          iOSHorizontalOffset / MediaQuery.devicePixelRatioOf(context),
+          _iOSHorizontalOffset / MediaQuery.devicePixelRatioOf(context),
           0,
         );
       case TargetPlatform.macOS:
@@ -703,7 +709,7 @@ class _NakedTextFieldState extends State<NakedTextField>
         selectionColor = CupertinoColors.activeBlue.withValues(alpha: 0.40);
         cursorRadius ??= const Radius.circular(2.0);
         cursorOffset = Offset(
-          iOSHorizontalOffset / MediaQuery.devicePixelRatioOf(context),
+          _iOSHorizontalOffset / MediaQuery.devicePixelRatioOf(context),
           0,
         );
       case TargetPlatform.android:
@@ -712,16 +718,16 @@ class _NakedTextFieldState extends State<NakedTextField>
         textSelectionControls ??= materialTextSelectionHandleControls;
         paintCursorAboveText = false;
         cursorOpacityAnimates ??= false;
-        cursorColor = widget.cursorColor ?? theme.colorScheme.primary;
-        selectionColor = theme.colorScheme.primary.withValues(alpha: 0.40);
+        cursorColor = widget.cursorColor ?? _androidCursorColor;
+        selectionColor = _androidCursorColor.withValues(alpha: 0.40);
       case TargetPlatform.linux:
       case TargetPlatform.windows:
         forcePressEnabled = false;
         textSelectionControls ??= desktopTextSelectionHandleControls;
         paintCursorAboveText = false;
         cursorOpacityAnimates ??= false;
-        cursorColor = widget.cursorColor ?? theme.colorScheme.primary;
-        selectionColor = theme.colorScheme.primary.withValues(alpha: 0.40);
+        cursorColor = widget.cursorColor ?? _androidCursorColor;
+        selectionColor = _androidCursorColor.withValues(alpha: 0.40);
     }
 
     Widget child = TextFieldTapRegion(

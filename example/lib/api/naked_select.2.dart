@@ -291,7 +291,7 @@ class _SelectItemState extends State<SelectItem> {
       value: widget.value,
       onHoveredState: (isHovered) => setState(() => _isHovered = isHovered),
       onFocusedState: (isFocused) => setState(() => _isFocused = isFocused),
-      onSelectState: (isSelected) => setState(() => _isSelected = isSelected),
+      onSelectedState: (isSelected) => setState(() => _isSelected = isSelected),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
         decoration: BoxDecoration(

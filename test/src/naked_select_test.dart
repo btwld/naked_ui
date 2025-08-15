@@ -512,6 +512,55 @@ void main() {
       // Menu should be rendered in the overlay
       expect(find.byType(OverlayPortal), findsOneWidget);
     });
+
+    testWidgets(
+      'fallback alignment positions overlay using fallback when primary would overflow',
+      (tester) async {
+        // Build with the trigger near the bottom so primary (bottomLeft/topLeft) would overflow
+        await tester.pumpMaterialWidget(
+          Align(
+            alignment: Alignment.bottomLeft,
+            child: Padding(
+              padding: const EdgeInsets.only(bottom: 4),
+              child: NakedSelect<String>(
+                menuPosition: const NakedMenuPosition(
+                  target: Alignment.bottomLeft,
+                  follower: Alignment.topLeft,
+                ),
+                fallbackPositions: const [
+                  NakedMenuPosition(
+                    target: Alignment.topLeft,
+                    follower: Alignment.bottomLeft,
+                  ),
+                ],
+                menu: Container(
+                  key: kMenuKey,
+                  width: 120,
+                  height: 160, // big enough to overflow downward
+                  child: const Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [Text('Menu Content')],
+                  ),
+                ),
+                child: const NakedSelectTrigger(child: Text('Select option')),
+              ),
+            ),
+          ),
+        );
+
+        // Open menu
+        await tester.tap(find.text('Select option'));
+        await tester.pumpAndSettle();
+
+        // Get the trigger and menu positions
+        final triggerRect = tester.getRect(find.text('Select option'));
+        final menuRect = tester.getRect(find.byKey(kMenuKey));
+
+        // Assert the menu is placed above the trigger (fallback used)
+        expect(menuRect.bottom <= triggerRect.top, isTrue);
+      },
+      timeout: Timeout(Duration(seconds: 20)),
+    );
   });
 
   group('Selection Behavior', () {

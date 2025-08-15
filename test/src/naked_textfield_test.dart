@@ -102,7 +102,9 @@ void main() {
   });
 
   group('State Callbacks', () {
-    testWidgets('calls onHoveredState when hovered', (WidgetTester tester) async {
+    testWidgets('calls onHoveredState when hovered', (
+      WidgetTester tester,
+    ) async {
       bool isHovered = false;
       await tester.pumpTextField(
         Padding(
@@ -442,5 +444,40 @@ void main() {
         await tester.pumpWidget(Container());
       }
     });
+  });
+
+  group('Outside taps', () {
+    testWidgets(
+      'onTapOutside fires when tapping outside',
+      (tester) async {
+        bool fired = false;
+        final insideKey = GlobalKey();
+
+        await tester.pumpTextField(
+          Column(
+            children: [
+              NakedTextField(
+                onTapOutside: (_) => fired = true,
+                builder: (context, child) =>
+                    Container(key: insideKey, child: child),
+              ),
+              const SizedBox(height: 20),
+              const Text('Outside'),
+            ],
+          ),
+        );
+
+        // Focus inside
+        await tester.tap(find.byKey(insideKey));
+        await tester.pump();
+
+        // Tap outside
+        await tester.tap(find.text('Outside'));
+        await tester.pump();
+
+        expect(fired, isTrue);
+      },
+      timeout: Timeout(Duration(seconds: 20)),
+    );
   });
 }
