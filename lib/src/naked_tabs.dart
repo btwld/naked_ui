@@ -45,20 +45,18 @@ class NakedTabGroup extends StatelessWidget {
   final VoidCallback? onEscapePressed;
 
   void _selectTab(String tabId) {
-    // Delegate to NakedTabsScope.selectTab for consistent validation
     if (!enabled) return;
     if (tabId == selectedTabId) return;
-    
+
+    assert(tabId.isNotEmpty, 'Tab ID cannot be empty');
+
     onSelectedTabIdChanged?.call(tabId);
   }
 
   @override
   Widget build(BuildContext context) {
-    assert(
-      selectedTabId.isNotEmpty,
-      'NakedTabGroup selectedTabId cannot be empty. Provide a valid tab identifier.',
-    );
-    
+    assert(selectedTabId.isNotEmpty, 'selectedTabId cannot be empty');
+
     return Semantics(
       container: true,
       explicitChildNodes: true,
@@ -90,11 +88,20 @@ class NakedTabsScope extends InheritedWidget {
   static NakedTabsScope of(BuildContext context) {
     if (context.findAncestorWidgetOfExactType<NakedTabsScope>() == null) {
       throw FlutterError(
-        'NakedTabsScope.of() was called with a context that does not contain a NakedTabsScope widget.\n'
-        'No NakedTabsScope ancestor could be found starting from the context that was passed.\n'
-        'This can happen when a NakedTab or NakedTabPanel is used outside of a NakedTabGroup.\n'
-        'The context used was:\n'
-        '  $context',
+        'NakedTabsScope.of() called outside of NakedTabGroup.\n'
+        'Wrap NakedTab and NakedTabPanel widgets in a NakedTabGroup:\n\n'
+        'NakedTabGroup(\n'
+        '  selectedTabId: "tab1",\n'
+        '  onSelectedTabIdChanged: (id) => updateSelectedTab(id),\n'
+        '  child: Column(children: [\n'
+        '    NakedTabList(child: Row(children: [\n'
+        '      NakedTab(tabId: "tab1", child: Text("Tab 1")),\n'
+        '      NakedTab(tabId: "tab2", child: Text("Tab 2")),\n'
+        '    ])),\n'
+        '    NakedTabPanel(tabId: "tab1", child: YourContent()),\n'
+        '    NakedTabPanel(tabId: "tab2", child: YourContent()),\n'
+        '  ]),\n'
+        ')',
       );
     }
 
@@ -125,12 +132,9 @@ class NakedTabsScope extends InheritedWidget {
   void selectTab(String tabId) {
     if (!enabled) return;
     if (tabId == selectedTabId) return;
-    
-    assert(
-      tabId.isNotEmpty,
-      'Tab ID cannot be empty. Provide a valid non-empty string identifier.',
-    );
-    
+
+    assert(tabId.isNotEmpty, 'Tab ID cannot be empty');
+
     onSelectedTabIdChanged?.call(tabId);
   }
 
@@ -223,20 +227,15 @@ class NakedTab extends StatefulWidget {
 
 class _NakedTabState extends State<NakedTab> {
   late final FocusNode _focusNode;
+  late bool _isEnabled;
+  late NakedTabsScope _tabsScope;
 
   @override
   void initState() {
     super.initState();
-    _focusNode = widget.focusNode ?? FocusNode(debugLabel: 'NakedTab-${widget.tabId}');
+    _focusNode =
+        widget.focusNode ?? FocusNode(debugLabel: 'NakedTab-${widget.tabId}');
   }
-  bool get _isEnabled {
-    final tabsScope = NakedTabsScope.of(context);
-
-    return widget.enabled && tabsScope.enabled;
-  }
-
-  MouseCursor get _cursor =>
-      _isEnabled ? widget.cursor : SystemMouseCursors.forbidden;
 
   /// Helper method to guard event handlers with enabled check
   void _ifEnabled(VoidCallback callback) {
@@ -247,13 +246,11 @@ class _NakedTabState extends State<NakedTab> {
 
   void _handleTap() {
     _ifEnabled(() {
-      final tabsScope = NakedTabsScope.of(context);
-
       if (widget.enableHapticFeedback) {
         HapticFeedback.selectionClick();
       }
 
-      tabsScope.selectTab(widget.tabId);
+      _tabsScope.selectTab(widget.tabId);
       if (_focusNode.canRequestFocus) {
         _focusNode.requestFocus();
       }
@@ -295,8 +292,7 @@ class _NakedTabState extends State<NakedTab> {
     }
 
     if (event is KeyDownEvent) {
-      final tabsScope = NakedTabsScope.of(context);
-      switch (tabsScope.orientation) {
+      switch (_tabsScope.orientation) {
         case Axis.horizontal:
           if (event.logicalKey == LogicalKeyboardKey.arrowLeft) {
             FocusTraversalGroup.of(context).previous(_focusNode);
@@ -328,13 +324,20 @@ class _NakedTabState extends State<NakedTab> {
         return KeyEventResult.handled;
       }
       if (event.logicalKey == LogicalKeyboardKey.escape) {
-        tabsScope.onEscapePressed?.call();
-        
+        _tabsScope.onEscapePressed?.call();
+
         return KeyEventResult.handled;
       }
     }
 
     return KeyEventResult.ignored;
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _tabsScope = NakedTabsScope.of(context);
+    _isEnabled = widget.enabled && _tabsScope.enabled;
   }
 
   @override
@@ -345,15 +348,14 @@ class _NakedTabState extends State<NakedTab> {
     super.dispose();
   }
 
+  MouseCursor get _cursor =>
+      _isEnabled ? widget.cursor : SystemMouseCursors.forbidden;
+
   @override
   Widget build(BuildContext context) {
-    final tabsScope = NakedTabsScope.of(context);
-    final isSelected = tabsScope.isTabSelected(widget.tabId);
-    
-    assert(
-      widget.tabId.isNotEmpty,
-      'NakedTab tabId cannot be empty. Each tab must have a unique identifier.',
-    );
+    final isSelected = _tabsScope.isTabSelected(widget.tabId);
+
+    assert(widget.tabId.isNotEmpty, 'tabId cannot be empty');
 
     return Semantics(
       container: true,
@@ -417,11 +419,8 @@ class NakedTabPanel extends StatelessWidget {
   Widget build(BuildContext context) {
     final tabsScope = NakedTabsScope.of(context);
     final isSelected = tabsScope.isTabSelected(tabId);
-    
-    assert(
-      tabId.isNotEmpty,
-      'NakedTabPanel tabId cannot be empty. Each panel must have a unique identifier.',
-    );
+
+    assert(tabId.isNotEmpty, 'tabId cannot be empty');
 
     if (!isSelected && !maintainState) {
       return const SizedBox.shrink();

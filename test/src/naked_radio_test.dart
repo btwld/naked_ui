@@ -1,4 +1,3 @@
-import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -190,9 +189,18 @@ void main() {
         ),
       );
 
-      final semantics = tester.getSemantics(find.byKey(key));
-      expect(semantics.hasFlag(SemanticsFlag.isChecked), true);
-      expect(semantics.hasFlag(SemanticsFlag.isEnabled), true);
+      expect(
+        tester.getSemantics(find.byKey(key)),
+        matchesSemantics(
+          hasCheckedState: true,
+          isChecked: true,
+          hasEnabledState: true,
+          isEnabled: true,
+          isFocusable: true,
+          hasTapAction: true,
+          hasFocusAction: true,
+        ),
+      );
     });
 
     testWidgets('handles keyboard selection with Space and Enter keys', (

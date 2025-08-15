@@ -17,12 +17,12 @@ void main() {
         children: [
           NakedAccordionItem<String>(
             value: 'item1',
-            trigger: (_, _, _) => const Text('Trigger 1'),
+            trigger: (_, _) => const Text('Trigger 1'),
             child: const Text('Content 1'),
           ),
           NakedAccordionItem<String>(
             value: 'item2',
-            trigger: (_, _, _) => const Text('Trigger 2'),
+            trigger: (_, _) => const Text('Trigger 2'),
             child: const Text('Content 2'),
           ),
         ],
@@ -68,7 +68,7 @@ void main() {
         children: [
           NakedAccordionItem<String>(
             value: 'item1',
-            trigger: (_, _, _) => const Text('Trigger 1'),
+            trigger: (_, _) => const Text('Trigger 1'),
             onFocusChange: (focused) => focusState = focused,
             autoFocus: autoFocus,
             focusNode: focusNode,
@@ -108,7 +108,7 @@ void main() {
           children: [
             NakedAccordionItem<String>(
               value: 'item1',
-              trigger: (_, _, _) => const Text('Trigger 1'),
+              trigger: (_, _) => const Text('Trigger 1'),
               onFocusChange: (focused) => focusState = focused,
               autoFocus: true,
               child: const Text('Content 1'),
@@ -135,9 +135,9 @@ void main() {
         children: [
           NakedAccordionItem<String>(
             value: 'item1',
-            trigger: (context, isExpanded, toggle) {
+            trigger: (context, isExpanded) {
               return GestureDetector(
-                onTap: toggle,
+                onTap: () {},
                 child: Text(isExpanded ? 'Close 1' : 'Open 1'),
               );
             },
@@ -145,9 +145,9 @@ void main() {
           ),
           NakedAccordionItem<String>(
             value: 'item2',
-            trigger: (context, isExpanded, toggle) {
+            trigger: (context, isExpanded) {
               return GestureDetector(
-                onTap: toggle,
+                onTap: () {},
                 child: Text(isExpanded ? 'Close 2' : 'Open 2'),
               );
             },
@@ -343,18 +343,12 @@ void main() {
         children: [
           NakedAccordionItem<String>(
             value: 'item1',
-            trigger: (context, isExpanded, toggle) => GestureDetector(
-              onTap: toggle,
-              child: Text(isExpanded ? 'Close 1' : 'Open 1'),
-            ),
+            trigger: (context, isExpanded) => Text(isExpanded ? 'Close 1' : 'Open 1'),
             child: const Text('Content 1'),
           ),
           NakedAccordionItem<String>(
             value: 'item2',
-            trigger: (context, isExpanded, toggle) => GestureDetector(
-              onTap: toggle,
-              child: Text(isExpanded ? 'Close 2' : 'Open 2'),
-            ),
+            trigger: (context, isExpanded) => Text(isExpanded ? 'Close 2' : 'Open 2'),
             child: const Text('Content 2'),
           ),
         ],

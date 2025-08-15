@@ -86,12 +86,9 @@ class _AccordionItemState extends State<AccordionItem> {
       ),
       child: NakedAccordionItem<String>(
         value: widget.value,
-        trigger: (context, isExpanded, toggle) {
-          return NakedButton(
-            onPressed: toggle,
-            onHoverChange: (isHovering) =>
-                setState(() => _isHovering = isHovering),
-            child: AnimatedContainer(
+        onHoverChange: (isHovering) => setState(() => _isHovering = isHovering),
+        trigger: (context, isExpanded) {
+          return AnimatedContainer(
               duration: const Duration(milliseconds: 200),
               decoration: BoxDecoration(
                 border: Border.all(
@@ -126,8 +123,7 @@ class _AccordionItemState extends State<AccordionItem> {
                   ),
                 ],
               ),
-            ),
-          );
+            );
         },
         child: Padding(
           padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),

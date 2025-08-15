@@ -424,8 +424,15 @@ void main() {
         NakedTextField(builder: (context, child) => child),
       );
 
-      final semantics = tester.getSemantics(find.byType(NakedTextField).first);
-      expect(semantics.hasFlag(SemanticsFlag.isTextField), true);
+      expect(
+        tester.getSemantics(find.byType(NakedTextField).first),
+        matchesSemantics(
+          isTextField: true,
+          hasEnabledState: true,
+          isEnabled: true,
+          hasTapAction: true,
+        ),
+      );
     });
 
     testWidgets('respects enabled state for semantics', (
@@ -436,10 +443,16 @@ void main() {
           NakedTextField(enabled: enabled, builder: (context, child) => child),
         );
 
-        final semantics = tester.getSemantics(
-          find.byType(NakedTextField).first,
+        expect(
+          tester.getSemantics(find.byType(NakedTextField).first),
+          matchesSemantics(
+            isTextField: true,
+            hasEnabledState: true,
+            isEnabled: enabled,
+            isReadOnly: !enabled,
+            hasTapAction: true,
+          ),
         );
-        expect(semantics.hasFlag(SemanticsFlag.isEnabled), enabled);
 
         await tester.pumpWidget(Container());
       }

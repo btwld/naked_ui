@@ -1,4 +1,3 @@
-import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -467,8 +466,18 @@ void main() {
         ),
       );
 
-      final semantics = tester.getSemantics(find.byKey(testKey));
-      expect(semantics.hasFlag(SemanticsFlag.isSlider), true);
+      expect(
+        tester.getSemantics(find.byKey(testKey)),
+        matchesSemantics(
+          isSlider: true,
+          hasEnabledState: true,
+          isEnabled: true,
+          isFocusable: true,
+          hasFocusAction: true,
+          hasScrollLeftAction: true,
+          hasScrollRightAction: true,
+        ),
+      );
     });
 
     testWidgets('provides semantic label', (WidgetTester tester) async {
@@ -500,8 +509,24 @@ void main() {
           ),
         );
 
-        final semantics = tester.getSemantics(find.byKey(testKey));
-        expect(semantics.hasFlag(SemanticsFlag.isEnabled), enabled);
+        expect(
+          tester.getSemantics(find.byKey(testKey)),
+          enabled ? matchesSemantics(
+            isSlider: true,
+            hasEnabledState: true,
+            isEnabled: true,
+            isFocusable: true,
+            hasFocusAction: true,
+            hasScrollLeftAction: true,
+            hasScrollRightAction: true,
+          ) : matchesSemantics(
+            isSlider: true,
+            hasEnabledState: true,
+            isEnabled: false,
+            isFocusable: true,
+            hasFocusAction: true,
+          ),
+        );
       }
     });
   });

@@ -320,9 +320,16 @@ void main() {
     ) async {
       await tester.pumpMaterialWidget(buildSelect<String>());
 
-      final semantics = tester.findSemantics(find.byType(NakedSelectTrigger));
-
-      expect(semantics.hasFlag(SemanticsFlag.isButton), true);
+      expect(
+        tester.findSemantics(find.byType(NakedSelectTrigger)),
+        matchesSemantics(
+          isButton: true,
+          hasEnabledState: true,
+          isEnabled: true,
+          isFocusable: true,
+          hasFocusAction: true,
+        ),
+      );
     });
 
     testWidgets('marks items as selected in semantics', (
@@ -337,11 +344,16 @@ void main() {
       await tester.pumpAndSettle();
 
       // Find the semantics node for the Apple item
-      final semantics = tester.findSemantics(
-        find.byType(NakedSelectItem<String>),
-      );
 
-      expect(semantics.hasFlag(SemanticsFlag.isSelected), true);
+      expect(
+        tester.findSemantics(find.byType(NakedSelectItem<String>)),
+        matchesSemantics(
+          isSelected: true,
+          hasSelectedState: true,
+          hasEnabledState: true,
+          isEnabled: true,
+        ),
+      );
     });
 
     testWidgets('shows correct enabled/disabled state', (
@@ -350,9 +362,16 @@ void main() {
       for (var enabled in [true, false]) {
         await tester.pumpMaterialWidget(buildSelect<String>(enabled: enabled));
 
-        final semantics = tester.findSemantics(find.byType(NakedSelectTrigger));
-
-        expect(semantics.hasFlag(SemanticsFlag.isEnabled), enabled);
+        expect(
+          tester.findSemantics(find.byType(NakedSelectTrigger)),
+          matchesSemantics(
+            isButton: true,
+            hasEnabledState: true,
+            isEnabled: enabled,
+            isFocusable: enabled,
+            hasFocusAction: enabled,
+          ),
+        );
 
         await tester.pumpWidget(Container());
       }

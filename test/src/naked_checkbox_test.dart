@@ -374,9 +374,18 @@ void main() {
         ),
       );
 
-      final semantics = tester.getSemantics(find.byKey(key));
-      expect(semantics.hasFlag(SemanticsFlag.hasCheckedState), true);
-      expect(semantics.hasFlag(SemanticsFlag.isChecked), true);
+      expect(
+        tester.getSemantics(find.byKey(key)),
+        matchesSemantics(
+          hasCheckedState: true,
+          isChecked: true,
+          hasEnabledState: true,
+          isEnabled: true,
+          isFocusable: true,
+          hasTapAction: true,
+          hasFocusAction: true,
+        ),
+      );
     });
 
     testWidgets('provides semantic tristate', (WidgetTester tester) async {
@@ -391,8 +400,18 @@ void main() {
         ),
       );
 
-      final semantics = tester.getSemantics(find.byKey(key));
-      expect(semantics.hasFlag(SemanticsFlag.isCheckStateMixed), false);
+      expect(
+        tester.getSemantics(find.byKey(key)),
+        matchesSemantics(
+          hasCheckedState: true,
+          isCheckStateMixed: false,
+          hasEnabledState: true,
+          isEnabled: true,
+          isFocusable: true,
+          hasTapAction: true,
+          hasFocusAction: true,
+        ),
+      );
     });
 
     testWidgets('applies custom semantic label when provided', (
@@ -428,8 +447,17 @@ void main() {
           ),
         );
 
-        final semantics = tester.getSemantics(find.byKey(key));
-        expect(semantics.hasFlag(SemanticsFlag.isEnabled), enabled);
+        expect(
+          tester.getSemantics(find.byKey(key)),
+          matchesSemantics(
+            hasCheckedState: true,
+            hasEnabledState: true,
+            isEnabled: enabled,
+            isFocusable: true,
+            hasTapAction: true,
+            hasFocusAction: true,
+          ),
+        );
       }
     });
   });

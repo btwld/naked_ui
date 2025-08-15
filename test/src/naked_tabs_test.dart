@@ -556,7 +556,21 @@ void main() {
         matching: Semantics,
       );
       expect(semantics.label, 'Custom Tab');
-      expect(semantics.hasFlag(SemanticsFlag.isSelected), true);
+      expect(
+        tester.getSemantics(
+          find.descendant(
+            of: find.byType(NakedTab),
+            matching: find.byType(Semantics),
+          ).first,
+        ),
+        matchesSemantics(
+          isSelected: true,
+          hasEnabledState: true,
+          isEnabled: true,
+          hasSelectedState: true,
+          hasTapAction: true,
+        ),
+      );
     });
 
     testWidgets('provides selected state for selected tab', (
@@ -582,11 +596,20 @@ void main() {
         ),
       );
 
-      final semantics2 = tester.getSemanticsNode(
-        of: NakedTab,
-        matching: Semantics,
+      expect(
+        tester.getSemantics(
+          find.descendant(
+            of: find.byType(NakedTab).at(1),
+            matching: find.byType(Semantics),
+          ).first,
+        ),
+        matchesSemantics(
+          hasEnabledState: true,
+          isEnabled: true,
+          hasSelectedState: true,
+          hasTapAction: true,
+        ),
       );
-      expect(semantics2.hasFlag(SemanticsFlag.isSelected), true);
     });
   });
 

@@ -1,7 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
+import 'package:flutter/services.dart';
 
-import 'naked_button.dart';
+import 'primitives/naked_interactable.dart';
 
 /// Controller that manages the state of an accordion.
 ///
@@ -317,20 +318,23 @@ class NakedAccordionItem<T> extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // Use NakedButton for the trigger to handle all interaction states
-              NakedButton(
+              // Use NakedInteractable for the trigger to handle all interaction states
+              NakedInteractable(
+                builder: (context, states) => trigger(context, isExpanded),
                 onPressed: enabled
-                    ? () => state._controller.toggle(value)
+                    ? () {
+                        if (enableHapticFeedback) {
+                          HapticFeedback.lightImpact();
+                        }
+                        state._controller.toggle(value);
+                      }
                     : null,
+                enabled: enabled,
+                autofocus: autoFocus,
+                focusNode: focusNode,
                 onHoverChange: onHoverChange,
                 onPressChange: onPressChange,
                 onFocusChange: onFocusChange,
-                enabled: enabled,
-                isSemanticButton: false, // Already wrapped in Semantics
-                enableHapticFeedback: enableHapticFeedback,
-                focusNode: focusNode,
-                autofocus: autoFocus,
-                child: trigger(context, isExpanded),
               ),
               transitionBuilder != null ? transitionBuilder!(child) : child,
             ],

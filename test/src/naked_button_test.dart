@@ -1,4 +1,3 @@
-import 'dart:ui';
 
 import 'package:flutter/material.dart' as m;
 import 'package:flutter/services.dart';
@@ -297,8 +296,16 @@ void main() {
         ),
       );
 
-      final semantics = tester.getSemantics(find.byKey(key));
-      expect(semantics.hasFlag(SemanticsFlag.isButton), true);
+      expect(
+        tester.getSemantics(find.byKey(key)),
+        matchesSemantics(
+          isButton: true,
+          hasEnabledState: true,
+          isEnabled: true,
+          isFocusable: true,
+          hasFocusAction: true,
+        ),
+      );
     });
 
     testWidgets('shows correct enabled/disabled state', (
@@ -315,8 +322,16 @@ void main() {
           ),
         );
 
-        final semantics = tester.getSemantics(find.byKey(key));
-        expect(semantics.hasFlag(SemanticsFlag.isEnabled), enabled);
+        expect(
+          tester.getSemantics(find.byKey(key)),
+          matchesSemantics(
+            isButton: true,
+            hasEnabledState: true,
+            isEnabled: enabled,
+            isFocusable: enabled,
+            hasFocusAction: enabled,
+          ),
+        );
       }
     });
   });
@@ -366,7 +381,16 @@ void main() {
 
       final semantics = tester.getSemantics(find.byType(NakedButton));
       expect(semantics.label, contains('Component label'));
-      expect(semantics.hasFlag(SemanticsFlag.isButton), true);
+      expect(
+        tester.getSemantics(find.byType(NakedButton)),
+        matchesSemantics(
+          isButton: true,
+          hasEnabledState: true,
+          isEnabled: true,
+          isFocusable: true,
+          hasFocusAction: true,
+        ),
+      );
     });
 
     testWidgets('respects isSemanticButton flag', (WidgetTester tester) async {
@@ -381,7 +405,16 @@ void main() {
 
       final semantics = tester.getSemantics(find.byType(NakedButton));
       expect(semantics.label, contains('Not a button'));
-      expect(semantics.hasFlag(SemanticsFlag.isButton), false);
+      expect(
+        tester.getSemantics(find.byType(NakedButton)),
+        matchesSemantics(
+          isButton: false,
+          hasEnabledState: true,
+          isEnabled: true,
+          isFocusable: true,
+          hasFocusAction: true,
+        ),
+      );
     });
 
     testWidgets('excludeSemantics parameter exists and accepts values', (
@@ -423,7 +456,16 @@ void main() {
 
       final semantics = tester.getSemantics(find.byType(NakedButton));
       expect(semantics.label, contains('Button label'));
-      expect(semantics.hasFlag(SemanticsFlag.isButton), true);
+      expect(
+        tester.getSemantics(find.byType(NakedButton)),
+        matchesSemantics(
+          isButton: true,
+          hasEnabledState: true,
+          isEnabled: true,
+          isFocusable: true,
+          hasFocusAction: true,
+        ),
+      );
     });
   });
 }
