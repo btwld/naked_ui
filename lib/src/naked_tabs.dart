@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import 'primitives/naked_interactable.dart';
+
 /// A customizable tabs component with no default styling.
 ///
 /// Provides interaction behavior and keyboard navigation for tabbed interfaces.
@@ -148,7 +150,7 @@ class NakedTabsScope extends InheritedWidget {
 }
 
 /// A container for tab triggers in a NakedTabs component.
-class NakedTabList extends StatelessWidget {
+class NakedTabList extends StatefulWidget {
   /// Creates a naked tab list.
   const NakedTabList({super.key, required this.child, this.semanticLabel});
 
@@ -158,16 +160,97 @@ class NakedTabList extends StatelessWidget {
   final String? semanticLabel;
 
   @override
+  State<NakedTabList> createState() => _NakedTabListState();
+}
+
+class _NakedTabListState extends State<NakedTabList> {
+  final Set<_NakedTabState> _tabs = {};
+
+  late final Map<ShortcutActivator, Intent> _tabListShortcuts = <ShortcutActivator, Intent>{
+    const SingleActivator(LogicalKeyboardKey.arrowLeft): VoidCallbackIntent(_selectPreviousTab),
+    const SingleActivator(LogicalKeyboardKey.arrowRight): VoidCallbackIntent(_selectNextTab),
+    const SingleActivator(LogicalKeyboardKey.arrowDown): VoidCallbackIntent(_selectNextTab),
+    const SingleActivator(LogicalKeyboardKey.arrowUp): VoidCallbackIntent(_selectPreviousTab),
+  };
+
+  void _registerTab(_NakedTabState tab) {
+    _tabs.add(tab);
+  }
+
+  void _unregisterTab(_NakedTabState tab) {
+    _tabs.remove(tab);
+  }
+
+  void _selectTabInDirection(bool forward) {
+    final tabsScope = NakedTabsScope.of(context);
+    final enabledTabs = _tabs.where((tab) => tab._isEnabled).toList();
+    
+    if (enabledTabs.length <= 1) return;
+
+    // Find currently focused tab
+    _NakedTabState? focusedTab;
+    for (final tab in enabledTabs) {
+      if (tab._focusNode.hasFocus) {
+        focusedTab = tab;
+        break;
+      }
+    }
+    
+    if (focusedTab == null) return;
+
+    final currentIndex = enabledTabs.indexOf(focusedTab);
+    final nextIndex = (currentIndex + (forward ? 1 : -1) + enabledTabs.length) % enabledTabs.length;
+    final nextTab = enabledTabs[nextIndex];
+
+    // Focus and select the next tab
+    nextTab._focusNode.requestFocus();
+    tabsScope.selectTab(nextTab.widget.tabId);
+  }
+
+  void _selectPreviousTab() {
+    _selectTabInDirection(false);
+  }
+
+  void _selectNextTab() {
+    _selectTabInDirection(true);
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Semantics(
       container: true,
       explicitChildNodes: true,
-      label: semanticLabel ?? 'Tab list',
+      label: widget.semanticLabel ?? 'Tab list',
       child: FocusTraversalGroup(
         policy: WidgetOrderTraversalPolicy(),
-        child: child,
+        child: Shortcuts(
+          shortcuts: _tabListShortcuts,
+          child: _NakedTabListScope(
+            state: this,
+            child: widget.child,
+          ),
+        ),
       ),
     );
+  }
+}
+
+/// Internal InheritedWidget that provides tab list state to child tabs.
+class _NakedTabListScope extends InheritedWidget {
+  const _NakedTabListScope({
+    required this.state,
+    required super.child,
+  });
+
+  final _NakedTabListState state;
+
+  static _NakedTabListScope? maybeOf(BuildContext context) {
+    return context.dependOnInheritedWidgetOfExactType<_NakedTabListScope>();
+  }
+
+  @override
+  bool updateShouldNotify(_NakedTabListScope oldWidget) {
+    return state != oldWidget.state;
   }
 }
 
@@ -229,6 +312,7 @@ class _NakedTabState extends State<NakedTab> {
   late final FocusNode _focusNode;
   late bool _isEnabled;
   late NakedTabsScope _tabsScope;
+  _NakedTabListState? _tabListState;
 
   @override
   void initState() {
@@ -257,80 +341,9 @@ class _NakedTabState extends State<NakedTab> {
     });
   }
 
-  void _handlePressDown(TapDownDetails details) {
-    _ifEnabled(() => widget.onPressChange?.call(true));
-  }
-
-  void _handlePressUp(TapUpDetails details) {
-    _ifEnabled(() => widget.onPressChange?.call(false));
-  }
-
-  void _handlePressCancel() {
-    _ifEnabled(() => widget.onPressChange?.call(false));
-  }
-
-  void _handleHoverEnter(PointerEnterEvent event) {
-    _ifEnabled(() => widget.onHoverChange?.call(true));
-  }
-
-  void _handleHoverExit(PointerExitEvent event) {
-    _ifEnabled(() => widget.onHoverChange?.call(false));
-  }
 
   void _handleFocusChange(bool focused) {
     widget.onFocusChange?.call(focused);
-  }
-
-  KeyEventResult _handleKeyEvent(FocusNode node, KeyEvent event) {
-    if (!_isEnabled) return KeyEventResult.ignored;
-
-    if (event is KeyUpEvent && event.logicalKey.isConfirmationKey) {
-      widget.onPressChange?.call(false);
-      _handleTap();
-
-      return KeyEventResult.handled;
-    }
-
-    if (event is KeyDownEvent) {
-      switch (_tabsScope.orientation) {
-        case Axis.horizontal:
-          if (event.logicalKey == LogicalKeyboardKey.arrowLeft) {
-            FocusTraversalGroup.of(context).previous(_focusNode);
-
-            return KeyEventResult.handled;
-          }
-          if (event.logicalKey == LogicalKeyboardKey.arrowRight) {
-            FocusTraversalGroup.of(context).next(_focusNode);
-
-            return KeyEventResult.handled;
-          }
-          break;
-        case Axis.vertical:
-          if (event.logicalKey == LogicalKeyboardKey.arrowDown) {
-            FocusTraversalGroup.of(context).next(_focusNode);
-
-            return KeyEventResult.handled;
-          }
-          if (event.logicalKey == LogicalKeyboardKey.arrowUp) {
-            FocusTraversalGroup.of(context).previous(_focusNode);
-
-            return KeyEventResult.handled;
-          }
-          break;
-      }
-      if (event.logicalKey.isConfirmationKey) {
-        widget.onPressChange?.call(true);
-
-        return KeyEventResult.handled;
-      }
-      if (event.logicalKey == LogicalKeyboardKey.escape) {
-        _tabsScope.onEscapePressed?.call();
-
-        return KeyEventResult.handled;
-      }
-    }
-
-    return KeyEventResult.ignored;
   }
 
   @override
@@ -338,10 +351,19 @@ class _NakedTabState extends State<NakedTab> {
     super.didChangeDependencies();
     _tabsScope = NakedTabsScope.of(context);
     _isEnabled = widget.enabled && _tabsScope.enabled;
+    
+    // Register with tab list
+    final tabListScope = _NakedTabListScope.maybeOf(context);
+    if (tabListScope != null && !identical(_tabListState, tabListScope.state)) {
+      _tabListState?._unregisterTab(this);
+      _tabListState = tabListScope.state;
+      _tabListState!._registerTab(this);
+    }
   }
 
   @override
   void dispose() {
+    _tabListState?._unregisterTab(this);
     if (widget.focusNode == null) {
       _focusNode.dispose();
     }
@@ -359,29 +381,21 @@ class _NakedTabState extends State<NakedTab> {
 
     return Semantics(
       container: true,
+      explicitChildNodes: true,
       excludeSemantics: widget.excludeSemantics,
       enabled: _isEnabled,
       selected: isSelected,
       label: widget.semanticLabel ?? 'Tab ${widget.tabId}',
-      onTap: _handleTap,
-      child: Focus(
+      onTap: _isEnabled ? _handleTap : null,
+      child: NakedInteractable(
+        builder: (context, states) => widget.child,
+        onPressed: _isEnabled ? _handleTap : null,
+        enabled: _isEnabled,
         focusNode: _focusNode,
+        mouseCursor: _cursor,
+        onHoverChange: widget.onHoverChange,
+        onPressChange: widget.onPressChange,
         onFocusChange: _handleFocusChange,
-        onKeyEvent: _handleKeyEvent,
-        canRequestFocus: _isEnabled,
-        child: MouseRegion(
-          onEnter: _handleHoverEnter,
-          onExit: _handleHoverExit,
-          cursor: _cursor,
-          child: GestureDetector(
-            onTapDown: _handlePressDown,
-            onTapUp: _handlePressUp,
-            onTap: _handleTap,
-            onTapCancel: _handlePressCancel,
-            behavior: HitTestBehavior.opaque,
-            child: widget.child,
-          ),
-        ),
       ),
     );
   }
@@ -437,7 +451,3 @@ class NakedTabPanel extends StatelessWidget {
   }
 }
 
-extension on LogicalKeyboardKey {
-  bool get isConfirmationKey =>
-      this == LogicalKeyboardKey.space || this == LogicalKeyboardKey.enter;
-}

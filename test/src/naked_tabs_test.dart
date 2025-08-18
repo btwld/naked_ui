@@ -227,6 +227,8 @@ void main() {
     testWidgets('calls onHoverChange when hovered', (
       WidgetTester tester,
     ) async {
+      FocusManager.instance.highlightStrategy =
+          FocusHighlightStrategy.alwaysTraditional;
       bool isHovered = false;
       final key = GlobalKey();
       await tester.pumpMaterialWidget(
@@ -375,6 +377,7 @@ void main() {
       );
 
       focusNode.requestFocus();
+      await tester.pump();
 
       await tester.sendKeyEvent(LogicalKeyboardKey.space);
       await tester.pump();

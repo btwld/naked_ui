@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import 'primitives/naked_interactable.dart';
+
 /// A customizable checkbox with no default styling.
 ///
 /// Provides interaction behavior and accessibility without visual styling.
 /// Supports checked, unchecked, and tristate (indeterminate) values.
-class NakedCheckbox extends StatefulWidget {
+class NakedCheckbox extends StatelessWidget {
   /// Creates a naked checkbox.
   const NakedCheckbox({
     super.key,
@@ -16,6 +18,7 @@ class NakedCheckbox extends StatefulWidget {
     this.onHoverChange,
     this.onPressChange,
     this.onFocusChange,
+    this.onDisabledChange,
     this.enabled = true,
     this.semanticLabel,
     this.cursor = SystemMouseCursors.click,
@@ -56,142 +59,73 @@ class NakedCheckbox extends StatefulWidget {
   final ValueChanged<bool?>? onChanged;
 
   /// Callback triggered when the checkbox's hover state changes.
-  ///
-  /// Passes `true` when the pointer enters the checkbox bounds, and `false`
-  /// when it exits. Useful for implementing hover effects.
   final ValueChanged<bool>? onHoverChange;
 
   /// Callback triggered when the checkbox is pressed or released.
-  ///
-  /// Passes `true` when the checkbox is pressed down, and `false` when released.
-  /// Useful for implementing press effects.
   final ValueChanged<bool>? onPressChange;
 
   /// Callback triggered when the checkbox gains or loses focus.
-  ///
-  /// Passes `true` when the checkbox gains focus, and `false` when it loses focus.
-  /// Useful for implementing focus indicators.
   final ValueChanged<bool>? onFocusChange;
 
+  /// Callback triggered when the checkbox's disabled state changes.
+  final ValueChanged<bool>? onDisabledChange;
+
   /// Whether the checkbox is disabled.
-  ///
-  /// When true, the checkbox will not respond to user interaction
-  /// and should be styled accordingly.
   final bool enabled;
 
   /// Optional semantic label for accessibility.
-  ///
-  /// Provides a description of the checkbox's purpose for screen readers.
-  /// If not provided, screen readers will use a default description.
   final String? semanticLabel;
 
   /// The cursor to show when hovering over the checkbox.
-  ///
-  /// Defaults to [SystemMouseCursors.click] when enabled,
-  /// or [SystemMouseCursors.forbidden] when disabled.
   final MouseCursor cursor;
 
   /// Whether to provide haptic feedback on tap.
-  ///
-  /// When true (the default), the device will produce a haptic feedback effect
-  /// when the checkbox is toggled.
   final bool enableHapticFeedback;
 
   /// Optional focus node to control focus behavior.
-  ///
-  /// If not provided, the checkbox will create its own focus node.
   final FocusNode? focusNode;
 
   /// Whether the checkbox should be autofocused when the widget is created.
-  ///
-  /// Defaults to false.
   final bool autofocus;
 
-  @override
-  State<NakedCheckbox> createState() => _NakedCheckboxState();
-}
+  bool get _isInteractive => enabled && onChanged != null;
+  MouseCursor get _mouseCursor =>
+      _isInteractive ? cursor : SystemMouseCursors.forbidden;
 
-class _NakedCheckboxState extends State<NakedCheckbox> {
-  FocusNode? _internalFocusNode;
-  FocusNode get _focusNode =>
-      widget.focusNode ?? (_internalFocusNode ??= FocusNode());
-  bool get _isEnabled => widget.enabled && widget.onChanged != null;
-  MouseCursor get _cursor => _isEnabled ? widget.cursor : SystemMouseCursors.forbidden;
-
-  late final Map<Type, Action<Intent>> _actionMap = <Type, Action<Intent>>{
-    ActivateIntent: CallbackAction<ActivateIntent>(onInvoke: _handleOnPressed),
-  };
-  void _handleOnPressed([Intent? _]) {
-    if (!_isEnabled) return;
-
-    if (widget.enableHapticFeedback) {
+  void _onPressed() {
+    if (!_isInteractive) return;
+    if (enableHapticFeedback) {
       HapticFeedback.selectionClick();
     }
-
-    switch (widget.value) {
+    switch (value) {
       case false:
-        widget.onChanged!(true);
+        onChanged!(true);
       case true:
-        widget.onChanged!(widget.tristate ? null : false);
+        onChanged!(tristate ? null : false);
       case null:
-        widget.onChanged!(false);
+        onChanged!(false);
     }
-  }
-
-  void _handlePressDown(TapDownDetails details) {
-    if (!_isEnabled) return;
-    widget.onPressChange?.call(true);
-  }
-
-  void _handlePressUp(TapUpDetails details) {
-    if (!_isEnabled) return;
-    widget.onPressChange?.call(false);
-  }
-
-  void _handlePressCancel() {
-    if (!_isEnabled) return;
-    widget.onPressChange?.call(false);
-  }
-
-  void _handleHoverChange(bool hovering) {
-    if (!_isEnabled) return;
-    widget.onHoverChange?.call(hovering);
-  }
-
-  void _handleFocusChange(bool focused) {
-    if (!_isEnabled) return;
-    widget.onFocusChange?.call(focused);
-  }
-
-  @override
-  void dispose() {
-    _internalFocusNode?.dispose();
-    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Semantics(
-      enabled: _isEnabled,
-      checked: widget.value ?? false,
-      mixed: widget.tristate ? widget.value == null : null,
-      label: widget.semanticLabel,
-      child: FocusableActionDetector(
-        enabled: _isEnabled,
-        focusNode: _focusNode,
-        autofocus: widget.autofocus,
-        actions: _actionMap,
-        onShowHoverHighlight: _handleHoverChange,
-        onFocusChange: _handleFocusChange,
-        mouseCursor: _cursor,
-        child: GestureDetector(
-          onTapDown: _handlePressDown,
-          onTapUp: _handlePressUp,
-          onTap: _handleOnPressed,
-          onTapCancel: _handlePressCancel,
-          behavior: HitTestBehavior.opaque,
-          child: widget.child,
-        ),
+      enabled: _isInteractive,
+      checked: value ?? false,
+      mixed: tristate ? value == null : null,
+      label: semanticLabel,
+      child: NakedInteractable(
+        builder: (context, states) => child,
+        onPressed: _isInteractive ? _onPressed : null,
+        enabled: enabled,
+        autofocus: autofocus,
+        focusNode: focusNode,
+        mouseCursor: _mouseCursor,
+        onHoverChange: onHoverChange,
+        onPressChange: onPressChange,
+        onFocusChange: onFocusChange,
+        onDisabledChange: onDisabledChange,
+        excludeFromSemantics: false,
       ),
     );
   }

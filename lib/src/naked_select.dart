@@ -656,7 +656,10 @@ class _NakedSelectItemState<T> extends State<NakedSelectItem<T>> {
         enableHapticFeedback: widget.enableHapticFeedback,
         focusNode: _focusNode,
         autofocus: widget.autofocus,
-        child: widget.child,
+        child: Semantics(
+          label: widget.semanticLabel ?? widget.value.toString(),
+          child: widget.child,
+        ),
       ),
     );
   }

@@ -16,6 +16,7 @@ class NakedButton extends StatelessWidget {
     this.onHoverChange,
     this.onPressChange,
     this.onFocusChange,
+    this.onDisabledChange,
     this.enabled = true,
     this.isSemanticButton = true,
     this.semanticLabel,
@@ -40,6 +41,9 @@ class NakedButton extends StatelessWidget {
 
   /// Called when focus state changes.
   final ValueChanged<bool>? onFocusChange;
+
+  /// Called when disabled state changes.
+  final ValueChanged<bool>? onDisabledChange;
 
   /// Whether the button is enabled.
   final bool enabled;
@@ -86,10 +90,13 @@ class NakedButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return Semantics(
       container: true,
+      explicitChildNodes: true,
       excludeSemantics: excludeSemantics,
       enabled: _effectiveEnabled,
       button: isSemanticButton,
+      focusable: _effectiveEnabled,
       label: semanticLabel,
+      onFocus: _effectiveEnabled ? () => true : null,
       child: NakedInteractable(
         builder: (context, states) => child,
         onPressed: onPressed == null ? null : _onPressed,
@@ -100,6 +107,7 @@ class NakedButton extends StatelessWidget {
         onHoverChange: onHoverChange,
         onPressChange: onPressChange,
         onFocusChange: onFocusChange,
+        onDisabledChange: onDisabledChange,
       ),
     );
   }

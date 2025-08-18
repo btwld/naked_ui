@@ -2,6 +2,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import 'primitives/naked_interactable.dart';
+
 /// A context provider for a radio group that manages a single selection
 /// across multiple radio buttons.
 ///
@@ -242,16 +244,13 @@ class _NakedRadioState<T> extends State<NakedRadio<T>> {
       _group.state.widget.onChanged != null;
   MouseCursor get _cursor => _isEnabled ? widget.cursor : SystemMouseCursors.forbidden;
 
-  late final Map<Type, Action<Intent>> _actionMap = <Type, Action<Intent>>{
-    ActivateIntent: CallbackAction<ActivateIntent>(onInvoke: _handleOnPressed),
-  };
   NakedRadioGroupScope<T> get _group => NakedRadioGroupScope.of(context);
   bool? _lastReportedSelection;
   NakedRadioGroupState<T>? _groupState;
 
   ValueChanged<T?>? get onChanged => _group.state.widget.onChanged;
 
-  void _handleOnPressed([Intent? intent]) {
+  void _handlePressed() {
     if (!_isEnabled) return;
     
     // If group is already set to this value, do nothing
@@ -268,28 +267,7 @@ class _NakedRadioState<T> extends State<NakedRadio<T>> {
     }
   }
 
-  void _handlePressDown(TapDownDetails details) {
-    if (!_isEnabled) return;
-    widget.onPressChange?.call(true);
-  }
-
-  void _handlePressUp(TapUpDetails details) {
-    if (!_isEnabled) return;
-    widget.onPressChange?.call(false);
-  }
-
-  void _handlePressCancel() {
-    if (!_isEnabled) return;
-    widget.onPressChange?.call(false);
-  }
-
-  void _handleHoverChange(bool hovering) {
-    if (!_isEnabled) return;
-    widget.onHoverChange?.call(hovering);
-  }
-
   void _handleFocusChange(bool focused) {
-    if (!_isEnabled) return;
     if (focused && _group.groupValue != widget.value) {
       onChanged?.call(widget.value);
     }
@@ -345,22 +323,17 @@ class _NakedRadioState<T> extends State<NakedRadio<T>> {
       enabled: _isEnabled,
       checked: isSelected,
       selected: accessibilitySelected,
-      child: FocusableActionDetector(
+      child: NakedInteractable(
+        builder: (context, states) => widget.child,
+        onPressed: _isEnabled ? _handlePressed : null,
         enabled: _isEnabled,
-        focusNode: _focusNode,
         autofocus: widget.autofocus,
-        actions: _actionMap,
-        onShowHoverHighlight: _handleHoverChange,
-        onFocusChange: _handleFocusChange,
+        focusNode: _focusNode,
         mouseCursor: _cursor,
-        child: GestureDetector(
-          onTapDown: _handlePressDown,
-          onTapUp: _handlePressUp,
-          onTap: _handleOnPressed,
-          onTapCancel: _handlePressCancel,
-          behavior: HitTestBehavior.opaque,
-          child: widget.child,
-        ),
+        onHoverChange: widget.onHoverChange,
+        onPressChange: widget.onPressChange,
+        onFocusChange: _handleFocusChange,
+        excludeFromSemantics: false,
       ),
     );
   }

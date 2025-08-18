@@ -252,6 +252,7 @@ class NakedAccordionItem<T> extends StatelessWidget {
     this.onHoverChange,
     this.onPressChange,
     this.onFocusChange,
+    this.onDisabledChange,
     this.enabled = true,
     this.enableHapticFeedback = true,
     this.autoFocus = false,
@@ -289,6 +290,9 @@ class NakedAccordionItem<T> extends StatelessWidget {
 
   /// Called when focus state changes.
   final ValueChanged<bool>? onFocusChange;
+
+  /// Called when disabled state changes.
+  final ValueChanged<bool>? onDisabledChange;
 
   /// Whether the accordion item is enabled.
   final bool enabled;
@@ -335,6 +339,7 @@ class NakedAccordionItem<T> extends StatelessWidget {
                 onHoverChange: onHoverChange,
                 onPressChange: onPressChange,
                 onFocusChange: onFocusChange,
+                onDisabledChange: onDisabledChange,
               ),
               transitionBuilder != null ? transitionBuilder!(child) : child,
             ],

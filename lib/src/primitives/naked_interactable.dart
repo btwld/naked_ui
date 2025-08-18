@@ -1,16 +1,5 @@
 import 'package:flutter/material.dart';
 
-/// A headless interactive primitive that unifies hover, focus, and press
-/// handling into a single Set<WidgetState> model.
-///
-/// Key principles:
-/// - Enabled logic is determined exclusively by [enabled]. The presence of
-///   [onPressed] must not affect whether this widget is considered enabled/disabled.
-/// - Consumers decide how to compute and pass [enabled] (e.g., a button may pass
-///   `enabled && onPressed != null`).
-/// - Hover and focus states are tracked when [enabled] is true.
-/// - Pressed state and activation are only meaningful when [enabled] is true; if
-///   [onPressed] is null, pressed visuals/handlers are not attached.
 class NakedInteractable extends StatefulWidget {
   const NakedInteractable({
     super.key,
@@ -26,142 +15,105 @@ class NakedInteractable extends StatefulWidget {
     this.onHoverChange,
     this.onPressChange,
     this.onFocusChange,
+    this.onDisabledChange,
+    this.excludeFromSemantics = true,
   });
 
-  /// Builds the widget tree based on current interaction states.
-  ///
-  /// The builder receives a Set<WidgetState> which can contain:
-  /// - WidgetState.hovered
-  /// - WidgetState.focused
-  /// - WidgetState.pressed
-  /// - WidgetState.disabled
   final Widget Function(BuildContext context, Set<WidgetState> states) builder;
-
-  /// Called when the control is activated via tap/click/keyboard.
   final VoidCallback? onPressed;
-
-  /// Whether this control should be considered enabled.
-  ///
-  /// This flag alone determines disabled state and whether hover/focus are tracked.
   final bool enabled;
-
-  /// Whether this control should request focus initially.
   final bool autofocus;
-
-  /// Gesture hit test behavior when gestures are attached.
   final HitTestBehavior behavior;
-
-  /// Optional focus node to control focus programmatically.
   final FocusNode? focusNode;
-
-  /// Whether descendants of this control can receive focus.
   final bool descendantsAreFocusable;
-
-  /// Whether descendants are traversable via keyboard navigation.
   final bool descendantsAreTraversable;
-
-  /// Optional override for mouse cursor. If null, defaults to:
-  /// - forbidden when disabled
-  /// - click when enabled and has handler
-  /// - defer when enabled and no handler
   final MouseCursor? mouseCursor;
-
-  /// Optional callbacks for state changes.
   final ValueChanged<bool>? onHoverChange;
   final ValueChanged<bool>? onPressChange;
   final ValueChanged<bool>? onFocusChange;
+  final ValueChanged<bool>? onDisabledChange;
+  final bool excludeFromSemantics;
 
   @override
   State<NakedInteractable> createState() => _NakedInteractableState();
 }
 
 class _NakedInteractableState extends State<NakedInteractable> {
-  late final FocusNode _focusNode;
-  final Set<WidgetState> _states = <WidgetState>{};
+  late FocusNode _focusNode;
+  bool _isHovered = false;
+  bool _isFocused = false;
+  bool _isPressed = false;
 
-  bool _ownsFocusNode = false;
-
-  bool get _hasHandler => widget.onPressed != null;
+  bool get _ownsFocusNode => widget.focusNode == null;
+  bool get _isInteractive => widget.enabled && widget.onPressed != null;
 
   @override
   void initState() {
     super.initState();
-    if (widget.focusNode != null) {
-      _focusNode = widget.focusNode!;
-      _ownsFocusNode = false;
-    } else {
-      _focusNode = FocusNode();
-      _ownsFocusNode = true;
-    }
-    _syncEnabledState();
-  }
-
-  void _syncEnabledState() {
-    if (!widget.enabled && !_states.contains(WidgetState.disabled)) {
-      setState(() => _states.add(WidgetState.disabled));
-    } else if (widget.enabled && _states.contains(WidgetState.disabled)) {
-      setState(() => _states.remove(WidgetState.disabled));
-    }
-  }
-
-  void _updateState(WidgetState state, bool add) {
-    final hadState = _states.contains(state);
-    if (add && !hadState) {
-      setState(() => _states.add(state));
-    } else if (!add && hadState) {
-      setState(() => _states.remove(state));
-    }
-
-    if (state == WidgetState.pressed && hadState != add) {
-      widget.onPressChange?.call(add);
-    }
-  }
-
-  void _handleActivate() {
-    if (!widget.enabled || !_hasHandler) return;
-
-    // Show pressed state briefly for keyboard activation
-    _updateState(WidgetState.pressed, true);
-    widget.onPressed!();
-    // Reset pressed state after current frame
+    _focusNode = widget.focusNode ?? FocusNode();
+    _focusNode.canRequestFocus = widget.enabled;
+    // Call onDisabledChange with initial disabled state after frame is built
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
-        _updateState(WidgetState.pressed, false);
+        widget.onDisabledChange?.call(!widget.enabled);
       }
     });
   }
 
-  void _handleTapDown(TapDownDetails details) {
-    if (!widget.enabled || !_hasHandler) return;
-    _updateState(WidgetState.pressed, true);
+  void _setHovered(bool value) {
+    if (_isHovered != value) {
+      setState(() => _isHovered = value);
+      widget.onHoverChange?.call(value);
+    }
   }
 
-  void _handleTapUp(TapUpDetails details) {
-    if (!widget.enabled || !_hasHandler) return;
-    _updateState(WidgetState.pressed, false);
+  void _setFocused(bool value) {
+    if (_isFocused != value) {
+      setState(() => _isFocused = value);
+      widget.onFocusChange?.call(value);
+    }
   }
 
-  void _handleTapCancel() {
-    if (!widget.enabled || !_hasHandler) return;
-    _updateState(WidgetState.pressed, false);
+  void _setPressed(bool value) {
+    if (_isPressed != value) {
+      setState(() => _isPressed = value);
+      widget.onPressChange?.call(value);
+    }
+  }
+
+  void _handleActivate() {
+    if (!_isInteractive) return;
+    if (!_isPressed) {
+      _setPressed(true);
+      Future.microtask(() {
+        if (mounted) _setPressed(false);
+      });
+    }
+    widget.onPressed!();
   }
 
   @override
   void didUpdateWidget(NakedInteractable oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.focusNode != widget.focusNode) {
-      if (_ownsFocusNode) {
+      if (oldWidget.focusNode == null) {
         _focusNode.dispose();
       }
-      if (widget.focusNode != null) {
-        _ownsFocusNode = false;
-        _focusNode = widget.focusNode!;
-      } else {
-        _ownsFocusNode = true;
-        _focusNode = FocusNode();
-      }
+      _focusNode = widget.focusNode ?? FocusNode();
     }
-    _syncEnabledState();
+    // Keep focus ability in sync with enabled
+    _focusNode.canRequestFocus = widget.enabled;
+
+    // Call onDisabledChange if disabled state changed
+    if (widget.enabled != oldWidget.enabled) {
+      widget.onDisabledChange?.call(!widget.enabled);
+    }
+
+    if (!widget.enabled && oldWidget.enabled && _isPressed) {
+      _isPressed =
+          false; // No setState in didUpdateWidget; build will run anyway
+      widget.onPressChange?.call(false);
+    }
   }
 
   @override
@@ -172,63 +124,68 @@ class _NakedInteractableState extends State<NakedInteractable> {
     super.dispose();
   }
 
-  MouseCursor get _cursor {
-    if (!widget.enabled) return SystemMouseCursors.forbidden;
-    if (widget.mouseCursor != null) return widget.mouseCursor!;
+  Set<WidgetState> get _states => {
+    if (!widget.enabled) WidgetState.disabled,
+    if (_isHovered) WidgetState.hovered,
+    if (_isFocused) WidgetState.focused,
+    if (_isPressed) WidgetState.pressed,
+  };
 
-    return _hasHandler ? SystemMouseCursors.click : MouseCursor.defer;
+  MouseCursor get _cursor {
+    return switch (widget.mouseCursor) {
+      MouseCursor cursor => cursor,
+      null when !widget.enabled => SystemMouseCursors.forbidden,
+      null when widget.onPressed != null => SystemMouseCursors.click,
+      null => MouseCursor.defer,
+    };
   }
 
   @override
   Widget build(BuildContext context) {
-    Widget child = FocusableActionDetector(
+    Widget content = widget.builder(context, _states);
+
+    content = GestureDetector(
+      onTapDown: (_) {
+        if (_isInteractive) _setPressed(true);
+      },
+      onTapUp: (_) {
+        if (_isInteractive) _setPressed(false);
+      },
+      onTap: () {
+        if (_isInteractive) {
+          _setPressed(false);
+          widget.onPressed!();
+        }
+      },
+      onTapCancel: () {
+        if (_isInteractive) _setPressed(false);
+      },
+      behavior: widget.behavior,
+      excludeFromSemantics: widget.excludeFromSemantics,
+      child: content,
+    );
+
+    return FocusableActionDetector(
       enabled: widget.enabled,
       focusNode: _focusNode,
       autofocus: widget.autofocus,
-      descendantsAreFocusable: widget.descendantsAreFocusable,
+      descendantsAreFocusable: widget.enabled && widget.descendantsAreFocusable,
       descendantsAreTraversable: widget.descendantsAreTraversable,
-      actions: widget.enabled && _hasHandler
+      actions: _isInteractive
           ? {
               ActivateIntent: CallbackAction<ActivateIntent>(
-                onInvoke: (_) {
-                  _handleActivate();
-
-                  return null;
-                },
+                onInvoke: (_) => _handleActivate(),
               ),
             }
           : const {},
-      onShowHoverHighlight: (value) {
-        if (!widget.enabled) return;
-        _updateState(WidgetState.hovered, value);
-        widget.onHoverChange?.call(value);
-      },
-      onFocusChange: (value) {
-        if (!widget.enabled) return;
-        _updateState(WidgetState.focused, value);
-        widget.onFocusChange?.call(value);
-      },
+      onShowHoverHighlight: widget.enabled ? _setHovered : null,
+      onFocusChange: widget.enabled ? _setFocused : null,
       mouseCursor: _cursor,
-      child: widget.builder(context, Set.unmodifiable(_states)),
+      child: content,
     );
-
-    if (widget.enabled && _hasHandler) {
-      child = GestureDetector(
-        onTapDown: _handleTapDown,
-        onTapUp: _handleTapUp,
-        onTap: _handleActivate,
-        onTapCancel: _handleTapCancel,
-        behavior: widget.behavior,
-        excludeFromSemantics: true,
-        child: child,
-      );
-    }
-
-    return child;
   }
 }
 
-/// Extension methods for cleaner state checking.
 extension WidgetStateSetX on Set<WidgetState> {
   bool get isHovered => contains(WidgetState.hovered);
   bool get isFocused => contains(WidgetState.focused);
