@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import 'primitives/naked_interactable.dart';
+import 'utilities/naked_interactable.dart';
 
-/// A customizable tabs component with no default styling.
+/// Provides tab interaction behavior without visual styling.
 ///
-/// Provides interaction behavior and keyboard navigation for tabbed interfaces.
-/// Includes tab groups, tab lists, individual tabs, and tab panels.
+/// Includes keyboard navigation for tabbed interfaces.
+/// Components: tab groups, tab lists, individual tabs, and tab panels.
 class NakedTabGroup extends StatelessWidget {
   /// Creates a naked tabs component.
   const NakedTabGroup({
@@ -166,12 +166,20 @@ class NakedTabList extends StatefulWidget {
 class _NakedTabListState extends State<NakedTabList> {
   final Set<_NakedTabState> _tabs = {};
 
-  late final Map<ShortcutActivator, Intent> _tabListShortcuts = <ShortcutActivator, Intent>{
-    const SingleActivator(LogicalKeyboardKey.arrowLeft): VoidCallbackIntent(_selectPreviousTab),
-    const SingleActivator(LogicalKeyboardKey.arrowRight): VoidCallbackIntent(_selectNextTab),
-    const SingleActivator(LogicalKeyboardKey.arrowDown): VoidCallbackIntent(_selectNextTab),
-    const SingleActivator(LogicalKeyboardKey.arrowUp): VoidCallbackIntent(_selectPreviousTab),
-  };
+  late final Map<ShortcutActivator, Intent> _tabListShortcuts =
+      <ShortcutActivator, Intent>{
+        const SingleActivator(LogicalKeyboardKey.arrowLeft): VoidCallbackIntent(
+          _selectPreviousTab,
+        ),
+        const SingleActivator(LogicalKeyboardKey.arrowRight):
+            VoidCallbackIntent(_selectNextTab),
+        const SingleActivator(LogicalKeyboardKey.arrowDown): VoidCallbackIntent(
+          _selectNextTab,
+        ),
+        const SingleActivator(LogicalKeyboardKey.arrowUp): VoidCallbackIntent(
+          _selectPreviousTab,
+        ),
+      };
 
   void _registerTab(_NakedTabState tab) {
     _tabs.add(tab);
@@ -184,7 +192,7 @@ class _NakedTabListState extends State<NakedTabList> {
   void _selectTabInDirection(bool forward) {
     final tabsScope = NakedTabsScope.of(context);
     final enabledTabs = _tabs.where((tab) => tab._isEnabled).toList();
-    
+
     if (enabledTabs.length <= 1) return;
 
     // Find currently focused tab
@@ -195,11 +203,13 @@ class _NakedTabListState extends State<NakedTabList> {
         break;
       }
     }
-    
+
     if (focusedTab == null) return;
 
     final currentIndex = enabledTabs.indexOf(focusedTab);
-    final nextIndex = (currentIndex + (forward ? 1 : -1) + enabledTabs.length) % enabledTabs.length;
+    final nextIndex =
+        (currentIndex + (forward ? 1 : -1) + enabledTabs.length) %
+        enabledTabs.length;
     final nextTab = enabledTabs[nextIndex];
 
     // Focus and select the next tab
@@ -225,10 +235,7 @@ class _NakedTabListState extends State<NakedTabList> {
         policy: WidgetOrderTraversalPolicy(),
         child: Shortcuts(
           shortcuts: _tabListShortcuts,
-          child: _NakedTabListScope(
-            state: this,
-            child: widget.child,
-          ),
+          child: _NakedTabListScope(state: this, child: widget.child),
         ),
       ),
     );
@@ -237,16 +244,13 @@ class _NakedTabListState extends State<NakedTabList> {
 
 /// Internal InheritedWidget that provides tab list state to child tabs.
 class _NakedTabListScope extends InheritedWidget {
-  const _NakedTabListScope({
-    required this.state,
-    required super.child,
-  });
-
-  final _NakedTabListState state;
+  const _NakedTabListScope({required this.state, required super.child});
 
   static _NakedTabListScope? maybeOf(BuildContext context) {
-    return context.dependOnInheritedWidgetOfExactType<_NakedTabListScope>();
+    return context.dependOnInheritedWidgetOfExactType();
   }
+
+  final _NakedTabListState state;
 
   @override
   bool updateShouldNotify(_NakedTabListScope oldWidget) {
@@ -341,7 +345,6 @@ class _NakedTabState extends State<NakedTab> {
     });
   }
 
-
   void _handleFocusChange(bool focused) {
     widget.onFocusChange?.call(focused);
   }
@@ -351,7 +354,7 @@ class _NakedTabState extends State<NakedTab> {
     super.didChangeDependencies();
     _tabsScope = NakedTabsScope.of(context);
     _isEnabled = widget.enabled && _tabsScope.enabled;
-    
+
     // Register with tab list
     final tabListScope = _NakedTabListScope.maybeOf(context);
     if (tabListScope != null && !identical(_tabListState, tabListScope.state)) {
@@ -450,4 +453,3 @@ class NakedTabPanel extends StatelessWidget {
     );
   }
 }
-

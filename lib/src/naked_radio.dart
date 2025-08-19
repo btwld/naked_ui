@@ -2,12 +2,11 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import 'primitives/naked_interactable.dart';
+import 'utilities/naked_interactable.dart';
 
-/// A context provider for a radio group that manages a single selection
-/// across multiple radio buttons.
+/// Manages single selection across multiple radio buttons.
 ///
-/// Provides keyboard navigation and manages focus between radio buttons.
+/// Provides keyboard navigation and focus management.
 class NakedRadioGroup<T> extends StatefulWidget {
   /// Creates a naked radio group.
   const NakedRadioGroup({
@@ -18,18 +17,18 @@ class NakedRadioGroup<T> extends StatefulWidget {
     this.enabled = true,
   });
 
-  /// The currently selected value within the group.
+  /// Currently selected value within the group.
   final T? groupValue;
 
   /// Called when a selection changes.
   final ValueChanged<T?>? onChanged;
 
-  /// Child widgets (typically containing NakedRadioButtons).
+  /// Child widgets (typically containing NakedRadio widgets).
   final Widget child;
 
   /// Whether the entire group is disabled.
   ///
-  /// When true, all radio buttons in the group will not respond to user interaction.
+  /// When true, all radio buttons become unresponsive.
   final bool enabled;
 
   @override
@@ -60,9 +59,7 @@ class NakedRadioGroupState<T> extends State<NakedRadioGroup<T>> {
   }
 
   void _selectRadioInDirection(bool forward) {
-    final enabledRadios = _radios
-        .where((radio) => radio._isEnabled)
-        .toList();
+    final enabledRadios = _radios.where((radio) => radio._isEnabled).toList();
     if (enabledRadios.length <= 1) {
       return;
     }
@@ -118,7 +115,7 @@ class NakedRadioGroupState<T> extends State<NakedRadioGroup<T>> {
   }
 }
 
-/// Internal InheritedWidget that provides radio group state to child radio buttons.
+/// Provides radio group state to child radio buttons.
 class NakedRadioGroupScope<T> extends InheritedWidget {
   /// Creates a radio group scope.
   const NakedRadioGroupScope({
@@ -141,7 +138,7 @@ class NakedRadioGroupScope<T> extends InheritedWidget {
     return group;
   }
 
-  /// Allows radio buttons to access their parent group without throwing an error.
+  /// Accesses parent group without throwing on failure.
   static NakedRadioGroupScope<T>? maybeOf<T>(BuildContext context) {
     return context.dependOnInheritedWidgetOfExactType();
   }
@@ -156,9 +153,8 @@ class NakedRadioGroupScope<T> extends InheritedWidget {
   }
 }
 
-/// A customizable radio button with no default styling.
+/// Provides radio button interaction behavior without visual styling.
 ///
-/// Provides interaction behavior and keyboard navigation without visual styling.
 /// Must be used within a NakedRadioGroup to function properly.
 class NakedRadio<T> extends StatefulWidget {
   /// Creates a naked radio button.
@@ -177,57 +173,43 @@ class NakedRadio<T> extends StatefulWidget {
     this.autofocus = false,
   });
 
-  /// The child widget that represents the radio button visually.
+  /// Child widget that represents the radio button visually.
   final Widget child;
 
-  /// The value this radio button represents.
+  /// Value this radio button represents.
   ///
-  /// When this value matches the group's value, this radio button is considered selected.
+  /// When matching the group's value, this button is selected.
   final T value;
 
   /// Called when hover state changes.
-  ///
-  /// Can be used to update visual feedback when the user hovers over the radio button.
   final ValueChanged<bool>? onHoverChange;
 
   /// Called when pressed state changes.
-  ///
-  /// Can be used to update visual feedback when the user presses the radio button.
   final ValueChanged<bool>? onPressChange;
 
   /// Called when select state changes.
-  ///
-  /// Can be used to update visual feedback when the radio button is selected.
   final ValueChanged<bool>? onSelectChange;
 
   /// Called when focus state changes.
   ///
-  /// Can be used to update visual feedback when the radio button gains or loses focus.
   /// Selection automatically follows focus.
   final ValueChanged<bool>? onFocusChange;
 
   /// Whether this radio button is enabled.
   ///
-  /// When false, the radio button will not respond to user interaction,
-  /// regardless of the group's enabled state.
+  /// When false, becomes unresponsive regardless of group state.
   final bool enabled;
 
-  /// The cursor to show when hovering over the radio button.
-  ///
-  /// Defaults to [SystemMouseCursors.click]. When disabled, shows [SystemMouseCursors.forbidden].
+  /// Cursor when hovering over the radio button.
   final MouseCursor cursor;
 
-  /// Whether to provide haptic feedback on tap.
-  ///
-  /// When true, triggers a selection click feedback when the radio button is selected.
+  /// Whether to provide haptic feedback on selection.
   final bool enableHapticFeedback;
 
   /// Optional focus node to control focus behavior.
-  ///
-  /// If not provided, a new [FocusNode] will be created internally.
   final FocusNode? focusNode;
 
-  /// Whether to automatically focus this radio button when first built.
+  /// Whether to automatically focus when first built.
   final bool autofocus;
 
   @override
@@ -242,7 +224,8 @@ class _NakedRadioState<T> extends State<NakedRadio<T>> {
       widget.enabled &&
       _group.state.widget.enabled &&
       _group.state.widget.onChanged != null;
-  MouseCursor get _cursor => _isEnabled ? widget.cursor : SystemMouseCursors.forbidden;
+  MouseCursor get _cursor =>
+      _isEnabled ? widget.cursor : SystemMouseCursors.forbidden;
 
   NakedRadioGroupScope<T> get _group => NakedRadioGroupScope.of(context);
   bool? _lastReportedSelection;
@@ -252,7 +235,7 @@ class _NakedRadioState<T> extends State<NakedRadio<T>> {
 
   void _handlePressed() {
     if (!_isEnabled) return;
-    
+
     // If group is already set to this value, do nothing
     if (_group.groupValue == widget.value) {
       return;
@@ -273,7 +256,6 @@ class _NakedRadioState<T> extends State<NakedRadio<T>> {
     }
     widget.onFocusChange?.call(focused);
   }
-
 
   @override
   void dispose() {
@@ -327,8 +309,8 @@ class _NakedRadioState<T> extends State<NakedRadio<T>> {
         builder: (context, states) => widget.child,
         onPressed: _isEnabled ? _handlePressed : null,
         enabled: _isEnabled,
-        autofocus: widget.autofocus,
         focusNode: _focusNode,
+        autofocus: widget.autofocus,
         mouseCursor: _cursor,
         onHoverChange: widget.onHoverChange,
         onPressChange: widget.onPressChange,

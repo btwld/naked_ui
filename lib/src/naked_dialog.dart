@@ -1,16 +1,12 @@
 import 'package:flutter/material.dart';
 
-/// A fully customizable dialog with no default styling.
+/// Provides dialog functionality without default styling.
 ///
-/// Unlike [showDialog], this function provides complete control over dialog
-/// appearance through the [builder] callback. The dialog has no default
-/// background, border radius, or padding, allowing custom designs.
+/// Unlike [showDialog], gives complete control over appearance through [builder].
+/// Has no default background, border radius, or padding.
 ///
-/// Returns a [Future] that resolves to the value passed to [Navigator.pop]
-/// when the dialog is closed, or null if dismissed.
-///
-/// The [barrierColor] must be specified to define the overlay background.
-/// Set [barrierDismissible] to control whether tapping outside closes the dialog.
+/// Returns [Future] that resolves to [Navigator.pop] value or null if dismissed.
+/// The [barrierColor] must be specified for overlay background.
 ///
 /// Example:
 /// ```dart

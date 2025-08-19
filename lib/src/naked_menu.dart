@@ -4,14 +4,10 @@ import 'package:flutter/services.dart';
 import 'naked_button.dart';
 import 'utilities/utilities.dart';
 
-/// A fully customizable menu with no default styling.
+/// Provides dropdown menu behavior without visual styling.
 ///
-/// NakedMenu provides interaction behavior and accessibility features
-/// for a dropdown menu without imposing any visual styling,
-/// giving consumers complete control over appearance through direct state callbacks.
-///
-/// This component uses Flutter's OverlayPortal to render menu content in the app overlay,
-/// ensuring proper z-index and maintaining context inheritance across the component tree.
+/// Uses Flutter's OverlayPortal to render menu content in the app overlay,
+/// ensuring proper z-index and context inheritance.
 ///
 /// Example:
 /// ```dart
@@ -50,25 +46,15 @@ import 'utilities/utilities.dart';
 /// )
 /// ```
 ///
-/// The menu is controlled through the [controller] and [onClose] callback.
-/// When open, the menu content will be positioned relative to the target using [menuAlignment]
-/// and any offset specified in the PositionConfig. If the menu doesn't fit in the preferred position,
-/// it will try the positions specified in [fallbackAlignments].
+/// Controlled through [controller] and [onClose] callback. Positions relative to target,
+/// trying fallback positions if needed. Handles focus management and keyboard navigation
+/// automatically. Supports screen readers and accessibility.
 ///
-/// Focus management and keyboard navigation are handled automatically. The menu can be closed
-/// by pressing Escape, clicking outside (if [consumeOutsideTaps] is true), or selecting an
-/// item (if [closeOnSelect] is true). When opened, focus is automatically moved to the menu
-/// content.
-///
-/// For accessibility, the menu supports screen readers and keyboard navigation.
-/// Menu items should use [NakedMenuItem] which provides proper interaction states
-/// and accessibility features.
+/// Menu items should use [NakedMenuItem] for proper interaction states.
 class NakedMenu extends StatelessWidget {
-  /// Create a naked menu.
+  /// Creates a naked menu.
   ///
-  /// The [builder] and [overlayBuilder] parameters are required.
-  /// The [builder] is the widget that triggers the menu (typically a button).
-  /// The [overlayBuilder] is the content to display when open.
+  /// The [builder] triggers the menu, [overlayBuilder] provides the menu content.
   const NakedMenu({
     super.key,
     required this.builder,
@@ -88,12 +74,10 @@ class NakedMenu extends StatelessWidget {
     ],
   });
 
-  /// The target widget that triggers the menu.
-  /// This is typically a button or other interactive element.
+  /// Target widget that triggers the menu.
   final WidgetBuilder builder;
 
-  /// The menu widget to display when open.
-  /// This is the content displayed in the overlay when the menu is open.
+  /// Menu widget to display when open.
   final WidgetBuilder overlayBuilder;
 
   /// Called when the menu should close.
@@ -103,19 +87,16 @@ class NakedMenu extends StatelessWidget {
   final bool closeOnSelect;
 
   /// Whether to automatically focus the menu when opened.
-  /// Note: This property is included for future implementation but currently has no effect.
+  /// Currently has no effect.
   final bool autofocus;
 
-  /// The alignment of the menu relative to its target.
-  /// Specifies how the menu should be positioned.
+  /// Alignment of the menu relative to its target.
   final NakedMenuPosition menuPosition;
 
-  /// Fallback alignments to try if the menu doesn't fit in the preferred position.
-  /// The menu will try each alignment in order until it finds one that fits.
+  /// Fallback alignments if the preferred position doesn't fit.
   final List<NakedMenuPosition> fallbackPositions;
 
-  /// The controller that manages the visibility of the menu.
-  /// Use this to show, hide, or toggle the menu programmatically.
+  /// Controller that manages menu visibility.
   final MenuController controller;
 
   /// Whether to consume outside taps.
@@ -142,19 +123,16 @@ class NakedMenu extends StatelessWidget {
   }
 }
 
-/// An inherited widget that provides access to the menu's close method.
+/// Provides access to the menu's close method.
 ///
-/// This widget allows descendant widgets to access the menu's close functionality
-/// without having to pass it down through every level of the widget tree.
+/// Allows descendant widgets to access close functionality without prop drilling.
 class NakedMenuClose extends InheritedWidget {
-  /// Creates a naked menu close inherited widget.
-  ///
-  /// The [close] callback and [child] are required.
+  /// Creates a naked menu close widget.
   const NakedMenuClose({super.key, required this.close, required super.child});
 
-  /// Returns the closest [NakedMenuClose] widget in the widget tree.
+  /// Returns the closest [NakedMenuClose] widget.
   ///
-  /// Throws a [StateError] if no [NakedMenuClose] widget is found.
+  /// Throws [StateError] if none found.
   static NakedMenuClose of(BuildContext context) {
     final NakedMenuClose? result = context
         .dependOnInheritedWidgetOfExactType<NakedMenuClose>();
@@ -163,7 +141,7 @@ class NakedMenuClose extends InheritedWidget {
     return result!;
   }
 
-  /// The callback to close the menu.
+  /// Callback to close the menu.
   final VoidCallback? close;
 
   @override
@@ -172,17 +150,14 @@ class NakedMenuClose extends InheritedWidget {
   }
 }
 
-/// An individual menu item that can be selected.
+/// Individual menu item that can be selected.
 ///
-/// This component provides interaction states (hover, press, focus) and
-/// accessibility features for menu items. It handles keyboard navigation
-/// and screen reader support.
+/// Provides interaction states and accessibility features.
+/// Handles keyboard navigation and screen reader support.
 class NakedMenuItem extends StatelessWidget {
   /// Creates a naked menu item.
   ///
-  /// The [child] parameter is required and represents the item's content.
-  /// Use [onPressed] to handle selection, and the state callbacks
-  /// ([onHoverChange], [onPressChange], [onFocusChange]) to customize appearance.
+  /// Use [onPressed] for selection and state callbacks for appearance customization.
   const NakedMenuItem({
     super.key,
     required this.child,
@@ -197,35 +172,31 @@ class NakedMenuItem extends StatelessWidget {
     this.focusNode,
   });
 
-  /// The content to display in the menu item.
+  /// Content to display in the menu item.
   final Widget child;
 
-  /// Called when the hover state changes.
-  /// Can be used to update visual feedback.
+  /// Called when hover state changes.
   final ValueChanged<bool>? onHoverChange;
 
-  /// Called when the pressed state changes.
-  /// Can be used to update visual feedback.
+  /// Called when pressed state changes.
   final ValueChanged<bool>? onPressChange;
 
-  /// Called when the focus state changes.
-  /// Can be used to update visual feedback.
+  /// Called when focus state changes.
   final ValueChanged<bool>? onFocusChange;
 
   /// Called when the item is selected.
   final VoidCallback? onPressed;
 
-  /// Whether the item is enabled and can be selected.
+  /// Whether the item can be selected.
   final bool enabled;
 
-  /// Optional semantic label for accessibility.
-  /// Provides a description of the item's purpose for screen readers.
+  /// Semantic label for screen readers.
   final String? semanticLabel;
 
-  /// The cursor to show when hovering over the item.
+  /// Cursor when hovering over the item.
   final MouseCursor cursor;
 
-  /// Whether to provide haptic feedback when selecting the item.
+  /// Whether to provide haptic feedback on selection.
   final bool enableHapticFeedback;
 
   /// Optional focus node to control focus behavior.

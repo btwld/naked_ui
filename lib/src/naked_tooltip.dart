@@ -4,14 +4,10 @@ import 'package:flutter/material.dart';
 
 import 'utilities/utilities.dart';
 
-/// A fully customizable tooltip with no default styling.
+/// Provides tooltip behavior without visual styling.
 ///
-/// NakedTooltip provides core tooltip behavior and accessibility
-/// without imposing any visual styling, giving consumers complete design freedom.
-///
-/// This component handles showing and hiding tooltips, positioning the tooltip
-/// relative to the target widget, and automatically dismissing the tooltip
-/// after a specified duration.
+/// Handles showing, hiding, and positioning tooltips relative to target widgets.
+/// Automatically dismisses after specified duration.
 ///
 /// Example:
 /// ```dart
@@ -98,8 +94,6 @@ import 'utilities/utilities.dart';
 /// ```
 class NakedTooltip extends StatefulWidget implements OverlayChildLifecycle {
   /// Creates a naked tooltip.
-  ///
-  /// The [child] and [tooltipWidget] parameters are required.
   const NakedTooltip({
     super.key,
     required this.child,
@@ -117,35 +111,35 @@ class NakedTooltip extends StatefulWidget implements OverlayChildLifecycle {
     this.onStateChange,
   });
 
-  /// The widget that triggers the tooltip.
+  /// Widget that triggers the tooltip.
   final Widget child;
 
-  /// The widget to display in the tooltip.
+  /// Widget to display in the tooltip.
   final WidgetBuilder tooltipBuilder;
 
-  /// The position of the tooltip relative to the target.
+  /// Tooltip position relative to the target.
   final NakedMenuPosition position;
 
-  /// Optional semantic label for accessibility.
+  /// Semantic label for accessibility.
   final String? tooltipSemantics;
 
-  /// Whether to exclude the tooltip from the semantics tree.
+  /// Whether to exclude tooltip from semantics tree.
   final bool excludeFromSemantics;
 
-  /// The fallback alignments for the tooltip.
+  /// Fallback alignments for the tooltip.
   final List<NakedMenuPosition> fallbackPositions;
 
-  /// The duration for which the tooltip remains visible.
+  /// Duration tooltip remains visible.
   final Duration showDuration;
 
-  /// The duration to wait before showing the tooltip after hover.
+  /// Duration to wait before showing tooltip after hover.
   final Duration waitDuration;
 
-  /// The duration to wait before removing the Widget from the Overlay after the tooltip is hidden.
+  /// Duration before removing widget from overlay after tooltip is hidden.
   @override
   final Duration removalDelay;
 
-  /// The event handler for the tooltip.
+  /// Event handler for the tooltip.
   @override
   final void Function(OverlayChildLifecycleState state)? onStateChange;
 

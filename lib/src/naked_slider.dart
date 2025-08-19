@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-/// A customizable slider with no default styling.
+/// Provides slider interaction behavior without visual styling.
 ///
-/// Provides interaction behavior and keyboard navigation without visual styling.
 /// Supports discrete divisions and both horizontal and vertical orientation.
 class NakedSlider extends StatefulWidget {
   /// Creates a naked slider.
@@ -31,25 +30,25 @@ class NakedSlider extends StatefulWidget {
     this.excludeSemantics = false,
   }) : assert(min < max, 'min must be less than max');
 
-  /// The child widget to display.
+  /// Child widget to display.
   final Widget child;
 
-  /// The current value of the slider.
+  /// Current value of the slider.
   final double value;
 
-  /// Minimum value of the slider.
+  /// Minimum slider value.
   final double min;
 
-  /// Maximum value of the slider.
+  /// Maximum slider value.
   final double max;
 
   /// Called when the slider value changes.
   final ValueChanged<double>? onChanged;
 
-  /// Called when the user starts dragging the slider.
+  /// Called when dragging starts.
   final VoidCallback? onDragStart;
 
-  /// Called when the user ends dragging the slider.
+  /// Called when dragging ends.
   final ValueChanged<double>? onDragEnd;
 
   /// Called when hover state changes.
@@ -61,38 +60,34 @@ class NakedSlider extends StatefulWidget {
   /// Called when focus state changes.
   final ValueChanged<bool>? onFocusChange;
 
-  /// Whether the slider is disabled.
-  ///
-  /// When true, the slider will not respond to user interaction.
+  /// Whether the slider is enabled.
   final bool enabled;
 
-  /// Optional semantic label for accessibility.
-  ///
-  /// This is used by screen readers to describe the slider.
+  /// Semantic label for screen readers.
   final String? semanticLabel;
 
-  /// The cursor to show when hovering over the slider.
+  /// Cursor when hovering over the slider.
   final MouseCursor cursor;
 
   /// Optional focus node to control focus behavior.
   final FocusNode? focusNode;
 
-  /// Whether the slider should automatically request focus when it is created.
+  /// Whether to automatically request focus when created.
   final bool autofocus;
 
-  /// Direction of the slider.
+  /// Slider direction.
   final Axis direction;
 
   /// Number of discrete divisions.
   final int? divisions;
 
-  /// Step size for keyboard navigation.
+  /// Keyboard navigation step size.
   final double keyboardStep;
 
-  /// Step size for large keyboard navigation.
+  /// Large keyboard navigation step size.
   final double largeKeyboardStep;
 
-  /// Whether to exclude child semantics from the semantic tree.
+  /// Whether to exclude child semantics.
   final bool excludeSemantics;
 
   @override

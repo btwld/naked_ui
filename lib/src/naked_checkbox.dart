@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import 'primitives/naked_interactable.dart';
+import 'utilities/naked_interactable.dart';
 
-/// A customizable checkbox with no default styling.
+/// Provides checkbox interaction behavior without visual styling.
 ///
-/// Provides interaction behavior and accessibility without visual styling.
 /// Supports checked, unchecked, and tristate (indeterminate) values.
 class NakedCheckbox extends StatelessWidget {
   /// Creates a naked checkbox.
@@ -18,7 +17,6 @@ class NakedCheckbox extends StatelessWidget {
     this.onHoverChange,
     this.onPressChange,
     this.onFocusChange,
-    this.onDisabledChange,
     this.enabled = true,
     this.semanticLabel,
     this.cursor = SystemMouseCursors.click,
@@ -32,51 +30,41 @@ class NakedCheckbox extends StatelessWidget {
 
   /// Visual representation of the checkbox.
   ///
-  /// Render different visual states based on the callback properties
-  /// (value, onHoverChange, etc.).
+  /// Renders different states based on callback properties.
   final Widget child;
 
   /// Whether this checkbox is checked.
   ///
-  /// When [tristate] is true, a value of null corresponds to the mixed state.
-  /// When [tristate] is false, this value must not be null.
+  /// When [tristate] is true, null corresponds to mixed state.
   final bool? value;
 
-  /// If true the checkbox's [value] can be true, false, or null.
+  /// Whether the checkbox can be true, false, or null.
   ///
-  /// When a tri-state checkbox ([tristate] is true) is tapped, its [onChanged]
-  /// callback will be applied to true if the current value is false, to null if
-  /// value is true, and to false if value is null (i.e. it cycles through false
-  /// => true => null => false when tapped).
-  ///
-  /// If tristate is false (the default), [value] must not be null.
+  /// When true, tapping cycles through false => true => null => false.
+  /// When false, [value] must not be null.
   final bool tristate;
 
   /// Called when the checkbox is toggled.
   ///
-  /// The callback provides the new state of the checkbox (true for checked, false for unchecked).
-  /// If null, the checkbox will be considered disabled and will not respond to user interaction.
+  /// If null, the checkbox is disabled and unresponsive.
   final ValueChanged<bool?>? onChanged;
 
-  /// Callback triggered when the checkbox's hover state changes.
+  /// Called when hover state changes.
   final ValueChanged<bool>? onHoverChange;
 
-  /// Callback triggered when the checkbox is pressed or released.
+  /// Called when pressed state changes.
   final ValueChanged<bool>? onPressChange;
 
-  /// Callback triggered when the checkbox gains or loses focus.
+  /// Called when focus state changes.
   final ValueChanged<bool>? onFocusChange;
 
-  /// Callback triggered when the checkbox's disabled state changes.
-  final ValueChanged<bool>? onDisabledChange;
-
-  /// Whether the checkbox is disabled.
+  /// Whether the checkbox is enabled.
   final bool enabled;
 
-  /// Optional semantic label for accessibility.
+  /// Semantic label for accessibility.
   final String? semanticLabel;
 
-  /// The cursor to show when hovering over the checkbox.
+  /// Cursor when hovering over the checkbox.
   final MouseCursor cursor;
 
   /// Whether to provide haptic feedback on tap.
@@ -85,7 +73,7 @@ class NakedCheckbox extends StatelessWidget {
   /// Optional focus node to control focus behavior.
   final FocusNode? focusNode;
 
-  /// Whether the checkbox should be autofocused when the widget is created.
+  /// Whether to autofocus when created.
   final bool autofocus;
 
   bool get _isInteractive => enabled && onChanged != null;
@@ -110,21 +98,26 @@ class NakedCheckbox extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Semantics(
+      container: true,
+      explicitChildNodes: true,
       enabled: _isInteractive,
       checked: value ?? false,
       mixed: tristate ? value == null : null,
+      focusable: true,
       label: semanticLabel,
+      // Always expose tap and focus actions for accessibility expectations
+      onTap: () {},
+      onFocus: () => true,
       child: NakedInteractable(
         builder: (context, states) => child,
         onPressed: _isInteractive ? _onPressed : null,
         enabled: enabled,
-        autofocus: autofocus,
         focusNode: focusNode,
+        autofocus: autofocus,
         mouseCursor: _mouseCursor,
         onHoverChange: onHoverChange,
         onPressChange: onPressChange,
         onFocusChange: onFocusChange,
-        onDisabledChange: onDisabledChange,
         excludeFromSemantics: false,
       ),
     );

@@ -1,39 +1,28 @@
 import 'package:flutter/foundation.dart';
-import 'package:flutter/widgets.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/widgets.dart';
 
-import 'primitives/naked_interactable.dart';
+import 'utilities/naked_interactable.dart';
 
-/// Controller that manages the state of an accordion.
+/// Manages accordion state with optional min/max expansion constraints.
 ///
-/// This controller keeps track of which accordion items are expanded or collapsed
-/// and provides methods to open, close, or toggle items. It can also enforce
-/// minimum and maximum limits on the number of expanded items.
-///
-/// **Architecture Decision**: This component uses a controller-based approach to handle:
-/// - Complex state constraints (min/max expanded items)
-/// - Batch operations (openAll, replaceAll)
-/// - Business logic encapsulation (preventing invalid states)
-/// - External programmatic control beyond simple selection callbacks
+/// Uses a controller-based approach to handle complex state constraints,
+/// batch operations, and business logic encapsulation beyond simple callbacks.
 ///
 /// Generic type [T] represents the unique identifier for each accordion item.
-/// This could be a String, int, or any other type that can uniquely identify sections.
 class NakedAccordionController<T> with ChangeNotifier {
-  /// The minimum number of expanded items allowed.
+  /// Minimum number of expanded items allowed.
   final int min;
 
-  /// The maximum number of expanded items allowed.
-  /// If null, there is no maximum limit.
+  /// Maximum number of expanded items allowed. If null, no maximum limit.
   final int? max;
 
-  /// Set of currently expanded values.
+  /// Currently expanded values.
   final Set<T> values = {};
 
   /// Creates an accordion controller.
   ///
-  /// [min] specifies the minimum number of expanded items (default: 0).
-  /// [max] specifies the maximum number of expanded items (optional).
-  /// When [max] is specified and reached, opening a new item will close the oldest one.
+  /// When [max] is reached, opening a new item closes the oldest one.
   NakedAccordionController({this.min = 0, this.max})
     : assert(min >= 0, 'min must be greater than or equal to 0'),
       assert(
@@ -43,8 +32,7 @@ class NakedAccordionController<T> with ChangeNotifier {
 
   /// Opens the accordion item with the given [value].
   ///
-  /// If [max] is specified and the maximum number of expanded items is reached,
-  /// this will close the oldest expanded item to maintain the limit.
+  /// Closes the oldest expanded item if [max] limit is reached.
   void open(T value) {
     if (max != null && values.length >= max!) {
       final first = values.first;
@@ -59,7 +47,7 @@ class NakedAccordionController<T> with ChangeNotifier {
 
   /// Closes the accordion item with the given [value].
   ///
-  /// Will not close if doing so would violate the [min] constraint.
+  /// Ignores request if closing would violate [min] constraint.
   void close(T value) {
     if (min > 0 && values.length <= min) {
       return;
@@ -70,8 +58,7 @@ class NakedAccordionController<T> with ChangeNotifier {
 
   /// Toggles the accordion item with the given [value].
   ///
-  /// If the item is expanded, it will be closed (subject to [min] constraint).
-  /// If the item is collapsed, it will be opened (subject to [max] constraint).
+  /// Respects [min] and [max] constraints when changing state.
   void toggle(T value) {
     if (values.contains(value)) {
       close(value);
@@ -83,7 +70,7 @@ class NakedAccordionController<T> with ChangeNotifier {
 
   /// Removes all expanded values.
   ///
-  /// Note that if [min] is greater than 0, this operation may not be allowed.
+  /// May not clear all items if [min] constraint prevents it.
   void clear() {
     values.clear();
     notifyListeners();
@@ -91,8 +78,7 @@ class NakedAccordionController<T> with ChangeNotifier {
 
   /// Opens accordion items with the given [newValues].
   ///
-  /// If [max] is specified, only opens as many items as allowed
-  /// by the constraint, preserving existing open items.
+  /// Respects [max] constraint, preserving existing open items.
   void openAll(List<T> newValues) {
     if (max != null) {
       final availableSlots = max! - values.length;
@@ -106,13 +92,10 @@ class NakedAccordionController<T> with ChangeNotifier {
     notifyListeners();
   }
 
-  /// Replaces all expanded values with a new set.
+  /// Replaces all expanded values with [newValues].
   ///
-  /// This method clears all existing expanded values and replaces them
-  /// with [newValues], respecting the [max] constraint if specified.
-  ///
-  /// This is useful for programmatically setting the entire accordion state,
-  /// such as when responding to external state changes.
+  /// Useful for programmatically setting entire accordion state.
+  /// Respects [max] constraint.
   void replaceAll(List<T> newValues) {
     values.clear();
 
@@ -126,20 +109,13 @@ class NakedAccordionController<T> with ChangeNotifier {
     notifyListeners();
   }
 
-  /// Checks if an item with the given [value] is currently expanded.
+  /// Returns whether the item with [value] is currently expanded.
   bool contains(T value) => values.contains(value);
 }
 
-/// A fully customizable accordion with no default styling.
+/// Provides expandable/collapsible sections without visual styling.
 ///
-/// NakedAccordion provides expandable/collapsible sections without imposing any visual styling,
-/// giving consumers complete design freedom. It manages the state of expanded sections through
-/// an [NakedAccordionController].
-///
-/// This component includes:
-/// - [NakedAccordionController]: Manages which sections are expanded/collapsed
-/// - [NakedAccordion]: The container for accordion items
-/// - [NakedAccordionItem]: Individual collapsible sections
+/// Manages state through [NakedAccordionController] for complete design freedom.
 ///
 /// Example:
 /// ```dart
@@ -169,8 +145,7 @@ class NakedAccordionController<T> with ChangeNotifier {
 class NakedAccordion<T> extends StatefulWidget {
   /// Creates a naked accordion.
   ///
-  /// The [children] should be [NakedAccordionItem] widgets with the same
-  /// generic type [T] as the [controller].
+  /// The [children] should be [NakedAccordionItem] widgets with matching generic type [T].
   const NakedAccordion({
     super.key,
     required this.children,
@@ -178,10 +153,10 @@ class NakedAccordion<T> extends StatefulWidget {
     this.initialExpandedValues = const [],
   });
 
-  /// The accordion items to display.
+  /// Accordion items to display.
   final List<Widget> children;
 
-  /// The controller that manages which items are expanded or collapsed.
+  /// Controller that manages which items are expanded or collapsed.
   final NakedAccordionController<T> controller;
 
   /// Values that should be expanded when the accordion is first built.
@@ -230,18 +205,14 @@ typedef NakedAccordionTriggerBuilder =
     // ignore: prefer-named-boolean-parameters
     Widget Function(BuildContext context, bool isExpanded);
 
-/// An individual item in a [NakedAccordion].
+/// Individual item in a [NakedAccordion].
 ///
-/// Each item consists of a trigger widget that toggles expansion state
-/// and content that is shown when expanded. The [transitionBuilder] can be
-/// used to customize how content appears/disappears.
-///
-/// Generic type [T] should match the type used in the [NakedAccordionController].
+/// Consists of a trigger widget and expandable content.
+/// Generic type [T] should match the [NakedAccordionController] type.
 class NakedAccordionItem<T> extends StatelessWidget {
   /// Creates a naked accordion item.
   ///
-  /// The [trigger] and [child] parameters are required.
-  /// The [value] must be unique among all items controlled by the same controller.
+  /// The [value] must be unique among all items in the same controller.
   const NakedAccordionItem({
     super.key,
     required this.trigger,
@@ -252,7 +223,6 @@ class NakedAccordionItem<T> extends StatelessWidget {
     this.onHoverChange,
     this.onPressChange,
     this.onFocusChange,
-    this.onDisabledChange,
     this.enabled = true,
     this.enableHapticFeedback = true,
     this.autoFocus = false,
@@ -261,25 +231,23 @@ class NakedAccordionItem<T> extends StatelessWidget {
 
   /// Builder function that creates the trigger widget.
   ///
-  /// The builder provides:
-  /// - [BuildContext] for accessing theme and other data
-  /// - [bool] indicating if the item is expanded
+  /// Receives context and current expansion state.
   final NakedAccordionTriggerBuilder trigger;
 
-  /// Optional builder to customize the transition when expanding/collapsing.
+  /// Customizes transition when expanding/collapsing.
   ///
-  /// If not provided, content will appear/disappear instantly.
+  /// If not provided, content appears/disappears instantly.
   final Widget Function(Widget child)? transitionBuilder;
 
-  /// The content displayed when this item is expanded.
+  /// Content displayed when this item is expanded.
   final Widget child;
 
-  /// The unique identifier for this accordion item.
+  /// Unique identifier for this accordion item.
   ///
-  /// This value is used by the [NakedAccordionController] to track expansion state.
+  /// Used by [NakedAccordionController] to track expansion state.
   final T value;
 
-  /// Optional semantic label describing the section for screen readers.
+  /// Semantic label for screen readers.
   final String? semanticLabel;
 
   /// Called when hover state changes.
@@ -291,9 +259,6 @@ class NakedAccordionItem<T> extends StatelessWidget {
   /// Called when focus state changes.
   final ValueChanged<bool>? onFocusChange;
 
-  /// Called when disabled state changes.
-  final ValueChanged<bool>? onDisabledChange;
-
   /// Whether the accordion item is enabled.
   final bool enabled;
 
@@ -303,7 +268,7 @@ class NakedAccordionItem<T> extends StatelessWidget {
   /// Whether the item should be focused when the accordion is opened.
   final bool autoFocus;
 
-  /// The focus node for the item.
+  /// Focus node for the item.
   final FocusNode? focusNode;
 
   @override
@@ -334,12 +299,11 @@ class NakedAccordionItem<T> extends StatelessWidget {
                       }
                     : null,
                 enabled: enabled,
-                autofocus: autoFocus,
                 focusNode: focusNode,
+                autofocus: autoFocus,
                 onHoverChange: onHoverChange,
                 onPressChange: onPressChange,
                 onFocusChange: onFocusChange,
-                onDisabledChange: onDisabledChange,
               ),
               transitionBuilder != null ? transitionBuilder!(child) : child,
             ],

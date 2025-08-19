@@ -7,10 +7,10 @@ import 'package:flutter/services.dart';
 import 'naked_button.dart';
 import 'utilities/utilities.dart';
 
-/// A customizable select/dropdown widget with no default styling.
+/// Provides select/dropdown behavior without visual styling.
 ///
 /// Supports single and multiple selection with keyboard navigation.
-/// Renders menu content in the overlay with automatic positioning.
+/// Renders menu content in overlay with automatic positioning.
 class NakedSelect<T> extends StatefulWidget implements OverlayChildLifecycle {
   /// Creates a naked select dropdown.
   const NakedSelect({
@@ -77,33 +77,31 @@ class NakedSelect<T> extends StatefulWidget implements OverlayChildLifecycle {
        selectedValue = null,
        onSelectedValueChanged = null;
 
-  /// The target widget that triggers the select dropdown.
-  /// This should typically be a [NakedSelectTrigger].
+  /// Target widget that triggers the dropdown.
   final Widget child;
 
-  /// The menu widget to display when the dropdown is open.
-  /// This should be a [NakedSelectMenu] containing [NakedSelectItem] widgets.
+  /// Menu widget to display when dropdown is open.
   final Widget menu;
 
   /// Called when the menu closes, either through selection or external interaction.
   final VoidCallback? onClose;
 
-  /// The currently selected value in single selection mode.
+  /// Currently selected value in single selection mode.
   final T? selectedValue;
 
   /// Called when the selected value changes in single selection mode.
   final ValueChanged<T?>? onSelectedValueChanged;
 
-  /// The set of currently selected values in multiple selection mode.
+  /// Currently selected values in multiple selection mode.
   final Set<T>? selectedValues;
 
   /// Called when selected values change in multiple selection mode.
   final ValueChanged<Set<T>>? onSelectedValuesChanged;
 
-  /// Whether to allow selecting multiple items.
+  /// Whether to allow multiple item selection.
   final bool allowMultiple;
 
-  /// Whether the select is enabled and can be interacted with.
+  /// Whether the select can be interacted with.
   final bool enabled;
 
   /// Semantic label for accessibility.
@@ -328,7 +326,7 @@ class NakedSelectScope<T> extends InheritedWidget {
   /// Whether multiple selection is enabled.
   final bool allowMultiple;
 
-  /// Whether the select is enabled and can be interacted with.
+  /// Whether the select can be interacted with.
   final bool enabled;
 
   bool isSelected(BuildContext context, T value) {

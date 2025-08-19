@@ -10,12 +10,11 @@ import 'package:flutter/material.dart'
         TextMagnifier;
 import 'package:flutter/services.dart';
 
-/// A customizable text field with no default styling or decoration.
+/// Provides text editing functionality without visual styling.
 ///
-/// Provides text editing functionality and interaction callbacks without visual styling.
-/// Uses a builder pattern for complete customization of the text field appearance.
+/// Uses a builder pattern for complete customization of appearance.
 class NakedTextField extends StatefulWidget {
-  /// Creates a simplified text field.
+  /// Creates a naked text field.
   const NakedTextField({
     super.key,
     this.groupId = EditableText,
@@ -104,7 +103,7 @@ class NakedTextField extends StatefulWidget {
        ),
        assert(maxLength == null || maxLength > 0);
 
-  /// The magnifier configuration to use for this text field.
+  /// Magnifier configuration for this text field.
   final TextMagnifierConfiguration? magnifierConfiguration;
 
   /// Controls the text being edited.
@@ -113,34 +112,34 @@ class NakedTextField extends StatefulWidget {
   /// Defines the keyboard focus for this widget.
   final FocusNode? focusNode;
 
-  /// The controller for undo/redo history.
+  /// Controller for undo/redo history.
   final UndoHistoryController? undoController;
 
-  /// The type of keyboard to use for editing the text.
+  /// Keyboard type for editing the text.
   final TextInputType? keyboardType;
 
-  /// The type of action button to use for the keyboard.
+  /// Action button type for the keyboard.
   final TextInputAction? textInputAction;
 
-  /// Configures how the platform keyboard will select an uppercase or lowercase keyboard.
+  /// How the platform keyboard selects uppercase or lowercase.
   final TextCapitalization textCapitalization;
 
   /// How the text should be aligned horizontally.
   final TextAlign textAlign;
 
-  /// The directionality of the text.
+  /// Text directionality.
   final TextDirection? textDirection;
 
   /// Whether the text can be changed.
   final bool readOnly;
 
-  /// Whether to show cursor.
+  /// Whether to show the cursor.
   final bool? showCursor;
 
-  /// Whether this text field should focus itself if nothing else is already focused.
+  /// Whether to autofocus if nothing else is focused.
   final bool autofocus;
 
-  /// Character used for obscuring text if obscureText is true.
+  /// Character used for obscuring text.
   final String obscuringCharacter;
 
   /// Whether to hide the text being edited.
@@ -149,119 +148,115 @@ class NakedTextField extends StatefulWidget {
   /// Whether to enable autocorrect.
   final bool autocorrect;
 
-  /// Configuration of smart dashes behavior.
+  /// Smart dashes behavior configuration.
   final SmartDashesType smartDashesType;
 
-  /// Configuration of smart quotes behavior.
+  /// Smart quotes behavior configuration.
   final SmartQuotesType smartQuotesType;
 
   /// Whether to show input suggestions as the user types.
   final bool enableSuggestions;
 
-  /// The maximum number of lines for the text to span.
+  /// Maximum number of lines for the text.
   final int? maxLines;
 
-  /// The minimum number of lines to occupy when the content spans fewer lines.
+  /// Minimum number of lines to occupy.
   final int? minLines;
 
-  /// Whether this widget's height will be sized to fill its parent.
+  /// Whether to size height to fill parent.
   final bool expands;
 
-  /// The maximum number of characters to allow in the text field.
+  /// Maximum number of characters allowed.
   final int? maxLength;
 
-  /// Determines how the maxLength limit should be enforced.
+  /// How the maxLength limit is enforced.
   final MaxLengthEnforcement? maxLengthEnforcement;
 
-  /// Called when the user initiates a change to the text field's value.
+  /// Called when text field value changes.
   final ValueChanged<String>? onChanged;
 
-  /// Called when the user indicates that they are done editing the text in the field.
+  /// Called when editing is complete.
   final VoidCallback? onEditingComplete;
 
-  /// Called when the user submits editable content.
+  /// Called when content is submitted.
   final ValueChanged<String>? onSubmitted;
 
-  /// Private API for platform-specific customization.
+  /// Platform-specific customization API.
   final AppPrivateCommandCallback? onAppPrivateCommand;
 
-  /// Optional input validation and formatting overrides.
+  /// Input validation and formatting overrides.
   final List<TextInputFormatter>? inputFormatters;
 
   /// Whether the text field is enabled.
   final bool enabled;
 
-  /// Width of the cursor.
+  /// Cursor width.
   final double cursorWidth;
 
-  /// Height of the cursor.
+  /// Cursor height.
   final double? cursorHeight;
 
-  /// Radius of the cursor.
+  /// Cursor radius.
   final Radius? cursorRadius;
 
-  /// Whether the cursor opacity animates.
+  /// Whether cursor opacity animates.
   final bool? cursorOpacityAnimates;
 
-  /// Color of the cursor.
+  /// Cursor color.
   final Color? cursorColor;
 
-  /// Controls how tall the selection highlight boxes are computed to be.
+  /// How tall selection highlight boxes are computed.
   final ui.BoxHeightStyle selectionHeightStyle;
 
-  /// Controls how wide the selection highlight boxes are computed to be.
+  /// How wide selection highlight boxes are computed.
   final ui.BoxWidthStyle selectionWidthStyle;
 
-  /// The appearance of the keyboard.
+  /// Keyboard appearance.
   final Brightness? keyboardAppearance;
 
-  /// Padding around the scrollable content.
+  /// Scrollable content padding.
   final EdgeInsets scrollPadding;
 
   /// Whether the value can be selected.
   final bool enableInteractiveSelection;
 
-  /// Controls the selection handles and contextual toolbar.
+  /// Selection handles and contextual toolbar controls.
   final TextSelectionControls? selectionControls;
 
-  /// Triggered when the user taps on the field.
+  /// Called when the field is tapped.
   final GestureTapCallback? onPressed;
 
-  /// Whether onPressed should be called for every tap.
+  /// Whether to call onPressed for every tap.
   final bool onTapAlwaysCalled;
 
-  /// Called when the pressed state changes.
-  ///
-  /// The callback provides the current pressed state as a boolean parameter:
-  /// - `true` when the text field is pressed
-  /// - `false` when the text field is released
+  /// Called when pressed state changes.
   final ValueChanged<bool>? onPressChange;
 
-  /// Called when a tap is detected outside of the field.
+  /// Called when tapping outside the field.
   final TapRegionCallback? onTapOutside;
 
-  /// Called when a tap up is detected outside of the field.
+  /// Called when tap up occurs outside the field.
   final TapRegionUpCallback? onPressUpOutside;
 
-  /// Drag start behavior.
+  /// Behavior when drag starts.
   final DragStartBehavior dragStartBehavior;
 
-  /// Controls scrolling of the text field.
+  /// Controls text field scrolling.
   final ScrollController? scrollController;
 
-  /// Scroll physics to apply to the scrollable content.
+  /// Scroll physics for scrollable content.
   final ScrollPhysics? scrollPhysics;
 
   /// Autofill hint information.
   final Iterable<String>? autofillHints;
 
-  /// Configuration for handling content insertion.
+  /// Content insertion handling configuration.
   final ContentInsertionConfiguration? contentInsertionConfiguration;
 
-  /// Clip behavior for content inside the text field.
+  /// Clip behavior for content inside the field.
   final Clip clipBehavior;
 
-  /// Restoration ID for this widget.
+  /// Widget restoration ID.
   final String? restorationId;
 
   final bool stylusHandwritingEnabled;
@@ -269,43 +264,33 @@ class NakedTextField extends StatefulWidget {
   /// Whether to enable IME personalized learning.
   final bool enableIMEPersonalizedLearning;
 
-  /// Builder for the context (right-click or long press) menu.
+  /// Context menu builder (right-click or long press).
   final EditableTextContextMenuBuilder? contextMenuBuilder;
 
-  /// Whether this text field can request focus.
+  /// Whether the field can request focus.
   final bool canRequestFocus;
 
-  /// Configuration for spell check behavior.
+  /// Spell check behavior configuration.
   final SpellCheckConfiguration? spellCheckConfiguration;
 
-  /// Called when the hover state changes.
-  ///
-  /// The callback provides the current hover state as a boolean parameter:
-  /// - `true` when the mouse pointer enters the text field
-  /// - `false` when the mouse pointer exits the text field
+  /// Called when hover state changes.
   final ValueChanged<bool>? onHoverChange;
 
-  /// Called when the focus state changes.
-  ///
-  /// The callback provides the current focus state as a boolean parameter:
-  /// - `true` when the text field gains focus
-  /// - `false` when the text field loses focus
+  /// Called when focus state changes.
   final ValueChanged<bool>? onFocusChange;
 
-  /// The group ID for the text field.
+  /// Group ID for the text field.
   final Object groupId;
 
-  /// The style of the text field.
+  /// Text field style.
   final TextStyle? style;
 
   /// Whether to ignore pointers.
   final bool? ignorePointers;
 
-  /// Required builder function that allows complete customization of the text field's appearance.
+  /// Required builder for complete text field customization.
   ///
-  /// The builder receives:
-  /// - [context] The build context
-  /// - [editableText] The core EditableText widget that should be included in the custom layout
+  /// Receives context and the core EditableText widget.
   final Widget Function(BuildContext context, Widget editableText) builder;
 
   @override
