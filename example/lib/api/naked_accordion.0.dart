@@ -86,7 +86,7 @@ class _AccordionItemState extends State<AccordionItem> {
       ),
       child: NakedAccordionItem<String>(
         value: widget.value,
-        onHoverChange: (isHovering) => setState(() => _isHovering = isHovering),
+        onHoverChange: (hovered) => setState(() => _isHovering = hovered),
         trigger: (context, isExpanded) {
           return AnimatedContainer(
               duration: const Duration(milliseconds: 200),

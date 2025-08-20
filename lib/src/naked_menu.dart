@@ -161,31 +161,35 @@ class NakedMenuItem extends StatelessWidget {
   const NakedMenuItem({
     super.key,
     required this.child,
-    this.onHoverChange,
-    this.onPressChange,
-    this.onFocusChange,
     this.onPressed,
     this.enabled = true,
     this.semanticLabel,
     this.cursor = SystemMouseCursors.click,
     this.enableHapticFeedback = true,
     this.focusNode,
+    this.onFocusChange,
+    this.onHoverChange,
+    this.onHighlightChanged,
+    this.controller,
   });
 
   /// Content to display in the menu item.
   final Widget child;
 
-  /// Called when hover state changes.
-  final ValueChanged<bool>? onHoverChange;
-
-  /// Called when pressed state changes.
-  final ValueChanged<bool>? onPressChange;
+  /// Called when the item is selected.
+  final VoidCallback? onPressed;
 
   /// Called when focus state changes.
   final ValueChanged<bool>? onFocusChange;
 
-  /// Called when the item is selected.
-  final VoidCallback? onPressed;
+  /// Called when hover state changes.
+  final ValueChanged<bool>? onHoverChange;
+
+  /// Called when highlight (pressed) state changes.
+  final ValueChanged<bool>? onHighlightChanged;
+
+  /// Optional external controller for interaction states.
+  final WidgetStatesController? controller;
 
   /// Whether the item can be selected.
   final bool enabled;
@@ -201,7 +205,6 @@ class NakedMenuItem extends StatelessWidget {
 
   /// Optional focus node to control focus behavior.
   final FocusNode? focusNode;
-
 
   @override
   Widget build(BuildContext context) {
@@ -220,14 +223,16 @@ class NakedMenuItem extends StatelessWidget {
 
     return NakedButton(
       onPressed: onPressed != null ? onPress : null,
-      onHoverChange: onHoverChange,
-      onPressChange: onPressChange,
-      onFocusChange: onFocusChange,
       enabled: enabled,
+      isSemanticButton: true,
       semanticLabel: semanticLabel,
       cursor: cursor,
       enableHapticFeedback: enableHapticFeedback,
       focusNode: focusNode,
+      onFocusChange: onFocusChange,
+      onHoverChange: onHoverChange,
+      onHighlightChanged: onHighlightChanged,
+      controller: controller,
       child: child,
     );
   }

@@ -395,7 +395,7 @@ void main() {
             menu: const SizedBox(),
             child: NakedSelectTrigger(
               key: key,
-              onHoverChange: (value) => isHovered = value,
+              onHoverChange: (hovered) => isHovered = hovered,
               child: const Text('Select option'),
             ),
           ),
@@ -412,7 +412,7 @@ void main() {
       expect(isHovered, false);
     });
 
-    testWidgets('calls onPressChange when trigger pressed', (
+    testWidgets('calls onHighlightChanged when trigger pressed', (
       WidgetTester tester,
     ) async {
       bool isPressed = false;
@@ -421,7 +421,7 @@ void main() {
         NakedSelect<String>(
           menu: const SizedBox(),
           child: NakedSelectTrigger(
-            onPressChange: (value) => isPressed = value,
+            onHighlightChanged: (pressed) => isPressed = pressed,
             child: const Text('Select option'),
           ),
         ),
@@ -450,7 +450,7 @@ void main() {
           menu: const SizedBox(),
           child: NakedSelectTrigger(
             focusNode: focusNode,
-            onFocusChange: (value) => isFocused = value,
+            onFocusChange: (focused) => isFocused = focused,
             child: const Text('Select option'),
           ),
         ),
@@ -486,8 +486,8 @@ void main() {
               child: NakedSelectItem<String>(
                 key: key,
                 value: 'test',
-                onHoverChange: (value) => itemHovered = value,
-                onPressChange: (value) => itemPressed = value,
+                onHoverChange: (hovered) => itemHovered = hovered,
+                onHighlightChanged: (pressed) => itemPressed = pressed,
                 child: const Text('Apple'),
               ),
             ),

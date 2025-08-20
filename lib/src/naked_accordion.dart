@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
 import 'utilities/naked_interactable.dart';
+import 'utilities/semantics.dart';
 
 /// Manages accordion state with optional min/max expansion constraints.
 ///
@@ -220,13 +221,14 @@ class NakedAccordionItem<T> extends StatelessWidget {
     required this.child,
     this.transitionBuilder,
     this.semanticLabel,
-    this.onHoverChange,
-    this.onPressChange,
-    this.onFocusChange,
     this.enabled = true,
     this.enableHapticFeedback = true,
     this.autoFocus = false,
     this.focusNode,
+    this.onFocusChange,
+    this.onHoverChange,
+    this.onHighlightChanged,
+    this.controller,
   });
 
   /// Builder function that creates the trigger widget.
@@ -250,14 +252,17 @@ class NakedAccordionItem<T> extends StatelessWidget {
   /// Semantic label for screen readers.
   final String? semanticLabel;
 
+  /// Called when focus state changes.
+  final ValueChanged<bool>? onFocusChange;
+
   /// Called when hover state changes.
   final ValueChanged<bool>? onHoverChange;
 
-  /// Called when pressed state changes.
-  final ValueChanged<bool>? onPressChange;
+  /// Called when highlight (pressed) state changes.
+  final ValueChanged<bool>? onHighlightChanged;
 
-  /// Called when focus state changes.
-  final ValueChanged<bool>? onFocusChange;
+  /// Optional external controller for interaction states.
+  final WidgetStatesController? controller;
 
   /// Whether the accordion item is enabled.
   final bool enabled;
@@ -281,29 +286,33 @@ class NakedAccordionItem<T> extends StatelessWidget {
         final isExpanded = state._controller.contains(value);
         final child = isExpanded ? this.child : const SizedBox.shrink();
 
-        return Semantics(
-          container: true,
+        final onTap = enabled
+            ? () {
+                if (enableHapticFeedback) {
+                  HapticFeedback.lightImpact();
+                }
+                state._controller.toggle(value);
+              }
+            : null;
+
+        return NakedSemantics.expandable(
           label: semanticLabel,
+          expanded: isExpanded,
+          onTap: onTap,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               // Use NakedInteractable for the trigger to handle all interaction states
               NakedInteractable(
                 builder: (context, states) => trigger(context, isExpanded),
-                onPressed: enabled
-                    ? () {
-                        if (enableHapticFeedback) {
-                          HapticFeedback.lightImpact();
-                        }
-                        state._controller.toggle(value);
-                      }
-                    : null,
+                onPressed: onTap,
                 enabled: enabled,
+                controller: controller,
                 focusNode: focusNode,
                 autofocus: autoFocus,
-                onHoverChange: onHoverChange,
-                onPressChange: onPressChange,
                 onFocusChange: onFocusChange,
+                onHoverChange: onHoverChange,
+                onHighlightChanged: onHighlightChanged,
               ),
               transitionBuilder != null ? transitionBuilder!(child) : child,
             ],

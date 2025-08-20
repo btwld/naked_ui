@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'utilities/naked_interactable.dart';
+import 'utilities/semantics.dart';
 
 /// Provides checkbox interaction behavior without visual styling.
 ///
@@ -14,15 +15,18 @@ class NakedCheckbox extends StatelessWidget {
     this.value = false,
     this.tristate = false,
     this.onChanged,
-    this.onHoverChange,
-    this.onPressChange,
-    this.onFocusChange,
     this.enabled = true,
     this.semanticLabel,
+    this.semanticHint,
+    this.excludeSemantics = false,
     this.cursor = SystemMouseCursors.click,
     this.enableHapticFeedback = true,
     this.focusNode,
     this.autofocus = false,
+    this.onFocusChange,
+    this.onHoverChange,
+    this.onHighlightChanged,
+    this.controller,
   }) : assert(
          (tristate || value != null),
          'Non-tristate checkbox must have a non-null value',
@@ -49,20 +53,29 @@ class NakedCheckbox extends StatelessWidget {
   /// If null, the checkbox is disabled and unresponsive.
   final ValueChanged<bool?>? onChanged;
 
+  /// Called when focus state changes.
+  final ValueChanged<bool>? onFocusChange;
+
   /// Called when hover state changes.
   final ValueChanged<bool>? onHoverChange;
 
-  /// Called when pressed state changes.
-  final ValueChanged<bool>? onPressChange;
+  /// Called when highlight (pressed) state changes.
+  final ValueChanged<bool>? onHighlightChanged;
 
-  /// Called when focus state changes.
-  final ValueChanged<bool>? onFocusChange;
+  /// Optional external controller for interaction states.
+  final WidgetStatesController? controller;
 
   /// Whether the checkbox is enabled.
   final bool enabled;
 
   /// Semantic label for accessibility.
   final String? semanticLabel;
+
+  /// Semantic hint for accessibility.
+  final String? semanticHint;
+
+  /// Whether to exclude child semantics from the semantic tree.
+  final bool excludeSemantics;
 
   /// Cursor when hovering over the checkbox.
   final MouseCursor cursor;
@@ -97,27 +110,24 @@ class NakedCheckbox extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Semantics(
-      container: true,
-      explicitChildNodes: true,
-      enabled: _isInteractive,
-      checked: value ?? false,
-      mixed: tristate ? value == null : null,
-      focusable: true,
+    return NakedSemantics.checkbox(
       label: semanticLabel,
-      // Always expose tap and focus actions for accessibility expectations
-      onTap: () {},
-      onFocus: () => true,
+      checked: value,
+      tristate: tristate,
+      onTap: _isInteractive ? _onPressed : null,
+      hint: semanticHint,
+      excludeSemantics: excludeSemantics,
       child: NakedInteractable(
         builder: (context, states) => child,
-        onPressed: _isInteractive ? _onPressed : null,
         enabled: enabled,
+        onPressed: _isInteractive ? _onPressed : null,
+        controller: controller,
         focusNode: focusNode,
         autofocus: autofocus,
-        mouseCursor: _mouseCursor,
-        onHoverChange: onHoverChange,
-        onPressChange: onPressChange,
         onFocusChange: onFocusChange,
+        onHoverChange: onHoverChange,
+        onHighlightChanged: onHighlightChanged,
+        mouseCursor: _mouseCursor,
         excludeFromSemantics: false,
       ),
     );

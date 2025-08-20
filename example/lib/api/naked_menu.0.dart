@@ -114,7 +114,7 @@ class _ItemContentState extends State<ItemContent> {
   Widget build(BuildContext context) {
     return NakedMenuItem(
       onPressed: widget.onPressed,
-      onHoverChange: (isHovered) => setState(() => _isHovered = isHovered),
+      onHoverChange: (hovered) => setState(() => _isHovered = hovered),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.all(8.0),

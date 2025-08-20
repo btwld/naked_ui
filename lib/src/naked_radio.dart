@@ -1,8 +1,8 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'utilities/naked_interactable.dart';
+import 'utilities/semantics.dart';
 
 /// Manages single selection across multiple radio buttons.
 ///
@@ -162,15 +162,19 @@ class NakedRadio<T> extends StatefulWidget {
     super.key,
     required this.child,
     required this.value,
-    this.onHoverChange,
-    this.onPressChange,
     this.onSelectChange,
-    this.onFocusChange,
     this.enabled = true,
+    this.semanticLabel,
+    this.semanticHint,
+    this.excludeSemantics = false,
     this.cursor = SystemMouseCursors.click,
     this.enableHapticFeedback = true,
     this.focusNode,
     this.autofocus = false,
+    this.onFocusChange,
+    this.onHoverChange,
+    this.onHighlightChanged,
+    this.controller,
   });
 
   /// Child widget that represents the radio button visually.
@@ -181,24 +185,34 @@ class NakedRadio<T> extends StatefulWidget {
   /// When matching the group's value, this button is selected.
   final T value;
 
-  /// Called when hover state changes.
-  final ValueChanged<bool>? onHoverChange;
-
-  /// Called when pressed state changes.
-  final ValueChanged<bool>? onPressChange;
-
   /// Called when select state changes.
   final ValueChanged<bool>? onSelectChange;
 
   /// Called when focus state changes.
-  ///
-  /// Selection automatically follows focus.
   final ValueChanged<bool>? onFocusChange;
+
+  /// Called when hover state changes.
+  final ValueChanged<bool>? onHoverChange;
+
+  /// Called when highlight (pressed) state changes.
+  final ValueChanged<bool>? onHighlightChanged;
+
+  /// Optional external controller for interaction states.
+  final WidgetStatesController? controller;
 
   /// Whether this radio button is enabled.
   ///
   /// When false, becomes unresponsive regardless of group state.
   final bool enabled;
+
+  /// Semantic label for accessibility.
+  final String? semanticLabel;
+
+  /// Semantic hint for accessibility.
+  final String? semanticHint;
+
+  /// Whether to exclude child semantics from the semantic tree.
+  final bool excludeSemantics;
 
   /// Cursor when hovering over the radio button.
   final MouseCursor cursor;
@@ -251,10 +265,10 @@ class _NakedRadioState<T> extends State<NakedRadio<T>> {
   }
 
   void _handleFocusChange(bool focused) {
+    widget.onFocusChange?.call(focused);
     if (focused && _group.groupValue != widget.value) {
       onChanged?.call(widget.value);
     }
-    widget.onFocusChange?.call(focused);
   }
 
   @override
@@ -288,33 +302,25 @@ class _NakedRadioState<T> extends State<NakedRadio<T>> {
   Widget build(BuildContext context) {
     final isSelected = _group.groupValue == widget.value;
 
-    final bool? accessibilitySelected;
-    switch (defaultTargetPlatform) {
-      case TargetPlatform.android:
-      case TargetPlatform.fuchsia:
-      case TargetPlatform.linux:
-      case TargetPlatform.windows:
-        accessibilitySelected = null;
-      case TargetPlatform.iOS:
-      case TargetPlatform.macOS:
-        accessibilitySelected = isSelected;
-    }
     // State change notification is handled in didChangeDependencies
 
-    return Semantics(
-      enabled: _isEnabled,
+    return NakedSemantics.radio(
+      label: widget.semanticLabel ?? '',
       checked: isSelected,
-      selected: accessibilitySelected,
+      onTap: _isEnabled ? _handlePressed : null,
+      hint: widget.semanticHint,
+      excludeSemantics: widget.excludeSemantics,
       child: NakedInteractable(
         builder: (context, states) => widget.child,
-        onPressed: _isEnabled ? _handlePressed : null,
         enabled: _isEnabled,
+        onPressed: _isEnabled ? _handlePressed : null,
+        controller: widget.controller,
         focusNode: _focusNode,
         autofocus: widget.autofocus,
-        mouseCursor: _cursor,
-        onHoverChange: widget.onHoverChange,
-        onPressChange: widget.onPressChange,
         onFocusChange: _handleFocusChange,
+        onHoverChange: widget.onHoverChange,
+        onHighlightChanged: widget.onHighlightChanged,
+        mouseCursor: _cursor,
         excludeFromSemantics: false,
       ),
     );

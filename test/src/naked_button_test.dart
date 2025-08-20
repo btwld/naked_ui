@@ -70,9 +70,9 @@ void main() {
           key: key,
           onPressed: () {},
           enabled: false,
-          onHoverChange: (value) => isHovered = value,
-          onPressChange: (value) => isPressed = value,
-          onFocusChange: (value) => isFocused = value,
+          onFocusChange: (focused) => isFocused = focused,
+          onHoverChange: (hovered) => isHovered = hovered,
+          onHighlightChanged: (pressed) => isPressed = pressed,
           child: const Text('Test Button'),
         ),
       );
@@ -121,7 +121,7 @@ void main() {
           child: NakedButton(
             key: key,
             onPressed: () {},
-            onHoverChange: (value) => isHovered = value,
+            onHoverChange: (hovered) => isHovered = hovered,
             child: const Text('Test Button'),
           ),
         ),
@@ -137,7 +137,7 @@ void main() {
       expect(isHovered, false);
     });
 
-    testWidgets('calls onPressChange on tap down/up', (
+    testWidgets('calls onHighlightChanged on tap down/up', (
       WidgetTester tester,
     ) async {
       bool isPressed = false;
@@ -146,7 +146,7 @@ void main() {
         NakedButton(
           key: key,
           onPressed: () {},
-          onPressChange: (value) => isPressed = value,
+          onHighlightChanged: (pressed) => isPressed = pressed,
           child: const Text('Test Button'),
         ),
       );
@@ -162,7 +162,7 @@ void main() {
     });
 
     testWidgets(
-      'calls onPressChange on tap cancel when gesture leaves and releases',
+      'calls onHighlightChanged on tap cancel when gesture leaves and releases',
       (tester) async {
         bool? lastPressedState;
         final key = UniqueKey();
@@ -171,7 +171,7 @@ void main() {
           NakedButton(
             key: key,
             onPressed: () {},
-            onPressChange: (value) => lastPressedState = value,
+            onHighlightChanged: (pressed) => lastPressedState = pressed,
             child: const Text('Test Button'),
           ),
         );
@@ -205,7 +205,7 @@ void main() {
         NakedButton(
           onPressed: () {},
           focusNode: focusNode,
-          onFocusChange: (value) => isFocused = value,
+          onFocusChange: (focused) => isFocused = focused,
           child: const Text('Test Button'),
         ),
       );
@@ -224,7 +224,7 @@ void main() {
             NakedButton(
               onPressed: () {},
               focusNode: focusNodeNakedButton,
-              onFocusChange: (value) => isFocused = value,
+              onFocusChange: (focused) => isFocused = focused,
               child: const Text('Test Button'),
             ),
             m.TextButton(
@@ -304,6 +304,7 @@ void main() {
           isEnabled: true,
           isFocusable: true,
           hasFocusAction: true,
+          hasTapAction: true,
         ),
       );
     });
@@ -330,6 +331,7 @@ void main() {
             isEnabled: enabled,
             isFocusable: enabled,
             hasFocusAction: enabled,
+            hasTapAction: enabled,
           ),
         );
       }
@@ -389,6 +391,7 @@ void main() {
           isEnabled: true,
           isFocusable: true,
           hasFocusAction: true,
+          hasTapAction: true,
         ),
       );
     });
@@ -464,6 +467,7 @@ void main() {
           isEnabled: true,
           isFocusable: true,
           hasFocusAction: true,
+          hasTapAction: true,
         ),
       );
     });

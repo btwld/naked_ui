@@ -97,7 +97,7 @@ void main() {
         KeyedSubtree(
           key: key,
           child: NakedInteractable(
-            onPressChange: (v) {
+            onHighlightChanged: (v) {
               if (v)
                 pressedCalledTrue = true;
               else
@@ -131,7 +131,7 @@ void main() {
           NakedInteractable(
             autofocus: true,
             onPressed: () => wasPressed = true,
-            onPressChange: (v) {
+            onHighlightChanged: (v) {
               if (v)
                 sawPressedTrue = true;
               else

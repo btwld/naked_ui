@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'utilities/naked_interactable.dart';
+import 'utilities/semantics.dart';
 
 /// Provides tab interaction behavior without visual styling.
 ///
@@ -265,15 +266,16 @@ class NakedTab extends StatefulWidget {
     super.key,
     required this.child,
     required this.tabId,
-    this.onHoverChange,
-    this.onPressChange,
-    this.onFocusChange,
     this.enabled = true,
     this.semanticLabel,
     this.cursor = SystemMouseCursors.click,
     this.enableHapticFeedback = true,
     this.focusNode,
     this.excludeSemantics = false,
+    this.onFocusChange,
+    this.onHoverChange,
+    this.onHighlightChanged,
+    this.controller,
   });
 
   final Widget child;
@@ -281,14 +283,17 @@ class NakedTab extends StatefulWidget {
   /// The unique ID for this tab.
   final String tabId;
 
+  /// Called when focus state changes.
+  final ValueChanged<bool>? onFocusChange;
+
   /// Called when hover state changes.
   final ValueChanged<bool>? onHoverChange;
 
-  /// Called when pressed state changes.
-  final ValueChanged<bool>? onPressChange;
+  /// Called when highlight (pressed) state changes.
+  final ValueChanged<bool>? onHighlightChanged;
 
-  /// Called when focus state changes.
-  final ValueChanged<bool>? onFocusChange;
+  /// Optional external controller for interaction states.
+  final WidgetStatesController? controller;
 
   /// Whether this tab is enabled.
   final bool enabled;
@@ -345,10 +350,6 @@ class _NakedTabState extends State<NakedTab> {
     });
   }
 
-  void _handleFocusChange(bool focused) {
-    widget.onFocusChange?.call(focused);
-  }
-
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
@@ -382,23 +383,21 @@ class _NakedTabState extends State<NakedTab> {
 
     assert(widget.tabId.isNotEmpty, 'tabId cannot be empty');
 
-    return Semantics(
-      container: true,
-      explicitChildNodes: true,
-      excludeSemantics: widget.excludeSemantics,
-      enabled: _isEnabled,
-      selected: isSelected,
+    return NakedSemantics.tab(
       label: widget.semanticLabel ?? 'Tab ${widget.tabId}',
+      selected: isSelected,
       onTap: _isEnabled ? _handleTap : null,
+      excludeSemantics: widget.excludeSemantics,
       child: NakedInteractable(
         builder: (context, states) => widget.child,
         onPressed: _isEnabled ? _handleTap : null,
         enabled: _isEnabled,
+        controller: widget.controller,
         focusNode: _focusNode,
         mouseCursor: _cursor,
+        onFocusChange: widget.onFocusChange,
         onHoverChange: widget.onHoverChange,
-        onPressChange: widget.onPressChange,
-        onFocusChange: _handleFocusChange,
+        onHighlightChanged: widget.onHighlightChanged,
       ),
     );
   }

@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
+import 'utilities/semantics.dart';
 import 'utilities/utilities.dart';
 
 /// Provides tooltip behavior without visual styling.
@@ -161,10 +162,9 @@ class _NakedTooltipState extends State<NakedTooltip>
 
   @override
   Widget build(BuildContext context) {
-    return Semantics(
-      container: true,
-      excludeSemantics: widget.excludeFromSemantics,
+    return NakedSemantics.tooltip(
       tooltip: widget.excludeFromSemantics ? null : widget.tooltipSemantics,
+      excludeSemantics: widget.excludeFromSemantics,
       child: ListenableBuilder(
         listenable: showNotifier,
         builder: (context, child) {

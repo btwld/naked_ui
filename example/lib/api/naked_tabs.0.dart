@@ -144,7 +144,7 @@ class _TabItemState extends State<TabItem> {
   Widget build(BuildContext context) {
     return NakedTab(
       tabId: widget.tabId,
-      onHoverChange: (isHovered) => setState(() => _isHovered = isHovered),
+      onHoverChange: (hovered) => setState(() => _isHovered = hovered),
       child: Container(
         alignment: Alignment.center,
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),

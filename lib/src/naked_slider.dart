@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import 'utilities/semantics.dart';
+
 /// Provides slider interaction behavior without visual styling.
 ///
 /// Supports discrete divisions and both horizontal and vertical orientation.
@@ -20,6 +22,7 @@ class NakedSlider extends StatefulWidget {
     this.onFocusChange,
     this.enabled = true,
     this.semanticLabel,
+    this.semanticHint,
     this.cursor = SystemMouseCursors.click,
     this.focusNode,
     this.autofocus = false,
@@ -28,6 +31,7 @@ class NakedSlider extends StatefulWidget {
     this.keyboardStep = 0.01,
     this.largeKeyboardStep = 0.1,
     this.excludeSemantics = false,
+    this.controller,
   }) : assert(min < max, 'min must be less than max');
 
   /// Child widget to display.
@@ -66,6 +70,9 @@ class NakedSlider extends StatefulWidget {
   /// Semantic label for screen readers.
   final String? semanticLabel;
 
+  /// Semantic hint for screen readers.
+  final String? semanticHint;
+
   /// Cursor when hovering over the slider.
   final MouseCursor cursor;
 
@@ -90,6 +97,9 @@ class NakedSlider extends StatefulWidget {
   /// Whether to exclude child semantics.
   final bool excludeSemantics;
 
+  /// Optional external controller for interaction states.
+  final WidgetStatesController? controller;
+
   @override
   State<NakedSlider> createState() => _NakedSliderState();
 }
@@ -100,8 +110,22 @@ class _NakedSliderState extends State<NakedSlider> {
       widget.focusNode ?? (_internalFocusNode ??= FocusNode());
   bool _isDragging = false;
 
+  WidgetStatesController? _internalController;
+  WidgetStatesController get _controller =>
+      widget.controller ?? (_internalController ??= WidgetStatesController());
+
+  bool _isHovered = false;
+  bool _isFocused = false;
+
   Offset? _dragStartPosition;
   double? _dragStartValue;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller.addListener(_onControllerChange);
+    _updateStates();
+  }
 
   void _callOnChangeIfNeeded(double value) {
     if (value != widget.value) {
@@ -130,6 +154,7 @@ class _NakedSliderState extends State<NakedSlider> {
       _isDragging = true;
       _dragStartPosition = details.globalPosition;
       _dragStartValue = widget.value;
+      _updateStates();
     });
 
     widget.onDragChange?.call(true);
@@ -171,6 +196,7 @@ class _NakedSliderState extends State<NakedSlider> {
       _isDragging = false;
       _dragStartPosition = null;
       _dragStartValue = null;
+      _updateStates();
     });
 
     widget.onDragChange?.call(false);
@@ -184,14 +210,101 @@ class _NakedSliderState extends State<NakedSlider> {
     return isShiftPressed ? widget.largeKeyboardStep : widget.keyboardStep;
   }
 
+  void _onControllerChange() {
+    if (mounted) {
+      // Rebuild to reflect controller state changes from external controller
+      setState(() {});
+    }
+  }
+
+  void _updateStates() {
+    final states = <WidgetState>{
+      if (!widget.enabled) WidgetState.disabled,
+      if (_isHovered) WidgetState.hovered,
+      if (_isFocused) WidgetState.focused,
+      if (_isDragging) WidgetState.pressed,
+    };
+
+    _controller.value = states;
+  }
+
+  Widget _buildSliderInteractable() {
+    return FocusableActionDetector(
+      enabled: _isEnabled,
+      focusNode: _focusNode,
+      autofocus: widget.autofocus,
+      descendantsAreTraversable: false,
+      shortcuts: _shortcuts,
+      actions: _actions,
+      onShowHoverHighlight: (value) {
+        setState(() {
+          _isHovered = value;
+          _updateStates();
+        });
+        widget.onHoverChange?.call(value);
+      },
+      onFocusChange: (value) {
+        setState(() {
+          _isFocused = value;
+          _updateStates();
+        });
+        widget.onFocusChange?.call(value);
+      },
+      mouseCursor: _cursor,
+      child: GestureDetector(
+        onVerticalDragStart: widget.direction == Axis.vertical && _isEnabled
+            ? _handleDragStart
+            : null,
+        onVerticalDragUpdate: widget.direction == Axis.vertical && _isEnabled
+            ? _handleDragUpdate
+            : null,
+        onVerticalDragEnd: widget.direction == Axis.vertical && _isEnabled
+            ? _handleDragEnd
+            : null,
+        onHorizontalDragStart: widget.direction == Axis.horizontal && _isEnabled
+            ? _handleDragStart
+            : null,
+        onHorizontalDragUpdate:
+            widget.direction == Axis.horizontal && _isEnabled
+            ? _handleDragUpdate
+            : null,
+        onHorizontalDragEnd: widget.direction == Axis.horizontal && _isEnabled
+            ? _handleDragEnd
+            : null,
+        behavior: HitTestBehavior.opaque,
+        child: widget.child,
+      ),
+    );
+  }
+
+  @override
+  void didUpdateWidget(NakedSlider oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.controller != oldWidget.controller) {
+      oldWidget.controller?.removeListener(_onControllerChange);
+      if (widget.controller != null) {
+        _internalController?.dispose();
+        _internalController = null;
+      } else {
+        _internalController ??= WidgetStatesController();
+      }
+      _controller.addListener(_onControllerChange);
+    }
+    _updateStates();
+  }
+
   @override
   void dispose() {
+    _controller.removeListener(_onControllerChange);
+    _internalController?.dispose();
     _internalFocusNode?.dispose();
     super.dispose();
   }
 
   bool get _isEnabled => widget.enabled && widget.onChanged != null;
-  MouseCursor get _cursor => _isEnabled ? widget.cursor : SystemMouseCursors.forbidden;
+
+  MouseCursor get _cursor =>
+      _isEnabled ? widget.cursor : SystemMouseCursors.forbidden;
 
   Map<ShortcutActivator, Intent> get _shortcuts {
     final bool isRTL = Directionality.of(context) == TextDirection.rtl;
@@ -265,51 +378,31 @@ class _NakedSliderState extends State<NakedSlider> {
     final double increasedValue = _normalizeValue(widget.value + step);
     final double decreasedValue = _normalizeValue(widget.value - step);
 
-    return Semantics(
-      excludeSemantics: widget.excludeSemantics,
-      enabled: _isEnabled,
-      slider: true,
-      label: widget.semanticLabel,
+    if (widget.excludeSemantics) {
+      // If excluding semantics, use original Semantics widget
+      return Semantics(
+        excludeSemantics: true,
+        child: _buildSliderInteractable(),
+      );
+    }
+
+    return NakedSemantics.slider(
+      label: widget.semanticLabel ?? '',
       value: '${percentage.round()}%',
+      onIncrease: _isEnabled
+          ? () => _callOnChangeIfNeeded(increasedValue)
+          : null,
+      onDecrease: _isEnabled
+          ? () => _callOnChangeIfNeeded(decreasedValue)
+          : null,
       increasedValue:
           '${((increasedValue - widget.min) / (widget.max - widget.min) * 100).round()}%',
       decreasedValue:
           '${((decreasedValue - widget.min) / (widget.max - widget.min) * 100).round()}%',
-      child: FocusableActionDetector(
-        enabled: _isEnabled,
-        focusNode: _focusNode,
-        autofocus: widget.autofocus,
-        descendantsAreTraversable: false,
-        shortcuts: _shortcuts,
-        actions: _actions,
-        onShowHoverHighlight: widget.onHoverChange,
-        onFocusChange: widget.onFocusChange,
-        mouseCursor: _cursor,
-        child: GestureDetector(
-          onVerticalDragStart: widget.direction == Axis.vertical && _isEnabled
-              ? _handleDragStart
-              : null,
-          onVerticalDragUpdate: widget.direction == Axis.vertical && _isEnabled
-              ? _handleDragUpdate
-              : null,
-          onVerticalDragEnd: widget.direction == Axis.vertical && _isEnabled
-              ? _handleDragEnd
-              : null,
-          onHorizontalDragStart:
-              widget.direction == Axis.horizontal && _isEnabled
-              ? _handleDragStart
-              : null,
-          onHorizontalDragUpdate:
-              widget.direction == Axis.horizontal && _isEnabled
-              ? _handleDragUpdate
-              : null,
-          onHorizontalDragEnd: widget.direction == Axis.horizontal && _isEnabled
-              ? _handleDragEnd
-              : null,
-          behavior: HitTestBehavior.opaque,
-          child: widget.child,
-        ),
-      ),
+      hint: widget.semanticHint,
+      excludeSemantics:
+          true, // Always exclude for slider since we handle it manually
+      child: _buildSliderInteractable(),
     );
   }
 }

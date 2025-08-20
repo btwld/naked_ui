@@ -381,28 +381,32 @@ class NakedSelectTrigger extends StatelessWidget {
   const NakedSelectTrigger({
     super.key,
     required this.child,
-    this.onHoverChange,
-    this.onPressChange,
-    this.onFocusChange,
     this.semanticLabel,
     this.cursor = SystemMouseCursors.click,
     this.enableHapticFeedback = true,
     this.focusNode,
     this.autofocus = false,
+    this.onFocusChange,
+    this.onHoverChange,
+    this.onHighlightChanged,
+    this.controller,
   });
 
   /// The child widget to display.
   /// This widget will be wrapped with interaction handlers.
   final Widget child;
 
-  /// Called when the hover state changes.
+  /// Called when focus state changes.
+  final ValueChanged<bool>? onFocusChange;
+
+  /// Called when hover state changes.
   final ValueChanged<bool>? onHoverChange;
 
-  /// Called when the pressed state changes.
-  final ValueChanged<bool>? onPressChange;
+  /// Called when highlight (pressed) state changes.
+  final ValueChanged<bool>? onHighlightChanged;
 
-  /// Called when the focus state changes.
-  final ValueChanged<bool>? onFocusChange;
+  /// Optional external controller for interaction states.
+  final WidgetStatesController? controller;
 
   /// Semantic label for accessibility.
   /// Used by screen readers to identify the trigger.
@@ -440,9 +444,6 @@ class NakedSelectTrigger extends StatelessWidget {
 
     return NakedButton(
       onPressed: handleTap,
-      onHoverChange: onHoverChange,
-      onPressChange: onPressChange,
-      onFocusChange: onFocusChange,
       enabled: state?.isEnabled ?? true,
       isSemanticButton: true,
       semanticLabel: semanticLabel,
@@ -450,6 +451,10 @@ class NakedSelectTrigger extends StatelessWidget {
       enableHapticFeedback: enableHapticFeedback,
       focusNode: focusNode,
       autofocus: autofocus,
+      onFocusChange: onFocusChange,
+      onHoverChange: onHoverChange,
+      onHighlightChanged: onHighlightChanged,
+      controller: controller,
       child: child,
     );
   }
@@ -484,9 +489,6 @@ class NakedSelectItem<T> extends StatefulWidget {
     super.key,
     required this.child,
     required this.value,
-    this.onHoverChange,
-    this.onPressChange,
-    this.onFocusChange,
     this.onSelectChange,
     this.enabled = true,
     this.semanticLabel,
@@ -495,6 +497,10 @@ class NakedSelectItem<T> extends StatefulWidget {
     this.focusNode,
     this.autofocus = false,
     this.excludeSemantics = false,
+    this.onFocusChange,
+    this.onHoverChange,
+    this.onHighlightChanged,
+    this.controller,
   });
 
   /// The child widget to display.
@@ -505,17 +511,20 @@ class NakedSelectItem<T> extends StatefulWidget {
   /// This value will be passed to the select's onChange callback when selected.
   final T value;
 
-  /// Called when the hover state changes.
-  final ValueChanged<bool>? onHoverChange;
-
-  /// Called when the pressed state changes.
-  final ValueChanged<bool>? onPressChange;
-
-  /// Called when the focus state changes.
-  final ValueChanged<bool>? onFocusChange;
-
   /// Called when the select state changes.
   final ValueChanged<bool>? onSelectChange;
+
+  /// Called when focus state changes.
+  final ValueChanged<bool>? onFocusChange;
+
+  /// Called when hover state changes.
+  final ValueChanged<bool>? onHoverChange;
+
+  /// Called when highlight (pressed) state changes.
+  final ValueChanged<bool>? onHighlightChanged;
+
+  /// Optional external controller for interaction states.
+  final WidgetStatesController? controller;
 
   /// Whether this item is enabled and can be selected.
   /// When false, all interaction is disabled.
@@ -644,9 +653,6 @@ class _NakedSelectItemState<T> extends State<NakedSelectItem<T>> {
       selected: isSelected,
       child: NakedButton(
         onPressed: handleSelect,
-        onHoverChange: widget.onHoverChange,
-        onPressChange: widget.onPressChange,
-        onFocusChange: widget.onFocusChange,
         enabled: isEffectivelyEnabled,
         isSemanticButton: true,
         semanticLabel: widget.semanticLabel ?? widget.value.toString(),
@@ -654,6 +660,10 @@ class _NakedSelectItemState<T> extends State<NakedSelectItem<T>> {
         enableHapticFeedback: widget.enableHapticFeedback,
         focusNode: _focusNode,
         autofocus: widget.autofocus,
+        onFocusChange: widget.onFocusChange,
+        onHoverChange: widget.onHoverChange,
+        onHighlightChanged: widget.onHighlightChanged,
+        controller: widget.controller,
         child: Semantics(
           label: widget.semanticLabel ?? widget.value.toString(),
           child: widget.child,

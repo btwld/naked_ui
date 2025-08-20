@@ -83,9 +83,9 @@ void main() {
           value: false,
           onChanged: (_) {},
           enabled: false,
-          onHoverChange: (value) => isHovered = value,
-          onPressChange: (value) => isPressed = value,
-          onFocusChange: (value) => isFocused = value,
+          onFocusChange: (focused) => isFocused = focused,
+          onHoverChange: (hovered) => isHovered = hovered,
+          onHighlightChanged: (pressed) => isPressed = pressed,
           child: const Text('Checkbox Label'),
         ),
       );
@@ -133,7 +133,7 @@ void main() {
           child: NakedCheckbox(
             value: false,
             onChanged: (_) {},
-            onHoverChange: (value) => isHovered = value,
+            onHoverChange: (hovered) => isHovered = hovered,
             child: Text('Checkbox Label', key: textKey),
           ),
         ),
@@ -156,7 +156,7 @@ void main() {
       expect(isHovered, isFalse);
     });
 
-    testWidgets('calls onPressChange on tap down/up', (
+    testWidgets('calls onHighlightChanged on tap down/up', (
       WidgetTester tester,
     ) async {
       bool isPressed = false;
@@ -164,7 +164,7 @@ void main() {
         NakedCheckbox(
           value: false,
           onChanged: (_) {},
-          onPressChange: (value) => isPressed = value,
+          onHighlightChanged: (pressed) => isPressed = pressed,
           child: const Text('Checkbox Label'),
         ),
       );
@@ -179,7 +179,7 @@ void main() {
     });
 
     testWidgets(
-      'calls onPressChange on tap cancel when gesture leaves and releases',
+      'calls onHighlightChanged on tap cancel when gesture leaves and releases',
       (tester) async {
         bool? lastPressedState;
         final key = UniqueKey();
@@ -189,7 +189,7 @@ void main() {
             key: key,
             value: false,
             onChanged: (_) {},
-            onPressChange: (value) => lastPressedState = value,
+            onHighlightChanged: (pressed) => lastPressedState = pressed,
             child: const Text('Checkbox Label'),
           ),
         );
@@ -222,7 +222,7 @@ void main() {
           value: false,
           onChanged: (_) {},
           focusNode: focusNode,
-          onFocusChange: (value) => isFocused = value,
+          onFocusChange: (focused) => isFocused = focused,
           child: const Text('Checkbox Label'),
         ),
       );
@@ -242,7 +242,7 @@ void main() {
               value: false,
               onChanged: (_) {},
               focusNode: focusNodeCheckbox,
-              onFocusChange: (value) => isFocused = value,
+              onFocusChange: (focused) => isFocused = focused,
               child: const Text('Checkbox Label'),
             ),
             m.TextButton(
@@ -282,6 +282,9 @@ void main() {
         ),
       );
 
+      // Give time for autofocus to take effect
+      await tester.pump();
+      
       expect(isChecked, false);
 
       await tester.sendKeyEvent(LogicalKeyboardKey.space);
@@ -292,14 +295,19 @@ void main() {
 
     testWidgets('toggles with Enter key', (WidgetTester tester) async {
       bool isChecked = false;
+      final focusNode = FocusNode();
       await tester.pumpMaterialWidget(
         NakedCheckbox(
           value: isChecked,
           onChanged: (value) => isChecked = value!,
-          focusNode: FocusNode()..requestFocus(),
+          focusNode: focusNode,
+          autofocus: true,
           child: const Text('Checkbox Label'),
         ),
       );
+      
+      // Give time for autofocus to take effect
+      await tester.pump();
 
       await tester.sendKeyEvent(LogicalKeyboardKey.enter);
       await tester.pump();
@@ -453,9 +461,9 @@ void main() {
             hasCheckedState: true,
             hasEnabledState: true,
             isEnabled: enabled,
-            isFocusable: true,
-            hasTapAction: true,
-            hasFocusAction: true,
+            isFocusable: enabled,
+            hasTapAction: enabled,
+            hasFocusAction: enabled,
           ),
         );
       }

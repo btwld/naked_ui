@@ -244,7 +244,7 @@ void main() {
                       NakedTab(
                         key: key,
                         tabId: 'tab1',
-                        onHoverChange: (value) => isHovered = value,
+                        onHoverChange: (hovered) => isHovered = hovered,
                         child: const Text('Tab 1'),
                       ),
                     ],
@@ -267,7 +267,7 @@ void main() {
       expect(isHovered, false);
     });
 
-    testWidgets('calls onPressChange on tap down/up', (
+    testWidgets('calls onHighlightChanged on tap down/up', (
       WidgetTester tester,
     ) async {
       bool isPressed = false;
@@ -281,7 +281,7 @@ void main() {
                   children: [
                     NakedTab(
                       tabId: 'tab1',
-                      onPressChange: (value) => isPressed = value,
+                      onHighlightChanged: (pressed) => isPressed = pressed,
                       child: const Text('Tab 1'),
                     ),
                   ],
@@ -319,7 +319,7 @@ void main() {
                     NakedTab(
                       tabId: 'tab1',
                       focusNode: focusNode,
-                      onFocusChange: (value) => isFocused = value,
+                      onFocusChange: (focused) => isFocused = focused,
                       child: const Text('Tab 1'),
                     ),
                   ],
