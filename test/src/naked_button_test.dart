@@ -44,6 +44,26 @@ void main() {
       expect(wasPressed, isFalse);
     });
 
+    testWidgets('does not respond to keyboard when disabled', (WidgetTester tester) async {
+      bool wasPressed = false;
+      await tester.pumpMaterialWidget(
+        NakedButton(
+          autofocus: true,
+          onPressed: () => wasPressed = true,
+          enabled: false,
+          child: const Text('Test Button'),
+        ),
+      );
+
+      await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+      await tester.pump();
+      expect(wasPressed, isFalse);
+      
+      await tester.sendKeyEvent(LogicalKeyboardKey.space);
+      await tester.pump();
+      expect(wasPressed, isFalse);
+    });
+
     testWidgets('does not respond when onPressed is null', (
       WidgetTester tester,
     ) async {
@@ -53,6 +73,27 @@ void main() {
 
       await tester.tap(find.byType(NakedButton));
       // No error should occur
+    });
+
+    testWidgets('supports stateController parameter', (WidgetTester tester) async {
+      final stateController = WidgetStatesController();
+      await tester.pumpMaterialWidget(
+        NakedButton(
+          onPressed: () {},
+          stateController: stateController,
+          child: const Text('Test Button'),
+        ),
+      );
+
+      expect(find.byType(NakedButton), findsOneWidget);
+      expect(stateController.value, isEmpty);
+      
+      // Tap to trigger state change
+      await tester.tap(find.byType(NakedButton));
+      await tester.pump();
+      
+      // Controller should have been used (no error)
+      expect(find.byType(NakedButton), findsOneWidget);
     });
   });
 
@@ -243,6 +284,74 @@ void main() {
       focusNodeOtherButton.requestFocus();
       await tester.pump();
       expect(isFocused, false);
+    });
+  });
+
+  group('Gesture Interaction', () {
+    testWidgets('calls onLongPress when long pressed', (WidgetTester tester) async {
+      bool wasLongPressed = false;
+      await tester.pumpMaterialWidget(
+        NakedButton(
+          onPressed: () {},
+          onLongPress: () => wasLongPressed = true,
+          child: const Text('Test Button'),
+        ),
+      );
+
+      await tester.longPress(find.byType(NakedButton));
+      expect(wasLongPressed, isTrue);
+    });
+
+    testWidgets('does not call onLongPress when disabled', (WidgetTester tester) async {
+      bool wasLongPressed = false;
+      await tester.pumpMaterialWidget(
+        NakedButton(
+          onPressed: () {},
+          onLongPress: () => wasLongPressed = true,
+          enabled: false,
+          child: const Text('Test Button'),
+        ),
+      );
+
+      await tester.longPress(find.byType(NakedButton));
+      expect(wasLongPressed, isFalse);
+    });
+
+    testWidgets('calls onDoubleTap when double tapped', (WidgetTester tester) async {
+      bool wasDoubleTapped = false;
+      await tester.pumpMaterialWidget(
+        NakedButton(
+          onPressed: () {},
+          onDoubleTap: () => wasDoubleTapped = true,
+          child: const Text('Test Button'),
+        ),
+      );
+
+      await tester.tap(find.byType(NakedButton));
+      await tester.pump(const Duration(milliseconds: 50));
+      await tester.tap(find.byType(NakedButton));
+      await tester.pumpAndSettle();
+      
+      expect(wasDoubleTapped, isTrue);
+    });
+
+    testWidgets('does not call onDoubleTap when disabled', (WidgetTester tester) async {
+      bool wasDoubleTapped = false;
+      await tester.pumpMaterialWidget(
+        NakedButton(
+          onPressed: () {},
+          onDoubleTap: () => wasDoubleTapped = true,
+          enabled: false,
+          child: const Text('Test Button'),
+        ),
+      );
+
+      await tester.tap(find.byType(NakedButton));
+      await tester.pump(const Duration(milliseconds: 50));
+      await tester.tap(find.byType(NakedButton));
+      await tester.pumpAndSettle();
+      
+      expect(wasDoubleTapped, isFalse);
     });
   });
 

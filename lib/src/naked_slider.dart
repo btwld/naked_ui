@@ -24,6 +24,7 @@ class NakedSlider extends StatefulWidget {
     this.semanticLabel,
     this.semanticHint,
     this.cursor = SystemMouseCursors.click,
+    this.enableHapticFeedback = true,
     this.focusNode,
     this.autofocus = false,
     this.direction = Axis.horizontal,
@@ -75,6 +76,9 @@ class NakedSlider extends StatefulWidget {
 
   /// Cursor when hovering over the slider.
   final MouseCursor cursor;
+
+  /// Whether to provide haptic feedback on keyboard navigation.
+  final bool enableHapticFeedback;
 
   /// Optional focus node to control focus behavior.
   final FocusNode? focusNode;
@@ -400,8 +404,6 @@ class _NakedSliderState extends State<NakedSlider> {
       decreasedValue:
           '${((decreasedValue - widget.min) / (widget.max - widget.min) * 100).round()}%',
       hint: widget.semanticHint,
-      excludeSemantics:
-          true, // Always exclude for slider since we handle it manually
       child: _buildSliderInteractable(),
     );
   }
@@ -444,6 +446,9 @@ class _SliderIncrementAction extends Action<_SliderIncrementIntent> {
     final step = state._calculateStep(isShiftPressed);
 
     final newValue = state._normalizeValue(state.widget.value + step);
+    if (state.widget.enableHapticFeedback && newValue != state.widget.value) {
+      HapticFeedback.selectionClick();
+    }
     state._callOnChangeIfNeeded(newValue);
   }
 }
@@ -459,6 +464,9 @@ class _SliderDecrementAction extends Action<_SliderDecrementIntent> {
     final step = state._calculateStep(isShiftPressed);
 
     final newValue = state._normalizeValue(state.widget.value - step);
+    if (state.widget.enableHapticFeedback && newValue != state.widget.value) {
+      HapticFeedback.selectionClick();
+    }
     state._callOnChangeIfNeeded(newValue);
   }
 }
@@ -470,6 +478,9 @@ class _SliderSetToMinAction extends Action<_SliderSetToMinIntent> {
 
   @override
   void invoke(_SliderSetToMinIntent intent) {
+    if (state.widget.enableHapticFeedback && state.widget.value != state.widget.min) {
+      HapticFeedback.selectionClick();
+    }
     state._callOnChangeIfNeeded(state.widget.min);
   }
 }
@@ -481,6 +492,9 @@ class _SliderSetToMaxAction extends Action<_SliderSetToMaxIntent> {
 
   @override
   void invoke(_SliderSetToMaxIntent intent) {
+    if (state.widget.enableHapticFeedback && state.widget.value != state.widget.max) {
+      HapticFeedback.selectionClick();
+    }
     state._callOnChangeIfNeeded(state.widget.max);
   }
 }

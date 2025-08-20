@@ -164,9 +164,12 @@ class NakedMenuItem extends StatelessWidget {
     this.onPressed,
     this.enabled = true,
     this.semanticLabel,
+    this.semanticHint,
+    this.excludeSemantics = false,
     this.cursor = SystemMouseCursors.click,
     this.enableHapticFeedback = true,
     this.focusNode,
+    this.autofocus = false,
     this.onFocusChange,
     this.onHoverChange,
     this.onHighlightChanged,
@@ -197,6 +200,12 @@ class NakedMenuItem extends StatelessWidget {
   /// Semantic label for screen readers.
   final String? semanticLabel;
 
+  /// Semantic hint for screen readers.
+  final String? semanticHint;
+
+  /// Whether to exclude child semantics from the semantic tree.
+  final bool excludeSemantics;
+
   /// Cursor when hovering over the item.
   final MouseCursor cursor;
 
@@ -205,6 +214,9 @@ class NakedMenuItem extends StatelessWidget {
 
   /// Optional focus node to control focus behavior.
   final FocusNode? focusNode;
+
+  /// Whether to automatically focus when created.
+  final bool autofocus;
 
   @override
   Widget build(BuildContext context) {
@@ -226,13 +238,16 @@ class NakedMenuItem extends StatelessWidget {
       enabled: enabled,
       isSemanticButton: true,
       semanticLabel: semanticLabel,
+      semanticHint: semanticHint,
+      excludeSemantics: excludeSemantics,
       cursor: cursor,
       enableHapticFeedback: enableHapticFeedback,
       focusNode: focusNode,
+      autofocus: autofocus,
       onFocusChange: onFocusChange,
       onHoverChange: onHoverChange,
       onHighlightChanged: onHighlightChanged,
-      controller: controller,
+      stateController: controller,
       child: child,
     );
   }

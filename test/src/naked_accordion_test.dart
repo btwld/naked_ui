@@ -61,7 +61,7 @@ void main() {
 
     Widget buildFocusableAccordion({
       required FocusNode focusNode,
-      required bool autoFocus,
+      required bool autofocus,
     }) {
       return NakedAccordion<String>(
         controller: NakedAccordionController<String>(),
@@ -70,7 +70,7 @@ void main() {
             value: 'item1',
             trigger: (_, _) => const Text('Trigger 1'),
             onFocusChange: (focused) => focusState = focused,
-            autoFocus: autoFocus,
+            autofocus: autofocus,
             focusNode: focusNode,
             child: const Text('Content 1'),
           ),
@@ -87,7 +87,7 @@ void main() {
     ) async {
       final focusNode = FocusNode();
       await tester.pumpMaterialWidget(
-        buildFocusableAccordion(focusNode: focusNode, autoFocus: false),
+        buildFocusableAccordion(focusNode: focusNode, autofocus: false),
       );
 
       // Focus the accordion item
@@ -110,7 +110,7 @@ void main() {
               value: 'item1',
               trigger: (_, _) => const Text('Trigger 1'),
               onFocusChange: (focused) => focusState = focused,
-              autoFocus: true,
+              autofocus: true,
               child: const Text('Content 1'),
             ),
           ],
@@ -343,12 +343,14 @@ void main() {
         children: [
           NakedAccordionItem<String>(
             value: 'item1',
-            trigger: (context, isExpanded) => Text(isExpanded ? 'Close 1' : 'Open 1'),
+            trigger: (context, isExpanded) =>
+                Text(isExpanded ? 'Close 1' : 'Open 1'),
             child: const Text('Content 1'),
           ),
           NakedAccordionItem<String>(
             value: 'item2',
-            trigger: (context, isExpanded) => Text(isExpanded ? 'Close 2' : 'Open 2'),
+            trigger: (context, isExpanded) =>
+                Text(isExpanded ? 'Close 2' : 'Open 2'),
             child: const Text('Content 2'),
           ),
         ],

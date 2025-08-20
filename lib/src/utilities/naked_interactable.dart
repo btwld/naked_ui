@@ -16,7 +16,7 @@ class NakedInteractable extends StatefulWidget {
     this.onDoubleTap,
     this.onLongPress,
     this.onSecondaryTap,
-    this.controller,
+    this.stateController,
     this.focusNode,
     this.autofocus = false,
     this.descendantsAreFocusable = true,
@@ -40,7 +40,7 @@ class NakedInteractable extends StatefulWidget {
   final VoidCallback? onDoubleTap;
   final VoidCallback? onLongPress;
   final VoidCallback? onSecondaryTap; // Focus properties
-  final WidgetStatesController? controller;
+  final WidgetStatesController? stateController;
 
   final FocusNode? focusNode;
   final bool autofocus;
@@ -60,7 +60,7 @@ class NakedInteractable extends StatefulWidget {
 }
 
 class _NakedInteractableState extends State<NakedInteractable> {
-  WidgetStatesController? _internalController;
+  WidgetStatesController? _internalStateController;
 
   void _handleTapDown(TapDownDetails details) {
     if (!canPress) return;
@@ -86,7 +86,7 @@ class _NakedInteractableState extends State<NakedInteractable> {
   }
 
   void _setPressed(bool pressed) {
-    controller.update(WidgetState.pressed, pressed);
+    stateController.update(WidgetState.pressed, pressed);
     widget.onHighlightChanged?.call(pressed);
   }
 
@@ -112,8 +112,8 @@ class _NakedInteractableState extends State<NakedInteractable> {
     };
   }
 
-  WidgetStatesController get controller =>
-      widget.controller ?? (_internalController ??= WidgetStatesController());
+  WidgetStatesController get stateController =>
+      widget.stateController ?? (_internalStateController ??= WidgetStatesController());
 
   bool get isEnabled => widget.enabled;
 
@@ -135,7 +135,7 @@ class _NakedInteractableState extends State<NakedInteractable> {
 
   @override
   void dispose() {
-    _internalController?.dispose();
+    _internalStateController?.dispose();
     super.dispose();
   }
 
@@ -164,7 +164,7 @@ class _NakedInteractableState extends State<NakedInteractable> {
         );
       },
       enabled: isEnabled,
-      controller: controller,
+      stateController: stateController,
       focusNode: widget.focusNode,
       autofocus: widget.autofocus,
       actions: _actionMap,

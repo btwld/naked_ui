@@ -454,7 +454,7 @@ class NakedSelectTrigger extends StatelessWidget {
       onFocusChange: onFocusChange,
       onHoverChange: onHoverChange,
       onHighlightChanged: onHighlightChanged,
-      controller: controller,
+      stateController: controller,
       child: child,
     );
   }
@@ -663,7 +663,7 @@ class _NakedSelectItemState<T> extends State<NakedSelectItem<T>> {
         onFocusChange: widget.onFocusChange,
         onHoverChange: widget.onHoverChange,
         onHighlightChanged: widget.onHighlightChanged,
-        controller: widget.controller,
+        stateController: widget.controller,
         child: Semantics(
           label: widget.semanticLabel ?? widget.value.toString(),
           child: widget.child,

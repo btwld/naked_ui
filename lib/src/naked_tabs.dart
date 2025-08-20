@@ -268,9 +268,11 @@ class NakedTab extends StatefulWidget {
     required this.tabId,
     this.enabled = true,
     this.semanticLabel,
+    this.semanticHint,
     this.cursor = SystemMouseCursors.click,
     this.enableHapticFeedback = true,
     this.focusNode,
+    this.autofocus = false,
     this.excludeSemantics = false,
     this.onFocusChange,
     this.onHoverChange,
@@ -301,6 +303,9 @@ class NakedTab extends StatefulWidget {
   /// Optional semantic label for accessibility.
   final String? semanticLabel;
 
+  /// Semantic hint for accessibility.
+  final String? semanticHint;
+
   /// The cursor to show when hovering over the tab.
   final MouseCursor cursor;
 
@@ -309,6 +314,9 @@ class NakedTab extends StatefulWidget {
 
   /// Optional focus node to control focus behavior.
   final FocusNode? focusNode;
+
+  /// Whether to automatically focus when created.
+  final bool autofocus;
 
   /// Whether to exclude child semantics from the semantic tree.
   final bool excludeSemantics;
@@ -387,13 +395,15 @@ class _NakedTabState extends State<NakedTab> {
       label: widget.semanticLabel ?? 'Tab ${widget.tabId}',
       selected: isSelected,
       onTap: _isEnabled ? _handleTap : null,
+      hint: widget.semanticHint,
       excludeSemantics: widget.excludeSemantics,
       child: NakedInteractable(
         builder: (context, states) => widget.child,
         onPressed: _isEnabled ? _handleTap : null,
         enabled: _isEnabled,
-        controller: widget.controller,
+        stateController: widget.controller,
         focusNode: _focusNode,
+        autofocus: widget.autofocus,
         mouseCursor: _cursor,
         onFocusChange: widget.onFocusChange,
         onHoverChange: widget.onHoverChange,

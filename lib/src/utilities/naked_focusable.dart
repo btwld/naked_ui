@@ -18,7 +18,7 @@ class NakedFocusable extends StatefulWidget {
     super.key,
     required this.builder,
     this.enabled = true,
-    this.controller,
+    this.stateController,
     this.focusNode,
     this.autofocus = false,
     this.actions,
@@ -31,7 +31,7 @@ class NakedFocusable extends StatefulWidget {
 
   final WidgetStateBuilder builder;
   final bool enabled;
-  final WidgetStatesController? controller;
+  final WidgetStatesController? stateController;
   final FocusNode? focusNode;
   final bool autofocus;
 
@@ -47,11 +47,11 @@ class NakedFocusable extends StatefulWidget {
 }
 
 class _NakedFocusableState extends State<NakedFocusable> {
-  WidgetStatesController? _internalController;
+  WidgetStatesController? _internalStateController;
   FocusNode? _internalFocusNode;
 
-  WidgetStatesController get controller =>
-      widget.controller ?? (_internalController ??= WidgetStatesController());
+  WidgetStatesController get stateController =>
+      widget.stateController ?? (_internalStateController ??= WidgetStatesController());
 
   FocusNode get focusNode =>
       widget.focusNode ?? (_internalFocusNode ??= FocusNode());
@@ -76,19 +76,25 @@ class _NakedFocusableState extends State<NakedFocusable> {
     });
   }
 
+  void _handleFocusChange(bool focused) {
+    if (!isEnabled) return;
+    stateController.update(WidgetState.focused, focused);
+    widget.onFocusChange?.call(focused);
+  }
+
   void _syncDisabledState() {
-    controller.update(WidgetState.disabled, !isEnabled);
+    stateController.update(WidgetState.disabled, !isEnabled);
   }
 
   void _handleFocusHighlight(bool value) {
     if (!isEnabled) return;
-    controller.update(WidgetState.focused, value);
+    stateController.update(WidgetState.focused, value);
     widget.onFocusChange?.call(value);
   }
 
   void _handleHoverHighlight(bool value) {
     if (!isEnabled) return;
-    controller.update(WidgetState.hovered, value);
+    stateController.update(WidgetState.hovered, value);
     widget.onHoverChange?.call(value);
   }
 
@@ -102,7 +108,7 @@ class _NakedFocusableState extends State<NakedFocusable> {
 
   @override
   void dispose() {
-    _internalController?.dispose();
+    _internalStateController?.dispose();
     _internalFocusNode?.dispose();
     super.dispose();
   }
@@ -111,18 +117,19 @@ class _NakedFocusableState extends State<NakedFocusable> {
   Widget build(BuildContext context) {
     // ListenableBuilder handles rebuild optimization automatically
     return ListenableBuilder(
-      listenable: controller,
+      listenable: stateController,
       builder: (context, _) => FocusableActionDetector(
         enabled: isEnabled,
         focusNode: focusNode,
         autofocus: canAutofocus,
-        actions: widget.actions ?? const {},
         descendantsAreFocusable: widget.descendantsAreFocusable,
         descendantsAreTraversable: widget.descendantsAreTraversable,
+        actions: widget.actions ?? const {},
         onShowFocusHighlight: _handleFocusHighlight,
         onShowHoverHighlight: _handleHoverHighlight,
+        onFocusChange: _handleFocusChange,
         mouseCursor: effectiveCursor,
-        child: widget.builder(context, controller.value),
+        child: widget.builder(context, stateController.value),
       ),
     );
   }

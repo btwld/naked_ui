@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -472,10 +471,10 @@ void main() {
           isSlider: true,
           hasEnabledState: true,
           isEnabled: true,
+          hasIncreaseAction: true,
+          hasDecreaseAction: true,
           isFocusable: true,
           hasFocusAction: true,
-          hasScrollLeftAction: true,
-          hasScrollRightAction: true,
         ),
       );
     });
@@ -511,21 +510,21 @@ void main() {
 
         expect(
           tester.getSemantics(find.byKey(testKey)),
-          enabled ? matchesSemantics(
-            isSlider: true,
-            hasEnabledState: true,
-            isEnabled: true,
-            isFocusable: true,
-            hasFocusAction: true,
-            hasScrollLeftAction: true,
-            hasScrollRightAction: true,
-          ) : matchesSemantics(
-            isSlider: true,
-            hasEnabledState: true,
-            isEnabled: false,
-            isFocusable: true,
-            hasFocusAction: true,
-          ),
+          enabled
+              ? matchesSemantics(
+                  isSlider: true,
+                  hasEnabledState: true,
+                  isEnabled: true,
+                  hasIncreaseAction: true,
+                  hasDecreaseAction: true,
+                  isFocusable: true,
+                  hasFocusAction: true,
+                )
+              : matchesSemantics(
+                  isSlider: true,
+                  hasEnabledState: true,
+                  isEnabled: false,
+                ),
         );
       }
     });

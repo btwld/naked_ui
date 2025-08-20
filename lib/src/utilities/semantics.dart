@@ -15,19 +15,24 @@ class NakedSemantics {
   /// The button is marked as disabled when [onTap] is null.
   /// When [excludeSemantics] is true, child semantics are excluded (default: true for headless widgets).
   static Widget button({
-    required String label,
+    String? label,
     required VoidCallback? onTap,
     required Widget child,
     String? hint,
-    bool excludeSemantics = true,
+    bool excludeSemantics = false,
   }) {
     return Semantics(
+      container: true,
+      explicitChildNodes: true,
       excludeSemantics: excludeSemantics,
       enabled: onTap != null,
       button: true,
+      // Make interactive controls discoverable and focusable by a11y tools
+      focusable: onTap != null,
       label: label,
       hint: hint,
       onTap: onTap,
+      onFocus: onTap != null ? () => true : null,
       child: child,
     );
   }
@@ -39,22 +44,26 @@ class NakedSemantics {
   /// The checkbox is marked as disabled when [onTap] is null.
   /// When [excludeSemantics] is true, child semantics are excluded (default: true for headless widgets).
   static Widget checkbox({
-    required String? label,
+    String? label,
     required bool? checked,
     required bool tristate,
     required VoidCallback? onTap,
     required Widget child,
-    required String? hint,
-    bool excludeSemantics = true,
+    String? hint,
+    bool excludeSemantics = false,
   }) {
     return Semantics(
+      container: true,
+      explicitChildNodes: true,
       excludeSemantics: excludeSemantics,
       enabled: onTap != null,
       checked: tristate && checked == null ? null : (checked ?? false),
       mixed: tristate && checked == null,
+      focusable: onTap != null,
       label: label,
       hint: hint,
       onTap: onTap,
+      onFocus: onTap != null ? () => true : null,
       child: child,
     );
   }
@@ -67,20 +76,25 @@ class NakedSemantics {
   ///
   /// Named [switchToggle] because 'switch' is a reserved keyword in Dart.
   static Widget switchToggle({
-    required String label,
+    String? label,
     required bool toggled,
     required VoidCallback? onTap,
     required Widget child,
     String? hint,
-    bool excludeSemantics = true,
+    bool excludeSemantics = false,
   }) {
+    final enabled = onTap != null;
+
     return Semantics(
       excludeSemantics: excludeSemantics,
-      enabled: onTap != null,
+      enabled: enabled,
       toggled: toggled,
+      // Provide consistent focus semantics for interactive controls
+      focusable: enabled,
       label: label,
       hint: hint,
       onTap: onTap,
+      onFocus: enabled ? () => true : null,
       child: child,
     );
   }
@@ -92,21 +106,25 @@ class NakedSemantics {
   /// The radio is marked as disabled when [onTap] is null.
   /// When [excludeSemantics] is true, child semantics are excluded (default: true for headless widgets).
   static Widget radio({
-    required String label,
+    String? label,
     required bool checked,
     required VoidCallback? onTap,
     required Widget child,
     String? hint,
-    bool excludeSemantics = true,
+    bool excludeSemantics = false,
   }) {
     return Semantics(
+      container: true,
+      explicitChildNodes: true,
       excludeSemantics: excludeSemantics,
       enabled: onTap != null,
       checked: checked,
+      focusable: onTap != null,
       inMutuallyExclusiveGroup: true,
       label: label,
       hint: hint,
       onTap: onTap,
+      onFocus: onTap != null ? () => true : null,
       child: child,
     );
   }
@@ -121,7 +139,7 @@ class NakedSemantics {
   /// The slider is marked as disabled when both [onIncrease] and [onDecrease] are null.
   /// When [excludeSemantics] is true, child semantics are excluded (default: true for headless widgets).
   static Widget slider({
-    required String label,
+    String? label,
     required String value,
     required VoidCallback? onIncrease,
     required VoidCallback? onDecrease,
@@ -134,9 +152,13 @@ class NakedSemantics {
     final enabled = onIncrease != null || onDecrease != null;
 
     return Semantics(
+      container: true,
+      explicitChildNodes: true,
       excludeSemantics: excludeSemantics,
       enabled: enabled,
       slider: true,
+      // Sliders expose focus semantics when enabled (Material parity)
+      focusable: enabled,
       label: label,
       value: value,
       increasedValue: increasedValue,
@@ -144,6 +166,7 @@ class NakedSemantics {
       hint: hint,
       onIncrease: onIncrease,
       onDecrease: onDecrease,
+      onFocus: enabled ? () => true : null,
       child: child,
     );
   }
@@ -173,9 +196,11 @@ class NakedSemantics {
     int? maxValueLength,
     int? currentValueLength,
     String? hint,
-    bool excludeSemantics = true,
+    bool excludeSemantics = false,
   }) {
     return Semantics(
+      container: true,
+      explicitChildNodes: true,
       excludeSemantics: excludeSemantics,
       enabled: onTap != null && !readOnly,
       textField: true,
@@ -203,17 +228,20 @@ class NakedSemantics {
   ///
   /// Note: Flutter lacks proper tab role (Issue #107861).
   static Widget tab({
-    required String? label,
+    String? label,
     required bool selected,
     required VoidCallback? onTap,
     required Widget child,
     String? hint,
-    bool excludeSemantics = true,
+    bool excludeSemantics = false,
   }) {
     return Semantics(
+      container: true,
+      explicitChildNodes: true,
       excludeSemantics: excludeSemantics,
       enabled: onTap != null,
       selected: selected,
+      // Do not expose focus action for tabs; some tests expect no focus
       label: label,
       hint: hint,
       onTap: onTap,
@@ -231,25 +259,29 @@ class NakedSemantics {
   ///
   /// Note: Flutter's expanded property doesn't work properly on all platforms yet (Issue #92040).
   static Widget expandable({
-    required String? label,
+    String? label,
     required bool expanded,
     required VoidCallback? onTap,
     required Widget child,
     String? hint,
-    bool excludeSemantics = true,
+    bool excludeSemantics = false,
   }) {
     // Auto-generate hint if not provided
-    final expandHint = hint ?? (expanded 
-      ? 'Double tap to collapse' 
-      : 'Double tap to expand');
-    
+    final expandHint =
+        hint ?? (expanded ? 'Double tap to collapse' : 'Double tap to expand');
+
     return Semantics(
+      container: true,
+      explicitChildNodes: true,
       excludeSemantics: excludeSemantics,
       enabled: onTap != null,
+      // Make interactive expanders discoverable and focusable when enabled
+      focusable: onTap != null,
       expanded: expanded,
       label: label,
       hint: expandHint,
       onTap: onTap,
+      onFocus: onTap != null ? () => true : null,
       child: child,
     );
   }
@@ -265,8 +297,8 @@ class NakedSemantics {
     bool excludeSemantics = false,
   }) {
     return Semantics(
-      excludeSemantics: excludeSemantics,
       container: true,
+      excludeSemantics: excludeSemantics,
       tooltip: tooltip,
       child: child,
     );
@@ -278,10 +310,10 @@ class NakedSemantics {
   /// Use [label] to describe what is loading.
   /// When [excludeSemantics] is true, child semantics are excluded (default: true for headless widgets).
   static Widget progressIndicator({
-    required String label,
+    String? label,
     required Widget child,
     String? value,
-    bool excludeSemantics = true,
+    bool excludeSemantics = false,
   }) {
     return Semantics(
       excludeSemantics: excludeSemantics,

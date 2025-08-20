@@ -221,9 +221,12 @@ class NakedAccordionItem<T> extends StatelessWidget {
     required this.child,
     this.transitionBuilder,
     this.semanticLabel,
+    this.semanticHint,
+    this.excludeSemantics = false,
     this.enabled = true,
+    this.cursor = SystemMouseCursors.click,
     this.enableHapticFeedback = true,
-    this.autoFocus = false,
+    this.autofocus = false,
     this.focusNode,
     this.onFocusChange,
     this.onHoverChange,
@@ -252,6 +255,12 @@ class NakedAccordionItem<T> extends StatelessWidget {
   /// Semantic label for screen readers.
   final String? semanticLabel;
 
+  /// Semantic hint for screen readers.
+  final String? semanticHint;
+
+  /// Whether to exclude child semantics from the semantic tree.
+  final bool excludeSemantics;
+
   /// Called when focus state changes.
   final ValueChanged<bool>? onFocusChange;
 
@@ -267,11 +276,14 @@ class NakedAccordionItem<T> extends StatelessWidget {
   /// Whether the accordion item is enabled.
   final bool enabled;
 
+  /// Cursor when hovering over the accordion trigger.
+  final MouseCursor cursor;
+
   /// Whether to provide haptic feedback on interaction.
   final bool enableHapticFeedback;
 
   /// Whether the item should be focused when the accordion is opened.
-  final bool autoFocus;
+  final bool autofocus;
 
   /// Focus node for the item.
   final FocusNode? focusNode;
@@ -299,6 +311,8 @@ class NakedAccordionItem<T> extends StatelessWidget {
           label: semanticLabel,
           expanded: isExpanded,
           onTap: onTap,
+          hint: semanticHint,
+          excludeSemantics: excludeSemantics,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -307,9 +321,10 @@ class NakedAccordionItem<T> extends StatelessWidget {
                 builder: (context, states) => trigger(context, isExpanded),
                 onPressed: onTap,
                 enabled: enabled,
-                controller: controller,
+                stateController: controller,
                 focusNode: focusNode,
-                autofocus: autoFocus,
+                autofocus: autofocus,
+                mouseCursor: cursor,
                 onFocusChange: onFocusChange,
                 onHoverChange: onHoverChange,
                 onHighlightChanged: onHighlightChanged,

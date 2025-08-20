@@ -328,6 +328,7 @@ void main() {
           isEnabled: true,
           isFocusable: true,
           hasFocusAction: true,
+          hasTapAction: true,
         ),
       );
     });
@@ -370,6 +371,7 @@ void main() {
             isEnabled: enabled,
             isFocusable: enabled,
             hasFocusAction: enabled,
+            hasTapAction: enabled,
           ),
         );
 
@@ -761,7 +763,7 @@ void main() {
       expect(appleSemantics.label, contains('Apple fruit'));
 
       final bananaSemantics = tester.getSemantics(find.text('Banana'));
-      expect(bananaSemantics.label, contains('Banana'));
+      expect(bananaSemantics.label, contains('banana'));
     });
   });
 }

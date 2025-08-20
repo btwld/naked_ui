@@ -314,7 +314,7 @@ class _NakedRadioState<T> extends State<NakedRadio<T>> {
         builder: (context, states) => widget.child,
         enabled: _isEnabled,
         onPressed: _isEnabled ? _handlePressed : null,
-        controller: widget.controller,
+        stateController: widget.controller,
         focusNode: _focusNode,
         autofocus: widget.autofocus,
         onFocusChange: _handleFocusChange,

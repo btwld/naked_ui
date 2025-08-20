@@ -121,7 +121,7 @@ class NakedCheckbox extends StatelessWidget {
         builder: (context, states) => child,
         enabled: enabled,
         onPressed: _isInteractive ? _onPressed : null,
-        controller: controller,
+        stateController: controller,
         focusNode: focusNode,
         autofocus: autofocus,
         onFocusChange: onFocusChange,

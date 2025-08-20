@@ -13,6 +13,8 @@ class NakedButton extends StatelessWidget {
     super.key,
     required this.child,
     this.onPressed,
+    this.onLongPress,
+    this.onDoubleTap,
     this.enabled = true,
     this.isSemanticButton = true,
     this.semanticLabel,
@@ -25,7 +27,7 @@ class NakedButton extends StatelessWidget {
     this.onFocusChange,
     this.onHoverChange,
     this.onHighlightChanged,
-    this.controller,
+    this.stateController,
   });
 
   /// Child widget to display.
@@ -33,6 +35,12 @@ class NakedButton extends StatelessWidget {
 
   /// Called when the button is tapped or activated via keyboard.
   final VoidCallback? onPressed;
+
+  /// Called when the button is long pressed.
+  final VoidCallback? onLongPress;
+
+  /// Called when the button is double tapped.
+  final VoidCallback? onDoubleTap;
 
   /// Called when focus state changes.
   final ValueChanged<bool>? onFocusChange;
@@ -44,7 +52,7 @@ class NakedButton extends StatelessWidget {
   final ValueChanged<bool>? onHighlightChanged;
 
   /// Optional external controller for interaction states.
-  final WidgetStatesController? controller;
+  final WidgetStatesController? stateController;
 
   /// Whether the button is enabled.
   final bool enabled;
@@ -102,15 +110,17 @@ class NakedButton extends StatelessWidget {
         onFocus: _effectiveEnabled ? () => true : null,
         child: NakedInteractable(
           builder: (context, states) => child,
-          onPressed: onPressed == null ? null : _onPressed,
           enabled: _effectiveEnabled,
-          controller: controller,
+          onPressed: onPressed == null ? null : _onPressed,
+          onDoubleTap: onDoubleTap,
+          onLongPress: onLongPress,
+          stateController: stateController,
           focusNode: focusNode,
           autofocus: autofocus,
-          mouseCursor: _mouseCursor,
           onFocusChange: onFocusChange,
           onHoverChange: onHoverChange,
           onHighlightChanged: onHighlightChanged,
+          mouseCursor: _mouseCursor,
         ),
       );
     }
@@ -122,15 +132,17 @@ class NakedButton extends StatelessWidget {
       excludeSemantics: excludeSemantics,
       child: NakedInteractable(
         builder: (context, states) => child,
-        onPressed: onPressed == null ? null : _onPressed,
         enabled: _effectiveEnabled,
-        controller: controller,
+        onPressed: onPressed == null ? null : _onPressed,
+        onDoubleTap: onDoubleTap,
+        onLongPress: onLongPress,
+        stateController: stateController,
         focusNode: focusNode,
         autofocus: autofocus,
-        mouseCursor: _mouseCursor,
         onFocusChange: onFocusChange,
         onHoverChange: onHoverChange,
         onHighlightChanged: onHighlightChanged,
+        mouseCursor: _mouseCursor,
         excludeFromSemantics: excludeSemantics,
       ),
     );
