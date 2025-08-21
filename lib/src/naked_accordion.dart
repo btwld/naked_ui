@@ -321,7 +321,7 @@ class NakedAccordionItem<T> extends StatelessWidget {
                 builder: (context, states) => trigger(context, isExpanded),
                 onPressed: onTap,
                 enabled: enabled,
-                stateController: controller,
+                statesController: controller,
                 focusNode: focusNode,
                 autofocus: autofocus,
                 mouseCursor: cursor,

@@ -16,7 +16,7 @@ class NakedInteractable extends StatefulWidget {
     this.onDoubleTap,
     this.onLongPress,
     this.onSecondaryTap,
-    this.stateController,
+    this.statesController,
     this.focusNode,
     this.autofocus = false,
     this.descendantsAreFocusable = true,
@@ -40,7 +40,7 @@ class NakedInteractable extends StatefulWidget {
   final VoidCallback? onDoubleTap;
   final VoidCallback? onLongPress;
   final VoidCallback? onSecondaryTap; // Focus properties
-  final WidgetStatesController? stateController;
+  final WidgetStatesController? statesController;
 
   final FocusNode? focusNode;
   final bool autofocus;
@@ -113,24 +113,34 @@ class _NakedInteractableState extends State<NakedInteractable> {
   }
 
   WidgetStatesController get stateController =>
-      widget.stateController ?? (_internalStateController ??= WidgetStatesController());
+      widget.statesController ?? (_internalStateController ??= WidgetStatesController());
 
+  /// Whether the widget is enabled and can receive interactions
   bool get isEnabled => widget.enabled;
 
+  /// Whether the widget can be pressed (has onPressed and is enabled)
   bool get canPress => isEnabled && widget.onPressed != null;
 
-  MouseCursor? get effectiveCursor {
-    if (widget.mouseCursor != null) return widget.mouseCursor;
-    // Check if any gesture callback exists
-    if (isEnabled &&
-        (widget.onPressed != null ||
-            widget.onDoubleTap != null ||
-            widget.onLongPress != null ||
-            widget.onSecondaryTap != null)) {
-      return SystemMouseCursors.click;
-    }
+  /// Whether any interactive callbacks are defined
+  bool get hasInteractions => 
+      widget.onPressed != null ||
+      widget.onDoubleTap != null ||
+      widget.onLongPress != null ||
+      widget.onSecondaryTap != null;
 
-    return null;
+  /// Computes the effective mouse cursor based on widget state
+  MouseCursor get effectiveCursor {
+    // 1. Explicit cursor always takes precedence
+    if (widget.mouseCursor != null) return widget.mouseCursor!;
+    
+    // 2. Disabled state shows forbidden cursor
+    if (!isEnabled) return SystemMouseCursors.forbidden;
+    
+    // 3. Interactive elements show click cursor
+    if (hasInteractions) return SystemMouseCursors.click;
+    
+    // 4. Non-interactive elements defer to parent
+    return MouseCursor.defer;
   }
 
   @override
@@ -149,22 +159,16 @@ class _NakedInteractableState extends State<NakedInteractable> {
           onTapUp: canPress ? _handleTapUp : null,
           onTap: canPress ? _handleTap : null,
           onTapCancel: canPress ? _handleTapCancel : null,
-          onSecondaryTap: isEnabled && widget.onSecondaryTap != null
-              ? widget.onSecondaryTap
-              : null,
-          onDoubleTap: isEnabled && widget.onDoubleTap != null
-              ? widget.onDoubleTap
-              : null,
-          onLongPress: isEnabled && widget.onLongPress != null
-              ? widget.onLongPress
-              : null,
+          onSecondaryTap: isEnabled ? widget.onSecondaryTap : null,
+          onDoubleTap: isEnabled ? widget.onDoubleTap : null,
+          onLongPress: isEnabled ? widget.onLongPress : null,
           behavior: widget.behavior,
           excludeFromSemantics: widget.excludeFromSemantics,
           child: widget.builder(context, states),
         );
       },
       enabled: isEnabled,
-      stateController: stateController,
+      statesController: stateController,
       focusNode: widget.focusNode,
       autofocus: widget.autofocus,
       actions: _actionMap,

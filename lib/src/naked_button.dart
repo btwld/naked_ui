@@ -27,7 +27,7 @@ class NakedButton extends StatelessWidget {
     this.onFocusChange,
     this.onHoverChange,
     this.onHighlightChanged,
-    this.stateController,
+    this.statesController,
   });
 
   /// Child widget to display.
@@ -52,7 +52,7 @@ class NakedButton extends StatelessWidget {
   final ValueChanged<bool>? onHighlightChanged;
 
   /// Optional external controller for interaction states.
-  final WidgetStatesController? stateController;
+  final WidgetStatesController? statesController;
 
   /// Whether the button is enabled.
   final bool enabled;
@@ -97,36 +97,8 @@ class NakedButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (!isSemanticButton) {
-      // If not a semantic button, use original Semantics widget
-      return Semantics(
-        container: true,
-        explicitChildNodes: true,
-        excludeSemantics: excludeSemantics,
-        enabled: _effectiveEnabled,
-        button: false,
-        focusable: _effectiveEnabled,
-        label: semanticLabel,
-        onFocus: _effectiveEnabled ? () => true : null,
-        child: NakedInteractable(
-          builder: (context, states) => child,
-          enabled: _effectiveEnabled,
-          onPressed: onPressed == null ? null : _onPressed,
-          onDoubleTap: onDoubleTap,
-          onLongPress: onLongPress,
-          stateController: stateController,
-          focusNode: focusNode,
-          autofocus: autofocus,
-          onFocusChange: onFocusChange,
-          onHoverChange: onHoverChange,
-          onHighlightChanged: onHighlightChanged,
-          mouseCursor: _mouseCursor,
-        ),
-      );
-    }
-
     return NakedSemantics.button(
-      label: semanticLabel ?? '',
+      label: semanticLabel,
       onTap: _effectiveEnabled ? _onPressed : null,
       hint: semanticHint,
       excludeSemantics: excludeSemantics,
@@ -136,7 +108,7 @@ class NakedButton extends StatelessWidget {
         onPressed: onPressed == null ? null : _onPressed,
         onDoubleTap: onDoubleTap,
         onLongPress: onLongPress,
-        stateController: stateController,
+        statesController: statesController,
         focusNode: focusNode,
         autofocus: autofocus,
         onFocusChange: onFocusChange,

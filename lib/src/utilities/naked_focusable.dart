@@ -18,7 +18,7 @@ class NakedFocusable extends StatefulWidget {
     super.key,
     required this.builder,
     this.enabled = true,
-    this.stateController,
+    this.statesController,
     this.focusNode,
     this.autofocus = false,
     this.actions,
@@ -31,7 +31,7 @@ class NakedFocusable extends StatefulWidget {
 
   final WidgetStateBuilder builder;
   final bool enabled;
-  final WidgetStatesController? stateController;
+  final WidgetStatesController? statesController;
   final FocusNode? focusNode;
   final bool autofocus;
 
@@ -50,20 +50,29 @@ class _NakedFocusableState extends State<NakedFocusable> {
   WidgetStatesController? _internalStateController;
   FocusNode? _internalFocusNode;
 
+  /// The state controller (provided or internal)
   WidgetStatesController get stateController =>
-      widget.stateController ?? (_internalStateController ??= WidgetStatesController());
+      widget.statesController ?? (_internalStateController ??= WidgetStatesController());
 
+  /// The focus node (provided or internal)
   FocusNode get focusNode =>
       widget.focusNode ?? (_internalFocusNode ??= FocusNode());
 
+  /// Whether the widget is enabled and can receive focus/hover
   bool get isEnabled => widget.enabled;
 
+  /// Whether the widget should autofocus (only if enabled)
   bool get canAutofocus => widget.autofocus && isEnabled;
 
+  /// Computes the effective mouse cursor based on widget state
   MouseCursor get effectiveCursor {
+    // 1. Explicit cursor always takes precedence
     if (widget.mouseCursor != null) return widget.mouseCursor!;
+    
+    // 2. Disabled state shows forbidden cursor
     if (!isEnabled) return SystemMouseCursors.forbidden;
-
+    
+    // 3. Default to defer (let parent decide)
     return MouseCursor.defer;
   }
 
@@ -76,22 +85,19 @@ class _NakedFocusableState extends State<NakedFocusable> {
     });
   }
 
+  /// Updates the disabled state in the controller
+  void _syncDisabledState() {
+    stateController.update(WidgetState.disabled, !isEnabled);
+  }
+
+  /// Handles focus state changes
   void _handleFocusChange(bool focused) {
     if (!isEnabled) return;
     stateController.update(WidgetState.focused, focused);
     widget.onFocusChange?.call(focused);
   }
 
-  void _syncDisabledState() {
-    stateController.update(WidgetState.disabled, !isEnabled);
-  }
-
-  void _handleFocusHighlight(bool value) {
-    if (!isEnabled) return;
-    stateController.update(WidgetState.focused, value);
-    widget.onFocusChange?.call(value);
-  }
-
+  /// Handles hover state changes
   void _handleHoverHighlight(bool value) {
     if (!isEnabled) return;
     stateController.update(WidgetState.hovered, value);
@@ -125,7 +131,7 @@ class _NakedFocusableState extends State<NakedFocusable> {
         descendantsAreFocusable: widget.descendantsAreFocusable,
         descendantsAreTraversable: widget.descendantsAreTraversable,
         actions: widget.actions ?? const {},
-        onShowFocusHighlight: _handleFocusHighlight,
+        onShowFocusHighlight: _handleFocusChange,
         onShowHoverHighlight: _handleHoverHighlight,
         onFocusChange: _handleFocusChange,
         mouseCursor: effectiveCursor,

@@ -75,18 +75,18 @@ void main() {
       // No error should occur
     });
 
-    testWidgets('supports stateController parameter', (WidgetTester tester) async {
-      final stateController = WidgetStatesController();
+    testWidgets('supports statesController parameter', (WidgetTester tester) async {
+      final statesController = WidgetStatesController();
       await tester.pumpMaterialWidget(
         NakedButton(
           onPressed: () {},
-          stateController: stateController,
+          statesController: statesController,
           child: const Text('Test Button'),
         ),
       );
 
       expect(find.byType(NakedButton), findsOneWidget);
-      expect(stateController.value, isEmpty);
+      expect(statesController.value, isEmpty);
       
       // Tap to trigger state change
       await tester.tap(find.byType(NakedButton));

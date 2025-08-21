@@ -389,7 +389,7 @@ class NakedSelectTrigger extends StatelessWidget {
     this.onFocusChange,
     this.onHoverChange,
     this.onHighlightChanged,
-    this.controller,
+    this.statesController,
   });
 
   /// The child widget to display.
@@ -406,7 +406,7 @@ class NakedSelectTrigger extends StatelessWidget {
   final ValueChanged<bool>? onHighlightChanged;
 
   /// Optional external controller for interaction states.
-  final WidgetStatesController? controller;
+  final WidgetStatesController? statesController;
 
   /// Semantic label for accessibility.
   /// Used by screen readers to identify the trigger.
@@ -454,7 +454,7 @@ class NakedSelectTrigger extends StatelessWidget {
       onFocusChange: onFocusChange,
       onHoverChange: onHoverChange,
       onHighlightChanged: onHighlightChanged,
-      stateController: controller,
+      statesController: statesController,
       child: child,
     );
   }
@@ -500,7 +500,7 @@ class NakedSelectItem<T> extends StatefulWidget {
     this.onFocusChange,
     this.onHoverChange,
     this.onHighlightChanged,
-    this.controller,
+    this.statesController,
   });
 
   /// The child widget to display.
@@ -524,7 +524,7 @@ class NakedSelectItem<T> extends StatefulWidget {
   final ValueChanged<bool>? onHighlightChanged;
 
   /// Optional external controller for interaction states.
-  final WidgetStatesController? controller;
+  final WidgetStatesController? statesController;
 
   /// Whether this item is enabled and can be selected.
   /// When false, all interaction is disabled.
@@ -663,7 +663,7 @@ class _NakedSelectItemState<T> extends State<NakedSelectItem<T>> {
         onFocusChange: widget.onFocusChange,
         onHoverChange: widget.onHoverChange,
         onHighlightChanged: widget.onHighlightChanged,
-        stateController: widget.controller,
+        statesController: widget.statesController,
         child: Semantics(
           label: widget.semanticLabel ?? widget.value.toString(),
           child: widget.child,

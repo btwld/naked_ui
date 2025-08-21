@@ -173,7 +173,7 @@ class NakedMenuItem extends StatelessWidget {
     this.onFocusChange,
     this.onHoverChange,
     this.onHighlightChanged,
-    this.controller,
+    this.statesController,
   });
 
   /// Content to display in the menu item.
@@ -192,7 +192,7 @@ class NakedMenuItem extends StatelessWidget {
   final ValueChanged<bool>? onHighlightChanged;
 
   /// Optional external controller for interaction states.
-  final WidgetStatesController? controller;
+  final WidgetStatesController? statesController;
 
   /// Whether the item can be selected.
   final bool enabled;
@@ -239,15 +239,15 @@ class NakedMenuItem extends StatelessWidget {
       isSemanticButton: true,
       semanticLabel: semanticLabel,
       semanticHint: semanticHint,
-      excludeSemantics: excludeSemantics,
       cursor: cursor,
       enableHapticFeedback: enableHapticFeedback,
       focusNode: focusNode,
       autofocus: autofocus,
+      excludeSemantics: excludeSemantics,
       onFocusChange: onFocusChange,
       onHoverChange: onHoverChange,
       onHighlightChanged: onHighlightChanged,
-      stateController: controller,
+      statesController: statesController,
       child: child,
     );
   }

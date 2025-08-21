@@ -277,7 +277,7 @@ class NakedTab extends StatefulWidget {
     this.onFocusChange,
     this.onHoverChange,
     this.onHighlightChanged,
-    this.controller,
+    this.statesController,
   });
 
   final Widget child;
@@ -295,7 +295,7 @@ class NakedTab extends StatefulWidget {
   final ValueChanged<bool>? onHighlightChanged;
 
   /// Optional external controller for interaction states.
-  final WidgetStatesController? controller;
+  final WidgetStatesController? statesController;
 
   /// Whether this tab is enabled.
   final bool enabled;
@@ -399,15 +399,15 @@ class _NakedTabState extends State<NakedTab> {
       excludeSemantics: widget.excludeSemantics,
       child: NakedInteractable(
         builder: (context, states) => widget.child,
-        onPressed: _isEnabled ? _handleTap : null,
         enabled: _isEnabled,
-        stateController: widget.controller,
+        onPressed: _isEnabled ? _handleTap : null,
+        statesController: widget.statesController,
         focusNode: _focusNode,
         autofocus: widget.autofocus,
-        mouseCursor: _cursor,
         onFocusChange: widget.onFocusChange,
         onHoverChange: widget.onHoverChange,
         onHighlightChanged: widget.onHighlightChanged,
+        mouseCursor: _cursor,
       ),
     );
   }

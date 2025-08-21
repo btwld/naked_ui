@@ -1,14 +1,8 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
-import 'utilities/naked_interactable.dart';
-import 'utilities/semantics.dart';
-
-/// Provides checkbox interaction behavior without visual styling.
-///
-/// Supports checked, unchecked, and tristate (indeterminate) values.
-class NakedCheckbox extends StatelessWidget {
-  /// Creates a naked checkbox.
+/// Headless checkbox built on Flutter's toggleable behaviors.
+class NakedCheckbox extends StatefulWidget {
   const NakedCheckbox({
     super.key,
     required this.child,
@@ -19,14 +13,15 @@ class NakedCheckbox extends StatelessWidget {
     this.semanticLabel,
     this.semanticHint,
     this.excludeSemantics = false,
-    this.cursor = SystemMouseCursors.click,
+    this.cursor,
     this.enableHapticFeedback = true,
     this.focusNode,
     this.autofocus = false,
     this.onFocusChange,
     this.onHoverChange,
     this.onHighlightChanged,
-    this.controller,
+    this.statesController,
+    this.builder,
   }) : assert(
          (tristate || value != null),
          'Non-tristate checkbox must have a non-null value',
@@ -63,7 +58,7 @@ class NakedCheckbox extends StatelessWidget {
   final ValueChanged<bool>? onHighlightChanged;
 
   /// Optional external controller for interaction states.
-  final WidgetStatesController? controller;
+  final WidgetStatesController? statesController;
 
   /// Whether the checkbox is enabled.
   final bool enabled;
@@ -78,7 +73,7 @@ class NakedCheckbox extends StatelessWidget {
   final bool excludeSemantics;
 
   /// Cursor when hovering over the checkbox.
-  final MouseCursor cursor;
+  final MouseCursor? cursor;
 
   /// Whether to provide haptic feedback on tap.
   final bool enableHapticFeedback;
@@ -89,47 +84,101 @@ class NakedCheckbox extends StatelessWidget {
   /// Whether to autofocus when created.
   final bool autofocus;
 
-  bool get _isInteractive => enabled && onChanged != null;
-  MouseCursor get _mouseCursor =>
-      _isInteractive ? cursor : SystemMouseCursors.forbidden;
+  /// Optional builder that receives the current scope for visuals.
+  final Widget Function(NakedCheckboxScope scope)? builder;
 
-  void _onPressed() {
-    if (!_isInteractive) return;
-    if (enableHapticFeedback) {
-      HapticFeedback.selectionClick();
-    }
-    switch (value) {
-      case false:
-        onChanged!(true);
-      case true:
-        onChanged!(tristate ? null : false);
-      case null:
-        onChanged!(false);
-    }
-  }
+  @override
+  State<NakedCheckbox> createState() => _NakedCheckboxState();
+}
+
+class _NakedCheckboxState extends State<NakedCheckbox>
+    with TickerProviderStateMixin, ToggleableStateMixin {
+  WidgetStateProperty<MouseCursor> get _mouseCursorProp => widget.cursor != null
+      ? WidgetStatePropertyAll<MouseCursor>(widget.cursor!)
+      : WidgetStateProperty.resolveWith((states) {
+          return states.contains(WidgetState.disabled)
+              ? SystemMouseCursors.forbidden
+              : SystemMouseCursors.click;
+        });
+
+  @override
+  bool get tristate => widget.tristate;
+
+  @override
+  bool? get value => widget.value;
+
+  @override
+  bool get isInteractive => widget.enabled && widget.onChanged != null;
+
+  @override
+  ValueChanged<bool?>? get onChanged =>
+      widget.enabled ? widget.onChanged : null;
 
   @override
   Widget build(BuildContext context) {
-    return NakedSemantics.checkbox(
-      label: semanticLabel,
-      checked: value,
-      tristate: tristate,
-      onTap: _isInteractive ? _onPressed : null,
-      hint: semanticHint,
-      excludeSemantics: excludeSemantics,
-      child: NakedInteractable(
-        builder: (context, states) => child,
-        enabled: enabled,
-        onPressed: _isInteractive ? _onPressed : null,
-        stateController: controller,
-        focusNode: focusNode,
-        autofocus: autofocus,
-        onFocusChange: onFocusChange,
-        onHoverChange: onHoverChange,
-        onHighlightChanged: onHighlightChanged,
-        mouseCursor: _mouseCursor,
-        excludeFromSemantics: false,
+    return Semantics(
+      checked: widget.value ?? false,
+      mixed: widget.tristate ? widget.value == null : null,
+      label: widget.semanticLabel,
+      hint: widget.semanticHint,
+      child: buildToggleableWithChild(
+        focusNode: widget.focusNode,
+        autofocus: widget.autofocus,
+        mouseCursor: _mouseCursorProp,
+        child: widget.builder != null
+            ? NakedCheckboxScope(
+                value: widget.value,
+                tristate: widget.tristate,
+                enabled: widget.enabled,
+                states: states,
+                child: Builder(
+                  builder: (scopeCtx) =>
+                      widget.builder!(NakedCheckboxScope.of(scopeCtx)),
+                ),
+              )
+            : widget.child,
       ),
     );
+  }
+}
+
+/// Provides checkbox state to visuals.
+class NakedCheckboxScope extends InheritedWidget {
+  const NakedCheckboxScope({
+    super.key,
+    required this.value,
+    required this.tristate,
+    required this.enabled,
+    required this.states,
+    required super.child,
+  });
+
+  static NakedCheckboxScope? maybeOf(BuildContext context) {
+    return context.dependOnInheritedWidgetOfExactType();
+  }
+
+  static NakedCheckboxScope of(BuildContext context) {
+    final NakedCheckboxScope? result = maybeOf(context);
+    assert(result != null, 'No NakedCheckboxScope found in context');
+
+    return result!;
+  }
+
+  final bool? value;
+  final bool tristate;
+
+  final bool enabled;
+  final Set<WidgetState> states;
+
+  bool get isSelected => value == true;
+
+  bool get isMixed => tristate && value == null;
+
+  @override
+  bool updateShouldNotify(covariant NakedCheckboxScope oldWidget) {
+    return value != oldWidget.value ||
+        tristate != oldWidget.tristate ||
+        enabled != oldWidget.enabled ||
+        !setEquals(states, oldWidget.states);
   }
 }
