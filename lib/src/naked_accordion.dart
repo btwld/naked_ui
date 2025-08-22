@@ -4,6 +4,7 @@ import 'package:flutter/widgets.dart';
 
 import 'utilities/naked_interactable.dart';
 import 'utilities/semantics.dart';
+import 'utilities/naked_focusable.dart';
 
 /// Manages accordion state with optional min/max expansion constraints.
 ///
@@ -231,6 +232,7 @@ class NakedAccordionItem<T> extends StatelessWidget {
     this.onFocusChange,
     this.onHoverChange,
     this.onHighlightChanged,
+    this.onStateChange,
     this.controller,
   });
 
@@ -269,6 +271,9 @@ class NakedAccordionItem<T> extends StatelessWidget {
 
   /// Called when highlight (pressed) state changes.
   final ValueChanged<bool>? onHighlightChanged;
+
+  /// Called when any widget state changes.
+  final ValueChanged<WidgetStatesDelta>? onStateChange;
 
   /// Optional external controller for interaction states.
   final WidgetStatesController? controller;
@@ -318,16 +323,17 @@ class NakedAccordionItem<T> extends StatelessWidget {
             children: [
               // Use NakedInteractable for the trigger to handle all interaction states
               NakedInteractable(
-                builder: (context, states) => trigger(context, isExpanded),
-                onPressed: onTap,
                 enabled: enabled,
+                onPressed: onTap,
                 statesController: controller,
                 focusNode: focusNode,
                 autofocus: autofocus,
-                mouseCursor: cursor,
                 onFocusChange: onFocusChange,
                 onHoverChange: onHoverChange,
                 onHighlightChanged: onHighlightChanged,
+                onStateChange: onStateChange,
+                mouseCursor: cursor,
+                builder: (states) => trigger(context, isExpanded),
               ),
               transitionBuilder != null ? transitionBuilder!(child) : child,
             ],

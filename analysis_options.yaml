@@ -31,6 +31,7 @@ dart_code_metrics:
       last:
         - child
         - children
+        - builder
     avoid-nested-conditional-expressions:
       acceptable-level: 3
     member-ordering:

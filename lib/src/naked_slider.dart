@@ -478,7 +478,8 @@ class _SliderSetToMinAction extends Action<_SliderSetToMinIntent> {
 
   @override
   void invoke(_SliderSetToMinIntent intent) {
-    if (state.widget.enableHapticFeedback && state.widget.value != state.widget.min) {
+    if (state.widget.enableHapticFeedback &&
+        state.widget.value != state.widget.min) {
       HapticFeedback.selectionClick();
     }
     state._callOnChangeIfNeeded(state.widget.min);
@@ -492,7 +493,8 @@ class _SliderSetToMaxAction extends Action<_SliderSetToMaxIntent> {
 
   @override
   void invoke(_SliderSetToMaxIntent intent) {
-    if (state.widget.enableHapticFeedback && state.widget.value != state.widget.max) {
+    if (state.widget.enableHapticFeedback &&
+        state.widget.value != state.widget.max) {
       HapticFeedback.selectionClick();
     }
     state._callOnChangeIfNeeded(state.widget.max);

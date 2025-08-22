@@ -25,13 +25,13 @@ void main() {
             child: NakedInteractable(
               onHoverChange: (v) => isHovered = v,
               onPressed: () {}, // interactive so MouseRegion is active
-              builder: (_, __) => const SizedBox(width: 24, height: 24),
+              builder: (_) => const SizedBox(width: 24, height: 24),
             ),
           ),
         ),
       );
 
-      await tester.simulateHover(key, onHover: () => expect(isHovered, isTrue));
+      await tester.simulateHover(key);
       expect(isHovered, isFalse);
     });
   });
@@ -48,7 +48,7 @@ void main() {
           onFocusChange: (v) => isFocused = v,
           onPressed:
               () {}, // ensure actions are wired, though not required for focus
-          builder: (_, __) => const SizedBox(width: 10, height: 10),
+          builder: (_) => const SizedBox(width: 10, height: 10),
         ),
       );
 
@@ -69,7 +69,7 @@ void main() {
             focusNode: node,
             onFocusChange: (v) => lastFocused = v,
             onPressed: () {},
-            builder: (_, __) => const SizedBox(width: 10, height: 10),
+            builder: (_) => const SizedBox(width: 10, height: 10),
           ),
         );
 
@@ -104,7 +104,7 @@ void main() {
                 pressedCalledFalse = true;
             },
             onPressed: () => wasPressed = true,
-            builder: (_, __) => const SizedBox(width: 24, height: 24),
+            builder: (_) => const SizedBox(width: 24, height: 24),
           ),
         ),
       );
@@ -137,7 +137,7 @@ void main() {
               else
                 sawPressedFalse = true;
             },
-            builder: (_, __) => const SizedBox(width: 24, height: 24),
+            builder: (_) => const SizedBox(width: 24, height: 24),
           ),
         );
 

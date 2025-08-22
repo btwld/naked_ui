@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import 'utilities/naked_focusable.dart';
 import 'utilities/naked_interactable.dart';
 import 'utilities/semantics.dart';
 
@@ -11,7 +12,7 @@ class NakedButton extends StatelessWidget {
   /// Creates a naked button.
   const NakedButton({
     super.key,
-    required this.child,
+    this.child,
     this.onPressed,
     this.onLongPress,
     this.onDoubleTap,
@@ -27,11 +28,16 @@ class NakedButton extends StatelessWidget {
     this.onFocusChange,
     this.onHoverChange,
     this.onHighlightChanged,
+    this.onStateChange,
     this.statesController,
-  });
+    this.builder,
+  }) : assert(
+         child != null || builder != null,
+         'Either child or builder must be provided',
+       );
 
   /// Child widget to display.
-  final Widget child;
+  final Widget? child;
 
   /// Called when the button is tapped or activated via keyboard.
   final VoidCallback? onPressed;
@@ -51,8 +57,14 @@ class NakedButton extends StatelessWidget {
   /// Called when highlight (pressed) state changes.
   final ValueChanged<bool>? onHighlightChanged;
 
+  /// Called when any widget state changes.
+  final ValueChanged<WidgetStatesDelta>? onStateChange;
+
   /// Optional external controller for interaction states.
   final WidgetStatesController? statesController;
+
+  /// Optional builder that receives the current states for visuals.
+  final WidgetStateBuilder? builder;
 
   /// Whether the button is enabled.
   final bool enabled;
@@ -103,7 +115,6 @@ class NakedButton extends StatelessWidget {
       hint: semanticHint,
       excludeSemantics: excludeSemantics,
       child: NakedInteractable(
-        builder: (context, states) => child,
         enabled: _effectiveEnabled,
         onPressed: onPressed == null ? null : _onPressed,
         onDoubleTap: onDoubleTap,
@@ -114,8 +125,16 @@ class NakedButton extends StatelessWidget {
         onFocusChange: onFocusChange,
         onHoverChange: onHoverChange,
         onHighlightChanged: onHighlightChanged,
+        onStateChange: onStateChange,
         mouseCursor: _mouseCursor,
         excludeFromSemantics: excludeSemantics,
+        builder: (states) {
+          if (builder != null) {
+            return builder!(states);
+          }
+
+          return child!;
+        },
       ),
     );
   }

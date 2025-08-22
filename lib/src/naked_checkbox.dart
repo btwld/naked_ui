@@ -1,11 +1,14 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
-/// Headless checkbox built on Flutter's toggleable behaviors.
-class NakedCheckbox extends StatefulWidget {
+import 'utilities/naked_focusable.dart';
+import 'utilities/naked_interactable.dart';
+
+/// Headless checkbox built on NakedInteractable with proper semantics and callbacks.
+class NakedCheckbox extends StatelessWidget {
   const NakedCheckbox({
     super.key,
-    required this.child,
+    this.child,
     this.value = false,
     this.tristate = false,
     this.onChanged,
@@ -20,17 +23,22 @@ class NakedCheckbox extends StatefulWidget {
     this.onFocusChange,
     this.onHoverChange,
     this.onHighlightChanged,
+    this.onStateChange,
     this.statesController,
     this.builder,
   }) : assert(
          (tristate || value != null),
          'Non-tristate checkbox must have a non-null value',
+       ),
+       assert(
+         child != null || builder != null,
+         'Either child or builder must be provided',
        );
 
   /// Visual representation of the checkbox.
   ///
   /// Renders different states based on callback properties.
-  final Widget child;
+  final Widget? child;
 
   /// Whether this checkbox is checked.
   ///
@@ -56,6 +64,9 @@ class NakedCheckbox extends StatefulWidget {
 
   /// Called when highlight (pressed) state changes.
   final ValueChanged<bool>? onHighlightChanged;
+
+  /// Called when any widget state changes.
+  final ValueChanged<WidgetStatesDelta>? onStateChange;
 
   /// Optional external controller for interaction states.
   final WidgetStatesController? statesController;
@@ -84,101 +95,67 @@ class NakedCheckbox extends StatefulWidget {
   /// Whether to autofocus when created.
   final bool autofocus;
 
-  /// Optional builder that receives the current scope for visuals.
-  final Widget Function(NakedCheckboxScope scope)? builder;
+  /// Optional builder that receives the current delta for visuals.
+  final WidgetStateBuilder? builder;
 
-  @override
-  State<NakedCheckbox> createState() => _NakedCheckboxState();
-}
+  bool? _getNextTristate(bool? currentValue) {
+    // Tristate cycling: false → true → null → false
+    switch (currentValue) {
+      case false:
+        return true;
+      case true:
+        return null;
+      case null:
+        return false;
+    }
+  }
 
-class _NakedCheckboxState extends State<NakedCheckbox>
-    with TickerProviderStateMixin, ToggleableStateMixin {
-  WidgetStateProperty<MouseCursor> get _mouseCursorProp => widget.cursor != null
-      ? WidgetStatePropertyAll<MouseCursor>(widget.cursor!)
-      : WidgetStateProperty.resolveWith((states) {
-          return states.contains(WidgetState.disabled)
-              ? SystemMouseCursors.forbidden
-              : SystemMouseCursors.click;
-        });
+  void _handlePressed() {
+    if (onChanged == null) return;
 
-  @override
-  bool get tristate => widget.tristate;
+    if (enableHapticFeedback) {
+      HapticFeedback.selectionClick();
+    }
 
-  @override
-  bool? get value => widget.value;
+    final bool? newValue = tristate
+        ? _getNextTristate(value)
+        : !(value ?? false);
 
-  @override
-  bool get isInteractive => widget.enabled && widget.onChanged != null;
-
-  @override
-  ValueChanged<bool?>? get onChanged =>
-      widget.enabled ? widget.onChanged : null;
+    onChanged!(newValue);
+  }
 
   @override
   Widget build(BuildContext context) {
+    final bool isChecked = value ?? false;
+    final bool isMixed = tristate && value == null;
+
     return Semantics(
-      checked: widget.value ?? false,
-      mixed: widget.tristate ? widget.value == null : null,
-      label: widget.semanticLabel,
-      hint: widget.semanticHint,
-      child: buildToggleableWithChild(
-        focusNode: widget.focusNode,
-        autofocus: widget.autofocus,
-        mouseCursor: _mouseCursorProp,
-        child: widget.builder != null
-            ? NakedCheckboxScope(
-                value: widget.value,
-                tristate: widget.tristate,
-                enabled: widget.enabled,
-                states: states,
-                child: Builder(
-                  builder: (scopeCtx) =>
-                      widget.builder!(NakedCheckboxScope.of(scopeCtx)),
-                ),
-              )
-            : widget.child,
+      excludeSemantics: excludeSemantics,
+      enabled: enabled,
+      checked: isChecked,
+      mixed: isMixed,
+      label: semanticLabel,
+      hint: semanticHint,
+      child: NakedInteractable(
+        enabled: enabled,
+        selected: isChecked,
+        onPressed: _handlePressed,
+        statesController: statesController,
+        focusNode: focusNode,
+        autofocus: autofocus,
+        onFocusChange: onFocusChange,
+        onHoverChange: onHoverChange,
+        onHighlightChanged: onHighlightChanged,
+        onStateChange: onStateChange,
+        mouseCursor: cursor,
+        builder: (states) {
+          if (builder != null) {
+            return builder!(states);
+          }
+
+          return child!;
+        },
       ),
     );
-  }
-}
-
-/// Provides checkbox state to visuals.
-class NakedCheckboxScope extends InheritedWidget {
-  const NakedCheckboxScope({
-    super.key,
-    required this.value,
-    required this.tristate,
-    required this.enabled,
-    required this.states,
-    required super.child,
-  });
-
-  static NakedCheckboxScope? maybeOf(BuildContext context) {
-    return context.dependOnInheritedWidgetOfExactType();
-  }
-
-  static NakedCheckboxScope of(BuildContext context) {
-    final NakedCheckboxScope? result = maybeOf(context);
-    assert(result != null, 'No NakedCheckboxScope found in context');
-
-    return result!;
-  }
-
-  final bool? value;
-  final bool tristate;
-
-  final bool enabled;
-  final Set<WidgetState> states;
-
-  bool get isSelected => value == true;
-
-  bool get isMixed => tristate && value == null;
-
-  @override
-  bool updateShouldNotify(covariant NakedCheckboxScope oldWidget) {
-    return value != oldWidget.value ||
-        tristate != oldWidget.tristate ||
-        enabled != oldWidget.enabled ||
-        !setEquals(states, oldWidget.states);
   }
 }

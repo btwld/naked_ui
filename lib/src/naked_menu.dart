@@ -160,7 +160,7 @@ class NakedMenuItem extends StatelessWidget {
   /// Use [onPressed] for selection and state callbacks for appearance customization.
   const NakedMenuItem({
     super.key,
-    required this.child,
+    this.child,
     this.onPressed,
     this.enabled = true,
     this.semanticLabel,
@@ -173,11 +173,16 @@ class NakedMenuItem extends StatelessWidget {
     this.onFocusChange,
     this.onHoverChange,
     this.onHighlightChanged,
+    this.onStateChange,
     this.statesController,
-  });
+    this.builder,
+  }) : assert(
+         child != null || builder != null,
+         'Either child or builder must be provided',
+       );
 
   /// Content to display in the menu item.
-  final Widget child;
+  final Widget? child;
 
   /// Called when the item is selected.
   final VoidCallback? onPressed;
@@ -191,8 +196,14 @@ class NakedMenuItem extends StatelessWidget {
   /// Called when highlight (pressed) state changes.
   final ValueChanged<bool>? onHighlightChanged;
 
+  /// Called when any widget state changes.
+  final ValueChanged<WidgetStatesDelta>? onStateChange;
+
   /// Optional external controller for interaction states.
   final WidgetStatesController? statesController;
+
+  /// Optional builder that receives the current states for visuals.
+  final WidgetStateBuilder? builder;
 
   /// Whether the item can be selected.
   final bool enabled;
@@ -247,8 +258,10 @@ class NakedMenuItem extends StatelessWidget {
       onFocusChange: onFocusChange,
       onHoverChange: onHoverChange,
       onHighlightChanged: onHighlightChanged,
+      onStateChange: onStateChange,
       statesController: statesController,
       child: child,
+      builder: builder,
     );
   }
 }

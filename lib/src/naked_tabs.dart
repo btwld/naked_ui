@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import 'utilities/naked_focusable.dart';
 import 'utilities/naked_interactable.dart';
 import 'utilities/semantics.dart';
 
@@ -264,7 +265,7 @@ class NakedTab extends StatefulWidget {
   /// Creates a naked tab.
   const NakedTab({
     super.key,
-    required this.child,
+    this.child,
     required this.tabId,
     this.enabled = true,
     this.semanticLabel,
@@ -277,10 +278,15 @@ class NakedTab extends StatefulWidget {
     this.onFocusChange,
     this.onHoverChange,
     this.onHighlightChanged,
+    this.onStateChange,
     this.statesController,
-  });
+    this.builder,
+  }) : assert(
+         child != null || builder != null,
+         'Either child or builder must be provided',
+       );
 
-  final Widget child;
+  final Widget? child;
 
   /// The unique ID for this tab.
   final String tabId;
@@ -294,8 +300,14 @@ class NakedTab extends StatefulWidget {
   /// Called when highlight (pressed) state changes.
   final ValueChanged<bool>? onHighlightChanged;
 
+  /// Called when any widget state changes.
+  final ValueChanged<WidgetStatesDelta>? onStateChange;
+
   /// Optional external controller for interaction states.
   final WidgetStatesController? statesController;
+
+  /// Optional builder that receives the current states for visuals.
+  final WidgetStateBuilder? builder;
 
   /// Whether this tab is enabled.
   final bool enabled;
@@ -398,7 +410,6 @@ class _NakedTabState extends State<NakedTab> {
       hint: widget.semanticHint,
       excludeSemantics: widget.excludeSemantics,
       child: NakedInteractable(
-        builder: (context, states) => widget.child,
         enabled: _isEnabled,
         onPressed: _isEnabled ? _handleTap : null,
         statesController: widget.statesController,
@@ -407,7 +418,15 @@ class _NakedTabState extends State<NakedTab> {
         onFocusChange: widget.onFocusChange,
         onHoverChange: widget.onHoverChange,
         onHighlightChanged: widget.onHighlightChanged,
+        onStateChange: widget.onStateChange,
         mouseCursor: _cursor,
+        builder: (states) {
+          if (widget.builder != null) {
+            return widget.builder!(states);
+          }
+
+          return widget.child!;
+        },
       ),
     );
   }

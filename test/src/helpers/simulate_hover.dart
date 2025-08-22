@@ -14,7 +14,7 @@ extension WidgetTesterExtension on WidgetTester {
   }
 
   /// Simulates hover by moving mouse gesture and waiting for Flutter to process hover events
-  Future<void> simulateHover(Key key) async {
+  Future<void> simulateHover(Key key, {VoidCallback? onHover}) async {
     final gesture = await createGesture(kind: PointerDeviceKind.mouse);
     await gesture.addPointer(location: Offset.zero);
     addTearDown(gesture.removePointer);
@@ -23,6 +23,9 @@ extension WidgetTesterExtension on WidgetTester {
     // Move to widget and wait for hover to be processed
     await gesture.moveTo(getCenter(find.byKey(key)));
     await pumpAndSettle(); // Wait for all hover events to propagate
+    
+    // Call onHover callback if provided
+    onHover?.call();
 
     // Move away and wait for hover exit to be processed  
     await gesture.moveTo(Offset.zero);
