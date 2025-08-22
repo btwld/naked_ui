@@ -4,7 +4,6 @@ import 'package:flutter/widgets.dart';
 
 import 'utilities/naked_interactable.dart';
 import 'utilities/semantics.dart';
-import 'utilities/naked_focusable.dart';
 
 /// Manages accordion state with optional min/max expansion constraints.
 ///
@@ -225,7 +224,7 @@ class NakedAccordionItem<T> extends StatelessWidget {
     this.semanticHint,
     this.excludeSemantics = false,
     this.enabled = true,
-    this.cursor = SystemMouseCursors.click,
+    this.mouseCursor = SystemMouseCursors.click,
     this.enableHapticFeedback = true,
     this.autofocus = false,
     this.focusNode,
@@ -273,7 +272,7 @@ class NakedAccordionItem<T> extends StatelessWidget {
   final ValueChanged<bool>? onHighlightChanged;
 
   /// Called when any widget state changes.
-  final ValueChanged<WidgetStatesDelta>? onStateChange;
+  final ValueChanged<Set<WidgetState>>? onStateChange;
 
   /// Optional external controller for interaction states.
   final WidgetStatesController? controller;
@@ -282,7 +281,7 @@ class NakedAccordionItem<T> extends StatelessWidget {
   final bool enabled;
 
   /// Cursor when hovering over the accordion trigger.
-  final MouseCursor cursor;
+  final MouseCursor mouseCursor;
 
   /// Whether to provide haptic feedback on interaction.
   final bool enableHapticFeedback;
@@ -321,19 +320,38 @@ class NakedAccordionItem<T> extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // Use NakedInteractable for the trigger to handle all interaction states
-              NakedInteractable(
-                enabled: enabled,
-                onPressed: onTap,
-                statesController: controller,
-                focusNode: focusNode,
-                autofocus: autofocus,
-                onFocusChange: onFocusChange,
-                onHoverChange: onHoverChange,
-                onHighlightChanged: onHighlightChanged,
-                onStateChange: onStateChange,
-                mouseCursor: cursor,
-                builder: (states) => trigger(context, isExpanded),
+              Shortcuts(
+                shortcuts: {
+                  const SingleActivator(LogicalKeyboardKey.enter):
+                      const ActivateIntent(),
+                  const SingleActivator(LogicalKeyboardKey.space):
+                      const ActivateIntent(),
+                },
+                child: Actions(
+                  actions: {
+                    ActivateIntent: CallbackAction<ActivateIntent>(
+                      onInvoke: (intent) =>
+                          (enabled && onTap != null) ? onTap() : null,
+                    ),
+                  },
+                  child: GestureDetector(
+                    onTap: onTap,
+                    behavior: HitTestBehavior.opaque,
+                    child: NakedInteractable(
+                      mouseCursor: mouseCursor,
+                      statesController: controller,
+                      enabled: enabled && onTap != null,
+                      onHighlightChanged: onHighlightChanged,
+                      onHoverChange: onHoverChange,
+                      onFocusChange: onFocusChange,
+                      onStateChange: onStateChange,
+                      autofocus: autofocus,
+                      focusNode: focusNode,
+                      builder: (context, states, child) =>
+                          trigger(context, isExpanded),
+                    ),
+                  ),
+                ),
               ),
               transitionBuilder != null ? transitionBuilder!(child) : child,
             ],

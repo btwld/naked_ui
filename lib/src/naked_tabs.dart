@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import 'utilities/naked_focusable.dart';
 import 'utilities/naked_interactable.dart';
 import 'utilities/semantics.dart';
 
@@ -270,7 +269,7 @@ class NakedTab extends StatefulWidget {
     this.enabled = true,
     this.semanticLabel,
     this.semanticHint,
-    this.cursor = SystemMouseCursors.click,
+    this.mouseCursor = SystemMouseCursors.click,
     this.enableHapticFeedback = true,
     this.focusNode,
     this.autofocus = false,
@@ -301,13 +300,13 @@ class NakedTab extends StatefulWidget {
   final ValueChanged<bool>? onHighlightChanged;
 
   /// Called when any widget state changes.
-  final ValueChanged<WidgetStatesDelta>? onStateChange;
+  final ValueChanged<Set<WidgetState>>? onStateChange;
 
   /// Optional external controller for interaction states.
   final WidgetStatesController? statesController;
 
   /// Optional builder that receives the current states for visuals.
-  final WidgetStateBuilder? builder;
+  final ValueWidgetBuilder<Set<WidgetState>>? builder;
 
   /// Whether this tab is enabled.
   final bool enabled;
@@ -319,7 +318,7 @@ class NakedTab extends StatefulWidget {
   final String? semanticHint;
 
   /// The cursor to show when hovering over the tab.
-  final MouseCursor cursor;
+  final MouseCursor mouseCursor;
 
   /// Whether to provide haptic feedback on tab selection.
   final bool enableHapticFeedback;
@@ -395,7 +394,7 @@ class _NakedTabState extends State<NakedTab> {
   }
 
   MouseCursor get _cursor =>
-      _isEnabled ? widget.cursor : SystemMouseCursors.forbidden;
+      _isEnabled ? widget.mouseCursor : SystemMouseCursors.forbidden;
 
   @override
   Widget build(BuildContext context) {
@@ -409,24 +408,27 @@ class _NakedTabState extends State<NakedTab> {
       onTap: _isEnabled ? _handleTap : null,
       hint: widget.semanticHint,
       excludeSemantics: widget.excludeSemantics,
-      child: NakedInteractable(
-        enabled: _isEnabled,
-        onPressed: _isEnabled ? _handleTap : null,
-        statesController: widget.statesController,
-        focusNode: _focusNode,
-        autofocus: widget.autofocus,
-        onFocusChange: widget.onFocusChange,
-        onHoverChange: widget.onHoverChange,
-        onHighlightChanged: widget.onHighlightChanged,
-        onStateChange: widget.onStateChange,
-        mouseCursor: _cursor,
-        builder: (states) {
-          if (widget.builder != null) {
-            return widget.builder!(states);
-          }
+      child: GestureDetector(
+        onTap: _isEnabled ? _handleTap : null,
+        behavior: HitTestBehavior.opaque,
+        child: NakedInteractable(
+          mouseCursor: _cursor,
+          statesController: widget.statesController,
+          enabled: _isEnabled,
+          onHighlightChanged: widget.onHighlightChanged,
+          onHoverChange: widget.onHoverChange,
+          onFocusChange: widget.onFocusChange,
+          onStateChange: widget.onStateChange,
+          autofocus: widget.autofocus,
+          focusNode: _focusNode,
+          builder: (context, states, child) {
+            if (widget.builder != null) {
+              return widget.builder!(context, states, child);
+            }
 
-          return widget.child!;
-        },
+            return widget.child!;
+          },
+        ),
       ),
     );
   }

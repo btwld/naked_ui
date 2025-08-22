@@ -71,11 +71,10 @@ class _RadioState extends State<Radio> {
   bool _isHovered = false;
   bool _isPressed = false;
   bool _isFocused = false;
-  bool _isSelected = false;
 
-  Color get borderColor {
+  Color borderColor(bool isSelected) {
     const baseColor = Color(0xFF3D3D3D);
-    if (_isSelected) {
+    if (isSelected) {
       return baseColor;
     }
     if (_isPressed || _isFocused) {
@@ -94,19 +93,21 @@ class _RadioState extends State<Radio> {
       onFocusChange: (focused) => setState(() => _isFocused = focused),
       onHoverChange: (hovered) => setState(() => _isHovered = hovered),
       onHighlightChanged: (pressed) => setState(() => _isPressed = pressed),
-      onSelectChange: (selected) => setState(() => _isSelected = selected),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 100),
-        width: 20,
-        height: 20,
-        decoration: BoxDecoration(
-          border: Border.all(
-            color: borderColor,
-            width: _isSelected ? 6 : 2,
+      builder: (context, states, child) {
+        final isSelected = states.isSelected;
+        return AnimatedContainer(
+          duration: const Duration(milliseconds: 100),
+          width: 20,
+          height: 20,
+          decoration: BoxDecoration(
+            border: Border.all(
+              color: borderColor(isSelected),
+              width: isSelected ? 6 : 2,
+            ),
+            borderRadius: BorderRadius.circular(10),
           ),
-          borderRadius: BorderRadius.circular(10),
-        ),
-      ),
+        );
+      },
     );
   }
 }

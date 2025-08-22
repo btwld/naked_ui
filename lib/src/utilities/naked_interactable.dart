@@ -1,61 +1,66 @@
 import 'package:flutter/widgets.dart';
 
-import 'naked_focusable.dart';
+import 'widget_state_extensions.dart';
 
-/// Full interactable widget with gestures + focus
+/// A minimal headless interactable widget providing pure interaction behavior.
+///
+/// This widget manages interaction states (pressed, hovered, focused, disabled, selected)
+/// and provides a builder to create UI based on these states.
+///
+/// Example usage:
+/// ```dart
+/// NakedInteractable(
+///   onPressed: () => print('Tapped!'),
+///   builder: (context, states, child) {
+///     return Container(
+///       color: states.isPressed
+///           ? Colors.blue
+///           : Colors.grey,
+///       child: child,
+///     );
+///   },
+/// )
+/// ```
 class NakedInteractable extends StatefulWidget {
   const NakedInteractable({
     super.key,
+    this.statesController,
     required this.builder,
     this.enabled = true,
-    this.selected = false,
-    this.onPressed,
-    this.onTapDown,
-    this.onTapUp,
-    this.onTapCancel,
-    this.onDoubleTap,
-    this.onLongPress,
-    this.onSecondaryTap,
-    this.statesController,
-    this.focusNode,
-    this.autofocus = false,
-    this.descendantsAreFocusable = true,
-    this.descendantsAreTraversable = true,
-    this.onFocusChange,
-    this.onHoverChange,
+    this.child,
     this.onHighlightChanged,
+    this.onHoverChange,
+    this.onFocusChange,
     this.onStateChange,
+    this.selected = false,
+    this.autofocus = false,
+    this.focusNode,
     this.mouseCursor,
-    this.behavior = HitTestBehavior.opaque,
-    this.excludeFromSemantics = false,
   });
 
   final bool enabled;
-  final bool selected;
 
-  final WidgetStateBuilder builder; // Gesture callbacks
-  final VoidCallback? onPressed;
-
-  final GestureTapDownCallback? onTapDown;
-  final GestureTapUpCallback? onTapUp;
-  final VoidCallback? onTapCancel;
-  final VoidCallback? onDoubleTap;
-  final VoidCallback? onLongPress;
-  final VoidCallback? onSecondaryTap; // Focus properties
+  /// Controller for widget states. If null, an internal controller is created.
   final WidgetStatesController? statesController;
 
-  final FocusNode? focusNode;
-  final bool autofocus;
+  /// Builds the widget based on current states.
+  final ValueWidgetBuilder<Set<WidgetState>> builder;
 
-  final bool descendantsAreFocusable;
-  final bool descendantsAreTraversable;
+  /// Optional child that doesn't rebuild on state changes.
+  final Widget? child;
+
   final ValueChanged<bool>? onFocusChange;
   final ValueChanged<bool>? onHoverChange;
   final ValueChanged<bool>? onHighlightChanged;
-  final ValueChanged<WidgetStatesDelta>? onStateChange;
+
+  /// Called when any widget state changes.
+  final ValueChanged<Set<WidgetState>>? onStateChange;
+  final bool selected;
+  final bool autofocus;
+  final FocusNode? focusNode;
+
+  /// The mouse cursor for this widget.
   final MouseCursor? mouseCursor;
-  final HitTestBehavior behavior;
-  final bool excludeFromSemantics;
 
   @override
   State<NakedInteractable> createState() => _NakedInteractableState();
@@ -64,22 +69,16 @@ class NakedInteractable extends StatefulWidget {
 class _NakedInteractableState extends State<NakedInteractable> {
   WidgetStatesController? _internalController;
 
-  WidgetStatesController get controller =>
+  WidgetStatesController get _effectiveController =>
       widget.statesController ??
-      (_internalController ??= WidgetStatesController());
+      (_internalController ??= _createInternalController());
 
-  // Single source of truth for interactivity
-  bool get isInteractive =>
-      widget.enabled &&
-      (widget.onPressed != null ||
-          widget.onLongPress != null ||
-          widget.onDoubleTap != null ||
-          widget.onSecondaryTap != null);
+  bool get _isDisabled => !widget.enabled;
 
   // Simplified cursor logic
   MouseCursor get effectiveCursor {
     if (widget.mouseCursor != null) return widget.mouseCursor!;
-    if (!isInteractive) return SystemMouseCursors.forbidden;
+    if (_isDisabled) return SystemMouseCursors.forbidden;
 
     return SystemMouseCursors.click;
   }
@@ -87,100 +86,124 @@ class _NakedInteractableState extends State<NakedInteractable> {
   @override
   void initState() {
     super.initState();
-    _updateControllerStates();
-  }
-
-  void _updateControllerStates() {
-    controller
+    _effectiveController
       ..update(WidgetState.selected, widget.selected)
-      ..update(WidgetState.disabled, !isInteractive);
+      ..update(WidgetState.disabled, _isDisabled)
+      ..addListener(_handleStateChange);
   }
 
-  void _handleTapDown(TapDownDetails details) {
-    widget.onTapDown?.call(details);
-    controller.update(WidgetState.pressed, true);
-    widget.onHighlightChanged?.call(true);
+  WidgetStatesController _createInternalController() {
+    return WidgetStatesController({
+      if (widget.selected) WidgetState.selected,
+      if (_isDisabled) WidgetState.disabled,
+    });
   }
 
-  void _handleTapUp(TapUpDetails details) {
-    widget.onTapUp?.call(details);
-    controller.update(WidgetState.pressed, false);
-    widget.onHighlightChanged?.call(false);
+  void _handleStateChange() {
+    final states = {..._effectiveController.value};
+    widget.onStateChange?.call(states);
+    if (mounted) {
+      // ignore: avoid-empty-setstate, no-empty-block
+      setState(() {}); // Rebuild for builder
+    }
   }
 
-  void _handleTapCancel() {
-    widget.onTapCancel?.call();
-    controller.update(WidgetState.pressed, false);
-    widget.onHighlightChanged?.call(false);
+  void _updatePressed(bool pressed) {
+    if (!_isDisabled) {
+      _effectiveController.update(WidgetState.pressed, pressed);
+      widget.onHighlightChanged?.call(pressed);
+    }
   }
 
-  void _handleTap() {
-    widget.onPressed?.call();
-  }
-
-  void _handleActivate(Intent intent) {
-    if (widget.onPressed == null) return;
-
-    controller.update(WidgetState.pressed, true);
-    widget.onHighlightChanged?.call(true);
-
-    // Ensure press state is cleared even if onPressed throws
-    try {
-      widget.onPressed!();
-    } finally {
-      if (mounted) {
-        controller.update(WidgetState.pressed, false);
-        widget.onHighlightChanged?.call(false);
+  void _handlePointerMove(PointerMoveEvent event) {
+    // Only check boundaries if currently pressed
+    if (!_isDisabled &&
+        _effectiveController.value.isPressed) {
+      final box = context.findRenderObject() as RenderBox?;
+      if (box != null && !box.size.contains(event.localPosition)) {
+        _effectiveController.update(WidgetState.pressed, false);
       }
+    }
+  }
+
+  void _handleOnHover(bool hovered) {
+    if (!_isDisabled) {
+      _effectiveController.update(WidgetState.hovered, hovered);
+      widget.onHoverChange?.call(hovered);
+    }
+  }
+
+  void _handleOnFocus(bool focused) {
+    if (!_isDisabled) {
+      _effectiveController.update(WidgetState.focused, focused);
+      widget.onFocusChange?.call(focused);
     }
   }
 
   @override
   void didUpdateWidget(NakedInteractable oldWidget) {
     super.didUpdateWidget(oldWidget);
-    _updateControllerStates();
+
+    // Handle controller change
+    if (oldWidget.statesController != widget.statesController) {
+      // Remove listener from old effective controller
+      final oldEffective = oldWidget.statesController ?? _internalController;
+      oldEffective?.removeListener(_handleStateChange);
+
+      // Handle internal controller lifecycle
+      if (widget.statesController == null) {
+        // Switching to internal - create if needed, preserving states
+        if (_internalController == null) {
+          _internalController = WidgetStatesController(
+            oldWidget.statesController?.value ?? {},
+          );
+        }
+      } else {
+        // Switching to external - dispose internal if exists
+        _internalController?.dispose();
+        _internalController = null;
+      }
+
+      // Add listener to new effective controller
+      // ignore: always-remove-listener
+      _effectiveController.addListener(_handleStateChange);
+    }
+
+    // Always update states
+    _effectiveController
+      ..update(WidgetState.selected, widget.selected)
+      ..update(WidgetState.disabled, _isDisabled);
   }
 
   @override
   void dispose() {
+    _effectiveController.removeListener(_handleStateChange);
     _internalController?.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return NakedFocusable(
-      enabled: isInteractive,
-      statesController: controller,
+    return Focus(
       focusNode: widget.focusNode,
       autofocus: widget.autofocus,
-      actions: isInteractive
-          ? {
-              ActivateIntent: CallbackAction<ActivateIntent>(
-                onInvoke: _handleActivate,
-              ),
-            }
-          : const {},
-      descendantsAreFocusable: widget.descendantsAreFocusable,
-      descendantsAreTraversable: widget.descendantsAreTraversable,
-      onFocusChange: widget.onFocusChange,
-      onHoverChange: widget.onHoverChange,
-      onStateChange: widget.onStateChange,
-      mouseCursor: effectiveCursor,
-      builder: (delta) {
-        return GestureDetector(
-          onTapDown: isInteractive ? _handleTapDown : null,
-          onTapUp: isInteractive ? _handleTapUp : null,
-          onTap: isInteractive ? _handleTap : null,
-          onTapCancel: isInteractive ? _handleTapCancel : null,
-          onSecondaryTap: widget.enabled ? widget.onSecondaryTap : null,
-          onDoubleTap: widget.enabled ? widget.onDoubleTap : null,
-          onLongPress: widget.enabled ? widget.onLongPress : null,
-          behavior: widget.behavior,
-          excludeFromSemantics: widget.excludeFromSemantics,
-          child: widget.builder(delta),
-        );
-      },
+      onFocusChange: _handleOnFocus,
+      child: MouseRegion(
+        onEnter: (_) => _handleOnHover(true),
+        onExit: (_) => _handleOnHover(false),
+        cursor: effectiveCursor,
+        child: Listener(
+          onPointerDown: (_) => _updatePressed(true),
+          onPointerMove: _handlePointerMove,
+          onPointerUp: (_) => _updatePressed(false),
+          onPointerCancel: (_) => _updatePressed(false),
+          child: widget.builder(
+            context,
+            _effectiveController.value,
+            widget.child,
+          ),
+        ),
+      ),
     );
   }
 }

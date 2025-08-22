@@ -457,7 +457,7 @@ void main() {
           onChanged: (_) {},
           child: const NakedRadio<String>(
             value: 'test',
-            cursor: SystemMouseCursors.help,
+            mouseCursor: SystemMouseCursors.help,
             child: SizedBox(width: 24, height: 24),
           ),
         ),
@@ -481,8 +481,8 @@ void main() {
             children: [
               NakedRadio<String>(
                 value: 'value1',
-                builder: (states) {
-                  capturedStates = states.current;
+                builder: (context, states, child) {
+                  capturedStates = states;
                   return Container(
                     color: states.isSelected ? Colors.blue : Colors.grey,
                     child: const Text('Radio 1'),
@@ -500,7 +500,7 @@ void main() {
       expect(capturedStates, isA<Set<WidgetState>>());
 
       // Should be selected since groupValue matches value
-      expect(capturedStates!.contains(WidgetState.selected), isTrue);
+      expect(capturedStates!.isSelected, isTrue);
     });
 
     testWidgets('builder updates when selection changes', (
@@ -526,8 +526,8 @@ void main() {
                     children: [
                       NakedRadio<String>(
                         value: 'value1',
-                        builder: (states) {
-                          radio1States = states.current;
+                        builder: (context, states, child) {
+                          radio1States = states;
                           return GestureDetector(
                             key: const Key('radio1'),
                             child: Container(
@@ -542,8 +542,8 @@ void main() {
                       ),
                       NakedRadio<String>(
                         value: 'value2',
-                        builder: (states) {
-                          radio2States = states.current;
+                        builder: (context, states, child) {
+                          radio2States = states;
                           return GestureDetector(
                             key: const Key('radio2'),
                             child: Container(
@@ -566,16 +566,16 @@ void main() {
       );
 
       // Initially radio1 is selected
-      expect(radio1States!.contains(WidgetState.selected), isTrue);
-      expect(radio2States!.contains(WidgetState.selected), isFalse);
+      expect(radio1States!.isSelected, isTrue);
+      expect(radio2States!.isSelected, isFalse);
 
       // Tap radio2
       await tester.tap(find.byKey(const Key('radio2')));
       await tester.pump();
 
       // Now radio2 should be selected
-      expect(radio1States!.contains(WidgetState.selected), isFalse);
-      expect(radio2States!.contains(WidgetState.selected), isTrue);
+      expect(radio1States!.isSelected, isFalse);
+      expect(radio2States!.isSelected, isTrue);
     });
 
     // TODO: Fix disabled state propagation in RawRadio
@@ -592,7 +592,7 @@ void main() {
     //         builder: (states) {
     //           capturedStates = states;
     //           return Container(
-    //             color: states.contains(WidgetState.disabled)
+    //             color: states.isDisabled
     //                 ? Colors.grey.shade300
     //                 : Colors.white,
     //             child: const Text('Disabled Radio'),
@@ -604,7 +604,7 @@ void main() {
     //   );
 
     //   // Should contain disabled state
-    //   expect(capturedStates!.contains(WidgetState.disabled), isTrue);
+    //   expect(capturedStates!.isDisabled, isTrue);
     // });
   });
 }

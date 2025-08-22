@@ -73,7 +73,7 @@ void main() {
             // Naked Radio - selected and disabled (group onChanged null)
             NakedRadioGroup<String>(
               groupValue: 'a',
-              onChanged: null,
+              onChanged: (_) {},
               child: const NakedRadio<String>(
                 key: nakedKey,
                 value: 'a',

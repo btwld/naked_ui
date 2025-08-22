@@ -23,7 +23,7 @@ class NakedSlider extends StatefulWidget {
     this.enabled = true,
     this.semanticLabel,
     this.semanticHint,
-    this.cursor = SystemMouseCursors.click,
+    this.mouseCursor = SystemMouseCursors.click,
     this.enableHapticFeedback = true,
     this.focusNode,
     this.autofocus = false,
@@ -32,7 +32,7 @@ class NakedSlider extends StatefulWidget {
     this.keyboardStep = 0.01,
     this.largeKeyboardStep = 0.1,
     this.excludeSemantics = false,
-    this.controller,
+    this.statesController,
   }) : assert(min < max, 'min must be less than max');
 
   /// Child widget to display.
@@ -75,7 +75,7 @@ class NakedSlider extends StatefulWidget {
   final String? semanticHint;
 
   /// Cursor when hovering over the slider.
-  final MouseCursor cursor;
+  final MouseCursor mouseCursor;
 
   /// Whether to provide haptic feedback on keyboard navigation.
   final bool enableHapticFeedback;
@@ -102,7 +102,7 @@ class NakedSlider extends StatefulWidget {
   final bool excludeSemantics;
 
   /// Optional external controller for interaction states.
-  final WidgetStatesController? controller;
+  final WidgetStatesController? statesController;
 
   @override
   State<NakedSlider> createState() => _NakedSliderState();
@@ -116,7 +116,7 @@ class _NakedSliderState extends State<NakedSlider> {
 
   WidgetStatesController? _internalController;
   WidgetStatesController get _controller =>
-      widget.controller ?? (_internalController ??= WidgetStatesController());
+      widget.statesController ?? (_internalController ??= WidgetStatesController());
 
   bool _isHovered = false;
   bool _isFocused = false;
@@ -284,14 +284,15 @@ class _NakedSliderState extends State<NakedSlider> {
   @override
   void didUpdateWidget(NakedSlider oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.controller != oldWidget.controller) {
-      oldWidget.controller?.removeListener(_onControllerChange);
-      if (widget.controller != null) {
+    if (widget.statesController != oldWidget.statesController) {
+      oldWidget.statesController?.removeListener(_onControllerChange);
+      if (widget.statesController != null) {
         _internalController?.dispose();
         _internalController = null;
       } else {
         _internalController ??= WidgetStatesController();
       }
+      // ignore: always-remove-listener
       _controller.addListener(_onControllerChange);
     }
     _updateStates();
@@ -308,7 +309,7 @@ class _NakedSliderState extends State<NakedSlider> {
   bool get _isEnabled => widget.enabled && widget.onChanged != null;
 
   MouseCursor get _cursor =>
-      _isEnabled ? widget.cursor : SystemMouseCursors.forbidden;
+      _isEnabled ? widget.mouseCursor : SystemMouseCursors.forbidden;
 
   Map<ShortcutActivator, Intent> get _shortcuts {
     final bool isRTL = Directionality.of(context) == TextDirection.rtl;

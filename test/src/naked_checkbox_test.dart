@@ -510,7 +510,7 @@ void main() {
           key: key,
           value: false,
           onChanged: (_) {},
-          cursor: SystemMouseCursors.help,
+          mouseCursor: SystemMouseCursors.help,
           child: const Text('Custom Cursor Checkbox'),
         ),
       );

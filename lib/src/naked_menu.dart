@@ -166,7 +166,7 @@ class NakedMenuItem extends StatelessWidget {
     this.semanticLabel,
     this.semanticHint,
     this.excludeSemantics = false,
-    this.cursor = SystemMouseCursors.click,
+    this.mouseCursor = SystemMouseCursors.click,
     this.enableHapticFeedback = true,
     this.focusNode,
     this.autofocus = false,
@@ -197,13 +197,13 @@ class NakedMenuItem extends StatelessWidget {
   final ValueChanged<bool>? onHighlightChanged;
 
   /// Called when any widget state changes.
-  final ValueChanged<WidgetStatesDelta>? onStateChange;
+  final ValueChanged<Set<WidgetState>>? onStateChange;
 
   /// Optional external controller for interaction states.
   final WidgetStatesController? statesController;
 
   /// Optional builder that receives the current states for visuals.
-  final WidgetStateBuilder? builder;
+  final ValueWidgetBuilder<Set<WidgetState>>? builder;
 
   /// Whether the item can be selected.
   final bool enabled;
@@ -218,7 +218,7 @@ class NakedMenuItem extends StatelessWidget {
   final bool excludeSemantics;
 
   /// Cursor when hovering over the item.
-  final MouseCursor cursor;
+  final MouseCursor mouseCursor;
 
   /// Whether to provide haptic feedback on selection.
   final bool enableHapticFeedback;
@@ -250,7 +250,7 @@ class NakedMenuItem extends StatelessWidget {
       isSemanticButton: true,
       semanticLabel: semanticLabel,
       semanticHint: semanticHint,
-      cursor: cursor,
+      mouseCursor: mouseCursor,
       enableHapticFeedback: enableHapticFeedback,
       focusNode: focusNode,
       autofocus: autofocus,
@@ -261,7 +261,7 @@ class NakedMenuItem extends StatelessWidget {
       onStateChange: onStateChange,
       statesController: statesController,
       child: child,
-      builder: builder,
+      builder: builder != null ? (context, states, child) => builder!(context, states, child) : null,
     );
   }
 }

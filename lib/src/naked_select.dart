@@ -382,7 +382,7 @@ class NakedSelectTrigger extends StatelessWidget {
     super.key,
     required this.child,
     this.semanticLabel,
-    this.cursor = SystemMouseCursors.click,
+    this.mouseCursor = SystemMouseCursors.click,
     this.enableHapticFeedback = true,
     this.focusNode,
     this.autofocus = false,
@@ -414,7 +414,7 @@ class NakedSelectTrigger extends StatelessWidget {
 
   /// The cursor to show when hovering over the trigger.
   /// Defaults to [SystemMouseCursors.click].
-  final MouseCursor cursor;
+  final MouseCursor mouseCursor;
 
   /// Whether to provide haptic feedback when tapped.
   /// Defaults to true.
@@ -447,7 +447,7 @@ class NakedSelectTrigger extends StatelessWidget {
       enabled: state?.isEnabled ?? true,
       isSemanticButton: true,
       semanticLabel: semanticLabel,
-      cursor: cursor,
+      mouseCursor: mouseCursor,
       enableHapticFeedback: enableHapticFeedback,
       focusNode: focusNode,
       autofocus: autofocus,
@@ -492,7 +492,7 @@ class NakedSelectItem<T> extends StatefulWidget {
     this.onSelectChange,
     this.enabled = true,
     this.semanticLabel,
-    this.cursor = SystemMouseCursors.click,
+    this.mouseCursor = SystemMouseCursors.click,
     this.enableHapticFeedback = true,
     this.focusNode,
     this.autofocus = false,
@@ -536,7 +536,7 @@ class NakedSelectItem<T> extends StatefulWidget {
 
   /// The cursor to show when hovering over this item.
   /// Defaults to [SystemMouseCursors.click].
-  final MouseCursor cursor;
+  final MouseCursor mouseCursor;
 
   /// Whether to provide haptic feedback when selected.
   /// Defaults to true.
@@ -656,7 +656,7 @@ class _NakedSelectItemState<T> extends State<NakedSelectItem<T>> {
         enabled: isEffectivelyEnabled,
         isSemanticButton: true,
         semanticLabel: widget.semanticLabel ?? widget.value.toString(),
-        cursor: widget.cursor,
+        mouseCursor: widget.mouseCursor,
         enableHapticFeedback: widget.enableHapticFeedback,
         focusNode: _focusNode,
         autofocus: widget.autofocus,

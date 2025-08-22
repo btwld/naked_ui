@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:naked_ui/naked_ui.dart';
 
-import '../helpers/semantics_utils.dart' as su;
 import '../helpers/simulate_hover.dart';
 
 void main() {

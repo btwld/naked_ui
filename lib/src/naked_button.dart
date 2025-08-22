@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import 'utilities/naked_focusable.dart';
 import 'utilities/naked_interactable.dart';
 import 'utilities/semantics.dart';
 
@@ -20,7 +19,7 @@ class NakedButton extends StatelessWidget {
     this.isSemanticButton = true,
     this.semanticLabel,
     this.semanticHint,
-    this.cursor = SystemMouseCursors.click,
+    this.mouseCursor = SystemMouseCursors.click,
     this.enableHapticFeedback = true,
     this.focusNode,
     this.autofocus = false,
@@ -58,13 +57,13 @@ class NakedButton extends StatelessWidget {
   final ValueChanged<bool>? onHighlightChanged;
 
   /// Called when any widget state changes.
-  final ValueChanged<WidgetStatesDelta>? onStateChange;
+  final ValueChanged<Set<WidgetState>>? onStateChange;
 
   /// Optional external controller for interaction states.
   final WidgetStatesController? statesController;
 
   /// Optional builder that receives the current states for visuals.
-  final WidgetStateBuilder? builder;
+  final ValueWidgetBuilder<Set<WidgetState>>? builder;
 
   /// Whether the button is enabled.
   final bool enabled;
@@ -81,7 +80,7 @@ class NakedButton extends StatelessWidget {
   /// Cursor when hovering over the button.
   ///
   /// Defaults to [SystemMouseCursors.click] when enabled.
-  final MouseCursor cursor;
+  final MouseCursor mouseCursor;
 
   /// Whether to provide haptic feedback on press.
   final bool enableHapticFeedback;
@@ -98,7 +97,7 @@ class NakedButton extends StatelessWidget {
   bool get _effectiveEnabled => enabled && onPressed != null;
 
   MouseCursor get _mouseCursor =>
-      _effectiveEnabled ? cursor : SystemMouseCursors.forbidden;
+      _effectiveEnabled ? mouseCursor : SystemMouseCursors.forbidden;
 
   void _onPressed() {
     if (enableHapticFeedback) {
@@ -114,27 +113,45 @@ class NakedButton extends StatelessWidget {
       onTap: _effectiveEnabled ? _onPressed : null,
       hint: semanticHint,
       excludeSemantics: excludeSemantics,
-      child: NakedInteractable(
-        enabled: _effectiveEnabled,
-        onPressed: onPressed == null ? null : _onPressed,
-        onDoubleTap: onDoubleTap,
-        onLongPress: onLongPress,
-        statesController: statesController,
-        focusNode: focusNode,
-        autofocus: autofocus,
-        onFocusChange: onFocusChange,
-        onHoverChange: onHoverChange,
-        onHighlightChanged: onHighlightChanged,
-        onStateChange: onStateChange,
-        mouseCursor: _mouseCursor,
-        excludeFromSemantics: excludeSemantics,
-        builder: (states) {
-          if (builder != null) {
-            return builder!(states);
-          }
-
-          return child!;
+      child: Shortcuts(
+        shortcuts: {
+          const SingleActivator(LogicalKeyboardKey.enter):
+              const ActivateIntent(),
+          const SingleActivator(LogicalKeyboardKey.space):
+              const ActivateIntent(),
         },
+        child: Actions(
+          actions: {
+            ActivateIntent: CallbackAction<ActivateIntent>(
+              onInvoke: (ActivateIntent intent) =>
+                  _effectiveEnabled ? _onPressed() : null,
+            ),
+          },
+          child: GestureDetector(
+            onTap: _effectiveEnabled ? _onPressed : null,
+            onDoubleTap: _effectiveEnabled ? onDoubleTap : null,
+            onLongPress: _effectiveEnabled ? onLongPress : null,
+            behavior: HitTestBehavior.opaque,
+            child: NakedInteractable(
+              mouseCursor: _mouseCursor,
+              statesController: statesController,
+              enabled: _effectiveEnabled,
+              onHighlightChanged: onHighlightChanged,
+              onHoverChange: onHoverChange,
+              onFocusChange: onFocusChange,
+              onStateChange: onStateChange,
+              autofocus: autofocus,
+              focusNode: focusNode,
+              builder: (context, states, child) {
+                if (builder != null) {
+                  return builder!(context, states, child);
+                }
+
+                return this.child!;
+              },
+            ),
+          ),
+        ),
       ),
     );
   }

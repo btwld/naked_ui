@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import 'utilities/naked_focusable.dart';
 import 'utilities/naked_interactable.dart';
+import 'utilities/semantics.dart';
 
 /// Headless checkbox built on NakedInteractable with proper semantics and callbacks.
 class NakedCheckbox extends StatelessWidget {
@@ -16,7 +16,7 @@ class NakedCheckbox extends StatelessWidget {
     this.semanticLabel,
     this.semanticHint,
     this.excludeSemantics = false,
-    this.cursor,
+    this.mouseCursor,
     this.enableHapticFeedback = true,
     this.focusNode,
     this.autofocus = false,
@@ -66,7 +66,7 @@ class NakedCheckbox extends StatelessWidget {
   final ValueChanged<bool>? onHighlightChanged;
 
   /// Called when any widget state changes.
-  final ValueChanged<WidgetStatesDelta>? onStateChange;
+  final ValueChanged<Set<WidgetState>>? onStateChange;
 
   /// Optional external controller for interaction states.
   final WidgetStatesController? statesController;
@@ -84,7 +84,7 @@ class NakedCheckbox extends StatelessWidget {
   final bool excludeSemantics;
 
   /// Cursor when hovering over the checkbox.
-  final MouseCursor? cursor;
+  final MouseCursor? mouseCursor;
 
   /// Whether to provide haptic feedback on tap.
   final bool enableHapticFeedback;
@@ -95,8 +95,8 @@ class NakedCheckbox extends StatelessWidget {
   /// Whether to autofocus when created.
   final bool autofocus;
 
-  /// Optional builder that receives the current delta for visuals.
-  final WidgetStateBuilder? builder;
+  /// Optional builder that receives the current states for visuals.
+  final ValueWidgetBuilder<Set<WidgetState>>? builder;
 
   bool? _getNextTristate(bool? currentValue) {
     // Tristate cycling: false → true → null → false
@@ -127,34 +127,53 @@ class NakedCheckbox extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final bool isChecked = value ?? false;
-    final bool isMixed = tristate && value == null;
+    final bool isInteractive = enabled && onChanged != null;
 
-    return Semantics(
-      excludeSemantics: excludeSemantics,
-      enabled: enabled,
-      checked: isChecked,
-      mixed: isMixed,
+    return NakedSemantics.checkbox(
       label: semanticLabel,
+      checked: value,
+      tristate: tristate,
+      onTap: isInteractive ? _handlePressed : null,
       hint: semanticHint,
-      child: NakedInteractable(
-        enabled: enabled,
-        selected: isChecked,
-        onPressed: _handlePressed,
-        statesController: statesController,
-        focusNode: focusNode,
-        autofocus: autofocus,
-        onFocusChange: onFocusChange,
-        onHoverChange: onHoverChange,
-        onHighlightChanged: onHighlightChanged,
-        onStateChange: onStateChange,
-        mouseCursor: cursor,
-        builder: (states) {
-          if (builder != null) {
-            return builder!(states);
-          }
-
-          return child!;
+      excludeSemantics: excludeSemantics,
+      child: Shortcuts(
+        shortcuts: {
+          const SingleActivator(LogicalKeyboardKey.enter):
+              const ActivateIntent(),
+          const SingleActivator(LogicalKeyboardKey.space):
+              const ActivateIntent(),
         },
+        child: Actions(
+          actions: {
+            ActivateIntent: CallbackAction<ActivateIntent>(
+              onInvoke: (ActivateIntent intent) =>
+                  isInteractive ? _handlePressed() : null,
+            ),
+          },
+          child: GestureDetector(
+            onTap: isInteractive ? _handlePressed : null,
+            behavior: HitTestBehavior.opaque,
+            child: NakedInteractable(
+              mouseCursor: mouseCursor,
+              statesController: statesController,
+              enabled: isInteractive,
+              onHighlightChanged: onHighlightChanged,
+              onHoverChange: onHoverChange,
+              onFocusChange: onFocusChange,
+              onStateChange: onStateChange,
+              selected: isChecked,
+              autofocus: autofocus,
+              focusNode: focusNode,
+              builder: (context, states, child) {
+                if (builder != null) {
+                  return builder!(context, states, child);
+                }
+
+                return this.child!;
+              },
+            ),
+          ),
+        ),
       ),
     );
   }

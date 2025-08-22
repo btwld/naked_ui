@@ -614,7 +614,7 @@ void main() {
         NakedSlider(
           key: testKey,
           value: 0.5,
-          cursor: SystemMouseCursors.precise,
+          mouseCursor: SystemMouseCursors.precise,
           onChanged: (_) {},
           child: _anyWidget(),
         ),

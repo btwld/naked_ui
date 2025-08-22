@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
-import 'utilities/naked_focusable.dart';
+import 'mixins/naked_mixins.dart';
+import 'utilities/naked_interactable.dart';
 
 /// Thin wrapper over Flutter's RadioGroup to preserve Naked API.
 class NakedRadioGroup<T> extends StatelessWidget {
@@ -28,13 +28,13 @@ class NakedRadioGroup<T> extends StatelessWidget {
 }
 
 /// Radio button built on RawRadio with proper semantics and state callbacks.
-class NakedRadio<T> extends StatefulWidget {
+class NakedRadio<T> extends StatefulWidget with NakedFocusable {
   const NakedRadio({
     super.key,
     required this.value,
     this.child,
     this.enabled = true,
-    this.cursor,
+    this.mouseCursor,
     this.focusNode,
     this.autofocus = false,
     this.toggleable = false,
@@ -46,7 +46,6 @@ class NakedRadio<T> extends StatefulWidget {
     this.semanticLabel,
     this.semanticHint,
     this.excludeSemantics = false,
-    this.enableHapticFeedback = true,
     this.builder,
   }) : assert(
          child != null || builder != null,
@@ -56,7 +55,7 @@ class NakedRadio<T> extends StatefulWidget {
   final T value;
   final Widget? child;
   final bool enabled;
-  final MouseCursor? cursor;
+  final MouseCursor? mouseCursor;
   final FocusNode? focusNode;
   final bool autofocus;
   final bool toggleable;
@@ -65,139 +64,20 @@ class NakedRadio<T> extends StatefulWidget {
   final ValueChanged<bool>? onFocusChange;
   final ValueChanged<bool>? onHoverChange;
   final ValueChanged<bool>? onHighlightChanged; // For pressed state
-  final ValueChanged<WidgetStatesDelta>? onStateChange;
+  final ValueChanged<Set<WidgetState>>? onStateChange;
 
   final WidgetStatesController? statesController;
   final String? semanticLabel;
   final String? semanticHint;
   final bool excludeSemantics;
-  final bool enableHapticFeedback;
-  final WidgetStateBuilder? builder;
+  final ValueWidgetBuilder<Set<WidgetState>>? builder;
 
   @override
   State<NakedRadio<T>> createState() => _NakedRadioState<T>();
 }
 
-class _NakedRadioState<T> extends State<NakedRadio<T>> {
-  // Internal resources we manage
-  FocusNode? _internalFocusNode;
-  WidgetStatesController? _internalStatesController;
-
-  // Track the delta for state changes
-  WidgetStatesDelta _currentDelta = (
-    previous: <WidgetState>{},
-    current: <WidgetState>{},
-  );
-
-  // Cache for the last built widget to avoid unnecessary rebuilds
-  Widget? _cachedWidget;
-
-  FocusNode get focusNode =>
-      widget.focusNode ?? (_internalFocusNode ??= FocusNode());
-
-  WidgetStatesController? get statesController =>
-      widget.statesController ??
-      (_internalStatesController ??= WidgetStatesController());
-
-  @override
-  void initState() {
-    super.initState();
-    // Initialize disabled state if we have a controller
-    statesController?.update(WidgetState.disabled, !widget.enabled);
-  }
-
-  /// Process state changes from RawRadio
-  void _processStates(Set<WidgetState> newStates) {
-    // Debug print to see what states we're getting
-    print('_processStates called with: $newStates');
-    
-    // Create new delta
-    final newDelta = (previous: _currentDelta.current, current: newStates);
-
-    // Use the extension to check if there's any change
-    if (!newDelta.hasChanged) {
-      print('No state changes detected');
-      return; // No change, nothing to do
-    }
-
-    print('State change detected: ${newDelta.previous} -> ${newDelta.current}');
-    
-    // Update our tracked delta
-    _currentDelta = newDelta;
-
-    // Update external controller if provided
-    if (statesController != null) {
-      for (final state in WidgetState.values) {
-        statesController!.update(state, newStates.contains(state));
-      }
-    }
-
-    // Call individual callbacks using the extension methods
-    if (newDelta.focusedHasChanged) {
-      widget.onFocusChange?.call(newDelta.isFocused);
-    }
-
-    if (newDelta.hoveredHasChanged) {
-      widget.onHoverChange?.call(newDelta.isHovered);
-    }
-
-    if (newDelta.pressedHasChanged) {
-      widget.onHighlightChanged?.call(newDelta.isPressed);
-    }
-
-    // Haptic feedback on selection using extension methods
-    if (widget.enableHapticFeedback &&
-        widget.enabled &&
-        newDelta.selectedHasChanged &&
-        newDelta.isSelected) {
-      HapticFeedback.selectionClick();
-    }
-
-    // Call unified state change callback
-    widget.onStateChange?.call(newDelta);
-
-    // Clear cache since states changed
-    _cachedWidget = null;
-  }
-
-  /// Build the widget from builder or child
-  Widget _buildWidget() {
-    if (widget.builder != null) {
-      return widget.builder!(_currentDelta);
-    }
-
-    return widget.child!;
-  }
-
-  @override
-  void didUpdateWidget(NakedRadio<T> oldWidget) {
-    super.didUpdateWidget(oldWidget);
-
-    // Update disabled state if enabled changed
-    if (oldWidget.enabled != widget.enabled) {
-      statesController?.update(WidgetState.disabled, !widget.enabled);
-    }
-
-    // Clean up internal focus node if switching to external
-    if (oldWidget.focusNode == null && widget.focusNode != null) {
-      _internalFocusNode?.dispose();
-      _internalFocusNode = null;
-    }
-
-    // Clean up internal states controller if switching to external
-    if (oldWidget.statesController == null && widget.statesController != null) {
-      _internalStatesController?.dispose();
-      _internalStatesController = null;
-    }
-  }
-
-  @override
-  void dispose() {
-    _internalFocusNode?.dispose();
-    _internalStatesController?.dispose();
-    super.dispose();
-  }
-
+class _NakedRadioState<T> extends State<NakedRadio<T>>
+    with NakedFocusableStateMixin {
   @override
   Widget build(BuildContext context) {
     final registry = RadioGroup.maybeOf<T>(context);
@@ -231,37 +111,43 @@ class _NakedRadioState<T> extends State<NakedRadio<T>> {
     final isSelected = registry.groupValue == widget.value;
 
     // Determine mouse cursor
-    final effectiveCursor = widget.cursor != null
-        ? WidgetStateMouseCursor.resolveWith((_) => widget.cursor!)
+    final effectiveCursor = widget.mouseCursor != null
+        ? WidgetStateMouseCursor.resolveWith((_) => widget.mouseCursor!)
         : widget.enabled
         ? WidgetStateMouseCursor.clickable
         : WidgetStateMouseCursor.resolveWith(
             (_) => SystemMouseCursors.forbidden,
           );
 
-    return Semantics(
-      excludeSemantics: widget.excludeSemantics,
+    return NakedInteractable(
+      statesController: widget.statesController,
       enabled: widget.enabled,
-      checked: isSelected,
-      inMutuallyExclusiveGroup: true,
-      label: widget.semanticLabel,
-      hint: widget.semanticHint,
-      child: RawRadio<T>(
-        value: widget.value,
-        mouseCursor: effectiveCursor,
-        toggleable: widget.toggleable,
-        focusNode: focusNode,
-        autofocus: widget.autofocus && widget.enabled,
-        groupRegistry: registry,
-        enabled: widget.enabled,
-        builder: (context, states) {
-          // Process the states from RawRadio immediately
-          _processStates(states.states);
+      onHighlightChanged: widget.onHighlightChanged,
+      onHoverChange: widget.onHoverChange,
+      onFocusChange: widget.onFocusChange,
+      onStateChange: widget.onStateChange,
+      selected: isSelected,
+      autofocus: widget.autofocus,
+      focusNode: effectiveFocusNode,
+      builder: (context, states, child) {
+        return RawRadio<T>(
+          value: widget.value,
+          mouseCursor: effectiveCursor,
+          toggleable: widget.toggleable,
+          focusNode: effectiveFocusNode,
+          autofocus: widget.autofocus && widget.enabled,
+          groupRegistry: registry,
+          enabled: widget.enabled,
+          builder: (context, radioStates) {
+            // Build the widget using NakedInteractable's states
+            if (widget.builder != null) {
+              return widget.builder!(context, states, child);
+            }
 
-          // Build the widget fresh each time for now
-          return _buildWidget();
-        },
-      ),
+            return widget.child!;
+          },
+        );
+      },
     );
   }
 }
