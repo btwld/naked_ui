@@ -126,7 +126,7 @@ void main() {
           onChanged: (_) {},
           child: NakedRadio<String>(
             value: 'test',
-            onHighlightChanged: (pressed) => isPressed = pressed,
+            onPressChange: (pressed) => isPressed = pressed,
             child: const SizedBox(width: 24, height: 24),
           ),
         ),
@@ -298,7 +298,7 @@ void main() {
       expect(wasChanged, false);
     });
 
-    testWidgets('disables interaction when group is disabled', (
+    testWidgets('enables selection when group value is null', (
       WidgetTester tester,
     ) async {
       bool wasChanged = false;
@@ -316,7 +316,7 @@ void main() {
       );
 
       await tester.tap(find.byType(NakedRadio<String>));
-      expect(wasChanged, false);
+      expect(wasChanged, true);
     });
 
     testWidgets('shows forbidden cursor when disabled', (

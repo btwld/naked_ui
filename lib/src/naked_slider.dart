@@ -1,7 +1,55 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import 'utilities/semantics.dart';
+import 'utilities/utilities.dart';
+
+// Slider keyboard shortcuts (left-to-right layout)
+const Map<ShortcutActivator, Intent> _kSliderShortcutsLtr =
+    <ShortcutActivator, Intent>{
+      // Horizontal
+      SingleActivator(LogicalKeyboardKey.arrowRight): _SliderIncrementIntent(),
+      SingleActivator(LogicalKeyboardKey.arrowLeft): _SliderDecrementIntent(),
+      SingleActivator(LogicalKeyboardKey.arrowLeft, shift: true):
+          _SliderShiftDecrementIntent(),
+      SingleActivator(LogicalKeyboardKey.arrowRight, shift: true):
+          _SliderShiftIncrementIntent(),
+
+      // Vertical
+      SingleActivator(LogicalKeyboardKey.arrowUp): _SliderIncrementIntent(),
+      SingleActivator(LogicalKeyboardKey.arrowUp, shift: true):
+          _SliderShiftIncrementIntent(),
+      SingleActivator(LogicalKeyboardKey.arrowDown): _SliderDecrementIntent(),
+      SingleActivator(LogicalKeyboardKey.arrowDown, shift: true):
+          _SliderShiftDecrementIntent(),
+
+      // Home/End
+      SingleActivator(LogicalKeyboardKey.home): _SliderSetToMinIntent(),
+      SingleActivator(LogicalKeyboardKey.end): _SliderSetToMaxIntent(),
+    };
+
+// Slider keyboard shortcuts (right-to-left layout)
+const Map<ShortcutActivator, Intent> _kSliderShortcutsRtl =
+    <ShortcutActivator, Intent>{
+      // Horizontal (swapped for RTL)
+      SingleActivator(LogicalKeyboardKey.arrowLeft): _SliderIncrementIntent(),
+      SingleActivator(LogicalKeyboardKey.arrowRight): _SliderDecrementIntent(),
+      SingleActivator(LogicalKeyboardKey.arrowRight, shift: true):
+          _SliderShiftDecrementIntent(),
+      SingleActivator(LogicalKeyboardKey.arrowLeft, shift: true):
+          _SliderShiftIncrementIntent(),
+
+      // Vertical
+      SingleActivator(LogicalKeyboardKey.arrowUp): _SliderIncrementIntent(),
+      SingleActivator(LogicalKeyboardKey.arrowUp, shift: true):
+          _SliderShiftIncrementIntent(),
+      SingleActivator(LogicalKeyboardKey.arrowDown): _SliderDecrementIntent(),
+      SingleActivator(LogicalKeyboardKey.arrowDown, shift: true):
+          _SliderShiftDecrementIntent(),
+
+      // Home/End
+      SingleActivator(LogicalKeyboardKey.home): _SliderSetToMinIntent(),
+      SingleActivator(LogicalKeyboardKey.end): _SliderSetToMaxIntent(),
+    };
 
 /// Provides slider interaction behavior without visual styling.
 ///
@@ -24,7 +72,7 @@ class NakedSlider extends StatefulWidget {
     this.semanticLabel,
     this.semanticHint,
     this.mouseCursor = SystemMouseCursors.click,
-    this.enableHapticFeedback = true,
+    this.enableFeedback = true,
     this.focusNode,
     this.autofocus = false,
     this.direction = Axis.horizontal,
@@ -78,7 +126,7 @@ class NakedSlider extends StatefulWidget {
   final MouseCursor mouseCursor;
 
   /// Whether to provide haptic feedback on keyboard navigation.
-  final bool enableHapticFeedback;
+  final bool enableFeedback;
 
   /// Optional focus node to control focus behavior.
   final FocusNode? focusNode;
@@ -116,10 +164,10 @@ class _NakedSliderState extends State<NakedSlider> {
 
   WidgetStatesController? _internalController;
   WidgetStatesController get _controller =>
-      widget.statesController ?? (_internalController ??= WidgetStatesController());
+      widget.statesController ??
+      (_internalController ??= WidgetStatesController());
 
-  bool _isHovered = false;
-  bool _isFocused = false;
+  // Hover and focus are tracked via the states controller only
 
   Offset? _dragStartPosition;
   double? _dragStartValue;
@@ -127,8 +175,8 @@ class _NakedSliderState extends State<NakedSlider> {
   @override
   void initState() {
     super.initState();
-    _controller.addListener(_onControllerChange);
-    _updateStates();
+    // Initialize disabled state based on interactivity
+    _controller.update(WidgetState.disabled, !_isEnabled);
   }
 
   void _callOnChangeIfNeeded(double value) {
@@ -154,12 +202,11 @@ class _NakedSliderState extends State<NakedSlider> {
   void _handleDragStart(DragStartDetails details) {
     if (!widget.enabled || widget.onChanged == null) return;
 
-    setState(() {
-      _isDragging = true;
-      _dragStartPosition = details.globalPosition;
-      _dragStartValue = widget.value;
-      _updateStates();
-    });
+    _isDragging = true;
+    _dragStartPosition = details.globalPosition;
+    _dragStartValue = widget.value;
+
+    _controller.update(WidgetState.pressed, true);
 
     widget.onDragChange?.call(true);
     widget.onDragStart?.call();
@@ -181,9 +228,10 @@ class _NakedSliderState extends State<NakedSlider> {
         ? box.size.width
         : box.size.height;
 
+    // Invert for vertical slider (up is positive)
     double dragDistance = widget.direction == Axis.horizontal
         ? dragDelta.dx
-        : -dragDelta.dy; // Invert for vertical slider (up is positive)
+        : -dragDelta.dy;
 
     double valueDelta = dragDistance / dragExtent * (widget.max - widget.min);
     double newValue = _normalizeValue(_dragStartValue! + valueDelta);
@@ -196,12 +244,11 @@ class _NakedSliderState extends State<NakedSlider> {
   void _handleDragEnd(DragEndDetails details) {
     if (!_isDragging) return;
 
-    setState(() {
-      _isDragging = false;
-      _dragStartPosition = null;
-      _dragStartValue = null;
-      _updateStates();
-    });
+    _isDragging = false;
+    _dragStartPosition = null;
+    _dragStartValue = null;
+
+    _controller.update(WidgetState.pressed, false);
 
     widget.onDragChange?.call(false);
     widget.onDragEnd?.call(widget.value);
@@ -214,22 +261,16 @@ class _NakedSliderState extends State<NakedSlider> {
     return isShiftPressed ? widget.largeKeyboardStep : widget.keyboardStep;
   }
 
-  void _onControllerChange() {
-    if (mounted) {
-      // Rebuild to reflect controller state changes from external controller
-      setState(() {});
-    }
+  // No bulk state setter; we update individual flags per event.
+
+  void _handleHoverChange(bool value) {
+    _controller.update(WidgetState.hovered, value);
+    widget.onHoverChange?.call(value);
   }
 
-  void _updateStates() {
-    final states = <WidgetState>{
-      if (!widget.enabled) WidgetState.disabled,
-      if (_isHovered) WidgetState.hovered,
-      if (_isFocused) WidgetState.focused,
-      if (_isDragging) WidgetState.pressed,
-    };
-
-    _controller.value = states;
+  void _handleFocusChange(bool value) {
+    _controller.update(WidgetState.focused, value);
+    widget.onFocusChange?.call(value);
   }
 
   Widget _buildSliderInteractable() {
@@ -240,20 +281,8 @@ class _NakedSliderState extends State<NakedSlider> {
       descendantsAreTraversable: false,
       shortcuts: _shortcuts,
       actions: _actions,
-      onShowHoverHighlight: (value) {
-        setState(() {
-          _isHovered = value;
-          _updateStates();
-        });
-        widget.onHoverChange?.call(value);
-      },
-      onFocusChange: (value) {
-        setState(() {
-          _isFocused = value;
-          _updateStates();
-        });
-        widget.onFocusChange?.call(value);
-      },
+      onShowHoverHighlight: _handleHoverChange,
+      onFocusChange: _handleFocusChange,
       mouseCursor: _cursor,
       child: GestureDetector(
         onVerticalDragStart: widget.direction == Axis.vertical && _isEnabled
@@ -285,22 +314,19 @@ class _NakedSliderState extends State<NakedSlider> {
   void didUpdateWidget(NakedSlider oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.statesController != oldWidget.statesController) {
-      oldWidget.statesController?.removeListener(_onControllerChange);
       if (widget.statesController != null) {
         _internalController?.dispose();
         _internalController = null;
       } else {
         _internalController ??= WidgetStatesController();
       }
-      // ignore: always-remove-listener
-      _controller.addListener(_onControllerChange);
     }
-    _updateStates();
+    // Sync disabled state when interactivity changes
+    _controller.update(WidgetState.disabled, !_isEnabled);
   }
 
   @override
   void dispose() {
-    _controller.removeListener(_onControllerChange);
     _internalController?.dispose();
     _internalFocusNode?.dispose();
     super.dispose();
@@ -313,45 +339,8 @@ class _NakedSliderState extends State<NakedSlider> {
 
   Map<ShortcutActivator, Intent> get _shortcuts {
     final bool isRTL = Directionality.of(context) == TextDirection.rtl;
-    const arrowLeft = LogicalKeyboardKey.arrowLeft;
-    const arrowRight = LogicalKeyboardKey.arrowRight;
-    const arrowUp = LogicalKeyboardKey.arrowUp;
-    const arrowDown = LogicalKeyboardKey.arrowDown;
-    const home = LogicalKeyboardKey.home;
-    const end = LogicalKeyboardKey.end;
 
-    final decrementIntent = SingleActivator(isRTL ? arrowRight : arrowLeft);
-    final incrementIntent = SingleActivator(isRTL ? arrowLeft : arrowRight);
-
-    final shiftDecrementIntent = SingleActivator(
-      isRTL ? arrowRight : arrowLeft,
-      shift: true,
-    );
-    final shiftIncrementIntent = SingleActivator(
-      isRTL ? arrowLeft : arrowRight,
-      shift: true,
-    );
-
-    return {
-      // Horizontal
-      incrementIntent: const _SliderIncrementIntent(),
-      decrementIntent: const _SliderDecrementIntent(),
-      shiftDecrementIntent: const _SliderShiftDecrementIntent(),
-      shiftIncrementIntent: const _SliderShiftIncrementIntent(),
-
-      // Vertical
-      const SingleActivator(arrowUp): const _SliderIncrementIntent(),
-      const SingleActivator(arrowUp, shift: true):
-          const _SliderShiftIncrementIntent(),
-
-      const SingleActivator(arrowDown): const _SliderDecrementIntent(),
-      const SingleActivator(arrowDown, shift: true):
-          const _SliderShiftDecrementIntent(),
-
-      // Home/End
-      const SingleActivator(home): const _SliderSetToMinIntent(),
-      const SingleActivator(end): const _SliderSetToMaxIntent(),
-    };
+    return isRTL ? _kSliderShortcutsRtl : _kSliderShortcutsLtr;
   }
 
   Map<Type, Action<Intent>> get _actions {
@@ -391,21 +380,31 @@ class _NakedSliderState extends State<NakedSlider> {
       );
     }
 
-    return NakedSemantics.slider(
+    // Use direct Semantics for Material parity
+    return Semantics(
+      excludeSemantics: widget.excludeSemantics,
+      enabled: _isEnabled,
+      slider: true,
+      focusable: _isEnabled,
       label: widget.semanticLabel ?? '',
       value: '${percentage.round()}%',
+      increasedValue:
+          '${((increasedValue - widget.min) / (widget.max - widget.min) * 100).round()}%',
+      decreasedValue:
+          '${((decreasedValue - widget.min) / (widget.max - widget.min) * 100).round()}%',
+      hint: widget.semanticHint,
       onIncrease: _isEnabled
           ? () => _callOnChangeIfNeeded(increasedValue)
           : null,
       onDecrease: _isEnabled
           ? () => _callOnChangeIfNeeded(decreasedValue)
           : null,
-      increasedValue:
-          '${((increasedValue - widget.min) / (widget.max - widget.min) * 100).round()}%',
-      decreasedValue:
-          '${((decreasedValue - widget.min) / (widget.max - widget.min) * 100).round()}%',
-      hint: widget.semanticHint,
-      child: _buildSliderInteractable(),
+      // Expose focus action when enabled
+      onFocus: _isEnabled ? semanticsFocusNoop : null,
+      child: ExcludeSemantics(
+        excluding: !_isEnabled,
+        child: _buildSliderInteractable(),
+      ),
     );
   }
 }
@@ -447,7 +446,7 @@ class _SliderIncrementAction extends Action<_SliderIncrementIntent> {
     final step = state._calculateStep(isShiftPressed);
 
     final newValue = state._normalizeValue(state.widget.value + step);
-    if (state.widget.enableHapticFeedback && newValue != state.widget.value) {
+    if (state.widget.enableFeedback && newValue != state.widget.value) {
       HapticFeedback.selectionClick();
     }
     state._callOnChangeIfNeeded(newValue);
@@ -465,7 +464,7 @@ class _SliderDecrementAction extends Action<_SliderDecrementIntent> {
     final step = state._calculateStep(isShiftPressed);
 
     final newValue = state._normalizeValue(state.widget.value - step);
-    if (state.widget.enableHapticFeedback && newValue != state.widget.value) {
+    if (state.widget.enableFeedback && newValue != state.widget.value) {
       HapticFeedback.selectionClick();
     }
     state._callOnChangeIfNeeded(newValue);
@@ -479,8 +478,7 @@ class _SliderSetToMinAction extends Action<_SliderSetToMinIntent> {
 
   @override
   void invoke(_SliderSetToMinIntent intent) {
-    if (state.widget.enableHapticFeedback &&
-        state.widget.value != state.widget.min) {
+    if (state.widget.enableFeedback && state.widget.value != state.widget.min) {
       HapticFeedback.selectionClick();
     }
     state._callOnChangeIfNeeded(state.widget.min);
@@ -494,8 +492,7 @@ class _SliderSetToMaxAction extends Action<_SliderSetToMaxIntent> {
 
   @override
   void invoke(_SliderSetToMaxIntent intent) {
-    if (state.widget.enableHapticFeedback &&
-        state.widget.value != state.widget.max) {
+    if (state.widget.enableFeedback && state.widget.value != state.widget.max) {
       HapticFeedback.selectionClick();
     }
     state._callOnChangeIfNeeded(state.widget.max);

@@ -1,7 +1,5 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:naked_ui/naked_ui.dart';
 
@@ -15,11 +13,8 @@ void main() {
       WidgetStatesController? controller,
       ValueWidgetBuilder<Set<WidgetState>>? builder,
       Widget? child,
-      VoidCallback? onPressed,
-      VoidCallback? onLongPress,
-      VoidCallback? onSecondaryTap,
-      VoidCallback? onSecondaryLongPress,
-      ValueChanged<Set<WidgetState>>? onStateChange,
+      bool enabled = true,
+      ValueChanged<Set<WidgetState>>? onStatesChange,
       bool selected = false,
       bool autofocus = false,
       FocusNode? focusNode,
@@ -29,29 +24,26 @@ void main() {
       return MaterialApp(
         home: Scaffold(
           body: Center(
-            child: GestureDetector(
-              onTap: onPressed,
-              behavior: behavior,
-              child: NakedInteractable(
-                statesController: controller,
-                builder:
-                    builder ??
-                    (context, states, child) {
-                      return Container(
-                        width: 100,
-                        height: 100,
-                        color: states.isPressed
-                            ? Colors.blue
-                            : Colors.grey,
-                        child: child,
-                      );
-                    },
-                child: child,
-                onStateChange: onStateChange,
-                selected: selected,
-                autofocus: autofocus,
-                focusNode: focusNode,
-              ),
+            child: NakedInteractable(
+              statesController: controller,
+              enabled: enabled,
+              builder:
+                  builder ??
+                  (context, states, child) {
+                    return Container(
+                      width: 100,
+                      height: 100,
+                      color: states.isPressed
+                          ? Colors.blue
+                          : Colors.grey,
+                      child: child,
+                    );
+                  },
+              child: child,
+              onStatesChange: onStatesChange,
+              selected: selected,
+              autofocus: autofocus,
+              focusNode: focusNode,
             ),
           ),
         ),
@@ -64,6 +56,7 @@ void main() {
 
         await tester.pumpWidget(
           buildTestWidget(
+            enabled: false,
             builder: (context, states, child) {
               capturedStates = states;
               return Container();
@@ -87,7 +80,7 @@ void main() {
         await tester.pumpWidget(
           buildTestWidget(
             selected: true,
-            onPressed: () {}, // Enable widget
+            enabled: true, // Enable widget
             builder: (context, states, child) {
               capturedStates = states;
               return Container();
@@ -102,9 +95,10 @@ void main() {
       testWidgets('updates disabled state based on callbacks', (tester) async {
         Set<WidgetState>? capturedStates;
 
-        // Initially disabled (no callbacks)
+        // Initially disabled
         await tester.pumpWidget(
           buildTestWidget(
+            enabled: false,
             builder: (context, states, child) {
               capturedStates = states;
               return Container();
@@ -114,10 +108,10 @@ void main() {
 
         expect(capturedStates!.isDisabled, isTrue);
 
-        // Add callback to enable
+        // Enable the widget
         await tester.pumpWidget(
           buildTestWidget(
-            onPressed: () {},
+            enabled: true,
             builder: (context, states, child) {
               capturedStates = states;
               return Container();
@@ -135,7 +129,7 @@ void main() {
         await tester.pumpWidget(
           buildTestWidget(
             controller: controller,
-            onPressed: () {},
+            enabled: true,
             builder: (context, states, child) {
               capturedStates = states;
               return Container();
@@ -164,7 +158,7 @@ void main() {
           await tester.pumpWidget(
             buildTestWidget(
               selected: true,
-              onPressed: () {},
+              enabled: true,
               builder: (context, states, child) {
                 capturedStates = states;
                 return Container();
@@ -189,7 +183,7 @@ void main() {
             buildTestWidget(
               controller: externalController,
               selected: true,
-              onPressed: () {},
+              enabled: true,
               builder: (context, states, child) {
                 capturedStates = states;
                 return Container();
@@ -218,7 +212,7 @@ void main() {
           await tester.pumpWidget(
             buildTestWidget(
               controller: externalController,
-              onPressed: () {},
+              enabled: true,
               builder: (context, states, child) {
                 capturedStates = states;
                 return Container();
@@ -231,7 +225,7 @@ void main() {
           // Switch to internal controller
           await tester.pumpWidget(
             buildTestWidget(
-              onPressed: () {},
+              enabled: true,
               builder: (context, states, child) {
                 capturedStates = states;
                 return Container();
@@ -248,28 +242,31 @@ void main() {
     });
 
     group('Tap Gestures', () {
-      testWidgets('handles tap correctly', (tester) async {
-        bool tapped = false;
-        Set<WidgetState>? capturedStates;
+      testWidgets('handles pointer events correctly', (tester) async {
+        final stateChanges = <Set<WidgetState>>[];
 
         await tester.pumpWidget(
           buildTestWidget(
-            onPressed: () => tapped = true,
-            builder: (context, states, child) {
-              capturedStates = states;
-              return Container();
-            },
+            enabled: true,
+            onStatesChange: (states) => stateChanges.add({...states}),
           ),
         );
 
-        await tester.tap(find.byType(Container));
-        await tester.pumpAndSettle();
+        // Use startGesture like the working test
+        final gesture = await tester.startGesture(
+          tester.getCenter(find.byType(Container)),
+        );
+        await tester.pump();
+        
+        // Should be pressed during gesture
+        expect(stateChanges.last.isPressed, isTrue);
 
-        expect(tapped, isTrue);
-        expect(
-          capturedStates!.isPressed,
-          isFalse,
-        ); // Released after tap
+        // Release gesture
+        await gesture.up();
+        await tester.pump();
+        
+        // Should not be pressed after release
+        expect(stateChanges.last.isPressed, isFalse);
       });
 
       testWidgets('updates pressed state during tap', (tester) async {
@@ -277,8 +274,8 @@ void main() {
 
         await tester.pumpWidget(
           buildTestWidget(
-            onPressed: () {},
-            onStateChange: (states) => stateChanges.add({...states}),
+            enabled: true,
+            onStatesChange: (states) => stateChanges.add({...states}),
           ),
         );
 
@@ -307,7 +304,7 @@ void main() {
             home: Scaffold(
               body: GestureDetector(
                 onLongPress: () => longPressed = true,
-                child: buildTestWidget(onPressed: () {}),
+                child: buildTestWidget(enabled: true),
               ),
             ),
           ),
@@ -327,7 +324,7 @@ void main() {
             home: Scaffold(
               body: GestureDetector(
                 onSecondaryTap: () => secondaryTapped = true,
-                child: buildTestWidget(onPressed: () {}),
+                child: buildTestWidget(enabled: true),
               ),
             ),
           ),
@@ -350,7 +347,7 @@ void main() {
             home: Scaffold(
               body: GestureDetector(
                 onSecondaryLongPress: () => secondaryLongPressed = true,
-                child: buildTestWidget(onPressed: () {}),
+                child: buildTestWidget(enabled: true),
               ),
             ),
           ),
@@ -370,12 +367,10 @@ void main() {
         expect(secondaryLongPressed, isTrue);
       });
 
-      testWidgets('does not trigger gestures when disabled', (tester) async {
-        bool tapped = false;
-
+      testWidgets('shows disabled state correctly', (tester) async {
         await tester.pumpWidget(
           buildTestWidget(
-            // No onPressed passed to GestureDetector; still disabled for NakedInteractable
+            enabled: false,
             builder: (context, states, child) {
               expect(states.isDisabled, isTrue);
               return Container();
@@ -383,10 +378,8 @@ void main() {
           ),
         );
 
-        await tester.tap(find.byType(Container));
+        // Widget should be in disabled state
         await tester.pumpAndSettle();
-
-        expect(tapped, isFalse);
       });
     });
 
@@ -396,8 +389,8 @@ void main() {
 
         await tester.pumpWidget(
           buildTestWidget(
-            onPressed: () {},
-            onStateChange: (states) => stateChanges.add({...states}),
+            enabled: true,
+            onStatesChange: (states) => stateChanges.add({...states}),
           ),
         );
 
@@ -427,9 +420,16 @@ void main() {
         final stateChanges = <Set<WidgetState>>[];
 
         await tester.pumpWidget(
-          buildTestWidget(
-            onPressed: () => tapped = true,
-            onStateChange: (states) => stateChanges.add({...states}),
+          MaterialApp(
+            home: Scaffold(
+              body: GestureDetector(
+                onTap: () => tapped = true,
+                child: buildTestWidget(
+                  enabled: true,
+                  onStatesChange: (states) => stateChanges.add({...states}),
+                ),
+              ),
+            ),
           ),
         );
 
@@ -468,8 +468,8 @@ void main() {
 
         await tester.pumpWidget(
           buildTestWidget(
-            onPressed: () {},
-            onStateChange: (states) => stateChanges.add({...states}),
+            enabled: true,
+            onStatesChange: (states) => stateChanges.add({...states}),
           ),
         );
 
@@ -497,8 +497,8 @@ void main() {
 
         await tester.pumpWidget(
           buildTestWidget(
-            onPressed: () {},
-            onStateChange: (states) => stateChanges.add({...states}),
+            enabled: true,
+            onStatesChange: (states) => stateChanges.add({...states}),
           ),
         );
 
@@ -526,8 +526,8 @@ void main() {
 
         await tester.pumpWidget(
           buildTestWidget(
-            onPressed: () {},
-            onStateChange: (states) => stateChanges.add({...states}),
+            enabled: true,
+            onStatesChange: (states) => stateChanges.add({...states}),
           ),
         );
 
@@ -569,8 +569,8 @@ void main() {
         await tester.pumpWidget(
           buildTestWidget(
             focusNode: focusNode,
-            onPressed: () {},
-            onStateChange: (states) => stateChanges.add({...states}),
+            enabled: true,
+            onStatesChange: (states) => stateChanges.add({...states}),
           ),
         );
 
@@ -595,8 +595,8 @@ void main() {
         await tester.pumpWidget(
           buildTestWidget(
             autofocus: true,
-            onPressed: () {},
-            onStateChange: (states) => stateChanges.add({...states}),
+            enabled: true,
+            onStatesChange: (states) => stateChanges.add({...states}),
           ),
         );
 
@@ -616,7 +616,7 @@ void main() {
         await tester.pumpWidget(
           buildTestWidget(
             focusNode: focusNode,
-            onPressed: () {},
+            enabled: true,
             builder: (context, states, child) {
               capturedStates = states;
               return Container();
@@ -633,7 +633,7 @@ void main() {
           buildTestWidget(
             focusNode: focusNode,
             selected: true, // Changed
-            onPressed: () {},
+            enabled: true,
             builder: (context, states, child) {
               capturedStates = states;
               return Container();
@@ -650,13 +650,13 @@ void main() {
     });
 
     group('State Change Notifications', () {
-      testWidgets('onStateChange called for all state changes', (tester) async {
+      testWidgets('onStatesChange called for all state changes', (tester) async {
         final stateChanges = <Set<WidgetState>>[];
 
         await tester.pumpWidget(
           buildTestWidget(
-            onPressed: () {},
-            onStateChange: (states) => stateChanges.add({...states}),
+            enabled: true,
+            onStatesChange: (states) => stateChanges.add({...states}),
           ),
         );
 
@@ -692,7 +692,7 @@ void main() {
 
         await tester.pumpWidget(
           buildTestWidget(
-            onPressed: () {},
+            enabled: true,
             builder: (context, states, child) {
               buildCount++;
               return Container(
@@ -734,8 +734,8 @@ void main() {
         await tester.pumpWidget(
           buildTestWidget(
             focusNode: focusNode,
-            onPressed: () {},
-            onStateChange: (states) => stateChanges.add({...states}),
+            enabled: true,
+            onStatesChange: (states) => stateChanges.add({...states}),
           ),
         );
 
@@ -768,7 +768,7 @@ void main() {
 
         await tester.pumpWidget(
           buildTestWidget(
-            onPressed: () {},
+            enabled: true,
             child: childWidget,
             builder: (context, states, child) {
               capturedChild = child;
@@ -786,7 +786,7 @@ void main() {
 
         await tester.pumpWidget(
           buildTestWidget(
-            onPressed: () {},
+            enabled: true,
             child: Builder(
               builder: (context) {
                 childBuildCount++;
@@ -819,9 +819,14 @@ void main() {
         bool tapped = false;
 
         await tester.pumpWidget(
-          buildTestWidget(
-            onPressed: () => tapped = true,
-            behavior: HitTestBehavior.opaque,
+          MaterialApp(
+            home: GestureDetector(
+              onTap: () => tapped = true,
+              child: buildTestWidget(
+                enabled: true,
+                behavior: HitTestBehavior.opaque,
+              ),
+            ),
           ),
         );
 
@@ -872,126 +877,128 @@ void main() {
         bool tapped = false;
 
         await tester.pumpWidget(
-          buildTestWidget(
-            onPressed: () => tapped = true,
-            behavior: HitTestBehavior.deferToChild,
-            builder: (context, states, child) {
-              // Empty container with no color
-              return Container(width: 100, height: 100);
-            },
+          MaterialApp(
+            home: GestureDetector(
+              onTap: () => tapped = true,
+              child: buildTestWidget(
+                enabled: true,
+                behavior: HitTestBehavior.deferToChild,
+                builder: (context, states, child) {
+                  // Empty container with no color
+                  return Container(width: 100, height: 100);
+                },
+              ),
+            ),
           ),
         );
 
-        await tester.tap(find.byType(Container));
+        await tester.tap(find.byType(Container), warnIfMissed: false);
         await tester.pump();
 
-        // With deferToChild and no colored child, tap might not register
-        // This behavior depends on the exact implementation
+        // With deferToChild and no colored child, tap still registers due to parent GestureDetector
         expect(tapped, isTrue);
       });
     });
 
-    group('Semantics', () {
-      testWidgets('provides correct semantic information', (tester) async {
+    group('State Management', () {
+      testWidgets('provides correct state information', (tester) async {
+        Set<WidgetState>? capturedStates;
+
         await tester.pumpWidget(
           buildTestWidget(
-            semanticsLabel: 'Test Button',
             selected: true,
-            onPressed: () {},
+            enabled: true,
+            builder: (context, states, child) {
+              capturedStates = states;
+              return Container();
+            },
           ),
         );
 
-        final semantics = tester.getSemantics(find.byType(Container));
-
-        expect(semantics.label, 'Test Button');
-        // ignore: deprecated_member_use
-        expect(semantics.hasFlag(SemanticsFlag.isButton), isTrue);
-        // ignore: deprecated_member_use
-        expect(semantics.hasFlag(SemanticsFlag.isEnabled), isTrue);
-        // ignore: deprecated_member_use
-        expect(semantics.hasFlag(SemanticsFlag.isSelected), isTrue);
+        expect(capturedStates!.isEnabled, isTrue);
+        expect(capturedStates!.isSelected, isTrue);
+        expect(capturedStates!.isDisabled, isFalse);
+        // NakedInteractable provides state management, not direct semantics
       });
 
-      testWidgets('disabled state reflected in semantics', (tester) async {
+      testWidgets('disabled state reflected in states', (tester) async {
+        Set<WidgetState>? capturedStates;
+
         await tester.pumpWidget(
-          buildTestWidget(semanticsLabel: 'Disabled Button'),
+          buildTestWidget(
+            enabled: false,
+            builder: (context, states, child) {
+              capturedStates = states;
+              return Container();
+            },
+          ),
         );
 
-        final semantics = tester.getSemantics(find.byType(Container));
-
-        // ignore: deprecated_member_use
-        expect(semantics.hasFlag(SemanticsFlag.isEnabled), isFalse);
+        expect(capturedStates!.isDisabled, isTrue);
+        expect(capturedStates!.isEnabled, isFalse);
       });
 
-      testWidgets('button semantics present even without label', (
+      testWidgets('interactable states without selection', (
         tester,
       ) async {
-        await tester.pumpWidget(buildTestWidget(onPressed: () {}));
+        Set<WidgetState>? capturedStates;
 
-        final semantics = tester.getSemantics(find.byType(Container));
+        await tester.pumpWidget(
+          buildTestWidget(
+            enabled: true,
+            builder: (context, states, child) {
+              capturedStates = states;
+              return Container();
+            },
+          ),
+        );
 
-        // ignore: deprecated_member_use
-        expect(semantics.hasFlag(SemanticsFlag.isButton), isTrue);
+        expect(capturedStates!.isEnabled, isTrue);
+        expect(capturedStates!.isSelected, isFalse);
+        // NakedInteractable provides state management functionality
       });
     });
 
     group('Keyboard Interaction', () {
-      testWidgets('Enter key triggers onTap when focused', (tester) async {
-        bool tapped = false;
+      // Test removed - NakedInteractable no longer handles tap directly
+      testWidgets('Focus behavior works correctly', (tester) async {
+        bool focused = false;
         final focusNode = FocusNode();
 
         await tester.pumpWidget(
-          buildTestWidget(focusNode: focusNode, onPressed: () => tapped = true),
+          buildTestWidget(
+            focusNode: focusNode, 
+            enabled: true,
+            onStatesChange: (states) {
+              focused = states.contains(WidgetState.focused);
+            },
+          ),
         );
 
         // Focus the widget
         focusNode.requestFocus();
         await tester.pump();
 
-        // Simulate Enter key press
-        await tester.sendKeyEvent(LogicalKeyboardKey.enter);
-        await tester.pump();
-
-        expect(tapped, isTrue);
+        expect(focused, isTrue);
 
         focusNode.dispose();
       });
 
-      testWidgets('Space key does not trigger onTap by default', (
-        tester,
-      ) async {
-        bool tapped = false;
-        final focusNode = FocusNode();
-
-        await tester.pumpWidget(
-          buildTestWidget(focusNode: focusNode, onPressed: () => tapped = true),
-        );
-
-        focusNode.requestFocus();
-        await tester.pump();
-
-        await tester.sendKeyEvent(LogicalKeyboardKey.space);
-        await tester.pump();
-
-        expect(tapped, isFalse);
-
-        focusNode.dispose();
-      });
+      // Test removed - NakedInteractable no longer handles keyboard directly
     });
 
     group('Edge Cases', () {
       testWidgets('handles rapid tap/untap correctly', (tester) async {
         final stateChanges = <Set<WidgetState>>[];
-        int tapCount = 0;
 
         await tester.pumpWidget(
           buildTestWidget(
-            onPressed: () => tapCount++,
-            onStateChange: (states) => stateChanges.add({...states}),
+            enabled: true,
+            onStatesChange: (states) => stateChanges.add({...states}),
           ),
         );
 
-        // Rapid taps
+        // Rapid press/release cycles
         for (int i = 0; i < 5; i++) {
           final gesture = await tester.startGesture(
             tester.getCenter(find.byType(Container)),
@@ -1003,7 +1010,6 @@ void main() {
 
         // Should not be stuck in pressed state
         expect(stateChanges.last.isPressed, isFalse);
-        expect(tapCount, equals(5));
       });
 
       testWidgets('handles pointer cancel correctly', (tester) async {
@@ -1011,8 +1017,8 @@ void main() {
 
         await tester.pumpWidget(
           buildTestWidget(
-            onPressed: () {},
-            onStateChange: (states) => stateChanges.add({...states}),
+            enabled: true,
+            onStatesChange: (states) => stateChanges.add({...states}),
           ),
         );
 
@@ -1034,7 +1040,7 @@ void main() {
         final controller = WidgetStatesController();
 
         await tester.pumpWidget(
-          buildTestWidget(controller: controller, onPressed: () {}),
+          buildTestWidget(controller: controller, enabled: true),
         );
 
         // Start interaction
@@ -1057,10 +1063,14 @@ void main() {
 
         await tester.pumpWidget(
           buildTestWidget(
-            onPressed: null,
+            enabled: false,
             builder: (context, states, child) {
               capturedStates = states;
-              return Container();
+              return Container(
+                width: 100,
+                height: 100,
+                color: Colors.grey,
+              );
             },
           ),
         );
@@ -1068,7 +1078,7 @@ void main() {
         // Should be disabled
         expect(capturedStates!.isDisabled, isTrue);
 
-        // Try to tap - should not crash
+        // Try to interact - should not crash
         await tester.tap(find.byType(Container));
         await tester.pump();
 
@@ -1083,7 +1093,7 @@ void main() {
         await tester.pumpWidget(
           buildTestWidget(
             controller: controller,
-            onPressed: () {},
+            enabled: true,
             builder: (context, states, child) {
               capturedStates = states;
               return Container();
@@ -1099,10 +1109,14 @@ void main() {
         // Switch to internal controller
         await tester.pumpWidget(
           buildTestWidget(
-            onPressed: () {},
+            enabled: true,
             builder: (context, states, child) {
               capturedStates = states;
-              return Container();
+              return Container(
+                width: 100,
+                height: 100,
+                color: Colors.grey,
+              );
             },
           ),
         );
@@ -1123,7 +1137,7 @@ void main() {
       testWidgets('no memory leaks with internal controller', (tester) async {
         // Create and destroy multiple times
         for (int i = 0; i < 3; i++) {
-          await tester.pumpWidget(buildTestWidget(onPressed: () {}));
+          await tester.pumpWidget(buildTestWidget(enabled: true));
 
           await tester.pumpWidget(Container());
         }
@@ -1138,7 +1152,7 @@ void main() {
         final controller = WidgetStatesController();
 
         await tester.pumpWidget(
-          buildTestWidget(controller: controller, onPressed: () {}),
+          buildTestWidget(controller: controller, enabled: true),
         );
 
         // Dispose widget
@@ -1162,14 +1176,17 @@ void main() {
               builder: (context, setState) {
                 parentBuildCount++;
                 return MaterialApp(
-                  home: GestureDetector(
-                    onTap: () {},
-                    child: NakedInteractable(
-                      builder: (context, states, child) {
-                        builderBuildCount++;
-                        return Container();
-                      },
-                    ),
+                  home: NakedInteractable(
+                    builder: (context, states, child) {
+                      builderBuildCount++;
+                      return Container(
+                        width: 100,
+                        height: 100,
+                        color: states.contains(WidgetState.pressed)
+                            ? Colors.blue
+                            : Colors.grey,
+                      );
+                    },
                   ),
                 );
               },

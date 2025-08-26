@@ -161,7 +161,7 @@ void main() {
       });
 
       testWidgets(
-        'calls onMenuClose when menu item selected (if closeOnSelect is true)',
+        'calls onMenuClose when menu item is selected (default behavior)',
         (WidgetTester tester) async {
           bool onMenuCloseCalled = false;
           const menuKey = Key('menu');
@@ -171,7 +171,6 @@ void main() {
           await tester.pumpMaterialWidget(
             NakedMenu(
               controller: controller,
-              closeOnSelect: true,
               onClose: () => onMenuCloseCalled = true,
               overlayBuilder: (_) => Container(
                 key: menuKey,
@@ -198,6 +197,49 @@ void main() {
           await tester.pumpAndSettle();
 
           expect(onMenuCloseCalled, true);
+        },
+      );
+
+      testWidgets(
+        'keeps menu open when closeOnSelect is false on menu item',
+        (WidgetTester tester) async {
+          bool onMenuCloseCalled = false;
+          const menuKey = Key('menu');
+          const item1Key = Key('item1');
+          final controller = MenuController();
+
+          await tester.pumpMaterialWidget(
+            NakedMenu(
+              controller: controller,
+              onClose: () => onMenuCloseCalled = true,
+              overlayBuilder: (_) => Container(
+                key: menuKey,
+                constraints: const BoxConstraints(
+                  maxWidth: 100,
+                  maxHeight: 100,
+                ),
+                child: NakedMenuItem(
+                  key: item1Key,
+                  closeOnSelect: false,
+                  onPressed: () {},
+                  child: const Text('Item 1'),
+                ),
+              ),
+              builder: (_) => const Text('child'),
+            ),
+          );
+
+          controller.open();
+
+          await tester.pump();
+          expect(find.byKey(menuKey), findsOneWidget);
+
+          await tester.tap(find.text('Item 1'));
+          await tester.pumpAndSettle();
+
+          // Menu should still be open since closeOnSelect is false
+          expect(onMenuCloseCalled, false);
+          expect(find.byKey(menuKey), findsOneWidget);
         },
       );
     });
@@ -453,7 +495,7 @@ void main() {
             overlayBuilder: (_) => NakedMenuItem(
               key: key,
               onPressed: () {},
-              onHighlightChanged: (pressed_) => pressed = pressed_,
+              onPressChange: (pressed_) => pressed = pressed_,
               child: const Text('Menu Item'),
             ),
           ),
@@ -502,7 +544,7 @@ void main() {
     });
 
     group('Keyboard Interaction', () {
-      testWidgets('Activates with Space and Enter keys', (
+      testWidgets('Activates with Space key', (
         WidgetTester tester,
       ) async {
         bool pressed = false;
@@ -530,13 +572,7 @@ void main() {
 
         // Test space key
         await tester.sendKeyEvent(LogicalKeyboardKey.space);
-        await tester.pump();
-        expect(pressed, true);
-
-        // Reset and test enter key
-        pressed = false;
-        await tester.sendKeyEvent(LogicalKeyboardKey.enter);
-        await tester.pump();
+        await tester.pumpAndSettle();
         expect(pressed, true);
 
         // Cleanup

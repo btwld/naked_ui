@@ -70,13 +70,14 @@ void main() {
                 enabled: false,
               ),
             ),
-            // Naked Radio - selected and disabled (group onChanged null)
+            // Naked Radio - selected and disabled
             NakedRadioGroup<String>(
               groupValue: 'a',
               onChanged: (_) {},
               child: const NakedRadio<String>(
                 key: nakedKey,
                 value: 'a',
+                enabled: false,
                 child: SizedBox(width: 24, height: 24),
               ),
             ),

@@ -92,7 +92,7 @@ class _RadioState extends State<Radio> {
       value: widget.value,
       onFocusChange: (focused) => setState(() => _isFocused = focused),
       onHoverChange: (hovered) => setState(() => _isHovered = hovered),
-      onHighlightChanged: (pressed) => setState(() => _isPressed = pressed),
+      onPressChange: (pressed) => setState(() => _isPressed = pressed),
       builder: (context, states, child) {
         final isSelected = states.isSelected;
         return AnimatedContainer(

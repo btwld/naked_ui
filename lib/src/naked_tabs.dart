@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import 'utilities/naked_interactable.dart';
-import 'utilities/semantics.dart';
+import 'utilities/naked_pressable.dart';
+import 'utilities/utilities.dart';
 
 /// Provides tab interaction behavior without visual styling.
 ///
@@ -14,7 +14,7 @@ class NakedTabGroup extends StatelessWidget {
     super.key,
     required this.child,
     required this.selectedTabId,
-    this.onSelectedTabIdChanged,
+    this.onChanged,
     this.orientation = Axis.horizontal,
     this.enabled = true,
     this.semanticLabel,
@@ -27,7 +27,7 @@ class NakedTabGroup extends StatelessWidget {
   final String selectedTabId;
 
   /// Called when the selected tab ID changes.
-  final ValueChanged<String>? onSelectedTabIdChanged;
+  final ValueChanged<String>? onChanged;
 
   /// Whether the tabs component is enabled.
   final bool enabled;
@@ -53,7 +53,7 @@ class NakedTabGroup extends StatelessWidget {
 
     assert(tabId.isNotEmpty, 'Tab ID cannot be empty');
 
-    onSelectedTabIdChanged?.call(tabId);
+    onChanged?.call(tabId);
   }
 
   @override
@@ -66,7 +66,7 @@ class NakedTabGroup extends StatelessWidget {
       label: semanticLabel,
       child: NakedTabsScope(
         selectedTabId: selectedTabId,
-        onSelectedTabIdChanged: _selectTab,
+        onChanged: _selectTab,
         orientation: orientation,
         enabled: enabled,
         onEscapePressed: onEscapePressed,
@@ -81,7 +81,7 @@ class NakedTabsScope extends InheritedWidget {
   const NakedTabsScope({
     super.key,
     required this.selectedTabId,
-    required this.onSelectedTabIdChanged,
+    required this.onChanged,
     required this.orientation,
     required this.enabled,
     this.onEscapePressed,
@@ -95,7 +95,7 @@ class NakedTabsScope extends InheritedWidget {
         'Wrap NakedTab and NakedTabPanel widgets in a NakedTabGroup:\n\n'
         'NakedTabGroup(\n'
         '  selectedTabId: "tab1",\n'
-        '  onSelectedTabIdChanged: (id) => updateSelectedTab(id),\n'
+        '  onChanged: (id) => updateSelectedTab(id),\n'
         '  child: Column(children: [\n'
         '    NakedTabList(child: Row(children: [\n'
         '      NakedTab(tabId: "tab1", child: Text("Tab 1")),\n'
@@ -115,7 +115,7 @@ class NakedTabsScope extends InheritedWidget {
   final String selectedTabId;
 
   /// Called when a tab is selected.
-  final ValueChanged<String>? onSelectedTabIdChanged;
+  final ValueChanged<String>? onChanged;
 
   /// The orientation of the tabs.
   final Axis orientation;
@@ -138,7 +138,7 @@ class NakedTabsScope extends InheritedWidget {
 
     assert(tabId.isNotEmpty, 'Tab ID cannot be empty');
 
-    onSelectedTabIdChanged?.call(tabId);
+    onChanged?.call(tabId);
   }
 
   @override
@@ -270,14 +270,14 @@ class NakedTab extends StatefulWidget {
     this.semanticLabel,
     this.semanticHint,
     this.mouseCursor = SystemMouseCursors.click,
-    this.enableHapticFeedback = true,
+    this.enableFeedback = true,
     this.focusNode,
     this.autofocus = false,
     this.excludeSemantics = false,
     this.onFocusChange,
     this.onHoverChange,
-    this.onHighlightChanged,
-    this.onStateChange,
+    this.onPressChange,
+    this.onStatesChange,
     this.statesController,
     this.builder,
   }) : assert(
@@ -297,10 +297,10 @@ class NakedTab extends StatefulWidget {
   final ValueChanged<bool>? onHoverChange;
 
   /// Called when highlight (pressed) state changes.
-  final ValueChanged<bool>? onHighlightChanged;
+  final ValueChanged<bool>? onPressChange;
 
   /// Called when any widget state changes.
-  final ValueChanged<Set<WidgetState>>? onStateChange;
+  final ValueChanged<Set<WidgetState>>? onStatesChange;
 
   /// Optional external controller for interaction states.
   final WidgetStatesController? statesController;
@@ -321,7 +321,10 @@ class NakedTab extends StatefulWidget {
   final MouseCursor mouseCursor;
 
   /// Whether to provide haptic feedback on tab selection.
-  final bool enableHapticFeedback;
+  ///
+  /// Note: Tabs use selectionClick haptic feedback for tab changes,
+  /// which is consistent across platforms for selection controls.
+  final bool enableFeedback;
 
   /// Optional focus node to control focus behavior.
   final FocusNode? focusNode;
@@ -358,7 +361,7 @@ class _NakedTabState extends State<NakedTab> {
 
   void _handleTap() {
     _ifEnabled(() {
-      if (widget.enableHapticFeedback) {
+      if (widget.enableFeedback) {
         HapticFeedback.selectionClick();
       }
 
@@ -393,42 +396,46 @@ class _NakedTabState extends State<NakedTab> {
     super.dispose();
   }
 
-  MouseCursor get _cursor =>
-      _isEnabled ? widget.mouseCursor : SystemMouseCursors.forbidden;
-
   @override
   Widget build(BuildContext context) {
     final isSelected = _tabsScope.isTabSelected(widget.tabId);
 
     assert(widget.tabId.isNotEmpty, 'tabId cannot be empty');
 
-    return NakedSemantics.tab(
-      label: widget.semanticLabel ?? 'Tab ${widget.tabId}',
-      selected: isSelected,
-      onTap: _isEnabled ? _handleTap : null,
-      hint: widget.semanticHint,
+    // Use NakedPressable for consistent gesture and cursor behavior
+    return Semantics(
       excludeSemantics: widget.excludeSemantics,
-      child: GestureDetector(
-        onTap: _isEnabled ? _handleTap : null,
-        behavior: HitTestBehavior.opaque,
-        child: NakedInteractable(
-          mouseCursor: _cursor,
-          statesController: widget.statesController,
-          enabled: _isEnabled,
-          onHighlightChanged: widget.onHighlightChanged,
-          onHoverChange: widget.onHoverChange,
-          onFocusChange: widget.onFocusChange,
-          onStateChange: widget.onStateChange,
-          autofocus: widget.autofocus,
-          focusNode: _focusNode,
-          builder: (context, states, child) {
-            if (widget.builder != null) {
-              return widget.builder!(context, states, child);
-            }
+      enabled: _isEnabled,
+      selected: isSelected,
+      focusable: _isEnabled,
+      label: widget.semanticLabel ?? 'Tab ${widget.tabId}',
+      hint: widget.semanticHint,
+      onTap: _isEnabled ? _handleTap : null,
+      // Expose focus action when enabled
+      onFocus: _isEnabled ? semanticsFocusNoop : null,
+      child: NakedPressable(
+        onPressed: _isEnabled ? _handleTap : null,
+        enabled: widget.enabled,
+        selected: isSelected,
+        mouseCursor: widget.mouseCursor,
+        disabledMouseCursor: SystemMouseCursors.forbidden,
+        focusNode: _focusNode,
+        autofocus: widget.autofocus,
+        onStatesChange: widget.onStatesChange,
+        onFocusChange: widget.onFocusChange,
+        onHoverChange: widget.onHoverChange,
+        onPressChange: widget.onPressChange,
+        statesController: widget.statesController,
+        // We handle our own selectionClick haptic feedback
+        enableFeedback: false,
+        child: widget.child,
+        builder: (context, states, child) {
+          if (widget.builder != null) {
+            return widget.builder!(context, states, child);
+          }
 
-            return widget.child!;
-          },
-        ),
+          return widget.child!;
+        },
       ),
     );
   }

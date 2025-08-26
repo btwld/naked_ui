@@ -1,8 +1,8 @@
 import 'dart:async';
 
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
-import 'utilities/semantics.dart';
 import 'utilities/utilities.dart';
 
 /// Provides tooltip behavior without visual styling.
@@ -153,6 +153,22 @@ class _NakedTooltipState extends State<NakedTooltip>
   Timer? _showTimer;
   Timer? _waitTimer;
 
+  void _handleMouseEnter(PointerEnterEvent _) {
+    _showTimer?.cancel();
+    _waitTimer?.cancel();
+    _waitTimer = Timer(widget.waitDuration, () {
+      showNotifier.value = true;
+    });
+  }
+
+  void _handleMouseExit(PointerExitEvent _) {
+    _showTimer?.cancel();
+    _waitTimer?.cancel();
+    _showTimer = Timer(widget.showDuration, () {
+      showNotifier.value = false;
+    });
+  }
+
   @override
   void dispose() {
     _showTimer?.cancel();
@@ -162,9 +178,10 @@ class _NakedTooltipState extends State<NakedTooltip>
 
   @override
   Widget build(BuildContext context) {
-    return NakedSemantics.tooltip(
-      tooltip: widget.excludeFromSemantics ? null : widget.tooltipSemantics,
+    // Use direct Semantics for Material parity
+    return Semantics(
       excludeSemantics: widget.excludeFromSemantics,
+      tooltip: widget.excludeFromSemantics ? null : widget.tooltipSemantics,
       child: ListenableBuilder(
         listenable: showNotifier,
         builder: (context, child) {
@@ -174,20 +191,8 @@ class _NakedTooltipState extends State<NakedTooltip>
             position: widget.position,
             fallbackPositions: widget.fallbackPositions,
             child: MouseRegion(
-              onEnter: (_) {
-                _showTimer?.cancel();
-                _waitTimer?.cancel();
-                _waitTimer = Timer(widget.waitDuration, () {
-                  showNotifier.value = true;
-                });
-              },
-              onExit: (_) {
-                _showTimer?.cancel();
-                _waitTimer?.cancel();
-                _showTimer = Timer(widget.showDuration, () {
-                  showNotifier.value = false;
-                });
-              },
+              onEnter: _handleMouseEnter,
+              onExit: _handleMouseExit,
               child: widget.child,
             ),
           );

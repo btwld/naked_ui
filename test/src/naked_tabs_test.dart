@@ -98,7 +98,7 @@ void main() {
           builder: (context, setState) {
             return NakedTabGroup(
               selectedTabId: selectedTabId,
-              onSelectedTabIdChanged: (id) =>
+              onChanged: (id) =>
                   setState(() => selectedTabId = id),
               child: const Column(
                 children: [
@@ -139,7 +139,7 @@ void main() {
             return NakedTabGroup(
               selectedTabId: selectedTabId,
               enabled: false,
-              onSelectedTabIdChanged: (id) =>
+              onChanged: (id) =>
                   setState(() => selectedTabId = id),
               child: const Column(
                 children: [
@@ -176,7 +176,7 @@ void main() {
           builder: (context, setState) {
             return NakedTabGroup(
               selectedTabId: selectedTabId,
-              onSelectedTabIdChanged: (id) =>
+              onChanged: (id) =>
                   setState(() => selectedTabId = id),
               child: const Column(
                 children: [
@@ -267,7 +267,7 @@ void main() {
       expect(isHovered, false);
     });
 
-    testWidgets('calls onHighlightChanged on tap down/up', (
+    testWidgets('calls onPressChange on tap down/up', (
       WidgetTester tester,
     ) async {
       bool isPressed = false;
@@ -281,7 +281,7 @@ void main() {
                   children: [
                     NakedTab(
                       tabId: 'tab1',
-                      onHighlightChanged: (pressed) => isPressed = pressed,
+                      onPressChange: (pressed) => isPressed = pressed,
                       child: const Text('Tab 1'),
                     ),
                   ],
@@ -351,7 +351,7 @@ void main() {
           builder: (context, setState) {
             return NakedTabGroup(
               selectedTabId: selectedTabId,
-              onSelectedTabIdChanged: (id) =>
+              onChanged: (id) =>
                   setState(() => selectedTabId = id),
               child: Column(
                 children: [
@@ -394,7 +394,7 @@ void main() {
           builder: (context, setState) {
             return NakedTabGroup(
               selectedTabId: selectedTabId,
-              onSelectedTabIdChanged: (id) =>
+              onChanged: (id) =>
                   setState(() => selectedTabId = id),
               child: const Column(
                 children: [
@@ -451,7 +451,7 @@ void main() {
                 builder: (context, setState) {
                   return NakedTabGroup(
                     selectedTabId: selectedTabId,
-                    onSelectedTabIdChanged: (id) =>
+                    onChanged: (id) =>
                         setState(() => selectedTabId = id),
                     child: const Column(
                       children: [
@@ -571,7 +571,9 @@ void main() {
           hasEnabledState: true,
           isEnabled: true,
           hasSelectedState: true,
+          isFocusable: true,
           hasTapAction: true,
+          hasFocusAction: true,
         ),
       );
     });
@@ -610,7 +612,9 @@ void main() {
           hasEnabledState: true,
           isEnabled: true,
           hasSelectedState: true,
+          isFocusable: true,
           hasTapAction: true,
+          hasFocusAction: true,
         ),
       );
     });
@@ -625,7 +629,7 @@ void main() {
             return NakedTabGroup(
               selectedTabId: selectedTabId,
               orientation: Axis.vertical,
-              onSelectedTabIdChanged: (id) =>
+              onChanged: (id) =>
                   setState(() => selectedTabId = id),
               child: const Row(
                 children: [
@@ -686,7 +690,7 @@ void main() {
                 builder: (context, setState) {
                   return NakedTabGroup(
                     selectedTabId: selectedTabId,
-                    onSelectedTabIdChanged: (id) =>
+                    onChanged: (id) =>
                         setState(() => selectedTabId = id),
                     child: Column(
                       children: [
@@ -796,7 +800,7 @@ void main() {
                   builder: (context, setState) {
                     return NakedTabGroup(
                       selectedTabId: selectedTabId,
-                      onSelectedTabIdChanged: (id) =>
+                      onChanged: (id) =>
                           setState(() => selectedTabId = id),
                       child: const Column(
                         children: [

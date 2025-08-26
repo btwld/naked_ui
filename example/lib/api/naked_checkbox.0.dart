@@ -60,7 +60,7 @@ class _CheckboxExampleState extends State<CheckboxExample> {
       },
       onFocusChange: (focused) => setState(() => _isFocused = focused),
       onHoverChange: (hovered) => setState(() => _isHovered = hovered),
-      onHighlightChanged: (pressed) => setState(() => _isPressed = pressed),
+      onPressChange: (pressed) => setState(() => _isPressed = pressed),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         spacing: 8,

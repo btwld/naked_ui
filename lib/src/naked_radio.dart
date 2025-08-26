@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 
 import 'mixins/naked_mixins.dart';
-import 'utilities/naked_interactable.dart';
+import 'utilities/utilities.dart';
 
 /// Thin wrapper over Flutter's RadioGroup to preserve Naked API.
 class NakedRadioGroup<T> extends StatelessWidget {
@@ -40,8 +40,8 @@ class NakedRadio<T> extends StatefulWidget with NakedFocusable {
     this.toggleable = false,
     this.onFocusChange,
     this.onHoverChange,
-    this.onHighlightChanged,
-    this.onStateChange,
+    this.onPressChange,
+    this.onStatesChange,
     this.statesController,
     this.semanticLabel,
     this.semanticHint,
@@ -63,8 +63,10 @@ class NakedRadio<T> extends StatefulWidget with NakedFocusable {
   // State change callbacks
   final ValueChanged<bool>? onFocusChange;
   final ValueChanged<bool>? onHoverChange;
-  final ValueChanged<bool>? onHighlightChanged; // For pressed state
-  final ValueChanged<Set<WidgetState>>? onStateChange;
+
+  /// Called when pressed state changes.
+  final ValueChanged<bool>? onPressChange;
+  final ValueChanged<Set<WidgetState>>? onStatesChange;
 
   final WidgetStatesController? statesController;
   final String? semanticLabel;
@@ -72,12 +74,35 @@ class NakedRadio<T> extends StatefulWidget with NakedFocusable {
   final bool excludeSemantics;
   final ValueWidgetBuilder<Set<WidgetState>>? builder;
 
+  // TODO: Implement focusOnPress for NakedRadio
+  // This requires special handling due to RadioGroup and RawRadio interaction.
+  // The focus management is more complex than simple NakedPressable components.
+
   @override
   State<NakedRadio<T>> createState() => _NakedRadioState<T>();
 }
 
 class _NakedRadioState<T> extends State<NakedRadio<T>>
     with NakedFocusableStateMixin {
+  void _handleSemanticTap(RadioGroupRegistry<T> registry, bool isSelected) {
+    if (!widget.enabled) return;
+    if (widget.toggleable && isSelected) {
+      registry.onChanged(null);
+    } else {
+      registry.onChanged(widget.value);
+    }
+  }
+
+  void _handlePointerTap(RadioGroupRegistry<T> registry, bool isSelected) {
+    if (!widget.enabled) return;
+    
+    if (widget.toggleable && isSelected) {
+      registry.onChanged(null);
+    } else if (!isSelected) {
+      registry.onChanged(widget.value);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final registry = RadioGroup.maybeOf<T>(context);
@@ -119,35 +144,61 @@ class _NakedRadioState<T> extends State<NakedRadio<T>>
             (_) => SystemMouseCursors.forbidden,
           );
 
-    return NakedInteractable(
-      statesController: widget.statesController,
+    return Semantics(
+      excludeSemantics: widget.excludeSemantics,
       enabled: widget.enabled,
-      onHighlightChanged: widget.onHighlightChanged,
-      onHoverChange: widget.onHoverChange,
-      onFocusChange: widget.onFocusChange,
-      onStateChange: widget.onStateChange,
-      selected: isSelected,
-      autofocus: widget.autofocus,
-      focusNode: effectiveFocusNode,
-      builder: (context, states, child) {
-        return RawRadio<T>(
-          value: widget.value,
-          mouseCursor: effectiveCursor,
-          toggleable: widget.toggleable,
-          focusNode: effectiveFocusNode,
-          autofocus: widget.autofocus && widget.enabled,
-          groupRegistry: registry,
-          enabled: widget.enabled,
-          builder: (context, radioStates) {
-            // Build the widget using NakedInteractable's states
-            if (widget.builder != null) {
-              return widget.builder!(context, states, child);
-            }
+      checked: isSelected,
+      focusable: widget.enabled,
+      inMutuallyExclusiveGroup: true,
+      label: widget.semanticLabel,
+      hint: widget.semanticHint,
+      onTap: widget.enabled
+          ? () => _handleSemanticTap(registry, isSelected)
+          : null,
+      // Expose focus action for a11y parity when enabled
+      onFocus: widget.enabled ? semanticsFocusNoop : null,
+      child: MouseRegion(
+        cursor: effectiveCursor.resolve({
+          if (!widget.enabled) WidgetState.disabled,
+          if (isSelected) WidgetState.selected,
+        }),
+        child: GestureDetector(
+          onTap: widget.enabled
+              ? () => _handlePointerTap(registry, isSelected)
+              : null,
+          behavior: HitTestBehavior.opaque,
+          child: NakedInteractable(
+            statesController: widget.statesController,
+            enabled: widget.enabled,
+            selected: isSelected,
+            autofocus: widget.autofocus,
+            onStatesChange: widget.onStatesChange,
+            onFocusChange: widget.onFocusChange,
+            onHoverChange: widget.onHoverChange,
+            onPressChange: widget.onPressChange,
+            // Don't pass focusNode here since RawRadio will manage it
+            builder: (context, states, child) {
+              return RawRadio<T>(
+                value: widget.value,
+                mouseCursor: effectiveCursor,
+                toggleable: widget.toggleable,
+                focusNode: effectiveFocusNode,
+                autofocus: widget.autofocus && widget.enabled,
+                groupRegistry: registry,
+                enabled: widget.enabled,
+                builder: (context, radioStates) {
+                  // Build the widget using NakedInteractable's states
+                  if (widget.builder != null) {
+                    return widget.builder!(context, states, child);
+                  }
 
-            return widget.child!;
-          },
-        );
-      },
+                  return widget.child!;
+                },
+              );
+            },
+          ),
+        ),
+      ),
     );
   }
 }

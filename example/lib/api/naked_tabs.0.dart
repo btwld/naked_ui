@@ -35,7 +35,7 @@ class _TabsExampleState extends State<TabsExample> {
   Widget build(BuildContext context) {
     return NakedTabGroup(
       selectedTabId: _selectedTabId,
-      onSelectedTabIdChanged: (tabId) => setState(() => _selectedTabId = tabId),
+      onChanged: (tabId) => setState(() => _selectedTabId = tabId),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [

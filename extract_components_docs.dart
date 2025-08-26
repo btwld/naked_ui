@@ -76,50 +76,87 @@ class ComponentDocumentationExtractor {
   }
 
   List<String> _extractConstructorParams(String content, String className) {
-    final lines = content.split('\n');
-    final params = <String>[];
-    bool inConstructor = false;
+    // Find the first constructor (including named ones) and extract only the
+    // parameter list by tracking parentheses depth. This avoids pulling in
+    // initializer lists and stray annotations.
+    final regex = RegExp(
+      r'(?:^|\n)\s*(?:const\s+)?' +
+          RegExp.escape(className) +
+          r'(?:\.\w+)?\s*\(',
+      multiLine: true,
+    );
 
-    for (int i = 0; i < lines.length; i++) {
-      final line = lines[i].trim();
+    final match = regex.firstMatch(content);
+    if (match == null) return const [];
 
-      if (line.contains('$className(') ||
-          (line.contains(className) && line.contains('('))) {
-        inConstructor = true;
-        continue;
-      }
+    // Start at the opening parenthesis
+    int startIndex = match.end - 1;
+    int depth = 0;
+    final buffer = StringBuffer();
 
-      if (inConstructor) {
-        if (line.contains(');')) {
+    for (int i = startIndex; i < content.length; i++) {
+      final ch = content[i];
+      buffer.write(ch);
+      if (ch == '(') {
+        depth++;
+      } else if (ch == ')') {
+        depth--;
+        if (depth == 0) {
           break;
-        }
-
-        if (line.contains('this.') ||
-            line.contains('required') ||
-            line.contains('@')) {
-          // Look for parameter documentation in previous lines
-          String? paramDoc;
-          for (int j = i - 1; j >= 0; j--) {
-            final prevLine = lines[j].trim();
-            if (prevLine.startsWith('///')) {
-              paramDoc = prevLine.substring(3).trim();
-              break;
-            } else if (prevLine.isEmpty || prevLine.startsWith('//')) {
-              continue;
-            }
-            break;
-          }
-
-          String paramInfo = line;
-          if (paramDoc != null) {
-            paramInfo = '$line // $paramDoc';
-          }
-          params.add(paramInfo);
         }
       }
     }
 
-    return params;
+    final paramBlock = buffer.toString();
+    if (paramBlock.isEmpty || !paramBlock.startsWith('(')) {
+      return const [];
+    }
+
+    // Strip outer parentheses
+    final inner = paramBlock.substring(1, paramBlock.length - 1);
+    final lines = inner
+        .split('\n')
+        .map((l) => l.trim())
+        .where((l) => l.isNotEmpty)
+        .toList();
+
+    final params = <String>[];
+    for (var line in lines) {
+      if (line.startsWith('///') || line.startsWith('//')) continue;
+      if (line.startsWith('@')) continue; // ignore annotations like @override
+
+      String sanitized = line.split('//').first.trim();
+
+      // For complex defaults (constructor calls, collections), omit the default
+      // to avoid broken/incomplete rendering across lines.
+      final eqIndex = sanitized.indexOf('=');
+      if (eqIndex != -1) {
+        final afterEq = sanitized.substring(eqIndex + 1).trim();
+        final hasComplexDefault =
+            afterEq.contains('(') ||
+            afterEq.startsWith('[') ||
+            afterEq.startsWith('const [') ||
+            afterEq.startsWith('const (');
+        if (hasComplexDefault) {
+          sanitized = sanitized.substring(0, eqIndex).trim();
+        }
+      }
+
+      if (sanitized.contains('this.') || sanitized.startsWith('required')) {
+        // Ensure trailing comma for readability in markdown
+        final withComma = sanitized.endsWith(',') ? sanitized : '$sanitized,';
+        params.add(withComma);
+      }
+    }
+
+    // De-duplicate while preserving order
+    final seen = <String>{};
+    final uniqueParams = <String>[];
+    for (final p in params) {
+      if (seen.add(p)) uniqueParams.add(p);
+    }
+
+    return uniqueParams;
   }
 
   List<String> _extractExamples(String docComment) {
@@ -155,14 +192,33 @@ class ComponentDocumentationExtractor {
       final trimmed = line.trim();
       if (trimmed.startsWith('*') || trimmed.startsWith('-')) {
         features.add(trimmed.substring(1).trim());
-      } else if (trimmed.contains('provides') ||
-          trimmed.contains('supports') ||
-          trimmed.contains('handles')) {
-        features.add(trimmed);
       }
     }
 
-    return features;
+    // De-duplicate
+    final seen = <String>{};
+
+    return [
+      for (final f in features)
+        if (seen.add(f)) f,
+    ];
+  }
+
+  String _stripCodeBlocks(String text) {
+    final lines = text.split('\n');
+    final buffer = StringBuffer();
+    bool inBlock = false;
+    for (final line in lines) {
+      if (line.trim().startsWith('```')) {
+        inBlock = !inBlock;
+        continue;
+      }
+      if (inBlock) continue;
+      if (line.trim().toLowerCase().startsWith('example:')) continue;
+      buffer.writeln(line);
+    }
+
+    return buffer.toString();
   }
 
   void _writeComponentSection(StringBuffer buffer, ComponentInfo component) {
@@ -173,7 +229,7 @@ class ComponentDocumentationExtractor {
     // Description
     buffer.writeln('### Description');
     buffer.writeln();
-    final cleanDescription = component.description
+    final cleanDescription = _stripCodeBlocks(component.description)
         .replaceAll(RegExp(r'\n\s*\n'), '\n\n')
         .replaceAll(RegExp(r'^\s*'), '')
         .trim();

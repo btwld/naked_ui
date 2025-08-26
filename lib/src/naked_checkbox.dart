@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import 'utilities/naked_interactable.dart';
-import 'utilities/semantics.dart';
+import 'utilities/naked_pressable.dart';
+import 'utilities/utilities.dart';
 
 /// Headless checkbox built on NakedInteractable with proper semantics and callbacks.
 class NakedCheckbox extends StatelessWidget {
@@ -17,15 +17,16 @@ class NakedCheckbox extends StatelessWidget {
     this.semanticHint,
     this.excludeSemantics = false,
     this.mouseCursor,
-    this.enableHapticFeedback = true,
+    this.enableFeedback = true,
     this.focusNode,
     this.autofocus = false,
     this.onFocusChange,
     this.onHoverChange,
-    this.onHighlightChanged,
-    this.onStateChange,
+    this.onPressChange,
+    this.onStatesChange,
     this.statesController,
     this.builder,
+    this.focusOnPress = false,
   }) : assert(
          (tristate || value != null),
          'Non-tristate checkbox must have a non-null value',
@@ -63,10 +64,10 @@ class NakedCheckbox extends StatelessWidget {
   final ValueChanged<bool>? onHoverChange;
 
   /// Called when highlight (pressed) state changes.
-  final ValueChanged<bool>? onHighlightChanged;
+  final ValueChanged<bool>? onPressChange;
 
   /// Called when any widget state changes.
-  final ValueChanged<Set<WidgetState>>? onStateChange;
+  final ValueChanged<Set<WidgetState>>? onStatesChange;
 
   /// Optional external controller for interaction states.
   final WidgetStatesController? statesController;
@@ -87,7 +88,10 @@ class NakedCheckbox extends StatelessWidget {
   final MouseCursor? mouseCursor;
 
   /// Whether to provide haptic feedback on tap.
-  final bool enableHapticFeedback;
+  ///
+  /// Note: Checkboxes use selectionClick haptic feedback for state changes,
+  /// which is consistent across platforms for selection controls.
+  final bool enableFeedback;
 
   /// Optional focus node to control focus behavior.
   final FocusNode? focusNode;
@@ -97,6 +101,15 @@ class NakedCheckbox extends StatelessWidget {
 
   /// Optional builder that receives the current states for visuals.
   final ValueWidgetBuilder<Set<WidgetState>>? builder;
+
+  /// Whether to request focus when the checkbox is pressed.
+  ///
+  /// When true, tapping the checkbox will request focus in addition to
+  /// toggling the value. This is useful for form controls where focus
+  /// indication after interaction improves user experience.
+  ///
+  /// Defaults to false to maintain Material Design consistency.
+  final bool focusOnPress;
 
   bool? _getNextTristate(bool? currentValue) {
     // Tristate cycling: false → true → null → false
@@ -113,7 +126,7 @@ class NakedCheckbox extends StatelessWidget {
   void _handlePressed() {
     if (onChanged == null) return;
 
-    if (enableHapticFeedback) {
+    if (enableFeedback) {
       HapticFeedback.selectionClick();
     }
 
@@ -129,52 +142,47 @@ class NakedCheckbox extends StatelessWidget {
     final bool isChecked = value ?? false;
     final bool isInteractive = enabled && onChanged != null;
 
-    return NakedSemantics.checkbox(
-      label: semanticLabel,
-      checked: value,
-      tristate: tristate,
-      onTap: isInteractive ? _handlePressed : null,
-      hint: semanticHint,
-      excludeSemantics: excludeSemantics,
-      child: Shortcuts(
-        shortcuts: {
-          const SingleActivator(LogicalKeyboardKey.enter):
-              const ActivateIntent(),
-          const SingleActivator(LogicalKeyboardKey.space):
-              const ActivateIntent(),
-        },
-        child: Actions(
-          actions: {
-            ActivateIntent: CallbackAction<ActivateIntent>(
-              onInvoke: (ActivateIntent intent) =>
-                  isInteractive ? _handlePressed() : null,
-            ),
-          },
-          child: GestureDetector(
-            onTap: isInteractive ? _handlePressed : null,
-            behavior: HitTestBehavior.opaque,
-            child: NakedInteractable(
-              mouseCursor: mouseCursor,
-              statesController: statesController,
-              enabled: isInteractive,
-              onHighlightChanged: onHighlightChanged,
-              onHoverChange: onHoverChange,
-              onFocusChange: onFocusChange,
-              onStateChange: onStateChange,
-              selected: isChecked,
-              autofocus: autofocus,
-              focusNode: focusNode,
-              builder: (context, states, child) {
-                if (builder != null) {
-                  return builder!(context, states, child);
-                }
+    // Use NakedPressable for consistent gesture and cursor behavior
+    Widget result = NakedPressable(
+      onPressed: isInteractive ? _handlePressed : null,
+      enabled: enabled,
+      selected: isChecked,
+      mouseCursor: mouseCursor,
+      // Forbidden cursor for disabled checkbox
+      disabledMouseCursor: SystemMouseCursors.forbidden,
+      focusNode: focusNode,
+      autofocus: autofocus,
+      onStatesChange: onStatesChange,
+      onFocusChange: onFocusChange,
+      onHoverChange: onHoverChange,
+      onPressChange: onPressChange,
+      statesController: statesController,
+      // We handle our own selectionClick haptic feedback
+      enableFeedback: false,
+      focusOnPress: focusOnPress,
+      child: child,
+      builder: (context, states, child) {
+        if (builder != null) {
+          return builder!(context, states, child);
+        }
 
-                return this.child!;
-              },
-            ),
-          ),
-        ),
-      ),
+        return this.child!;
+      },
+    );
+
+    // Wrap with checkbox semantics
+    return Semantics(
+      excludeSemantics: excludeSemantics,
+      enabled: isInteractive,
+      checked: tristate && value == null ? null : (value ?? false),
+      mixed: tristate && value == null,
+      focusable: isInteractive,
+      label: semanticLabel,
+      hint: semanticHint,
+      onTap: isInteractive ? _handlePressed : null,
+      // Expose focus action when enabled
+      onFocus: isInteractive ? semanticsFocusNoop : null,
+      child: result,
     );
   }
 }

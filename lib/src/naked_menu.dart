@@ -6,16 +6,17 @@ import 'utilities/utilities.dart';
 
 /// Provides dropdown menu behavior without visual styling.
 ///
-/// Uses Flutter's OverlayPortal to render menu content in the app overlay,
+/// Uses Flutter's RawMenuAnchor to render menu content in the app overlay,
 /// ensuring proper z-index and context inheritance.
 ///
 /// Example:
 /// ```dart
-/// final controller = OverlayPortalController();
+/// final controller = MenuController();
 ///
 /// NakedMenu(
+///   controller: controller,
 ///   builder: (_) => NakedButton(
-///     onPressed: () => controller.show(),
+///     onPressed: () => controller.open(),
 ///     child: const Text('Open Menu'),
 ///   ),
 ///   overlayBuilder: (_) => Container(
@@ -41,16 +42,15 @@ import 'utilities/utilities.dart';
 ///       ],
 ///     ),
 ///   ),
-///   controller: controller,
-///   onClose: () => controller.hide(),
 /// )
 /// ```
 ///
-/// Controlled through [controller] and [onClose] callback. Positions relative to target,
+/// Controlled through [controller]. Positions relative to target,
 /// trying fallback positions if needed. Handles focus management and keyboard navigation
 /// automatically. Supports screen readers and accessibility.
 ///
-/// Menu items should use [NakedMenuItem] for proper interaction states.
+/// Menu items use [NakedMenuItem] and automatically close the menu when selected
+/// unless [NakedMenuItem.closeOnSelect] is set to false.
 class NakedMenu extends StatelessWidget {
   /// Creates a naked menu.
   ///
@@ -63,7 +63,6 @@ class NakedMenu extends StatelessWidget {
     this.onClose,
     this.consumeOutsideTaps = true,
     this.useRootOverlay = false,
-    this.closeOnSelect = true,
     this.autofocus = false,
     this.menuPosition = const NakedMenuPosition(),
     this.fallbackPositions = const [
@@ -83,8 +82,6 @@ class NakedMenu extends StatelessWidget {
   /// Called when the menu should close.
   final VoidCallback? onClose;
 
-  /// Whether to close the menu when an item is selected.
-  final bool closeOnSelect;
 
   /// Whether to automatically focus the menu when opened.
   /// Currently has no effect.
@@ -107,48 +104,19 @@ class NakedMenu extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return NakedMenuClose(
-      close: closeOnSelect ? onClose : null,
-      child: NakedMenuAnchor(
-        controller: controller,
-        overlayBuilder: overlayBuilder,
-        useRootOverlay: useRootOverlay,
-        consumeOutsideTaps: consumeOutsideTaps,
-        position: menuPosition,
-        fallbackPositions: fallbackPositions,
-        onClose: onClose,
-        child: builder(context),
-      ),
+    return NakedMenuAnchor(
+      controller: controller,
+      overlayBuilder: overlayBuilder,
+      useRootOverlay: useRootOverlay,
+      consumeOutsideTaps: consumeOutsideTaps,
+      position: menuPosition,
+      fallbackPositions: fallbackPositions,
+      onClose: onClose,
+      child: builder(context),
     );
   }
 }
 
-/// Provides access to the menu's close method.
-///
-/// Allows descendant widgets to access close functionality without prop drilling.
-class NakedMenuClose extends InheritedWidget {
-  /// Creates a naked menu close widget.
-  const NakedMenuClose({super.key, required this.close, required super.child});
-
-  /// Returns the closest [NakedMenuClose] widget.
-  ///
-  /// Throws [StateError] if none found.
-  static NakedMenuClose of(BuildContext context) {
-    final NakedMenuClose? result = context
-        .dependOnInheritedWidgetOfExactType<NakedMenuClose>();
-    assert(result != null, 'No NakedMenuClose found in context');
-
-    return result!;
-  }
-
-  /// Callback to close the menu.
-  final VoidCallback? close;
-
-  @override
-  bool updateShouldNotify(NakedMenuClose oldWidget) {
-    return close != oldWidget.close;
-  }
-}
 
 /// Individual menu item that can be selected.
 ///
@@ -163,17 +131,18 @@ class NakedMenuItem extends StatelessWidget {
     this.child,
     this.onPressed,
     this.enabled = true,
+    this.closeOnSelect = true,
     this.semanticLabel,
     this.semanticHint,
     this.excludeSemantics = false,
     this.mouseCursor = SystemMouseCursors.click,
-    this.enableHapticFeedback = true,
+    this.enableFeedback = true,
     this.focusNode,
     this.autofocus = false,
     this.onFocusChange,
     this.onHoverChange,
-    this.onHighlightChanged,
-    this.onStateChange,
+    this.onPressChange,
+    this.onStatesChange,
     this.statesController,
     this.builder,
   }) : assert(
@@ -187,6 +156,10 @@ class NakedMenuItem extends StatelessWidget {
   /// Called when the item is selected.
   final VoidCallback? onPressed;
 
+  /// Whether to automatically close the menu when this item is selected.
+  /// Defaults to true for typical menu behavior.
+  final bool closeOnSelect;
+
   /// Called when focus state changes.
   final ValueChanged<bool>? onFocusChange;
 
@@ -194,10 +167,10 @@ class NakedMenuItem extends StatelessWidget {
   final ValueChanged<bool>? onHoverChange;
 
   /// Called when highlight (pressed) state changes.
-  final ValueChanged<bool>? onHighlightChanged;
+  final ValueChanged<bool>? onPressChange;
 
   /// Called when any widget state changes.
-  final ValueChanged<Set<WidgetState>>? onStateChange;
+  final ValueChanged<Set<WidgetState>>? onStatesChange;
 
   /// Optional external controller for interaction states.
   final WidgetStatesController? statesController;
@@ -221,7 +194,7 @@ class NakedMenuItem extends StatelessWidget {
   final MouseCursor mouseCursor;
 
   /// Whether to provide haptic feedback on selection.
-  final bool enableHapticFeedback;
+  final bool enableFeedback;
 
   /// Optional focus node to control focus behavior.
   final FocusNode? focusNode;
@@ -229,20 +202,22 @@ class NakedMenuItem extends StatelessWidget {
   /// Whether to automatically focus when created.
   final bool autofocus;
 
+  void _handlePress(MenuController? controller) {
+    if (!enabled) return;
+    if (enableFeedback) {
+      HapticFeedback.lightImpact();
+    }
+    onPressed?.call();
+    if (closeOnSelect) {
+      controller?.close();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final menuState = NakedMenuClose.of(context);
+    final controller = MenuController.maybeOf(context);
 
-    void onPress() {
-      if (!enabled) return;
-      if (enableHapticFeedback) {
-        HapticFeedback.lightImpact();
-      }
-      onPressed?.call();
-      if (menuState.close != null) {
-        menuState.close!();
-      }
-    }
+    void onPress() => _handlePress(controller);
 
     return NakedButton(
       onPressed: onPressed != null ? onPress : null,
@@ -251,17 +226,19 @@ class NakedMenuItem extends StatelessWidget {
       semanticLabel: semanticLabel,
       semanticHint: semanticHint,
       mouseCursor: mouseCursor,
-      enableHapticFeedback: enableHapticFeedback,
+      enableFeedback: enableFeedback,
       focusNode: focusNode,
       autofocus: autofocus,
       excludeSemantics: excludeSemantics,
       onFocusChange: onFocusChange,
       onHoverChange: onHoverChange,
-      onHighlightChanged: onHighlightChanged,
-      onStateChange: onStateChange,
+      onPressChange: onPressChange,
+      onStatesChange: onStatesChange,
       statesController: statesController,
       child: child,
-      builder: builder != null ? (context, states, child) => builder!(context, states, child) : null,
+      builder: builder != null
+          ? (context, states, child) => builder!(context, states, child)
+          : null,
     );
   }
 }

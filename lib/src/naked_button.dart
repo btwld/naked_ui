@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
-import 'utilities/naked_interactable.dart';
-import 'utilities/semantics.dart';
+import 'utilities/naked_pressable.dart';
+import 'utilities/utilities.dart';
 
 /// Provides button interaction behavior without visual styling.
 ///
@@ -20,16 +19,17 @@ class NakedButton extends StatelessWidget {
     this.semanticLabel,
     this.semanticHint,
     this.mouseCursor = SystemMouseCursors.click,
-    this.enableHapticFeedback = true,
+    this.enableFeedback = true,
     this.focusNode,
     this.autofocus = false,
     this.excludeSemantics = false,
     this.onFocusChange,
     this.onHoverChange,
-    this.onHighlightChanged,
-    this.onStateChange,
+    this.onPressChange,
+    this.onStatesChange,
     this.statesController,
     this.builder,
+    this.focusOnPress = false,
   }) : assert(
          child != null || builder != null,
          'Either child or builder must be provided',
@@ -54,10 +54,10 @@ class NakedButton extends StatelessWidget {
   final ValueChanged<bool>? onHoverChange;
 
   /// Called when highlight (pressed) state changes.
-  final ValueChanged<bool>? onHighlightChanged;
+  final ValueChanged<bool>? onPressChange;
 
   /// Called when any widget state changes.
-  final ValueChanged<Set<WidgetState>>? onStateChange;
+  final ValueChanged<Set<WidgetState>>? onStatesChange;
 
   /// Optional external controller for interaction states.
   final WidgetStatesController? statesController;
@@ -82,8 +82,8 @@ class NakedButton extends StatelessWidget {
   /// Defaults to [SystemMouseCursors.click] when enabled.
   final MouseCursor mouseCursor;
 
-  /// Whether to provide haptic feedback on press.
-  final bool enableHapticFeedback;
+  /// Whether to provide platform-specific feedback on press.
+  final bool enableFeedback;
 
   /// Optional focus node to control focus behavior.
   final FocusNode? focusNode;
@@ -94,65 +94,73 @@ class NakedButton extends StatelessWidget {
   /// Whether to exclude child semantics.
   final bool excludeSemantics;
 
+  /// Whether to request focus when the button is pressed.
+  ///
+  /// When true, tapping the button will request focus in addition to
+  /// calling the onPressed callback. This is useful for form submission
+  /// buttons and input-related actions where focus indication improves
+  /// user experience.
+  ///
+  /// Defaults to false to maintain Material Design consistency.
+  final bool focusOnPress;
+
   bool get _effectiveEnabled => enabled && onPressed != null;
-
-  MouseCursor get _mouseCursor =>
-      _effectiveEnabled ? mouseCursor : SystemMouseCursors.forbidden;
-
-  void _onPressed() {
-    if (enableHapticFeedback) {
-      HapticFeedback.lightImpact();
-    }
-    onPressed!();
-  }
 
   @override
   Widget build(BuildContext context) {
-    return NakedSemantics.button(
-      label: semanticLabel,
-      onTap: _effectiveEnabled ? _onPressed : null,
-      hint: semanticHint,
-      excludeSemantics: excludeSemantics,
-      child: Shortcuts(
-        shortcuts: {
-          const SingleActivator(LogicalKeyboardKey.enter):
-              const ActivateIntent(),
-          const SingleActivator(LogicalKeyboardKey.space):
-              const ActivateIntent(),
-        },
-        child: Actions(
-          actions: {
-            ActivateIntent: CallbackAction<ActivateIntent>(
-              onInvoke: (ActivateIntent intent) =>
-                  _effectiveEnabled ? _onPressed() : null,
-            ),
-          },
-          child: GestureDetector(
-            onTap: _effectiveEnabled ? _onPressed : null,
-            onDoubleTap: _effectiveEnabled ? onDoubleTap : null,
-            onLongPress: _effectiveEnabled ? onLongPress : null,
-            behavior: HitTestBehavior.opaque,
-            child: NakedInteractable(
-              mouseCursor: _mouseCursor,
-              statesController: statesController,
-              enabled: _effectiveEnabled,
-              onHighlightChanged: onHighlightChanged,
-              onHoverChange: onHoverChange,
-              onFocusChange: onFocusChange,
-              onStateChange: onStateChange,
-              autofocus: autofocus,
-              focusNode: focusNode,
-              builder: (context, states, child) {
-                if (builder != null) {
-                  return builder!(context, states, child);
-                }
+    Widget result = NakedPressable(
+      onPressed: _effectiveEnabled ? onPressed : null,
+      onDoubleTap: _effectiveEnabled ? onDoubleTap : null,
+      onLongPress: _effectiveEnabled ? onLongPress : null,
+      enabled: enabled,
+      mouseCursor: mouseCursor,
+      // Stronger indication for buttons
+      disabledMouseCursor: SystemMouseCursors.forbidden,
+      focusNode: focusNode,
+      autofocus: autofocus,
+      onStatesChange: onStatesChange,
+      onFocusChange: onFocusChange,
+      onHoverChange: onHoverChange,
+      onPressChange: onPressChange,
+      statesController: statesController,
+      enableFeedback: enableFeedback,
+      focusOnPress: focusOnPress,
+      child: child,
+      builder: (context, states, child) {
+        if (builder != null) {
+          return builder!(context, states, child);
+        }
 
-                return this.child!;
-              },
-            ),
-          ),
-        ),
-      ),
+        return this.child!;
+      },
+    );
+
+    // Only wrap with button semantics if isSemanticButton is true
+    if (isSemanticButton) {
+      return Semantics(
+        excludeSemantics: excludeSemantics,
+        enabled: _effectiveEnabled,
+        button: true,
+        focusable: _effectiveEnabled,
+        label: semanticLabel,
+        hint: semanticHint,
+        onTap: _effectiveEnabled ? onPressed : null,
+        // Expose focus action when enabled
+        onFocus: _effectiveEnabled ? semanticsFocusNoop : null,
+        child: result,
+      );
+    } // When not a semantic button, still indicate enabled state but no button semantics
+
+    return Semantics(
+      excludeSemantics: excludeSemantics,
+      enabled: _effectiveEnabled,
+      focusable: _effectiveEnabled,
+      label: semanticLabel,
+      hint: semanticHint,
+      // Expose focus action when enabled
+      onFocus: _effectiveEnabled ? semanticsFocusNoop : null,
+      // No onTap or button flag - the child handles interactions
+      child: result,
     );
   }
 }

@@ -349,7 +349,7 @@ class _NakedTextFieldState extends State<NakedTextField>
     }
     _effectiveFocusNode.canRequestFocus =
         widget.canRequestFocus && widget.enabled;
-    _effectiveFocusNode.addListener(_handleFocusChanged);
+    _effectiveFocusNode.addListener(_handleFocusChange);
   }
 
   bool get _canRequestFocus {
@@ -414,12 +414,17 @@ class _NakedTextFieldState extends State<NakedTextField>
     return false;
   }
 
-  void _handleFocusChanged() {
-    // ignore: no-empty-block, avoid-empty-setstate
-    setState(() {
-      // Rebuild the widget on focus change to show/hide the text selection highlight.
-    });
-    widget.onFocusChange?.call(_effectiveFocusNode.hasFocus);
+  void _handleFocusChange() {
+    final hasFocus = _effectiveFocusNode.hasFocus;
+    // Rebuild only if selection handles visibility could change
+    // or if there is an external listener.
+    if (widget.onFocusChange != null || _showSelectionHandles != hasFocus) {
+      // ignore: no-empty-block, avoid-empty-setstate
+      setState(() {
+        // Rebuild the widget on focus change to show/hide the text selection highlight.
+      });
+    }
+    widget.onFocusChange?.call(hasFocus);
   }
 
   void _handleSelectionChanged(
@@ -466,6 +471,14 @@ class _NakedTextFieldState extends State<NakedTextField>
     }
   }
 
+  void _handleMouseEnter(PointerEnterEvent event) {
+    widget.onHoverChange?.call(true);
+  }
+
+  void _handleMouseExit(PointerExitEvent event) {
+    widget.onHoverChange?.call(false);
+  }
+
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
@@ -484,8 +497,8 @@ class _NakedTextFieldState extends State<NakedTextField>
     }
 
     if (widget.focusNode != oldWidget.focusNode) {
-      (oldWidget.focusNode ?? _focusNode)?.removeListener(_handleFocusChanged);
-      (widget.focusNode ?? _focusNode)?.addListener(_handleFocusChanged);
+      (oldWidget.focusNode ?? _focusNode)?.removeListener(_handleFocusChange);
+      (widget.focusNode ?? _focusNode)?.addListener(_handleFocusChange);
     }
 
     _effectiveFocusNode.canRequestFocus = _canRequestFocus;
@@ -508,7 +521,7 @@ class _NakedTextFieldState extends State<NakedTextField>
 
   @override
   void dispose() {
-    _effectiveFocusNode.removeListener(_handleFocusChanged);
+    _effectiveFocusNode.removeListener(_handleFocusChange);
     _focusNode?.dispose();
     _controller?.dispose();
     super.dispose();
@@ -526,7 +539,6 @@ class _NakedTextFieldState extends State<NakedTextField>
   // AutofillClient implementation start.
   @override
   String get autofillId => _editableText!.autofillId;
-
   @override
   TextInputConfiguration get textInputConfiguration {
     final List<String>? autofillHints = widget.autofillHints?.toList(
@@ -732,10 +744,8 @@ class _NakedTextFieldState extends State<NakedTextField>
             },
       child: widget.enabled
           ? MouseRegion(
-              onEnter: (PointerEnterEvent event) =>
-                  widget.onHoverChange?.call(true),
-              onExit: (PointerExitEvent event) =>
-                  widget.onHoverChange?.call(false),
+              onEnter: _handleMouseEnter,
+              onExit: _handleMouseExit,
               cursor: SystemMouseCursors.text,
               child: _selectionGestureDetectorBuilder.buildGestureDetector(
                 behavior: HitTestBehavior.translucent,

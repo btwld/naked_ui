@@ -32,7 +32,7 @@ void main() {
               const SizedBox(height: 16),
               NakedTabGroup(
                 selectedTabId: '1',
-                onSelectedTabIdChanged: (_) {},
+                onChanged: (_) {},
                 child: NakedTabList(
                   child: Row(
                     children: const [

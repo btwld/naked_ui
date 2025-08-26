@@ -2,8 +2,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
-import 'utilities/naked_interactable.dart';
-import 'utilities/semantics.dart';
+import 'utilities/naked_pressable.dart';
+import 'utilities/utilities.dart';
 
 /// Manages accordion state with optional min/max expansion constraints.
 ///
@@ -225,14 +225,14 @@ class NakedAccordionItem<T> extends StatelessWidget {
     this.excludeSemantics = false,
     this.enabled = true,
     this.mouseCursor = SystemMouseCursors.click,
-    this.enableHapticFeedback = true,
+    this.enableFeedback = true,
     this.autofocus = false,
     this.focusNode,
     this.onFocusChange,
     this.onHoverChange,
-    this.onHighlightChanged,
-    this.onStateChange,
-    this.controller,
+    this.onPressChange,
+    this.onStatesChange,
+    this.statesController,
   });
 
   /// Builder function that creates the trigger widget.
@@ -269,13 +269,13 @@ class NakedAccordionItem<T> extends StatelessWidget {
   final ValueChanged<bool>? onHoverChange;
 
   /// Called when highlight (pressed) state changes.
-  final ValueChanged<bool>? onHighlightChanged;
+  final ValueChanged<bool>? onPressChange;
 
   /// Called when any widget state changes.
-  final ValueChanged<Set<WidgetState>>? onStateChange;
+  final ValueChanged<Set<WidgetState>>? onStatesChange;
 
   /// Optional external controller for interaction states.
-  final WidgetStatesController? controller;
+  final WidgetStatesController? statesController;
 
   /// Whether the accordion item is enabled.
   final bool enabled;
@@ -283,14 +283,18 @@ class NakedAccordionItem<T> extends StatelessWidget {
   /// Cursor when hovering over the accordion trigger.
   final MouseCursor mouseCursor;
 
-  /// Whether to provide haptic feedback on interaction.
-  final bool enableHapticFeedback;
+  /// Whether to provide platform-specific feedback on interaction.
+  final bool enableFeedback;
 
   /// Whether the item should be focused when the accordion is opened.
   final bool autofocus;
 
   /// Focus node for the item.
   final FocusNode? focusNode;
+
+  void _handleToggle(_NakedAccordionState? state) {
+    state?._controller.toggle(value);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -302,53 +306,59 @@ class NakedAccordionItem<T> extends StatelessWidget {
         final isExpanded = state._controller.contains(value);
         final child = isExpanded ? this.child : const SizedBox.shrink();
 
-        final onTap = enabled
-            ? () {
-                if (enableHapticFeedback) {
-                  HapticFeedback.lightImpact();
-                }
-                state._controller.toggle(value);
-              }
-            : null;
+        void onTap() => _handleToggle(state);
 
-        return NakedSemantics.expandable(
-          label: semanticLabel,
-          expanded: isExpanded,
-          onTap: onTap,
-          hint: semanticHint,
+        // Use direct Semantics for Material parity
+        // Auto-generate hint if not provided
+        final expandHint =
+            semanticHint ??
+            (isExpanded ? 'Double tap to collapse' : 'Double tap to expand');
+
+        return Semantics(
           excludeSemantics: excludeSemantics,
+          enabled: enabled,
+          focusable: enabled,
+          expanded: isExpanded,
+          label: semanticLabel,
+          hint: expandHint,
+          onTap: enabled ? onTap : null,
+          onFocus: enabled ? semanticsFocusNoop : null,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               Shortcuts(
-                shortcuts: {
-                  const SingleActivator(LogicalKeyboardKey.enter):
-                      const ActivateIntent(),
-                  const SingleActivator(LogicalKeyboardKey.space):
-                      const ActivateIntent(),
+                shortcuts: const {
+                  SingleActivator(LogicalKeyboardKey.enter): ActivateIntent(),
+                  SingleActivator(LogicalKeyboardKey.space): ActivateIntent(),
                 },
                 child: Actions(
                   actions: {
                     ActivateIntent: CallbackAction<ActivateIntent>(
-                      onInvoke: (intent) =>
-                          (enabled && onTap != null) ? onTap() : null,
+                      onInvoke: (intent) => enabled ? onTap() : null,
                     ),
                   },
-                  child: GestureDetector(
-                    onTap: onTap,
-                    behavior: HitTestBehavior.opaque,
-                    child: NakedInteractable(
-                      mouseCursor: mouseCursor,
-                      statesController: controller,
-                      enabled: enabled && onTap != null,
-                      onHighlightChanged: onHighlightChanged,
-                      onHoverChange: onHoverChange,
-                      onFocusChange: onFocusChange,
-                      onStateChange: onStateChange,
-                      autofocus: autofocus,
-                      focusNode: focusNode,
-                      builder: (context, states, child) =>
-                          trigger(context, isExpanded),
+                  child: NakedPressable(
+                    onPressed: onTap,
+                    enabled: enabled,
+                    mouseCursor: mouseCursor,
+                    disabledMouseCursor: SystemMouseCursors.forbidden,
+                    focusNode: focusNode,
+                    autofocus: autofocus,
+                    onStatesChange: onStatesChange,
+                    onFocusChange: onFocusChange,
+                    onHoverChange: onHoverChange,
+                    onPressChange: onPressChange,
+                    statesController: statesController,
+                    enableFeedback: enableFeedback,
+                    builder: (context, states, child) => Semantics(
+                      enabled: enabled,
+                      // Expose hasSelectedState without isSelected
+                      selected: false,
+                      focusable: enabled,
+                      onTap: enabled ? onTap : null,
+                      onFocus: enabled ? semanticsFocusNoop : null,
+                      // Do not set label here; inherit from trigger content (e.g., Text)
+                      child: trigger(context, isExpanded),
                     ),
                   ),
                 ),

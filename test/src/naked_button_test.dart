@@ -113,7 +113,7 @@ void main() {
           enabled: false,
           onFocusChange: (focused) => isFocused = focused,
           onHoverChange: (hovered) => isHovered = hovered,
-          onHighlightChanged: (pressed) => isPressed = pressed,
+          onPressChange: (pressed) => isPressed = pressed,
           child: const Text('Test Button'),
         ),
       );
@@ -178,7 +178,7 @@ void main() {
       expect(isHovered, false);
     });
 
-    testWidgets('calls onHighlightChanged on tap down/up', (
+    testWidgets('calls onPressChange on tap down/up', (
       WidgetTester tester,
     ) async {
       bool isPressed = false;
@@ -187,7 +187,7 @@ void main() {
         NakedButton(
           key: key,
           onPressed: () {},
-          onHighlightChanged: (pressed) => isPressed = pressed,
+          onPressChange: (pressed) => isPressed = pressed,
           child: const Text('Test Button'),
         ),
       );
@@ -203,7 +203,7 @@ void main() {
     });
 
     testWidgets(
-      'calls onHighlightChanged on tap cancel when gesture leaves and releases',
+      'calls onPressChange on tap cancel when gesture leaves and releases',
       (tester) async {
         bool? lastPressedState;
         final key = UniqueKey();
@@ -212,7 +212,7 @@ void main() {
           NakedButton(
             key: key,
             onPressed: () {},
-            onHighlightChanged: (pressed) => lastPressedState = pressed,
+            onPressChange: (pressed) => lastPressedState = pressed,
             child: const Text('Test Button'),
           ),
         );

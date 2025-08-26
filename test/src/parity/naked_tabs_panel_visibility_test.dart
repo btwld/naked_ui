@@ -14,7 +14,7 @@ void main() {
           StatefulBuilder(
             builder: (context, setState) => NakedTabGroup(
               selectedTabId: selected,
-              onSelectedTabIdChanged: (id) => setState(() => selected = id),
+              onChanged: (id) => setState(() => selected = id),
               child: Column(
                 children: const [
                   NakedTabList(

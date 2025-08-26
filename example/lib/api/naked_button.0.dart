@@ -59,7 +59,7 @@ class _ButtonExampleState extends State<ButtonExample> {
       },
       onFocusChange: (focused) => setState(() => _isFocused = focused),
       onHoverChange: (hovered) => setState(() => _isHovered = hovered),
-      onHighlightChanged: (pressed) => setState(() => _isPressed = pressed),
+      onPressChange: (pressed) => setState(() => _isPressed = pressed),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 2),
         decoration: BoxDecoration(

@@ -20,6 +20,34 @@ const Map<ShortcutActivator, Intent> _shortcuts = <ShortcutActivator, Intent>{
   ),
 };
 
+/// An action that closes the menu when a dismiss intent is received.
+/// 
+/// Typically triggered by the Escape key to close the currently open menu.
+class NakedDismissMenuAction extends DismissAction {
+  /// The [MenuController] that manages the menu to be dismissed.
+  final MenuController controller;
+  
+  /// Creates a [NakedDismissMenuAction].
+  NakedDismissMenuAction({required this.controller});
+  
+  @override
+  void invoke(DismissIntent intent) {
+    controller.close();
+  }
+  
+  @override
+  bool isEnabled(DismissIntent intent) {
+    return controller.isOpen;
+  }
+}
+
+/// Defines how an overlay (follower) is positioned relative to its target.
+///
+/// The [target] alignment picks a point within the target's bounds and the
+/// [follower] alignment picks a point within the overlay's bounds. The overlay
+/// is positioned so that these points coincide. For example, the default
+/// [Alignment.bottomLeft] target with [Alignment.topLeft] follower positions
+/// the overlay directly below the target, left aligned.
 class NakedMenuPosition {
   final Alignment target;
   final Alignment follower;
@@ -30,6 +58,10 @@ class NakedMenuPosition {
   });
 }
 
+/// Anchors an overlay to a target widget and manages its lifecycle.
+///
+/// This widget wires up keyboard navigation, focus management, outside-tap
+/// dismissal, and fallback positioning for overlays such as menus and selects.
 class NakedMenuAnchor extends StatefulWidget {
   const NakedMenuAnchor({
     super.key,
@@ -65,6 +97,15 @@ class NakedMenuAnchor extends StatefulWidget {
 
 class _NakedMenuAnchorState extends State<NakedMenuAnchor> {
   final _focusScopeNode = FocusScopeNode();
+  ScrollPosition? _scrollPosition;
+  Size? _viewSize;
+
+  void _handleScroll() {
+    // Close menu when ancestor scrolls (but not when menu content itself scrolls)
+    if (widget.controller.isOpen) {
+      widget.controller.close();
+    }
+  }
 
   Widget _overlayBuilder(BuildContext context, RawMenuOverlayInfo info) {
     return Positioned.fill(
@@ -84,13 +125,18 @@ class _NakedMenuAnchorState extends State<NakedMenuAnchor> {
               alignment: widget.position,
               fallbackAlignments: widget.fallbackPositions,
             ),
-            child: Shortcuts(
-              shortcuts: _shortcuts,
-              child: KeyboardListener(
-                focusNode: _focusScopeNode,
-                autofocus: true,
-                onKeyEvent: widget.onKeyEvent,
-                child: widget.overlayBuilder(context),
+            child: Actions(
+              actions: {
+                DismissIntent: NakedDismissMenuAction(controller: widget.controller),
+              },
+              child: Shortcuts(
+                shortcuts: _shortcuts,
+                child: KeyboardListener(
+                  focusNode: _focusScopeNode,
+                  autofocus: true,
+                  onKeyEvent: widget.onKeyEvent,
+                  child: widget.overlayBuilder(context),
+                ),
               ),
             ),
           ),
@@ -100,7 +146,26 @@ class _NakedMenuAnchorState extends State<NakedMenuAnchor> {
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    
+    // Set up scroll listener for auto-close behavior
+    _scrollPosition?.isScrollingNotifier.removeListener(_handleScroll);
+    _scrollPosition = Scrollable.maybeOf(context)?.position;
+    _scrollPosition?.isScrollingNotifier.addListener(_handleScroll);
+    
+    // Monitor view size changes for auto-close on resize
+    final Size newSize = MediaQuery.sizeOf(context);
+    if (_viewSize != null && newSize != _viewSize && widget.controller.isOpen) {
+      // Close the menu if the view changes size while open
+      widget.controller.close();
+    }
+    _viewSize = newSize;
+  }
+
+  @override
   void dispose() {
+    _scrollPosition?.isScrollingNotifier.removeListener(_handleScroll);
     _focusScopeNode.dispose();
     super.dispose();
   }

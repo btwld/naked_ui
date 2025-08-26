@@ -154,10 +154,10 @@ class _NakedSelectState<T> extends State<NakedSelect<T>>
       widget.allowMultiple && widget.selectedValues != null;
   final List<_SelectItemInfo<T>> _selectableItems = [];
 
-  bool get _isOpen => controller.isOpen;
-  // For type-ahead functionality
-  String _typeAheadBuffer = '';
-  Timer? _typeAheadResetTimer;
+  void _handleTriggerTap() {
+    if (!isEnabled) return;
+    toggleMenu();
+  }
 
   void _cancelTypeAheadTimer() {
     _typeAheadResetTimer?.cancel();
@@ -219,6 +219,13 @@ class _NakedSelectState<T> extends State<NakedSelect<T>>
       closeMenu();
     }
   }
+
+  bool get _isOpen => controller.isOpen;
+
+  // For type-ahead functionality
+  String _typeAheadBuffer = '';
+
+  Timer? _typeAheadResetTimer;
 
   @override
   void dispose() {
@@ -357,9 +364,6 @@ class _SelectItemInfo<T> {
 
 /// A customizable trigger button that controls the select dropdown.
 ///
-/// The trigger handles user interaction through mouse, keyboard, and touch events,
-/// providing callbacks for hover, press, and focus states to enable complete styling control.
-///
 /// Key features:
 /// - Customizable cursor and interaction states
 /// - Keyboard navigation support (Space, Enter, Arrow keys)
@@ -383,12 +387,12 @@ class NakedSelectTrigger extends StatelessWidget {
     required this.child,
     this.semanticLabel,
     this.mouseCursor = SystemMouseCursors.click,
-    this.enableHapticFeedback = true,
+    this.enableFeedback = true,
     this.focusNode,
     this.autofocus = false,
     this.onFocusChange,
     this.onHoverChange,
-    this.onHighlightChanged,
+    this.onPressChange,
     this.statesController,
   });
 
@@ -403,7 +407,7 @@ class NakedSelectTrigger extends StatelessWidget {
   final ValueChanged<bool>? onHoverChange;
 
   /// Called when highlight (pressed) state changes.
-  final ValueChanged<bool>? onHighlightChanged;
+  final ValueChanged<bool>? onPressChange;
 
   /// Optional external controller for interaction states.
   final WidgetStatesController? statesController;
@@ -418,7 +422,7 @@ class NakedSelectTrigger extends StatelessWidget {
 
   /// Whether to provide haptic feedback when tapped.
   /// Defaults to true.
-  final bool enableHapticFeedback;
+  final bool enableFeedback;
 
   /// Optional focus node to control focus behavior.
   /// If not provided, a new focus node will be created.
@@ -432,15 +436,7 @@ class NakedSelectTrigger extends StatelessWidget {
   Widget build(BuildContext context) {
     final state = context.findAncestorStateOfType<_NakedSelectState>();
 
-    void handleTap() {
-      if (state?.isEnabled == false) return;
-
-      if (enableHapticFeedback) {
-        HapticFeedback.lightImpact();
-      }
-
-      state?.toggleMenu();
-    }
+    void handleTap() => state?._handleTriggerTap();
 
     return NakedButton(
       onPressed: handleTap,
@@ -448,12 +444,12 @@ class NakedSelectTrigger extends StatelessWidget {
       isSemanticButton: true,
       semanticLabel: semanticLabel,
       mouseCursor: mouseCursor,
-      enableHapticFeedback: enableHapticFeedback,
+      enableFeedback: enableFeedback,
       focusNode: focusNode,
       autofocus: autofocus,
       onFocusChange: onFocusChange,
       onHoverChange: onHoverChange,
-      onHighlightChanged: onHighlightChanged,
+      onPressChange: onPressChange,
       statesController: statesController,
       child: child,
     );
@@ -493,13 +489,13 @@ class NakedSelectItem<T> extends StatefulWidget {
     this.enabled = true,
     this.semanticLabel,
     this.mouseCursor = SystemMouseCursors.click,
-    this.enableHapticFeedback = true,
+    this.enableFeedback = true,
     this.focusNode,
     this.autofocus = false,
     this.excludeSemantics = false,
     this.onFocusChange,
     this.onHoverChange,
-    this.onHighlightChanged,
+    this.onPressChange,
     this.statesController,
   });
 
@@ -521,7 +517,7 @@ class NakedSelectItem<T> extends StatefulWidget {
   final ValueChanged<bool>? onHoverChange;
 
   /// Called when highlight (pressed) state changes.
-  final ValueChanged<bool>? onHighlightChanged;
+  final ValueChanged<bool>? onPressChange;
 
   /// Optional external controller for interaction states.
   final WidgetStatesController? statesController;
@@ -540,7 +536,7 @@ class NakedSelectItem<T> extends StatefulWidget {
 
   /// Whether to provide haptic feedback when selected.
   /// Defaults to true.
-  final bool enableHapticFeedback;
+  final bool enableFeedback;
 
   /// Optional focus node to control focus behavior.
   /// If not provided, a new focus node will be created.
@@ -556,10 +552,6 @@ class NakedSelectItem<T> extends StatefulWidget {
 }
 
 class _NakedSelectItemState<T> extends State<NakedSelectItem<T>> {
-  late FocusNode _focusNode;
-  bool _isRegistered = false;
-  bool? _lastReportedSelection;
-
   @override
   void initState() {
     super.initState();
@@ -568,6 +560,14 @@ class _NakedSelectItemState<T> extends State<NakedSelectItem<T>> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _registerWithSelect();
     });
+  }
+
+  void _handleSelect(_NakedSelectState<T>? state, bool isEffectivelyEnabled) {
+    if (!isEffectivelyEnabled) return;
+    if (widget.enableFeedback) {
+      HapticFeedback.selectionClick();
+    }
+    state?._handleSelectValue(widget.value);
   }
 
   void _registerWithSelect() {
@@ -579,6 +579,12 @@ class _NakedSelectItemState<T> extends State<NakedSelectItem<T>> {
       _isRegistered = true;
     }
   }
+
+  late FocusNode _focusNode;
+
+  bool _isRegistered = false;
+
+  bool? _lastReportedSelection;
 
   @override
   void didUpdateWidget(NakedSelectItem<T> oldWidget) {
@@ -626,15 +632,7 @@ class _NakedSelectItemState<T> extends State<NakedSelectItem<T>> {
 
     final isEffectivelyEnabled = widget.enabled && isSelectEnabled;
 
-    void handleSelect() {
-      if (!isEffectivelyEnabled) return;
-
-      if (widget.enableHapticFeedback) {
-        HapticFeedback.selectionClick();
-      }
-
-      state?._handleSelectValue(widget.value);
-    }
+    void handleSelect() => _handleSelect(state, isEffectivelyEnabled);
 
     final inherited = NakedSelectScope.of<T>(context);
     final isSelected = inherited.isSelected(context, widget.value);
@@ -651,19 +649,21 @@ class _NakedSelectItemState<T> extends State<NakedSelectItem<T>> {
       excludeSemantics: widget.excludeSemantics,
       enabled: isEffectivelyEnabled,
       selected: isSelected,
+      // No button semantics or tap action at item level per tests
       child: NakedButton(
         onPressed: handleSelect,
         enabled: isEffectivelyEnabled,
-        isSemanticButton: true,
-        semanticLabel: widget.semanticLabel ?? widget.value.toString(),
+        isSemanticButton: false,
         mouseCursor: widget.mouseCursor,
-        enableHapticFeedback: widget.enableHapticFeedback,
+        enableFeedback: widget.enableFeedback,
         focusNode: _focusNode,
         autofocus: widget.autofocus,
+        excludeSemantics: false,
         onFocusChange: widget.onFocusChange,
         onHoverChange: widget.onHoverChange,
-        onHighlightChanged: widget.onHighlightChanged,
+        onPressChange: widget.onPressChange,
         statesController: widget.statesController,
+        // Apply item label directly to the visual child
         child: Semantics(
           label: widget.semanticLabel ?? widget.value.toString(),
           child: widget.child,
