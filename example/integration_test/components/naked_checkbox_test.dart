@@ -242,6 +242,106 @@ void main() {
       expect(checkboxValue, isTrue); // But value should still change
     });
 
+    testWidgets('checkbox builder method works with states', (tester) async {
+      final checkboxKey = UniqueKey();
+      bool checkboxValue = false;
+      bool isHovered = false;
+      
+      await tester.pumpWidget(MaterialApp(
+        home: Scaffold(
+          body: Center(
+            child: NakedCheckbox(
+              key: checkboxKey,
+              value: checkboxValue,
+              onChanged: (value) => checkboxValue = value!,
+              builder: (context, states, child) {
+                final isChecked = states.contains(WidgetState.selected);
+                return Container(
+                  width: 24,
+                  height: 24,
+                  decoration: BoxDecoration(
+                    color: isChecked ? Colors.blue : Colors.white,
+                    border: Border.all(
+                      color: states.contains(WidgetState.hovered) 
+                          ? Colors.blue.shade400 
+                          : Colors.grey,
+                      width: states.contains(WidgetState.pressed) ? 3 : 2,
+                    ),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: isChecked 
+                      ? const Icon(Icons.check, color: Colors.white, size: 18) 
+                      : null,
+                );
+              },
+              onHoverChange: (hovered) => isHovered = hovered,
+              child: const Text('Builder Checkbox'),
+            ),
+          ),
+        ),
+      ));
+      await tester.pumpAndSettle();
+      
+      final checkboxFinder = find.byKey(checkboxKey);
+      expect(checkboxFinder, findsOneWidget);
+      expect(find.text('Builder Checkbox'), findsOneWidget);
+      
+      // Initially unchecked
+      expect(find.byIcon(Icons.check), findsNothing);
+      
+      // Test hover state updates builder
+      await tester.simulateHover(checkboxKey, onHover: () {
+        expect(isHovered, isTrue);
+      });
+      
+      // Tap to check - builder should update
+      await tester.tap(checkboxFinder);
+      await tester.pump();
+      expect(checkboxValue, isTrue);
+      expect(find.byIcon(Icons.check), findsOneWidget);
+    });
+
+    testWidgets('checkbox supports tristate mode', (tester) async {
+      final checkboxKey = UniqueKey();
+      bool? checkboxValue; // null for indeterminate state
+      
+      await tester.pumpWidget(MaterialApp(
+        home: Scaffold(
+          body: Center(
+            child: NakedCheckbox(
+              key: checkboxKey,
+              value: checkboxValue,
+              tristate: true,
+              onChanged: (value) => checkboxValue = value,
+              child: const Text('Tristate Checkbox'),
+            ),
+          ),
+        ),
+      ));
+      await tester.pumpAndSettle();
+      
+      final checkboxFinder = find.byKey(checkboxKey);
+      expect(checkboxFinder, findsOneWidget);
+      
+      // Initially null (indeterminate)
+      expect(checkboxValue, isNull);
+      
+      // First tap: null -> true
+      await tester.tap(checkboxFinder);
+      await tester.pump();
+      expect(checkboxValue, isTrue);
+      
+      // Second tap: true -> false
+      await tester.tap(checkboxFinder);
+      await tester.pump();
+      expect(checkboxValue, isFalse);
+      
+      // Third tap: false -> null (back to indeterminate)
+      await tester.tap(checkboxFinder);
+      await tester.pump();
+      expect(checkboxValue, isNull);
+    });
+
     testWidgets('checkbox works with different visual states', (tester) async {
       // Test checked and unchecked visual representations
       await tester.pumpWidget(const checkbox_example.MyApp());

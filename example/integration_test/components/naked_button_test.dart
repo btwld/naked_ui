@@ -252,6 +252,112 @@ void main() {
       expect(wasPressed, isTrue);
     });
 
+    testWidgets('button builder method works with states', (tester) async {
+      final buttonKey = UniqueKey();
+      bool isHovered = false;
+      bool isPressed = false;
+      
+      await tester.pumpWidget(MaterialApp(
+        home: Scaffold(
+          body: Center(
+            child: NakedButton(
+              key: buttonKey,
+              onPressed: () {},
+              builder: (context, states, child) {
+                return Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: states.contains(WidgetState.hovered) 
+                        ? Colors.blue.shade100 
+                        : Colors.grey.shade100,
+                    border: Border.all(
+                      color: states.contains(WidgetState.pressed) 
+                          ? Colors.blue 
+                          : Colors.grey,
+                      width: 2,
+                    ),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: child,
+                );
+              },
+              onHoverChange: (hovered) => isHovered = hovered,
+              onPressChange: (pressed) => isPressed = pressed,
+              child: const Text('Builder Button'),
+            ),
+          ),
+        ),
+      ));
+      await tester.pumpAndSettle();
+      
+      final buttonFinder = find.byKey(buttonKey);
+      expect(buttonFinder, findsOneWidget);
+      expect(find.text('Builder Button'), findsOneWidget);
+      
+      // Test that builder updates with state changes
+      await tester.simulateHover(buttonKey, onHover: () {
+        expect(isHovered, isTrue);
+      });
+      
+      await tester.simulatePress(buttonKey, onPressed: () {
+        expect(isPressed, isTrue);
+      });
+    });
+
+    testWidgets('button onLongPress works correctly', (tester) async {
+      final buttonKey = UniqueKey();
+      bool wasLongPressed = false;
+      
+      await tester.pumpWidget(MaterialApp(
+        home: Scaffold(
+          body: Center(
+            child: NakedButton(
+              key: buttonKey,
+              onPressed: () {},
+              onLongPress: () => wasLongPressed = true,
+              child: const Text('Long Press Button'),
+            ),
+          ),
+        ),
+      ));
+      await tester.pumpAndSettle();
+      
+      // Long press the button
+      await tester.longPress(find.byKey(buttonKey));
+      await tester.pumpAndSettle();
+      
+      // Verify long press callback was called
+      expect(wasLongPressed, isTrue);
+    });
+
+    testWidgets('button onDoubleTap works correctly', (tester) async {
+      final buttonKey = UniqueKey();
+      bool wasDoubleTapped = false;
+      
+      await tester.pumpWidget(MaterialApp(
+        home: Scaffold(
+          body: Center(
+            child: NakedButton(
+              key: buttonKey,
+              onPressed: () {},
+              onDoubleTap: () => wasDoubleTapped = true,
+              child: const Text('Double Tap Button'),
+            ),
+          ),
+        ),
+      ));
+      await tester.pumpAndSettle();
+      
+      // Double tap the button
+      await tester.tap(find.byKey(buttonKey));
+      await tester.pump(const Duration(milliseconds: 100));
+      await tester.tap(find.byKey(buttonKey));
+      await tester.pumpAndSettle();
+      
+      // Verify double tap callback was called
+      expect(wasDoubleTapped, isTrue);
+    });
+
     testWidgets('button works with different child widgets', (tester) async {
       // Test with Icon child
       await tester.pumpWidget(MaterialApp(

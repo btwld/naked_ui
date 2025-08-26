@@ -18,30 +18,32 @@ void main() {
       final radioGroupFinder = find.byType(NakedRadioGroup<radio_example.RadioOption>);
       expect(radioGroupFinder, findsOneWidget);
       
-      // Find both radio buttons
-      final radioFinders = find.byType(NakedRadio<radio_example.RadioOption>);
-      expect(radioFinders, findsNWidgets(2));
+      // Find all radio options
+      final appleRadio = find.text('Apple');
+      final bananaRadio = find.text('Banana');
       
-      // Initially banana should be selected (thick border)
-      // We can test by tapping each radio and verifying visual changes
-      final appleRadio = radioFinders.at(1);
+      expect(appleRadio, findsOneWidget);
+      expect(bananaRadio, findsOneWidget);
       
-      // Tap apple radio
+      // Initially no selection (or banana selected based on example)
+      // Test selecting apple
       await tester.tap(appleRadio);
       await tester.pumpAndSettle();
       
-      // Tap banana radio again
-      final bananaRadio = radioFinders.at(0);
+      // Verify apple is selected - this would be visible in the UI styling
+      // The example app would show visual difference for selected state
+      
+      // Test selecting banana
       await tester.tap(bananaRadio);
       await tester.pumpAndSettle();
       
-      // The visual state should update (border thickness changes)
-      expect(radioFinders, findsNWidgets(2));
+      // Only one should be selected at a time
+      expect(appleRadio, findsOneWidget); // Still exists
+      expect(bananaRadio, findsOneWidget); // Still exists
     });
     
     testWidgets('radio responds to keyboard activation', (tester) async {
-      final radioKey1 = UniqueKey();
-      final radioKey2 = UniqueKey();
+      final radioKey = UniqueKey();
       radio_example.RadioOption selectedValue = radio_example.RadioOption.banana;
       
       await tester.pumpWidget(MaterialApp(
@@ -50,20 +52,10 @@ void main() {
             child: NakedRadioGroup<radio_example.RadioOption>(
               groupValue: selectedValue,
               onChanged: (value) => selectedValue = value!,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  NakedRadio<radio_example.RadioOption>(
-                    key: radioKey1,
-                    value: radio_example.RadioOption.banana,
-                    child: const Text('Banana'),
-                  ),
-                  NakedRadio<radio_example.RadioOption>(
-                    key: radioKey2,
-                    value: radio_example.RadioOption.apple,
-                    child: const Text('Apple'),
-                  ),
-                ],
+              child: NakedRadio<radio_example.RadioOption>(
+                key: radioKey,
+                value: radio_example.RadioOption.apple,
+                child: const Text('Apple'),
               ),
             ),
           ),
@@ -71,8 +63,8 @@ void main() {
       ));
       await tester.pumpAndSettle();
       
-      // Test keyboard activation on second radio
-      await tester.testKeyboardActivation(find.byKey(radioKey2));
+      // Test keyboard activation
+      await tester.testKeyboardActivation(find.byKey(radioKey));
       await tester.pumpAndSettle();
     });
     
@@ -124,15 +116,13 @@ void main() {
         }
       });
       
-      // Test press state
+      // Test press state  
       await tester.simulatePress(radioKey, onPressed: () {
         expect(isPressed, isTrue);
         if (lastStates != null) {
           tester.expectWidgetStates(lastStates!, expectPressed: true);
         }
       });
-      
-      // Selection state testing is complex with groups - tested in dedicated selection tests
     });
     
     testWidgets('radio handles focus management correctly', (tester) async {
@@ -152,7 +142,7 @@ void main() {
                 value: radio_example.RadioOption.apple,
                 focusNode: focusNode,
                 onFocusChange: (focused) => focusChanged = focused,
-                child: const Text('Test Radio'),
+                child: const Text('Focus Test Radio'),
               ),
             ),
           ),
@@ -176,7 +166,6 @@ void main() {
     
     testWidgets('disabled radio blocks interactions', (tester) async {
       final radioKey = UniqueKey();
-      bool wasChanged = false;
       bool hoverChanged = false;
       radio_example.RadioOption selectedValue = radio_example.RadioOption.banana;
       
@@ -185,13 +174,12 @@ void main() {
           body: Center(
             child: NakedRadioGroup<radio_example.RadioOption>(
               groupValue: selectedValue,
-              onChanged: (value) => wasChanged = true,
+              onChanged: (value) => selectedValue = value!,
               child: NakedRadio<radio_example.RadioOption>(
                 key: radioKey,
                 value: radio_example.RadioOption.apple,
                 enabled: false,
                 onHoverChange: (hovered) => hoverChanged = true,
-                onFocusChange: (focused) {},
                 child: const Text('Disabled Radio'),
               ),
             ),
@@ -203,21 +191,21 @@ void main() {
       // Test that disabled radio doesn't respond to tap
       await tester.tap(find.byKey(radioKey));
       await tester.pump();
-      expect(wasChanged, isFalse);
-      
-      // Test that disabled radio doesn't respond to keyboard
-      await tester.testKeyboardActivation(find.byKey(radioKey));
-      expect(wasChanged, isFalse);
+      expect(selectedValue, radio_example.RadioOption.banana); // Should not change
       
       // Test that hover callbacks aren't triggered when disabled
       await tester.simulateHover(radioKey);
       expect(hoverChanged, isFalse);
+      
+      // Test that disabled radio doesn't respond to keyboard
+      await tester.testKeyboardActivation(find.byKey(radioKey));
+      expect(selectedValue, radio_example.RadioOption.banana); // Should not change
     });
-
+    
     testWidgets('radio group enforces single selection', (tester) async {
+      radio_example.RadioOption selectedValue = radio_example.RadioOption.banana;
       final radio1Key = UniqueKey();
       final radio2Key = UniqueKey();
-      radio_example.RadioOption selectedValue = radio_example.RadioOption.banana;
       
       await tester.pumpWidget(MaterialApp(
         home: Scaffold(
@@ -226,11 +214,10 @@ void main() {
               groupValue: selectedValue,
               onChanged: (value) => selectedValue = value!,
               child: Column(
-                mainAxisSize: MainAxisSize.min,
                 children: [
                   NakedRadio<radio_example.RadioOption>(
                     key: radio1Key,
-                    value: radio_example.RadioOption.banana,
+                    value: radio_example.RadioOption.apple,
                     builder: (context, states, child) {
                       return Container(
                         width: 20,
@@ -245,10 +232,9 @@ void main() {
                       );
                     },
                   ),
-                  const SizedBox(height: 10),
                   NakedRadio<radio_example.RadioOption>(
                     key: radio2Key,
-                    value: radio_example.RadioOption.apple,
+                    value: radio_example.RadioOption.banana,
                     builder: (context, states, child) {
                       return Container(
                         width: 20,
@@ -271,18 +257,84 @@ void main() {
       ));
       await tester.pumpAndSettle();
       
-      // Initially banana should be selected
-      // Tap apple radio to change selection
-      await tester.tap(find.byKey(radio2Key));
-      await tester.pumpAndSettle();
+      // Initially banana is selected
+      expect(selectedValue, radio_example.RadioOption.banana);
       
-      // Tap banana radio to change back
+      // Select apple - should change selection
       await tester.tap(find.byKey(radio1Key));
+      await tester.pumpAndSettle();
+      expect(selectedValue, radio_example.RadioOption.apple);
+      
+      // Select banana - should change selection back
+      await tester.tap(find.byKey(radio2Key));
       await tester.pumpAndSettle();
       
       // Both radios should exist but only one should be visually selected
       expect(find.byKey(radio1Key), findsOneWidget);
       expect(find.byKey(radio2Key), findsOneWidget);
+    });
+    
+    testWidgets('radio builder method works with states', (tester) async {
+      final radioKey = UniqueKey();
+      radio_example.RadioOption? groupValue;
+      bool isSelected = false;
+      bool isHovered = false;
+      
+      await tester.pumpWidget(MaterialApp(
+        home: Scaffold(
+          body: Center(
+            child: NakedRadioGroup<radio_example.RadioOption>(
+              groupValue: groupValue,
+              onChanged: (value) => groupValue = value,
+              child: NakedRadio<radio_example.RadioOption>(
+                key: radioKey,
+                value: radio_example.RadioOption.apple,
+                onHoverChange: (hovered) => isHovered = hovered,
+                builder: (context, states, child) {
+                  isSelected = states.contains(WidgetState.selected);
+                  return Container(
+                    width: 24,
+                    height: 24,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: isSelected ? Colors.blue : Colors.white,
+                      border: Border.all(
+                        color: states.contains(WidgetState.hovered)
+                            ? Colors.blue.shade400
+                            : Colors.grey,
+                        width: states.contains(WidgetState.pressed) ? 3 : 2,
+                      ),
+                    ),
+                    child: isSelected
+                        ? const Icon(Icons.circle, color: Colors.white, size: 12)
+                        : null,
+                  );
+                },
+                child: const Text('Builder Radio'),
+              ),
+            ),
+          ),
+        ),
+      ));
+      await tester.pumpAndSettle();
+      
+      final radioFinder = find.byKey(radioKey);
+      expect(radioFinder, findsOneWidget);
+      
+      // Initially not selected
+      expect(isSelected, isFalse);
+      
+      // Test hover state updates builder
+      await tester.simulateHover(radioKey, onHover: () {
+        expect(isHovered, isTrue);
+      });
+      
+      // Tap to select - builder should update
+      await tester.tap(radioFinder);
+      await tester.pump();
+      expect(groupValue, radio_example.RadioOption.apple);
+      expect(isSelected, isTrue);
+      expect(find.byIcon(Icons.circle), findsOneWidget);
     });
   });
 }
