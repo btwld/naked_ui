@@ -135,31 +135,16 @@ class NakedButton extends StatelessWidget {
       },
     );
 
-    // Only wrap with button semantics if isSemanticButton is true
-    if (isSemanticButton) {
-      return Semantics(
-        excludeSemantics: excludeSemantics,
-        enabled: _effectiveEnabled,
-        button: true,
-        focusable: _effectiveEnabled,
-        label: semanticLabel,
-        hint: semanticHint,
-        onTap: _effectiveEnabled ? onPressed : null,
-        // Expose focus action when enabled
-        onFocus: _effectiveEnabled ? semanticsFocusNoop : null,
-        child: result,
-      );
-    } // When not a semantic button, still indicate enabled state but no button semantics
-
     return Semantics(
       excludeSemantics: excludeSemantics,
       enabled: _effectiveEnabled,
+      button: isSemanticButton,
       focusable: _effectiveEnabled,
       label: semanticLabel,
       hint: semanticHint,
+      onTap: isSemanticButton && _effectiveEnabled ? onPressed : null,
       // Expose focus action when enabled
       onFocus: _effectiveEnabled ? semanticsFocusNoop : null,
-      // No onTap or button flag - the child handles interactions
       child: result,
     );
   }
