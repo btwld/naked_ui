@@ -90,7 +90,6 @@ void main() {
         ),
       );
 
-      // Test hover
       await tester.simulateHover(
         key,
         onHover: () {
@@ -100,7 +99,6 @@ void main() {
 
       expect(isHovered, false);
 
-      // Test press
       final pressGesture = await tester.press(find.byType(NakedCheckbox));
       await tester.pump();
       expect(isPressed, false);
@@ -108,7 +106,6 @@ void main() {
       await tester.pump();
       expect(isPressed, false);
 
-      // Test focus
       final focusNode = FocusNode();
       focusNode.requestFocus();
       await tester.pump();

@@ -118,7 +118,6 @@ void main() {
         ),
       );
 
-      // Test hover
       await tester.simulateHover(
         key,
         onHover: () {
@@ -137,7 +136,6 @@ void main() {
 
       expect(isPressed, false);
 
-      // Test focus
       final focusNode = FocusNode();
       focusNode.requestFocus();
       await tester.pump();

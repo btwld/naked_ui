@@ -84,7 +84,6 @@ class NakedMenu extends StatelessWidget {
 
 
   /// Whether to automatically focus the menu when opened.
-  /// Currently has no effect.
   final bool autofocus;
 
   /// Alignment of the menu relative to its target.

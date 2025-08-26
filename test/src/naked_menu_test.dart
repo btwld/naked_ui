@@ -293,26 +293,6 @@ void main() {
         expect(item2Focused, true);
       });
     });
-
-    // group('Accessibility', () {
-    //   testWidgets('Provides semantic labels when provided',
-    //       (WidgetTester tester) async {
-    //     await tester.pumpMenu(
-    //       const NakedMenu(
-    //         semanticLabel: 'Test Menu',
-    //         menu: NakedMenuContent(
-    //           child: Text('Menu Content'),
-    //         ),
-    //         child: Text('child'),
-    //       ),
-    //     );
-
-    //     expect(
-    //       tester.getSemantics(find.byType(Semantics).first),
-    //       matchesSemantics(label: 'Test Menu'),
-    //     );
-    //   });
-    // });
   });
 
   group('NakedMenuContent', () {
@@ -570,12 +550,10 @@ void main() {
         focusNode.requestFocus();
         await tester.pump();
 
-        // Test space key
         await tester.sendKeyEvent(LogicalKeyboardKey.space);
         await tester.pumpAndSettle();
         expect(pressed, true);
 
-        // Cleanup
         focusNode.dispose();
       });
     });

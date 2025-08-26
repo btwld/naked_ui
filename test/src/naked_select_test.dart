@@ -502,7 +502,6 @@ void main() {
       await tester.tap(find.text('Select option'));
       await tester.pumpAndSettle();
 
-      // Test hover
       await tester.simulateHover(
         key,
         onHover: () {
@@ -511,7 +510,6 @@ void main() {
       );
       expect(itemHovered, false);
 
-      // Test press
       final pressGesture = await tester.press(find.byKey(key));
       await tester.pump();
       expect(itemPressed, true);

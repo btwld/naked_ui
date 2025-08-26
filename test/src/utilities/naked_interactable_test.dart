@@ -3,12 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:naked_ui/naked_ui.dart';
 
-// Import your NakedInteractable widget
-// import 'package:your_package/naked_interactable.dart';
-
 void main() {
   group('NakedInteractable Complete Test Suite', () {
-    // Test utilities
     Widget buildTestWidget({
       WidgetStatesController? controller,
       ValueWidgetBuilder<Set<WidgetState>>? builder,
@@ -145,7 +141,6 @@ void main() {
 
         expect(capturedStates!.isFocused, isTrue);
 
-        // Cleanup
         controller.dispose();
       });
 
@@ -411,7 +406,6 @@ void main() {
 
         expect(stateChanges.last.isHovered, isFalse);
 
-        // Clean up
         await gesture.removePointer();
       });
 
@@ -580,7 +574,6 @@ void main() {
 
         expect(stateChanges.last.isFocused, isTrue);
 
-        // Remove focus
         focusNode.unfocus();
         await tester.pump();
 
@@ -960,7 +953,6 @@ void main() {
     });
 
     group('Keyboard Interaction', () {
-      // Test removed - NakedInteractable no longer handles tap directly
       testWidgets('Focus behavior works correctly', (tester) async {
         bool focused = false;
         final focusNode = FocusNode();
@@ -983,8 +975,6 @@ void main() {
 
         focusNode.dispose();
       });
-
-      // Test removed - NakedInteractable no longer handles keyboard directly
     });
 
     group('Edge Cases', () {

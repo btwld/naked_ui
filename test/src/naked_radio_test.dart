@@ -200,35 +200,6 @@ void main() {
       );
     });
 
-    // TODO: Fix keyboard activation - currently broken due to NakedInteractable changes
-    // testWidgets('handles keyboard selection with Space and Enter keys', (
-    //   WidgetTester tester,
-    // ) async {
-    //   String? selectedValue;
-    //   final focusNode = FocusNode();
-
-    //   await tester.pumpMaterialWidget(
-    //     NakedRadioGroup<String>(
-    //       groupValue: null,
-    //       onChanged: (value) => selectedValue = value,
-    //       child: NakedRadio<String>(
-    //         value: 'test',
-    //         focusNode: focusNode,
-    //         child: const SizedBox(width: 24, height: 24),
-    //       ),
-    //     ),
-    //   );
-
-    //   focusNode.requestFocus();
-    //   await tester.pump();
-
-    //   for (final key in [LogicalKeyboardKey.space, LogicalKeyboardKey.enter]) {
-    //     await tester.sendKeyEvent(key);
-    //     await tester.pump();
-    //     expect(selectedValue, 'test');
-    //     selectedValue = null;
-    //   }
-    // });
 
     testWidgets('properly manages focus', (WidgetTester tester) async {
       bool isFocused = false;
@@ -578,33 +549,5 @@ void main() {
       expect(radio2States!.isSelected, isTrue);
     });
 
-    // TODO: Fix disabled state propagation in RawRadio
-    // testWidgets('disabled state is reflected in states', (WidgetTester tester) async {
-    //   Set<WidgetState>? capturedStates;
-
-    //   await tester.pumpMaterialWidget(
-    //     NakedRadioGroup<String>(
-    //       groupValue: null,
-    //       onChanged: null, // Disabled group
-    //       enabled: false,
-    //       child: NakedRadio<String>(
-    //         value: 'value1',
-    //         builder: (states) {
-    //           capturedStates = states;
-    //           return Container(
-    //             color: states.isDisabled
-    //                 ? Colors.grey.shade300
-    //                 : Colors.white,
-    //             child: const Text('Disabled Radio'),
-    //           );
-    //         },
-    //         child: const SizedBox.shrink(),
-    //       ),
-    //     ),
-    //   );
-
-    //   // Should contain disabled state
-    //   expect(capturedStates!.isDisabled, isTrue);
-    // });
   });
 }

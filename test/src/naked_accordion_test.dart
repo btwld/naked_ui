@@ -95,7 +95,6 @@ void main() {
       await tester.pump();
       expect(focusState, true);
 
-      // Remove focus
       focusNode.unfocus();
       await tester.pump();
       expect(focusState, false);
