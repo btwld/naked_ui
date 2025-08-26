@@ -16,7 +16,7 @@ void main() {
   group('Builder Pattern Documentation Tests', () {
     
     group('Builder Pattern Core Behavior', () {
-      testWidgets('builder receives correct WidgetState set', (tester) async {
+      testWidgets('builder receives correct WidgetState set', (WidgetTester tester) async {
         Set<WidgetState>? receivedStates;
         
         await tester.pumpMaterialWidget(
@@ -42,7 +42,7 @@ void main() {
         expect(receivedStates, isNot(contains(WidgetState.hovered)));
       });
 
-      testWidgets('builder receives non-null child when provided', (tester) async {
+      testWidgets('builder receives non-null child when provided', (WidgetTester tester) async {
         Widget? receivedChild;
         
         const expectedChild = Text('Expected Child');
@@ -62,7 +62,7 @@ void main() {
         expect(receivedChild, equals(expectedChild));
       });
 
-      testWidgets('builder can return different widgets based on states', (tester) async {
+      testWidgets('builder can return different widgets based on states', (WidgetTester tester) async {
         await tester.pumpMaterialWidget(
           NakedButton(
             onPressed: () {},
@@ -102,7 +102,7 @@ void main() {
     });
 
     group('Builder Efficiency Tests', () {
-      testWidgets('builder rebuilds only when states change', (tester) async {
+      testWidgets('builder rebuilds only when states change', (WidgetTester tester) async {
         int builderCallCount = 0;
         
         await tester.pumpMaterialWidget(
@@ -138,7 +138,7 @@ void main() {
         expect(builderCallCount, greaterThan(afterPressCount));
       });
 
-      testWidgets('child widget does not rebuild when states change', (tester) async {
+      testWidgets('child widget does not rebuild when states change', (WidgetTester tester) async {
         int childBuildCount = 0;
         int builderBuildCount = 0;
         
@@ -180,7 +180,7 @@ void main() {
     });
 
     group('Cross-Component Builder Pattern Consistency', () {
-      testWidgets('NakedButton builder pattern', (tester) async {
+      testWidgets('NakedButton builder pattern', (WidgetTester tester) async {
         await _testComponentBuilder(
           tester,
           (builder, child) => NakedButton(
@@ -191,7 +191,7 @@ void main() {
         );
       });
 
-      testWidgets('NakedCheckbox builder pattern', (tester) async {
+      testWidgets('NakedCheckbox builder pattern', (WidgetTester tester) async {
         await _testComponentBuilder(
           tester,
           (builder, child) => NakedCheckbox(
@@ -203,7 +203,7 @@ void main() {
         );
       });
 
-      testWidgets('NakedRadio builder pattern', (tester) async {
+      testWidgets('NakedRadio builder pattern', (WidgetTester tester) async {
         await tester.pumpMaterialWidget(
           NakedRadioGroup<String>(
             groupValue: null,
@@ -215,7 +215,7 @@ void main() {
         await _verifyBuilderBehavior(tester);
       });
 
-      testWidgets('NakedTab builder pattern', (tester) async {
+      testWidgets('NakedTab builder pattern', (WidgetTester tester) async {
         await tester.pumpMaterialWidget(
           NakedTabGroup(
             selectedTabId: 'tab1',
@@ -233,7 +233,7 @@ void main() {
     });
 
     group('Builder Error Handling', () {
-      testWidgets('builder handles null child gracefully', (tester) async {
+      testWidgets('builder handles null child gracefully', (WidgetTester tester) async {
         Widget? receivedChild;
         
         await tester.pumpMaterialWidget(
@@ -256,7 +256,7 @@ void main() {
         expect(find.byType(Container), findsOneWidget);
       });
 
-      testWidgets('builder can ignore provided child', (tester) async {
+      testWidgets('builder can ignore provided child', (WidgetTester tester) async {
         await tester.pumpMaterialWidget(
           NakedButton(
             onPressed: () {},
@@ -274,7 +274,7 @@ void main() {
     });
 
     group('State-Specific Builder Behavior', () {
-      testWidgets('builder responds to all widget states', (tester) async {
+      testWidgets('builder responds to all widget states', (WidgetTester tester) async {
         Set<WidgetState>? lastStates;
         
         await tester.pumpMaterialWidget(
@@ -315,7 +315,7 @@ void main() {
         expect(lastStates, isNot(contains(WidgetState.pressed)));
       });
 
-      testWidgets('builder handles disabled state', (tester) async {
+      testWidgets('builder handles disabled state', (WidgetTester tester) async {
         Set<WidgetState>? enabledStates;
         Set<WidgetState>? disabledStates;
         

@@ -6,7 +6,7 @@ import 'helpers/simulate_hover.dart';
 
 void main() {
   group('NakedButton Builder Pattern Tests', () {
-    testWidgets('builder rebuilds on state change', (tester) async {
+    testWidgets('builder rebuilds on state change', (WidgetTester tester) async {
       int builderCallCount = 0;
       bool isPressed = false;
       
@@ -44,7 +44,7 @@ void main() {
       await tester.pump();
     });
 
-    testWidgets('parent widget does NOT rebuild on state change (efficiency)', (tester) async {
+    testWidgets('parent widget does NOT rebuild on state change (efficiency)', (WidgetTester tester) async {
       int parentBuildCount = 0;
       int builderBuildCount = 0;
       
@@ -94,7 +94,7 @@ void main() {
       expect(builderBuildCount, greaterThan(initialBuilderBuilds));
     });
 
-    testWidgets('child parameter does not rebuild unnecessarily', (tester) async {
+    testWidgets('child parameter does not rebuild unnecessarily', (WidgetTester tester) async {
       int childBuildCount = 0;
       int builderBuildCount = 0;
       
@@ -138,7 +138,7 @@ void main() {
       expect(builderBuildCount, greaterThan(initialBuilderBuilds));
     });
 
-    testWidgets('builder receives correct states for all interactions', (tester) async {
+    testWidgets('builder receives correct states for all interactions', (WidgetTester tester) async {
       Set<WidgetState>? lastStates;
       
       await tester.pumpMaterialWidget(
@@ -178,7 +178,7 @@ void main() {
       expect(lastStates, isNot(contains(WidgetState.pressed)));
     });
 
-    testWidgets('builder can return different widgets based on states', (tester) async {
+    testWidgets('builder can return different widgets based on states', (WidgetTester tester) async {
       await tester.pumpMaterialWidget(
         NakedButton(
           onPressed: () {},
@@ -223,7 +223,7 @@ void main() {
       expect(find.text('Pressed!'), findsNothing);
     });
 
-    testWidgets('builder works correctly when disabled', (tester) async {
+    testWidgets('builder works correctly when disabled', (WidgetTester tester) async {
       Set<WidgetState>? lastStates;
       
       await tester.pumpMaterialWidget(

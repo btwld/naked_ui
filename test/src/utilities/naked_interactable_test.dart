@@ -47,7 +47,7 @@ void main() {
     }
 
     group('State Management', () {
-      testWidgets('initializes with correct default states', (tester) async {
+      testWidgets('initializes with correct default states', (WidgetTester tester) async {
         Set<WidgetState>? capturedStates;
 
         await tester.pumpWidget(
@@ -88,7 +88,7 @@ void main() {
         expect(capturedStates!.isDisabled, isFalse);
       });
 
-      testWidgets('updates disabled state based on callbacks', (tester) async {
+      testWidgets('updates disabled state based on callbacks', (WidgetTester tester) async {
         Set<WidgetState>? capturedStates;
 
         // Initially disabled
@@ -118,7 +118,7 @@ void main() {
         expect(capturedStates!.isDisabled, isFalse);
       });
 
-      testWidgets('uses external controller when provided', (tester) async {
+      testWidgets('uses external controller when provided', (WidgetTester tester) async {
         final controller = WidgetStatesController({WidgetState.selected});
         Set<WidgetState>? capturedStates;
 
@@ -237,7 +237,7 @@ void main() {
     });
 
     group('Tap Gestures', () {
-      testWidgets('handles pointer events correctly', (tester) async {
+      testWidgets('handles pointer events correctly', (WidgetTester tester) async {
         final stateChanges = <Set<WidgetState>>[];
 
         await tester.pumpWidget(
@@ -264,7 +264,7 @@ void main() {
         expect(stateChanges.last.isPressed, isFalse);
       });
 
-      testWidgets('updates pressed state during tap', (tester) async {
+      testWidgets('updates pressed state during tap', (WidgetTester tester) async {
         final stateChanges = <Set<WidgetState>>[];
 
         await tester.pumpWidget(
@@ -291,7 +291,7 @@ void main() {
         expect(stateChanges.last.isPressed, isFalse);
       });
 
-      testWidgets('handles long press correctly', (tester) async {
+      testWidgets('handles long press correctly', (WidgetTester tester) async {
         bool longPressed = false;
 
         await tester.pumpWidget(
@@ -311,7 +311,7 @@ void main() {
         expect(longPressed, isTrue);
       });
 
-      testWidgets('handles secondary tap (right-click)', (tester) async {
+      testWidgets('handles secondary tap (right-click)', (WidgetTester tester) async {
         bool secondaryTapped = false;
 
         await tester.pumpWidget(
@@ -334,7 +334,7 @@ void main() {
         expect(secondaryTapped, isTrue);
       });
 
-      testWidgets('handles secondary long press', (tester) async {
+      testWidgets('handles secondary long press', (WidgetTester tester) async {
         bool secondaryLongPressed = false;
 
         await tester.pumpWidget(
@@ -362,7 +362,7 @@ void main() {
         expect(secondaryLongPressed, isTrue);
       });
 
-      testWidgets('shows disabled state correctly', (tester) async {
+      testWidgets('shows disabled state correctly', (WidgetTester tester) async {
         await tester.pumpWidget(
           buildTestWidget(
             enabled: false,
@@ -379,7 +379,7 @@ void main() {
     });
 
     group('Hover States', () {
-      testWidgets('updates hover state on mouse enter/exit', (tester) async {
+      testWidgets('updates hover state on mouse enter/exit', (WidgetTester tester) async {
         final stateChanges = <Set<WidgetState>>[];
 
         await tester.pumpWidget(
@@ -409,7 +409,7 @@ void main() {
         await gesture.removePointer();
       });
 
-      testWidgets('hover does not interfere with tap', (tester) async {
+      testWidgets('hover does not interfere with tap', (WidgetTester tester) async {
         bool tapped = false;
         final stateChanges = <Set<WidgetState>>[];
 
@@ -556,7 +556,7 @@ void main() {
     });
 
     group('Focus Management', () {
-      testWidgets('updates focus state correctly', (tester) async {
+      testWidgets('updates focus state correctly', (WidgetTester tester) async {
         final focusNode = FocusNode();
         final stateChanges = <Set<WidgetState>>[];
 
@@ -582,7 +582,7 @@ void main() {
         focusNode.dispose();
       });
 
-      testWidgets('autofocus works correctly', (tester) async {
+      testWidgets('autofocus works correctly', (WidgetTester tester) async {
         final stateChanges = <Set<WidgetState>>[];
 
         await tester.pumpWidget(
@@ -602,7 +602,7 @@ void main() {
         );
       });
 
-      testWidgets('focus survives widget rebuild', (tester) async {
+      testWidgets('focus survives widget rebuild', (WidgetTester tester) async {
         final focusNode = FocusNode();
         Set<WidgetState>? capturedStates;
 
@@ -643,7 +643,7 @@ void main() {
     });
 
     group('State Change Notifications', () {
-      testWidgets('onStatesChange called for all state changes', (tester) async {
+      testWidgets('onStatesChange called for all state changes', (WidgetTester tester) async {
         final stateChanges = <Set<WidgetState>>[];
 
         await tester.pumpWidget(
@@ -680,7 +680,7 @@ void main() {
         await gesture.removePointer();
       });
 
-      testWidgets('state changes trigger builder rebuild', (tester) async {
+      testWidgets('state changes trigger builder rebuild', (WidgetTester tester) async {
         int buildCount = 0;
 
         await tester.pumpWidget(
@@ -720,7 +720,7 @@ void main() {
         expect((releasedContainer.color as Color), equals(Colors.grey));
       });
 
-      testWidgets('multiple simultaneous state changes', (tester) async {
+      testWidgets('multiple simultaneous state changes', (WidgetTester tester) async {
         final stateChanges = <Set<WidgetState>>[];
         final focusNode = FocusNode();
 
@@ -755,7 +755,7 @@ void main() {
     });
 
     group('Child Widget', () {
-      testWidgets('passes child through builder correctly', (tester) async {
+      testWidgets('passes child through builder correctly', (WidgetTester tester) async {
         const childWidget = Text('Child Widget');
         Widget? capturedChild;
 
@@ -774,7 +774,7 @@ void main() {
         expect(find.text('Child Widget'), findsOneWidget);
       });
 
-      testWidgets('child does not rebuild on state changes', (tester) async {
+      testWidgets('child does not rebuild on state changes', (WidgetTester tester) async {
         int childBuildCount = 0;
 
         await tester.pumpWidget(
@@ -808,7 +808,7 @@ void main() {
     });
 
     group('HitTestBehavior', () {
-      testWidgets('respects opaque hit test behavior', (tester) async {
+      testWidgets('respects opaque hit test behavior', (WidgetTester tester) async {
         bool tapped = false;
 
         await tester.pumpWidget(
@@ -829,7 +829,7 @@ void main() {
         expect(tapped, isTrue);
       });
 
-      testWidgets('respects translucent hit test behavior', (tester) async {
+      testWidgets('respects translucent hit test behavior', (WidgetTester tester) async {
         bool backgroundTapped = false;
         bool foregroundTapped = false;
 
@@ -866,7 +866,7 @@ void main() {
         expect(backgroundTapped, isFalse); // Translucent still blocks
       });
 
-      testWidgets('respects deferToChild hit test behavior', (tester) async {
+      testWidgets('respects deferToChild hit test behavior', (WidgetTester tester) async {
         bool tapped = false;
 
         await tester.pumpWidget(
@@ -894,7 +894,7 @@ void main() {
     });
 
     group('State Management', () {
-      testWidgets('provides correct state information', (tester) async {
+      testWidgets('provides correct state information', (WidgetTester tester) async {
         Set<WidgetState>? capturedStates;
 
         await tester.pumpWidget(
@@ -914,7 +914,7 @@ void main() {
         // NakedInteractable provides state management, not direct semantics
       });
 
-      testWidgets('disabled state reflected in states', (tester) async {
+      testWidgets('disabled state reflected in states', (WidgetTester tester) async {
         Set<WidgetState>? capturedStates;
 
         await tester.pumpWidget(
@@ -953,7 +953,7 @@ void main() {
     });
 
     group('Keyboard Interaction', () {
-      testWidgets('Focus behavior works correctly', (tester) async {
+      testWidgets('Focus behavior works correctly', (WidgetTester tester) async {
         bool focused = false;
         final focusNode = FocusNode();
 
@@ -978,7 +978,7 @@ void main() {
     });
 
     group('Edge Cases', () {
-      testWidgets('handles rapid tap/untap correctly', (tester) async {
+      testWidgets('handles rapid tap/untap correctly', (WidgetTester tester) async {
         final stateChanges = <Set<WidgetState>>[];
 
         await tester.pumpWidget(
@@ -1002,7 +1002,7 @@ void main() {
         expect(stateChanges.last.isPressed, isFalse);
       });
 
-      testWidgets('handles pointer cancel correctly', (tester) async {
+      testWidgets('handles pointer cancel correctly', (WidgetTester tester) async {
         final stateChanges = <Set<WidgetState>>[];
 
         await tester.pumpWidget(
@@ -1026,7 +1026,7 @@ void main() {
         expect(stateChanges.last.isPressed, isFalse);
       });
 
-      testWidgets('handles widget disposal during interaction', (tester) async {
+      testWidgets('handles widget disposal during interaction', (WidgetTester tester) async {
         final controller = WidgetStatesController();
 
         await tester.pumpWidget(
@@ -1048,7 +1048,7 @@ void main() {
         controller.dispose();
       });
 
-      testWidgets('handles null callbacks gracefully', (tester) async {
+      testWidgets('handles null callbacks gracefully', (WidgetTester tester) async {
         Set<WidgetState>? capturedStates;
 
         await tester.pumpWidget(
@@ -1076,7 +1076,7 @@ void main() {
         expect(capturedStates!.isDisabled, isTrue);
       });
 
-      testWidgets('controller disposal does not affect widget', (tester) async {
+      testWidgets('controller disposal does not affect widget', (WidgetTester tester) async {
         final controller = WidgetStatesController();
         Set<WidgetState>? capturedStates;
 
@@ -1124,7 +1124,7 @@ void main() {
     });
 
     group('Memory and Performance', () {
-      testWidgets('no memory leaks with internal controller', (tester) async {
+      testWidgets('no memory leaks with internal controller', (WidgetTester tester) async {
         // Create and destroy multiple times
         for (int i = 0; i < 3; i++) {
           await tester.pumpWidget(buildTestWidget(enabled: true));

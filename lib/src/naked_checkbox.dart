@@ -166,7 +166,7 @@ class NakedCheckbox extends StatelessWidget {
           return builder!(context, states, child);
         }
 
-        return this.child!;
+        return child!;
       },
     );
 

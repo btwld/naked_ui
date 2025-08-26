@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 
 import 'mixins/naked_mixins.dart';
 import 'utilities/utilities.dart';
@@ -73,10 +72,6 @@ class NakedRadio<T> extends StatefulWidget with NakedFocusable {
   final String? semanticHint;
   final bool excludeSemantics;
   final ValueWidgetBuilder<Set<WidgetState>>? builder;
-
-  // TODO: Implement focusOnPress for NakedRadio
-  // This requires special handling due to RadioGroup and RawRadio interaction.
-  // The focus management is more complex than simple NakedPressable components.
 
   @override
   State<NakedRadio<T>> createState() => _NakedRadioState<T>();
