@@ -167,8 +167,8 @@ const NakedSlider({
   this.onChanged,
   this.onDragStart,
   this.onDragEnd,
-  this.onHoverState,
-  this.onDraggingState,
+  this.onHoverChange,
+  this.onDragChange,
   this.onFocusChange,
   this.enabled = true,
   this.semanticLabel,
@@ -204,10 +204,10 @@ Called when the user starts dragging the slider.
 #### onDragEnd → `ValueChanged<double>?`
 Called when the user ends dragging the slider.
 
-#### onHoverState → `ValueChanged<bool>?`
+#### onHoverChange → `ValueChanged<bool>?`
 Called when hover state changes. Provides the current hover state (true when hovered, false otherwise).
 
-#### onDraggingState → `ValueChanged<bool>?`
+#### onDragChange → `ValueChanged<bool>?`
 Called when dragging state changes. Provides the current dragging state (true when dragging, false otherwise).
 
 #### onFocusChange → `ValueChanged<bool>?`

@@ -147,7 +147,7 @@ class _AnimatedSelectExampleState extends State<AnimatedSelectExample>
           ),
         ),
         child: NakedSelectTrigger(
-          onHoverState: (isHovered) => setState(() => _isHovered = isHovered),
+          onHoverChange: (isHovered) => setState(() => _isHovered = isHovered),
           onFocusChange: (isFocused) => setState(() => _isFocused = isFocused),
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 200),
@@ -210,7 +210,7 @@ class _SelectItemState extends State<SelectItem> {
   Widget build(BuildContext context) {
     return NakedSelectItem<String>(
       value: widget.value,
-      onHoverState: (isHovered) => setState(() => _isHovered = isHovered),
+      onHoverChange: (isHovered) => setState(() => _isHovered = isHovered),
       onFocusChange: (isFocused) => setState(() => _isFocused = isFocused),
       onSelectChange: (isSelected) => setState(() => _isSelected = isSelected),
       child: Container(
@@ -358,7 +358,7 @@ Whether to close the menu when clicking outside. Defaults to true.
 const NakedSelectTrigger({
   Key? key,
   required this.child,
-  this.onHoverState,
+  this.onHoverChange,
   this.onPressChange,
   this.onFocusChange,
   this.semanticLabel,
@@ -374,7 +374,7 @@ const NakedSelectTrigger({
 #### child → `Widget`
 The child widget to display. This widget will be wrapped with interaction handlers.
 
-#### onHoverState → `ValueChanged<bool>?`
+#### onHoverChange → `ValueChanged<bool>?`
 Called when the hover state changes. Use this to update the visual appearance on hover.
 
 #### onPressChange → `ValueChanged<bool>?`
@@ -406,7 +406,7 @@ const NakedSelectItem({
   Key? key,
   required this.child,
   required this.value,
-  this.onHoverState,
+  this.onHoverChange,
   this.onPressChange,
   this.onFocusChange,
   this.onSelectChange,
@@ -427,7 +427,7 @@ The child widget to display. This widget will be wrapped with interaction handle
 #### value → `T`
 The value associated with this item. This value will be passed to the select's onChange callback when selected.
 
-#### onHoverState → `ValueChanged<bool>?`
+#### onHoverChange → `ValueChanged<bool>?`
 Called when the hover state changes. Use this to update the visual appearance on hover.
 
 #### onPressChange → `ValueChanged<bool>?`

@@ -47,7 +47,7 @@ class _CheckboxExampleState extends State<CheckboxExample> {
           _isChecked = value!;
         });
       },
-      onHoverState: (isHovered) => setState(() => _isHovered = isHovered),
+      onHoverChange: (isHovered) => setState(() => _isHovered = isHovered),
       onPressChange: (isPressed) => setState(() => _isPressed = isPressed),
       onFocusChange: (isFocused) => setState(() => _isFocused = isFocused),
       child: Row(
@@ -105,7 +105,7 @@ const NakedCheckbox({
   this.value = false,
   this.tristate = false,
   this.onChanged,
-  this.onHoverState,
+  this.onHoverChange,
   this.onPressChange,
   this.onFocusChange,
   this.enabled = true,
@@ -131,7 +131,7 @@ If true the checkbox's `value` can be true, false, or null. When a tri-state che
 #### onChanged → `ValueChanged<bool?>?`
 Called when the checkbox is toggled. The callback provides the new state of the checkbox. If null, the checkbox will be considered disabled.
 
-#### onHoverState → `ValueChanged<bool>?`
+#### onHoverChange → `ValueChanged<bool>?`
 Called when hover state changes. Provides the current hover state (true when hovered, false otherwise).
 
 #### onPressChange → `ValueChanged<bool>?`

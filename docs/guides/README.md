@@ -50,7 +50,7 @@ class _MyButtonState extends State<MyButton> {
       onPressed: () {
         print('Button pressed!');
       },
-      onHoverState: (isHovered) => setState(() => _isHovered = isHovered),
+      onHoverChange: (isHovered) => setState(() => _isHovered = isHovered),
       onPressChange: (isPressed) => setState(() => _isPressed = isPressed),
       onFocusChange: (isFocused) => setState(() => _isFocused = isFocused),
       child: Container(

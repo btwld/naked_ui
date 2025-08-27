@@ -46,7 +46,7 @@ class _ButtonExampleState extends State<ButtonExample> {
       onPressed: () {
         debugPrint('Button pressed!');
       },
-      onHoverState: (isHovered) => setState(() => _isHovered = isHovered),
+      onHoverChange: (isHovered) => setState(() => _isHovered = isHovered),
       onPressChange: (isPressed) => setState(() => _isPressed = isPressed),
       onFocusChange: (isFocused) => setState(() => _isFocused = isFocused),
       child: Container(
@@ -88,10 +88,9 @@ const NakedButton({
   Key? key,
   required this.child,
   this.onPressed,
-  this.onHoverState,
+  this.onHoverChange,
   this.onPressChange,
   this.onFocusChange,
-  this.onDisabledState,
   this.enabled = true,
   this.isSemanticButton = true,
   this.semanticLabel,
@@ -110,7 +109,7 @@ The child widget to display. This widget should represent the visual appearance 
 #### onPressed → `VoidCallback?`
 Called when the button is tapped or activated via keyboard. If null, the button will be considered disabled.
 
-#### onHoverState → `ValueChanged<bool>?`
+#### onHoverChange → `ValueChanged<bool>?`
 Called when hover state changes. Provides the current hover state (true when hovered, false otherwise).
 
 #### onPressChange → `ValueChanged<bool>?`
@@ -119,8 +118,6 @@ Called when pressed state changes. Provides the current pressed state (true when
 #### onFocusChange → `ValueChanged<bool>?`
 Called when focus state changes. Provides the current focus state (true when focused, false otherwise).
 
-#### onDisabledState → `ValueChanged<bool>?`
-Called when disabled state changes. Provides the current disabled state (true when disabled, false otherwise).
 
 #### enabled → `bool`
 Whether the button is enabled. Defaults to true.

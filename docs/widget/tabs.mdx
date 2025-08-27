@@ -132,7 +132,7 @@ class _TabItemState extends State<TabItem> {
   Widget build(BuildContext context) {
     return NakedTab(
       tabId: widget.tabId,
-      onHoverState: (isHovered) => setState(() => _isHovered = isHovered),
+      onHoverChange: (isHovered) => setState(() => _isHovered = isHovered),
       child: Container(
         alignment: Alignment.center,
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -235,7 +235,7 @@ const NakedTab({
   Key? key,
   required this.child,
   required this.tabId,
-  this.onHoverState,
+  this.onHoverChange,
   this.onPressChange,
   this.onFocusChange,
   this.enabled = true,
@@ -254,7 +254,7 @@ The child widget to display.
 #### tabId → `String`
 The unique ID for this tab.
 
-#### onHoverState → `ValueChanged<bool>?`
+#### onHoverChange → `ValueChanged<bool>?`
 Called when hover state changes. Provides the current hover state (true when hovered, false otherwise).
 
 #### onPressChange → `ValueChanged<bool>?`

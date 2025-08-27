@@ -40,7 +40,7 @@ class _TextFieldExampleState extends State<TextFieldExample> {
       child: NakedTextField(
         cursorColor: Colors.grey.shade700,
         
-        onHoverState: (isHovered) => setState(() => _isHovered = isHovered),
+        onHoverChange: (isHovered) => setState(() => _isHovered = isHovered),
         onPressChange: (isPressed) => setState(() => _isPressed = isPressed),
         onFocusChange: (isFocused) => setState(() => _isFocused = isFocused),
         builder: (context, child) {
@@ -135,7 +135,7 @@ const NakedTextField({
   this.canRequestFocus = true,
   this.spellCheckConfiguration,
   this.magnifierConfiguration,
-  this.onHoverState,
+  this.onHoverChange,
   this.onFocusChange,
   this.style,
   required this.builder,
@@ -315,7 +315,7 @@ Configuration for spell check behavior.
 #### magnifierConfiguration → `TextMagnifierConfiguration?`
 The magnifier configuration to use for this text field.
 
-#### onHoverState → `ValueChanged<bool>?`
+#### onHoverChange → `ValueChanged<bool>?`
 Called when the hover state changes. Provides the current hover state as a boolean parameter:
 - `true` when the mouse pointer enters the text field
 - `false` when the mouse pointer exits the text field
