@@ -1,3 +1,32 @@
+## [0.1.0] - 2025-08-27
+
+### ⚠️ BREAKING CHANGES
+
+- **API Change**: Standardized state callback naming convention across all components:
+  - `onStateHover` → `onHoverChange`
+  - `onStatePressed` → `onPressChange`
+  - `onStateFocus` → `onFocusChange`
+  - `onStateDragging` → `onDragChange` (NakedSlider)
+  - `onStateSelected` → `onSelectChange` (NakedRadio, NakedSelectItem)
+- **Removed Callbacks**:
+  - `onDisabledState` removed from NakedButton and NakedMenu (use `enabled` property instead)
+- **Migration Required**: Existing code using the old callback names will need updates
+- See [MIGRATION.md](./MIGRATION.md) for detailed migration instructions
+
+### Added
+- Comprehensive migration guide (MIGRATION.md) for upgrading from pre-v0.1.0 versions
+
+### Fixed
+- Inconsistent callback naming patterns across components
+- Updated outdated documentation to reflect current API conventions
+
+### Documentation  
+- Updated all widget documentation to match implemented API
+- Fixed outdated examples in documentation files
+- Ensured consistency between code and documentation
+
+---
+
 ## 0.0.1-dev.1
 
  - **REFACTOR**: Select (#596).

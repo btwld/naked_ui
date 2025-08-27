@@ -9,7 +9,7 @@ Naked components use a standardized pattern for state callbacks to ensure consis
 All state-related callbacks in Naked components follow the naming pattern:
 
 ```
-on{State}State
+on{State}Change
 ```
 
 For example:
@@ -86,10 +86,12 @@ This pattern:
 
 In previous versions of the library, some components used the pattern `onState{Name}` (e.g., `onStateHover`, `onStateFocus`). 
 
-The naming has been standardized to `on{State}State` for clarity and consistency. If you're upgrading from a previous version, you'll need to update your callback usage:
+The naming has been standardized to `on{State}Change` for clarity and consistency. If you're upgrading from a previous version, you'll need to update your callback usage:
 
 | Old Pattern | New Pattern |
 |-------------|-------------|
 | `onStateHover` | `onHoverChange` |
 | `onStatePressed` | `onPressChange` |
 | `onStateFocus` | `onFocusChange` |
+| `onStateDragging` | `onDragChange` |
+| `onStateSelected` | `onSelectChange` |
