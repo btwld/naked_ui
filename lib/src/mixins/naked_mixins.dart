@@ -1,5 +1,6 @@
+// ignore_for_file: no-empty-block
+
 import 'package:flutter/gestures.dart';
-import 'package:flutter/scheduler.dart';
 import 'package:flutter/widgets.dart';
 
 /// Mixin for widgets that support focus management.
@@ -19,7 +20,7 @@ mixin NakedFocusable on StatefulWidget {
 ///
 /// This mixin only manages the lifecycle of focus nodes.
 /// Widgets decide how to react to focus changes by overriding onFocusChange.
-/// 
+///
 /// NOTE: This is the legacy focus mixin. For widgets using WidgetStatesController,
 /// use NakedFocusableWithStatesMixin instead.
 mixin NakedFocusableStateMixin<T extends NakedFocusable> on State<T> {
@@ -105,7 +106,7 @@ mixin NakedFocusableStateMixin<T extends NakedFocusable> on State<T> {
 
 /// Mixin for widgets that support WidgetStatesController management.
 /// Provides a contract for states controller and change notifications.
-mixin NakedStateful on StatefulWidget {
+mixin NakedWidgetStates on StatefulWidget {
   /// Optional external states controller.
   /// If null, the widget will create and manage its own controller.
   WidgetStatesController? get statesController;
@@ -119,7 +120,7 @@ mixin NakedStateful on StatefulWidget {
 /// Provides the base controller management that other state mixins depend on.
 /// Handles listener management, external/internal controller switching, and
 /// proper setState scheduling to avoid build-time setState calls.
-mixin NakedStatefulStateMixin<T extends NakedStateful> on State<T> {
+mixin NakedWidgetStatesStateMixin<T extends NakedWidgetStates> on State<T> {
   WidgetStatesController? _internalController;
 
   WidgetStatesController get effectiveController =>
@@ -143,12 +144,8 @@ mixin NakedStatefulStateMixin<T extends NakedStateful> on State<T> {
   void _handleStateChange() {
     widget.onStatesChange?.call({...effectiveController.value});
     if (mounted) {
-      // Use addPostFrameCallback to avoid setState during build
-      SchedulerBinding.instance.addPostFrameCallback((_) {
-        if (mounted) {
-          setState(() {});
-        }
-      });
+      // ignore: avoid-empty-setstate
+      setState(() {});
     }
   }
 
@@ -199,8 +196,9 @@ mixin NakedSelectable on StatefulWidget {
 }
 
 /// State mixin that handles selected state management.
-/// T must implement both NakedSelectable and NakedStateful.
-mixin NakedSelectableStateMixin<T extends StatefulWidget> on NakedStatefulStateMixin<T> {
+/// T must implement both NakedSelectable and NakedWidgetStates.
+mixin NakedSelectableStateMixin<T extends NakedWidgetStates>
+    on NakedWidgetStatesStateMixin<T> {
   @override
   WidgetStatesController createInternalController() {
     final controller = super.createInternalController();
@@ -230,8 +228,9 @@ mixin NakedErrorable on StatefulWidget {
 }
 
 /// State mixin that handles error state management.
-/// T must implement both NakedErrorable and NakedStateful.
-mixin NakedErrorableStateMixin<T extends StatefulWidget> on NakedStatefulStateMixin<T> {
+/// T must implement both NakedErrorable and NakedWidgetStates.
+mixin NakedErrorableStateMixin<T extends NakedWidgetStates>
+    on NakedWidgetStatesStateMixin<T> {
   @override
   WidgetStatesController createInternalController() {
     final controller = super.createInternalController();
@@ -262,8 +261,9 @@ mixin NakedEnableable on StatefulWidget {
 
 /// State mixin that handles enabled/disabled state management.
 /// Also clears transient states when becoming disabled.
-/// T must implement both NakedEnableable and NakedStateful.
-mixin NakedEnableableStateMixin<T extends StatefulWidget> on NakedStatefulStateMixin<T> {
+/// T must implement both NakedEnableable and NakedWidgetStates.
+mixin NakedEnableableStateMixin<T extends NakedWidgetStates>
+    on NakedWidgetStatesStateMixin<T> {
   @override
   WidgetStatesController createInternalController() {
     final controller = super.createInternalController();
@@ -311,8 +311,9 @@ mixin NakedInteractive on StatefulWidget {
 
 /// State mixin that handles interactive states (hover, press) management.
 /// Provides methods for handling pointer events and state updates.
-/// T must implement both NakedInteractive and NakedStateful.
-mixin NakedInteractiveStateMixin<T extends StatefulWidget> on NakedStatefulStateMixin<T> {
+/// T must implement both NakedInteractive and NakedWidgetStates.
+mixin NakedInteractiveStateMixin<T extends NakedWidgetStates>
+    on NakedWidgetStatesStateMixin<T> {
   bool _isPointerInside = false;
 
   /// Updates the hovered state and notifies listeners.
@@ -342,30 +343,30 @@ mixin NakedInteractiveStateMixin<T extends StatefulWidget> on NakedStatefulState
   // ==================== Pointer Event Handlers ====================
 
   /// Handles pointer entering the widget bounds.
-  void handlePointerEnter(PointerEnterEvent event) {
+  void handlePointerEnter(PointerEnterEvent _) {
     _isPointerInside = true;
     setHovered(true);
   }
 
   /// Handles pointer exiting the widget bounds.
-  void handlePointerExit(PointerExitEvent event) {
+  void handlePointerExit(PointerExitEvent _) {
     _isPointerInside = false;
     setHovered(false);
     clearPressedState();
   }
 
   /// Handles pointer down events.
-  void handlePointerDown(PointerDownEvent event) {
+  void handlePointerDown(PointerDownEvent _) {
     setPressed(true);
   }
 
   /// Handles pointer up events.
-  void handlePointerUp(PointerUpEvent event) {
+  void handlePointerUp(PointerUpEvent _) {
     clearPressedState();
   }
 
   /// Handles pointer cancel events.
-  void handlePointerCancel(PointerCancelEvent event) {
+  void handlePointerCancel(PointerCancelEvent _) {
     clearPressedState();
   }
 
@@ -388,8 +389,9 @@ mixin NakedInteractiveStateMixin<T extends StatefulWidget> on NakedStatefulState
 
 /// Enhanced focus mixin that integrates with WidgetStatesController.
 /// Use this instead of NakedFocusableStateMixin for widgets with states controller.
-/// T must implement both NakedFocusable and NakedStateful.
-mixin NakedFocusableWithStatesMixin<T extends StatefulWidget> on NakedStatefulStateMixin<T> {
+/// T must implement both NakedFocusable and NakedWidgetStates.
+mixin NakedFocusableWithStatesMixin<T extends NakedWidgetStates>
+    on NakedWidgetStatesStateMixin<T> {
   FocusNode? _internalNode;
   late FocusNode effectiveFocusNode;
 

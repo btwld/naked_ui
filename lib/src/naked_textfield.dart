@@ -424,6 +424,7 @@ class _NakedTextFieldState extends State<NakedTextField>
       // This follows Flutter's official recommendation for listener callbacks
       SchedulerBinding.instance.addPostFrameCallback((_) {
         if (mounted) {
+          // ignore: avoid-empty-setstate, no-empty-block
           setState(() {
             // Rebuild the widget on focus change to show/hide the text selection highlight.
           });
