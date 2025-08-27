@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
@@ -182,6 +183,22 @@ class _NakedPressableState extends State<NakedPressable> {
     }
   }
 
+  /// Clears transient states (hover, pressed, focused).
+  ///
+  /// Called when the widget becomes disabled to ensure
+  /// visual consistency and proper state management.
+  void _clearTransientStates() {
+    _effectiveController
+      ..update(WidgetState.hovered, false)
+      ..update(WidgetState.pressed, false)
+      ..update(WidgetState.focused, false);
+
+    // Notify callbacks
+    widget.onHoverChange?.call(false);
+    widget.onPressChange?.call(false);
+    widget.onFocusChange?.call(false);
+  }
+
   /// Handles keyboard activation with proper pressed state animation.
   ///
   /// Follows Material Design pattern from InkWell:
@@ -212,8 +229,14 @@ class _NakedPressableState extends State<NakedPressable> {
     // This matches Material button behavior and gives users visual confirmation
     _activationTimer = Timer(_activationDuration, () {
       if (mounted) {
-        _effectiveController.update(WidgetState.pressed, false);
-        widget.onPressChange?.call(false);
+        // Use addPostFrameCallback to avoid setState during build
+        // This follows Flutter's official recommendation for state updates
+        SchedulerBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            _effectiveController.update(WidgetState.pressed, false);
+            widget.onPressChange?.call(false);
+          }
+        });
       }
     });
   }
@@ -266,6 +289,28 @@ class _NakedPressableState extends State<NakedPressable> {
         // Switching to external controller - dispose internal
         _internalController?.dispose();
         _internalController = null;
+      }
+    }
+
+    // Only update states that actually changed
+    if (oldWidget.selected != widget.selected) {
+      _effectiveController.update(WidgetState.selected, widget.selected);
+    }
+    if (oldWidget.error != widget.error) {
+      _effectiveController.update(WidgetState.error, widget.error);
+    }
+
+    // Handle enabled state changes
+    if (oldWidget.enabled != widget.enabled) {
+      _effectiveController.update(WidgetState.disabled, !widget.enabled);
+      
+      // Clear transient states when becoming disabled
+      if (!widget.enabled) {
+        _clearTransientStates();
+        // Unfocus if we have focus
+        if (_effectiveController.value.contains(WidgetState.focused)) {
+          widget.focusNode?.unfocus();
+        }
       }
     }
   }

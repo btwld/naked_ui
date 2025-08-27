@@ -1,4 +1,5 @@
 import 'package:flutter/gestures.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter/widgets.dart';
 
 /// A headless interactive widget that manages interaction states.
@@ -204,8 +205,13 @@ class _NakedInteractableState extends State<NakedInteractable> {
   void _handleStateChange() {
     widget.onStatesChange?.call({..._effectiveController.value});
     if (mounted) {
-      // ignore: avoid-empty-setstate, no-empty-block
-      setState(() {});
+      // Use addPostFrameCallback to avoid setState during build
+      // This follows Flutter's official recommendation for WidgetStatesController listeners
+      SchedulerBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          setState(() {});
+        }
+      });
     }
   }
 
@@ -323,17 +329,27 @@ class _NakedInteractableState extends State<NakedInteractable> {
       _handleControllerChange(oldWidget);
     }
 
-    // Clear transient states when becoming disabled
-    if (!widget.enabled && oldWidget.enabled) {
-      _clearTransientStates();
-      // Unfocus if we have focus
-      if (_effectiveController.value.contains(WidgetState.focused)) {
-        widget.focusNode?.unfocus();
-      }
+    // Only update states that actually changed
+    if (oldWidget.selected != widget.selected) {
+      _effectiveController.update(WidgetState.selected, widget.selected);
+    }
+    if (oldWidget.error != widget.error) {
+      _effectiveController.update(WidgetState.error, widget.error);
     }
 
-    // Update states based on new widget properties
-    _setupWidgetStates();
+    // Handle enabled state changes
+    if (oldWidget.enabled != widget.enabled) {
+      _effectiveController.update(WidgetState.disabled, !widget.enabled);
+      
+      // Clear transient states when becoming disabled
+      if (!widget.enabled) {
+        _clearTransientStates();
+        // Unfocus if we have focus
+        if (_effectiveController.value.contains(WidgetState.focused)) {
+          widget.focusNode?.unfocus();
+        }
+      }
+    }
   }
 
   @override

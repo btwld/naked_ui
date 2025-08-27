@@ -8,6 +8,7 @@ import 'package:flutter/material.dart'
         materialTextSelectionHandleControls,
         desktopTextSelectionHandleControls,
         TextMagnifier;
+import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 
 /// Provides text editing functionality without visual styling.
@@ -419,9 +420,14 @@ class _NakedTextFieldState extends State<NakedTextField>
     // Rebuild only if selection handles visibility could change
     // or if there is an external listener.
     if (widget.onFocusChange != null || _showSelectionHandles != hasFocus) {
-      // ignore: no-empty-block, avoid-empty-setstate
-      setState(() {
-        // Rebuild the widget on focus change to show/hide the text selection highlight.
+      // Use addPostFrameCallback to avoid setState during build
+      // This follows Flutter's official recommendation for listener callbacks
+      SchedulerBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          setState(() {
+            // Rebuild the widget on focus change to show/hide the text selection highlight.
+          });
+        }
       });
     }
     widget.onFocusChange?.call(hasFocus);
