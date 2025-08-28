@@ -122,7 +122,7 @@ void main() {
       await tester.simulateHover(tabKey, onHover: () {
         expect(isHovered, isTrue);
         if (lastStates != null) {
-          tester.expectWidgetStates(lastStates!, expectHovered: true);
+          tester.expectWidgetStates(lastStates!, expectHovered: true, expectSelected: true);
         }
       });
       
@@ -135,7 +135,7 @@ void main() {
       await tester.simulatePress(tabKey, onPressed: () {
         expect(isPressed, isTrue);
         if (lastStates != null) {
-          tester.expectWidgetStates(lastStates!, expectPressed: true);
+          tester.expectWidgetStates(lastStates!, expectPressed: true, expectSelected: true);
         }
       });
     });
@@ -272,6 +272,15 @@ class _StatefulTabsWidget extends StatefulWidget {
 
 class _StatefulTabsWidgetState extends State<_StatefulTabsWidget> {
   String selectedTabId = 'light';
+  
+  @override
+  void initState() {
+    super.initState();
+    // If using a custom tab, set the selectedTabId to 'test' to match the custom tab's tabId
+    if (widget.customTab != null) {
+      selectedTabId = 'test';
+    }
+  }
   
   @override
   Widget build(BuildContext context) {

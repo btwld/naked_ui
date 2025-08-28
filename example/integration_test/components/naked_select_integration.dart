@@ -35,38 +35,45 @@ void main() {
       await tester.pumpWidget(MaterialApp(
         home: Scaffold(
           body: Center(
-            child: NakedSelect<String>(
-              selectedValue: selectedValue,
-              onSelectedValueChanged: (value) => selectedValue = value,
-              menu: Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  border: Border.all(color: Colors.grey),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: const Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    NakedSelectItem<String>(
-                      value: 'Apple',
-                      child: Text('Apple'),
+            child: StatefulBuilder(
+              builder: (context, setState) {
+                return NakedSelect<String>(
+                  selectedValue: selectedValue,
+                  onSelectedValueChanged: (value) =>
+                      setState(() => selectedValue = value),
+                  menu: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      border: Border.all(color: Colors.grey),
+                      borderRadius: BorderRadius.circular(8),
                     ),
-                    NakedSelectItem<String>(
-                      value: 'Banana',
-                      child: Text('Banana'),
+                    child: const Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        NakedSelectItem<String>(
+                          value: 'Apple',
+                          child: Text('Apple'),
+                        ),
+                        NakedSelectItem<String>(
+                          value: 'Banana',
+                          child: Text('Banana'),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
-              ),
-              child: Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.grey),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text(selectedValue ?? 'Select an option'),
-              ),
+                  ),
+                  child: NakedSelectTrigger(
+                    child: Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.grey),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(selectedValue ?? 'Select an option'),
+                    ),
+                  ),
+                );
+              },
             ),
           ),
         ),
@@ -74,12 +81,14 @@ void main() {
       await tester.pumpAndSettle();
 
       // Open dropdown
-      await tester.tap(find.text('Select an option'));
-      await tester.pump();
+      await tester.tap(find.byType(NakedSelectTrigger));
+      await tester.pumpAndSettle();
 
-      // Select an item
-      await tester.tap(find.text('Apple'));
-      await tester.pump();
+      // Select an item (use item finder to avoid text ambiguity)
+      final itemFinder = find.byType(NakedSelectItem<String>).first;
+      expect(itemFinder, findsWidgets);
+      await tester.tap(itemFinder);
+      await tester.pumpAndSettle();
 
       // Verify selection
       expect(selectedValue, 'Apple');
@@ -95,43 +104,50 @@ void main() {
       await tester.pumpWidget(MaterialApp(
         home: Scaffold(
           body: Center(
-            child: NakedSelect<String>.multiple(
-              selectedValues: selectedValues,
-              onSelectedValuesChanged: (values) => selectedValues = values,
-              closeOnSelect: false,
-              menu: Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  border: Border.all(color: Colors.grey),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: const Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    NakedSelectItem<String>(
-                      value: 'Apple',
-                      child: Text('Apple'),
+            child: StatefulBuilder(
+              builder: (context, setState) {
+                return NakedSelect<String>.multiple(
+                  selectedValues: selectedValues,
+                  onSelectedValuesChanged: (values) =>
+                      setState(() => selectedValues = values),
+                  closeOnSelect: false,
+                  menu: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      border: Border.all(color: Colors.grey),
+                      borderRadius: BorderRadius.circular(8),
                     ),
-                    NakedSelectItem<String>(
-                      value: 'Banana',
-                      child: Text('Banana'),
+                    child: const Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        NakedSelectItem<String>(
+                          value: 'Apple',
+                          child: Text('Apple'),
+                        ),
+                        NakedSelectItem<String>(
+                          value: 'Banana',
+                          child: Text('Banana'),
+                        ),
+                        NakedSelectItem<String>(
+                          value: 'Cherry',
+                          child: Text('Cherry'),
+                        ),
+                      ],
                     ),
-                    NakedSelectItem<String>(
-                      value: 'Cherry',
-                      child: Text('Cherry'),
+                  ), // Keep open for multiple selections
+                  child: NakedSelectTrigger(
+                    child: Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.grey),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text('Selected: ${selectedValues.join(', ')}'),
                     ),
-                  ],
-                ),
-              ), // Keep open for multiple selections
-              child: Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.grey),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text('Selected: ${selectedValues.join(', ')}'),
-              ),
+                  ),
+                );
+              },
             ),
           ),
         ),
@@ -139,16 +155,28 @@ void main() {
       await tester.pumpAndSettle();
 
       // Open dropdown
-      await tester.tap(find.text('Selected: '));
-      await tester.pump();
+      await tester.tap(find.byType(NakedSelectTrigger));
+      await tester.pumpAndSettle();
 
       // Select multiple items
-      await tester.tap(find.text('Apple'));
-      await tester.pump();
+      final appleItem = find
+          .descendant(
+            of: find.byType(NakedSelectItem<String>),
+            matching: find.text('Apple'),
+          )
+          .first;
+      await tester.tap(appleItem);
+      await tester.pumpAndSettle();
       expect(selectedValues, contains('Apple'));
 
-      await tester.tap(find.text('Cherry'));
-      await tester.pump();
+      final cherryItem = find
+          .descendant(
+            of: find.byType(NakedSelectItem<String>),
+            matching: find.text('Cherry'),
+          )
+          .first;
+      await tester.tap(cherryItem);
+      await tester.pumpAndSettle();
       expect(selectedValues, contains('Cherry'));
       expect(selectedValues.length, 2);
 
@@ -185,7 +213,7 @@ void main() {
                   ],
                 ),
               ),
-              child: const Text('Select'),
+              child: const NakedSelectTrigger(child: Text('Select')),
             ),
           ),
         ),
@@ -231,7 +259,7 @@ void main() {
                   ],
                 ),
               ),
-              child: const Text('Select'),
+              child: const NakedSelectTrigger(child: Text('Select')),
             ),
           ),
         ),
@@ -266,7 +294,7 @@ void main() {
                 padding: const EdgeInsets.all(8),
                 child: const Text('Menu Content'),
               ),
-              child: const Text('Disabled Select'),
+              child: const NakedSelectTrigger(child: Text('Disabled Select')),
             ),
           ),
         ),
@@ -287,27 +315,43 @@ void main() {
       await tester.pumpWidget(const select_example.MyApp());
       await tester.pump(const Duration(milliseconds: 100));
 
-      final selectFinder = find.byType(NakedSelect<String>);
+      // Open dropdown via the trigger
+      await tester.tap(find.byType(NakedSelectTrigger));
+      await tester.pumpAndSettle();
 
-      // Open dropdown
-      await tester.tap(selectFinder);
-      await tester.pump();
-
-      // Select an option
-      await tester.tap(find.text('Option 2'));
-      await tester.pump();
+      // Select an option (disambiguate by selecting the menu item text under NakedSelectItem)
+      final option2Item = find
+          .descendant(
+            of: find.byType(NakedSelectItem<String>),
+            matching: find.text('Option 2'),
+          )
+          .first;
+      await tester.tap(option2Item);
+      await tester.pumpAndSettle();
 
       // Dropdown should close and show selected value
       expect(find.text('Option 1'), findsNothing); // Menu closed
 
       // Test that we can open again and see the selection reflected
-      await tester.tap(selectFinder);
-      await tester.pump();
+      await tester.tap(find.byType(NakedSelectTrigger));
+      await tester.pumpAndSettle();
 
-      // Should see all options again
-      expect(find.text('Option 1'), findsOneWidget);
-      expect(find.text('Option 2'), findsOneWidget);
-      expect(find.text('Option 3'), findsOneWidget);
+      // Should see all options again (scope to menu items to avoid trigger label)
+      expect(
+          find.descendant(
+              of: find.byType(NakedSelectItem<String>),
+              matching: find.text('Option 1')),
+          findsOneWidget);
+      expect(
+          find.descendant(
+              of: find.byType(NakedSelectItem<String>),
+              matching: find.text('Option 2')),
+          findsOneWidget);
+      expect(
+          find.descendant(
+              of: find.byType(NakedSelectItem<String>),
+              matching: find.text('Option 3')),
+          findsOneWidget);
     });
   });
 }

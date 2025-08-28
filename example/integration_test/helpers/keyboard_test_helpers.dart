@@ -5,38 +5,43 @@ extension KeyboardTestHelpers on WidgetTester {
   /// Test tab navigation order through a list of widgets
   Future<void> verifyTabOrder(List<Finder> expectedOrder) async {
     if (expectedOrder.isEmpty) return;
-    
+
     // First focus the first element by tapping on it
     await tap(expectedOrder.first);
     await pump();
-    
+
     // Then tab through the rest
     for (int i = 1; i < expectedOrder.length; i++) {
       await sendKeyEvent(LogicalKeyboardKey.tab);
       await pump();
-      
-      // Just verify the widget exists - focus detection is complex 
+
+      // Just verify the widget exists - focus detection is complex
       // and varies by platform and widget implementation
       expect(expectedOrder[i], findsOneWidget);
     }
   }
 
   /// Test common keyboard activation (Space or Enter)
-  Future<void> testKeyboardActivation(Finder target, {
+  Future<void> testKeyboardActivation(
+    Finder target, {
     bool testSpace = true,
     bool testEnter = true,
   }) async {
     // Focus the target first
     await tap(target);
     await pump();
-    
+
     if (testSpace) {
-      await sendKeyEvent(LogicalKeyboardKey.space);
+      await sendKeyDownEvent(LogicalKeyboardKey.space);
+      await pump();
+      await sendKeyUpEvent(LogicalKeyboardKey.space);
       await pump();
     }
-    
+
     if (testEnter) {
-      await sendKeyEvent(LogicalKeyboardKey.enter);
+      await sendKeyDownEvent(LogicalKeyboardKey.enter);
+      await pump();
+      await sendKeyUpEvent(LogicalKeyboardKey.enter);
       await pump();
     }
   }

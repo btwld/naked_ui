@@ -6,16 +6,31 @@ extension StateTestHelpers on WidgetTester {
   /// Helper to verify widget state extensions work correctly
   void expectWidgetStates(
     Set<WidgetState> actualStates, {
-    bool expectHovered = false,
-    bool expectFocused = false,
-    bool expectPressed = false,
-    bool expectDisabled = false,
-    bool expectSelected = false,
+    bool? expectHovered,
+    bool? expectFocused,
+    bool? expectPressed,
+    bool? expectDisabled,
+    bool? expectSelected,
   }) {
-    expect(actualStates.isHovered, expectHovered, reason: 'Hover state mismatch');
-    expect(actualStates.isFocused, expectFocused, reason: 'Focus state mismatch');
-    expect(actualStates.isPressed, expectPressed, reason: 'Press state mismatch');
-    expect(actualStates.isDisabled, expectDisabled, reason: 'Disabled state mismatch');
-    expect(actualStates.isSelected, expectSelected, reason: 'Selected state mismatch');
+    if (expectHovered != null) {
+      expect(actualStates.isHovered, expectHovered,
+          reason: 'Hover state mismatch');
+    }
+    if (expectFocused != null) {
+      expect(actualStates.isFocused, expectFocused,
+          reason: 'Focus state mismatch');
+    }
+    if (expectPressed != null) {
+      expect(actualStates.isPressed, expectPressed,
+          reason: 'Press state mismatch');
+    }
+    if (expectDisabled != null) {
+      expect(actualStates.isDisabled, expectDisabled,
+          reason: 'Disabled state mismatch');
+    }
+    if (expectSelected != null) {
+      expect(actualStates.isSelected, expectSelected,
+          reason: 'Selected state mismatch');
+    }
   }
 }

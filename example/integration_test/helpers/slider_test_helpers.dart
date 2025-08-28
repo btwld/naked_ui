@@ -8,13 +8,18 @@ extension SliderTestHelpers on WidgetTester {
     final slider = widget<NakedSlider>(finder);
     final box = getSize(finder);
     final center = getCenter(finder);
+    final rect = getRect(finder);
     
-    // Calculate position based on target value
+    // Calculate current position based on current value
+    final currentNormalizedValue = (slider.value - slider.min) / (slider.max - slider.min);
+    final currentOffset = Offset(rect.left + (box.width * currentNormalizedValue), center.dy);
+    
+    // Calculate target position based on target value
     final normalizedValue = (targetValue - slider.min) / (slider.max - slider.min);
-    final targetOffset = Offset(box.width * normalizedValue, center.dy);
+    final targetOffset = Offset(rect.left + (box.width * normalizedValue), center.dy);
     
-    // Start drag from current position to target
-    final gesture = await startGesture(center);
+    // Start drag from current value position to target
+    final gesture = await startGesture(currentOffset);
     await pump();
     await gesture.moveTo(targetOffset);
     await pump();

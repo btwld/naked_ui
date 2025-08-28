@@ -308,7 +308,7 @@ void main() {
         of: sliderFinder,
         matching: find.byType(CustomPaint),
       );
-      expect(customPaintFinder, findsNWidgets(2)); // Track and thumb painters
+      expect(customPaintFinder, findsOneWidget); // Single CustomPaint with both track and thumb painters
       
       // Test interaction with styled slider
       await tester.dragSlider(sliderFinder, 0.2);

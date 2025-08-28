@@ -13,23 +13,27 @@ extension WidgetTesterExtension on WidgetTester {
     );
   }
 
-  /// Simulates hover by moving mouse gesture and waiting for Flutter to process hover events
+  /// Simulates hover by moving a mouse pointer slightly inside the widget's rect
+  /// and giving the framework a couple of frames to dispatch onEnter/onExit.
   Future<void> simulateHover(Key key, {VoidCallback? onHover}) async {
     final gesture = await createGesture(kind: PointerDeviceKind.mouse);
-    await gesture.addPointer(location: Offset.zero);
+    await gesture.addPointer(location: const Offset(1, 1));
     addTearDown(gesture.removePointer);
-    await pump();
+    await pump(const Duration(milliseconds: 16));
 
-    // Move to widget and wait for hover to be processed
-    await gesture.moveTo(getCenter(find.byKey(key)));
-    await pumpAndSettle(); // Wait for all hover events to propagate
-    
+    // Move to a position clearly inside the target to avoid edge hit-test flakiness
+    final rect = getRect(find.byKey(key));
+    final inside = Offset(rect.left + 2, rect.top + 2);
+    await gesture.moveTo(inside);
+    // Give at least one frame for MouseRegion.onEnter to fire
+    await pump(const Duration(milliseconds: 16));
+
     // Call onHover callback if provided
     onHover?.call();
 
-    // Move away and wait for hover exit to be processed  
-    await gesture.moveTo(Offset.zero);
-    await pumpAndSettle(); // Wait for all hover exit events to propagate
+    // Move away far outside and allow onExit to fire
+    await gesture.moveTo(const Offset(0, 0));
+    await pump(const Duration(milliseconds: 16));
   }
 
   Future<void> simulatePress(
