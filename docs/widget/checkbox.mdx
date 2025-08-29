@@ -101,26 +101,32 @@ class _CheckboxExampleState extends State<CheckboxExample> {
 ```dart
 const NakedCheckbox({
   Key? key,
-  required this.child,
+  this.child,
   this.value = false,
   this.tristate = false,
   this.onChanged,
-  this.onHoverChange,
-  this.onPressChange,
-  this.onFocusChange,
   this.enabled = true,
   this.semanticLabel,
-  this.cursor = SystemMouseCursors.click,
-  this.enableHapticFeedback = true,
+  this.semanticHint,
+  this.excludeSemantics = false,
+  this.mouseCursor,
+  this.enableFeedback = true,
   this.focusNode,
   this.autofocus = false,
+  this.onFocusChange,
+  this.onHoverChange,
+  this.onPressChange,
+  this.onStatesChange,
+  this.statesController,
+  this.builder,
+  this.focusOnPress = false,
 })
 ```
 
 ## Properties
 
-#### child → `Widget`
-The child widget to display. This widget should represent the visual appearance of the checkbox.
+#### child → `Widget?`
+The child widget to display. Provide either `child` or `builder`.
 
 #### value → `bool?`
 Whether this checkbox is checked. When `tristate` is true, a value of null corresponds to the mixed state. When `tristate` is false, this value must not be null.
@@ -146,14 +152,32 @@ Whether the checkbox is enabled. Defaults to true.
 #### semanticLabel → `String?`
 The semantic label for the checkbox used by assistive technologies.
 
-#### cursor → `MouseCursor`
+#### semanticHint → `String?`
+Additional semantic hint for assistive technologies.
+
+#### mouseCursor → `MouseCursor?`
 The cursor to show when hovering over the checkbox. Defaults to SystemMouseCursors.click.
 
-#### enableHapticFeedback → `bool`
-Whether to provide haptic feedback on tap. Defaults to true.
+#### enableFeedback → `bool`
+Whether to provide haptic/feedback on toggle. Defaults to true.
 
 #### focusNode → `FocusNode?`
 Optional focus node to control focus behavior.
 
 #### autofocus → `bool`
 Whether the checkbox should be focused when first built. Defaults to false.
+
+#### excludeSemantics → `bool`
+Whether to exclude the child subtree from the semantics tree.
+
+#### onStatesChange → `ValueChanged<Set<WidgetState>>?`
+Called when any widget state changes (hovered, pressed, focused, selected, disabled).
+
+#### statesController → `WidgetStatesController?`
+Optional external controller for interaction states.
+
+#### builder → `ValueWidgetBuilder<Set<WidgetState>>?`
+Optional builder that receives the current states to drive visuals.
+
+#### focusOnPress → `bool`
+Whether to request focus when the checkbox is pressed. Defaults to false.

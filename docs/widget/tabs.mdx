@@ -23,7 +23,7 @@ class _TabsExampleState extends State<TabsExample> {
   Widget build(BuildContext context) {
     return NakedTabGroup(
       selectedTabId: _selectedTabId,
-      onSelectedTabIdChanged: (tabId) => setState(() => _selectedTabId = tabId),
+      onChanged: (tabId) => setState(() => _selectedTabId = tabId),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -171,7 +171,7 @@ const NakedTabGroup({
   Key? key,
   required this.child,
   required this.selectedTabId,
-  this.onSelectedTabIdChanged,
+  this.onChanged,
   this.orientation = Axis.horizontal,
   this.enabled = true,
   this.semanticLabel,
@@ -187,7 +187,7 @@ The child widget to display.
 #### selectedTabId → `String`
 The ID of the currently selected tab.
 
-#### onSelectedTabIdChanged → `ValueChanged<String>?`
+#### onChanged → `ValueChanged<String>?`
 Called when the selected tab ID changes.
 
 #### orientation → `Axis`
@@ -233,23 +233,29 @@ An individual tab trigger in a NakedTabs component.
 ```dart
 const NakedTab({
   Key? key,
-  required this.child,
+  this.child,
   required this.tabId,
-  this.onHoverChange,
-  this.onPressChange,
-  this.onFocusChange,
   this.enabled = true,
   this.semanticLabel,
-  this.cursor = SystemMouseCursors.click,
-  this.enableHapticFeedback = true,
+  this.semanticHint,
+  this.mouseCursor = SystemMouseCursors.click,
+  this.enableFeedback = true,
   this.focusNode,
+  this.autofocus = false,
+  this.excludeSemantics = false,
+  this.onFocusChange,
+  this.onHoverChange,
+  this.onPressChange,
+  this.onStatesChange,
+  this.statesController,
+  this.builder,
 })
 ```
 
 ### Properties
 
-#### child  → `Widget`
-The child widget to display.
+#### child  → `Widget?`
+The child widget to display. Provide either `child` or `builder`.
 
 #### tabId → `String`
 The unique ID for this tab.
@@ -267,16 +273,34 @@ Called when focus state changes. Provides the current focus state (true when foc
 Whether this tab is enabled. When false, the tab will not respond to user interaction, regardless of the tabs component's enabled state. Defaults to true.
 
 #### semanticLabel → `String?`
-Optional semantic label for accessibility. This is used by screen readers to describe the tab.
+Optional semantic label for accessibility.
 
-#### cursor → `MouseCursor`
+#### semanticHint → `String?`
+Additional semantic hint for assistive technologies.
+
+#### mouseCursor → `MouseCursor`
 The cursor to show when hovering over the tab. Defaults to SystemMouseCursors.click.
 
-#### enableHapticFeedback → `bool`
+#### enableFeedback → `bool`
 Whether to provide haptic feedback on tab selection. Defaults to true.
 
 #### focusNode → `FocusNode?`
 Optional focus node to control focus behavior.
+
+#### autofocus → `bool`
+Whether to automatically focus when created. Defaults to false.
+
+#### excludeSemantics → `bool`
+Whether to exclude the child semantics subtree.
+
+#### onStatesChange → `ValueChanged<Set<WidgetState>>?`
+Called when any widget state changes.
+
+#### statesController → `WidgetStatesController?`
+Optional external controller for interaction states.
+
+#### builder → `ValueWidgetBuilder<Set<WidgetState>>?`
+Optional builder that receives current interaction states to drive visuals.
 
 ## NakedTabPanel
 

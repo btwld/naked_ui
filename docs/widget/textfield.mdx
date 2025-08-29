@@ -129,7 +129,7 @@ const NakedTextField({
   this.contentInsertionConfiguration,
   this.clipBehavior = Clip.hardEdge,
   this.restorationId,
-  this.scribbleEnabled = true,
+  this.stylusHandwritingEnabled = true,
   this.enableIMEPersonalizedLearning = true,
   this.contextMenuBuilder,
   this.canRequestFocus = true,
@@ -279,6 +279,9 @@ Called when the pressed state changes. Provides the current pressed state as a b
 #### onTapOutside → `TapRegionCallback?`
 Called when a tap is detected outside of the field.
 
+#### onPressUpOutside → `TapRegionUpCallback?`
+Called when a tap up occurs outside of the field.
+
 #### scrollController → `ScrollController?`
 Controls scrolling of the text field.
 
@@ -297,8 +300,8 @@ Clip behavior for content inside the text field. Defaults to Clip.hardEdge.
 #### restorationId → `String?`
 Restoration ID for this widget.
 
-#### scribbleEnabled → `bool`
-Whether scribble is enabled. Defaults to true.
+#### stylusHandwritingEnabled → `bool`
+Whether stylus handwriting features are enabled. Defaults to true.
 
 #### enableIMEPersonalizedLearning → `bool`
 Whether to enable IME personalized learning. Defaults to true.

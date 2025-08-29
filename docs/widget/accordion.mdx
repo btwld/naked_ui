@@ -75,46 +75,42 @@ class _AccordionItemState extends State<AccordionItem> {
       ),
       child: NakedAccordionItem<String>(
         value: widget.value,
-        trigger: (context, isExpanded, toggle) {
-          return NakedButton(
-            onPressed: toggle,
-            onHoverChange: (isHovering) =>
-                setState(() => _isHovering = isHovering),
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              decoration: BoxDecoration(
-                border: Border.all(
-                  color: _isHovering || isExpanded
-                      ? Colors.grey.shade100
-                      : Colors.grey.shade300,
-                ),
-                borderRadius: BorderRadius.circular(12),
+        onHoverChange: (isHovering) => setState(() => _isHovering = isHovering),
+        trigger: (context, isExpanded) {
+          return AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            decoration: BoxDecoration(
+              border: Border.all(
                 color: _isHovering || isExpanded
                     ? Colors.grey.shade100
-                    : Colors.white,
+                    : Colors.grey.shade300,
               ),
-              padding: const EdgeInsets.all(12),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    widget.title,
-                    style: TextStyle(
-                      fontWeight: FontWeight.w500,
-                      color: Colors.grey.shade700,
-                    ),
+              borderRadius: BorderRadius.circular(12),
+              color: _isHovering || isExpanded
+                  ? Colors.grey.shade100
+                  : Colors.white,
+            ),
+            padding: const EdgeInsets.all(12),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  widget.title,
+                  style: TextStyle(
+                    fontWeight: FontWeight.w500,
+                    color: Colors.grey.shade700,
                   ),
-                  AnimatedRotation(
-                    turns: isExpanded ? 0.5 : 0,
-                    duration: const Duration(milliseconds: 200),
-                    child: Icon(
-                      Icons.keyboard_arrow_down_rounded,
-                      color: Colors.grey.shade600,
-                      weight: 100,
-                    ),
+                ),
+                AnimatedRotation(
+                  turns: isExpanded ? 0.5 : 0,
+                  duration: const Duration(milliseconds: 200),
+                  child: Icon(
+                    Icons.keyboard_arrow_down_rounded,
+                    color: Colors.grey.shade600,
+                    weight: 100,
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           );
         },
@@ -220,16 +216,25 @@ const NakedAccordionItem({
   required this.child,
   this.transitionBuilder,
   this.semanticLabel,
-  this.onFocusChange,
-  this.autoFocus = false,
+  this.semanticHint,
+  this.excludeSemantics = false,
+  this.enabled = true,
+  this.mouseCursor = SystemMouseCursors.click,
+  this.enableFeedback = true,
+  this.autofocus = false,
   this.focusNode,
+  this.onFocusChange,
+  this.onHoverChange,
+  this.onPressChange,
+  this.onStatesChange,
+  this.statesController,
 })
 ```
 
 ### Properties
 
 #### trigger → `NakedAccordionTriggerBuilder`
-Builder function that creates the trigger widget. The builder provides the current BuildContext, a boolean indicating if the item is expanded, and a callback to toggle the expansion state.
+Builder function that creates the trigger widget. Receives the current `BuildContext` and a boolean `isExpanded`. Tapping the trigger toggles expansion automatically.
 
 #### value → `T`
 The unique identifier for this accordion item. This value is used by the NakedAccordionController to track expansion state.
@@ -243,11 +248,38 @@ Optional builder to customize the transition when expanding/collapsing. If not p
 #### semanticLabel → `String?`
 Optional semantic label describing the section for screen readers.
 
-#### onFocusChange → `ValueChanged<bool>?`
-Optional callback to handle focus state changes.
+#### semanticHint → `String?`
+Additional semantic hint for assistive technologies.
 
-#### autoFocus → `bool`
-Whether the item should be focused when the accordion is opened. Defaults to false.
+#### excludeSemantics → `bool`
+Whether to exclude the child semantics subtree.
+
+#### enabled → `bool`
+Whether the item can be toggled.
+
+#### mouseCursor → `MouseCursor`
+Cursor to display when hovering over the trigger.
+
+#### enableFeedback → `bool`
+Whether to provide platform feedback on interaction.
+
+#### autofocus → `bool`
+Whether to automatically focus when created.
 
 #### focusNode → `FocusNode?`
-The focus node for the item.
+Optional focus node to control focus behavior.
+
+#### onFocusChange → `ValueChanged<bool>?`
+Called when focus state changes.
+
+#### onHoverChange → `ValueChanged<bool>?`
+Called when hover state changes.
+
+#### onPressChange → `ValueChanged<bool>?`
+Called when pressed state changes.
+
+#### onStatesChange → `ValueChanged<Set<WidgetState>>?`
+Called when any widget state changes.
+
+#### statesController → `WidgetStatesController?`
+Optional external controller for interaction states.

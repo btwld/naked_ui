@@ -82,19 +82,21 @@ class _RadioButtonState extends State<RadioButton> {
       onFocusChange: (focused) => setState(() => _isFocused = focused),
       onHoverChange: (hovered) => setState(() => _isHovered = hovered),
       onPressChange: (pressed) => setState(() => _isPressed = pressed),
-      onSelectChange: (selected) => setState(() => _isSelected = selected),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 100),
-        width: 20,
-        height: 20,
-        decoration: BoxDecoration(
-          border: Border.all(
-            color: getBorderColor(_isSelected),
-            width: _isSelected ? 6 : 2,
+      builder: (context, states, __) {
+        _isSelected = states.contains(WidgetState.selected);
+        return AnimatedContainer(
+          duration: const Duration(milliseconds: 100),
+          width: 20,
+          height: 20,
+          decoration: BoxDecoration(
+            border: Border.all(
+              color: getBorderColor(_isSelected),
+              width: _isSelected ? 6 : 2,
+            ),
+            borderRadius: BorderRadius.circular(10),
           ),
-          borderRadius: BorderRadius.circular(10),
-        ),
-      ),
+        );
+      },
     );
   }
 }
@@ -108,7 +110,6 @@ const NakedRadioGroup({
   required this.groupValue,
   required this.onChanged,
   required this.child,
-  this.enabled = true,
 })
 ```
 
@@ -117,18 +118,15 @@ const NakedRadioGroup({
 #### groupValue → `T?`
 The currently selected value within the group. When this value matches a radio button's value, that button is considered selected.
 
-#### onChanged → `ValueChanged<T?>?`
+#### onChanged → `ValueChanged<T?>`
 Called when a selection changes. Receives the newly selected value.
 
 #### child → `Widget`
-Child widgets, typically containing NakedRadioButton widgets. These buttons will be managed by the radio group.
-
-#### enabled → `bool`
-Whether the entire group is enabled. When false, all radio buttons in the group will not respond to user interaction. Defaults to true.
+Child widgets, typically containing `NakedRadio` widgets. These buttons will be managed by the radio group.
 
 ## Features
 
-- Customizable appearance through NakedRadioButton builder functions
+- Customizable appearance through `NakedRadio` builder functions
 - Keyboard navigation support via arrow keys (up/down and left/right)
 - Selection follows focus
 - Accessibility support
@@ -137,32 +135,41 @@ Whether the entire group is enabled. When false, all radio buttons in the group 
 ## Related Components
 
 
-## NakedRadioButton
+## NakedRadio
 
-NakedRadioButton provides interaction behavior and accessibility features without imposing any visual styling, giving complete design freedom. It must be used within a NakedRadioGroup to function properly.
+NakedRadio provides interaction behavior and accessibility features without imposing any visual styling, giving complete design freedom. It must be used within a NakedRadioGroup to function properly.
 
-## Constructor
+### Constructor
 
 ```dart
-const NakedRadioButton({
+const NakedRadio<T>({
   Key? key,
-  required this.builder,
   required this.value,
-  this.onHoverChange,
-  this.onPressChange,
-  this.onFocusChange,
+  this.child,
   this.enabled = true,
-  this.cursor = SystemMouseCursors.click,
-  this.enableHapticFeedback = true,
+  this.mouseCursor,
   this.focusNode,
   this.autofocus = false,
+  this.toggleable = false,
+  this.onFocusChange,
+  this.onHoverChange,
+  this.onPressChange,
+  this.onStatesChange,
+  this.statesController,
+  this.semanticLabel,
+  this.semanticHint,
+  this.excludeSemantics = false,
+  this.builder,
 })
 ```
 
 ## Properties
 
-#### builder → `NakedRadioButtonBuilder`
-The builder function that creates the radio button's visual representation. Receives the current context and selected state, and should return a widget.
+#### child → `Widget?`
+Optional visual child. Provide either `child` or `builder`.
+
+#### builder → `ValueWidgetBuilder<Set<WidgetState>>?`
+Optional builder that receives the current interaction states for styling.
 
 #### value → `T`
 The value this radio button represents. When this value matches the group's value, this radio button is considered selected.
@@ -179,17 +186,32 @@ Called when focus state changes. Can be used to update visual feedback when the 
 #### enabled → `bool`
 Whether this radio button is enabled. When false, the radio button will not respond to user interaction, regardless of the group's enabled state. Defaults to true.
 
-#### cursor → `MouseCursor`
-The cursor to show when hovering over the radio button. Defaults to SystemMouseCursors.click.
+#### mouseCursor → `MouseCursor?`
+The cursor to show when hovering over the radio button. If not provided, an appropriate state-resolving cursor is used.
 
-#### enableHapticFeedback → `bool`
-Whether to provide haptic feedback on tap. When true, triggers a selection click feedback when the radio button is selected. Defaults to true.
+#### toggleable → `bool`
+Whether tapping an already-selected radio clears the selection (sets null). Defaults to false.
 
 #### focusNode → `FocusNode?`
 Optional focus node to control focus behavior. If not provided, a new FocusNode will be created internally.
 
 #### autofocus → `bool`
 Whether to automatically focus this radio button when first built. Defaults to false.
+
+#### onStatesChange → `ValueChanged<Set<WidgetState>>?`
+Called when any widget state changes.
+
+#### statesController → `WidgetStatesController?`
+Optional external controller for interaction states.
+
+#### semanticLabel → `String?`
+Optional semantic label for accessibility.
+
+#### semanticHint → `String?`
+Additional semantic hint for assistive technologies.
+
+#### excludeSemantics → `bool`
+Whether to exclude the child subtree from the semantics tree.
 
 ## Features
 
@@ -200,4 +222,3 @@ Whether to automatically focus this radio button when first built. Defaults to f
 - Haptic feedback on selection
 - Accessibility support
 - Disabled state handling
-

@@ -32,18 +32,19 @@ class _TooltipExampleState extends State<TooltipExample>
   @override
   Widget build(BuildContext context) {
     return NakedTooltip(
-      targetAnchor: Alignment.topCenter,
-      followerAnchor: Alignment.bottomCenter,
-      offset: const Offset(0, -4),
+      position: const NakedMenuPosition(
+        target: Alignment.topCenter,
+        follower: Alignment.bottomCenter,
+      ),
       waitDuration: const Duration(seconds: 0),
       showDuration: const Duration(seconds: 0),
       removalDelay: const Duration(milliseconds: 300),
       onStateChange: (state) {
         switch (state) {
-          case TooltipLifecycleState.present:
+          case OverlayChildLifecycleState.present:
             _animationController.forward();
             break;
-          case TooltipLifecycleState.pendingRemoval:
+          case OverlayChildLifecycleState.pendingRemoval:
             _animationController.reverse();
             break;
           default:
@@ -98,12 +99,13 @@ const NakedTooltip({
   required this.tooltipBuilder,
   this.showDuration = const Duration(seconds: 2),
   this.waitDuration = const Duration(seconds: 1),
-  this.followerAnchor = Alignment.bottomCenter,
-  this.targetAnchor = Alignment.topCenter,
-  this.offset = const Offset(0, -8),
+  this.position = const NakedMenuPosition(
+    target: Alignment.topCenter,
+    follower: Alignment.bottomCenter,
+  ),
   this.tooltipSemantics,
   this.excludeFromSemantics = false,
-  this.fallbackAlignments = const [],
+  this.fallbackPositions = const [],
   this.removalDelay = const Duration(seconds: 0),
   this.onStateChange,
 })
@@ -123,14 +125,8 @@ The duration for which the tooltip remains visible. Defaults to Duration(seconds
 #### waitDuration → `Duration`
 The duration to wait before showing the tooltip after hover. Defaults to Duration(seconds: 1).
 
-#### followerAnchor → `Alignment`
-The anchor point on the tooltip that should be aligned with the target. Defaults to Alignment.bottomCenter.
-
-#### targetAnchor → `Alignment`
-The anchor point on the target that the tooltip should be aligned to. Defaults to Alignment.topCenter.
-
-#### offset → `Offset`
-The offset of the tooltip from the target widget. Defaults to Offset(0, -8).
+#### position → `NakedMenuPosition`
+Defines how the tooltip overlay is positioned relative to the target.
 
 #### tooltipSemantics → `String?`
 Optional semantic label for accessibility.
@@ -138,11 +134,11 @@ Optional semantic label for accessibility.
 #### excludeFromSemantics → `bool`
 Whether to exclude the tooltip from the semantics tree. Defaults to false.
 
-#### fallbackAlignments → `List<PositionConfig>`
-The fallback alignments for the tooltip. These are used if the tooltip doesn't fit in the viewport with the primary alignment. Defaults to an empty list.
+#### fallbackPositions → `List<NakedMenuPosition>`
+Fallback alignments used if the tooltip doesn't fit in the viewport.
 
 #### removalDelay → `Duration`
 The duration to wait before removing the Widget from the Overlay after the tooltip is hidden. Defaults to Duration(seconds: 0).
 
-#### onStateChange → `void Function(TooltipLifecycleState state)?`
-Event handler for tooltip lifecycle state changes. Called when the tooltip state changes (present, pendingRemoval, removed). 
+#### onStateChange → `void Function(OverlayChildLifecycleState state)?`
+Event handler for tooltip lifecycle state changes: `present`, `pendingRemoval`, `removed`.

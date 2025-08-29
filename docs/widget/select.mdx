@@ -246,16 +246,14 @@ const NakedSelect({
   this.autofocus = false,
   this.enableTypeAhead = true,
   this.typeAheadDebounceTime = const Duration(milliseconds: 500),
-  this.menuAlignment = const PositionConfig(
+  this.menuPosition = const NakedMenuPosition(
     target: Alignment.bottomLeft,
     follower: Alignment.topLeft,
-    offset: Offset(0, 4),
   ),
-  this.fallbackAlignments = const [
-    PositionConfig(
+  this.fallbackPositions = const [
+    NakedMenuPosition(
       target: Alignment.topLeft,
       follower: Alignment.bottomLeft,
-      offset: Offset(0, -8),
     ),
   ],
   this.closeOnClickOutside = true,
@@ -277,16 +275,14 @@ const NakedSelect.multiple({
   this.autofocus = false,
   this.enableTypeAhead = true,
   this.typeAheadDebounceTime = const Duration(milliseconds: 500),
-  this.menuAlignment = const PositionConfig(
+  this.menuPosition = const NakedMenuPosition(
     target: Alignment.bottomLeft,
     follower: Alignment.topLeft,
-    offset: Offset(0, 4),
   ),
-  this.fallbackAlignments = const [
-    PositionConfig(
+  this.fallbackPositions = const [
+    NakedMenuPosition(
       target: Alignment.topLeft,
       follower: Alignment.bottomLeft,
-      offset: Offset(0, -8),
     ),
   ],
   this.closeOnClickOutside = true,
@@ -342,10 +338,10 @@ Whether to enable type-ahead selection for quick keyboard navigation. Defaults t
 #### typeAheadDebounceTime → `Duration`
 Duration before resetting the type-ahead search buffer. Defaults to 500ms.
 
-#### menuAlignment → `PositionConfig`
+#### menuPosition → `NakedMenuPosition`
 The alignment of the menu relative to its trigger.
 
-#### fallbackAlignments → `List<PositionConfig>`
+#### fallbackPositions → `List<NakedMenuPosition>`
 Alternative alignments to try if the menu doesn't fit in the preferred position.
 
 #### closeOnClickOutside → `bool`
@@ -362,10 +358,11 @@ const NakedSelectTrigger({
   this.onPressChange,
   this.onFocusChange,
   this.semanticLabel,
-  this.cursor = SystemMouseCursors.click,
-  this.enableHapticFeedback = true,
+  this.mouseCursor = SystemMouseCursors.click,
+  this.enableFeedback = true,
   this.focusNode,
   this.autofocus = false,
+  this.statesController,
 })
 ```
 
@@ -386,11 +383,11 @@ Called when the focus state changes. Use this to update the visual appearance wh
 #### semanticLabel → `String?`
 Semantic label for accessibility. Used by screen readers to identify the trigger.
 
-#### cursor → `MouseCursor`
+#### mouseCursor → `MouseCursor`
 The cursor to show when hovering over the trigger. Defaults to `SystemMouseCursors.click`.
 
-#### enableHapticFeedback → `bool`
-Whether to provide haptic feedback when tapped. Defaults to true.
+#### enableFeedback → `bool`
+Whether to provide feedback when tapped. Defaults to true.
 
 #### focusNode → `FocusNode?`
 Optional focus node to control focus behavior.
@@ -412,10 +409,12 @@ const NakedSelectItem({
   this.onSelectChange,
   this.enabled = true,
   this.semanticLabel,
-  this.cursor = SystemMouseCursors.click,
-  this.enableHapticFeedback = true,
+  this.mouseCursor = SystemMouseCursors.click,
+  this.enableFeedback = true,
   this.focusNode,
   this.autofocus = false,
+  this.excludeSemantics = false,
+  this.statesController,
 })
 ```
 
@@ -445,14 +444,22 @@ Whether this item is enabled and can be selected. Defaults to true.
 #### semanticLabel → `String?`
 Semantic label for accessibility. Used by screen readers to identify the item.
 
-#### cursor → `MouseCursor`
+#### mouseCursor → `MouseCursor`
 The cursor to show when hovering over this item. Defaults to `SystemMouseCursors.click`.
 
-#### enableHapticFeedback → `bool`
+#### enableFeedback → `bool`
 Whether to provide haptic feedback when selected. Defaults to true.
 
 #### focusNode → `FocusNode?`
 Optional focus node to control focus behavior.
 
+#### statesController → `WidgetStatesController?`
+Optional external controller for interaction states.
 #### autofocus → `bool`
 Whether to automatically focus this item. Defaults to false.
+
+#### excludeSemantics → `bool`
+Whether to exclude the child semantics subtree.
+
+#### statesController → `WidgetStatesController?`
+Optional external controller for interaction states.

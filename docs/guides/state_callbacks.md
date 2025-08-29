@@ -17,7 +17,7 @@ For example:
 - `onPressChange`: Called when pressed state changes
 - `onFocusChange`: Called when focus state changes
 - `onDragChange`: Called when drag state changes (NakedSlider)
-- `onSelectChange`: Called when selection state changes (NakedRadio)
+- `onSelectChange`: Called when selection state changes (NakedSelect/NakedSelectItem)
 
 ## Common State Callbacks
 
@@ -34,7 +34,7 @@ Some components also implement specialized state callbacks:
 | Callback | Description | Used By |
 |----------|-------------|---------|
 | `onDragChange` | Called when drag state changes | `NakedSlider` |
-| `onSelectChange` | Called when selection state changes | `NakedRadio`, `NakedSelect` |
+| `onSelectChange` | Called when selection state changes | `NakedSelect`, `NakedSelectItem` |
 
 ## Usage Example
 
@@ -73,6 +73,8 @@ NakedButton(
 ```
 
 ## State Management
+
+Note on radio buttons: `NakedRadio` does not expose `onSelectChange`. Use the `NakedRadioGroup`’s `onChanged` to observe selection changes, or read selection via `NakedRadio`’s builder/`onStatesChange` using `WidgetState.selected`.
 
 Naked components do not manage their own state internally. Instead, they provide callbacks that inform you when states change, allowing you to manage state in your own widgets and control the visual representation accordingly.
 
