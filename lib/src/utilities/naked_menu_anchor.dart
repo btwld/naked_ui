@@ -21,20 +21,20 @@ const Map<ShortcutActivator, Intent> _shortcuts = <ShortcutActivator, Intent>{
 };
 
 /// An action that closes the menu when a dismiss intent is received.
-/// 
+///
 /// Typically triggered by the Escape key to close the currently open menu.
 class NakedDismissMenuAction extends DismissAction {
   /// The [MenuController] that manages the menu to be dismissed.
   final MenuController controller;
-  
+
   /// Creates a [NakedDismissMenuAction].
   NakedDismissMenuAction({required this.controller});
-  
+
   @override
   void invoke(DismissIntent intent) {
     controller.close();
   }
-  
+
   @override
   bool isEnabled(DismissIntent intent) {
     return controller.isOpen;
@@ -127,7 +127,9 @@ class _NakedMenuAnchorState extends State<NakedMenuAnchor> {
             ),
             child: Actions(
               actions: {
-                DismissIntent: NakedDismissMenuAction(controller: widget.controller),
+                DismissIntent: NakedDismissMenuAction(
+                  controller: widget.controller,
+                ),
               },
               child: Shortcuts(
                 shortcuts: _shortcuts,
@@ -148,12 +150,12 @@ class _NakedMenuAnchorState extends State<NakedMenuAnchor> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    
+
     // Set up scroll listener for auto-close behavior
     _scrollPosition?.isScrollingNotifier.removeListener(_handleScroll);
     _scrollPosition = Scrollable.maybeOf(context)?.position;
     _scrollPosition?.isScrollingNotifier.addListener(_handleScroll);
-    
+
     // Monitor view size changes for auto-close on resize
     final Size newSize = MediaQuery.sizeOf(context);
     if (_viewSize != null && newSize != _viewSize && widget.controller.isOpen) {

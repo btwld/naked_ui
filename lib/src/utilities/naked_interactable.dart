@@ -1,5 +1,6 @@
-import 'package:flutter/gestures.dart';
 import 'package:flutter/widgets.dart';
+
+import 'interaction_behaviors.dart';
 
 /// A headless interactive widget that manages interaction states.
 ///
@@ -128,7 +129,6 @@ class NakedInteractable extends StatefulWidget {
 class _NakedInteractableState extends State<NakedInteractable> {
   // State management
   WidgetStatesController? _internalController;
-  bool _isPointerInside = false;
 
   WidgetStatesController get _effectiveController =>
       widget.statesController ??
@@ -209,107 +209,19 @@ class _NakedInteractableState extends State<NakedInteractable> {
     }
   }
 
-  /// Clears the pressed state and notifies listeners.
-  ///
-  /// Extracted helper to avoid code duplication across multiple handlers.
-  void _clearPressedState() {
-    if (!_effectiveController.value.contains(WidgetState.pressed)) return;
+  // ==================== Behavior Callback Handlers ====================
 
-    _effectiveController.update(WidgetState.pressed, false);
-    widget.onPressChange?.call(false);
+  void _handleHoverChange(bool hovered) {
+    _effectiveController.update(WidgetState.hovered, hovered);
+    widget.onHoverChange?.call(hovered);
   }
 
-  // ==================== MouseRegion Event Handlers ====================
-
-  /// Handles pointer entering the widget bounds.
-  ///
-  /// Only triggered by mouse/stylus pointers that support hover.
-  /// Touch pointers do not emit enter events.
-  void _handlePointerEnter(PointerEnterEvent event) {
-    if (_isDisabled) return;
-
-    _isPointerInside = true;
-    _effectiveController.update(WidgetState.hovered, true);
-    widget.onHoverChange?.call(true);
+  void _handlePressChange(bool pressed) {
+    _effectiveController.update(WidgetState.pressed, pressed);
+    widget.onPressChange?.call(pressed);
   }
 
-  /// Handles pointer exiting the widget bounds.
-  ///
-  /// Only triggered by mouse/stylus pointers that support hover.
-  /// Touch pointers do not emit exit events. Also clears pressed
-  /// state to handle edge cases where exit occurs while pressed.
-  void _handlePointerExit(PointerExitEvent event) {
-    _isPointerInside = false;
-
-    if (_isDisabled) return;
-
-    // Clear hover state
-    _effectiveController.update(WidgetState.hovered, false);
-    widget.onHoverChange?.call(false);
-
-    // Clear pressed state if active (edge case handling)
-    _clearPressedState();
-  }
-
-  // ==================== Listener Event Handlers ====================
-
-  /// Handles pointer down events for all pointer types.
-  ///
-  /// CRITICAL: No boundary check here! Touch devices don't emit
-  /// onPointerEnter, so checking _isPointerInside would break touch input.
-  /// The Listener widget already ensures this only fires when the
-  /// pointer is actually inside the widget bounds.
-  void _handlePointerDown(PointerDownEvent event) {
-    if (_isDisabled) return;
-    // NO _isPointerInside check - this is critical for touch support!
-
-    _effectiveController.update(WidgetState.pressed, true);
-    widget.onPressChange?.call(true);
-  }
-
-  /// Handles pointer up events.
-  void _handlePointerUp(PointerUpEvent event) {
-    if (_isDisabled) return;
-    _clearPressedState();
-  }
-
-  /// Handles pointer cancel events.
-  void _handlePointerCancel(PointerCancelEvent event) {
-    if (_isDisabled) return;
-    _clearPressedState();
-  }
-
-  /// Handles pointer move events to track boundary crossings.
-  ///
-  /// Updates hover state when the pointer crosses widget boundaries
-  /// and clears pressed state if the pointer moves outside while pressed.
-  /// This provides proper drag-out behavior for both mouse and touch.
-  void _handlePointerMove(PointerMoveEvent event) {
-    if (_isDisabled) return;
-
-    final box = context.findRenderObject() as RenderBox?;
-    if (box == null) return;
-
-    final isInside = box.size.contains(event.localPosition);
-
-    // For hover-capable devices, only update if boundary actually changed
-    // For touch devices, _isPointerInside may never be updated (no hover events)
-    // so we always check if pressed state needs to be cleared
-    if (isInside != _isPointerInside) {
-      _isPointerInside = isInside;
-    }
-
-    // Always clear pressed state when moving outside, regardless of device type
-    if (!isInside) {
-      _clearPressedState();
-    }
-  }
-  // ==================== Focus Handler ====================
-
-  /// Handles focus state changes.
   void _handleFocusChange(bool focused) {
-    if (_isDisabled) return;
-
     _effectiveController.update(WidgetState.focused, focused);
     widget.onFocusChange?.call(focused);
   }
@@ -355,40 +267,22 @@ class _NakedInteractableState extends State<NakedInteractable> {
 
   @override
   Widget build(BuildContext context) {
-    // Build from inside out: Builder -> Listener -> MouseRegion -> Focus
+    final builtChild = widget.builder(
+      context,
+      _effectiveController.value,
+      widget.child,
+    );
 
-    // 1. Core: Listener for press/drag events
-    Widget result = Listener(
-      onPointerDown: _handlePointerDown,
-      onPointerMove: _handlePointerMove,
-      onPointerUp: _handlePointerUp,
-      onPointerCancel: _handlePointerCancel,
+    return InteractiveBehavior(
+      enabled: widget.enabled,
+      focusNode: widget.focusNode,
+      autofocus: widget.autofocus,
+      // Allow parent to control cursors; do not set here
       behavior: HitTestBehavior.opaque,
-      child: widget.builder(context, _effectiveController.value, widget.child),
+      onFocusChange: _handleFocusChange,
+      onHoverChange: _handleHoverChange,
+      onPressChange: _handlePressChange,
+      child: builtChild,
     );
-
-    // 2. Wrap with MouseRegion for hover state
-    // MouseRegion is REQUIRED for onEnter/onExit events
-    // We don't set cursor to allow parent/child cursor control
-    result = MouseRegion(
-      onEnter: _handlePointerEnter,
-      onExit: _handlePointerExit,
-      // NO cursor property - inherits from parent or uses default
-      // NO opaque property - not needed for our use case
-      // NO onHover - we handle movement in Listener.onPointerMove
-      child: result,
-    );
-
-    // 3. Conditionally wrap with Focus when enabled
-    if (!_isDisabled) {
-      result = Focus(
-        focusNode: widget.focusNode,
-        autofocus: widget.autofocus,
-        onFocusChange: _handleFocusChange,
-        child: result,
-      );
-    }
-
-    return result;
   }
 }

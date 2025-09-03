@@ -14,6 +14,10 @@ void main() {
     test(
       'run all integration tests',
       () async {
+        if (!Platform.isMacOS) {
+          print('↩️ Skipping integration tests on non-macOS CI');
+          return;
+        }
         print('🚀 Starting NakedUI Integration Tests...\n');
 
         final stopwatch = Stopwatch()..start();
@@ -93,6 +97,10 @@ void main() {
     test(
       'run button integration tests only',
       () async {
+        if (!Platform.isMacOS) {
+          print('↩️ Skipping button tests on non-macOS CI');
+          return;
+        }
         print('🚀 Running Button Integration Tests...\n');
 
         Process? process;
@@ -145,6 +153,10 @@ void main() {
     test(
       'run slider integration tests only',
       () async {
+        if (!Platform.isMacOS) {
+          print('↩️ Skipping slider tests on non-macOS CI');
+          return;
+        }
         print('🚀 Running Slider Integration Tests...\n');
 
         Process? process;

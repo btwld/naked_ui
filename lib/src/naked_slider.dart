@@ -264,6 +264,7 @@ class _NakedSliderState extends State<NakedSlider> {
   // No bulk state setter; we update individual flags per event.
 
   void _handleHoverChange(bool value) {
+    if (!_isEnabled) return;
     _controller.update(WidgetState.hovered, value);
     widget.onHoverChange?.call(value);
   }
@@ -284,28 +285,34 @@ class _NakedSliderState extends State<NakedSlider> {
       onShowHoverHighlight: _handleHoverChange,
       onFocusChange: _handleFocusChange,
       mouseCursor: _cursor,
-      child: GestureDetector(
-        onVerticalDragStart: widget.direction == Axis.vertical && _isEnabled
-            ? _handleDragStart
-            : null,
-        onVerticalDragUpdate: widget.direction == Axis.vertical && _isEnabled
-            ? _handleDragUpdate
-            : null,
-        onVerticalDragEnd: widget.direction == Axis.vertical && _isEnabled
-            ? _handleDragEnd
-            : null,
-        onHorizontalDragStart: widget.direction == Axis.horizontal && _isEnabled
-            ? _handleDragStart
-            : null,
-        onHorizontalDragUpdate:
-            widget.direction == Axis.horizontal && _isEnabled
-            ? _handleDragUpdate
-            : null,
-        onHorizontalDragEnd: widget.direction == Axis.horizontal && _isEnabled
-            ? _handleDragEnd
-            : null,
-        behavior: HitTestBehavior.opaque,
-        child: widget.child,
+      child: MouseRegion(
+        onEnter: (_) => _handleHoverChange(true),
+        onExit: (_) => _handleHoverChange(false),
+        cursor: _cursor,
+        child: GestureDetector(
+          onVerticalDragStart: widget.direction == Axis.vertical && _isEnabled
+              ? _handleDragStart
+              : null,
+          onVerticalDragUpdate: widget.direction == Axis.vertical && _isEnabled
+              ? _handleDragUpdate
+              : null,
+          onVerticalDragEnd: widget.direction == Axis.vertical && _isEnabled
+              ? _handleDragEnd
+              : null,
+          onHorizontalDragStart:
+              widget.direction == Axis.horizontal && _isEnabled
+              ? _handleDragStart
+              : null,
+          onHorizontalDragUpdate:
+              widget.direction == Axis.horizontal && _isEnabled
+              ? _handleDragUpdate
+              : null,
+          onHorizontalDragEnd: widget.direction == Axis.horizontal && _isEnabled
+              ? _handleDragEnd
+              : null,
+          behavior: HitTestBehavior.opaque,
+          child: widget.child,
+        ),
       ),
     );
   }
@@ -323,6 +330,12 @@ class _NakedSliderState extends State<NakedSlider> {
     }
     // Sync disabled state when interactivity changes
     _controller.update(WidgetState.disabled, !_isEnabled);
+    if (!_isEnabled) {
+      // Clear transient hover/pressed states when disabled
+      _controller
+        ..update(WidgetState.hovered, false)
+        ..update(WidgetState.pressed, false);
+    }
   }
 
   @override

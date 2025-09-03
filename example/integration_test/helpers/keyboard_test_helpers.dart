@@ -32,16 +32,15 @@ extension KeyboardTestHelpers on WidgetTester {
     await pump();
 
     if (testSpace) {
-      await sendKeyDownEvent(LogicalKeyboardKey.space);
-      await pump();
-      await sendKeyUpEvent(LogicalKeyboardKey.space);
+      // Use a single synthesized key event to avoid state desync in
+      // integration environments where platform key up/down may be
+      // delivered asynchronously.
+      await sendKeyEvent(LogicalKeyboardKey.space);
       await pump();
     }
 
     if (testEnter) {
-      await sendKeyDownEvent(LogicalKeyboardKey.enter);
-      await pump();
-      await sendKeyUpEvent(LogicalKeyboardKey.enter);
+      await sendKeyEvent(LogicalKeyboardKey.enter);
       await pump();
     }
   }

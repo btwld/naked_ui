@@ -1,6 +1,10 @@
 // ignore_for_file: no-empty-block
 
+import 'dart:async';
+
 import 'package:flutter/gestures.dart';
+import 'package:flutter/scheduler.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
 /// Mixin for widgets that support focus management.
@@ -126,6 +130,21 @@ mixin NakedWidgetStatesStateMixin<T extends NakedWidgetStates> on State<T> {
   WidgetStatesController get effectiveController =>
       widget.statesController ??
       (_internalController ??= createInternalController());
+
+  /// Snapshot of current states for builder ergonomics.
+  Set<WidgetState> get states => {...effectiveController.value};
+
+  /// Convenience boolean getters that mirror Set<WidgetState> extensions.
+  bool get isHovered => states.contains(WidgetState.hovered);
+  bool get isFocused => states.contains(WidgetState.focused);
+  bool get hasFocus => isFocused;
+  bool get isPressed => states.contains(WidgetState.pressed);
+  bool get isDragged => states.contains(WidgetState.dragged);
+  bool get isSelected => states.contains(WidgetState.selected);
+  bool get isDisabled => states.contains(WidgetState.disabled);
+  bool get isError => states.contains(WidgetState.error);
+  bool get isScrolledUnder => states.contains(WidgetState.scrolledUnder);
+  bool get isEnabled => !isDisabled;
 
   /// Creates an internal controller with initial states.
   /// Override in mixins to provide specific initial states.
@@ -472,5 +491,222 @@ mixin NakedFocusableWithStatesMixin<T extends NakedWidgetStates>
     effectiveFocusNode.removeListener(_onFocusChange);
     _internalNode?.dispose();
     super.dispose();
+  }
+
+  /// Wraps [child] with a [Focus] configured for this mixin.
+  @protected
+  Widget buildFocus({
+    required Widget child,
+    FocusOnKeyEventCallback? onKeyEvent,
+    bool canRequestFocus = true,
+    bool skipTraversal = false,
+  }) {
+    final focusable = widget as NakedFocusable;
+
+    return Focus(
+      focusNode: effectiveFocusNode,
+      autofocus: focusable.autofocus,
+      onKeyEvent: onKeyEvent,
+      canRequestFocus: canRequestFocus,
+      skipTraversal: skipTraversal,
+      child: child,
+    );
+  }
+
+  /// Requests focus if possible.
+  @protected
+  void requestFocus() {
+    if (mounted && effectiveFocusNode.canRequestFocus) {
+      effectiveFocusNode.requestFocus();
+    }
+  }
+
+  /// Removes focus from this node.
+  @protected
+  void unfocus({UnfocusDisposition disposition = UnfocusDisposition.scope}) {
+    effectiveFocusNode.unfocus(disposition: disposition);
+  }
+}
+
+// ==================== Pressable (hover/press + keyboard) ====================
+
+/// Mixin for widgets that support press/activation (tap/long-press/double-tap)
+/// and pointer hover/press visual feedback, mouse cursor, and feedback.
+mixin NakedPressable on StatefulWidget {
+  VoidCallback? get onPressed;
+  VoidCallback? get onDoubleTap;
+  VoidCallback? get onLongPress;
+
+  MouseCursor? get mouseCursor;
+  MouseCursor? get disabledMouseCursor;
+
+  /// Whether to provide platform-specific feedback for activation.
+  bool get enableFeedback;
+
+  /// Whether tapping should request focus when focus is available.
+  bool get focusOnPress;
+
+  /// Hover/press callbacks (optional).
+  ValueChanged<bool>? get onHoverChange;
+  ValueChanged<bool>? get onPressChange;
+}
+
+/// State mixin implementing press/activation behavior, hover/press state,
+/// keyboard activation timing, pointer tracking, and mouse cursor handling.
+mixin NakedPressableStateMixin<T extends NakedWidgetStates>
+    on NakedInteractiveStateMixin<T> {
+  static const Duration _activationDuration = Duration(milliseconds: 100);
+
+  Timer? _activationTimer;
+
+  NakedPressable get _pressable => widget as NakedPressable;
+
+  bool get _hasAnyActivationCallback =>
+      _pressable.onPressed != null ||
+      _pressable.onDoubleTap != null ||
+      _pressable.onLongPress != null;
+
+  bool get _isInteractive => isEnabled && _hasAnyActivationCallback;
+
+  MouseCursor get _effectiveCursor => _isInteractive
+      ? (_pressable.mouseCursor ?? SystemMouseCursors.click)
+      : (_pressable.disabledMouseCursor ?? SystemMouseCursors.basic);
+
+  // Pointer handlers, hover/press updates, and clearing are provided by
+  // NakedInteractiveStateMixin which we depend on via the `on` clause.
+
+  // ==================== Gesture and Keyboard ====================
+
+  void _handleKeyboardActivation(Intent? intent) {
+    if (!_isInteractive) return;
+
+    _activationTimer?.cancel();
+    _activationTimer = null;
+
+    setPressed(true);
+
+    if (_pressable.enableFeedback) {
+      HapticFeedback.lightImpact();
+    }
+
+    onActivated();
+
+    _activationTimer = Timer(_activationDuration, () {
+      if (mounted) {
+        SchedulerBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            clearPressedState();
+          }
+        });
+      }
+    });
+  }
+
+  void _handleTap() {
+    if (!_isInteractive) return;
+
+    if (_pressable.enableFeedback) {
+      Feedback.forTap(context);
+    }
+
+    if (_pressable.focusOnPress && widget is NakedFocusable) {
+      final node = (widget as NakedFocusable).focusNode;
+      node?.requestFocus();
+    }
+
+    onActivated();
+  }
+
+  void _handleLongPress() {
+    if (!_isInteractive || _pressable.onLongPress == null) return;
+
+    if (_pressable.enableFeedback) {
+      Feedback.forLongPress(context);
+    }
+
+    _pressable.onLongPress!();
+  }
+
+  /// Builds the activation wrappers for hover/press/keyboard/cursor.
+  @protected
+  Widget buildPressable({
+    required Widget child,
+    HitTestBehavior behavior = HitTestBehavior.opaque,
+    bool excludeFromSemantics = true,
+  }) {
+    return Shortcuts(
+      shortcuts: const {
+        SingleActivator(LogicalKeyboardKey.enter): ActivateIntent(),
+        SingleActivator(LogicalKeyboardKey.space): ActivateIntent(),
+      },
+      child: Actions(
+        actions: {
+          ActivateIntent: CallbackAction<ActivateIntent>(
+            onInvoke: _handleKeyboardActivation,
+          ),
+        },
+        child: MouseRegion(
+          onEnter: handlePointerEnter,
+          onExit: handlePointerExit,
+          cursor: _effectiveCursor,
+          child: Listener(
+            onPointerDown: handlePointerDown,
+            onPointerMove: handlePointerMove,
+            onPointerUp: handlePointerUp,
+            onPointerCancel: handlePointerCancel,
+            child: GestureDetector(
+              onTap: _isInteractive ? _handleTap : null,
+              onDoubleTap: _isInteractive ? _pressable.onDoubleTap : null,
+              onLongPress: _isInteractive ? _handleLongPress : null,
+              behavior: behavior,
+              excludeFromSemantics: excludeFromSemantics,
+              child: child,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Called when an activation (tap/keyboard) happens.
+  /// Default behavior is to call onPressed if provided.
+  @protected
+  void onActivated() {
+    _pressable.onPressed?.call();
+  }
+
+  @override
+  void dispose() {
+    _activationTimer?.cancel();
+    super.dispose();
+  }
+}
+
+// ==================== Toggleable ====================
+
+/// Mixin for widgets that toggle selection when activated (e.g., Checkbox, Switch).
+mixin NakedToggleable on StatefulWidget {
+  bool get selected;
+  ValueChanged<bool>? get onChanged;
+}
+
+/// State mixin that flips selected state and calls onChanged upon activation.
+/// Compose this after [NakedPressableStateMixin] to override activation.
+mixin NakedToggleableStateMixin<T extends NakedWidgetStates>
+    on NakedPressableStateMixin<T> {
+  NakedToggleable get _toggleable => widget as NakedToggleable;
+
+  /// Called by pressable activation when composed after it.
+  @protected
+  void onActivated() {
+    if (!isEnabled) return;
+    final newValue = !states.contains(WidgetState.selected);
+    effectiveController.update(WidgetState.selected, newValue);
+    _toggleable.onChanged?.call(newValue);
+
+    // If the widget also exposes onPressed, invoke it for parity.
+    if (widget is NakedPressable) {
+      (widget as NakedPressable).onPressed?.call();
+    }
   }
 }
