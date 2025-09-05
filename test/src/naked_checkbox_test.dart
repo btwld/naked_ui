@@ -365,108 +365,6 @@ void main() {
     );
   });
 
-  group('Accessibility', () {
-    testWidgets('provides semantic checkbox property', (
-      WidgetTester tester,
-    ) async {
-      final key = UniqueKey();
-      await tester.pumpMaterialWidget(
-        NakedCheckbox(
-          key: key,
-          value: true,
-          onChanged: (_) {},
-          child: const Text('Checkbox Label'),
-        ),
-      );
-
-      expect(
-        tester.getSemantics(find.byKey(key)),
-        matchesSemantics(
-          hasCheckedState: true,
-          isChecked: true,
-          hasEnabledState: true,
-          isEnabled: true,
-          isFocusable: true,
-          hasTapAction: true,
-          hasFocusAction: true,
-        ),
-      );
-    });
-
-    testWidgets('provides semantic tristate', (WidgetTester tester) async {
-      final key = UniqueKey();
-      await tester.pumpMaterialWidget(
-        NakedCheckbox(
-          key: key,
-          value: false,
-          tristate: true,
-          onChanged: (_) {},
-          child: const Text('Checkbox Label'),
-        ),
-      );
-
-      expect(
-        tester.getSemantics(find.byKey(key)),
-        matchesSemantics(
-          hasCheckedState: true,
-          isCheckStateMixed: false,
-          hasEnabledState: true,
-          isEnabled: true,
-          isFocusable: true,
-          hasTapAction: true,
-          hasFocusAction: true,
-        ),
-      );
-    });
-
-    testWidgets('applies custom semantic label when provided', (
-      WidgetTester tester,
-    ) async {
-      final key = UniqueKey();
-      await tester.pumpMaterialWidget(
-        NakedCheckbox(
-          key: key,
-          value: false,
-          onChanged: (_) {},
-          semanticLabel: 'Custom Checkbox Label',
-          child: const SizedBox.square(dimension: 10),
-        ),
-      );
-
-      final semantics = tester.getSemantics(find.byKey(key));
-      expect(semantics.label, 'Custom Checkbox Label');
-    });
-
-    testWidgets('shows correct enabled/disabled state', (
-      WidgetTester tester,
-    ) async {
-      final key = UniqueKey();
-      for (var enabled in [true, false]) {
-        await tester.pumpMaterialWidget(
-          NakedCheckbox(
-            key: key,
-            value: false,
-            onChanged: (_) {},
-            enabled: enabled,
-            child: const SizedBox.square(dimension: 10),
-          ),
-        );
-
-        expect(
-          tester.getSemantics(find.byKey(key)),
-          matchesSemantics(
-            hasCheckedState: true,
-            hasEnabledState: true,
-            isEnabled: enabled,
-            isFocusable: enabled,
-            hasTapAction: enabled,
-            hasFocusAction: enabled,
-          ),
-        );
-      }
-    });
-  });
-
   group('Cursor', () {
     testWidgets('shows appropriate cursor based on interactive state', (
       WidgetTester tester,
@@ -496,7 +394,7 @@ void main() {
 
       tester.expectCursor(SystemMouseCursors.click, on: keyEnabled);
 
-      tester.expectCursor(SystemMouseCursors.forbidden, on: keyDisabled);
+      tester.expectCursor(SystemMouseCursors.basic, on: keyDisabled);
     });
 
     testWidgets('supports custom cursor', (WidgetTester tester) async {

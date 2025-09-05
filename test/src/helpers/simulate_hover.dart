@@ -6,11 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 extension WidgetTesterExtension on WidgetTester {
   Future<void> pumpMaterialWidget(Widget widget) async {
-    await pumpWidget(
-      MaterialApp(
-        home: Scaffold(body: widget),
-      ),
-    );
+    await pumpWidget(MaterialApp(home: Scaffold(body: widget)));
   }
 
   /// Simulates hover by moving mouse gesture and waiting for Flutter to process hover events
@@ -23,11 +19,11 @@ extension WidgetTesterExtension on WidgetTester {
     // Move to widget and wait for hover to be processed
     await gesture.moveTo(getCenter(find.byKey(key)));
     await pumpAndSettle(); // Wait for all hover events to propagate
-    
+
     // Call onHover callback if provided
     onHover?.call();
 
-    // Move away and wait for hover exit to be processed  
+    // Move away and wait for hover exit to be processed
     await gesture.moveTo(Offset.zero);
     await pumpAndSettle(); // Wait for all hover exit events to propagate
   }
@@ -45,10 +41,12 @@ extension WidgetTesterExtension on WidgetTester {
     await pump();
   }
 
-  void expectCursor(SystemMouseCursor cursor, {required Key on}) async {
-    final region = widget<MouseRegion>(find
-        .descendant(of: find.byKey(on), matching: find.byType(MouseRegion))
-        .first);
+  void expectCursor(SystemMouseCursor cursor, {required Key on}) {
+    final region = widget<MouseRegion>(
+      find
+          .descendant(of: find.byKey(on), matching: find.byType(MouseRegion))
+          .first,
+    );
 
     expect(region.cursor, cursor);
   }

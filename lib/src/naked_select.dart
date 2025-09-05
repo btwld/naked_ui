@@ -24,7 +24,6 @@ class NakedSelect<T> extends StatefulWidget implements OverlayChildLifecycle {
     this.removalDelay = Duration.zero,
     this.onSelectedValueChanged,
     this.enabled = true,
-    this.semanticLabel,
     this.closeOnSelect = true,
     this.autofocus = false,
     this.enableTypeAhead = true,
@@ -40,7 +39,6 @@ class NakedSelect<T> extends StatefulWidget implements OverlayChildLifecycle {
       ),
     ],
     this.closeOnClickOutside = true,
-    this.excludeSemantics = false,
   }) : allowMultiple = false,
        selectedValues = null,
        onSelectedValuesChanged = null;
@@ -56,7 +54,6 @@ class NakedSelect<T> extends StatefulWidget implements OverlayChildLifecycle {
     this.selectedValues,
     this.onSelectedValuesChanged,
     this.enabled = true,
-    this.semanticLabel,
     this.closeOnSelect = true,
     this.autofocus = false,
     this.enableTypeAhead = true,
@@ -72,7 +69,6 @@ class NakedSelect<T> extends StatefulWidget implements OverlayChildLifecycle {
       ),
     ],
     this.closeOnClickOutside = true,
-    this.excludeSemantics = false,
   }) : allowMultiple = true,
        selectedValue = null,
        onSelectedValueChanged = null;
@@ -104,9 +100,6 @@ class NakedSelect<T> extends StatefulWidget implements OverlayChildLifecycle {
   /// Whether the select can be interacted with.
   final bool enabled;
 
-  /// Semantic label for accessibility.
-  final String? semanticLabel;
-
   /// Whether to automatically close the dropdown when an item is selected.
   final bool closeOnSelect;
 
@@ -132,9 +125,6 @@ class NakedSelect<T> extends StatefulWidget implements OverlayChildLifecycle {
 
   /// Whether to close the menu when clicking outside.
   final bool closeOnClickOutside;
-
-  /// Whether to exclude child semantics from the semantic tree.
-  final bool excludeSemantics;
 
   /// The duration to wait before removing the Widget from the Overlay after the menu is closed.
   @override
@@ -263,31 +253,25 @@ class _NakedSelectState<T> extends State<NakedSelect<T>>
       selectedValues: widget.selectedValues,
       allowMultiple: widget.allowMultiple,
       enabled: widget.enabled,
-      child: Semantics(
-        container: true,
-        explicitChildNodes: true,
-        excludeSemantics: widget.excludeSemantics,
-        label: widget.semanticLabel,
-        child: NakedMenuAnchor(
-          controller: controller,
-          overlayBuilder: (_) => widget.menu,
-          consumeOutsideTaps: widget.closeOnClickOutside,
-          position: widget.menuPosition,
-          fallbackPositions: widget.fallbackPositions,
-          onClose: closeMenu,
-          onOpen: openMenu,
-          onKeyEvent: (event) {
-            // Type-ahead with character keys
-            final character = event.character;
+      child: NakedMenuAnchor(
+        controller: controller,
+        overlayBuilder: (_) => widget.menu,
+        consumeOutsideTaps: widget.closeOnClickOutside,
+        position: widget.menuPosition,
+        fallbackPositions: widget.fallbackPositions,
+        onClose: closeMenu,
+        onOpen: openMenu,
+        onKeyEvent: (event) {
+          // Type-ahead with character keys
+          final character = event.character;
 
-            if (character != null &&
-                character.isNotEmpty &&
-                widget.enableTypeAhead) {
-              _handleTypeAhead(character);
-            }
-          },
-          child: widget.child,
-        ),
+          if (character != null &&
+              character.isNotEmpty &&
+              widget.enableTypeAhead) {
+            _handleTypeAhead(character);
+          }
+        },
+        child: widget.child,
       ),
     );
   }
@@ -385,7 +369,6 @@ class NakedSelectTrigger extends StatelessWidget {
   const NakedSelectTrigger({
     super.key,
     required this.child,
-    this.semanticLabel,
     this.mouseCursor = SystemMouseCursors.click,
     this.enableFeedback = true,
     this.focusNode,
@@ -412,10 +395,6 @@ class NakedSelectTrigger extends StatelessWidget {
   /// Optional external controller for interaction states.
   final WidgetStatesController? statesController;
 
-  /// Semantic label for accessibility.
-  /// Used by screen readers to identify the trigger.
-  final String? semanticLabel;
-
   /// The cursor to show when hovering over the trigger.
   /// Defaults to [SystemMouseCursors.click].
   final MouseCursor mouseCursor;
@@ -441,8 +420,6 @@ class NakedSelectTrigger extends StatelessWidget {
     return NakedButton(
       onPressed: handleTap,
       enabled: state?.isEnabled ?? true,
-      isSemanticButton: true,
-      semanticLabel: semanticLabel,
       mouseCursor: mouseCursor,
       enableFeedback: enableFeedback,
       focusNode: focusNode,
@@ -487,12 +464,10 @@ class NakedSelectItem<T> extends StatefulWidget {
     required this.value,
     this.onSelectChange,
     this.enabled = true,
-    this.semanticLabel,
     this.mouseCursor = SystemMouseCursors.click,
     this.enableFeedback = true,
     this.focusNode,
     this.autofocus = false,
-    this.excludeSemantics = false,
     this.onFocusChange,
     this.onHoverChange,
     this.onPressChange,
@@ -526,10 +501,6 @@ class NakedSelectItem<T> extends StatefulWidget {
   /// When false, all interaction is disabled.
   final bool enabled;
 
-  /// Semantic label for accessibility.
-  /// Used by screen readers to identify the item.
-  final String? semanticLabel;
-
   /// The cursor to show when hovering over this item.
   /// Defaults to [SystemMouseCursors.click].
   final MouseCursor mouseCursor;
@@ -543,9 +514,6 @@ class NakedSelectItem<T> extends StatefulWidget {
   final FocusNode? focusNode;
 
   final bool autofocus;
-
-  /// Whether to exclude child semantics from the semantic tree.
-  final bool excludeSemantics;
 
   @override
   State<NakedSelectItem<T>> createState() => _NakedSelectItemState<T>();
@@ -645,30 +613,18 @@ class _NakedSelectItemState<T> extends State<NakedSelectItem<T>> {
       });
     }
 
-    return Semantics(
-      excludeSemantics: widget.excludeSemantics,
+    return NakedButton(
+      onPressed: handleSelect,
       enabled: isEffectivelyEnabled,
-      selected: isSelected,
-      // No button semantics or tap action at item level per tests
-      child: NakedButton(
-        onPressed: handleSelect,
-        enabled: isEffectivelyEnabled,
-        isSemanticButton: false,
-        mouseCursor: widget.mouseCursor,
-        enableFeedback: widget.enableFeedback,
-        focusNode: _focusNode,
-        autofocus: widget.autofocus,
-        excludeSemantics: false,
-        onFocusChange: widget.onFocusChange,
-        onHoverChange: widget.onHoverChange,
-        onPressChange: widget.onPressChange,
-        statesController: widget.statesController,
-        // Apply item label directly to the visual child
-        child: Semantics(
-          label: widget.semanticLabel ?? widget.value.toString(),
-          child: widget.child,
-        ),
-      ),
+      mouseCursor: widget.mouseCursor,
+      enableFeedback: widget.enableFeedback,
+      focusNode: _focusNode,
+      autofocus: widget.autofocus,
+      onFocusChange: widget.onFocusChange,
+      onHoverChange: widget.onHoverChange,
+      onPressChange: widget.onPressChange,
+      statesController: widget.statesController,
+      child: widget.child,
     );
   }
 }

@@ -8,7 +8,7 @@ import 'button_behavior.dart';
 /// - Wraps button activation and forwards focus/hover/press callbacks
 /// - Computes next selection for checkbox-like patterns (including tristate)
 /// - Emits value via [onChanged]
-/// - Leaves semantics to higher-level wrappers/components
+
 class ToggleableBehavior extends StatelessWidget {
   const ToggleableBehavior({
     super.key,

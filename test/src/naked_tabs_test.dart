@@ -6,15 +6,7 @@ import 'package:naked_ui/naked_ui.dart';
 
 import 'helpers/simulate_hover.dart';
 
-extension _WidgetTesterX on WidgetTester {
-  SemanticsNode getSemanticsNode({required Type of, required Type matching}) {
-    return getSemantics(
-      find
-          .descendant(of: find.byType(of), matching: find.byType(matching))
-          .first,
-    );
-  }
-}
+
 
 class _Counter extends StatefulWidget {
   @override
@@ -782,7 +774,7 @@ void main() {
 
       tester.expectCursor(SystemMouseCursors.click, on: key);
 
-      tester.expectCursor(SystemMouseCursors.forbidden, on: disabledKey);
+      tester.expectCursor(SystemMouseCursors.basic, on: disabledKey);
     });
   });
 
@@ -850,92 +842,9 @@ void main() {
     );
   });
 
-  group('Semantic Configuration', () {
-    testWidgets('NakedTab supports excludeSemantics parameter', (
-      WidgetTester tester,
-    ) async {
-      await tester.pumpMaterialWidget(
-        NakedTabGroup(
-          selectedTabId: 'tab1',
-          child: Column(
-            children: [
-              NakedTabList(
-                child: Row(
-                  children: [
-                    NakedTab(
-                      tabId: 'tab1',
-                      excludeSemantics: false, // Default value
-                      child: const Text('Tab 1'),
-                    ),
-                    NakedTab(
-                      tabId: 'tab2',
-                      excludeSemantics: true, // Override value
-                      child: const Text('Tab 2'),
-                    ),
-                  ],
-                ),
-              ),
-              const NakedTabPanel(tabId: 'tab1', child: Text('Panel 1')),
-              const NakedTabPanel(tabId: 'tab2', child: Text('Panel 2')),
-            ],
-          ),
-        ),
-      );
-
-      // If this compiles and runs, the parameter exists and works
-      expect(find.byType(NakedTab), findsNWidgets(2));
-    });
-
-    testWidgets('NakedTab semantic label is applied', (
-      WidgetTester tester,
-    ) async {
-      await tester.pumpMaterialWidget(
-        const NakedTabGroup(
-          selectedTabId: 'home',
-          child: Column(
-            children: [
-              NakedTabList(
-                child: Row(
-                  children: [
-                    NakedTab(
-                      tabId: 'home',
-                      semanticLabel: 'Home tab',
-                      child: Text('Home'),
-                    ),
-                  ],
-                ),
-              ),
-              NakedTabPanel(tabId: 'home', child: Text('Home content')),
-            ],
-          ),
-        ),
-      );
-
-      final semantics = tester.getSemantics(find.byType(NakedTab));
-      expect(semantics.label, contains('Home tab'));
-    });
-
-    testWidgets('excludeSemantics defaults to false (enabling composition)', (
-      WidgetTester tester,
-    ) async {
-      await tester.pumpMaterialWidget(
-        const NakedTabGroup(
-          selectedTabId: 'settings',
-          child: Column(
-            children: [
-              NakedTabList(
-                child: Row(
-                  children: [
-                    NakedTab(
-                      tabId: 'settings',
-                      // excludeSemantics defaults to false
-                      semanticLabel: 'Settings tab',
-                      child: Text('Settings'),
-                    ),
-                  ],
-                ),
-              ),
-              NakedTabPanel(tabId: 'settings', child: Text('Settings panel')),
+  
+}
+, child: Text('Settings panel')),
             ],
           ),
         ),

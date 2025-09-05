@@ -235,7 +235,7 @@ The following remain exactly the same:
 - All widget functionality and behavior
 - All non-callback parameters and properties
 - Widget lifecycle and performance characteristics
-- Accessibility features and semantics
+
 - All `onPressed`, `onChanged`, and similar action callbacks
 
 This is purely a naming consistency update with some callback removals for API simplification.

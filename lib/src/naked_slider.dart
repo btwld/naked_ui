@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import 'utilities/utilities.dart';
-
 // Slider keyboard shortcuts (left-to-right layout)
 const Map<ShortcutActivator, Intent> _kSliderShortcutsLtr =
     <ShortcutActivator, Intent>{
@@ -69,8 +67,6 @@ class NakedSlider extends StatefulWidget {
     this.onDragChange,
     this.onFocusChange,
     this.enabled = true,
-    this.semanticLabel,
-    this.semanticHint,
     this.mouseCursor = SystemMouseCursors.click,
     this.enableFeedback = true,
     this.focusNode,
@@ -79,7 +75,6 @@ class NakedSlider extends StatefulWidget {
     this.divisions,
     this.keyboardStep = 0.01,
     this.largeKeyboardStep = 0.1,
-    this.excludeSemantics = false,
     this.statesController,
   }) : assert(min < max, 'min must be less than max');
 
@@ -116,12 +111,6 @@ class NakedSlider extends StatefulWidget {
   /// Whether the slider is enabled.
   final bool enabled;
 
-  /// Semantic label for screen readers.
-  final String? semanticLabel;
-
-  /// Semantic hint for screen readers.
-  final String? semanticHint;
-
   /// Cursor when hovering over the slider.
   final MouseCursor mouseCursor;
 
@@ -145,9 +134,6 @@ class NakedSlider extends StatefulWidget {
 
   /// Large keyboard navigation step size.
   final double largeKeyboardStep;
-
-  /// Whether to exclude child semantics.
-  final bool excludeSemantics;
 
   /// Optional external controller for interaction states.
   final WidgetStatesController? statesController;
@@ -348,7 +334,7 @@ class _NakedSliderState extends State<NakedSlider> {
   bool get _isEnabled => widget.enabled && widget.onChanged != null;
 
   MouseCursor get _cursor =>
-      _isEnabled ? widget.mouseCursor : SystemMouseCursors.forbidden;
+      _isEnabled ? widget.mouseCursor : SystemMouseCursors.basic;
 
   Map<ShortcutActivator, Intent> get _shortcuts {
     final bool isRTL = Directionality.of(context) == TextDirection.rtl;
@@ -385,40 +371,7 @@ class _NakedSliderState extends State<NakedSlider> {
     final double increasedValue = _normalizeValue(widget.value + step);
     final double decreasedValue = _normalizeValue(widget.value - step);
 
-    if (widget.excludeSemantics) {
-      // If excluding semantics, use original Semantics widget
-      return Semantics(
-        excludeSemantics: true,
-        child: _buildSliderInteractable(),
-      );
-    }
-
-    // Use direct Semantics for Material parity
-    return Semantics(
-      excludeSemantics: widget.excludeSemantics,
-      enabled: _isEnabled,
-      slider: true,
-      focusable: _isEnabled,
-      label: widget.semanticLabel ?? '',
-      value: '${percentage.round()}%',
-      increasedValue:
-          '${((increasedValue - widget.min) / (widget.max - widget.min) * 100).round()}%',
-      decreasedValue:
-          '${((decreasedValue - widget.min) / (widget.max - widget.min) * 100).round()}%',
-      hint: widget.semanticHint,
-      onIncrease: _isEnabled
-          ? () => _callOnChangeIfNeeded(increasedValue)
-          : null,
-      onDecrease: _isEnabled
-          ? () => _callOnChangeIfNeeded(decreasedValue)
-          : null,
-      // Expose focus action when enabled
-      onFocus: _isEnabled ? semanticsFocusNoop : null,
-      child: ExcludeSemantics(
-        excluding: !_isEnabled,
-        child: _buildSliderInteractable(),
-      ),
-    );
+    return _buildSliderInteractable();
   }
 }
 

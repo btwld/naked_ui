@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 import 'utilities/naked_pressable.dart';
-import 'utilities/utilities.dart';
 
 /// Provides button interaction behavior without visual styling.
 ///
@@ -15,14 +14,10 @@ class NakedButton extends StatelessWidget {
     this.onLongPress,
     this.onDoubleTap,
     this.enabled = true,
-    this.isSemanticButton = true,
-    this.semanticLabel,
-    this.semanticHint,
     this.mouseCursor = SystemMouseCursors.click,
     this.enableFeedback = true,
     this.focusNode,
     this.autofocus = false,
-    this.excludeSemantics = false,
     this.onFocusChange,
     this.onHoverChange,
     this.onPressChange,
@@ -68,15 +63,6 @@ class NakedButton extends StatelessWidget {
   /// Whether the button is enabled.
   final bool enabled;
 
-  /// Whether the button should be treated as a semantic button.
-  final bool isSemanticButton;
-
-  /// The semantic label for the button.
-  final String? semanticLabel;
-
-  /// The semantic hint for the button.
-  final String? semanticHint;
-
   /// Cursor when hovering over the button.
   ///
   /// Defaults to [SystemMouseCursors.click] when enabled.
@@ -90,9 +76,6 @@ class NakedButton extends StatelessWidget {
 
   /// Whether to focus the button when first built.
   final bool autofocus;
-
-  /// Whether to exclude child semantics.
-  final bool excludeSemantics;
 
   /// Whether to request focus when the button is pressed.
   ///
@@ -108,14 +91,14 @@ class NakedButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    Widget result = NakedPressable(
+    return NakedPressable(
       onPressed: _effectiveEnabled ? onPressed : null,
       onDoubleTap: _effectiveEnabled ? onDoubleTap : null,
       onLongPress: _effectiveEnabled ? onLongPress : null,
       enabled: enabled,
       mouseCursor: mouseCursor,
-      // Stronger indication for buttons
-      disabledMouseCursor: SystemMouseCursors.forbidden,
+      // Use basic cursor for disabled buttons instead of forbidden
+      disabledMouseCursor: SystemMouseCursors.basic,
       focusNode: focusNode,
       autofocus: autofocus,
       onStatesChange: onStatesChange,
@@ -133,19 +116,6 @@ class NakedButton extends StatelessWidget {
 
         return child!;
       },
-    );
-
-    return Semantics(
-      excludeSemantics: excludeSemantics,
-      enabled: _effectiveEnabled,
-      button: isSemanticButton,
-      focusable: _effectiveEnabled,
-      label: semanticLabel,
-      hint: semanticHint,
-      onTap: isSemanticButton && _effectiveEnabled ? onPressed : null,
-      // Expose focus action when enabled
-      onFocus: _effectiveEnabled ? semanticsFocusNoop : null,
-      child: result,
     );
   }
 }

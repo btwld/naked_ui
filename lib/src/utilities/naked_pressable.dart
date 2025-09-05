@@ -23,7 +23,7 @@ import 'naked_interactable.dart';
 ///   onPressed: () => print('Pressed!'),
 ///   enabled: true,
 ///   mouseCursor: SystemMouseCursors.click,
-///   disabledMouseCursor: SystemMouseCursors.forbidden,
+///   disabledMouseCursor: SystemMouseCursors.basic,
 ///   builder: (context, states, child) {
 ///     return Container(
 ///       padding: EdgeInsets.all(16),

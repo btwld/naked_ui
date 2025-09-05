@@ -3,7 +3,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
 import 'utilities/naked_pressable.dart';
-import 'utilities/utilities.dart';
 
 /// Manages accordion state with optional min/max expansion constraints.
 ///
@@ -220,9 +219,6 @@ class NakedAccordionItem<T> extends StatelessWidget {
     required this.value,
     required this.child,
     this.transitionBuilder,
-    this.semanticLabel,
-    this.semanticHint,
-    this.excludeSemantics = false,
     this.enabled = true,
     this.mouseCursor = SystemMouseCursors.click,
     this.enableFeedback = true,
@@ -252,15 +248,6 @@ class NakedAccordionItem<T> extends StatelessWidget {
   ///
   /// Used by [NakedAccordionController] to track expansion state.
   final T value;
-
-  /// Semantic label for screen readers.
-  final String? semanticLabel;
-
-  /// Semantic hint for screen readers.
-  final String? semanticHint;
-
-  /// Whether to exclude child semantics from the semantic tree.
-  final bool excludeSemantics;
 
   /// Called when focus state changes.
   final ValueChanged<bool>? onFocusChange;
@@ -308,64 +295,39 @@ class NakedAccordionItem<T> extends StatelessWidget {
 
         void onTap() => _handleToggle(state);
 
-        // Use direct Semantics for Material parity
-        // Auto-generate hint if not provided
-        final expandHint =
-            semanticHint ??
-            (isExpanded ? 'Double tap to collapse' : 'Double tap to expand');
-
-        return Semantics(
-          excludeSemantics: excludeSemantics,
-          enabled: enabled,
-          focusable: enabled,
-          expanded: isExpanded,
-          label: semanticLabel,
-          hint: expandHint,
-          onTap: enabled ? onTap : null,
-          onFocus: enabled ? semanticsFocusNoop : null,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Shortcuts(
-                shortcuts: const {
-                  SingleActivator(LogicalKeyboardKey.enter): ActivateIntent(),
-                  SingleActivator(LogicalKeyboardKey.space): ActivateIntent(),
-                },
-                child: Actions(
-                  actions: {
-                    ActivateIntent: CallbackAction<ActivateIntent>(
-                      onInvoke: (intent) => enabled ? onTap() : null,
-                    ),
-                  },
-                  child: NakedPressable(
-                    onPressed: onTap,
-                    enabled: enabled,
-                    mouseCursor: mouseCursor,
-                    disabledMouseCursor: SystemMouseCursors.forbidden,
-                    focusNode: focusNode,
-                    autofocus: autofocus,
-                    onStatesChange: onStatesChange,
-                    onFocusChange: onFocusChange,
-                    onHoverChange: onHoverChange,
-                    onPressChange: onPressChange,
-                    statesController: statesController,
-                    enableFeedback: enableFeedback,
-                    builder: (context, states, child) => Semantics(
-                      enabled: enabled,
-                      // Expose hasSelectedState without isSelected
-                      selected: false,
-                      focusable: enabled,
-                      onTap: enabled ? onTap : null,
-                      onFocus: enabled ? semanticsFocusNoop : null,
-                      // Do not set label here; inherit from trigger content (e.g., Text)
-                      child: trigger(context, isExpanded),
-                    ),
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Shortcuts(
+              shortcuts: const {
+                SingleActivator(LogicalKeyboardKey.enter): ActivateIntent(),
+                SingleActivator(LogicalKeyboardKey.space): ActivateIntent(),
+              },
+              child: Actions(
+                actions: {
+                  ActivateIntent: CallbackAction<ActivateIntent>(
+                    onInvoke: (intent) => enabled ? onTap() : null,
                   ),
+                },
+                child: NakedPressable(
+                  onPressed: onTap,
+                  enabled: enabled,
+                  mouseCursor: mouseCursor,
+                  disabledMouseCursor: SystemMouseCursors.basic,
+                  focusNode: focusNode,
+                  autofocus: autofocus,
+                  onStatesChange: onStatesChange,
+                  onFocusChange: onFocusChange,
+                  onHoverChange: onHoverChange,
+                  onPressChange: onPressChange,
+                  statesController: statesController,
+                  enableFeedback: enableFeedback,
+                  builder: (context, states, child) => trigger(context, isExpanded),
                 ),
               ),
-              transitionBuilder != null ? transitionBuilder!(child) : child,
-            ],
-          ),
+            ),
+            transitionBuilder != null ? transitionBuilder!(child) : child,
+          ],
         );
       },
     );

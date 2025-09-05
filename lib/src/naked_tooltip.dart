@@ -105,8 +105,6 @@ class NakedTooltip extends StatefulWidget implements OverlayChildLifecycle {
       target: Alignment.topCenter,
       follower: Alignment.bottomCenter,
     ),
-    this.tooltipSemantics,
-    this.excludeFromSemantics = false,
     this.fallbackPositions = const [],
     this.removalDelay = Duration.zero,
     this.onStateChange,
@@ -120,12 +118,6 @@ class NakedTooltip extends StatefulWidget implements OverlayChildLifecycle {
 
   /// Tooltip position relative to the target.
   final NakedMenuPosition position;
-
-  /// Semantic label for accessibility.
-  final String? tooltipSemantics;
-
-  /// Whether to exclude tooltip from semantics tree.
-  final bool excludeFromSemantics;
 
   /// Fallback alignments for the tooltip.
   final List<NakedMenuPosition> fallbackPositions;
@@ -178,11 +170,7 @@ class _NakedTooltipState extends State<NakedTooltip>
 
   @override
   Widget build(BuildContext context) {
-    // Use direct Semantics for Material parity
-    return Semantics(
-      excludeSemantics: widget.excludeFromSemantics,
-      tooltip: widget.excludeFromSemantics ? null : widget.tooltipSemantics,
-      child: ListenableBuilder(
+    return ListenableBuilder(
         listenable: showNotifier,
         builder: (context, child) {
           return NakedMenuAnchor(
@@ -197,7 +185,6 @@ class _NakedTooltipState extends State<NakedTooltip>
             ),
           );
         },
-      ),
     );
   }
 }

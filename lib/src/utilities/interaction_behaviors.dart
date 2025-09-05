@@ -276,7 +276,7 @@ class InteractiveBehavior extends StatelessWidget {
       child: pressLayer,
     );
 
-    // Only include Focus when enabled to avoid setting isFocusable semantics
+    
     final focusLayer = enabled
         ? FocusableBehavior(
             focusNode: focusNode,

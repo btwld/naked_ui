@@ -42,9 +42,6 @@ class NakedRadio<T> extends StatefulWidget with NakedFocusable {
     this.onPressChange,
     this.onStatesChange,
     this.statesController,
-    this.semanticLabel,
-    this.semanticHint,
-    this.excludeSemantics = false,
     this.builder,
   }) : assert(
          child != null || builder != null,
@@ -68,9 +65,6 @@ class NakedRadio<T> extends StatefulWidget with NakedFocusable {
   final ValueChanged<Set<WidgetState>>? onStatesChange;
 
   final WidgetStatesController? statesController;
-  final String? semanticLabel;
-  final String? semanticHint;
-  final bool excludeSemantics;
   final ValueWidgetBuilder<Set<WidgetState>>? builder;
 
   @override
@@ -136,23 +130,10 @@ class _NakedRadioState<T> extends State<NakedRadio<T>>
         : widget.enabled
         ? WidgetStateMouseCursor.clickable
         : WidgetStateMouseCursor.resolveWith(
-            (_) => SystemMouseCursors.forbidden,
+            (_) => SystemMouseCursors.basic,
           );
 
-    return Semantics(
-      excludeSemantics: widget.excludeSemantics,
-      enabled: widget.enabled,
-      checked: isSelected,
-      focusable: widget.enabled,
-      inMutuallyExclusiveGroup: true,
-      label: widget.semanticLabel,
-      hint: widget.semanticHint,
-      onTap: widget.enabled
-          ? () => _handleSemanticTap(registry, isSelected)
-          : null,
-      // Expose focus action for a11y parity when enabled
-      onFocus: widget.enabled ? semanticsFocusNoop : null,
-      child: MouseRegion(
+    return MouseRegion(
         cursor: effectiveCursor.resolve({
           if (!widget.enabled) WidgetState.disabled,
           if (isSelected) WidgetState.selected,
@@ -193,7 +174,6 @@ class _NakedRadioState<T> extends State<NakedRadio<T>>
             },
           ),
         ),
-      ),
     );
   }
 }

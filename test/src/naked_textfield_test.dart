@@ -5,29 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:naked_ui/naked_ui.dart';
 
-extension _WidgetTesterX on WidgetTester {
-  Future<void> pumpTextField(Widget widget) async {
-    await pumpWidget(
-      WidgetsApp(
-        color: Colors.white,
-        onGenerateRoute: (settings) =>
-            MaterialPageRoute(builder: (context) => widget),
-      ),
-    );
-  }
 
-  Future<TestGesture> simulateHover(Type type) async {
-    final gesture = await createGesture(kind: PointerDeviceKind.mouse);
-    await gesture.addPointer(location: Offset.zero);
-    addTearDown(gesture.removePointer);
-    await pump();
-
-    await gesture.moveTo(getCenter(find.byType(type)));
-    await pump();
-
-    return gesture;
-  }
-}
 
 void main() {
   group('Basic Functionality', () {
@@ -416,48 +394,7 @@ void main() {
     });
   });
 
-  group('Accessibility', () {
-    testWidgets('provides semantic properties for accessibility', (
-      WidgetTester tester,
-    ) async {
-      await tester.pumpTextField(
-        NakedTextField(builder: (context, child) => child),
-      );
-
-      expect(
-        tester.getSemantics(find.byType(NakedTextField).first),
-        matchesSemantics(
-          isTextField: true,
-          hasEnabledState: true,
-          isEnabled: true,
-          hasTapAction: true,
-        ),
-      );
-    });
-
-    testWidgets('respects enabled state for semantics', (
-      WidgetTester tester,
-    ) async {
-      for (var enabled in [false, true]) {
-        await tester.pumpTextField(
-          NakedTextField(enabled: enabled, builder: (context, child) => child),
-        );
-
-        expect(
-          tester.getSemantics(find.byType(NakedTextField).first),
-          matchesSemantics(
-            isTextField: true,
-            hasEnabledState: true,
-            isEnabled: enabled,
-            isReadOnly: !enabled,
-            hasTapAction: true,
-          ),
-        );
-
-        await tester.pumpWidget(Container());
-      }
-    });
-  });
+  
 
   group('Outside taps', () {
     testWidgets(

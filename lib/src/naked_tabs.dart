@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'utilities/naked_pressable.dart';
-import 'utilities/utilities.dart';
 
 /// Provides tab interaction behavior without visual styling.
 ///
@@ -17,7 +16,6 @@ class NakedTabGroup extends StatelessWidget {
     this.onChanged,
     this.orientation = Axis.horizontal,
     this.enabled = true,
-    this.semanticLabel,
     this.onEscapePressed,
   });
 
@@ -31,11 +29,6 @@ class NakedTabGroup extends StatelessWidget {
 
   /// Whether the tabs component is enabled.
   final bool enabled;
-
-  /// Optional semantic label for accessibility.
-  ///
-  /// This is used by screen readers to describe the tabs component.
-  final String? semanticLabel;
 
   /// The orientation of the tabs.
   ///
@@ -60,18 +53,13 @@ class NakedTabGroup extends StatelessWidget {
   Widget build(BuildContext context) {
     assert(selectedTabId.isNotEmpty, 'selectedTabId cannot be empty');
 
-    return Semantics(
-      container: true,
-      explicitChildNodes: true,
-      label: semanticLabel,
-      child: NakedTabsScope(
-        selectedTabId: selectedTabId,
-        onChanged: _selectTab,
-        orientation: orientation,
-        enabled: enabled,
-        onEscapePressed: onEscapePressed,
-        child: child,
-      ),
+    return NakedTabsScope(
+      selectedTabId: selectedTabId,
+      onChanged: _selectTab,
+      orientation: orientation,
+      enabled: enabled,
+      onEscapePressed: onEscapePressed,
+      child: child,
     );
   }
 }
@@ -153,12 +141,9 @@ class NakedTabsScope extends InheritedWidget {
 /// A container for tab triggers in a NakedTabs component.
 class NakedTabList extends StatefulWidget {
   /// Creates a naked tab list.
-  const NakedTabList({super.key, required this.child, this.semanticLabel});
+  const NakedTabList({super.key, required this.child});
 
   final Widget child;
-
-  /// Optional semantic label for accessibility.
-  final String? semanticLabel;
 
   @override
   State<NakedTabList> createState() => _NakedTabListState();
@@ -228,16 +213,11 @@ class _NakedTabListState extends State<NakedTabList> {
 
   @override
   Widget build(BuildContext context) {
-    return Semantics(
-      container: true,
-      explicitChildNodes: true,
-      label: widget.semanticLabel ?? 'Tab list',
-      child: FocusTraversalGroup(
-        policy: WidgetOrderTraversalPolicy(),
-        child: Shortcuts(
-          shortcuts: _tabListShortcuts,
-          child: _NakedTabListScope(state: this, child: widget.child),
-        ),
+    return FocusTraversalGroup(
+      policy: WidgetOrderTraversalPolicy(),
+      child: Shortcuts(
+        shortcuts: _tabListShortcuts,
+        child: _NakedTabListScope(state: this, child: widget.child),
       ),
     );
   }
@@ -267,13 +247,10 @@ class NakedTab extends StatefulWidget {
     this.child,
     required this.tabId,
     this.enabled = true,
-    this.semanticLabel,
-    this.semanticHint,
     this.mouseCursor = SystemMouseCursors.click,
     this.enableFeedback = true,
     this.focusNode,
     this.autofocus = false,
-    this.excludeSemantics = false,
     this.onFocusChange,
     this.onHoverChange,
     this.onPressChange,
@@ -311,12 +288,6 @@ class NakedTab extends StatefulWidget {
   /// Whether this tab is enabled.
   final bool enabled;
 
-  /// Optional semantic label for accessibility.
-  final String? semanticLabel;
-
-  /// Semantic hint for accessibility.
-  final String? semanticHint;
-
   /// The cursor to show when hovering over the tab.
   final MouseCursor mouseCursor;
 
@@ -331,9 +302,6 @@ class NakedTab extends StatefulWidget {
 
   /// Whether to automatically focus when created.
   final bool autofocus;
-
-  /// Whether to exclude child semantics from the semantic tree.
-  final bool excludeSemantics;
 
   @override
   State<NakedTab> createState() => _NakedTabState();
@@ -403,22 +371,12 @@ class _NakedTabState extends State<NakedTab> {
     assert(widget.tabId.isNotEmpty, 'tabId cannot be empty');
 
     // Use NakedPressable for consistent gesture and cursor behavior
-    return Semantics(
-      excludeSemantics: widget.excludeSemantics,
-      enabled: _isEnabled,
-      selected: isSelected,
-      focusable: _isEnabled,
-      label: widget.semanticLabel ?? 'Tab ${widget.tabId}',
-      hint: widget.semanticHint,
-      onTap: _isEnabled ? _handleTap : null,
-      // Expose focus action when enabled
-      onFocus: _isEnabled ? semanticsFocusNoop : null,
-      child: NakedPressable(
+    return NakedPressable(
         onPressed: _isEnabled ? _handleTap : null,
         enabled: widget.enabled,
         selected: isSelected,
         mouseCursor: widget.mouseCursor,
-        disabledMouseCursor: SystemMouseCursors.forbidden,
+        disabledMouseCursor: SystemMouseCursors.basic,
         focusNode: _focusNode,
         autofocus: widget.autofocus,
         onStatesChange: widget.onStatesChange,
@@ -436,7 +394,6 @@ class _NakedTabState extends State<NakedTab> {
 
           return widget.child!;
         },
-      ),
     );
   }
 }
@@ -448,7 +405,6 @@ class NakedTabPanel extends StatelessWidget {
     super.key,
     required this.child,
     required this.tabId,
-    this.semanticLabel,
     this.maintainState = true,
   });
 
@@ -457,11 +413,6 @@ class NakedTabPanel extends StatelessWidget {
 
   /// The ID of the tab this panel is associated with.
   final String tabId;
-
-  /// Optional semantic label for accessibility.
-  ///
-  /// This is used by screen readers to describe the tab panel.
-  final String? semanticLabel;
 
   /// Whether to keep the panel in the widget tree when inactive.
   ///

@@ -659,7 +659,6 @@ mixin NakedPressableStateMixin<T extends NakedWidgetStates>
               onDoubleTap: _isInteractive ? _pressable.onDoubleTap : null,
               onLongPress: _isInteractive ? _handleLongPress : null,
               behavior: behavior,
-              excludeFromSemantics: excludeFromSemantics,
               child: child,
             ),
           ),

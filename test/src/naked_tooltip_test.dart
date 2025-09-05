@@ -6,25 +6,7 @@ import 'package:naked_ui/naked_ui.dart';
 
 import 'helpers/simulate_hover.dart';
 
-extension _WidgetTesterX on WidgetTester {
-  Future<void> simulateHoverOnTooltip(
-    Key key, {
-    required VoidCallback? onHover,
-  }) async {
-    final gesture = await createGesture(kind: PointerDeviceKind.mouse);
-    await gesture.addPointer(location: Offset.zero);
-    addTearDown(gesture.removePointer);
-    await pumpAndSettle();
 
-    await gesture.moveTo(getCenter(find.byKey(key)));
-    await pumpAndSettle();
-
-    onHover?.call();
-
-    await gesture.moveTo(Offset.zero);
-    await pumpAndSettle();
-  }
-}
 
 void _expectDistance(Offset offset1, Offset offset2, double expectedDistance) {
   final distance = (offset1 - offset2).distance;

@@ -6,13 +6,7 @@ import 'package:naked_ui/naked_ui.dart';
 
 import 'helpers/simulate_hover.dart';
 
-extension _WidgetTesterX on WidgetTester {
-  SemanticsNode findSemantics(Finder finder) {
-    return getSemantics(
-      find.descendant(of: finder, matching: find.byType(Semantics)).first,
-    );
-  }
-}
+
 
 void main() {
   const kMenuKey = Key('menu');
@@ -665,64 +659,13 @@ void main() {
 
       tester.expectCursor(SystemMouseCursors.click, on: keyEnabledTrigger);
 
-      tester.expectCursor(SystemMouseCursors.forbidden, on: keyDisabledTrigger);
+      tester.expectCursor(SystemMouseCursors.basic, on: keyDisabledTrigger);
     });
   });
 
-  group('Semantic Configuration', () {
-    testWidgets('NakedSelect supports excludeSemantics parameter', (
-      WidgetTester tester,
-    ) async {
-      await tester.pumpMaterialWidget(
-        NakedSelect<String>(
-          excludeSemantics: false, // Default value
-          semanticLabel: 'Select component',
-          menu: const SizedBox(),
-          child: const NakedSelectTrigger(child: Text('Select option')),
-        ),
-      );
-
-      // If this compiles and runs, the parameter exists and works
-      expect(find.byType(NakedSelect<String>), findsOneWidget);
-    });
-
-    testWidgets('NakedSelectItem supports excludeSemantics parameter', (
-      WidgetTester tester,
-    ) async {
-      await tester.pumpMaterialWidget(
-        NakedSelect<String>(
-          menu: Column(
-            children: [
-              NakedSelectItem<String>(
-                value: 'item1',
-                excludeSemantics: false, // Default value
-                child: const Text('Item 1'),
-              ),
-              NakedSelectItem<String>(
-                value: 'item2',
-                excludeSemantics: true, // Override value
-                child: const Text('Item 2'),
-              ),
-            ],
-          ),
-          child: const NakedSelectTrigger(child: Text('Select option')),
-        ),
-      );
-
-      // Open menu to render items
-      await tester.tap(find.text('Select option'));
-      await tester.pumpAndSettle();
-
-      // If this compiles and runs, the parameter exists and works
-      expect(find.byType(NakedSelectItem<String>), findsNWidgets(2));
-    });
-
-    testWidgets('NakedSelect semantic label is applied', (
-      WidgetTester tester,
-    ) async {
-      await tester.pumpMaterialWidget(
-        NakedSelect<String>(
-          semanticLabel: 'Fruit picker',
+  
+}
+     semanticLabel: 'Fruit picker',
           menu: const SizedBox(),
           child: const NakedSelectTrigger(child: Text('Select fruit')),
         ),

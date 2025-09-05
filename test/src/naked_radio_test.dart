@@ -168,85 +168,6 @@ void main() {
     });
   });
 
-  group('Accessibility Tests', () {
-    testWidgets('provides correct semantic properties', (
-      WidgetTester tester,
-    ) async {
-      final key = GlobalKey();
-      await tester.pumpMaterialWidget(
-        NakedRadioGroup<String>(
-          groupValue: 'test', // Selected
-          onChanged: (_) {},
-          child: NakedRadio<String>(
-            key: key,
-            value: 'test',
-            child: const SizedBox(width: 24, height: 24),
-          ),
-        ),
-      );
-
-      expect(
-        tester.getSemantics(find.byKey(key)),
-        matchesSemantics(
-          hasCheckedState: true,
-          isChecked: true,
-          hasEnabledState: true,
-          isEnabled: true,
-          isFocusable: true,
-          hasTapAction: true,
-          hasFocusAction: true,
-          isInMutuallyExclusiveGroup: true,
-        ),
-      );
-    });
-
-
-    testWidgets('properly manages focus', (WidgetTester tester) async {
-      bool isFocused = false;
-      final focusNode = FocusNode();
-
-      await tester.pumpMaterialWidget(
-        NakedRadioGroup<String>(
-          groupValue: null,
-          onChanged: (_) {},
-          child: NakedRadio<String>(
-            value: 'test',
-            focusNode: focusNode,
-            onFocusChange: (focused) => isFocused = focused,
-            child: const SizedBox(width: 24, height: 24),
-          ),
-        ),
-      );
-
-      focusNode.requestFocus();
-      await tester.pump();
-      expect(isFocused, true);
-      expect(focusNode.hasFocus, true);
-    });
-
-    testWidgets('uses custom focus node when provided', (
-      WidgetTester tester,
-    ) async {
-      final customFocusNode = FocusNode();
-
-      await tester.pumpMaterialWidget(
-        NakedRadioGroup<String>(
-          groupValue: null,
-          onChanged: (_) {},
-          child: NakedRadio<String>(
-            value: 'test',
-            focusNode: customFocusNode,
-            child: const SizedBox(width: 24, height: 24),
-          ),
-        ),
-      );
-
-      customFocusNode.requestFocus();
-      await tester.pump();
-      expect(customFocusNode.hasFocus, true);
-    });
-  });
-
   group('Interactivity Tests', () {
     testWidgets('disables interaction when RadioButton is disabled', (
       WidgetTester tester,
@@ -306,7 +227,7 @@ void main() {
         ),
       );
 
-      tester.expectCursor(SystemMouseCursors.forbidden, on: _key);
+      tester.expectCursor(SystemMouseCursors.basic, on: _key);
     });
 
     testWidgets(

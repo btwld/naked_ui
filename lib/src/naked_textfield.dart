@@ -737,33 +737,20 @@ class _NakedTextFieldState extends State<NakedTextField>
       ),
     );
 
-    return Semantics(
-      enabled: widget.enabled,
-      onTap: widget.readOnly
-          ? null
-          : () {
-              if (!controller.selection.isValid) {
-                controller.selection = TextSelection.collapsed(
-                  offset: controller.text.length,
-                );
-              }
-              _requestKeyboard();
-            },
-      child: widget.enabled
-          ? MouseRegion(
-              onEnter: _handleMouseEnter,
-              onExit: _handleMouseExit,
-              cursor: SystemMouseCursors.text,
-              child: _selectionGestureDetectorBuilder.buildGestureDetector(
-                behavior: HitTestBehavior.translucent,
-                child: widget.builder(context, child),
-              ),
-            )
-          : _selectionGestureDetectorBuilder.buildGestureDetector(
+    return widget.enabled
+        ? MouseRegion(
+            onEnter: _handleMouseEnter,
+            onExit: _handleMouseExit,
+            cursor: SystemMouseCursors.text,
+            child: _selectionGestureDetectorBuilder.buildGestureDetector(
               behavior: HitTestBehavior.translucent,
               child: widget.builder(context, child),
             ),
-    );
+          )
+        : _selectionGestureDetectorBuilder.buildGestureDetector(
+            behavior: HitTestBehavior.translucent,
+            child: widget.builder(context, child),
+          );
   }
 }
 

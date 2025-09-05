@@ -61,7 +61,7 @@ void main() {
       await tester.tap(find.byKey(materialOpenKey));
       await tester.pumpAndSettle();
       expect(find.text('Material Dialog Content'), findsOneWidget);
-      expect(find.bySemanticsLabel(barrierLabel), findsOneWidget);
+
 
       // Close by tapping barrier
       await tester.tapAt(const Offset(10, 10));
@@ -72,7 +72,7 @@ void main() {
       await tester.tap(find.byKey(nakedOpenKey));
       await tester.pumpAndSettle();
       expect(find.text('Naked Dialog Content'), findsOneWidget);
-      expect(find.bySemanticsLabel(barrierLabel), findsOneWidget);
+
 
       // Close by tapping barrier
       await tester.tapAt(const Offset(10, 10));

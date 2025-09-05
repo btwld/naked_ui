@@ -146,7 +146,6 @@ class ButtonBehavior extends StatelessWidget {
             ? () => _handleLongPress(context)
             : null,
         behavior: behavior,
-        excludeFromSemantics: true,
         child: child,
       ),
     );

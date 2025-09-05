@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'utilities/naked_pressable.dart';
-import 'utilities/utilities.dart';
 
 /// Headless checkbox built on NakedInteractable with proper semantics and callbacks.
 class NakedCheckbox extends StatelessWidget {
@@ -13,9 +12,6 @@ class NakedCheckbox extends StatelessWidget {
     this.tristate = false,
     this.onChanged,
     this.enabled = true,
-    this.semanticLabel,
-    this.semanticHint,
-    this.excludeSemantics = false,
     this.mouseCursor,
     this.enableFeedback = true,
     this.focusNode,
@@ -74,15 +70,6 @@ class NakedCheckbox extends StatelessWidget {
 
   /// Whether the checkbox is enabled.
   final bool enabled;
-
-  /// Semantic label for accessibility.
-  final String? semanticLabel;
-
-  /// Semantic hint for accessibility.
-  final String? semanticHint;
-
-  /// Whether to exclude child semantics from the semantic tree.
-  final bool excludeSemantics;
 
   /// Cursor when hovering over the checkbox.
   final MouseCursor? mouseCursor;
@@ -148,8 +135,8 @@ class NakedCheckbox extends StatelessWidget {
       enabled: enabled,
       selected: isChecked,
       mouseCursor: mouseCursor,
-      // Forbidden cursor for disabled checkbox
-      disabledMouseCursor: SystemMouseCursors.forbidden,
+      // Basic cursor for disabled checkbox
+      disabledMouseCursor: SystemMouseCursors.basic,
       focusNode: focusNode,
       autofocus: autofocus,
       onStatesChange: onStatesChange,
@@ -170,19 +157,6 @@ class NakedCheckbox extends StatelessWidget {
       },
     );
 
-    // Wrap with checkbox semantics
-    return Semantics(
-      excludeSemantics: excludeSemantics,
-      enabled: isInteractive,
-      checked: tristate && value == null ? null : (value ?? false),
-      mixed: tristate && value == null,
-      focusable: isInteractive,
-      label: semanticLabel,
-      hint: semanticHint,
-      onTap: isInteractive ? _handlePressed : null,
-      // Expose focus action when enabled
-      onFocus: isInteractive ? semanticsFocusNoop : null,
-      child: result,
-    );
+    return result;
   }
 }
