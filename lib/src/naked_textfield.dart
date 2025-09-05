@@ -379,6 +379,9 @@ class _NakedTextFieldState extends State<NakedTextField>
     }
   }
 
+  void _requestKeyboard() {
+    _editableText?.requestKeyboard();
+  }
 
   bool _shouldShowSelectionHandles(SelectionChangedCause? cause) {
     // When the text field is activated by something that doesn't trigger the
@@ -763,6 +766,17 @@ class _TextFieldSelectionGestureDetectorBuilder
   @override
   void onUserTap() {
     _state.widget.onPressed?.call();
+    
+    // Handle keyboard request for accessibility and functionality
+    if (!_state.widget.readOnly) {
+      final controller = _state._effectiveController;
+      if (!controller.selection.isValid) {
+        controller.selection = TextSelection.collapsed(
+          offset: controller.text.length,
+        );
+      }
+      _state._requestKeyboard();
+    }
   }
 
   @override
