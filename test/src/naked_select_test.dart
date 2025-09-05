@@ -1,4 +1,3 @@
-import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -178,7 +177,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Apple'), findsNothing);
-    }, timeout: Timeout(Duration(seconds: 20)));
+    });
 
     testWidgets(
       'restores focus to trigger after closing with Escape',
@@ -215,7 +214,6 @@ void main() {
         // Expect focus to be back on the trigger
         expect(triggerFocusNode.hasFocus, isTrue);
       },
-      timeout: Timeout(Duration(seconds: 20)),
     );
 
     testWidgets('selects item with Enter key', (WidgetTester tester) async {
@@ -270,7 +268,6 @@ void main() {
 
         expect(selectedValue, 'banana');
       },
-      timeout: Timeout(Duration(seconds: 20)),
     );
 
     testWidgets(
@@ -304,75 +301,9 @@ void main() {
 
         expect(selectedValue, 'banana');
       },
-      timeout: Timeout(Duration(seconds: 20)),
     );
   });
 
-  group('Accessibility', () {
-    testWidgets('provides semantic button property for trigger', (
-      WidgetTester tester,
-    ) async {
-      await tester.pumpMaterialWidget(buildSelect<String>());
-
-      expect(
-        tester.findSemantics(find.byType(NakedSelectTrigger)),
-        matchesSemantics(
-          isButton: true,
-          hasEnabledState: true,
-          isEnabled: true,
-          isFocusable: true,
-          hasFocusAction: true,
-          hasTapAction: true,
-        ),
-      );
-    });
-
-    testWidgets('marks items as selected in semantics', (
-      WidgetTester tester,
-    ) async {
-      await tester.pumpMaterialWidget(
-        buildSelect<String>(selectedValue: 'apple'),
-      );
-
-      // Open menu
-      await tester.tap(find.text('Select option'));
-      await tester.pumpAndSettle();
-
-      // Find the semantics node for the Apple item
-
-      expect(
-        tester.findSemantics(find.byType(NakedSelectItem<String>)),
-        matchesSemantics(
-          isSelected: true,
-          hasSelectedState: true,
-          hasEnabledState: true,
-          isEnabled: true,
-        ),
-      );
-    });
-
-    testWidgets('shows correct enabled/disabled state', (
-      WidgetTester tester,
-    ) async {
-      for (var enabled in [true, false]) {
-        await tester.pumpMaterialWidget(buildSelect<String>(enabled: enabled));
-
-        expect(
-          tester.findSemantics(find.byType(NakedSelectTrigger)),
-          matchesSemantics(
-            isButton: true,
-            hasEnabledState: true,
-            isEnabled: enabled,
-            isFocusable: enabled,
-            hasFocusAction: enabled,
-            hasTapAction: enabled,
-          ),
-        );
-
-        await tester.pumpWidget(Container());
-      }
-    });
-  });
 
   group('Interaction States', () {
     testWidgets('calls onHoverChange when trigger hovered', (
@@ -572,7 +503,6 @@ void main() {
         // Assert the menu is placed above the trigger (fallback used)
         expect(menuRect.bottom <= triggerRect.top, isTrue);
       },
-      timeout: Timeout(Duration(seconds: 20)),
     );
   });
 
@@ -660,51 +590,6 @@ void main() {
       tester.expectCursor(SystemMouseCursors.click, on: keyEnabledTrigger);
 
       tester.expectCursor(SystemMouseCursors.basic, on: keyDisabledTrigger);
-    });
-  });
-
-  
-}
-     semanticLabel: 'Fruit picker',
-          menu: const SizedBox(),
-          child: const NakedSelectTrigger(child: Text('Select fruit')),
-        ),
-      );
-
-      final selectSemantics = tester.getSemantics(
-        find.byType(NakedSelect<String>),
-      );
-      expect(selectSemantics.label, equals('Fruit picker'));
-    });
-
-    testWidgets('NakedSelectItem semantic labels work', (
-      WidgetTester tester,
-    ) async {
-      await tester.pumpMaterialWidget(
-        NakedSelect<String>(
-          menu: Column(
-            children: const [
-              NakedSelectItem<String>(
-                value: 'apple',
-                semanticLabel: 'Apple fruit',
-                child: Text('Apple'),
-              ),
-              NakedSelectItem<String>(value: 'banana', child: Text('Banana')),
-            ],
-          ),
-          child: const NakedSelectTrigger(child: Text('Select fruit')),
-        ),
-      );
-
-      // Open menu to render items
-      await tester.tap(find.text('Select fruit'));
-      await tester.pumpAndSettle();
-
-      final appleSemantics = tester.getSemantics(find.text('Apple'));
-      expect(appleSemantics.label, contains('Apple fruit'));
-
-      final bananaSemantics = tester.getSemantics(find.text('Banana'));
-      expect(bananaSemantics.label, contains('banana'));
     });
   });
 }

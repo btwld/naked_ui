@@ -361,16 +361,6 @@ class _NakedSliderState extends State<NakedSlider> {
 
   @override
   Widget build(BuildContext context) {
-    // Calculate percentage for accessibility
-    final double percentage = widget.max > widget.min
-        ? ((widget.value - widget.min) / (widget.max - widget.min)) * 100
-        : 0.0;
-
-    // Calculate value change for accessibility notifications
-    final double step = widget.keyboardStep;
-    final double increasedValue = _normalizeValue(widget.value + step);
-    final double decreasedValue = _normalizeValue(widget.value - step);
-
     return _buildSliderInteractable();
   }
 }

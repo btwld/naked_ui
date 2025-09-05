@@ -41,6 +41,8 @@ dependencies:
   
   # URL strategy for web
   url_strategy: ^0.2.0
+  flutter_web_plugins:
+    sdk: flutter
   
   # Routing
   go_router: ^13.1.0

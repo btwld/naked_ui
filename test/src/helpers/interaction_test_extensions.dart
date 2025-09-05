@@ -5,6 +5,48 @@ import 'package:flutter_test/flutter_test.dart';
 
 /// Minimal, composable extensions for common full interaction flows.
 extension InteractionTestExtensions on WidgetTester {
+  /// Pumps a widget wrapped in WidgetsApp for text field testing.
+  Future<void> pumpTextField(Widget widget) async {
+    await pumpWidget(
+      WidgetsApp(
+        color: Colors.white,
+        onGenerateRoute: (settings) =>
+            MaterialPageRoute(builder: (context) => widget),
+      ),
+    );
+  }
+
+  /// Creates a mouse gesture to simulate hover on a widget type.
+  Future<TestGesture> simulateHover(Type type) async {
+    final gesture = await createGesture(kind: PointerDeviceKind.mouse);
+    await gesture.addPointer(location: Offset.zero);
+    addTearDown(gesture.removePointer);
+    await pump();
+
+    await gesture.moveTo(getCenter(find.byType(type)));
+    await pump();
+
+    return gesture;
+  }
+
+  /// Simulates hover interaction specifically for tooltip components.
+  Future<void> simulateHoverOnTooltip(
+    Key key, {
+    required VoidCallback? onHover,
+  }) async {
+    final gesture = await createGesture(kind: PointerDeviceKind.mouse);
+    await gesture.addPointer(location: Offset.zero);
+    addTearDown(gesture.removePointer);
+    await pumpAndSettle();
+
+    await gesture.moveTo(getCenter(find.byKey(key)));
+    await pumpAndSettle();
+    
+    onHover?.call();
+    
+    await gesture.moveTo(Offset.zero);
+    await pumpAndSettle();
+  }
   /// Wraps a child in a MaterialApp+Scaffold for predictable environment.
   Future<void> pumpInApp(Widget child) async {
     await pumpWidget(MaterialApp(home: Scaffold(body: Center(child: child))));

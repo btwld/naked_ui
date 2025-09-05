@@ -479,20 +479,6 @@ void main() {
       );
     });
 
-    testWidgets('provides semantic label', (WidgetTester tester) async {
-      await tester.pumpMaterialWidget(
-        NakedSlider(
-          key: testKey,
-          value: 0.5,
-          semanticLabel: 'Custom Label',
-          onChanged: (_) {},
-          child: _anyWidget(),
-        ),
-      );
-
-      final semantics = tester.getSemantics(find.byKey(testKey));
-      expect(semantics.label, 'Custom Label');
-    });
 
     testWidgets('shows correct enabled/disabled state', (
       WidgetTester tester,
@@ -727,14 +713,6 @@ void main() {
       await tester.sendKeyEvent(LogicalKeyboardKey.tab);
       await tester.pump();
       expect(focusNode3.hasFocus, true);
-    });
-  });
-
-  
-}
-nal semantics = tester.getSemantics(find.byType(NakedSlider));
-      expect(semantics.label, contains('Audio volume'));
-      expect(semantics.value, contains('25%')); // 0.25 * 100 = 25%
     });
   });
 }

@@ -303,7 +303,7 @@ class _NakedPressableState extends State<NakedPressable> {
     // Handle enabled state changes
     if (oldWidget.enabled != widget.enabled) {
       _effectiveController.update(WidgetState.disabled, !widget.enabled);
-      
+
       // Clear transient states when becoming disabled
       if (!widget.enabled) {
         _clearTransientStates();
@@ -344,6 +344,7 @@ class _NakedPressableState extends State<NakedPressable> {
         child: MouseRegion(
           cursor: effectiveCursor,
           child: GestureDetector(
+            excludeFromSemantics: true, // Prevent automatic button semantics
             onTap: _isInteractive ? _handleTap : null,
             onDoubleTap: _isInteractive ? widget.onDoubleTap : null,
             onLongPress: _isInteractive ? _handleLongPress : null,

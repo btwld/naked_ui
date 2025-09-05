@@ -21,7 +21,7 @@ void main() {
   group('All NakedUI Integration Tests', () {
     // Add teardown to help with process termination
     tearDownAll(() async {
-      print('🏁 All integration tests completed, cleaning up...');
+      // All integration tests completed, cleaning up...
       await Future.delayed(const Duration(seconds: 2));
       // This helps ensure the test process terminates properly
     });
