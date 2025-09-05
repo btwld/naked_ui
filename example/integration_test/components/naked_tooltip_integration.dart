@@ -308,8 +308,6 @@ void main() {
             child: NakedTooltip(
               waitDuration: Duration.zero,
               showDuration: Duration.zero,
-              tooltipSemantics: 'This is tooltip information',
-              excludeFromSemantics: false,
               tooltipBuilder: (context) => Container(
                 padding: const EdgeInsets.all(8),
                 child: const Text('Semantic Tooltip'),

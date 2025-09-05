@@ -241,7 +241,6 @@ const NakedSelect({
   this.removalDelay = Duration.zero,
   this.onSelectedValueChanged,
   this.enabled = true,
-  this.semanticLabel,
   this.closeOnSelect = true,
   this.autofocus = false,
   this.enableTypeAhead = true,
@@ -270,7 +269,6 @@ const NakedSelect.multiple({
   this.selectedValues,
   this.onSelectedValuesChanged,
   this.enabled = true,
-  this.semanticLabel,
   this.closeOnSelect = true,
   this.autofocus = false,
   this.enableTypeAhead = true,
@@ -323,8 +321,7 @@ Called when selected values change in multiple selection mode. Only used in the 
 #### enabled → `bool`
 Whether the select is enabled and can be interacted with. Defaults to true.
 
-#### semanticLabel → `String?`
-Semantic label for accessibility. Used by screen readers to identify the select component.
+
 
 #### closeOnSelect → `bool`
 Whether to automatically close the dropdown when an item is selected. Defaults to true.
@@ -357,7 +354,6 @@ const NakedSelectTrigger({
   this.onHoverChange,
   this.onPressChange,
   this.onFocusChange,
-  this.semanticLabel,
   this.mouseCursor = SystemMouseCursors.click,
   this.enableFeedback = true,
   this.focusNode,
@@ -377,11 +373,7 @@ Called when the hover state changes. Use this to update the visual appearance on
 #### onPressChange → `ValueChanged<bool>?`
 Called when the pressed state changes. Use this to update the visual appearance while pressed.
 
-#### onFocusChange → `ValueChanged<bool>?`
-Called when the focus state changes. Use this to update the visual appearance when focused.
 
-#### semanticLabel → `String?`
-Semantic label for accessibility. Used by screen readers to identify the trigger.
 
 #### mouseCursor → `MouseCursor`
 The cursor to show when hovering over the trigger. Defaults to `SystemMouseCursors.click`.
@@ -408,12 +400,10 @@ const NakedSelectItem({
   this.onFocusChange,
   this.onSelectChange,
   this.enabled = true,
-  this.semanticLabel,
   this.mouseCursor = SystemMouseCursors.click,
   this.enableFeedback = true,
   this.focusNode,
   this.autofocus = false,
-  this.excludeSemantics = false,
   this.statesController,
 })
 ```
@@ -438,11 +428,7 @@ Called when the focus state changes. Use this to update the visual appearance wh
 #### onSelectChange → `ValueChanged<bool>?`
 Called when the selection state changes. Use this to update the visual appearance when this item is selected or deselected.
 
-#### enabled → `bool`
-Whether this item is enabled and can be selected. Defaults to true.
 
-#### semanticLabel → `String?`
-Semantic label for accessibility. Used by screen readers to identify the item.
 
 #### mouseCursor → `MouseCursor`
 The cursor to show when hovering over this item. Defaults to `SystemMouseCursors.click`.
@@ -453,13 +439,4 @@ Whether to provide haptic feedback when selected. Defaults to true.
 #### focusNode → `FocusNode?`
 Optional focus node to control focus behavior.
 
-#### statesController → `WidgetStatesController?`
-Optional external controller for interaction states.
-#### autofocus → `bool`
-Whether to automatically focus this item. Defaults to false.
 
-#### excludeSemantics → `bool`
-Whether to exclude the child semantics subtree.
-
-#### statesController → `WidgetStatesController?`
-Optional external controller for interaction states.

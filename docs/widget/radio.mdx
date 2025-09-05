@@ -156,9 +156,7 @@ const NakedRadio<T>({
   this.onPressChange,
   this.onStatesChange,
   this.statesController,
-  this.semanticLabel,
-  this.semanticHint,
-  this.excludeSemantics = false,
+  
   this.builder,
 })
 ```
@@ -204,14 +202,7 @@ Called when any widget state changes.
 #### statesController → `WidgetStatesController?`
 Optional external controller for interaction states.
 
-#### semanticLabel → `String?`
-Optional semantic label for accessibility.
 
-#### semanticHint → `String?`
-Additional semantic hint for assistive technologies.
-
-#### excludeSemantics → `bool`
-Whether to exclude the child subtree from the semantics tree.
 
 ## Features
 

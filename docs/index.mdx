@@ -123,17 +123,7 @@ NakedButton(
 )
 ```
 
-### Accessibility Options
 
-Components offer accessibility configuration:
-
-```dart
-NakedButton(
-  semanticLabel: 'Submit form',
-  isSemanticButton: true,
-  // Other properties...
-)
-```
 
 ### Custom Focus Handling
 

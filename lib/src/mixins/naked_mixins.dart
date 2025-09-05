@@ -632,7 +632,6 @@ mixin NakedPressableStateMixin<T extends NakedWidgetStates>
   Widget buildPressable({
     required Widget child,
     HitTestBehavior behavior = HitTestBehavior.opaque,
-    bool excludeFromSemantics = true,
   }) {
     return Shortcuts(
       shortcuts: const {

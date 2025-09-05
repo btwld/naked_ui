@@ -571,7 +571,6 @@ class _RadioTileState extends State<_RadioTile> {
         onFocusChange: (focused) => setState(() => _isFocused = focused),
         onHoverChange: (hovered) => setState(() => _isHovered = hovered),
         onPressChange: (pressed) => setState(() => _isPressed = pressed),
-        semanticLabel: '${widget.title} - ${widget.subtitle}',
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),

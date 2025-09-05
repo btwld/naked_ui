@@ -215,9 +215,7 @@ const NakedAccordionItem({
   required this.value,
   required this.child,
   this.transitionBuilder,
-  this.semanticLabel,
-  this.semanticHint,
-  this.excludeSemantics = false,
+  
   this.enabled = true,
   this.mouseCursor = SystemMouseCursors.click,
   this.enableFeedback = true,
@@ -245,14 +243,7 @@ The content displayed when this item is expanded.
 #### transitionBuilder → `Widget Function(Widget child)?`
 Optional builder to customize the transition when expanding/collapsing. If not provided, content will appear/disappear instantly.
 
-#### semanticLabel → `String?`
-Optional semantic label describing the section for screen readers.
 
-#### semanticHint → `String?`
-Additional semantic hint for assistive technologies.
-
-#### excludeSemantics → `bool`
-Whether to exclude the child semantics subtree.
 
 #### enabled → `bool`
 Whether the item can be toggled.

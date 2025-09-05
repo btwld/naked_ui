@@ -106,9 +106,7 @@ const NakedCheckbox({
   this.tristate = false,
   this.onChanged,
   this.enabled = true,
-  this.semanticLabel,
-  this.semanticHint,
-  this.excludeSemantics = false,
+  
   this.mouseCursor,
   this.enableFeedback = true,
   this.focusNode,
@@ -149,11 +147,7 @@ Called when focus state changes. Provides the current focus state (true when foc
 #### enabled → `bool`
 Whether the checkbox is enabled. Defaults to true.
 
-#### semanticLabel → `String?`
-The semantic label for the checkbox used by assistive technologies.
 
-#### semanticHint → `String?`
-Additional semantic hint for assistive technologies.
 
 #### mouseCursor → `MouseCursor?`
 The cursor to show when hovering over the checkbox. Defaults to SystemMouseCursors.click.
@@ -164,11 +158,7 @@ Whether to provide haptic/feedback on toggle. Defaults to true.
 #### focusNode → `FocusNode?`
 Optional focus node to control focus behavior.
 
-#### autofocus → `bool`
-Whether the checkbox should be focused when first built. Defaults to false.
 
-#### excludeSemantics → `bool`
-Whether to exclude the child subtree from the semantics tree.
 
 #### onStatesChange → `ValueChanged<Set<WidgetState>>?`
 Called when any widget state changes (hovered, pressed, focused, selected, disabled).

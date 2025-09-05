@@ -91,14 +91,11 @@ const NakedButton({
   this.onLongPress,
   this.onDoubleTap,
   this.enabled = true,
-  this.isSemanticButton = true,
-  this.semanticLabel,
-  this.semanticHint,
+  
   this.mouseCursor = SystemMouseCursors.click,
   this.enableFeedback = true,
   this.focusNode,
-  this.autofocus = false,
-  this.excludeSemantics = false,
+  
   this.onFocusChange,
   this.onHoverChange,
   this.onPressChange,
@@ -136,14 +133,7 @@ Called when focus state changes. Provides the current focus state (true when foc
 #### enabled → `bool`
 Whether the button is enabled. Defaults to true.
 
-#### isSemanticButton → `bool`
-Whether the button should be treated as a semantic button. Defaults to true.
 
-#### semanticLabel → `String?`
-The semantic label for the button used by assistive technologies.
-
-#### semanticHint → `String?`
-Additional semantic hint for assistive technologies.
 
 #### mouseCursor → `MouseCursor`
 The cursor to show when hovering over the button. Defaults to SystemMouseCursors.click.
@@ -154,11 +144,7 @@ Whether to provide platform-specific feedback on press. Defaults to true.
 #### focusNode → `FocusNode?`
 Optional focus node to control focus behavior.
 
-#### autofocus → `bool`
-Whether the button should be focused when first built. Defaults to false.
 
-#### excludeSemantics → `bool`
-Whether to exclude the child subtree from the semantics tree.
 
 #### onStatesChange → `ValueChanged<Set<WidgetState>>?`
 Called when any widget state changes (hovered, pressed, focused, selected, disabled).

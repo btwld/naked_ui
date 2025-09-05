@@ -171,8 +171,7 @@ const NakedSlider({
   this.onDragChange,
   this.onFocusChange,
   this.enabled = true,
-  this.semanticLabel,
-  this.semanticHint,
+  
   this.mouseCursor = SystemMouseCursors.click,
   this.enableFeedback = true,
   this.focusNode,
@@ -180,8 +179,7 @@ const NakedSlider({
   this.direction = Axis.horizontal,
   this.divisions,
   this.keyboardStep = 0.01,
-  this.largeKeyboardStep = 0.1,
-  this.excludeSemantics = false,
+  
   this.statesController,
 })
 ```
@@ -221,14 +219,7 @@ Called when focus state changes. Provides the current focus state (true when foc
 #### enabled → `bool`
 Whether the slider is enabled. When true, the slider will respond to user interaction. Defaults to true.
 
-#### semanticLabel → `String?`
-Optional semantic label for accessibility. This is used by screen readers to describe the slider.
 
-#### mouseCursor → `MouseCursor`
-The cursor to show when hovering over the slider. Defaults to SystemMouseCursors.click.
-
-#### semanticHint → `String?`
-Optional semantic hint for accessibility. Helps screen readers describe slider interactions.
 
 #### focusNode → `FocusNode?`
 Optional focus node to control focus behavior.
@@ -248,11 +239,7 @@ Step size for keyboard navigation. This value is used when arrow keys are presse
 #### largeKeyboardStep → `double`
 Step size for large keyboard navigation. This value is used when arrow keys are pressed while holding Shift. Defaults to 0.1 (10% of the slider range).
 
-#### enableFeedback → `bool`
-Whether to provide platform-specific feedback on keyboard navigation. Defaults to true.
 
-#### excludeSemantics → `bool`
-Whether to exclude the child’s semantics subtree. Defaults to false.
 
 #### statesController → `WidgetStatesController?`
 Optional external controller for interaction states.

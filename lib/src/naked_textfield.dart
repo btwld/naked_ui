@@ -379,9 +379,6 @@ class _NakedTextFieldState extends State<NakedTextField>
     }
   }
 
-  void _requestKeyboard() {
-    _editableText?.requestKeyboard();
-  }
 
   bool _shouldShowSelectionHandles(SelectionChangedCause? cause) {
     // When the text field is activated by something that doesn't trigger the

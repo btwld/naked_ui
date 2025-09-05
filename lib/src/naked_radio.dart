@@ -73,14 +73,6 @@ class NakedRadio<T> extends StatefulWidget with NakedFocusable {
 
 class _NakedRadioState<T> extends State<NakedRadio<T>>
     with NakedFocusableStateMixin {
-  void _handleSemanticTap(RadioGroupRegistry<T> registry, bool isSelected) {
-    if (!widget.enabled) return;
-    if (widget.toggleable && isSelected) {
-      registry.onChanged(null);
-    } else {
-      registry.onChanged(widget.value);
-    }
-  }
 
   void _handlePointerTap(RadioGroupRegistry<T> registry, bool isSelected) {
     if (!widget.enabled) return;

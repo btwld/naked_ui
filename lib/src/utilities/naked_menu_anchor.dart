@@ -110,35 +110,31 @@ class _NakedMenuAnchorState extends State<NakedMenuAnchor> {
   Widget _overlayBuilder(BuildContext context, RawMenuOverlayInfo info) {
     return Positioned.fill(
       bottom: MediaQuery.of(context).viewInsets.bottom,
-      child: Semantics(
-        explicitChildNodes: true,
-        scopesRoute: true,
-        child: TapRegion(
-          onTapOutside: (PointerDownEvent event) {
-            widget.controller.close();
-          },
-          groupId: info.tapRegionGroupId,
-          child: CustomSingleChildLayout(
-            delegate: _NakedPositionDelegate(
-              target: info.anchorRect.topLeft,
-              targetSize: info.anchorRect.size,
-              alignment: widget.position,
-              fallbackAlignments: widget.fallbackPositions,
-            ),
-            child: Actions(
-              actions: {
-                DismissIntent: NakedDismissMenuAction(
-                  controller: widget.controller,
-                ),
-              },
-              child: Shortcuts(
-                shortcuts: _shortcuts,
-                child: KeyboardListener(
-                  focusNode: _focusScopeNode,
-                  autofocus: true,
-                  onKeyEvent: widget.onKeyEvent,
-                  child: widget.overlayBuilder(context),
-                ),
+      child: TapRegion(
+        onTapOutside: (PointerDownEvent event) {
+          widget.controller.close();
+        },
+        groupId: info.tapRegionGroupId,
+        child: CustomSingleChildLayout(
+          delegate: _NakedPositionDelegate(
+            target: info.anchorRect.topLeft,
+            targetSize: info.anchorRect.size,
+            alignment: widget.position,
+            fallbackAlignments: widget.fallbackPositions,
+          ),
+          child: Actions(
+            actions: {
+              DismissIntent: NakedDismissMenuAction(
+                controller: widget.controller,
+              ),
+            },
+            child: Shortcuts(
+              shortcuts: _shortcuts,
+              child: KeyboardListener(
+                focusNode: _focusScopeNode,
+                autofocus: true,
+                onKeyEvent: widget.onKeyEvent,
+                child: widget.overlayBuilder(context),
               ),
             ),
           ),

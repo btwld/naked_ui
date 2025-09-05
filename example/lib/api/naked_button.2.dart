@@ -187,12 +187,6 @@ class _SemanticButtonState extends State<_SemanticButton> {
       enabled: widget.enabled,
       enableFeedback: widget.enableFeedback,
       focusOnPress: widget.focusOnPress,
-      semanticLabel: widget.enabled 
-        ? 'Interactive demo button'
-        : 'Disabled demo button - enable using the toggle below',
-      semanticHint: widget.enabled 
-        ? 'Tap to trigger action and see state changes'
-        : 'This button is currently disabled',
       onPressed: widget.enabled ? widget.onPressed : null,
       onFocusChange: (focused) => setState(() => _isFocused = focused),
       onHoverChange: (hovered) => setState(() => _isHovered = hovered),
@@ -498,8 +492,6 @@ class _DisabledButtonExample extends StatelessWidget {
   Widget build(BuildContext context) {
     return NakedButton(
       enabled: false,
-      semanticLabel: '$label - disabled button example',
-      semanticHint: 'This is a demonstration of disabled button styling',
       onPressed: null,
       mouseCursor: SystemMouseCursors.forbidden,
       child: Container(

@@ -199,9 +199,7 @@ const NakedMenuItem({
   this.onPressed,
   this.enabled = true,
   this.closeOnSelect = true,
-  this.semanticLabel,
-  this.semanticHint,
-  this.excludeSemantics = false,
+  
   this.mouseCursor = SystemMouseCursors.click,
   this.enableFeedback = true,
   this.focusNode,
@@ -221,8 +219,7 @@ const NakedMenuItem({
 - onPressed: Called when the item is selected.
 - enabled: Whether the item is enabled.
 - closeOnSelect: Whether to close the menu when selected. Defaults to true.
-- semanticLabel/semanticHint: Accessibility metadata.
-- excludeSemantics: Exclude child semantics subtree.
+
 - mouseCursor: Cursor when hovering. Defaults to click.
 - enableFeedback: Whether to provide feedback on selection.
 - focusNode/autofocus: Focus handling.

@@ -348,8 +348,6 @@ class _NakedPressableState extends State<NakedPressable> {
             onDoubleTap: _isInteractive ? widget.onDoubleTap : null,
             onLongPress: _isInteractive ? _handleLongPress : null,
             behavior: widget.behavior,
-            // Let parent widgets handle semantics
-            excludeFromSemantics: true,
             child: NakedInteractable(
               statesController: _effectiveController,
               enabled: _isInteractive,

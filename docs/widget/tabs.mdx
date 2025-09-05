@@ -174,7 +174,6 @@ const NakedTabGroup({
   this.onChanged,
   this.orientation = Axis.horizontal,
   this.enabled = true,
-  this.semanticLabel,
   this.onEscapePressed,
 })
 ```
@@ -193,11 +192,7 @@ Called when the selected tab ID changes.
 #### orientation → `Axis`
 The orientation of the tabs. Defaults to Axis.horizontal.
 
-#### enabled → `bool`
-Whether the tabs component is enabled. When false, the tabs will not respond to user interaction. Defaults to true.
 
-#### semanticLabel → `String?`
-Optional semantic label for accessibility. This is used by screen readers to describe the tabs component.
 
 #### onEscapePressed → `VoidCallback?`
 Optional escape key handler. This is called when the escape key is pressed while the tabs component has focus.
@@ -212,17 +207,12 @@ A container for tab triggers in a NakedTabs component.
 const NakedTabList({
   Key? key,
   required this.child,
-  this.semanticLabel,
 })
 ```
 
 ### Properties
 
-#### child  → `Widget`
-The child widget to display.
 
-#### semanticLabel → `String?`
-Optional semantic label for accessibility. This is used by screen readers to describe the tab list.
 
 ## NakedTab
 
@@ -236,13 +226,10 @@ const NakedTab({
   this.child,
   required this.tabId,
   this.enabled = true,
-  this.semanticLabel,
-  this.semanticHint,
   this.mouseCursor = SystemMouseCursors.click,
   this.enableFeedback = true,
   this.focusNode,
   this.autofocus = false,
-  this.excludeSemantics = false,
   this.onFocusChange,
   this.onHoverChange,
   this.onPressChange,
@@ -269,14 +256,7 @@ Called when pressed state changes. Provides the current pressed state (true when
 #### onFocusChange → `ValueChanged<bool>?`
 Called when focus state changes. Provides the current focus state (true when focused, false otherwise).
 
-#### enabled → `bool`
-Whether this tab is enabled. When false, the tab will not respond to user interaction, regardless of the tabs component's enabled state. Defaults to true.
 
-#### semanticLabel → `String?`
-Optional semantic label for accessibility.
-
-#### semanticHint → `String?`
-Additional semantic hint for assistive technologies.
 
 #### mouseCursor → `MouseCursor`
 The cursor to show when hovering over the tab. Defaults to SystemMouseCursors.click.
@@ -287,11 +267,7 @@ Whether to provide haptic feedback on tab selection. Defaults to true.
 #### focusNode → `FocusNode?`
 Optional focus node to control focus behavior.
 
-#### autofocus → `bool`
-Whether to automatically focus when created. Defaults to false.
 
-#### excludeSemantics → `bool`
-Whether to exclude the child semantics subtree.
 
 #### onStatesChange → `ValueChanged<Set<WidgetState>>?`
 Called when any widget state changes.
@@ -313,7 +289,6 @@ const NakedTabPanel({
   Key? key,
   required this.child,
   required this.tabId,
-  this.semanticLabel,
   this.maintainState = true,
 })
 ```
@@ -323,11 +298,7 @@ const NakedTabPanel({
 #### child  → `Widget`
 The child widget to display when this panel is active.
 
-#### tabId → `String`
-The ID of the tab this panel is associated with.
 
-#### semanticLabel → `String?`
-Optional semantic label for accessibility. This is used by screen readers to describe the tab panel.
 
 #### maintainState → `bool`
 Whether to keep the panel in the widget tree when inactive. When true, the panel will remain in the widget tree but be invisible when inactive. When false, the panel will be removed from the widget tree when inactive. Defaults to true. 
