@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
-import 'utilities/naked_pressable.dart';
+import 'utilities/naked_toggleable.dart';
 
-/// Headless checkbox built on NakedInteractable with proper semantics and callbacks.
+/// Headless checkbox built on NakedToggleable with proper semantics and callbacks.
 class NakedCheckbox extends StatelessWidget {
   const NakedCheckbox({
     super.key,
@@ -98,44 +97,15 @@ class NakedCheckbox extends StatelessWidget {
   /// Defaults to false to maintain Material Design consistency.
   final bool focusOnPress;
 
-  bool? _getNextTristate(bool? currentValue) {
-    // Tristate cycling: false → true → null → false
-    switch (currentValue) {
-      case false:
-        return true;
-      case true:
-        return null;
-      case null:
-        return false;
-    }
-  }
-
-  void _handlePressed() {
-    if (onChanged == null) return;
-
-    if (enableFeedback) {
-      HapticFeedback.selectionClick();
-    }
-
-    final bool? newValue = tristate
-        ? _getNextTristate(value)
-        : !(value ?? false);
-
-    onChanged!(newValue);
-  }
-
   @override
   Widget build(BuildContext context) {
-    final bool isChecked = value ?? false;
-    final bool isInteractive = enabled && onChanged != null;
-
-    // Use NakedPressable for consistent gesture and cursor behavior
-    Widget result = NakedPressable(
-      onPressed: isInteractive ? _handlePressed : null,
+    // Use NakedToggleable for checkbox behavior
+    Widget result = NakedToggleable(
+      selected: value,
+      tristate: tristate,
+      onChanged: onChanged,
       enabled: enabled,
-      selected: isChecked,
       mouseCursor: mouseCursor,
-      // Basic cursor for disabled checkbox
       disabledMouseCursor: SystemMouseCursors.basic,
       focusNode: focusNode,
       autofocus: autofocus,
@@ -144,19 +114,17 @@ class NakedCheckbox extends StatelessWidget {
       onHoverChange: onHoverChange,
       onPressChange: onPressChange,
       statesController: statesController,
-      // We handle our own selectionClick haptic feedback
-      enableFeedback: false,
+      enableFeedback: enableFeedback,
       focusOnPress: focusOnPress,
       child: child,
-      builder: (context, states, child) {
-        if (builder != null) {
-          return builder!(context, states, child);
-        }
-
-        return child!;
-      },
+      builder: builder ?? ((context, states, child) => child!),
     );
 
-    return result;
+    // Add semantics for accessibility
+    return Semantics(
+      checked: value,
+      mixed: tristate && value == null,
+      child: result,
+    );
   }
 }

@@ -91,6 +91,16 @@ class NakedButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // When using builder pattern, we need to ensure press state changes trigger rebuilds
+    // by providing an onPressChange callback even if the user didn't specify one
+    final effectiveOnPressChange = builder != null 
+        ? (bool pressed) {
+            // Call user's callback if provided
+            onPressChange?.call(pressed);
+            // The state change will trigger rebuild through NakedInteractable's listener
+          }
+        : onPressChange;
+
     return NakedPressable(
       onPressed: _effectiveEnabled ? onPressed : null,
       onDoubleTap: _effectiveEnabled ? onDoubleTap : null,
@@ -104,7 +114,7 @@ class NakedButton extends StatelessWidget {
       onStatesChange: onStatesChange,
       onFocusChange: onFocusChange,
       onHoverChange: onHoverChange,
-      onPressChange: onPressChange,
+      onPressChange: effectiveOnPressChange,
       statesController: statesController,
       enableFeedback: enableFeedback,
       focusOnPress: focusOnPress,

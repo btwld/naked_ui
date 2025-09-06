@@ -1,51 +1,52 @@
+// ABOUTME: Interactive widget that handles focus, hover, and press states with built-in state management.
+// ABOUTME: Provides complete interaction handling through a builder pattern for custom styling.
 import 'package:flutter/widgets.dart';
 
-import 'interaction_behaviors.dart';
+import 'naked_focusable.dart';
 
-/// A headless interactive widget that manages interaction states.
+// Re-export the WidgetStateExtensions for convenience
+export 'widget_state_extensions.dart';
+
+/// Handles focus, hover, and press behaviors for complete interaction handling.
 ///
-/// Provides pure interaction behavior without any visual styling,
-/// managing states like pressed, hovered, focused, disabled, selected, and error.
-/// Uses a builder pattern to allow complete control over the visual
-/// representation based on the current interaction states.
+/// The behaviors are composed in a specific order to ensure proper event handling:
+/// - Focus (outermost) - Manages keyboard focus
+/// - Hover (middle) - Tracks mouse/stylus hover
+/// - Press (innermost) - Detects press/touch events
 ///
-/// The widget uses [MouseRegion] for hover detection and [Listener] for
-/// press/drag interactions. Touch devices will not trigger hover states
-/// as they don't emit enter/exit events.
+/// When [enabled] is false, all interactions are blocked via [IgnorePointer].
+///
+/// This widget provides state management and interaction detection, but no gestures
+/// or keyboard activation. For full button behavior, use [NakedPressable].
 ///
 /// Example:
 /// ```dart
 /// NakedInteractable(
 ///   enabled: true,
 ///   selected: false,
-///   error: hasValidationError,
+///   onFocusChange: (focused) => print('Focus: $focused'),
+///   onHoverChange: (hovered) => print('Hover: $hovered'),
+///   onPressChange: (pressed) => print('Press: $pressed'),
 ///   builder: (context, states, child) {
 ///     return Container(
 ///       padding: EdgeInsets.all(16),
 ///       decoration: BoxDecoration(
-///         color: states.contains(WidgetState.pressed)
+///         color: states.isPressed
 ///             ? Colors.blue.shade700
-///             : states.contains(WidgetState.hovered)
+///             : states.isHovered
 ///                 ? Colors.blue.shade400
 ///                 : Colors.grey,
-///         border: states.contains(WidgetState.focused)
+///         border: states.isFocused
 ///             ? Border.all(color: Colors.black, width: 2)
-///             : states.contains(WidgetState.error)
-///                 ? Border.all(color: Colors.red, width: 2)
-///                 : null,
+///             : null,
 ///       ),
-///       child: child ?? Text('Click me'),
+///       child: Text('Interactive Widget'),
 ///     );
 ///   },
 /// )
 /// ```
-///
-/// The widget does not interfere with parent or child [MouseRegion] widgets:
-/// - Parent cursors are inherited automatically
-/// - All [MouseRegion] widgets in the hierarchy receive their events
-/// - Multiple hover handlers can coexist at different levels
 class NakedInteractable extends StatefulWidget {
-  /// Creates a headless interactive widget.
+  /// Creates an interactive widget with composed behaviors.
   const NakedInteractable({
     super.key,
     required this.builder,
@@ -53,8 +54,10 @@ class NakedInteractable extends StatefulWidget {
     this.enabled = true,
     this.selected = false,
     this.error = false,
-    this.autofocus = false,
     this.focusNode,
+    this.autofocus = false,
+    this.cursor = MouseCursor.defer,
+    this.behavior = HitTestBehavior.opaque,
     this.child,
     this.onStatesChange,
     this.onFocusChange,
@@ -63,63 +66,45 @@ class NakedInteractable extends StatefulWidget {
   });
 
   /// Builds the widget based on current interaction states.
-  ///
-  /// The builder receives the current [WidgetState] set and an optional
-  /// child widget that doesn't rebuild when states change.
   final ValueWidgetBuilder<Set<WidgetState>> builder;
 
   /// Controls the widget states externally.
-  ///
-  /// If null, an internal controller is created and managed by this widget.
-  /// When provided, the caller is responsible for disposing the controller.
   final WidgetStatesController? statesController;
 
   /// Whether this widget responds to input.
-  ///
-  /// When false, the widget will not respond to touch, hover, or focus events,
-  /// and will have [WidgetState.disabled] in its state set. Transient states
-  /// (hovered, pressed, focused) are cleared when becoming disabled.
   final bool enabled;
 
   /// Whether this widget is in a selected state.
-  ///
-  /// Useful for toggleable widgets like checkboxes or radio buttons.
-  /// When true, [WidgetState.selected] is added to the state set.
   final bool selected;
 
   /// Whether this widget has an error state.
-  ///
-  /// Useful for form validation feedback and error indicators.
-  /// When true, [WidgetState.error] is added to the state set.
   final bool error;
 
-  /// Whether this widget should be focused initially.
-  final bool autofocus;
-
-  /// Controls focus state for this widget.
-  ///
-  /// If null, focus is managed internally when [enabled] is true.
+  /// Optional focus node for focus management.
   final FocusNode? focusNode;
 
+  /// Whether to autofocus this widget.
+  final bool autofocus;
+
+  /// The mouse cursor for this widget.
+  final MouseCursor cursor;
+
+  /// How this widget should behave during hit testing.
+  final HitTestBehavior behavior;
+
   /// Optional child widget that doesn't rebuild when states change.
-  ///
-  /// Useful for expensive widgets that don't need to react to
-  /// interaction state changes.
   final Widget? child;
 
   /// Called whenever the widget state set changes.
   final ValueChanged<Set<WidgetState>>? onStatesChange;
 
-  /// Called when the focus state changes.
+  /// Called when focus state changes.
   final ValueChanged<bool>? onFocusChange;
 
-  /// Called when the hover state changes.
-  ///
-  /// Only triggered by mouse or stylus pointers that support hover.
-  /// Touch pointers do not trigger hover state changes.
+  /// Called when hover state changes.
   final ValueChanged<bool>? onHoverChange;
 
-  /// Called when the pressed state changes.
+  /// Called when pressed state changes.
   final ValueChanged<bool>? onPressChange;
 
   @override
@@ -127,76 +112,25 @@ class NakedInteractable extends StatefulWidget {
 }
 
 class _NakedInteractableState extends State<NakedInteractable> {
-  // State management
   WidgetStatesController? _internalController;
+  bool _isPressed = false;
 
   WidgetStatesController get _effectiveController =>
       widget.statesController ??
       (_internalController ??= _createInternalController());
-
-  bool get _isDisabled => !widget.enabled;
-
-  @override
-  void initState() {
-    super.initState();
-    _setupWidgetStates();
-    _effectiveController.addListener(_handleStateChange);
-  }
-
-  // ==================== State Management ====================
 
   /// Creates an internal controller with initial states.
   WidgetStatesController _createInternalController() {
     return WidgetStatesController({
       if (widget.selected) WidgetState.selected,
       if (widget.error) WidgetState.error,
-      if (_isDisabled) WidgetState.disabled,
+      if (!widget.enabled) WidgetState.disabled,
     });
   }
 
-  /// Updates states when widget properties change.
-  void _setupWidgetStates() {
-    _effectiveController
-      ..update(WidgetState.selected, widget.selected)
-      ..update(WidgetState.error, widget.error)
-      ..update(WidgetState.disabled, _isDisabled);
-  }
-
-  /// Clears transient states (hover, pressed, focused).
-  ///
-  /// Called when the widget becomes disabled to ensure
-  /// visual consistency and proper state management.
-  void _clearTransientStates() {
-    _effectiveController
-      ..update(WidgetState.hovered, false)
-      ..update(WidgetState.pressed, false)
-      ..update(WidgetState.focused, false);
-
-    // Notify callbacks
-    widget.onHoverChange?.call(false);
-    widget.onPressChange?.call(false);
-    widget.onFocusChange?.call(false);
-  }
-
-  /// Handles state controller changes between external and internal.
-  void _handleControllerChange(NakedInteractable oldWidget) {
-    // Remove listener from old controller
-    final oldEffective = oldWidget.statesController ?? _internalController;
-    oldEffective?.removeListener(_handleStateChange);
-
-    // Handle internal controller lifecycle
-    if (widget.statesController == null) {
-      // Switching to internal controller
-      _internalController ??= WidgetStatesController(
-        oldWidget.statesController?.value ?? {},
-      );
-    } else {
-      // Switching to external controller
-      _internalController?.dispose();
-      _internalController = null;
-    }
-
-    // Add listener to new controller
+  @override
+  void initState() {
+    super.initState();
     _effectiveController.addListener(_handleStateChange);
   }
 
@@ -209,21 +143,56 @@ class _NakedInteractableState extends State<NakedInteractable> {
     }
   }
 
-  // ==================== Behavior Callback Handlers ====================
+  /// Handles focus state changes and updates controller.
+  void _handleFocusChange(bool focused) {
+    _effectiveController.update(WidgetState.focused, focused);
+    widget.onFocusChange?.call(focused);
+  }
 
+  /// Handles hover state changes and updates controller.
   void _handleHoverChange(bool hovered) {
+    if (!widget.enabled) return;
     _effectiveController.update(WidgetState.hovered, hovered);
     widget.onHoverChange?.call(hovered);
   }
 
+  /// Handles press state changes and updates controller.
   void _handlePressChange(bool pressed) {
+    if (!widget.enabled) return;
     _effectiveController.update(WidgetState.pressed, pressed);
     widget.onPressChange?.call(pressed);
   }
 
-  void _handleFocusChange(bool focused) {
-    _effectiveController.update(WidgetState.focused, focused);
-    widget.onFocusChange?.call(focused);
+  // Press detection methods
+  void _setPressed(bool pressed) {
+    if (_isPressed != pressed) {
+      _isPressed = pressed;
+      _handlePressChange(pressed);
+    }
+  }
+
+  bool _isPointerWithinBounds(Offset localPosition) {
+    final RenderBox? box = context.findRenderObject() as RenderBox?;
+
+    return box != null && box.size.contains(localPosition);
+  }
+
+  void _handlePointerDown(PointerDownEvent event) {
+    _setPressed(true);
+  }
+
+  void _handlePointerMove(PointerMoveEvent event) {
+    if (_isPressed && !_isPointerWithinBounds(event.localPosition)) {
+      _setPressed(false);
+    }
+  }
+
+  void _handlePointerUp(PointerUpEvent event) {
+    _setPressed(false);
+  }
+
+  void _handlePointerCancel(PointerCancelEvent event) {
+    _setPressed(false);
   }
 
   @override
@@ -232,7 +201,18 @@ class _NakedInteractableState extends State<NakedInteractable> {
 
     // Handle controller changes
     if (oldWidget.statesController != widget.statesController) {
-      _handleControllerChange(oldWidget);
+      _effectiveController.removeListener(_handleStateChange);
+      if (widget.statesController == null) {
+        // Switching to internal controller - preserve existing states
+        _internalController ??= WidgetStatesController(
+          oldWidget.statesController?.value ?? {},
+        );
+      } else {
+        // Switching to external controller - dispose internal
+        _internalController?.dispose();
+        _internalController = null;
+      }
+      _effectiveController.addListener(_handleStateChange);
     }
 
     // Only update states that actually changed
@@ -242,18 +222,20 @@ class _NakedInteractableState extends State<NakedInteractable> {
     if (oldWidget.error != widget.error) {
       _effectiveController.update(WidgetState.error, widget.error);
     }
-
-    // Handle enabled state changes
     if (oldWidget.enabled != widget.enabled) {
       _effectiveController.update(WidgetState.disabled, !widget.enabled);
-
+      
       // Clear transient states when becoming disabled
       if (!widget.enabled) {
-        _clearTransientStates();
-        // Unfocus if we have focus
-        if (_effectiveController.value.contains(WidgetState.focused)) {
-          widget.focusNode?.unfocus();
-        }
+        _effectiveController
+          ..update(WidgetState.hovered, false)
+          ..update(WidgetState.pressed, false)
+          ..update(WidgetState.focused, false);
+        
+        // Notify callbacks of clearing
+        widget.onHoverChange?.call(false);
+        widget.onPressChange?.call(false);
+        widget.onFocusChange?.call(false);
       }
     }
   }
@@ -267,22 +249,55 @@ class _NakedInteractableState extends State<NakedInteractable> {
 
   @override
   Widget build(BuildContext context) {
+    // Build child with current states
     final builtChild = widget.builder(
       context,
       _effectiveController.value,
       widget.child,
     );
 
-    return InteractiveBehavior(
-      enabled: widget.enabled,
-      focusNode: widget.focusNode,
-      autofocus: widget.autofocus,
-      // Allow parent to control cursors; do not set here
-      behavior: HitTestBehavior.opaque,
-      onFocusChange: _handleFocusChange,
-      onHoverChange: _handleHoverChange,
-      onPressChange: _handlePressChange,
+    // Widget hierarchy (outermost to innermost):
+    // IgnorePointer -> Focus -> MouseRegion -> Listener -> child
+    final listenerLayer = Listener(
+      onPointerDown: widget.enabled && widget.onPressChange != null
+          ? _handlePointerDown
+          : null,
+      onPointerMove: widget.enabled && widget.onPressChange != null
+          ? _handlePointerMove
+          : null,
+      onPointerUp: widget.enabled && widget.onPressChange != null
+          ? _handlePointerUp
+          : null,
+      onPointerCancel: widget.enabled && widget.onPressChange != null
+          ? _handlePointerCancel
+          : null,
+      behavior: widget.behavior,
       child: builtChild,
+    );
+
+    final mouseRegionLayer = MouseRegion(
+      onEnter: widget.enabled && widget.onHoverChange != null
+          ? (_) => _handleHoverChange(true)
+          : null,
+      onExit: widget.enabled && widget.onHoverChange != null
+          ? (_) => _handleHoverChange(false)
+          : null,
+      cursor: widget.enabled ? widget.cursor : MouseCursor.defer,
+      child: listenerLayer,
+    );
+
+    final focusLayer = widget.enabled
+        ? NakedFocusable(
+            focusNode: widget.focusNode,
+            autofocus: widget.autofocus,
+            onFocusChange: _handleFocusChange,
+            child: mouseRegionLayer,
+          )
+        : mouseRegionLayer;
+
+    return IgnorePointer(
+      ignoring: !widget.enabled,
+      child: focusLayer,
     );
   }
 }

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'mixins/naked_mixins.dart';
-import 'utilities/utilities.dart';
+import 'utilities/naked_pressable.dart';
 
 /// Thin wrapper over Flutter's RadioGroup to preserve Naked API.
 class NakedRadioGroup<T> extends StatelessWidget {
@@ -26,8 +25,8 @@ class NakedRadioGroup<T> extends StatelessWidget {
   }
 }
 
-/// Radio button built on RawRadio with proper semantics and state callbacks.
-class NakedRadio<T> extends StatefulWidget with NakedFocusable {
+/// Radio button built with simplified architecture.
+class NakedRadio<T> extends StatelessWidget {
   const NakedRadio({
     super.key,
     required this.value,
@@ -67,20 +66,13 @@ class NakedRadio<T> extends StatefulWidget with NakedFocusable {
   final WidgetStatesController? statesController;
   final ValueWidgetBuilder<Set<WidgetState>>? builder;
 
-  @override
-  State<NakedRadio<T>> createState() => _NakedRadioState<T>();
-}
-
-class _NakedRadioState<T> extends State<NakedRadio<T>>
-    with NakedFocusableStateMixin {
-
   void _handlePointerTap(RadioGroupRegistry<T> registry, bool isSelected) {
-    if (!widget.enabled) return;
+    if (!enabled) return;
     
-    if (widget.toggleable && isSelected) {
+    if (toggleable && isSelected) {
       registry.onChanged(null);
     } else if (!isSelected) {
-      registry.onChanged(widget.value);
+      registry.onChanged(value);
     }
   }
 
@@ -114,58 +106,48 @@ class _NakedRadioState<T> extends State<NakedRadio<T>>
     }
 
     // Check if selected
-    final isSelected = registry.groupValue == widget.value;
+    final isSelected = registry.groupValue == value;
 
     // Determine mouse cursor
-    final effectiveCursor = widget.mouseCursor != null
-        ? WidgetStateMouseCursor.resolveWith((_) => widget.mouseCursor!)
-        : widget.enabled
-        ? WidgetStateMouseCursor.clickable
-        : WidgetStateMouseCursor.resolveWith(
-            (_) => SystemMouseCursors.basic,
-          );
+    final effectiveCursor = mouseCursor != null
+        ? mouseCursor!
+        : enabled
+        ? SystemMouseCursors.click
+        : SystemMouseCursors.basic;
 
-    return MouseRegion(
-        cursor: effectiveCursor.resolve({
-          if (!widget.enabled) WidgetState.disabled,
-          if (isSelected) WidgetState.selected,
-        }),
-        child: GestureDetector(
-          onTap: widget.enabled
-              ? () => _handlePointerTap(registry, isSelected)
-              : null,
-          behavior: HitTestBehavior.opaque,
-          child: NakedInteractable(
-            statesController: widget.statesController,
-            enabled: widget.enabled,
-            selected: isSelected,
-            autofocus: widget.autofocus,
-            onStatesChange: widget.onStatesChange,
-            onFocusChange: widget.onFocusChange,
-            onHoverChange: widget.onHoverChange,
-            onPressChange: widget.onPressChange,
-            // Don't pass focusNode here since RawRadio will manage it
-            builder: (context, states, child) {
-              return RawRadio<T>(
-                value: widget.value,
-                mouseCursor: effectiveCursor,
-                toggleable: widget.toggleable,
-                focusNode: effectiveFocusNode,
-                autofocus: widget.autofocus && widget.enabled,
-                groupRegistry: registry,
-                enabled: widget.enabled,
-                builder: (context, radioStates) {
-                  // Build the widget using NakedInteractable's states
-                  if (widget.builder != null) {
-                    return widget.builder!(context, states, child);
-                  }
+    return NakedPressable(
+      builder: (context, states, child) {
+        return RawRadio<T>(
+          value: value,
+          mouseCursor: WidgetStateMouseCursor.resolveWith((_) => effectiveCursor),
+          toggleable: toggleable,
+          focusNode: focusNode ?? FocusNode(),
+          autofocus: autofocus && enabled,
+          groupRegistry: registry,
+          enabled: enabled,
+          builder: (context, radioStates) {
+            // Build the widget using NakedPressable's states
+            if (builder != null) {
+              return builder!(context, states, child);
+            }
 
-                  return widget.child!;
-                },
-              );
-            },
-          ),
-        ),
+            return this.child!;
+          },
+        );
+      },
+      onPressed: enabled
+          ? () => _handlePointerTap(registry, isSelected)
+          : null,
+      enabled: enabled,
+      selected: isSelected,
+      mouseCursor: effectiveCursor,
+      focusNode: focusNode,
+      autofocus: autofocus,
+      onStatesChange: onStatesChange,
+      onFocusChange: onFocusChange,
+      onHoverChange: onHoverChange,
+      onPressChange: onPressChange,
+      statesController: statesController,
     );
   }
 }
