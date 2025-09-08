@@ -30,6 +30,9 @@ class NakedTabGroup extends StatelessWidget {
   /// Whether the tabs component is enabled.
   final bool enabled;
 
+  /// Whether this tabs component is effectively enabled (has enabled=true AND has onChanged callback).
+  bool get _effectiveEnabled => enabled && onChanged != null;
+
   /// The orientation of the tabs.
   ///
   /// Defaults to horizontal.
@@ -41,7 +44,7 @@ class NakedTabGroup extends StatelessWidget {
   final VoidCallback? onEscapePressed;
 
   void _selectTab(String tabId) {
-    if (!enabled) return;
+    if (!_effectiveEnabled) return;
     if (tabId == selectedTabId) return;
 
     assert(tabId.isNotEmpty, 'Tab ID cannot be empty');
@@ -57,7 +60,7 @@ class NakedTabGroup extends StatelessWidget {
       selectedTabId: selectedTabId,
       onChanged: _selectTab,
       orientation: orientation,
-      enabled: enabled,
+      enabled: _effectiveEnabled,
       onEscapePressed: onEscapePressed,
       child: child,
     );

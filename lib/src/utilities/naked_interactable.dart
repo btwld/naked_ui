@@ -119,6 +119,12 @@ class _NakedInteractableState extends State<NakedInteractable> {
       widget.statesController ??
       (_internalController ??= _createInternalController());
 
+  @override
+  void initState() {
+    super.initState();
+    _effectiveController.addListener(_handleStateChange);
+  }
+
   /// Creates an internal controller with initial states.
   WidgetStatesController _createInternalController() {
     return WidgetStatesController({
@@ -126,12 +132,6 @@ class _NakedInteractableState extends State<NakedInteractable> {
       if (widget.error) WidgetState.error,
       if (!widget.enabled) WidgetState.disabled,
     });
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    _effectiveController.addListener(_handleStateChange);
   }
 
   /// Notifies listeners when states change and triggers rebuild.
@@ -224,14 +224,14 @@ class _NakedInteractableState extends State<NakedInteractable> {
     }
     if (oldWidget.enabled != widget.enabled) {
       _effectiveController.update(WidgetState.disabled, !widget.enabled);
-      
+
       // Clear transient states when becoming disabled
       if (!widget.enabled) {
         _effectiveController
           ..update(WidgetState.hovered, false)
           ..update(WidgetState.pressed, false)
           ..update(WidgetState.focused, false);
-        
+
         // Notify callbacks of clearing
         widget.onHoverChange?.call(false);
         widget.onPressChange?.call(false);
@@ -295,9 +295,6 @@ class _NakedInteractableState extends State<NakedInteractable> {
           )
         : mouseRegionLayer;
 
-    return IgnorePointer(
-      ignoring: !widget.enabled,
-      child: focusLayer,
-    );
+    return IgnorePointer(ignoring: !widget.enabled, child: focusLayer);
   }
 }

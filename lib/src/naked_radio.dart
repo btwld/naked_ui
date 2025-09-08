@@ -68,7 +68,7 @@ class NakedRadio<T> extends StatelessWidget {
 
   void _handlePointerTap(RadioGroupRegistry<T> registry, bool isSelected) {
     if (!enabled) return;
-    
+
     if (toggleable && isSelected) {
       registry.onChanged(null);
     } else if (!isSelected) {
@@ -116,10 +116,23 @@ class NakedRadio<T> extends StatelessWidget {
         : SystemMouseCursors.basic;
 
     return NakedPressable(
+      onPressed: enabled ? () => _handlePointerTap(registry, isSelected) : null,
+      enabled: enabled,
+      selected: isSelected,
+      mouseCursor: effectiveCursor,
+      focusNode: focusNode,
+      autofocus: autofocus,
+      onStatesChange: onStatesChange,
+      onFocusChange: onFocusChange,
+      onHoverChange: onHoverChange,
+      onPressChange: onPressChange,
+      statesController: statesController,
       builder: (context, states, child) {
         return RawRadio<T>(
           value: value,
-          mouseCursor: WidgetStateMouseCursor.resolveWith((_) => effectiveCursor),
+          mouseCursor: WidgetStateMouseCursor.resolveWith(
+            (_) => effectiveCursor,
+          ),
           toggleable: toggleable,
           focusNode: focusNode ?? FocusNode(),
           autofocus: autofocus && enabled,
@@ -135,19 +148,6 @@ class NakedRadio<T> extends StatelessWidget {
           },
         );
       },
-      onPressed: enabled
-          ? () => _handlePointerTap(registry, isSelected)
-          : null,
-      enabled: enabled,
-      selected: isSelected,
-      mouseCursor: effectiveCursor,
-      focusNode: focusNode,
-      autofocus: autofocus,
-      onStatesChange: onStatesChange,
-      onFocusChange: onFocusChange,
-      onHoverChange: onHoverChange,
-      onPressChange: onPressChange,
-      statesController: statesController,
     );
   }
 }

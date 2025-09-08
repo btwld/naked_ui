@@ -177,6 +177,9 @@ class NakedMenuItem extends StatelessWidget {
   /// Whether the item can be selected.
   final bool enabled;
 
+  /// Whether this menu item is effectively enabled (has enabled=true AND has onPressed callback).
+  bool get _effectiveEnabled => enabled && onPressed != null;
+
   /// Cursor when hovering over the item.
   final MouseCursor mouseCursor;
 
@@ -190,7 +193,7 @@ class NakedMenuItem extends StatelessWidget {
   final bool autofocus;
 
   void _handlePress(MenuController? controller) {
-    if (!enabled) return;
+    if (!_effectiveEnabled) return;
     if (enableFeedback) {
       HapticFeedback.lightImpact();
     }
@@ -207,8 +210,8 @@ class NakedMenuItem extends StatelessWidget {
     void onPress() => _handlePress(controller);
 
     return NakedButton(
-      onPressed: onPressed != null ? onPress : null,
-      enabled: enabled,
+      onPressed: _effectiveEnabled ? onPress : null,
+      enabled: _effectiveEnabled,
       mouseCursor: mouseCursor,
       enableFeedback: enableFeedback,
       focusNode: focusNode,

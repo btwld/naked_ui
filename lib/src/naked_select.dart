@@ -100,6 +100,10 @@ class NakedSelect<T> extends StatefulWidget implements OverlayChildLifecycle {
   /// Whether the select can be interacted with.
   final bool enabled;
 
+  /// Whether this select is effectively enabled (has enabled=true AND has callbacks).
+  bool get _effectiveEnabled => enabled && 
+      (onSelectedValueChanged != null || onSelectedValuesChanged != null);
+
   /// Whether to automatically close the dropdown when an item is selected.
   final bool closeOnSelect;
 
@@ -192,7 +196,7 @@ class _NakedSelectState<T> extends State<NakedSelect<T>>
   }
 
   void _handleSelectValue(T value) {
-    if (!widget.enabled) return;
+    if (!widget._effectiveEnabled) return;
 
     if (_isMultipleSelection) {
       final newValues = Set<T>.of(widget.selectedValues!);
@@ -252,7 +256,7 @@ class _NakedSelectState<T> extends State<NakedSelect<T>>
       selectedValue: widget.selectedValue,
       selectedValues: widget.selectedValues,
       allowMultiple: widget.allowMultiple,
-      enabled: widget.enabled,
+      enabled: widget._effectiveEnabled,
       child: NakedMenuAnchor(
         controller: controller,
         overlayBuilder: (_) => widget.menu,

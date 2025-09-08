@@ -151,6 +151,7 @@ class _NakedPressableState extends State<NakedPressable> {
     if (widget.statesController != null) {
       return widget.statesController!;
     }
+
     // For keyboard activation, we need our own controller
     return _keyboardController ??= WidgetStatesController({
       if (widget.selected) WidgetState.selected,
@@ -245,11 +246,11 @@ class _NakedPressableState extends State<NakedPressable> {
           ),
         },
         child: GestureDetector(
-          excludeFromSemantics: true,
           onTap: _isInteractive ? _handleTap : null,
           onDoubleTap: _isInteractive ? widget.onDoubleTap : null,
           onLongPress: _isInteractive ? _handleLongPress : null,
           behavior: widget.behavior,
+          excludeFromSemantics: true,
           child: NakedInteractable(
             statesController: _effectiveController,
             enabled: widget.enabled,
@@ -271,4 +272,3 @@ class _NakedPressableState extends State<NakedPressable> {
     );
   }
 }
-

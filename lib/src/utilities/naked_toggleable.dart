@@ -141,7 +141,7 @@ class NakedToggleable extends StatelessWidget {
     if (!_isInteractive) {
       return selected;
     }
-    
+
     if (tristate) {
       // Tristate cycling: false → true → null → false
       switch (selected) {
@@ -178,7 +178,6 @@ class NakedToggleable extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return NakedPressable(
-      builder: builder,
       onPressed: _isInteractive ? _handleActivation : null,
       enabled: enabled,
       selected: selected ?? false,
@@ -192,11 +191,12 @@ class NakedToggleable extends StatelessWidget {
       onHoverChange: onHoverChange,
       onPressChange: onPressChange,
       statesController: statesController,
-      child: child,
       behavior: behavior,
       // We handle our own selectionClick feedback
       enableFeedback: false,
       focusOnPress: focusOnPress,
+      child: child,
+      builder: builder,
     );
   }
 }
