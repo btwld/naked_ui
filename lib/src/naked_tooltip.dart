@@ -108,6 +108,7 @@ class NakedTooltip extends StatefulWidget implements OverlayChildLifecycle {
     this.fallbackPositions = const [],
     this.removalDelay = Duration.zero,
     this.onStateChange,
+    this.semanticsLabel,
   });
 
   /// Widget that triggers the tooltip.
@@ -115,6 +116,10 @@ class NakedTooltip extends StatefulWidget implements OverlayChildLifecycle {
 
   /// Widget to display in the tooltip.
   final WidgetBuilder tooltipBuilder;
+
+  /// Optional semantics tooltip label applied to the trigger.
+  /// Screen readers announce this on focus/hover.
+  final String? semanticsLabel;
 
   /// Tooltip position relative to the target.
   final NakedMenuPosition position;
@@ -171,20 +176,23 @@ class _NakedTooltipState extends State<NakedTooltip>
   @override
   Widget build(BuildContext context) {
     return ListenableBuilder(
-        listenable: showNotifier,
-        builder: (context, child) {
-          return NakedMenuAnchor(
-            controller: controller,
-            overlayBuilder: widget.tooltipBuilder,
-            position: widget.position,
-            fallbackPositions: widget.fallbackPositions,
-            child: MouseRegion(
-              onEnter: _handleMouseEnter,
-              onExit: _handleMouseExit,
+      listenable: showNotifier,
+      builder: (context, child) {
+        return NakedMenuAnchor(
+          controller: controller,
+          overlayBuilder: widget.tooltipBuilder,
+          position: widget.position,
+          fallbackPositions: widget.fallbackPositions,
+          child: MouseRegion(
+            onEnter: _handleMouseEnter,
+            onExit: _handleMouseExit,
+            child: Semantics(
+              tooltip: widget.semanticsLabel,
               child: widget.child,
             ),
-          );
-        },
+          ),
+        );
+      },
     );
   }
 }

@@ -9,15 +9,19 @@ extension SliderTestHelpers on WidgetTester {
     final box = getSize(finder);
     final center = getCenter(finder);
     final rect = getRect(finder);
-    
+
     // Calculate current position based on current value
-    final currentNormalizedValue = (slider.value - slider.min) / (slider.max - slider.min);
-    final currentOffset = Offset(rect.left + (box.width * currentNormalizedValue), center.dy);
-    
+    final currentNormalizedValue =
+        (slider.value - slider.min) / (slider.max - slider.min);
+    final currentOffset =
+        Offset(rect.left + (box.width * currentNormalizedValue), center.dy);
+
     // Calculate target position based on target value
-    final normalizedValue = (targetValue - slider.min) / (slider.max - slider.min);
-    final targetOffset = Offset(rect.left + (box.width * normalizedValue), center.dy);
-    
+    final normalizedValue =
+        (targetValue - slider.min) / (slider.max - slider.min);
+    final targetOffset =
+        Offset(rect.left + (box.width * normalizedValue), center.dy);
+
     // Start drag from current value position to target
     final gesture = await startGesture(currentOffset);
     await pump();
@@ -26,22 +30,25 @@ extension SliderTestHelpers on WidgetTester {
     await gesture.up();
     await pump();
   }
-  
+
   /// Verify slider value matches expected value
-  void expectSliderValue(Finder finder, double expected, {double tolerance = 0.01}) {
+  void expectSliderValue(Finder finder, double expected,
+      {double tolerance = 0.01}) {
     final slider = widget<NakedSlider>(finder);
     expect(slider.value, closeTo(expected, tolerance));
   }
-  
+
   /// Send keyboard arrow keys to slider
+  /// Use only a key down event to avoid IntegrationTest key-up state mismatch.
   Future<void> sendArrowKey(LogicalKeyboardKey key) async {
-    await sendKeyEvent(key);
+    await sendKeyDownEvent(key);
     await pump();
   }
-  
+
   /// Send Home/End keys to slider
+  /// Use only a key down event to trigger Shortcuts without key-up assertions.
   Future<void> sendHomeEndKey(LogicalKeyboardKey key) async {
-    await sendKeyEvent(key);
+    await sendKeyDownEvent(key);
     await pump();
   }
 }

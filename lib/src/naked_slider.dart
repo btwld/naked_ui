@@ -322,23 +322,30 @@ class _NakedSliderState extends State<NakedSlider> {
     );
 
     return MergeSemantics(
-      child: FocusableActionDetector(
-        enabled: _isEnabled,
-        focusNode: _focusNode,
-        autofocus: widget.autofocus,
-        descendantsAreTraversable: false,
-        shortcuts: _shortcuts,
-        actions: _actions,
-        onShowHoverHighlight: _handleHoverChange,
-        onFocusChange: _handleFocusChange,
-        mouseCursor: _cursor,
-        child: MouseRegion(
-          onEnter: (_) => _handleHoverChange(true),
-          onExit: (_) => _handleHoverChange(false),
-          cursor: _cursor,
-          child: semantics,
-        ),
-      ),
+      child: _isEnabled
+          ? FocusableActionDetector(
+              enabled: true,
+              focusNode: _focusNode,
+              autofocus: widget.autofocus,
+              descendantsAreTraversable: false,
+              shortcuts: _shortcuts,
+              actions: _actions,
+              onShowHoverHighlight: _handleHoverChange,
+              onFocusChange: _handleFocusChange,
+              mouseCursor: _cursor,
+              child: MouseRegion(
+                onEnter: (_) => _handleHoverChange(true),
+                onExit: (_) => _handleHoverChange(false),
+                cursor: _cursor,
+                child: semantics,
+              ),
+            )
+          : MouseRegion(
+              onEnter: (_) => _handleHoverChange(true),
+              onExit: (_) => _handleHoverChange(false),
+              cursor: _cursor,
+              child: semantics,
+            ),
     );
   }
 

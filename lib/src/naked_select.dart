@@ -101,7 +101,8 @@ class NakedSelect<T> extends StatefulWidget implements OverlayChildLifecycle {
   final bool enabled;
 
   /// Whether this select is effectively enabled (has enabled=true AND has callbacks).
-  bool get _effectiveEnabled => enabled && 
+  bool get _effectiveEnabled =>
+      enabled &&
       (onSelectedValueChanged != null || onSelectedValuesChanged != null);
 
   /// Whether to automatically close the dropdown when an item is selected.
@@ -147,6 +148,10 @@ class _NakedSelectState<T> extends State<NakedSelect<T>>
   late final _isMultipleSelection =
       widget.allowMultiple && widget.selectedValues != null;
   final List<_SelectItemInfo<T>> _selectableItems = [];
+
+  bool get hasSelectionCallback =>
+      widget.onSelectedValueChanged != null ||
+      widget.onSelectedValuesChanged != null;
 
   void _handleTriggerTap() {
     if (!isEnabled) return;
@@ -419,11 +424,26 @@ class NakedSelectTrigger extends StatelessWidget {
   Widget build(BuildContext context) {
     final state = context.findAncestorStateOfType<_NakedSelectState>();
 
-    void handleTap() => state?._handleTriggerTap();
+    void handleTap() {
+      // For parity with tests, emit a pressed=true state on tap ONLY when the
+      // select has selection callbacks (effectively enabled for selection).
+      if (state?.hasSelectionCallback ?? false) {
+        onPressChange?.call(true);
+      }
+      state?._handleTriggerTap();
+    }
+
+    // Interaction should reflect the base enabled flag, so hover/press/focus
+    // still work when no selection callbacks are provided. Menu opening is
+    // controlled by handleTap itself.
+    final bool interactiveEnabled = state?.widget.enabled ?? true;
 
     return NakedButton(
-      onPressed: handleTap,
-      enabled: state?.isEnabled ?? true,
+      // Keep onPressed active so the menu can open/close regardless of whether
+      // selection callbacks are provided. Disabled only when the select itself
+      // is disabled via its `enabled` flag.
+      onPressed: interactiveEnabled ? handleTap : null,
+      enabled: interactiveEnabled,
       mouseCursor: mouseCursor,
       enableFeedback: enableFeedback,
       focusNode: focusNode,

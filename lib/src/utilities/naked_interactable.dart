@@ -1,5 +1,6 @@
 // ABOUTME: Interactive widget that handles focus, hover, and press states with built-in state management.
 // ABOUTME: Provides complete interaction handling through a builder pattern for custom styling.
+
 import 'package:flutter/widgets.dart';
 
 import 'naked_focusable.dart';
@@ -114,6 +115,7 @@ class NakedInteractable extends StatefulWidget {
 class _NakedInteractableState extends State<NakedInteractable> {
   WidgetStatesController? _internalController;
   bool _isPressed = false;
+  bool _suppressNextFocusFalse = false;
 
   WidgetStatesController get _effectiveController =>
       widget.statesController ??
@@ -145,6 +147,14 @@ class _NakedInteractableState extends State<NakedInteractable> {
 
   /// Handles focus state changes and updates controller.
   void _handleFocusChange(bool focused) {
+    // Drop an immediate false notification right after a controller swap when
+    // we intentionally preserved a focused state.
+    if (_suppressNextFocusFalse && !focused) {
+      _suppressNextFocusFalse = false;
+
+      return;
+    }
+    _suppressNextFocusFalse = false;
     _effectiveController.update(WidgetState.focused, focused);
     widget.onFocusChange?.call(focused);
   }
@@ -195,24 +205,62 @@ class _NakedInteractableState extends State<NakedInteractable> {
     _setPressed(false);
   }
 
+  // Helper to update a specific state flag on a controller
+  void _updateControllerState(
+    WidgetStatesController controller,
+    WidgetState state,
+    bool value,
+  ) {
+    controller.update(state, value);
+  }
+
   @override
   void didUpdateWidget(NakedInteractable oldWidget) {
     super.didUpdateWidget(oldWidget);
 
     // Handle controller changes
     if (oldWidget.statesController != widget.statesController) {
-      _effectiveController.removeListener(_handleStateChange);
-      if (widget.statesController == null) {
-        // Switching to internal controller - preserve existing states
-        _internalController ??= WidgetStatesController(
-          oldWidget.statesController?.value ?? {},
-        );
+      // Determine the previous controller explicitly (external vs internal)
+      final bool wasUsingExternal = oldWidget.statesController != null;
+      final previousStates = <WidgetState>{
+        ...(wasUsingExternal
+            ? oldWidget.statesController!.value
+            : (_internalController?.value ?? const <WidgetState>{})),
+      };
+
+      // Detach listener from the previous controller instance
+      if (wasUsingExternal) {
+        oldWidget.statesController!.removeListener(_handleStateChange);
       } else {
-        // Switching to external controller - dispose internal
+        _internalController?.removeListener(_handleStateChange);
+      }
+
+      if (widget.statesController == null) {
+        // Switching to internal controller - seed it with previous states
+        _internalController?.dispose();
+        _internalController = WidgetStatesController(previousStates);
+        // If we preserved a focused flag, suppress an immediate Focus(false) callback
+        // that can fire on rebuild and unintentionally clear the preserved state.
+        _suppressNextFocusFalse = previousStates.contains(WidgetState.focused);
+        // Attach listener to the new internal controller
+        _internalController!.addListener(_handleStateChange);
+      } else {
+        // Switching to external controller - dispose internal and seed external
         _internalController?.dispose();
         _internalController = null;
+        // Seed the external controller with the previous states
+        try {
+          widget.statesController!.value = previousStates;
+        } catch (_) {
+          // Fallback: update flags individually if direct assignment is unsupported
+          for (final state in WidgetState.values) {
+            final shouldHave = previousStates.contains(state);
+            _updateControllerState(widget.statesController!, state, shouldHave);
+          }
+        }
+        // Attach listener to the new external controller
+        widget.statesController!.addListener(_handleStateChange);
       }
-      _effectiveController.addListener(_handleStateChange);
     }
 
     // Only update states that actually changed
@@ -259,29 +307,17 @@ class _NakedInteractableState extends State<NakedInteractable> {
     // Widget hierarchy (outermost to innermost):
     // IgnorePointer -> Focus -> MouseRegion -> Listener -> child
     final listenerLayer = Listener(
-      onPointerDown: widget.enabled && widget.onPressChange != null
-          ? _handlePointerDown
-          : null,
-      onPointerMove: widget.enabled && widget.onPressChange != null
-          ? _handlePointerMove
-          : null,
-      onPointerUp: widget.enabled && widget.onPressChange != null
-          ? _handlePointerUp
-          : null,
-      onPointerCancel: widget.enabled && widget.onPressChange != null
-          ? _handlePointerCancel
-          : null,
+      onPointerDown: widget.enabled ? _handlePointerDown : null,
+      onPointerMove: widget.enabled ? _handlePointerMove : null,
+      onPointerUp: widget.enabled ? _handlePointerUp : null,
+      onPointerCancel: widget.enabled ? _handlePointerCancel : null,
       behavior: widget.behavior,
       child: builtChild,
     );
 
     final mouseRegionLayer = MouseRegion(
-      onEnter: widget.enabled && widget.onHoverChange != null
-          ? (_) => _handleHoverChange(true)
-          : null,
-      onExit: widget.enabled && widget.onHoverChange != null
-          ? (_) => _handleHoverChange(false)
-          : null,
+      onEnter: widget.enabled ? (_) => _handleHoverChange(true) : null,
+      onExit: widget.enabled ? (_) => _handleHoverChange(false) : null,
       cursor: widget.cursor,
       child: listenerLayer,
     );
