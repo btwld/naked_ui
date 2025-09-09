@@ -63,6 +63,7 @@ class NakedPressable extends StatefulWidget {
     this.behavior = HitTestBehavior.opaque,
     this.enableFeedback = true,
     this.focusOnPress = false,
+    this.semanticsIsButton = true,
   });
 
   /// Builds the widget based on current interaction states.
@@ -118,6 +119,10 @@ class NakedPressable extends StatefulWidget {
 
   /// How to behave during hit tests.
   final HitTestBehavior behavior;
+
+  /// Whether to expose a button role in semantics.
+  /// For toggleables (checkbox/radio/switch) this should be false.
+  final bool semanticsIsButton;
 
   /// Whether to provide platform-specific feedback on activation.
   final bool enableFeedback;
@@ -234,38 +239,48 @@ class _NakedPressableState extends State<NakedPressable> {
         ? (widget.mouseCursor ?? SystemMouseCursors.click)
         : (widget.disabledMouseCursor ?? SystemMouseCursors.basic);
 
-    return Shortcuts(
-      shortcuts: const {
-        SingleActivator(LogicalKeyboardKey.enter): ActivateIntent(),
-        SingleActivator(LogicalKeyboardKey.space): ActivateIntent(),
+    return Semantics(
+      enabled: _isInteractive,
+      button: widget.semanticsIsButton,
+      focusable: true,
+      onTap: _isInteractive && widget.semanticsIsButton ? _handleTap : null,
+      onFocus: () {
+        // Request focus on provided node if available.
+        widget.focusNode?.requestFocus();
       },
-      child: Actions(
-        actions: {
-          ActivateIntent: CallbackAction<ActivateIntent>(
-            onInvoke: _handleKeyboardActivation,
-          ),
+      child: Shortcuts(
+        shortcuts: const {
+          SingleActivator(LogicalKeyboardKey.enter): ActivateIntent(),
+          SingleActivator(LogicalKeyboardKey.space): ActivateIntent(),
         },
-        child: GestureDetector(
-          onTap: _isInteractive ? _handleTap : null,
-          onDoubleTap: _isInteractive ? widget.onDoubleTap : null,
-          onLongPress: _isInteractive ? _handleLongPress : null,
-          behavior: widget.behavior,
-          excludeFromSemantics: true,
-          child: NakedInteractable(
-            statesController: _effectiveController,
-            enabled: widget.enabled,
-            selected: widget.selected,
-            error: widget.error,
-            focusNode: widget.focusNode,
-            autofocus: widget.autofocus,
-            cursor: effectiveCursor,
+        child: Actions(
+          actions: {
+            ActivateIntent: CallbackAction<ActivateIntent>(
+              onInvoke: _handleKeyboardActivation,
+            ),
+          },
+          child: GestureDetector(
+            onTap: _isInteractive ? _handleTap : null,
+            onDoubleTap: _isInteractive ? widget.onDoubleTap : null,
+            onLongPress: _isInteractive ? _handleLongPress : null,
             behavior: widget.behavior,
-            onStatesChange: widget.onStatesChange,
-            onFocusChange: widget.onFocusChange,
-            onHoverChange: widget.onHoverChange,
-            onPressChange: widget.onPressChange,
-            child: widget.child,
-            builder: widget.builder,
+            excludeFromSemantics: true,
+            child: NakedInteractable(
+              statesController: _effectiveController,
+              enabled: widget.enabled,
+              selected: widget.selected,
+              error: widget.error,
+              focusNode: widget.focusNode,
+              autofocus: widget.autofocus,
+              cursor: effectiveCursor,
+              behavior: widget.behavior,
+              onStatesChange: widget.onStatesChange,
+              onFocusChange: widget.onFocusChange,
+              onHoverChange: widget.onHoverChange,
+              onPressChange: widget.onPressChange,
+              child: widget.child,
+              builder: widget.builder,
+            ),
           ),
         ),
       ),

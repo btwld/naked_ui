@@ -24,7 +24,6 @@ The library includes the following components:
 - **NakedSelect**: Dropdown/select implementation with keyboard navigation
 - **NakedSlider**: Draggable slider with keyboard support and value constraints
 - **NakedTabs**: Tab navigation behavior with accessibility controls
-- **NakedRadioGroup**: Radio button group behavior with selection management
 - **NakedAccordion**: Expandable/collapsible section behavior
 - **NakedMenu**: Menu component with keyboard navigation
 

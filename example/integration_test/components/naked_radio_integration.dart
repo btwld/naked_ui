@@ -17,7 +17,7 @@ void main() {
       await tester.pumpAndSettle();
 
       final radioGroupFinder =
-          find.byType(NakedRadioGroup<radio_example.RadioOption>);
+          find.byType(RadioGroup<radio_example.RadioOption>);
       expect(radioGroupFinder, findsOneWidget);
 
       // The example renders purely visual radios without text labels.
@@ -45,7 +45,7 @@ void main() {
       await tester.pumpWidget(MaterialApp(
         home: Scaffold(
           body: Center(
-            child: NakedRadioGroup<radio_example.RadioOption>(
+            child: RadioGroup<radio_example.RadioOption>(
               groupValue: selectedValue,
               onChanged: (value) => selectedValue = value!,
               child: NakedRadio<radio_example.RadioOption>(
@@ -75,7 +75,7 @@ void main() {
       await tester.pumpWidget(MaterialApp(
         home: Scaffold(
           body: Center(
-            child: NakedRadioGroup<radio_example.RadioOption>(
+            child: RadioGroup<radio_example.RadioOption>(
               groupValue: selectedValue,
               onChanged: (value) => selectedValue = value!,
               child: NakedRadio<radio_example.RadioOption>(
@@ -132,7 +132,7 @@ void main() {
       await tester.pumpWidget(MaterialApp(
         home: Scaffold(
           body: Center(
-            child: NakedRadioGroup<radio_example.RadioOption>(
+            child: RadioGroup<radio_example.RadioOption>(
               groupValue: selectedValue,
               onChanged: (value) => selectedValue = value!,
               child: NakedRadio<radio_example.RadioOption>(
@@ -171,7 +171,7 @@ void main() {
       await tester.pumpWidget(MaterialApp(
         home: Scaffold(
           body: Center(
-            child: NakedRadioGroup<radio_example.RadioOption>(
+            child: RadioGroup<radio_example.RadioOption>(
               groupValue: selectedValue,
               onChanged: (value) => selectedValue = value!,
               child: NakedRadio<radio_example.RadioOption>(
@@ -212,7 +212,7 @@ void main() {
       await tester.pumpWidget(MaterialApp(
         home: Scaffold(
           body: Center(
-            child: NakedRadioGroup<radio_example.RadioOption>(
+            child: RadioGroup<radio_example.RadioOption>(
               groupValue: selectedValue,
               onChanged: (value) => selectedValue = value!,
               child: Column(
@@ -289,7 +289,7 @@ void main() {
           body: Center(
             child: StatefulBuilder(
               builder: (context, setState) {
-                return NakedRadioGroup<radio_example.RadioOption>(
+                return RadioGroup<radio_example.RadioOption>(
                   groupValue: groupValue,
                   onChanged: (value) => setState(() => groupValue = value),
                   child: NakedRadio<radio_example.RadioOption>(

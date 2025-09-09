@@ -282,18 +282,17 @@ class _NakedInteractableState extends State<NakedInteractable> {
       onExit: widget.enabled && widget.onHoverChange != null
           ? (_) => _handleHoverChange(false)
           : null,
-      cursor: widget.enabled ? widget.cursor : MouseCursor.defer,
+      cursor: widget.cursor,
       child: listenerLayer,
     );
 
-    final focusLayer = widget.enabled
-        ? NakedFocusable(
-            focusNode: widget.focusNode,
-            autofocus: widget.autofocus,
-            onFocusChange: _handleFocusChange,
-            child: mouseRegionLayer,
-          )
-        : mouseRegionLayer;
+    // Always include a Focus layer so focus semantics are available even when disabled.
+    final focusLayer = NakedFocusable(
+      focusNode: widget.focusNode,
+      autofocus: widget.autofocus,
+      onFocusChange: _handleFocusChange,
+      child: mouseRegionLayer,
+    );
 
     return IgnorePointer(ignoring: !widget.enabled, child: focusLayer);
   }

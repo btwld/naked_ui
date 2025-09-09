@@ -2,7 +2,7 @@
 title: NakedRadio
 ---
 
-NakedRadioGroup provides a context provider for managing a single selection across multiple radio buttons without imposing any visual styling. It handles keyboard navigation between radio buttons using arrow keys and provides a simple callback-based API.
+RadioGroup provides a context provider for managing a single selection across multiple radio buttons without imposing any visual styling. It handles keyboard navigation between radio buttons using arrow keys and provides a simple callback-based API.
 
 <Info>
   You can find this example in our [GitHub repository](https://github.com/btwld/mix/blob/main/packages/naked/example/lib/api/naked_radio_group.0.dart).
@@ -26,7 +26,7 @@ class _RadioGroupExampleState extends State<RadioGroupExample> {
 
   @override
   Widget build(BuildContext context) {
-    return NakedRadioGroup<RadioOption>(
+    return RadioGroup<RadioOption>(
       groupValue: _selectedValue,
       onChanged: (value) {
         setState(() => _selectedValue = value!);
@@ -105,7 +105,7 @@ class _RadioButtonState extends State<RadioButton> {
 ## Constructor
 
 ```dart
-const NakedRadioGroup({
+const RadioGroup({
   Key? key,
   required this.groupValue,
   required this.onChanged,
@@ -137,7 +137,7 @@ Child widgets, typically containing `NakedRadio` widgets. These buttons will be 
 
 ## NakedRadio
 
-NakedRadio provides interaction behavior and accessibility features without imposing any visual styling, giving complete design freedom. It must be used within a NakedRadioGroup to function properly.
+NakedRadio provides interaction behavior and accessibility features without imposing any visual styling, giving complete design freedom. It must be used within a RadioGroup to function properly.
 
 ### Constructor
 
@@ -208,7 +208,7 @@ Optional external controller for interaction states.
 
 - Completely customizable appearance through builder function
 - State callbacks for hover, pressed, and focus states
-- Keyboard navigation support via arrow keys (handled by NakedRadioGroup)
+- Keyboard navigation support via arrow keys (handled by RadioGroup)
 - Selection follows focus
 - Haptic feedback on selection
 - Accessibility support

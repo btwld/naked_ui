@@ -38,7 +38,7 @@ class _RadioExampleState extends State<RadioExample> {
 
   @override
   Widget build(BuildContext context) {
-    return NakedRadioGroup<RadioOption>(
+    return RadioGroup<RadioOption>(
       groupValue: _selectedValue,
       onChanged: (value) {
         setState(() => _selectedValue = value!);

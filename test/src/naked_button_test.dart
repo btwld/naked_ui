@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart' as m;
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
@@ -44,7 +43,9 @@ void main() {
       expect(wasPressed, isFalse);
     });
 
-    testWidgets('does not respond to keyboard when disabled', (WidgetTester tester) async {
+    testWidgets('does not respond to keyboard when disabled', (
+      WidgetTester tester,
+    ) async {
       bool wasPressed = false;
       await tester.pumpMaterialWidget(
         NakedButton(
@@ -58,7 +59,7 @@ void main() {
       await tester.sendKeyEvent(LogicalKeyboardKey.enter);
       await tester.pump();
       expect(wasPressed, isFalse);
-      
+
       await tester.sendKeyEvent(LogicalKeyboardKey.space);
       await tester.pump();
       expect(wasPressed, isFalse);
@@ -75,7 +76,9 @@ void main() {
       // No error should occur
     });
 
-    testWidgets('supports statesController parameter', (WidgetTester tester) async {
+    testWidgets('supports statesController parameter', (
+      WidgetTester tester,
+    ) async {
       final statesController = WidgetStatesController();
       await tester.pumpMaterialWidget(
         NakedButton(
@@ -87,11 +90,11 @@ void main() {
 
       expect(find.byType(NakedButton), findsOneWidget);
       expect(statesController.value, isEmpty);
-      
+
       // Tap to trigger state change
       await tester.tap(find.byType(NakedButton));
       await tester.pump();
-      
+
       // Controller should have been used (no error)
       expect(find.byType(NakedButton), findsOneWidget);
     });
@@ -286,7 +289,9 @@ void main() {
   });
 
   group('Gesture Interaction', () {
-    testWidgets('calls onLongPress when long pressed', (WidgetTester tester) async {
+    testWidgets('calls onLongPress when long pressed', (
+      WidgetTester tester,
+    ) async {
       bool wasLongPressed = false;
       await tester.pumpMaterialWidget(
         NakedButton(
@@ -300,7 +305,9 @@ void main() {
       expect(wasLongPressed, isTrue);
     });
 
-    testWidgets('does not call onLongPress when disabled', (WidgetTester tester) async {
+    testWidgets('does not call onLongPress when disabled', (
+      WidgetTester tester,
+    ) async {
       bool wasLongPressed = false;
       await tester.pumpMaterialWidget(
         NakedButton(
@@ -315,7 +322,9 @@ void main() {
       expect(wasLongPressed, isFalse);
     });
 
-    testWidgets('calls onDoubleTap when double tapped', (WidgetTester tester) async {
+    testWidgets('calls onDoubleTap when double tapped', (
+      WidgetTester tester,
+    ) async {
       bool wasDoubleTapped = false;
       await tester.pumpMaterialWidget(
         NakedButton(
@@ -329,11 +338,13 @@ void main() {
       await tester.pump(const Duration(milliseconds: 50));
       await tester.tap(find.byType(NakedButton));
       await tester.pumpAndSettle();
-      
+
       expect(wasDoubleTapped, isTrue);
     });
 
-    testWidgets('does not call onDoubleTap when disabled', (WidgetTester tester) async {
+    testWidgets('does not call onDoubleTap when disabled', (
+      WidgetTester tester,
+    ) async {
       bool wasDoubleTapped = false;
       await tester.pumpMaterialWidget(
         NakedButton(
@@ -348,7 +359,7 @@ void main() {
       await tester.pump(const Duration(milliseconds: 50));
       await tester.tap(find.byType(NakedButton));
       await tester.pumpAndSettle();
-      
+
       expect(wasDoubleTapped, isFalse);
     });
   });
@@ -436,8 +447,9 @@ void main() {
             isButton: true,
             hasEnabledState: true,
             isEnabled: enabled,
-            isFocusable: enabled,
-            hasFocusAction: enabled,
+            // Focus semantics should be present regardless of enabled state, matching Material behavior.
+            isFocusable: true,
+            hasFocusAction: true,
             hasTapAction: enabled,
           ),
         );
@@ -475,5 +487,4 @@ void main() {
       tester.expectCursor(SystemMouseCursors.basic, on: keyDisabled);
     });
   });
-
 }

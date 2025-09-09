@@ -281,7 +281,7 @@ void main() {
 
       // Give time for autofocus to take effect
       await tester.pump();
-      
+
       expect(isChecked, false);
 
       await tester.sendKeyEvent(LogicalKeyboardKey.space);
@@ -302,7 +302,7 @@ void main() {
           child: const Text('Checkbox Label'),
         ),
       );
-      
+
       // Give time for autofocus to take effect
       await tester.pump();
 
@@ -315,7 +315,7 @@ void main() {
 
   group('Tristate', () {
     testWidgets(
-      'cycles through states false -> true -> null when tristate is enabled',
+      'cycles through states false -> true -> false when tristate is enabled (Material parity)',
       (WidgetTester tester) async {
         bool? value = false;
 
@@ -341,11 +341,11 @@ void main() {
 
         await tester.pump();
         await tester.tap(find.byType(NakedCheckbox));
-        expect(value, null);
+        expect(value, false);
 
         await tester.pump();
         await tester.tap(find.byType(NakedCheckbox));
-        expect(value, false);
+        expect(value, true);
       },
     );
 

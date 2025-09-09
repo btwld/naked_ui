@@ -74,7 +74,7 @@ NakedButton(
 
 ## State Management
 
-Note on radio buttons: `NakedRadio` does not expose `onSelectChange`. Use the `NakedRadioGroup`’s `onChanged` to observe selection changes, or read selection via `NakedRadio`’s builder/`onStatesChange` using `WidgetState.selected`.
+Note on radio buttons: `NakedRadio` does not expose `onSelectChange`. Use the `RadioGroup`’s `onChanged` to observe selection changes, or read selection via `NakedRadio`’s builder/`onStatesChange` using `WidgetState.selected`.
 
 Naked components do not manage their own state internally. Instead, they provide callbacks that inform you when states change, allowing you to manage state in your own widgets and control the visual representation accordingly.
 

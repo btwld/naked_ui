@@ -31,13 +31,13 @@ class RadioGroupExample extends StatefulWidget {
 class _RadioGroupExampleState extends State<RadioGroupExample> {
   // Primary example
   String? _selectedPriority = 'medium';
-  
+
   // Settings example
   String? _selectedTheme = 'system';
-  
+
   // Notification example
   String? _selectedNotification = 'push';
-  
+
   // User type example
   String? _selectedUserType;
 
@@ -67,39 +67,39 @@ class _RadioGroupExampleState extends State<RadioGroupExample> {
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 32),
-          
+
           // Priority selection
           _PriorityRadioGroup(
             selectedValue: _selectedPriority,
             onChanged: (value) => setState(() => _selectedPriority = value),
           ),
-          
+
           const SizedBox(height: 24),
-          
+
           // Theme selection
           _ThemeRadioGroup(
             selectedValue: _selectedTheme,
             onChanged: (value) => setState(() => _selectedTheme = value),
           ),
-          
+
           const SizedBox(height: 24),
-          
+
           // Notification settings
           _NotificationRadioGroup(
             selectedValue: _selectedNotification,
             onChanged: (value) => setState(() => _selectedNotification = value),
           ),
-          
+
           const SizedBox(height: 24),
-          
+
           // User type with validation
           _UserTypeRadioGroup(
             selectedValue: _selectedUserType,
             onChanged: (value) => setState(() => _selectedUserType = value),
           ),
-          
+
           const SizedBox(height: 32),
-          
+
           // Selection summary
           _SelectionSummary(
             priority: _selectedPriority,
@@ -107,9 +107,9 @@ class _RadioGroupExampleState extends State<RadioGroupExample> {
             notification: _selectedNotification,
             userType: _selectedUserType,
           ),
-          
+
           const SizedBox(height: 24),
-          
+
           // Radio group benefits
           const _RadioGroupBenefits(),
         ],
@@ -189,7 +189,7 @@ class _PriorityRadioGroup extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 16),
-          NakedRadioGroup<String>(
+          RadioGroup<String>(
             groupValue: selectedValue,
             onChanged: onChanged,
             child: Column(
@@ -275,7 +275,7 @@ class _ThemeRadioGroup extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 16),
-          NakedRadioGroup<String>(
+          RadioGroup<String>(
             groupValue: selectedValue,
             onChanged: onChanged,
             child: Column(
@@ -361,7 +361,7 @@ class _NotificationRadioGroup extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 16),
-          NakedRadioGroup<String>(
+          RadioGroup<String>(
             groupValue: selectedValue,
             onChanged: onChanged,
             child: Column(
@@ -443,7 +443,8 @@ class _UserTypeRadioGroup extends StatelessWidget {
             children: [
               Icon(
                 hasSelection ? Icons.person_outline : Icons.error_outline,
-                color: hasSelection ? Colors.purple.shade700 : Colors.red.shade700,
+                color:
+                    hasSelection ? Colors.purple.shade700 : Colors.red.shade700,
                 size: 20,
               ),
               const SizedBox(width: 8),
@@ -452,13 +453,15 @@ class _UserTypeRadioGroup extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
-                  color: hasSelection ? Colors.purple.shade700 : Colors.red.shade700,
+                  color: hasSelection
+                      ? Colors.purple.shade700
+                      : Colors.red.shade700,
                 ),
               ),
             ],
           ),
           const SizedBox(height: 16),
-          NakedRadioGroup<String>(
+          RadioGroup<String>(
             groupValue: selectedValue,
             onChanged: onChanged,
             child: Column(
@@ -481,7 +484,8 @@ class _UserTypeRadioGroup extends StatelessWidget {
               color: hasSelection ? Colors.green.shade100 : Colors.red.shade100,
               borderRadius: BorderRadius.circular(8),
               border: Border.all(
-                color: hasSelection ? Colors.green.shade300 : Colors.red.shade300,
+                color:
+                    hasSelection ? Colors.green.shade300 : Colors.red.shade300,
               ),
             ),
             child: Row(
@@ -489,7 +493,9 @@ class _UserTypeRadioGroup extends StatelessWidget {
                 Icon(
                   hasSelection ? Icons.check_circle : Icons.error,
                   size: 16,
-                  color: hasSelection ? Colors.green.shade700 : Colors.red.shade700,
+                  color: hasSelection
+                      ? Colors.green.shade700
+                      : Colors.red.shade700,
                 ),
                 const SizedBox(width: 8),
                 Expanded(
@@ -499,7 +505,9 @@ class _UserTypeRadioGroup extends StatelessWidget {
                         : 'Please select a user type to continue.',
                     style: TextStyle(
                       fontSize: 12,
-                      color: hasSelection ? Colors.green.shade800 : Colors.red.shade800,
+                      color: hasSelection
+                          ? Colors.green.shade800
+                          : Colors.red.shade800,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
@@ -591,7 +599,8 @@ class _RadioTileState extends State<_RadioTile> {
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   border: Border.all(
-                    color: widget.isSelected ? widget.color : Colors.grey.shade400,
+                    color:
+                        widget.isSelected ? widget.color : Colors.grey.shade400,
                     width: 2,
                   ),
                 ),
@@ -609,24 +618,25 @@ class _RadioTileState extends State<_RadioTile> {
                     : null,
               ),
               const SizedBox(width: 12),
-              
+
               // Icon
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: widget.isSelected 
-                    ? widget.color.withValues(alpha: 0.2)
-                    : Colors.grey.shade100,
+                  color: widget.isSelected
+                      ? widget.color.withValues(alpha: 0.2)
+                      : Colors.grey.shade100,
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
                   widget.icon,
                   size: 18,
-                  color: widget.isSelected ? widget.color : Colors.grey.shade600,
+                  color:
+                      widget.isSelected ? widget.color : Colors.grey.shade600,
                 ),
               ),
               const SizedBox(width: 12),
-              
+
               // Title and subtitle
               Expanded(
                 child: Column(
@@ -637,9 +647,9 @@ class _RadioTileState extends State<_RadioTile> {
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
-                        color: widget.isSelected 
-                          ? widget.color 
-                          : const Color(0xFF1A1A1A),
+                        color: widget.isSelected
+                            ? widget.color
+                            : const Color(0xFF1A1A1A),
                       ),
                     ),
                     const SizedBox(height: 2),
@@ -647,15 +657,15 @@ class _RadioTileState extends State<_RadioTile> {
                       widget.subtitle,
                       style: TextStyle(
                         fontSize: 12,
-                        color: widget.isSelected 
-                          ? widget.color.withValues(alpha: 0.8)
-                          : Colors.grey.shade600,
+                        color: widget.isSelected
+                            ? widget.color.withValues(alpha: 0.8)
+                            : Colors.grey.shade600,
                       ),
                     ),
                   ],
                 ),
               ),
-              
+
               // Selection indicator
               if (widget.isSelected)
                 Icon(
@@ -786,14 +796,14 @@ class _SummaryItem extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
             decoration: BoxDecoration(
-              color: hasValue 
-                ? Colors.green.shade100
-                : (isRequired ? Colors.red.shade100 : Colors.grey.shade200),
+              color: hasValue
+                  ? Colors.green.shade100
+                  : (isRequired ? Colors.red.shade100 : Colors.grey.shade200),
               borderRadius: BorderRadius.circular(8),
               border: Border.all(
-                color: hasValue 
-                  ? Colors.green.shade300
-                  : (isRequired ? Colors.red.shade300 : Colors.grey.shade300),
+                color: hasValue
+                    ? Colors.green.shade300
+                    : (isRequired ? Colors.red.shade300 : Colors.grey.shade300),
               ),
             ),
             child: Text(
@@ -801,9 +811,9 @@ class _SummaryItem extends StatelessWidget {
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
-                color: hasValue 
-                  ? Colors.green.shade800
-                  : (isRequired ? Colors.red.shade800 : Colors.grey.shade600),
+                color: hasValue
+                    ? Colors.green.shade800
+                    : (isRequired ? Colors.red.shade800 : Colors.grey.shade600),
               ),
             ),
           ),
@@ -823,7 +833,8 @@ class _RadioGroupBenefits extends StatelessWidget {
       decoration: BoxDecoration(
         color: const Color(0xFFE8F5E8),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFF4CAF50).withValues(alpha: 0.3)),
+        border:
+            Border.all(color: const Color(0xFF4CAF50).withValues(alpha: 0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -855,7 +866,8 @@ class _RadioGroupBenefits extends StatelessWidget {
           const _BenefitItem(
             icon: Icons.group,
             title: 'Group Management',
-            description: 'Automatic state synchronization across all radio buttons',
+            description:
+                'Automatic state synchronization across all radio buttons',
           ),
           const _BenefitItem(
             icon: Icons.accessibility,

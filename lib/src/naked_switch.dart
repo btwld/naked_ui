@@ -2,13 +2,12 @@ import 'package:flutter/material.dart';
 
 import 'utilities/naked_toggleable.dart';
 
-/// Headless checkbox built on NakedToggleable with proper semantics and callbacks.
-class NakedCheckbox extends StatelessWidget {
-  const NakedCheckbox({
+/// Headless switch built on NakedToggleable with proper semantics and callbacks.
+class NakedSwitch extends StatelessWidget {
+  const NakedSwitch({
     super.key,
     this.child,
-    this.value = false,
-    this.tristate = false,
+    required this.value,
     this.onChanged,
     this.enabled = true,
     this.mouseCursor,
@@ -23,33 +22,21 @@ class NakedCheckbox extends StatelessWidget {
     this.builder,
     this.focusOnPress = false,
   }) : assert(
-         (tristate || value != null),
-         'Non-tristate checkbox must have a non-null value',
+         value != null,
+         'NakedSwitch is binary and requires a non-null value.',
        ),
        assert(
          child != null || builder != null,
          'Either child or builder must be provided',
        );
 
-  /// Visual representation of the checkbox.
-  ///
-  /// Renders different states based on callback properties.
+  /// Visual representation of the switch.
   final Widget? child;
 
-  /// Whether this checkbox is checked.
-  ///
-  /// When [tristate] is true, null corresponds to mixed state.
+  /// Whether this switch is on.
   final bool? value;
 
-  /// Whether the checkbox can be true, false, or null.
-  ///
-  /// When true, tapping cycles through false => true => null => false.
-  /// When false, [value] must not be null.
-  final bool tristate;
-
-  /// Called when the checkbox is toggled.
-  ///
-  /// If null, the checkbox is disabled and unresponsive.
+  /// Called when the switch is toggled.
   final ValueChanged<bool?>? onChanged;
 
   /// Called when focus state changes.
@@ -67,16 +54,13 @@ class NakedCheckbox extends StatelessWidget {
   /// Optional external controller for interaction states.
   final WidgetStatesController? statesController;
 
-  /// Whether the checkbox is enabled.
+  /// Whether the switch is enabled.
   final bool enabled;
 
-  /// Cursor when hovering over the checkbox.
+  /// Cursor when hovering over the switch.
   final MouseCursor? mouseCursor;
 
   /// Whether to provide haptic feedback on tap.
-  ///
-  /// Note: Checkboxes use selectionClick haptic feedback for state changes,
-  /// which is consistent across platforms for selection controls.
   final bool enableFeedback;
 
   /// Optional focus node to control focus behavior.
@@ -88,21 +72,15 @@ class NakedCheckbox extends StatelessWidget {
   /// Optional builder that receives the current states for visuals.
   final ValueWidgetBuilder<Set<WidgetState>>? builder;
 
-  /// Whether to request focus when the checkbox is pressed.
-  ///
-  /// When true, tapping the checkbox will request focus in addition to
-  /// toggling the value. This is useful for form controls where focus
-  /// indication after interaction improves user experience.
-  ///
-  /// Defaults to false to maintain Material Design consistency.
+  /// Whether to request focus when the switch is pressed.
   final bool focusOnPress;
 
   @override
   Widget build(BuildContext context) {
-    // Use NakedToggleable for checkbox behavior
-    Widget result = NakedToggleable(
+    // Use NakedToggleable for switch behavior (binary only)
+    final Widget result = NakedToggleable(
       selected: value,
-      tristate: tristate,
+      tristate: false,
       onChanged: onChanged,
       enabled: enabled,
       focusNode: focusNode,
@@ -124,14 +102,9 @@ class NakedCheckbox extends StatelessWidget {
     final bool _interactive = enabled && onChanged != null;
 
     return Semantics(
-      checked: value,
-      mixed: tristate && value == null,
-      // Provide tap action for assistive tech (avoid double-binding in Pressable)
-      onTap: _interactive
-          ? () => onChanged!(
-              tristate ? (value == null ? false : !value!) : !(value ?? false),
-            )
-          : null,
+      toggled: value,
+      // Provide tap action for assistive tech
+      onTap: _interactive ? () => onChanged!(!(value ?? false)) : null,
       child: result,
     );
   }

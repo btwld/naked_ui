@@ -247,6 +247,14 @@ class _NakedSliderState extends State<NakedSlider> {
     return isShiftPressed ? widget.largeKeyboardStep : widget.keyboardStep;
   }
 
+  String _percentString(double v) {
+    final total = widget.max - widget.min;
+    if (total == 0) return '0%';
+    final pct = (((v - widget.min) / total) * 100).round();
+
+    return '$pct%';
+  }
+
   // No bulk state setter; we update individual flags per event.
 
   void _handleHoverChange(bool value) {
@@ -261,43 +269,74 @@ class _NakedSliderState extends State<NakedSlider> {
   }
 
   Widget _buildSliderInteractable() {
-    return FocusableActionDetector(
+    final gesture = ExcludeSemantics(
+      child: GestureDetector(
+        onVerticalDragStart: widget.direction == Axis.vertical && _isEnabled
+            ? _handleDragStart
+            : null,
+        onVerticalDragUpdate: widget.direction == Axis.vertical && _isEnabled
+            ? _handleDragUpdate
+            : null,
+        onVerticalDragEnd: widget.direction == Axis.vertical && _isEnabled
+            ? _handleDragEnd
+            : null,
+        onHorizontalDragStart: widget.direction == Axis.horizontal && _isEnabled
+            ? _handleDragStart
+            : null,
+        onHorizontalDragUpdate:
+            widget.direction == Axis.horizontal && _isEnabled
+            ? _handleDragUpdate
+            : null,
+        onHorizontalDragEnd: widget.direction == Axis.horizontal && _isEnabled
+            ? _handleDragEnd
+            : null,
+        behavior: HitTestBehavior.opaque,
+        child: widget.child,
+      ),
+    );
+
+    final semantics = Semantics(
       enabled: _isEnabled,
-      focusNode: _focusNode,
-      autofocus: widget.autofocus,
-      descendantsAreTraversable: false,
-      shortcuts: _shortcuts,
-      actions: _actions,
-      onShowHoverHighlight: _handleHoverChange,
-      onFocusChange: _handleFocusChange,
-      mouseCursor: _cursor,
-      child: MouseRegion(
-        onEnter: (_) => _handleHoverChange(true),
-        onExit: (_) => _handleHoverChange(false),
-        cursor: _cursor,
-        child: GestureDetector(
-          onVerticalDragStart: widget.direction == Axis.vertical && _isEnabled
-              ? _handleDragStart
-              : null,
-          onVerticalDragUpdate: widget.direction == Axis.vertical && _isEnabled
-              ? _handleDragUpdate
-              : null,
-          onVerticalDragEnd: widget.direction == Axis.vertical && _isEnabled
-              ? _handleDragEnd
-              : null,
-          onHorizontalDragStart:
-              widget.direction == Axis.horizontal && _isEnabled
-              ? _handleDragStart
-              : null,
-          onHorizontalDragUpdate:
-              widget.direction == Axis.horizontal && _isEnabled
-              ? _handleDragUpdate
-              : null,
-          onHorizontalDragEnd: widget.direction == Axis.horizontal && _isEnabled
-              ? _handleDragEnd
-              : null,
-          behavior: HitTestBehavior.opaque,
-          child: widget.child,
+      slider: true,
+      focusable: _isEnabled,
+      value: _percentString(widget.value),
+      increasedValue: _percentString(
+        _normalizeValue(widget.value + _calculateStep(false)),
+      ),
+      decreasedValue: _percentString(
+        _normalizeValue(widget.value - _calculateStep(false)),
+      ),
+      onIncrease: _isEnabled
+          ? () {
+              final step = _calculateStep(false);
+              _callOnChangeIfNeeded(_normalizeValue(widget.value + step));
+            }
+          : null,
+      onDecrease: _isEnabled
+          ? () {
+              final step = _calculateStep(false);
+              _callOnChangeIfNeeded(_normalizeValue(widget.value - step));
+            }
+          : null,
+      child: gesture,
+    );
+
+    return MergeSemantics(
+      child: FocusableActionDetector(
+        enabled: _isEnabled,
+        focusNode: _focusNode,
+        autofocus: widget.autofocus,
+        descendantsAreTraversable: false,
+        shortcuts: _shortcuts,
+        actions: _actions,
+        onShowHoverHighlight: _handleHoverChange,
+        onFocusChange: _handleFocusChange,
+        mouseCursor: _cursor,
+        child: MouseRegion(
+          onEnter: (_) => _handleHoverChange(true),
+          onExit: (_) => _handleHoverChange(false),
+          cursor: _cursor,
+          child: semantics,
         ),
       ),
     );

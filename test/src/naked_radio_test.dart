@@ -11,7 +11,7 @@ void main() {
   group('Structural Tests', () {
     testWidgets('renders child widget correctly', (WidgetTester tester) async {
       await tester.pumpMaterialWidget(
-        NakedRadioGroup<String>(
+        RadioGroup<String>(
           groupValue: null,
           onChanged: (_) {},
           child: const NakedRadio<String>(
@@ -24,7 +24,7 @@ void main() {
       expect(find.text('Test Radio'), findsOneWidget);
     });
 
-    testWidgets('throws FlutterError when used outside NakedRadioGroup', (
+    testWidgets('throws FlutterError when used outside RadioGroup', (
       WidgetTester tester,
     ) async {
       FlutterErrorDetails? errorDetails;
@@ -50,7 +50,7 @@ void main() {
       String? selectedValue;
 
       await tester.pumpMaterialWidget(
-        NakedRadioGroup<String>(
+        RadioGroup<String>(
           groupValue: null,
           onChanged: (value) => selectedValue = value,
           child: const NakedRadio<String>(
@@ -72,7 +72,7 @@ void main() {
       bool wasChanged = false;
 
       await tester.pumpMaterialWidget(
-        NakedRadioGroup<String>(
+        RadioGroup<String>(
           groupValue: selectedValue,
           onChanged: (_) => wasChanged = true,
           child: const NakedRadio<String>(
@@ -99,7 +99,7 @@ void main() {
       await tester.pumpMaterialWidget(
         Padding(
           padding: const EdgeInsets.all(1.0),
-          child: NakedRadioGroup<String>(
+          child: RadioGroup<String>(
             groupValue: 'test',
             onChanged: (_) {},
             child: NakedRadio<String>(
@@ -121,7 +121,7 @@ void main() {
       bool isPressed = false;
 
       await tester.pumpMaterialWidget(
-        NakedRadioGroup<String>(
+        RadioGroup<String>(
           groupValue: null,
           onChanged: (_) {},
           child: NakedRadio<String>(
@@ -146,7 +146,7 @@ void main() {
       final focusNode = FocusNode();
 
       await tester.pumpMaterialWidget(
-        NakedRadioGroup<String>(
+        RadioGroup<String>(
           groupValue: null,
           onChanged: (_) {},
           child: NakedRadio<String>(
@@ -175,7 +175,7 @@ void main() {
       bool wasChanged = false;
 
       await tester.pumpMaterialWidget(
-        NakedRadioGroup<String>(
+        RadioGroup<String>(
           groupValue: null,
           onChanged: (_) => wasChanged = true,
           child: const NakedRadio<String>(
@@ -196,7 +196,7 @@ void main() {
       bool wasChanged = false;
 
       await tester.pumpMaterialWidget(
-        NakedRadioGroup<String>(
+        RadioGroup<String>(
           groupValue: null,
           onChanged: (_) => wasChanged = true,
 
@@ -215,7 +215,7 @@ void main() {
       WidgetTester tester,
     ) async {
       await tester.pumpMaterialWidget(
-        NakedRadioGroup<String>(
+        RadioGroup<String>(
           groupValue: null,
           onChanged: (_) {},
           child: const NakedRadio<String>(
@@ -238,7 +238,7 @@ void main() {
         final focusNodes = [FocusNode(), FocusNode(), FocusNode()];
 
         await tester.pumpMaterialWidget(
-          NakedRadioGroup<String>(
+          RadioGroup<String>(
             groupValue: null,
             onChanged: (v) => selected = v,
             child: Row(
@@ -292,7 +292,7 @@ void main() {
         final focusNodes = [FocusNode(), FocusNode(), FocusNode()];
 
         await tester.pumpMaterialWidget(
-          NakedRadioGroup<String>(
+          RadioGroup<String>(
             groupValue: null,
             onChanged: (v) => selected = v,
             child: Column(
@@ -343,7 +343,7 @@ void main() {
       WidgetTester tester,
     ) async {
       await tester.pumpMaterialWidget(
-        NakedRadioGroup<String>(
+        RadioGroup<String>(
           key: _key,
           groupValue: null,
           onChanged: (_) {},
@@ -366,7 +366,7 @@ void main() {
       Set<WidgetState>? capturedStates;
 
       await tester.pumpMaterialWidget(
-        NakedRadioGroup<String>(
+        RadioGroup<String>(
           groupValue: 'value1',
           onChanged: (_) {},
           child: Column(
@@ -407,7 +407,7 @@ void main() {
           home: Scaffold(
             body: StatefulBuilder(
               builder: (context, setState) {
-                return NakedRadioGroup<String>(
+                return RadioGroup<String>(
                   groupValue: groupValue,
                   onChanged: (value) {
                     setState(() {
@@ -469,6 +469,5 @@ void main() {
       expect(radio1States!.isSelected, isFalse);
       expect(radio2States!.isSelected, isTrue);
     });
-
   });
 }

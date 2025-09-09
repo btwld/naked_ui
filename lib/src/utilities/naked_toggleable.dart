@@ -143,21 +143,16 @@ class NakedToggleable extends StatelessWidget {
     }
 
     if (tristate) {
-      // Tristate cycling: false → true → null → false
-      switch (selected) {
-        case false:
-          return true;
-        case true:
-          return null;
-        case null:
-          return false;
-      }
-    } else {
-      // Binary toggle: treat null as false, then toggle
-      final current = selected ?? false;
+      // Material tristate cycle: null → false → true → null
+      if (selected == null) return false;
+      if (selected == false) return true;
 
-      return !current;
+      return null; // true → null (complete the cycle)
     }
+    // Binary toggle: treat null as false, then toggle
+    final current = selected ?? false;
+
+    return !current;
   }
 
   /// Handles activation (tap/keyboard).
@@ -195,6 +190,7 @@ class NakedToggleable extends StatelessWidget {
       // We handle our own selectionClick feedback
       enableFeedback: false,
       focusOnPress: focusOnPress,
+      semanticsIsButton: false,
       child: child,
       builder: builder,
     );
