@@ -385,7 +385,6 @@ class NakedSelectTrigger extends StatelessWidget {
     this.onFocusChange,
     this.onHoverChange,
     this.onPressChange,
-    this.statesController,
   });
 
   /// The child widget to display.
@@ -401,8 +400,6 @@ class NakedSelectTrigger extends StatelessWidget {
   /// Called when highlight (pressed) state changes.
   final ValueChanged<bool>? onPressChange;
 
-  /// Optional external controller for interaction states.
-  final WidgetStatesController? statesController;
 
   /// The cursor to show when hovering over the trigger.
   /// Defaults to [SystemMouseCursors.click].
@@ -451,7 +448,6 @@ class NakedSelectTrigger extends StatelessWidget {
       onFocusChange: onFocusChange,
       onHoverChange: onHoverChange,
       onPressChange: onPressChange,
-      statesController: statesController,
       child: child,
     );
   }
@@ -495,7 +491,6 @@ class NakedSelectItem<T> extends StatefulWidget {
     this.onFocusChange,
     this.onHoverChange,
     this.onPressChange,
-    this.statesController,
   });
 
   /// The child widget to display.
@@ -518,8 +513,6 @@ class NakedSelectItem<T> extends StatefulWidget {
   /// Called when highlight (pressed) state changes.
   final ValueChanged<bool>? onPressChange;
 
-  /// Optional external controller for interaction states.
-  final WidgetStatesController? statesController;
 
   /// Whether this item is enabled and can be selected.
   /// When false, all interaction is disabled.
@@ -647,7 +640,6 @@ class _NakedSelectItemState<T> extends State<NakedSelectItem<T>> {
       onFocusChange: widget.onFocusChange,
       onHoverChange: widget.onHoverChange,
       onPressChange: widget.onPressChange,
-      statesController: widget.statesController,
       child: widget.child,
     );
   }

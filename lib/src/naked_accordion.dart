@@ -227,8 +227,6 @@ class NakedAccordionItem<T> extends StatelessWidget {
     this.onFocusChange,
     this.onHoverChange,
     this.onPressChange,
-    this.onStatesChange,
-    this.statesController,
   });
 
   /// Builder function that creates the trigger widget.
@@ -258,11 +256,6 @@ class NakedAccordionItem<T> extends StatelessWidget {
   /// Called when highlight (pressed) state changes.
   final ValueChanged<bool>? onPressChange;
 
-  /// Called when any widget state changes.
-  final ValueChanged<Set<WidgetState>>? onStatesChange;
-
-  /// Optional external controller for interaction states.
-  final WidgetStatesController? statesController;
 
   /// Whether the accordion item is enabled.
   final bool enabled;
@@ -319,8 +312,6 @@ class NakedAccordionItem<T> extends StatelessWidget {
                   onFocusChange: onFocusChange,
                   onHoverChange: onHoverChange,
                   onPressChange: onPressChange,
-                  onStatesChange: onStatesChange,
-                  statesController: statesController,
                   builder: (context, states, child) =>
                       trigger(context, isExpanded),
                 ),

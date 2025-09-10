@@ -84,7 +84,6 @@ void main() {
                 onHoverChange: (hovered) => isHovered = hovered,
                 onPressChange: (pressed) => isPressed = pressed,
                 onFocusChange: (focused) {},
-                onStatesChange: (states) => lastStates = states,
                 builder: (context, states, child) {
                   return Container(
                     width: 20,
@@ -108,17 +107,11 @@ void main() {
       // Test hover state
       await tester.simulateHover(radioKey, onHover: () {
         expect(isHovered, isTrue);
-        if (lastStates != null) {
-          tester.expectWidgetStates(lastStates!, expectHovered: true);
-        }
       });
 
       // Test press state
       await tester.simulatePress(radioKey, onPressed: () {
         expect(isPressed, isTrue);
-        if (lastStates != null) {
-          tester.expectWidgetStates(lastStates!, expectPressed: true);
-        }
       });
     });
 

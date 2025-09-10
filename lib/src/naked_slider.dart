@@ -75,7 +75,6 @@ class NakedSlider extends StatefulWidget {
     this.divisions,
     this.keyboardStep = 0.01,
     this.largeKeyboardStep = 0.1,
-    this.statesController,
   }) : assert(min < max, 'min must be less than max');
 
   /// Child widget to display.
@@ -135,8 +134,6 @@ class NakedSlider extends StatefulWidget {
   /// Large keyboard navigation step size.
   final double largeKeyboardStep;
 
-  /// Optional external controller for interaction states.
-  final WidgetStatesController? statesController;
 
   @override
   State<NakedSlider> createState() => _NakedSliderState();
@@ -148,10 +145,7 @@ class _NakedSliderState extends State<NakedSlider> {
       widget.focusNode ?? (_internalFocusNode ??= FocusNode());
   bool _isDragging = false;
 
-  WidgetStatesController? _internalController;
-  WidgetStatesController get _controller =>
-      widget.statesController ??
-      (_internalController ??= WidgetStatesController());
+  final Set<WidgetState> _widgetStates = <WidgetState>{};
 
   // Hover and focus are tracked via the states controller only
 
@@ -162,7 +156,9 @@ class _NakedSliderState extends State<NakedSlider> {
   void initState() {
     super.initState();
     // Initialize disabled state based on interactivity
-    _controller.update(WidgetState.disabled, !_isEnabled);
+    if (!_isEnabled) {
+      _widgetStates.add(WidgetState.disabled);
+    }
   }
 
   void _callOnChangeIfNeeded(double value) {
@@ -192,7 +188,7 @@ class _NakedSliderState extends State<NakedSlider> {
     _dragStartPosition = details.globalPosition;
     _dragStartValue = widget.value;
 
-    _controller.update(WidgetState.pressed, true);
+    _widgetStates.add(WidgetState.pressed);
 
     widget.onDragChange?.call(true);
     widget.onDragStart?.call();
@@ -234,7 +230,7 @@ class _NakedSliderState extends State<NakedSlider> {
     _dragStartPosition = null;
     _dragStartValue = null;
 
-    _controller.update(WidgetState.pressed, false);
+    _widgetStates.remove(WidgetState.pressed);
 
     widget.onDragChange?.call(false);
     widget.onDragEnd?.call(widget.value);
@@ -257,16 +253,6 @@ class _NakedSliderState extends State<NakedSlider> {
 
   // No bulk state setter; we update individual flags per event.
 
-  void _handleHoverChange(bool value) {
-    if (!_isEnabled) return;
-    _controller.update(WidgetState.hovered, value);
-    widget.onHoverChange?.call(value);
-  }
-
-  void _handleFocusChange(bool value) {
-    _controller.update(WidgetState.focused, value);
-    widget.onFocusChange?.call(value);
-  }
 
   Widget _buildSliderInteractable() {
     final gesture = ExcludeSemantics(
@@ -330,19 +316,54 @@ class _NakedSliderState extends State<NakedSlider> {
               descendantsAreTraversable: false,
               shortcuts: _shortcuts,
               actions: _actions,
-              onShowHoverHighlight: _handleHoverChange,
-              onFocusChange: _handleFocusChange,
+              onShowHoverHighlight: (value) {
+                if (!_isEnabled) return;
+                if (value) {
+                  _widgetStates.add(WidgetState.hovered);
+                } else {
+                  _widgetStates.remove(WidgetState.hovered);
+                }
+                widget.onHoverChange?.call(value);
+              },
+              onFocusChange: (value) {
+                if (value) {
+                  _widgetStates.add(WidgetState.focused);
+                } else {
+                  _widgetStates.remove(WidgetState.focused);
+                }
+                widget.onFocusChange?.call(value);
+              },
               mouseCursor: _cursor,
               child: MouseRegion(
-                onEnter: (_) => _handleHoverChange(true),
-                onExit: (_) => _handleHoverChange(false),
+                onEnter: (_) {
+                  if (_isEnabled) {
+                    _widgetStates.add(WidgetState.hovered);
+                    widget.onHoverChange?.call(true);
+                  }
+                },
+                onExit: (_) {
+                  if (_isEnabled) {
+                    _widgetStates.remove(WidgetState.hovered);
+                    widget.onHoverChange?.call(false);
+                  }
+                },
                 cursor: _cursor,
                 child: semantics,
               ),
             )
           : MouseRegion(
-              onEnter: (_) => _handleHoverChange(true),
-              onExit: (_) => _handleHoverChange(false),
+              onEnter: (_) {
+                if (_isEnabled) {
+                  _widgetStates.add(WidgetState.hovered);
+                  widget.onHoverChange?.call(true);
+                }
+              },
+              onExit: (_) {
+                if (_isEnabled) {
+                  _widgetStates.remove(WidgetState.hovered);
+                  widget.onHoverChange?.call(false);
+                }
+              },
               cursor: _cursor,
               child: semantics,
             ),
@@ -352,27 +373,19 @@ class _NakedSliderState extends State<NakedSlider> {
   @override
   void didUpdateWidget(NakedSlider oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.statesController != oldWidget.statesController) {
-      if (widget.statesController != null) {
-        _internalController?.dispose();
-        _internalController = null;
-      } else {
-        _internalController ??= WidgetStatesController();
-      }
-    }
-    // Sync disabled state when interactivity changes
-    _controller.update(WidgetState.disabled, !_isEnabled);
-    if (!_isEnabled) {
+    // Update disabled state when interactivity changes
+    if (_isEnabled) {
+      _widgetStates.remove(WidgetState.disabled);
+    } else {
+      _widgetStates.add(WidgetState.disabled);
       // Clear transient hover/pressed states when disabled
-      _controller
-        ..update(WidgetState.hovered, false)
-        ..update(WidgetState.pressed, false);
+      _widgetStates.remove(WidgetState.hovered);
+      _widgetStates.remove(WidgetState.pressed);
     }
   }
 
   @override
   void dispose() {
-    _internalController?.dispose();
     _internalFocusNode?.dispose();
     super.dispose();
   }

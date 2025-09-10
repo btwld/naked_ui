@@ -1,31 +1,31 @@
+import 'package:example/api/naked_button.0.dart' as button_example;
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:naked_ui/naked_ui.dart';
-import 'package:example/api/naked_button.0.dart' as button_example;
 
 import '../helpers/test_helpers.dart';
 
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
-  
+
   group('NakedButton Integration Tests', () {
     testWidgets('button responds to all interaction types', (tester) async {
       // Use the actual example app
       await tester.pumpWidget(const button_example.MyApp());
       await tester.pumpAndSettle();
-      
+
       final buttonFinder = find.byType(NakedButton);
       expect(buttonFinder, findsOneWidget);
-      
+
       // Test tap interaction
       await tester.tap(buttonFinder);
       await tester.pumpAndSettle();
-      
+
       // Test keyboard activation
       await tester.testKeyboardActivation(buttonFinder);
       await tester.pumpAndSettle();
-      
+
       // Test hover simulation (on platforms that support it)
       final buttonKey = UniqueKey();
       await tester.pumpWidget(MaterialApp(
@@ -40,16 +40,16 @@ void main() {
         ),
       ));
       await tester.pumpAndSettle();
-      
+
       await tester.simulateHover(buttonKey);
       await tester.pumpAndSettle();
     });
-    
+
     testWidgets('button handles focus management correctly', (tester) async {
       final buttonKey = UniqueKey();
       final focusNode = tester.createManagedFocusNode();
       bool focusChanged = false;
-      
+
       await tester.pumpWidget(MaterialApp(
         home: Scaffold(
           body: Center(
@@ -64,13 +64,13 @@ void main() {
         ),
       ));
       await tester.pumpAndSettle();
-      
+
       // Test focus acquisition
       focusNode.requestFocus();
       await tester.pump();
       expect(focusNode.hasFocus, isTrue);
       expect(focusChanged, isTrue);
-      
+
       // Test focus loss
       focusChanged = false;
       focusNode.unfocus();
@@ -78,13 +78,14 @@ void main() {
       expect(focusNode.hasFocus, isFalse);
       expect(focusChanged, isFalse);
     });
-    
-    testWidgets('button state callbacks work in real app context', (tester) async {
+
+    testWidgets('button state callbacks work in real app context',
+        (tester) async {
       final buttonKey = UniqueKey();
       bool isHovered = false;
       bool isPressed = false;
       Set<WidgetState>? lastStates;
-      
+
       await tester.pumpWidget(MaterialApp(
         home: Scaffold(
           body: Center(
@@ -94,36 +95,29 @@ void main() {
               onHoverChange: (hovered) => isHovered = hovered,
               onPressChange: (pressed) => isPressed = pressed,
               onFocusChange: (focused) {},
-              onStatesChange: (states) => lastStates = states,
               child: const Text('Test Button'),
             ),
           ),
         ),
       ));
       await tester.pumpAndSettle();
-      
+
       // Test hover state
       await tester.simulateHover(buttonKey, onHover: () {
         expect(isHovered, isTrue);
-        if (lastStates != null) {
-          tester.expectWidgetStates(lastStates!, expectHovered: true);
-        }
       });
-      
+
       // Test press state
       await tester.simulatePress(buttonKey, onPressed: () {
         expect(isPressed, isTrue);
-        if (lastStates != null) {
-          tester.expectWidgetStates(lastStates!, expectPressed: true);
-        }
       });
     });
-    
+
     testWidgets('button keyboard navigation works correctly', (tester) async {
       // Create multiple buttons to test tab navigation
       final button1Key = UniqueKey();
       final button2Key = UniqueKey();
-      
+
       await tester.pumpWidget(MaterialApp(
         home: Scaffold(
           body: Column(
@@ -145,19 +139,19 @@ void main() {
         ),
       ));
       await tester.pumpAndSettle();
-      
+
       // Test tab navigation order
       await tester.verifyTabOrder([
         find.byKey(button1Key),
         find.byKey(button2Key),
       ]);
     });
-    
+
     testWidgets('disabled button blocks all interactions', (tester) async {
       final buttonKey = UniqueKey();
       bool wasPressed = false;
       bool hoverChanged = false;
-      
+
       await tester.pumpWidget(MaterialApp(
         home: Scaffold(
           body: Center(
@@ -173,26 +167,26 @@ void main() {
         ),
       ));
       await tester.pumpAndSettle();
-      
+
       // Test that disabled button doesn't respond to tap
       await tester.tap(find.byKey(buttonKey));
       await tester.pump();
       expect(wasPressed, isFalse);
-      
+
       // Test that disabled button doesn't respond to keyboard
       await tester.testKeyboardActivation(find.byKey(buttonKey));
       expect(wasPressed, isFalse);
-      
+
       // Test that hover callbacks aren't triggered when disabled
       await tester.simulateHover(buttonKey);
       expect(hoverChanged, isFalse);
     });
-    
+
     testWidgets('focusOnPress requests focus when enabled', (tester) async {
       final buttonKey = UniqueKey();
       final focusNode = tester.createManagedFocusNode();
       bool wasPressed = false;
-      
+
       await tester.pumpWidget(MaterialApp(
         home: Scaffold(
           body: Center(
@@ -207,24 +201,24 @@ void main() {
         ),
       ));
       await tester.pumpAndSettle();
-      
+
       // Initially not focused
       expect(focusNode.hasFocus, isFalse);
-      
+
       // Tap button - should request focus
       await tester.tap(find.byKey(buttonKey));
       await tester.pump();
-      
+
       // Now should be focused and pressed
       expect(focusNode.hasFocus, isTrue);
       expect(wasPressed, isTrue);
     });
-    
+
     testWidgets('focusOnPress disabled does not request focus', (tester) async {
       final buttonKey = UniqueKey();
       final focusNode = tester.createManagedFocusNode();
       bool wasPressed = false;
-      
+
       await tester.pumpWidget(MaterialApp(
         home: Scaffold(
           body: Center(
@@ -239,14 +233,14 @@ void main() {
         ),
       ));
       await tester.pumpAndSettle();
-      
+
       // Initially not focused
       expect(focusNode.hasFocus, isFalse);
-      
+
       // Tap button - should NOT request focus
       await tester.tap(find.byKey(buttonKey));
       await tester.pump();
-      
+
       // Should still not be focused but should be pressed
       expect(focusNode.hasFocus, isFalse);
       expect(wasPressed, isTrue);
@@ -256,7 +250,7 @@ void main() {
       final buttonKey = UniqueKey();
       bool isHovered = false;
       bool isPressed = false;
-      
+
       await tester.pumpWidget(MaterialApp(
         home: Scaffold(
           body: Center(
@@ -267,12 +261,12 @@ void main() {
                 return Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: states.contains(WidgetState.hovered) 
-                        ? Colors.blue.shade100 
+                    color: states.contains(WidgetState.hovered)
+                        ? Colors.blue.shade100
                         : Colors.grey.shade100,
                     border: Border.all(
-                      color: states.contains(WidgetState.pressed) 
-                          ? Colors.blue 
+                      color: states.contains(WidgetState.pressed)
+                          ? Colors.blue
                           : Colors.grey,
                       width: 2,
                     ),
@@ -289,16 +283,16 @@ void main() {
         ),
       ));
       await tester.pumpAndSettle();
-      
+
       final buttonFinder = find.byKey(buttonKey);
       expect(buttonFinder, findsOneWidget);
       expect(find.text('Builder Button'), findsOneWidget);
-      
+
       // Test that builder updates with state changes
       await tester.simulateHover(buttonKey, onHover: () {
         expect(isHovered, isTrue);
       });
-      
+
       await tester.simulatePress(buttonKey, onPressed: () {
         expect(isPressed, isTrue);
       });
@@ -307,7 +301,7 @@ void main() {
     testWidgets('button onLongPress works correctly', (tester) async {
       final buttonKey = UniqueKey();
       bool wasLongPressed = false;
-      
+
       await tester.pumpWidget(MaterialApp(
         home: Scaffold(
           body: Center(
@@ -321,11 +315,11 @@ void main() {
         ),
       ));
       await tester.pumpAndSettle();
-      
+
       // Long press the button
       await tester.longPress(find.byKey(buttonKey));
       await tester.pumpAndSettle();
-      
+
       // Verify long press callback was called
       expect(wasLongPressed, isTrue);
     });
@@ -333,7 +327,7 @@ void main() {
     testWidgets('button onDoubleTap works correctly', (tester) async {
       final buttonKey = UniqueKey();
       bool wasDoubleTapped = false;
-      
+
       await tester.pumpWidget(MaterialApp(
         home: Scaffold(
           body: Center(
@@ -347,13 +341,13 @@ void main() {
         ),
       ));
       await tester.pumpAndSettle();
-      
+
       // Double tap the button
       await tester.tap(find.byKey(buttonKey));
       await tester.pump(const Duration(milliseconds: 100));
       await tester.tap(find.byKey(buttonKey));
       await tester.pumpAndSettle();
-      
+
       // Verify double tap callback was called
       expect(wasDoubleTapped, isTrue);
     });
@@ -371,14 +365,14 @@ void main() {
         ),
       ));
       await tester.pumpAndSettle();
-      
+
       final iconButton = find.byType(NakedButton);
       expect(iconButton, findsOneWidget);
       expect(find.byIcon(Icons.star), findsOneWidget);
-      
+
       await tester.tap(iconButton);
       await tester.pumpAndSettle();
-      
+
       // Test with complex child widget
       await tester.pumpWidget(MaterialApp(
         home: Scaffold(
@@ -398,12 +392,12 @@ void main() {
         ),
       ));
       await tester.pumpAndSettle();
-      
+
       final complexButton = find.byType(NakedButton);
       expect(complexButton, findsOneWidget);
       expect(find.text('Play'), findsOneWidget);
       expect(find.byIcon(Icons.play_arrow), findsOneWidget);
-      
+
       await tester.tap(complexButton);
       await tester.pumpAndSettle();
     });

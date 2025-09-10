@@ -19,8 +19,6 @@ class NakedCheckbox extends StatefulWidget {
     this.onFocusChange,
     this.onHoverChange,
     this.onPressChange,
-    this.onStatesChange,
-    this.statesController,
     this.builder,
     this.focusOnPress = false,
   }) : assert(
@@ -62,11 +60,6 @@ class NakedCheckbox extends StatefulWidget {
   /// Called when highlight (pressed) state changes.
   final ValueChanged<bool>? onPressChange;
 
-  /// Called when any widget state changes.
-  final ValueChanged<Set<WidgetState>>? onStatesChange;
-
-  /// Optional external controller for interaction states.
-  final WidgetStatesController? statesController;
 
   /// Whether the checkbox is enabled.
   final bool enabled;
@@ -106,32 +99,15 @@ class NakedCheckbox extends StatefulWidget {
 
 class _NakedCheckboxState extends State<NakedCheckbox>
     with
-        WidgetStatesControllerMixin<NakedCheckbox>,
+        SimpleWidgetStatesMixin<NakedCheckbox>,
         NakedFocusableMixin<NakedCheckbox>,
         NakedHoverableMixin<NakedCheckbox>,
         NakedPressableMixin<NakedCheckbox>,
         NakedSelectableMixin<NakedCheckbox> {
-  // Bridge to mixins
   @override
-  WidgetStatesController? get providedStatesController =>
-      widget.statesController;
-
-  @override
-  ValueChanged<Set<WidgetState>>? get onStatesChange =>
-      widget.onStatesChange != null ||
-          widget.onFocusChange != null ||
-          widget.onHoverChange != null ||
-          widget.onPressChange != null
-      ? (states) {
-          emitStateCallbacks(
-            states: states,
-            onStatesChange: widget.onStatesChange,
-            onFocusChange: widget.onFocusChange,
-            onHoverChange: widget.onHoverChange,
-            onPressChange: widget.onPressChange,
-          );
-        }
-      : null;
+  void initializeWidgetStates() {
+    updateState(WidgetState.disabled, !widget.enabled);
+  }
 
   @override
   FocusNode? get providedFocusNode => widget.focusNode;
@@ -156,19 +132,6 @@ class _NakedCheckboxState extends State<NakedCheckbox>
     );
   }
 
-  void _handleHoverChange(bool hovered) {
-    if (widget.enabled) {
-      updateState(WidgetState.hovered, hovered);
-    }
-  }
-
-  void _handleFocusChange(bool focused) {
-    updateState(WidgetState.focused, focused);
-  }
-
-  void _handlePressChange(bool pressed) {
-    updateState(WidgetState.pressed, pressed);
-  }
 
   void _handleTapDown(TapDownDetails _) {
     if (widget.focusOnPress && providedFocusNode != null) {
@@ -177,7 +140,7 @@ class _NakedCheckboxState extends State<NakedCheckbox>
   }
 
   Widget _buildContent(BuildContext context) {
-    final states = currentStates;
+    final states = widgetStates;
 
     return widget.builder != null
         ? widget.builder!(context, states, widget.child)
@@ -187,14 +150,9 @@ class _NakedCheckboxState extends State<NakedCheckbox>
   @override
   void didUpdateWidget(covariant NakedCheckbox oldWidget) {
     super.didUpdateWidget(oldWidget);
-    syncStatesController();
+    syncWidgetStates();
   }
 
-  @override
-  void syncWidgetStates(WidgetStatesController controller) {
-    // Only sync the disabled state from widget constructor props.
-    controller.update(WidgetState.disabled, !widget.enabled);
-  }
 
   MouseCursor get _effectiveCursor => widget._effectiveEnabled
       ? (widget.mouseCursor ?? SystemMouseCursors.click)
@@ -221,7 +179,11 @@ class _NakedCheckboxState extends State<NakedCheckbox>
         },
         child: buildFocus(
           autofocus: widget.autofocus,
-          onFocusChange: _handleFocusChange,
+          onFocusChange: (focused) {
+            if (updateState(WidgetState.focused, focused)) {
+              widget.onFocusChange?.call(focused);
+            }
+          },
           includeSemantics: false,
           child: Semantics(
             enabled: widget._effectiveEnabled,
@@ -231,12 +193,20 @@ class _NakedCheckboxState extends State<NakedCheckbox>
             onFocus: _semanticsFocusHandler,
             child: buildHoverRegion(
               cursor: _effectiveCursor,
-              onHoverChange: _handleHoverChange,
+              onHoverChange: (hovered) {
+                if (widget.enabled && updateState(WidgetState.hovered, hovered)) {
+                  widget.onHoverChange?.call(hovered);
+                }
+              },
               child: buildPressDetector(
                 enabled: widget.enabled,
                 behavior: HitTestBehavior.opaque,
                 excludeFromSemantics: false,
-                onPressChange: _handlePressChange,
+                onPressChange: (pressed) {
+                  if (updateState(WidgetState.pressed, pressed)) {
+                    widget.onPressChange?.call(pressed);
+                  }
+                },
                 onTap: widget._effectiveEnabled ? _handleActivation : null,
                 onTapDown: _handleTapDown,
                 child: _buildContent(context),

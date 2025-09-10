@@ -77,7 +77,6 @@ void main() {
               onHoverChange: (hovered) => isHovered = hovered,
               onPressChange: (pressed) => isPressed = pressed,
               onFocusChange: (focused) {},
-              onStatesChange: (states) => lastStates = states,
               child: const Text('Test Checkbox'),
             ),
           ),
@@ -88,17 +87,11 @@ void main() {
       // Test hover state
       await tester.simulateHover(checkboxKey, onHover: () {
         expect(isHovered, isTrue);
-        if (lastStates != null) {
-          tester.expectWidgetStates(lastStates!, expectHovered: true);
-        }
       });
 
       // Test press state
       await tester.simulatePress(checkboxKey, onPressed: () {
         expect(isPressed, isTrue);
-        if (lastStates != null) {
-          tester.expectWidgetStates(lastStates!, expectPressed: true);
-        }
       });
     });
 

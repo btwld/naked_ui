@@ -136,8 +136,6 @@ class NakedMenuItem extends StatelessWidget {
     this.onFocusChange,
     this.onHoverChange,
     this.onPressChange,
-    this.onStatesChange,
-    this.statesController,
     this.builder,
   }) : assert(
          child != null || builder != null,
@@ -163,11 +161,6 @@ class NakedMenuItem extends StatelessWidget {
   /// Called when highlight (pressed) state changes.
   final ValueChanged<bool>? onPressChange;
 
-  /// Called when any widget state changes.
-  final ValueChanged<Set<WidgetState>>? onStatesChange;
-
-  /// Optional external controller for interaction states.
-  final WidgetStatesController? statesController;
 
   /// Optional builder that receives the current states for visuals.
   final ValueWidgetBuilder<Set<WidgetState>>? builder;
@@ -217,8 +210,6 @@ class NakedMenuItem extends StatelessWidget {
       onFocusChange: onFocusChange,
       onHoverChange: onHoverChange,
       onPressChange: onPressChange,
-      onStatesChange: onStatesChange,
-      statesController: statesController,
       child: child,
       builder: builder != null
           ? (context, states, child) => builder!(context, states, child)

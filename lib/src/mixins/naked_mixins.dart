@@ -123,139 +123,65 @@ mixin NakedHoverableMixin<T extends StatefulWidget> on State<T> {
   }
 }
 
-/// Simplified helper for managing a WidgetStatesController lifecycle.
+/// Simplified widget states management mixin.
 ///
 /// Purpose:
-/// - Provide an "effective" controller (external when provided, otherwise internal)
-/// - Handle listener attach/detach and controller swapping
-/// - Sync widget properties to controller states via syncWidgetStates hook
+/// - Manage widget interaction states internally using a Set<WidgetState>
+/// - Provide updateState method to change states and trigger rebuilds
+/// - Emit individual state change callbacks when states actually change
 ///
 /// How to use:
-/// - mixin on a State class: `with WidgetStatesControllerMixin<YourWidget>`
-/// - implement the protected getters:
-///   * `WidgetStatesController? get providedStatesController`
-///   * `ValueChanged<Set<WidgetState>>? get onStatesChange` (optional)
-/// - implement `syncWidgetStates()` to sync widget props to controller
+/// - mixin on a State class: `with SimpleWidgetStatesMixin<YourWidget>`
 /// - use [updateState] to update interaction flags like focused/hovered/pressed
-mixin WidgetStatesControllerMixin<T extends StatefulWidget> on State<T> {
-  WidgetStatesController? _internalStatesController;
-  WidgetStatesController? _currentController;
-  Set<WidgetState> _lastStates = <WidgetState>{};
+/// - override [initializeWidgetStates] to set initial states based on widget properties
+mixin SimpleWidgetStatesMixin<T extends StatefulWidget> on State<T> {
+  Set<WidgetState> _widgetStates = <WidgetState>{};
 
+  /// Current widget states (copy) for use in builders and semantics.
   @protected
-  WidgetStatesController? get providedStatesController;
+  Set<WidgetState> get widgetStates => {..._widgetStates};
 
-  /// Optional callback to notify consumers when the state set changes.
+  /// Hook for widgets to initialize states based on widget properties.
+  /// Called during initialization and when widget updates.
   @protected
-  ValueChanged<Set<WidgetState>>? get onStatesChange;
-
-  @protected
-  WidgetStatesController get effectiveStatesController {
-    return providedStatesController ??
-        (_internalStatesController ??= WidgetStatesController());
-  }
-
-  /// Hook for widgets to synchronize widget properties to controller states.
-  /// Called automatically during initialization and after controller swaps.
-  @protected
-  void syncWidgetStates(WidgetStatesController controller);
-
-  void _handleControllerChanged() {
-    final statesCopy = {...effectiveStatesController.value};
-    onStatesChange?.call(statesCopy);
-    // Update last snapshot after notifying
-    _lastStates = statesCopy;
-    if (mounted) {
-      // ignore: avoid-empty-setstate, no-empty-block
-      setState(() {});
-    }
+  void initializeWidgetStates() {
+    // Default implementation does nothing - override in concrete widgets
   }
 
   @override
   @mustCallSuper
   void initState() {
     super.initState();
-    _currentController = effectiveStatesController;
-    _currentController!.addListener(_handleControllerChanged);
-    // Initialize last snapshot BEFORE first sync so deltas are computed correctly
-    _lastStates = {..._currentController!.value};
-    syncWidgetStates(_currentController!);
+    initializeWidgetStates();
   }
 
-  /// Call this method from your widget's didUpdateWidget to handle controller changes
-  /// and sync states when needed.
+  /// Call this method from your widget's didUpdateWidget to sync states.
   @protected
-  void syncStatesController() {
-    final newController = effectiveStatesController;
-    if (!identical(_currentController, newController)) {
-      // Controller changed - swap listeners
-      _currentController?.removeListener(_handleControllerChanged);
-      _currentController = newController;
-      _currentController!.addListener(_handleControllerChanged);
-    }
-    // Reset last snapshot to current before syncing props
-    _lastStates = {...?_currentController?.value};
-    // Always sync widget states after potential swaps
-    syncWidgetStates(_currentController!);
+  void syncWidgetStates() {
+    // Update states based on current widget properties
+    initializeWidgetStates();
   }
 
   /// Change-detecting state update. Returns true if the value actually changed.
   @protected
   // ignore: prefer-named-boolean-parameters
   bool updateState(WidgetState state, bool value) {
-    final ctrl = effectiveStatesController;
-    final before = ctrl.value.contains(state);
+    final before = _widgetStates.contains(state);
     if (before == value) return false;
-    ctrl.update(state, value);
-
+    
+    if (value) {
+      _widgetStates.add(state);
+    } else {
+      _widgetStates.remove(state);
+    }
+    
+    if (mounted) {
+      setState(() {});
+    }
+    
     return true;
   }
 
-  /// Helper method to emit both unified and individual state change callbacks.
-  /// Only emits individual callbacks when their value actually changed.
-  @protected
-  void emitStateCallbacks({
-    required Set<WidgetState> states,
-    ValueChanged<Set<WidgetState>>? onStatesChange,
-    ValueChanged<bool>? onFocusChange,
-    ValueChanged<bool>? onHoverChange,
-    ValueChanged<bool>? onPressChange,
-  }) {
-    // Call unified callback first
-    onStatesChange?.call(states);
-
-    // Delta-based emission for individual callbacks
-    final prev = _lastStates;
-    final focusedNow = states.contains(WidgetState.focused);
-    final focusedBefore = prev.contains(WidgetState.focused);
-    if (focusedNow != focusedBefore) {
-      onFocusChange?.call(focusedNow);
-    }
-
-    final hoveredNow = states.contains(WidgetState.hovered);
-    final hoveredBefore = prev.contains(WidgetState.hovered);
-    if (hoveredNow != hoveredBefore) {
-      onHoverChange?.call(hoveredNow);
-    }
-
-    final pressedNow = states.contains(WidgetState.pressed);
-    final pressedBefore = prev.contains(WidgetState.pressed);
-    if (pressedNow != pressedBefore) {
-      onPressChange?.call(pressedNow);
-    }
-  }
-
-  /// Current states snapshot (copy) for convenience.
-  @protected
-  Set<WidgetState> get currentStates => {...effectiveStatesController.value};
-
-  @override
-  @mustCallSuper
-  void dispose() {
-    _currentController?.removeListener(_handleControllerChanged);
-    _internalStatesController?.dispose();
-    super.dispose();
-  }
 }
 
 /// Press listener mixin: stateless helper that forwards press lifecycle via callbacks.

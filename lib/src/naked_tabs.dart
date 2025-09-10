@@ -257,8 +257,6 @@ class NakedTab extends StatefulWidget {
     this.onFocusChange,
     this.onHoverChange,
     this.onPressChange,
-    this.onStatesChange,
-    this.statesController,
     this.builder,
   }) : assert(
          child != null || builder != null,
@@ -279,11 +277,6 @@ class NakedTab extends StatefulWidget {
   /// Called when highlight (pressed) state changes.
   final ValueChanged<bool>? onPressChange;
 
-  /// Called when any widget state changes.
-  final ValueChanged<Set<WidgetState>>? onStatesChange;
-
-  /// Optional external controller for interaction states.
-  final WidgetStatesController? statesController;
 
   /// Optional builder that receives the current states for visuals.
   final ValueWidgetBuilder<Set<WidgetState>>? builder;
@@ -373,33 +366,6 @@ class _NakedTabState extends State<NakedTab> {
 
     assert(widget.tabId.isNotEmpty, 'tabId cannot be empty');
 
-    // Create states controller for managing selected state
-    final WidgetStatesController effectiveController;
-    if (widget.statesController != null) {
-      effectiveController = widget.statesController!;
-    } else {
-      // This needs a proper solution - for now, use a local controller
-      effectiveController = WidgetStatesController();
-    }
-    
-    // Update selected state on the controller
-    effectiveController.update(WidgetState.selected, isSelected);
-
-    // Bridge old individual callbacks to new unified callback
-    void handleStateChange(Set<WidgetState> states) {
-      // Forward individual state callbacks if provided
-      final wasPressed = states.contains(WidgetState.pressed);
-      final wasHovered = states.contains(WidgetState.hovered);
-      final wasFocused = states.contains(WidgetState.focused);
-      
-      // Call individual callbacks
-      widget.onPressChange?.call(wasPressed);
-      widget.onHoverChange?.call(wasHovered);
-      widget.onFocusChange?.call(wasFocused);
-      
-      // Also forward to main callback
-      widget.onStatesChange?.call(states);
-    }
 
     // Use NakedButton for consistent gesture and cursor behavior
     return NakedButton(
@@ -409,8 +375,9 @@ class _NakedTabState extends State<NakedTab> {
         autofocus: widget.autofocus,
         mouseCursor: widget.mouseCursor,
         enableFeedback: false,
-        statesController: effectiveController,
-        onStatesChange: handleStateChange,
+        onFocusChange: widget.onFocusChange,
+        onHoverChange: widget.onHoverChange,
+        onPressChange: widget.onPressChange,
         child: widget.child,
         builder: (context, states, child) {
           if (widget.builder != null) {

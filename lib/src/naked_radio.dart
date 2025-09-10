@@ -16,8 +16,6 @@ class NakedRadio<T> extends StatefulWidget {
     this.onFocusChange,
     this.onHoverChange,
     this.onPressChange,
-    this.onStatesChange,
-    this.statesController,
     this.builder,
   }) : assert(
          child != null || builder != null,
@@ -38,9 +36,6 @@ class NakedRadio<T> extends StatefulWidget {
 
   /// Called when pressed state changes.
   final ValueChanged<bool>? onPressChange;
-  final ValueChanged<Set<WidgetState>>? onStatesChange;
-
-  final WidgetStatesController? statesController;
   final ValueWidgetBuilder<Set<WidgetState>>? builder;
 
   @override
@@ -165,8 +160,6 @@ class _NakedRadioState<T> extends State<NakedRadio<T>>
                   // This is a limitation of the RawRadio API
                 };
 
-                // Call onStatesChange if provided
-                widget.onStatesChange?.call(states);
 
                 if (widget.builder != null) {
                   return widget.builder!(context, states, widget.child);

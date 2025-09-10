@@ -24,8 +24,6 @@ class NakedButton extends StatefulWidget {
     this.onFocusChange,
     this.onHoverChange,
     this.onPressChange,
-    this.onStatesChange,
-    this.statesController,
     this.builder,
     this.focusOnPress = false,
   }) : assert(
@@ -54,11 +52,6 @@ class NakedButton extends StatefulWidget {
   /// Called when highlight (pressed) state changes.
   final ValueChanged<bool>? onPressChange;
 
-  /// Called when any widget state changes.
-  final ValueChanged<Set<WidgetState>>? onStatesChange;
-
-  /// Optional external controller for interaction states.
-  final WidgetStatesController? statesController;
 
   /// Optional builder that receives the current states for visuals.
   final ValueWidgetBuilder<Set<WidgetState>>? builder;
@@ -98,7 +91,7 @@ class NakedButton extends StatefulWidget {
 
 class _NakedButtonState extends State<NakedButton>
     with
-        WidgetStatesControllerMixin<NakedButton>,
+        SimpleWidgetStatesMixin<NakedButton>,
         NakedFocusableMixin<NakedButton>,
         NakedHoverableMixin<NakedButton>,
         NakedPressableMixin<NakedButton> {
@@ -106,27 +99,10 @@ class _NakedButtonState extends State<NakedButton>
 
   Timer? _activationTimer;
 
-  // Bridge to mixins
   @override
-  WidgetStatesController? get providedStatesController =>
-      widget.statesController;
-
-  @override
-  ValueChanged<Set<WidgetState>>? get onStatesChange =>
-      widget.onStatesChange != null ||
-          widget.onFocusChange != null ||
-          widget.onHoverChange != null ||
-          widget.onPressChange != null
-      ? (states) {
-          emitStateCallbacks(
-            states: states,
-            onStatesChange: widget.onStatesChange,
-            onFocusChange: widget.onFocusChange,
-            onHoverChange: widget.onHoverChange,
-            onPressChange: widget.onPressChange,
-          );
-        }
-      : null;
+  void initializeWidgetStates() {
+    updateState(WidgetState.disabled, !widget.enabled);
+  }
 
   @override
   FocusNode? get providedFocusNode => widget.focusNode;
@@ -137,7 +113,7 @@ class _NakedButtonState extends State<NakedButton>
   void _handleKeyboardActivation([Intent? _]) {
     if (!widget._effectiveEnabled || widget.onPressed == null) return;
     // show pressed briefly
-    effectiveStatesController.update(WidgetState.pressed, true);
+    updateState(WidgetState.pressed, true);
     if (widget.enableFeedback) {
       HapticFeedback.lightImpact();
     }
@@ -145,27 +121,11 @@ class _NakedButtonState extends State<NakedButton>
     _activationTimer?.cancel();
     _activationTimer = Timer(_activationDuration, () {
       if (mounted) {
-        effectiveStatesController.update(WidgetState.pressed, false);
+        updateState(WidgetState.pressed, false);
       }
     });
   }
 
-  void _handleHoverChange(bool hovered) {
-    if (widget.enabled) {
-      updateState(WidgetState.hovered, hovered);
-    }
-  }
-
-  void _handleFocusChange(bool focused) {
-    updateState(WidgetState.focused, focused);
-  }
-
-  void _handlePressChange(bool pressed) {
-    // Update controller-backed state
-    updateState(WidgetState.pressed, pressed);
-    // Also emit immediate per-event callback for robustness in integration envs
-    widget.onPressChange?.call(pressed);
-  }
 
   void _handleTap() {
     if (widget._effectiveEnabled) {
@@ -190,11 +150,13 @@ class _NakedButtonState extends State<NakedButton>
       providedFocusNode!.requestFocus();
     }
     // Ensure pressed state is visible immediately on tap down
-    _handlePressChange(true);
+    if (updateState(WidgetState.pressed, true)) {
+      widget.onPressChange?.call(true);
+    }
   }
 
   Widget _buildContent(BuildContext context) {
-    final states = currentStates;
+    final states = widgetStates;
 
     return widget.builder != null
         ? widget.builder!(context, states, widget.child)
@@ -204,9 +166,7 @@ class _NakedButtonState extends State<NakedButton>
   @override
   void didUpdateWidget(covariant NakedButton oldWidget) {
     super.didUpdateWidget(oldWidget);
-
-    // Handle controller sync
-    syncStatesController();
+    syncWidgetStates();
   }
 
   @override
@@ -215,11 +175,6 @@ class _NakedButtonState extends State<NakedButton>
     super.dispose();
   }
 
-  @override
-  void syncWidgetStates(WidgetStatesController controller) {
-    // Only sync the disabled state from widget constructor props.
-    controller.update(WidgetState.disabled, !widget.enabled);
-  }
 
   MouseCursor get _effectiveCursor =>
       widget._effectiveEnabled ? widget.mouseCursor : SystemMouseCursors.basic;
@@ -245,22 +200,34 @@ class _NakedButtonState extends State<NakedButton>
         },
         child: buildFocus(
           autofocus: widget.autofocus,
-          onFocusChange: _handleFocusChange,
+          onFocusChange: (focused) {
+            if (updateState(WidgetState.focused, focused)) {
+              widget.onFocusChange?.call(focused);
+            }
+          },
           includeSemantics: false,
           child: Semantics(
             enabled: widget._effectiveEnabled,
             button: true,
             focusable: true,
-            focused: currentStates.contains(WidgetState.focused),
+            focused: widgetStates.contains(WidgetState.focused),
             onTap: _semanticsTapHandler,
             onFocus: _semanticsFocusHandler,
             child: buildHoverRegion(
               cursor: _effectiveCursor,
-              onHoverChange: _handleHoverChange,
+              onHoverChange: (hovered) {
+                if (widget.enabled && updateState(WidgetState.hovered, hovered)) {
+                  widget.onHoverChange?.call(hovered);
+                }
+              },
               child: buildPressDetector(
                 enabled: widget.enabled,
                 behavior: HitTestBehavior.opaque,
-                onPressChange: _handlePressChange,
+                onPressChange: (pressed) {
+                  if (updateState(WidgetState.pressed, pressed)) {
+                    widget.onPressChange?.call(pressed);
+                  }
+                },
                 onTap: _handleTap,
                 onTapDown: _handleTapDown,
                 onDoubleTap: widget._effectiveEnabled
