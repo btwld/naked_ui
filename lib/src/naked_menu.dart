@@ -82,7 +82,6 @@ class NakedMenu extends StatelessWidget {
   /// Called when the menu should close.
   final VoidCallback? onClose;
 
-
   /// Whether to automatically focus the menu when opened.
   final bool autofocus;
 
@@ -115,7 +114,6 @@ class NakedMenu extends StatelessWidget {
     );
   }
 }
-
 
 /// Individual menu item that can be selected.
 ///

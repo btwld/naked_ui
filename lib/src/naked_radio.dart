@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'utilities/naked_interactable.dart';
+import 'mixins/naked_mixins.dart';
 
 /// Radio button built with simplified architecture.
 class NakedRadio<T> extends StatefulWidget {
@@ -47,7 +47,8 @@ class NakedRadio<T> extends StatefulWidget {
   State<NakedRadio<T>> createState() => _NakedRadioState<T>();
 }
 
-class _NakedRadioState<T> extends State<NakedRadio<T>> {
+class _NakedRadioState<T> extends State<NakedRadio<T>>
+    with NakedPressableListenerMixin<NakedRadio<T>> {
   FocusNode? _internalFocusNode;
 
   FocusNode get _focusNode =>
@@ -134,49 +135,48 @@ class _NakedRadioState<T> extends State<NakedRadio<T>> {
         : SystemMouseCursors.basic;
 
     return MergeSemantics(
-      child: NakedInteractable(
-        statesController: widget.statesController,
-        enabled: widget.enabled,
-        selected: isSelected,
-        // Keep Interactable independent of RawRadio focus to avoid node sharing
-        focusNode: null,
-        autofocus: false,
-        cursor: effectiveCursor,
-        onStatesChange: widget.onStatesChange,
-        onFocusChange: null, // We'll emit focus via _focusNode listener
-        onHoverChange: widget.onHoverChange,
-        onPressChange: widget.onPressChange,
-        builder: (context, states, child) {
-          final radio = RawRadio<T>(
-            value: widget.value,
-            mouseCursor: WidgetStateMouseCursor.resolveWith(
-              (_) => effectiveCursor,
-            ),
-            toggleable: widget.toggleable,
-            focusNode: _focusNode,
-            autofocus: widget.autofocus && widget.enabled,
-            groupRegistry: registry,
+      child: ConstrainedBox(
+        constraints: const BoxConstraints.tightFor(width: 48, height: 48),
+        child: GestureDetector(
+          onTap: widget.enabled
+              ? () => _handlePointerTap(registry, isSelected)
+              : null,
+          behavior: HitTestBehavior.opaque,
+          child: buildPressListener(
             enabled: widget.enabled,
-            builder: (context, radioStates) {
-              if (widget.builder != null) {
-                return widget.builder!(context, states, child);
-              }
+            behavior: HitTestBehavior.opaque,
+            onPressChange: widget.onPressChange,
+            child: RawRadio<T>(
+              value: widget.value,
+              mouseCursor: WidgetStateMouseCursor.resolveWith(
+                (_) => effectiveCursor,
+              ),
+              toggleable: widget.toggleable,
+              focusNode: _focusNode,
+              autofocus: widget.autofocus && widget.enabled,
+              groupRegistry: registry,
+              enabled: widget.enabled,
+              builder: (context, radioState) {
+                // Create states set from basic state info
+                final states = <WidgetState>{
+                  if (!widget.enabled) WidgetState.disabled,
+                  if (isSelected) WidgetState.selected,
+                  // Note: RawRadio doesn't expose hover/press states through builder
+                  // This is a limitation of the RawRadio API
+                };
 
-              return widget.child!;
-            },
-          );
+                // Call onStatesChange if provided
+                widget.onStatesChange?.call(states);
 
-          return ConstrainedBox(
-            constraints: const BoxConstraints.tightFor(width: 48, height: 48),
-            child: GestureDetector(
-              onTap: widget.enabled
-                  ? () => _handlePointerTap(registry, isSelected)
-                  : null,
-              behavior: HitTestBehavior.opaque,
-              child: radio,
+                if (widget.builder != null) {
+                  return widget.builder!(context, states, widget.child);
+                }
+
+                return widget.child!;
+              },
             ),
-          );
-        },
+          ),
+        ),
       ),
     );
   }

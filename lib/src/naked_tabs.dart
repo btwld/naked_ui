@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import 'utilities/naked_pressable.dart';
+import 'naked_button.dart';
 
 /// Provides tab interaction behavior without visual styling.
 ///
@@ -373,22 +373,44 @@ class _NakedTabState extends State<NakedTab> {
 
     assert(widget.tabId.isNotEmpty, 'tabId cannot be empty');
 
-    // Use NakedPressable for consistent gesture and cursor behavior
-    return NakedPressable(
+    // Create states controller for managing selected state
+    final WidgetStatesController effectiveController;
+    if (widget.statesController != null) {
+      effectiveController = widget.statesController!;
+    } else {
+      // This needs a proper solution - for now, use a local controller
+      effectiveController = WidgetStatesController();
+    }
+    
+    // Update selected state on the controller
+    effectiveController.update(WidgetState.selected, isSelected);
+
+    // Bridge old individual callbacks to new unified callback
+    void handleStateChange(Set<WidgetState> states) {
+      // Forward individual state callbacks if provided
+      final wasPressed = states.contains(WidgetState.pressed);
+      final wasHovered = states.contains(WidgetState.hovered);
+      final wasFocused = states.contains(WidgetState.focused);
+      
+      // Call individual callbacks
+      widget.onPressChange?.call(wasPressed);
+      widget.onHoverChange?.call(wasHovered);
+      widget.onFocusChange?.call(wasFocused);
+      
+      // Also forward to main callback
+      widget.onStatesChange?.call(states);
+    }
+
+    // Use NakedButton for consistent gesture and cursor behavior
+    return NakedButton(
         onPressed: _isEnabled ? _handleTap : null,
         enabled: widget.enabled,
-        selected: isSelected,
-        mouseCursor: widget.mouseCursor,
-        disabledMouseCursor: SystemMouseCursors.basic,
         focusNode: _focusNode,
         autofocus: widget.autofocus,
-        onStatesChange: widget.onStatesChange,
-        onFocusChange: widget.onFocusChange,
-        onHoverChange: widget.onHoverChange,
-        onPressChange: widget.onPressChange,
-        statesController: widget.statesController,
-        // We handle our own selectionClick haptic feedback
+        mouseCursor: widget.mouseCursor,
         enableFeedback: false,
+        statesController: effectiveController,
+        onStatesChange: handleStateChange,
         child: widget.child,
         builder: (context, states, child) {
           if (widget.builder != null) {

@@ -2,7 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
-import 'utilities/naked_pressable.dart';
+import 'naked_button.dart';
 
 /// Manages accordion state with optional min/max expansion constraints.
 ///
@@ -309,20 +309,20 @@ class NakedAccordionItem<T> extends StatelessWidget {
                     onInvoke: (intent) => enabled ? onTap() : null,
                   ),
                 },
-                child: NakedPressable(
+                child: NakedButton(
                   onPressed: onTap,
                   enabled: enabled,
                   mouseCursor: mouseCursor,
-                  disabledMouseCursor: SystemMouseCursors.basic,
+                  enableFeedback: enableFeedback,
                   focusNode: focusNode,
                   autofocus: autofocus,
-                  onStatesChange: onStatesChange,
                   onFocusChange: onFocusChange,
                   onHoverChange: onHoverChange,
                   onPressChange: onPressChange,
+                  onStatesChange: onStatesChange,
                   statesController: statesController,
-                  enableFeedback: enableFeedback,
-                  builder: (context, states, child) => trigger(context, isExpanded),
+                  builder: (context, states, child) =>
+                      trigger(context, isExpanded),
                 ),
               ),
             ),

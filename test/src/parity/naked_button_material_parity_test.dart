@@ -240,15 +240,29 @@ void main() {
       await tester.tap(find.text('Toggle'));
       await tester.pump();
 
-      // Disabled state: assert on Naked only; Material focusability may vary by platform.
+      // Disabled state: assert BOTH are identical in semantics
+      final materialSemantics = tester.getSemantics(find.byKey(materialKey));
+      final nakedSemantics = tester.getSemantics(find.byKey(nakedKey));
+
       expect(
-        tester.getSemantics(find.byKey(nakedKey)),
+        materialSemantics,
         matchesSemantics(
           isButton: true,
           hasEnabledState: true,
           isEnabled: false,
           hasTapAction: false,
-          // Disabled buttons should still expose focus semantics like Material
+          isFocusable: true,
+          hasFocusAction: true,
+        ),
+      );
+
+      expect(
+        nakedSemantics,
+        matchesSemantics(
+          isButton: true,
+          hasEnabledState: true,
+          isEnabled: false,
+          hasTapAction: false,
           isFocusable: true,
           hasFocusAction: true,
         ),
@@ -307,8 +321,7 @@ void main() {
       tester.expectCursor(SystemMouseCursors.click, on: materialEnabledKey);
       tester.expectCursor(SystemMouseCursors.click, on: nakedEnabledKey);
 
-      // Disabled: Material may defer cursor; Naked uses basic.
-      // Verify Material is not using a click cursor when disabled
+      // Disabled: cursors must match exactly across Material and Naked
       final materialDisabledRegion = tester.widget<MouseRegion>(
         find
             .descendant(
@@ -317,13 +330,19 @@ void main() {
             )
             .first,
       );
-      expect(
-        materialDisabledRegion.cursor == SystemMouseCursors.basic ||
-            materialDisabledRegion.cursor == MouseCursor.defer,
-        isTrue,
-        reason: 'Material disabled cursor should be basic or defer',
+      final nakedDisabledRegion = tester.widget<MouseRegion>(
+        find
+            .descendant(
+              of: find.byKey(nakedDisabledKey),
+              matching: find.byType(MouseRegion),
+            )
+            .first,
       );
-      tester.expectCursor(SystemMouseCursors.basic, on: nakedDisabledKey);
+      expect(
+        materialDisabledRegion.cursor,
+        equals(nakedDisabledRegion.cursor),
+        reason: 'Disabled cursor must be identical for parity',
+      );
     });
 
     testWidgets('semantics parity (button role and actions)', (tester) async {
@@ -382,6 +401,71 @@ void main() {
           isEnabled: true,
           isFocusable: true,
           hasFocusAction: true,
+          hasTapAction: true,
+        ),
+      );
+    });
+    testWidgets('semantics focus parity (focused state and role)', (
+      tester,
+    ) async {
+      final nakedFocus = FocusNode(debugLabel: 'naked');
+      final materialFocus = FocusNode(debugLabel: 'material');
+      addTearDown(() {
+        nakedFocus.dispose();
+        materialFocus.dispose();
+      });
+
+      const nakedKey = Key('naked');
+      const materialKey = Key('material');
+
+      await tester.pumpMaterialWidget(
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          spacing: 24,
+          children: [
+            TextButton(
+              key: materialKey,
+              focusNode: materialFocus,
+              onPressed: () {},
+              child: const Text('Material'),
+            ),
+            NakedButton(
+              key: nakedKey,
+              focusNode: nakedFocus,
+              onPressed: () {},
+              child: const Text('Naked'),
+            ),
+          ],
+        ),
+      );
+
+      // Request focus on both and assert focused semantics role parity
+      materialFocus.requestFocus();
+      await tester.pump();
+      expect(
+        tester.getSemantics(find.byKey(materialKey)),
+        matchesSemantics(
+          isButton: true,
+          hasEnabledState: true,
+          isEnabled: true,
+          isFocusable: true,
+          hasFocusAction: true,
+          isFocused: true,
+          hasTapAction: true,
+        ),
+      );
+
+      nakedFocus.requestFocus();
+      await tester.pump();
+      expect(
+        tester.getSemantics(find.byKey(nakedKey)),
+        matchesSemantics(
+          isButton: true,
+          hasEnabledState: true,
+          isEnabled: true,
+          isFocusable: true,
+          hasFocusAction: true,
+          isFocused: true,
           hasTapAction: true,
         ),
       );

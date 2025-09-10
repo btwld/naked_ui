@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
-import 'utilities/naked_toggleable.dart';
+import 'mixins/naked_mixins.dart';
 
-/// Headless checkbox built on NakedToggleable with proper semantics and callbacks.
-class NakedCheckbox extends StatelessWidget {
+/// Headless checkbox built with mixins for proper semantics and callbacks.
+class NakedCheckbox extends StatefulWidget {
   const NakedCheckbox({
     super.key,
     this.child,
@@ -97,42 +98,153 @@ class NakedCheckbox extends StatelessWidget {
   /// Defaults to false to maintain Material Design consistency.
   final bool focusOnPress;
 
+  bool get _effectiveEnabled => enabled && onChanged != null;
+
+  @override
+  State<NakedCheckbox> createState() => _NakedCheckboxState();
+}
+
+class _NakedCheckboxState extends State<NakedCheckbox>
+    with
+        WidgetStatesControllerMixin<NakedCheckbox>,
+        NakedFocusableMixin<NakedCheckbox>,
+        NakedHoverableMixin<NakedCheckbox>,
+        NakedPressableMixin<NakedCheckbox>,
+        NakedSelectableMixin<NakedCheckbox> {
+  // Bridge to mixins
+  @override
+  WidgetStatesController? get providedStatesController =>
+      widget.statesController;
+
+  @override
+  ValueChanged<Set<WidgetState>>? get onStatesChange =>
+      widget.onStatesChange != null ||
+          widget.onFocusChange != null ||
+          widget.onHoverChange != null ||
+          widget.onPressChange != null
+      ? (states) {
+          emitStateCallbacks(
+            states: states,
+            onStatesChange: widget.onStatesChange,
+            onFocusChange: widget.onFocusChange,
+            onHoverChange: widget.onHoverChange,
+            onPressChange: widget.onPressChange,
+          );
+        }
+      : null;
+
+  @override
+  FocusNode? get providedFocusNode => widget.focusNode;
+
+  @override
+  String get focusDebugLabel => 'NakedCheckbox';
+
+  void _handleKeyboardActivation([Intent? _]) {
+    if (!widget._effectiveEnabled) return;
+
+    _handleActivation();
+  }
+
+  void _handleActivation() {
+    if (!widget._effectiveEnabled) return;
+
+    handleSelectableActivation(
+      selected: widget.value,
+      tristate: widget.tristate,
+      onChanged: widget.onChanged,
+      enableFeedback: widget.enableFeedback,
+    );
+  }
+
+  void _handleHoverChange(bool hovered) {
+    if (widget.enabled) {
+      updateState(WidgetState.hovered, hovered);
+    }
+  }
+
+  void _handleFocusChange(bool focused) {
+    updateState(WidgetState.focused, focused);
+  }
+
+  void _handlePressChange(bool pressed) {
+    updateState(WidgetState.pressed, pressed);
+  }
+
+  void _handleTapDown(TapDownDetails _) {
+    if (widget.focusOnPress && providedFocusNode != null) {
+      providedFocusNode!.requestFocus();
+    }
+  }
+
+  Widget _buildContent(BuildContext context) {
+    final states = currentStates;
+
+    return widget.builder != null
+        ? widget.builder!(context, states, widget.child)
+        : widget.child!;
+  }
+
+  @override
+  void didUpdateWidget(covariant NakedCheckbox oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    syncStatesController();
+  }
+
+  @override
+  void syncWidgetStates(WidgetStatesController controller) {
+    // Only sync the disabled state from widget constructor props.
+    controller.update(WidgetState.disabled, !widget.enabled);
+  }
+
+  MouseCursor get _effectiveCursor => widget._effectiveEnabled
+      ? (widget.mouseCursor ?? SystemMouseCursors.click)
+      : SystemMouseCursors.basic;
+
+  VoidCallback? get _semanticsTapHandler =>
+      widget._effectiveEnabled ? _handleActivation : null;
+
+  VoidCallback get _semanticsFocusHandler =>
+      () => providedFocusNode?.requestFocus();
+
   @override
   Widget build(BuildContext context) {
-    // Use NakedToggleable for checkbox behavior
-    Widget result = NakedToggleable(
-      selected: value,
-      tristate: tristate,
-      onChanged: onChanged,
-      enabled: enabled,
-      focusNode: focusNode,
-      autofocus: autofocus,
-      mouseCursor: mouseCursor,
-      disabledMouseCursor: SystemMouseCursors.basic,
-      onStatesChange: onStatesChange,
-      onFocusChange: onFocusChange,
-      onHoverChange: onHoverChange,
-      onPressChange: onPressChange,
-      statesController: statesController,
-      enableFeedback: enableFeedback,
-      focusOnPress: focusOnPress,
-      child: child,
-      builder: builder ?? ((context, states, child) => child!),
-    );
-
-    // Add semantics for accessibility
-    final bool _interactive = enabled && onChanged != null;
-
-    return Semantics(
-      checked: value,
-      mixed: tristate && value == null,
-      // Provide tap action for assistive tech (avoid double-binding in Pressable)
-      onTap: _interactive
-          ? () => onChanged!(
-              tristate ? (value == null ? false : !value!) : !(value ?? false),
-            )
-          : null,
-      child: result,
+    return Shortcuts(
+      shortcuts: const {
+        SingleActivator(LogicalKeyboardKey.enter): ActivateIntent(),
+        SingleActivator(LogicalKeyboardKey.space): ActivateIntent(),
+      },
+      child: Actions(
+        actions: {
+          ActivateIntent: CallbackAction<ActivateIntent>(
+            onInvoke: _handleKeyboardActivation,
+          ),
+        },
+        child: buildFocus(
+          autofocus: widget.autofocus,
+          onFocusChange: _handleFocusChange,
+          includeSemantics: false,
+          child: Semantics(
+            enabled: widget._effectiveEnabled,
+            checked: widget.value,
+            mixed: widget.tristate && widget.value == null,
+            onTap: _semanticsTapHandler,
+            onFocus: _semanticsFocusHandler,
+            child: buildHoverRegion(
+              cursor: _effectiveCursor,
+              onHoverChange: _handleHoverChange,
+              child: buildPressDetector(
+                enabled: widget.enabled,
+                behavior: HitTestBehavior.opaque,
+                excludeFromSemantics: false,
+                onPressChange: _handlePressChange,
+                onTap: widget._effectiveEnabled ? _handleActivation : null,
+                onTapDown: _handleTapDown,
+                child: _buildContent(context),
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

@@ -34,7 +34,7 @@ void main() {
       final gesture = await tester.startGesture(
         tester.getCenter(find.byType(NakedButton)),
       );
-      await tester.pump();
+      await tester.pumpAndSettle();
       
       // Builder should have been called again
       expect(builderCallCount, greaterThan(initialBuilds));
@@ -170,7 +170,7 @@ void main() {
       final gesture = await tester.startGesture(
         tester.getCenter(find.byType(NakedButton)),
       );
-      await tester.pump();
+      await tester.pumpAndSettle();
       expect(lastStates, contains(WidgetState.pressed));
       
       await gesture.up();
@@ -210,7 +210,7 @@ void main() {
       final gesture = await tester.startGesture(
         tester.getCenter(find.byType(NakedButton)),
       );
-      await tester.pump();
+      await tester.pumpAndSettle();
       
       expect(find.text('Normal'), findsNothing);
       expect(find.text('Pressed!'), findsOneWidget);

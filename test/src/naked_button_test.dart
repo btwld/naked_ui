@@ -101,12 +101,10 @@ void main() {
   });
 
   group('State Callbacks', () {
-    testWidgets('does not call state callbacks when disabled', (
+    testWidgets('does not change states when disabled', (
       WidgetTester tester,
     ) async {
-      bool isHovered = false;
-      bool isPressed = false;
-      bool isFocused = false;
+      Set<WidgetState>? lastStates;
       final key = UniqueKey();
 
       await tester.pumpMaterialWidget(
@@ -114,46 +112,43 @@ void main() {
           key: key,
           onPressed: () {},
           enabled: false,
-          onFocusChange: (focused) => isFocused = focused,
-          onHoverChange: (hovered) => isHovered = hovered,
-          onPressChange: (pressed) => isPressed = pressed,
+          onStatesChange: (states) => lastStates = states,
           child: const Text('Test Button'),
         ),
       );
 
+      // Should contain disabled state
+      expect(lastStates, contains(WidgetState.disabled));
+      expect(lastStates, isNot(contains(WidgetState.hovered)));
+      expect(lastStates, isNot(contains(WidgetState.pressed)));
+      expect(lastStates, isNot(contains(WidgetState.focused)));
+
       await tester.simulateHover(
         key,
         onHover: () {
-          expect(isHovered, false);
+          expect(lastStates, isNot(contains(WidgetState.hovered)));
         },
       );
-
-      expect(isHovered, false);
 
       await tester.simulatePress(
         key,
         onPressed: () {
-          expect(isPressed, false);
+          expect(lastStates, isNot(contains(WidgetState.pressed)));
         },
       );
-
-      expect(isPressed, false);
 
       final focusNode = FocusNode();
       focusNode.requestFocus();
       await tester.pump();
-      expect(isFocused, false);
-      focusNode.unfocus();
-      await tester.pump();
-      expect(isFocused, false);
+      expect(lastStates, isNot(contains(WidgetState.focused)));
     });
 
-    testWidgets('calls onHoverChange when hovered', (
+    testWidgets('reports hover state changes', (
       WidgetTester tester,
     ) async {
       FocusManager.instance.highlightStrategy =
           FocusHighlightStrategy.alwaysTraditional;
-      bool isHovered = false;
+      Set<WidgetState>? lastStates;
 
       final key = UniqueKey();
 
@@ -163,7 +158,7 @@ void main() {
           child: NakedButton(
             key: key,
             onPressed: () {},
-            onHoverChange: (hovered) => isHovered = hovered,
+            onStatesChange: (states) => lastStates = states,
             child: const Text('Test Button'),
           ),
         ),
@@ -172,23 +167,23 @@ void main() {
       await tester.simulateHover(
         key,
         onHover: () {
-          expect(isHovered, true);
+          expect(lastStates, contains(WidgetState.hovered));
         },
       );
 
-      expect(isHovered, false);
+      expect(lastStates, isNot(contains(WidgetState.hovered)));
     });
 
-    testWidgets('calls onPressChange on tap down/up', (
+    testWidgets('reports press state changes on tap down/up', (
       WidgetTester tester,
     ) async {
-      bool isPressed = false;
+      Set<WidgetState>? lastStates;
       final key = UniqueKey();
       await tester.pumpMaterialWidget(
         NakedButton(
           key: key,
           onPressed: () {},
-          onPressChange: (pressed) => isPressed = pressed,
+          onStatesChange: (states) => lastStates = states,
           child: const Text('Test Button'),
         ),
       );
@@ -196,24 +191,24 @@ void main() {
       await tester.simulatePress(
         key,
         onPressed: () {
-          expect(isPressed, true);
+          expect(lastStates, contains(WidgetState.pressed));
         },
       );
 
-      expect(isPressed, false);
+      expect(lastStates, isNot(contains(WidgetState.pressed)));
     });
 
     testWidgets(
-      'calls onPressChange on tap cancel when gesture leaves and releases',
+      'reports press cancel when gesture leaves and releases',
       (tester) async {
-        bool? lastPressedState;
+        Set<WidgetState>? lastStates;
         final key = UniqueKey();
 
         await tester.pumpMaterialWidget(
           NakedButton(
             key: key,
             onPressed: () {},
-            onPressChange: (pressed) => lastPressedState = pressed,
+            onStatesChange: (states) => lastStates = states,
             child: const Text('Test Button'),
           ),
         );
@@ -221,7 +216,7 @@ void main() {
         final center = tester.getCenter(find.byKey(key));
         final gesture = await tester.startGesture(center);
         await tester.pump();
-        expect(lastPressedState, true);
+        expect(lastStates, contains(WidgetState.pressed));
 
         // Drag off the button to trigger cancel
         await gesture.moveTo(Offset.zero);
@@ -230,31 +225,31 @@ void main() {
         await gesture.up();
         await tester.pump();
 
-        expect(lastPressedState, false);
+        expect(lastStates, isNot(contains(WidgetState.pressed)));
       },
       timeout: Timeout(Duration(seconds: 15)),
     );
 
-    testWidgets('calls onFocusChange when focused/unfocused', (
+    testWidgets('reports focus state changes when focused/unfocused', (
       WidgetTester tester,
     ) async {
       FocusManager.instance.highlightStrategy =
           FocusHighlightStrategy.alwaysTraditional;
-      bool isFocused = false;
+      Set<WidgetState>? lastStates;
       final focusNode = FocusNode();
 
       await tester.pumpMaterialWidget(
         NakedButton(
           onPressed: () {},
           focusNode: focusNode,
-          onFocusChange: (focused) => isFocused = focused,
+          onStatesChange: (states) => lastStates = states,
           child: const Text('Test Button'),
         ),
       );
 
       focusNode.requestFocus();
       await tester.pump();
-      expect(isFocused, true);
+      expect(lastStates, contains(WidgetState.focused));
 
       // Focus elsewhere
       final focusNodeNakedButton = FocusNode();
@@ -266,7 +261,7 @@ void main() {
             NakedButton(
               onPressed: () {},
               focusNode: focusNodeNakedButton,
-              onFocusChange: (focused) => isFocused = focused,
+              onStatesChange: (states) => lastStates = states,
               child: const Text('Test Button'),
             ),
             m.TextButton(
@@ -280,11 +275,11 @@ void main() {
 
       focusNodeNakedButton.requestFocus();
       await tester.pump();
-      expect(isFocused, true);
+      expect(lastStates, contains(WidgetState.focused));
 
       focusNodeOtherButton.requestFocus();
       await tester.pump();
-      expect(isFocused, false);
+      expect(lastStates, isNot(contains(WidgetState.focused)));
     });
   });
 

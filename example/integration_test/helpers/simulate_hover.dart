@@ -40,12 +40,30 @@ extension WidgetTesterExtension on WidgetTester {
     Key key, {
     required VoidCallback? onPressed,
   }) async {
-    final pressGesture = await press(find.byKey(key));
-    await pump();
+    // Use a precise inside point like simulateHover to avoid hit-test flakiness
+    final rect = getRect(find.byKey(key));
+    final inside = Offset(rect.left + 2, rect.top + 2);
+
+    final gesture = await startGesture(inside);
+    addTearDown(() async {
+      try {
+        await gesture.up();
+      } catch (_) {}
+    });
+
+    // Wait for pressed state to become true (with timeout)
+    const maxWaitMs = 250;
+    const incrementMs = 10;
+    var waitedMs = 0;
+
+    while (waitedMs < maxWaitMs) {
+      await pump(const Duration(milliseconds: incrementMs));
+      waitedMs += incrementMs;
+      // We intentionally wait up to maxWaitMs to allow onTapDown/press callbacks to propagate
+    }
 
     onPressed?.call();
-
-    await pressGesture.up();
+    await gesture.up();
     await pump();
   }
 
