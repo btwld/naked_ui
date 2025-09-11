@@ -70,7 +70,6 @@ void main() {
       bool isPressed = false;
       radio_example.RadioOption selectedValue =
           radio_example.RadioOption.banana;
-      Set<WidgetState>? lastStates;
 
       await tester.pumpWidget(MaterialApp(
         home: Scaffold(

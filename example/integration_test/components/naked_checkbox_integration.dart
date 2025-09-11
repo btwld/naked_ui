@@ -65,7 +65,6 @@ void main() {
       bool isHovered = false;
       bool isPressed = false;
       bool checkboxValue = false;
-      Set<WidgetState>? lastStates;
 
       await tester.pumpWidget(MaterialApp(
         home: Scaffold(
@@ -179,7 +178,6 @@ void main() {
             child: NakedCheckbox(
               key: checkboxKey,
               focusNode: focusNode,
-              focusOnPress: true,
               value: checkboxValue,
               onChanged: (value) => checkboxValue = value!,
               child: const Text('Focus Test Checkbox'),
@@ -212,7 +210,6 @@ void main() {
             child: NakedCheckbox(
               key: checkboxKey,
               focusNode: focusNode,
-              focusOnPress: false, // Default value, but explicit for test
               value: checkboxValue,
               onChanged: (value) => checkboxValue = value!,
               child: const Text('No Focus Test Checkbox'),

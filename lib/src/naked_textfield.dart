@@ -81,6 +81,10 @@ class NakedTextField extends StatefulWidget {
     this.style,
     required this.builder,
     this.ignorePointers,
+    this.addSemantics = true,
+    this.excludeChildSemantics = false,
+    this.semanticLabel,
+    this.semanticHint,
   }) : assert(obscuringCharacter.length == 1),
        smartDashesType =
            smartDashesType ??
@@ -293,6 +297,18 @@ class NakedTextField extends StatefulWidget {
   ///
   /// Receives context and the core EditableText widget.
   final Widget Function(BuildContext context, Widget editableText) builder;
+
+  /// Whether to add semantics to this text field.
+  final bool addSemantics;
+
+  /// Whether to exclude child semantics.
+  final bool excludeChildSemantics;
+
+  /// Semantic label for accessibility.
+  final String? semanticLabel;
+
+  /// Semantic hint for accessibility.
+  final String? semanticHint;
 
   @override
   State<NakedTextField> createState() => _NakedTextFieldState();
@@ -737,6 +753,24 @@ class _NakedTextFieldState extends State<NakedTextField>
       ),
     );
 
+    Widget _wrapWithSemantics(Widget textField) {
+      if (!widget.addSemantics) return textField;
+
+      return Semantics(
+        excludeSemantics: widget.excludeChildSemantics,
+        textField: true,
+        readOnly: widget.readOnly,
+        obscured: widget.obscureText,
+        multiline: (widget.maxLines ?? 1) > 1,
+        maxValueLength: widget.maxLength,
+        currentValueLength: _effectiveController.text.length,
+        label: widget.semanticLabel,
+        value: _effectiveController.text,
+        hint: widget.semanticHint,
+        child: textField,
+      );
+    }
+
     return widget.enabled
         ? MouseRegion(
             onEnter: _handleMouseEnter,
@@ -744,12 +778,12 @@ class _NakedTextFieldState extends State<NakedTextField>
             cursor: SystemMouseCursors.text,
             child: _selectionGestureDetectorBuilder.buildGestureDetector(
               behavior: HitTestBehavior.translucent,
-              child: widget.builder(context, child),
+              child: _wrapWithSemantics(widget.builder(context, child)),
             ),
           )
         : _selectionGestureDetectorBuilder.buildGestureDetector(
             behavior: HitTestBehavior.translucent,
-            child: widget.builder(context, child),
+            child: _wrapWithSemantics(widget.builder(context, child)),
           );
   }
 }
@@ -766,7 +800,7 @@ class _TextFieldSelectionGestureDetectorBuilder
   @override
   void onUserTap() {
     _state.widget.onPressed?.call();
-    
+
     // Handle keyboard request for accessibility and functionality
     if (!_state.widget.readOnly) {
       final controller = _state._effectiveController;

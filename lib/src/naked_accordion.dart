@@ -227,6 +227,8 @@ class NakedAccordionItem<T> extends StatelessWidget {
     this.onFocusChange,
     this.onHoverChange,
     this.onPressChange,
+    this.semanticLabel,
+    this.excludeChildSemantics = false,
   });
 
   /// Builder function that creates the trigger widget.
@@ -256,6 +258,11 @@ class NakedAccordionItem<T> extends StatelessWidget {
   /// Called when highlight (pressed) state changes.
   final ValueChanged<bool>? onPressChange;
 
+  /// Semantic label for accessibility.
+  final String? semanticLabel;
+
+  /// Whether to exclude child semantics.
+  final bool excludeChildSemantics;
 
   /// Whether the accordion item is enabled.
   final bool enabled;
@@ -302,18 +309,27 @@ class NakedAccordionItem<T> extends StatelessWidget {
                     onInvoke: (intent) => enabled ? onTap() : null,
                   ),
                 },
-                child: NakedButton(
-                  onPressed: onTap,
+                child: Semantics(
+                  excludeSemantics: excludeChildSemantics,
                   enabled: enabled,
-                  mouseCursor: mouseCursor,
-                  enableFeedback: enableFeedback,
-                  focusNode: focusNode,
-                  autofocus: autofocus,
-                  onFocusChange: onFocusChange,
-                  onHoverChange: onHoverChange,
-                  onPressChange: onPressChange,
-                  builder: (context, states, child) =>
-                      trigger(context, isExpanded),
+                  button: true,
+                  expanded: isExpanded,
+                  label: semanticLabel,
+                  onTap: enabled ? onTap : null,
+                  child: NakedButton(
+                    onPressed: onTap,
+                    enabled: enabled,
+                    mouseCursor: mouseCursor,
+                    enableFeedback: enableFeedback,
+                    focusNode: focusNode,
+                    autofocus: autofocus,
+                    onFocusChange: onFocusChange,
+                    onHoverChange: onHoverChange,
+                    onPressChange: onPressChange,
+                    addSemantics: false,
+                    builder: (context, states, child) =>
+                        trigger(context, isExpanded),
+                  ),
                 ),
               ),
             ),

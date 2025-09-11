@@ -12,57 +12,67 @@ void main() {
   group('Basic Functionality', () {
     testWidgets('renders child widget', (WidgetTester tester) async {
       await tester.pumpMaterialWidget(
-        NakedCheckbox(
+        NakedSwitch(
           value: false,
           onChanged: (_) {},
-          child: const Text('Checkbox Label'),
+          child: const Text('Switch Label'),
         ),
       );
 
-      expect(find.text('Checkbox Label'), findsOneWidget);
+      expect(find.text('Switch Label'), findsOneWidget);
     });
 
     testWidgets('handles tap to toggle state', (WidgetTester tester) async {
-      bool isChecked = false;
+      bool isOn = false;
       await tester.pumpMaterialWidget(
-        NakedCheckbox(
-          value: isChecked,
-          onChanged: (value) => isChecked = value!,
-          child: const Text('Checkbox Label'),
+        StatefulBuilder(
+          builder: (context, setState) {
+            return NakedSwitch(
+              value: isOn,
+              onChanged: (value) => setState(() => isOn = value ?? false),
+              child: const Text('Switch Label'),
+            );
+          },
         ),
       );
 
-      await tester.tap(find.byType(NakedCheckbox));
-      expect(isChecked, isTrue);
+      await tester.tap(find.byType(NakedSwitch));
+      await tester.pump();
+      expect(isOn, isTrue);
     });
 
     testWidgets('does not respond when disabled', (WidgetTester tester) async {
-      bool isChecked = false;
+      bool isOn = false;
       await tester.pumpMaterialWidget(
-        NakedCheckbox(
-          value: isChecked,
-          onChanged: (value) => isChecked = value!,
-          enabled: false,
-          child: const Text('Checkbox Label'),
+        StatefulBuilder(
+          builder: (context, setState) {
+            return NakedSwitch(
+              value: isOn,
+              onChanged: (value) => setState(() => isOn = value ?? false),
+              enabled: false,
+              child: const Text('Switch Label'),
+            );
+          },
         ),
       );
 
-      await tester.tap(find.byType(NakedCheckbox));
-      expect(isChecked, isFalse);
+      await tester.tap(find.byType(NakedSwitch));
+      await tester.pump();
+      expect(isOn, isFalse);
     });
 
     testWidgets('does not respond when onChanged is null', (
       WidgetTester tester,
     ) async {
       await tester.pumpMaterialWidget(
-        const NakedCheckbox(
+        const NakedSwitch(
           value: false,
           onChanged: null,
-          child: Text('Checkbox Label'),
+          child: Text('Switch Label'),
         ),
       );
 
-      await tester.tap(find.byType(NakedCheckbox));
+      await tester.tap(find.byType(NakedSwitch));
       // No error should occur
     });
   });
@@ -78,7 +88,7 @@ void main() {
       bool isFocused = false;
 
       await tester.pumpMaterialWidget(
-        NakedCheckbox(
+        NakedSwitch(
           key: key,
           value: false,
           onChanged: (_) {},
@@ -86,7 +96,7 @@ void main() {
           onFocusChange: (focused) => isFocused = focused,
           onHoverChange: (hovered) => isHovered = hovered,
           onPressChange: (pressed) => isPressed = pressed,
-          child: const Text('Checkbox Label'),
+          child: const Text('Switch Label'),
         ),
       );
 
@@ -99,7 +109,7 @@ void main() {
 
       expect(isHovered, false);
 
-      final pressGesture = await tester.press(find.byType(NakedCheckbox));
+      final pressGesture = await tester.press(find.byType(NakedSwitch));
       await tester.pump();
       expect(isPressed, false);
       await pressGesture.up();
@@ -127,11 +137,11 @@ void main() {
       await tester.pumpMaterialWidget(
         Padding(
           padding: const EdgeInsets.all(1),
-          child: NakedCheckbox(
+          child: NakedSwitch(
             value: false,
             onChanged: (_) {},
             onHoverChange: (hovered) => isHovered = hovered,
-            child: Text('Checkbox Label', key: textKey),
+            child: Text('Switch Label', key: textKey),
           ),
         ),
       );
@@ -158,15 +168,15 @@ void main() {
     ) async {
       bool isPressed = false;
       await tester.pumpMaterialWidget(
-        NakedCheckbox(
+        NakedSwitch(
           value: false,
           onChanged: (_) {},
           onPressChange: (pressed) => isPressed = pressed,
-          child: const Text('Checkbox Label'),
+          child: const Text('Switch Label'),
         ),
       );
 
-      final gesture = await tester.press(find.byType(NakedCheckbox));
+      final gesture = await tester.press(find.byType(NakedSwitch));
       await tester.pump();
       expect(isPressed, true);
 
@@ -182,12 +192,12 @@ void main() {
         final key = UniqueKey();
 
         await tester.pumpMaterialWidget(
-          NakedCheckbox(
+          NakedSwitch(
             key: key,
             value: false,
             onChanged: (_) {},
             onPressChange: (pressed) => lastPressedState = pressed,
-            child: const Text('Checkbox Label'),
+            child: const Text('Switch Label'),
           ),
         );
 
@@ -196,7 +206,7 @@ void main() {
         await tester.pump();
         expect(lastPressedState, true);
 
-        // Drag off the checkbox to trigger cancel
+        // Drag off the switch to trigger cancel
         await gesture.moveTo(Offset.zero);
         await tester.pump();
 
@@ -215,12 +225,12 @@ void main() {
       final focusNode = FocusNode();
 
       await tester.pumpMaterialWidget(
-        NakedCheckbox(
+        NakedSwitch(
           value: false,
           onChanged: (_) {},
           focusNode: focusNode,
           onFocusChange: (focused) => isFocused = focused,
-          child: const Text('Checkbox Label'),
+          child: const Text('Switch Label'),
         ),
       );
 
@@ -229,18 +239,18 @@ void main() {
       expect(isFocused, true);
 
       // Focus elsewhere
-      final focusNodeCheckbox = FocusNode();
+      final focusNodeSwitch = FocusNode();
       final focusNodeOther = FocusNode();
 
       await tester.pumpMaterialWidget(
         Column(
           children: [
-            NakedCheckbox(
+            NakedSwitch(
               value: false,
               onChanged: (_) {},
-              focusNode: focusNodeCheckbox,
+              focusNode: focusNodeSwitch,
               onFocusChange: (focused) => isFocused = focused,
-              child: const Text('Checkbox Label'),
+              child: const Text('Switch Label'),
             ),
             m.TextButton(
               onPressed: () {},
@@ -251,7 +261,7 @@ void main() {
         ),
       );
 
-      focusNodeCheckbox.requestFocus();
+      focusNodeSwitch.requestFocus();
       await tester.pump();
       expect(isFocused, true);
 
@@ -266,40 +276,48 @@ void main() {
       FocusManager.instance.highlightStrategy =
           FocusHighlightStrategy.alwaysTraditional;
 
-      bool isChecked = false;
+      bool isOn = false;
 
       final focusNode = FocusNode();
       await tester.pumpMaterialWidget(
-        NakedCheckbox(
-          value: isChecked,
-          autofocus: true,
-          onChanged: (value) => isChecked = value!,
-          focusNode: focusNode,
-          child: const Text('Checkbox Label'),
+        StatefulBuilder(
+          builder: (context, setState) {
+            return NakedSwitch(
+              value: isOn,
+              autofocus: true,
+              onChanged: (value) => setState(() => isOn = value ?? false),
+              focusNode: focusNode,
+              child: const Text('Switch Label'),
+            );
+          },
         ),
       );
 
       // Give time for autofocus to take effect
       await tester.pump();
 
-      expect(isChecked, false);
+      expect(isOn, false);
 
       await tester.sendKeyEvent(LogicalKeyboardKey.space);
       await tester.pump();
 
-      expect(isChecked, true);
+      expect(isOn, true);
     });
 
     testWidgets('toggles with Enter key', (WidgetTester tester) async {
-      bool isChecked = false;
+      bool isOn = false;
       final focusNode = FocusNode();
       await tester.pumpMaterialWidget(
-        NakedCheckbox(
-          value: isChecked,
-          onChanged: (value) => isChecked = value!,
-          focusNode: focusNode,
-          autofocus: true,
-          child: const Text('Checkbox Label'),
+        StatefulBuilder(
+          builder: (context, setState) {
+            return NakedSwitch(
+              value: isOn,
+              onChanged: (value) => setState(() => isOn = value ?? false),
+              focusNode: focusNode,
+              autofocus: true,
+              child: const Text('Switch Label'),
+            );
+          },
         ),
       );
 
@@ -309,60 +327,8 @@ void main() {
       await tester.sendKeyEvent(LogicalKeyboardKey.enter);
       await tester.pump();
 
-      expect(isChecked, true);
+      expect(isOn, true);
     });
-  });
-
-  group('Tristate', () {
-    testWidgets(
-      'cycles through states false -> true -> false when tristate is enabled (Material parity)',
-      (WidgetTester tester) async {
-        bool? value = false;
-
-        await tester.pumpMaterialWidget(
-          StatefulBuilder(
-            builder: (context, setState) {
-              return NakedCheckbox(
-                value: value,
-                tristate: true,
-                onChanged: (newValue) {
-                  setState(() {
-                    value = newValue;
-                  });
-                },
-                child: const Text('Checkbox Label'),
-              );
-            },
-          ),
-        );
-
-        await tester.tap(find.byType(NakedCheckbox));
-        expect(value, true);
-
-        await tester.pump();
-        await tester.tap(find.byType(NakedCheckbox));
-        expect(value, false);
-
-        await tester.pump();
-        await tester.tap(find.byType(NakedCheckbox));
-        expect(value, true);
-      },
-    );
-
-    testWidgets(
-      'throws assertion error when value is null but tristate is false, since null values are only allowed in tristate mode',
-      (WidgetTester tester) async {
-        expect(
-          () => NakedCheckbox(
-            value: null,
-            tristate: false,
-            onChanged: (_) {},
-            child: const Text('Checkbox Label'),
-          ),
-          throwsAssertionError,
-        );
-      },
-    );
   });
 
   group('Cursor', () {
@@ -375,18 +341,18 @@ void main() {
       await tester.pumpMaterialWidget(
         Column(
           children: [
-            NakedCheckbox(
+            NakedSwitch(
               key: keyEnabled,
               value: false,
               onChanged: (_) {},
-              child: const Text('Enabled Checkbox'),
+              child: const Text('Enabled Switch'),
             ),
-            NakedCheckbox(
+            NakedSwitch(
               key: keyDisabled,
               value: false,
               onChanged: (_) {},
               enabled: false,
-              child: const Text('Disabled Checkbox'),
+              child: const Text('Disabled Switch'),
             ),
           ],
         ),
@@ -401,12 +367,12 @@ void main() {
       final key = UniqueKey();
 
       await tester.pumpMaterialWidget(
-        NakedCheckbox(
+        NakedSwitch(
           key: key,
           value: false,
           onChanged: (_) {},
           mouseCursor: SystemMouseCursors.help,
-          child: const Text('Custom Cursor Checkbox'),
+          child: const Text('Custom Cursor Switch'),
         ),
       );
 
@@ -421,19 +387,19 @@ void main() {
       final key = UniqueKey();
 
       await tester.pumpMaterialWidget(
-        NakedCheckbox(
+        NakedSwitch(
           key: key,
           value: false,
           onChanged: (_) {},
-          child: const Text('Checkbox Label'),
+          child: const Text('Switch Label'),
         ),
       );
 
       expect(
         tester.getSemantics(find.byKey(key)),
         matchesSemantics(
-          hasCheckedState: true,
-          isChecked: false,
+          hasToggledState: true,
+          isToggled: false,
           hasEnabledState: true,
           isEnabled: true,
           hasTapAction: true,
@@ -449,20 +415,20 @@ void main() {
       final key = UniqueKey();
 
       await tester.pumpMaterialWidget(
-        NakedCheckbox(
+        NakedSwitch(
           key: key,
           value: false,
           onChanged: (_) {},
           enabled: false,
-          child: const Text('Checkbox Label'),
+          child: const Text('Switch Label'),
         ),
       );
 
       expect(
         tester.getSemantics(find.byKey(key)),
         matchesSemantics(
-          hasCheckedState: true,
-          isChecked: false,
+          hasToggledState: true,
+          isToggled: false,
           hasEnabledState: true,
           isEnabled: false,
           hasTapAction: false,
@@ -472,25 +438,25 @@ void main() {
       );
     });
 
-    testWidgets('has correct semantic properties when checked', (
+    testWidgets('has correct semantic properties when toggled', (
       WidgetTester tester,
     ) async {
       final key = UniqueKey();
 
       await tester.pumpMaterialWidget(
-        NakedCheckbox(
+        NakedSwitch(
           key: key,
           value: true,
           onChanged: (_) {},
-          child: const Text('Checkbox Label'),
+          child: const Text('Switch Label'),
         ),
       );
 
       expect(
         tester.getSemantics(find.byKey(key)),
         matchesSemantics(
-          hasCheckedState: true,
-          isChecked: true,
+          hasToggledState: true,
+          isToggled: true,
           hasEnabledState: true,
           isEnabled: true,
           hasTapAction: true,
@@ -508,12 +474,12 @@ void main() {
       addTearDown(() => focusNode.dispose());
 
       await tester.pumpMaterialWidget(
-        NakedCheckbox(
+        NakedSwitch(
           key: key,
           value: false,
           onChanged: (_) {},
           focusNode: focusNode,
-          child: const Text('Checkbox Label'),
+          child: const Text('Switch Label'),
         ),
       );
 
@@ -523,44 +489,14 @@ void main() {
       expect(
         tester.getSemantics(find.byKey(key)),
         matchesSemantics(
-          hasCheckedState: true,
-          isChecked: false,
+          hasToggledState: true,
+          isToggled: false,
           hasEnabledState: true,
           isEnabled: true,
           hasTapAction: true,
           isFocusable: true,
           hasFocusAction: true,
           isFocused: true,
-        ),
-      );
-    });
-
-    testWidgets('has correct semantic properties in tristate mode - mixed', (
-      WidgetTester tester,
-    ) async {
-      final key = UniqueKey();
-
-      await tester.pumpMaterialWidget(
-        NakedCheckbox(
-          key: key,
-          value: null,
-          tristate: true,
-          onChanged: (_) {},
-          child: const Text('Checkbox Label'),
-        ),
-      );
-
-      expect(
-        tester.getSemantics(find.byKey(key)),
-        matchesSemantics(
-          hasCheckedState: true,
-          isChecked: false,
-          isCheckStateMixed: true,
-          hasEnabledState: true,
-          isEnabled: true,
-          hasTapAction: true,
-          isFocusable: true,
-          hasFocusAction: true,
         ),
       );
     });
@@ -576,12 +512,12 @@ void main() {
           builder: (context, setState) {
             return Column(
               children: [
-                NakedCheckbox(
+                NakedSwitch(
                   key: key,
                   value: false,
                   enabled: enabled,
                   onChanged: (_) {},
-                  child: const Text('Checkbox Label'),
+                  child: const Text('Switch Label'),
                 ),
                 m.TextButton(
                   onPressed: () => setState(() => enabled = !enabled),
@@ -597,8 +533,8 @@ void main() {
       expect(
         tester.getSemantics(find.byKey(key)),
         matchesSemantics(
-          hasCheckedState: true,
-          isChecked: false,
+          hasToggledState: true,
+          isToggled: false,
           hasEnabledState: true,
           isEnabled: true,
           hasTapAction: true,
@@ -614,8 +550,8 @@ void main() {
       expect(
         tester.getSemantics(find.byKey(key)),
         matchesSemantics(
-          hasCheckedState: true,
-          isChecked: false,
+          hasToggledState: true,
+          isToggled: false,
           hasEnabledState: true,
           isEnabled: false,
           hasTapAction: false,

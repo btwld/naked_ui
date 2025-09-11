@@ -39,13 +39,12 @@ void main() {
 
     testWidgets('NakedSelect with callback responds to trigger', (tester) async {
       bool triggerPressed = false;
-      String? selectedValue;
       
       await tester.pumpWidget(MaterialApp(
         home: Scaffold(
           body: NakedSelect<String>(
             enabled: true,
-            onSelectedValueChanged: (value) => selectedValue = value,
+            onSelectedValueChanged: (value) {}, // Just need callback for effective enabled
             menu: const Column(
               mainAxisSize: MainAxisSize.min,
               children: [

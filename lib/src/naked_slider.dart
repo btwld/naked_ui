@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import 'mixins/naked_mixins.dart';
+
 // Slider keyboard shortcuts (left-to-right layout)
 const Map<ShortcutActivator, Intent> _kSliderShortcutsLtr =
     <ShortcutActivator, Intent>{
@@ -75,6 +77,9 @@ class NakedSlider extends StatefulWidget {
     this.divisions,
     this.keyboardStep = 0.01,
     this.largeKeyboardStep = 0.1,
+    this.semanticLabel,
+    this.addSemantics = true,
+    this.excludeChildSemantics = false,
   }) : assert(min < max, 'min must be less than max');
 
   /// Child widget to display.
@@ -134,32 +139,30 @@ class NakedSlider extends StatefulWidget {
   /// Large keyboard navigation step size.
   final double largeKeyboardStep;
 
+  /// Semantic label for accessibility.
+  final String? semanticLabel;
+
+  /// Whether to add semantics to this slider.
+  final bool addSemantics;
+
+  /// Whether to exclude child semantics.
+  final bool excludeChildSemantics;
 
   @override
   State<NakedSlider> createState() => _NakedSliderState();
 }
 
-class _NakedSliderState extends State<NakedSlider> {
+class _NakedSliderState extends State<NakedSlider>
+    with WidgetStatesMixin<NakedSlider> {
   FocusNode? _internalFocusNode;
   FocusNode get _focusNode =>
       widget.focusNode ?? (_internalFocusNode ??= FocusNode());
   bool _isDragging = false;
 
-  final Set<WidgetState> _widgetStates = <WidgetState>{};
-
   // Hover and focus are tracked via the states controller only
 
   Offset? _dragStartPosition;
   double? _dragStartValue;
-
-  @override
-  void initState() {
-    super.initState();
-    // Initialize disabled state based on interactivity
-    if (!_isEnabled) {
-      _widgetStates.add(WidgetState.disabled);
-    }
-  }
 
   void _callOnChangeIfNeeded(double value) {
     if (value != widget.value) {
@@ -188,7 +191,7 @@ class _NakedSliderState extends State<NakedSlider> {
     _dragStartPosition = details.globalPosition;
     _dragStartValue = widget.value;
 
-    _widgetStates.add(WidgetState.pressed);
+    updateState(WidgetState.pressed, true);
 
     widget.onDragChange?.call(true);
     widget.onDragStart?.call();
@@ -230,7 +233,7 @@ class _NakedSliderState extends State<NakedSlider> {
     _dragStartPosition = null;
     _dragStartValue = null;
 
-    _widgetStates.remove(WidgetState.pressed);
+    updateState(WidgetState.pressed, false);
 
     widget.onDragChange?.call(false);
     widget.onDragEnd?.call(widget.value);
@@ -253,134 +256,75 @@ class _NakedSliderState extends State<NakedSlider> {
 
   // No bulk state setter; we update individual flags per event.
 
-
   Widget _buildSliderInteractable() {
-    final gesture = ExcludeSemantics(
-      child: GestureDetector(
-        onVerticalDragStart: widget.direction == Axis.vertical && _isEnabled
-            ? _handleDragStart
-            : null,
-        onVerticalDragUpdate: widget.direction == Axis.vertical && _isEnabled
-            ? _handleDragUpdate
-            : null,
-        onVerticalDragEnd: widget.direction == Axis.vertical && _isEnabled
-            ? _handleDragEnd
-            : null,
-        onHorizontalDragStart: widget.direction == Axis.horizontal && _isEnabled
-            ? _handleDragStart
-            : null,
-        onHorizontalDragUpdate:
-            widget.direction == Axis.horizontal && _isEnabled
-            ? _handleDragUpdate
-            : null,
-        onHorizontalDragEnd: widget.direction == Axis.horizontal && _isEnabled
-            ? _handleDragEnd
-            : null,
-        behavior: HitTestBehavior.opaque,
-        child: widget.child,
-      ),
-    );
-
-    final semantics = Semantics(
+    return FocusableActionDetector(
+      // Keyboard and focus handling
       enabled: _isEnabled,
-      slider: true,
-      focusable: _isEnabled,
-      value: _percentString(widget.value),
-      increasedValue: _percentString(
-        _normalizeValue(widget.value + _calculateStep(false)),
+      focusNode: _focusNode,
+      autofocus: widget.autofocus,
+      descendantsAreTraversable: false,
+      shortcuts: _shortcuts,
+      actions: _actions,
+      onShowHoverHighlight: (value) {
+        updateHoverState(value, widget.onHoverChange);
+      },
+      onFocusChange: (value) {
+        updateFocusState(value, widget.onFocusChange);
+      },
+      mouseCursor: _cursor,
+      child: MouseRegion(
+        onEnter: (_) {
+          updateHoverState(true, widget.onHoverChange);
+        },
+        onExit: (_) {
+          updateHoverState(false, widget.onHoverChange);
+        },
+        cursor: _cursor,
+        child: GestureDetector(
+          // CRITICAL: Prevents duplicate semantic nodes
+          onVerticalDragStart: widget.direction == Axis.vertical && _isEnabled
+              ? _handleDragStart
+              : null,
+          onVerticalDragUpdate: widget.direction == Axis.vertical && _isEnabled
+              ? _handleDragUpdate
+              : null,
+          onVerticalDragEnd: widget.direction == Axis.vertical && _isEnabled
+              ? _handleDragEnd
+              : null,
+          onHorizontalDragStart:
+              widget.direction == Axis.horizontal && _isEnabled
+              ? _handleDragStart
+              : null,
+          onHorizontalDragUpdate:
+              widget.direction == Axis.horizontal && _isEnabled
+              ? _handleDragUpdate
+              : null,
+          onHorizontalDragEnd: widget.direction == Axis.horizontal && _isEnabled
+              ? _handleDragEnd
+              : null,
+          behavior: HitTestBehavior.opaque,
+          // Visual interaction handling only
+          excludeFromSemantics: true,
+          child: widget.child,
+        ),
       ),
-      decreasedValue: _percentString(
-        _normalizeValue(widget.value - _calculateStep(false)),
-      ),
-      onIncrease: _isEnabled
-          ? () {
-              final step = _calculateStep(false);
-              _callOnChangeIfNeeded(_normalizeValue(widget.value + step));
-            }
-          : null,
-      onDecrease: _isEnabled
-          ? () {
-              final step = _calculateStep(false);
-              _callOnChangeIfNeeded(_normalizeValue(widget.value - step));
-            }
-          : null,
-      child: gesture,
     );
+  }
 
-    return MergeSemantics(
-      child: _isEnabled
-          ? FocusableActionDetector(
-              enabled: true,
-              focusNode: _focusNode,
-              autofocus: widget.autofocus,
-              descendantsAreTraversable: false,
-              shortcuts: _shortcuts,
-              actions: _actions,
-              onShowHoverHighlight: (value) {
-                if (!_isEnabled) return;
-                if (value) {
-                  _widgetStates.add(WidgetState.hovered);
-                } else {
-                  _widgetStates.remove(WidgetState.hovered);
-                }
-                widget.onHoverChange?.call(value);
-              },
-              onFocusChange: (value) {
-                if (value) {
-                  _widgetStates.add(WidgetState.focused);
-                } else {
-                  _widgetStates.remove(WidgetState.focused);
-                }
-                widget.onFocusChange?.call(value);
-              },
-              mouseCursor: _cursor,
-              child: MouseRegion(
-                onEnter: (_) {
-                  if (_isEnabled) {
-                    _widgetStates.add(WidgetState.hovered);
-                    widget.onHoverChange?.call(true);
-                  }
-                },
-                onExit: (_) {
-                  if (_isEnabled) {
-                    _widgetStates.remove(WidgetState.hovered);
-                    widget.onHoverChange?.call(false);
-                  }
-                },
-                cursor: _cursor,
-                child: semantics,
-              ),
-            )
-          : MouseRegion(
-              onEnter: (_) {
-                if (_isEnabled) {
-                  _widgetStates.add(WidgetState.hovered);
-                  widget.onHoverChange?.call(true);
-                }
-              },
-              onExit: (_) {
-                if (_isEnabled) {
-                  _widgetStates.remove(WidgetState.hovered);
-                  widget.onHoverChange?.call(false);
-                }
-              },
-              cursor: _cursor,
-              child: semantics,
-            ),
-    );
+  @override
+  void initializeWidgetStates() {
+    updateDisabledState(!_isEnabled);
   }
 
   @override
   void didUpdateWidget(NakedSlider oldWidget) {
     super.didUpdateWidget(oldWidget);
-    // Update disabled state when interactivity changes
-    if (_isEnabled) {
-      _widgetStates.remove(WidgetState.disabled);
-    } else {
-      _widgetStates.add(WidgetState.disabled);
-      // Clear transient hover/pressed states when disabled
-      _widgetStates.remove(WidgetState.hovered);
-      _widgetStates.remove(WidgetState.pressed);
+    syncWidgetStates();
+
+    // Clear transient states when disabled
+    if (!_isEnabled) {
+      updateState(WidgetState.hovered, false);
+      updateState(WidgetState.pressed, false);
     }
   }
 
@@ -420,7 +364,38 @@ class _NakedSliderState extends State<NakedSlider> {
 
   @override
   Widget build(BuildContext context) {
-    return _buildSliderInteractable();
+    Widget sliderWidget = _buildSliderInteractable();
+
+    if (!widget.addSemantics) return sliderWidget;
+
+    return Semantics(
+      excludeSemantics: widget.excludeChildSemantics,
+      enabled: _isEnabled,
+      slider: true,
+      focusable: _isEnabled,
+      focused: isFocused,
+      label: widget.semanticLabel,
+      value: _percentString(widget.value),
+      increasedValue: _percentString(
+        _normalizeValue(widget.value + _calculateStep(false)),
+      ),
+      decreasedValue: _percentString(
+        _normalizeValue(widget.value - _calculateStep(false)),
+      ),
+      onIncrease: _isEnabled
+          ? () {
+              final step = _calculateStep(false);
+              _callOnChangeIfNeeded(_normalizeValue(widget.value + step));
+            }
+          : null,
+      onDecrease: _isEnabled
+          ? () {
+              final step = _calculateStep(false);
+              _callOnChangeIfNeeded(_normalizeValue(widget.value - step));
+            }
+          : null,
+      child: sliderWidget,
+    );
   }
 }
 

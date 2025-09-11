@@ -96,7 +96,6 @@ void main() {
       bool isHovered = false;
       bool isFocused = false;
       bool isPressed = false;
-      Set<WidgetState>? lastStates;
 
       await tester.pumpWidget(MaterialApp(
         home: Scaffold(

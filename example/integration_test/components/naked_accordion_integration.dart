@@ -201,7 +201,6 @@ void main() {
       final itemKey = UniqueKey();
       bool isHovered = false;
       bool isPressed = false;
-      Set<WidgetState>? lastStates;
 
       await tester.pumpWidget(MaterialApp(
         home: Scaffold(

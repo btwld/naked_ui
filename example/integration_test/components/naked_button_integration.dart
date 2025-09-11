@@ -84,7 +84,6 @@ void main() {
       final buttonKey = UniqueKey();
       bool isHovered = false;
       bool isPressed = false;
-      Set<WidgetState>? lastStates;
 
       await tester.pumpWidget(MaterialApp(
         home: Scaffold(
@@ -193,7 +192,6 @@ void main() {
             child: NakedButton(
               key: buttonKey,
               focusNode: focusNode,
-              focusOnPress: true,
               onPressed: () => wasPressed = true,
               child: const Text('Focus Test Button'),
             ),
@@ -225,7 +223,6 @@ void main() {
             child: NakedButton(
               key: buttonKey,
               focusNode: focusNode,
-              focusOnPress: false, // Default value, but explicit for test
               onPressed: () => wasPressed = true,
               child: const Text('No Focus Test Button'),
             ),

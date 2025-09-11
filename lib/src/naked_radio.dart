@@ -17,6 +17,9 @@ class NakedRadio<T> extends StatefulWidget {
     this.onHoverChange,
     this.onPressChange,
     this.builder,
+    this.semanticLabel,
+    this.addSemantics = true,
+    this.excludeChildSemantics = false,
   }) : assert(
          child != null || builder != null,
          'Either child or builder must be provided',
@@ -38,12 +41,21 @@ class NakedRadio<T> extends StatefulWidget {
   final ValueChanged<bool>? onPressChange;
   final ValueWidgetBuilder<Set<WidgetState>>? builder;
 
+  /// Semantic label for accessibility.
+  final String? semanticLabel;
+
+  /// Whether to add semantics to this radio.
+  final bool addSemantics;
+
+  /// Whether to exclude child semantics.
+  final bool excludeChildSemantics;
+
   @override
   State<NakedRadio<T>> createState() => _NakedRadioState<T>();
 }
 
 class _NakedRadioState<T> extends State<NakedRadio<T>>
-    with NakedPressableListenerMixin<NakedRadio<T>> {
+    with PressListenerMixin<NakedRadio<T>> {
   FocusNode? _internalFocusNode;
 
   FocusNode get _focusNode =>
@@ -70,6 +82,57 @@ class _NakedRadioState<T> extends State<NakedRadio<T>>
     widget.onFocusChange?.call(_focusNode.hasFocus);
   }
 
+  Widget _buildRadioWidget(
+    BuildContext _,
+    RadioGroupRegistry<T> registry,
+    bool isSelected,
+  ) {
+    final effectiveCursor = widget.mouseCursor != null
+        ? widget.mouseCursor!
+        : widget.enabled
+        ? SystemMouseCursors.click
+        : SystemMouseCursors.basic;
+
+    return ConstrainedBox(
+      constraints: const BoxConstraints.tightFor(width: 48, height: 48),
+      child: GestureDetector(
+        onTap: widget.enabled
+            ? () => _handlePointerTap(registry, isSelected)
+            : null,
+        behavior: HitTestBehavior.opaque,
+        excludeFromSemantics: true,
+        child: buildPressListener(
+          enabled: widget.enabled,
+          behavior: HitTestBehavior.opaque,
+          onPressChange: widget.onPressChange,
+          child: RawRadio<T>(
+            value: widget.value,
+            mouseCursor: WidgetStateMouseCursor.resolveWith(
+              (_) => effectiveCursor,
+            ),
+            toggleable: widget.toggleable,
+            focusNode: _focusNode,
+            autofocus: widget.autofocus && widget.enabled,
+            groupRegistry: registry,
+            enabled: widget.enabled,
+            builder: (context, radioState) {
+              if (widget.builder != null) {
+                final states = <WidgetState>{
+                  if (!widget.enabled) WidgetState.disabled,
+                  if (isSelected) WidgetState.selected,
+                };
+
+                return widget.builder!(context, states, widget.child);
+              }
+
+              return widget.child!;
+            },
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   void didUpdateWidget(NakedRadio<T> oldWidget) {
     super.didUpdateWidget(oldWidget);
@@ -78,6 +141,7 @@ class _NakedRadioState<T> extends State<NakedRadio<T>>
       (oldWidget.focusNode ?? _internalFocusNode)?.removeListener(
         _handleFocusNodeChanged,
       );
+      // ignore: always-remove-listener
       _focusNode.addListener(_handleFocusNodeChanged);
     }
   }
@@ -85,9 +149,7 @@ class _NakedRadioState<T> extends State<NakedRadio<T>>
   @override
   void dispose() {
     // Detach listener from the current effective node before disposing.
-    (widget.focusNode ?? _internalFocusNode)?.removeListener(
-      _handleFocusNodeChanged,
-    );
+    _focusNode.removeListener(_handleFocusNodeChanged);
     _internalFocusNode?.dispose();
     super.dispose();
   }
@@ -96,7 +158,6 @@ class _NakedRadioState<T> extends State<NakedRadio<T>>
   Widget build(BuildContext context) {
     final registry = RadioGroup.maybeOf<T>(context);
 
-    // Always require registry
     if (registry == null) {
       throw FlutterError.fromParts([
         ErrorSummary('NakedRadio<$T> must be used within a RadioGroup<$T>.'),
@@ -119,58 +180,24 @@ class _NakedRadioState<T> extends State<NakedRadio<T>>
       ]);
     }
 
-    // Check if selected
     final isSelected = registry.groupValue == widget.value;
+    Widget radioWidget = _buildRadioWidget(context, registry, isSelected);
 
-    // Determine mouse cursor
-    final effectiveCursor = widget.mouseCursor != null
-        ? widget.mouseCursor!
-        : widget.enabled
-        ? SystemMouseCursors.click
-        : SystemMouseCursors.basic;
+    if (!widget.addSemantics) return radioWidget;
 
-    return MergeSemantics(
-      child: ConstrainedBox(
-        constraints: const BoxConstraints.tightFor(width: 48, height: 48),
-        child: GestureDetector(
-          onTap: widget.enabled
-              ? () => _handlePointerTap(registry, isSelected)
-              : null,
-          behavior: HitTestBehavior.opaque,
-          child: buildPressListener(
-            enabled: widget.enabled,
-            behavior: HitTestBehavior.opaque,
-            onPressChange: widget.onPressChange,
-            child: RawRadio<T>(
-              value: widget.value,
-              mouseCursor: WidgetStateMouseCursor.resolveWith(
-                (_) => effectiveCursor,
-              ),
-              toggleable: widget.toggleable,
-              focusNode: _focusNode,
-              autofocus: widget.autofocus && widget.enabled,
-              groupRegistry: registry,
-              enabled: widget.enabled,
-              builder: (context, radioState) {
-                // Create states set from basic state info
-                final states = <WidgetState>{
-                  if (!widget.enabled) WidgetState.disabled,
-                  if (isSelected) WidgetState.selected,
-                  // Note: RawRadio doesn't expose hover/press states through builder
-                  // This is a limitation of the RawRadio API
-                };
-
-
-                if (widget.builder != null) {
-                  return widget.builder!(context, states, widget.child);
-                }
-
-                return widget.child!;
-              },
-            ),
-          ),
-        ),
-      ),
+    return Semantics(
+      excludeSemantics: widget.excludeChildSemantics,
+      enabled: widget.enabled,
+      checked: isSelected,
+      focusable: widget.enabled,
+      focused: _focusNode.hasFocus,
+      inMutuallyExclusiveGroup: true,
+      label: widget.semanticLabel,
+      onTap: widget.enabled
+          ? () => _handlePointerTap(registry, isSelected)
+          : null,
+      onFocus: () => _focusNode.requestFocus(),
+      child: radioWidget,
     );
   }
 }

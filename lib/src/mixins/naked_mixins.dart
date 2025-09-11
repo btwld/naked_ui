@@ -1,149 +1,75 @@
-import 'package:flutter/gestures.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
-/// Focus mixin: manages FocusNode lifecycle and provides a builder.
-///
-/// Usage:
-///   - mixin on a State class: `with NakedFocusableMixin<YourWidget>`
-///   - implement [providedFocusNode] to supply an external FocusNode (or return null)
-///   - call [buildFocus] to wrap your child
-mixin NakedFocusableMixin<T extends StatefulWidget> on State<T> {
-  FocusNode? _internalNode;
-  bool _usingExternal = false;
-  FocusNode? _observedFocusNode;
-
-  @protected
-  FocusNode? get providedFocusNode;
-
-  @protected
-  String get focusDebugLabel => 'NakedFocusableMixin<$T>';
-
-  @protected
-  FocusNode get effectiveFocusNode => providedFocusNode ?? _internalNode!;
-
-  @mustCallSuper
-  @override
-  void initState() {
-    super.initState();
-    _usingExternal = providedFocusNode != null;
-    if (!_usingExternal) {
-      _internalNode = FocusNode(debugLabel: focusDebugLabel);
-    }
-    // Observe focus changes to trigger rebuilds (for semantics parity, etc.)
-    _rebindFocusListener();
-  }
-
-  @mustCallSuper
-  @override
-  void didUpdateWidget(covariant T oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    final newUsingExternal = providedFocusNode != null;
-    if (_usingExternal && !newUsingExternal) {
-      _internalNode = FocusNode(debugLabel: focusDebugLabel);
-    } else if (!_usingExternal && newUsingExternal) {
-      _internalNode?.dispose();
-      _internalNode = null;
-    }
-    _usingExternal = newUsingExternal;
-    _rebindFocusListener();
-  }
-
-  @mustCallSuper
-  @override
-  void dispose() {
-    _observedFocusNode?.removeListener(_onFocusChanged);
-    _observedFocusNode = null;
-    _internalNode?.dispose();
-    _internalNode = null;
-    super.dispose();
-  }
-
-  @protected
-  void _onFocusChanged() {
-    if (mounted) setState(() {});
-  }
-
-  void _rebindFocusListener() {
-    final node = effectiveFocusNode;
-    if (!identical(node, _observedFocusNode)) {
-      _observedFocusNode?.removeListener(_onFocusChanged);
-      _observedFocusNode = node..addListener(_onFocusChanged);
-    }
-  }
-
-  Widget buildFocus({
-    Key? key,
-    required Widget child,
-    bool autofocus = false,
-    ValueChanged<bool>? onFocusChange,
-    bool canRequestFocus = true,
-    bool descendantsAreFocusable = true,
-    bool skipTraversal = false,
-    bool includeSemantics = true,
-  }) {
-    return Focus(
-      key: key,
-      focusNode: effectiveFocusNode,
-      autofocus: autofocus,
-      onFocusChange: onFocusChange,
-      canRequestFocus: canRequestFocus,
-      skipTraversal: skipTraversal,
-      descendantsAreFocusable: descendantsAreFocusable,
-      includeSemantics: includeSemantics,
-      child: child,
-    );
-  }
-}
-
-/// Hover mixin: tracks isHovered and provides a MouseRegion builder.
-///
-/// Usage:
-///   - mixin on a State class: `with NakedHoverableMixin<YourWidget>`
-///   - call [buildHoverRegion] to wrap your child
-mixin NakedHoverableMixin<T extends StatefulWidget> on State<T> {
-  @protected
-  Widget buildHoverRegion({
-    Key? key,
-    required Widget child,
-    MouseCursor cursor = MouseCursor.defer,
-    bool opaque = false,
-    ValueChanged<bool>? onHoverChange,
-    void Function(PointerHoverEvent)? onHover,
-  }) {
-    return MouseRegion(
-      key: key,
-      onEnter: (_) => onHoverChange?.call(true),
-      onExit: (_) => onHoverChange?.call(false),
-      onHover: onHover,
-      cursor: cursor,
-      opaque: opaque,
-      child: child,
-    );
-  }
-}
-
-/// Simplified widget states management mixin.
+/// Widget states management mixin.
 ///
 /// Purpose:
 /// - Manage widget interaction states internally using a Set<WidgetState>
 /// - Provide updateState method to change states and trigger rebuilds
 /// - Emit individual state change callbacks when states actually change
+/// - Offer convenient helper methods for common state updates
+/// - Provide readable getter properties for state checking
 ///
 /// How to use:
-/// - mixin on a State class: `with SimpleWidgetStatesMixin<YourWidget>`
-/// - use [updateState] to update interaction flags like focused/hovered/pressed
+/// - mixin on a State class: `with WidgetStatesMixin<YourWidget>`
+/// - use helper methods like [updateHoverState], [updateFocusState], [updatePressState]
+/// - use getter properties like [isFocused], [isHovered], [isPressed] for state checking
 /// - override [initializeWidgetStates] to set initial states based on widget properties
-mixin SimpleWidgetStatesMixin<T extends StatefulWidget> on State<T> {
+///
+/// Example:
+/// ```dart
+/// class _MyWidgetState extends State<MyWidget>
+///     with WidgetStatesMixin<MyWidget> {
+///
+///   @override
+///   void initializeWidgetStates() {
+///     updateDisabledState(!widget.enabled);
+///   }
+///
+///   Widget build(BuildContext context) {
+///     return FocusableActionDetector(
+///       enabled: widget.enabled,
+///       onHoverChange: (hovered) => updateHoverState(hovered, widget.onHoverChange),
+///       onFocusChange: (focused) => updateFocusState(focused, widget.onFocusChange),
+///       child: MyChild(isPressed: isPressed),
+///     );
+///   }
+/// }
+/// ```
+mixin WidgetStatesMixin<T extends StatefulWidget> on State<T> {
   Set<WidgetState> _widgetStates = <WidgetState>{};
 
   /// Current widget states (copy) for use in builders and semantics.
   @protected
   Set<WidgetState> get widgetStates => {..._widgetStates};
 
+  /// Whether the widget currently has keyboard focus.
+  @protected
+  bool get isFocused => _widgetStates.contains(WidgetState.focused);
+
+  /// Whether the widget is currently being hovered over by a mouse cursor.
+  @protected
+  bool get isHovered => _widgetStates.contains(WidgetState.hovered);
+
+  /// Whether the widget is currently being pressed.
+  @protected
+  bool get isPressed => _widgetStates.contains(WidgetState.pressed);
+
+  /// Whether the widget is disabled and cannot be interacted with.
+  @protected
+  bool get isDisabled => _widgetStates.contains(WidgetState.disabled);
+
+  /// Whether the widget is currently selected.
+  @protected
+  bool get isSelected => _widgetStates.contains(WidgetState.selected);
+
+  /// Whether the widget is enabled (not disabled).
+  @protected
+  bool get isEnabled => !isDisabled;
+
   /// Hook for widgets to initialize states based on widget properties.
   /// Called during initialization and when widget updates.
   @protected
+  // ignore: no-empty-block
   void initializeWidgetStates() {
     // Default implementation does nothing - override in concrete widgets
   }
@@ -168,20 +94,78 @@ mixin SimpleWidgetStatesMixin<T extends StatefulWidget> on State<T> {
   bool updateState(WidgetState state, bool value) {
     final before = _widgetStates.contains(state);
     if (before == value) return false;
-    
+
     if (value) {
       _widgetStates.add(state);
     } else {
       _widgetStates.remove(state);
     }
-    
+
     if (mounted) {
-      setState(() {});
+      // ignore: avoid-empty-setstate, no-empty-block
+      setState(() {}); // Trigger rebuild when widget state changes
     }
-    
+
     return true;
   }
 
+  /// Update hover state and fire callback only if the state actually changed.
+  @protected
+  // ignore: prefer-named-boolean-parameters
+  bool updateHoverState(bool value, ValueChanged<bool>? onHoverChange) {
+    if (updateState(WidgetState.hovered, value)) {
+      onHoverChange?.call(value);
+
+      return true;
+    }
+
+    return false;
+  }
+
+  /// Update focus state and fire callback only if the state actually changed.
+  @protected
+  // ignore: prefer-named-boolean-parameters
+  bool updateFocusState(bool value, ValueChanged<bool>? onFocusChange) {
+    if (updateState(WidgetState.focused, value)) {
+      onFocusChange?.call(value);
+
+      return true;
+    }
+
+    return false;
+  }
+
+  /// Update press state and fire callback only if the state actually changed.
+  @protected
+  // ignore: prefer-named-boolean-parameters
+  bool updatePressState(bool value, ValueChanged<bool>? onPressChange) {
+    if (updateState(WidgetState.pressed, value)) {
+      onPressChange?.call(value);
+
+      return true;
+    }
+
+    return false;
+  }
+
+  /// Update disabled state. Returns true if the state actually changed.
+  @protected
+  bool updateDisabledState(bool value) {
+    return updateState(WidgetState.disabled, value);
+  }
+
+  /// Update selected state and fire callback only if the state actually changed.
+  @protected
+  // ignore: prefer-named-boolean-parameters
+  bool updateSelectedState(bool value, ValueChanged<bool>? onSelectedChange) {
+    if (updateState(WidgetState.selected, value)) {
+      onSelectedChange?.call(value);
+
+      return true;
+    }
+
+    return false;
+  }
 }
 
 /// Press listener mixin: stateless helper that forwards press lifecycle via callbacks.
@@ -191,9 +175,9 @@ mixin SimpleWidgetStatesMixin<T extends StatefulWidget> on State<T> {
 ///  - Emits onPressChange(false) when pointer moves outside, on up, or cancel
 ///
 /// Usage:
-///  - mixin on a State class: `with NakedPressableListenerMixin<YourWidget>`
+///  - mixin on a State class: `with PressListenerMixin<YourWidget>`
 ///  - call [buildPressListener] to wrap your child
-mixin NakedPressableListenerMixin<T extends StatefulWidget> on State<T> {
+mixin PressListenerMixin<T extends StatefulWidget> on State<T> {
   @protected
   bool _isPointerWithinBounds(Offset localPosition) {
     final RenderBox? box = context.findRenderObject() as RenderBox?;
@@ -235,102 +219,5 @@ mixin NakedPressableListenerMixin<T extends StatefulWidget> on State<T> {
       behavior: behavior,
       child: child,
     );
-  }
-}
-
-/// Press mixin (GestureDetector): stateless helper that forwards press lifecycle.
-///
-/// Behavior:
-///  - Emits onPressChange(true) on tap down
-///  - Emits onPressChange(false) on tap up or cancel
-///  - Does not track out-of-bounds drag; use the Listener-based mixin if needed
-///
-/// Usage:
-///  - mixin on a State class: `with NakedPressableMixin<YourWidget>`
-///  - call [buildPressDetector] to wrap your child
-mixin NakedPressableMixin<T extends StatefulWidget> on State<T> {
-  @protected
-  Widget buildPressDetector({
-    Key? key,
-    required Widget child,
-    bool enabled = true,
-    HitTestBehavior behavior = HitTestBehavior.opaque,
-    bool excludeFromSemantics = false,
-    ValueChanged<bool>? onPressChange,
-    VoidCallback? onTap,
-    GestureTapDownCallback? onTapDown,
-    GestureTapUpCallback? onTapUp,
-    GestureTapCancelCallback? onTapCancel,
-    VoidCallback? onDoubleTap,
-    GestureLongPressCallback? onLongPress,
-  }) {
-    if (!enabled) {
-      onPressChange?.call(false);
-
-      return Listener(behavior: behavior, child: child);
-    }
-
-    return GestureDetector(
-      key: key,
-      onTapDown: (details) {
-        onPressChange?.call(true);
-        onTapDown?.call(details);
-      },
-      onTapUp: (details) {
-        onPressChange?.call(false);
-        onTapUp?.call(details);
-      },
-      onTap: onTap,
-      onTapCancel: () {
-        onPressChange?.call(false);
-        onTapCancel?.call();
-      },
-      onDoubleTap: onDoubleTap,
-      onLongPress: onLongPress,
-      behavior: behavior,
-      excludeFromSemantics: excludeFromSemantics,
-      child: child,
-    );
-  }
-}
-
-// Selectable mixin: helps compute next selected value and activation behavior.
-// Intended for checkbox/radio/switch-like controls.
-mixin NakedSelectableMixin<T extends StatefulWidget> on State<T> {
-  /// Computes the next selection state based on current [selected] and [tristate].
-  ///
-  /// Tristate cycle (Material-compatible): null → false → true → null
-  /// Binary toggle: treat null as false, then toggle.
-  @protected
-  bool? computeNextSelected({required bool? selected, required bool tristate}) {
-    if (tristate) {
-      if (selected == null) return false;
-      if (selected == false) return true;
-
-      return null; // true → null
-    }
-    final current = selected ?? false;
-
-    return !current;
-  }
-
-  /// Handles activation (e.g., tap/keyboard) by emitting selectionClick
-  /// feedback and calling [onChanged] with the computed next value.
-  @protected
-  void handleSelectableActivation({
-    required bool? selected,
-    required bool tristate,
-    required ValueChanged<bool?>? onChanged,
-    bool enableFeedback = true,
-  }) {
-    if (onChanged == null) return;
-    if (enableFeedback) {
-      HapticFeedback.selectionClick();
-    }
-    final nextValue = computeNextSelected(
-      selected: selected,
-      tristate: tristate,
-    );
-    onChanged(nextValue);
   }
 }

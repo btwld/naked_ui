@@ -109,6 +109,8 @@ class NakedTooltip extends StatefulWidget implements OverlayChildLifecycle {
     this.removalDelay = Duration.zero,
     this.onStateChange,
     this.semanticsLabel,
+    this.addSemantics = true,
+    this.excludeChildSemantics = false,
   });
 
   /// Widget that triggers the tooltip.
@@ -120,6 +122,12 @@ class NakedTooltip extends StatefulWidget implements OverlayChildLifecycle {
   /// Optional semantics tooltip label applied to the trigger.
   /// Screen readers announce this on focus/hover.
   final String? semanticsLabel;
+
+  /// Whether to add semantics to this tooltip.
+  final bool addSemantics;
+
+  /// Whether to exclude child semantics.
+  final bool excludeChildSemantics;
 
   /// Tooltip position relative to the target.
   final NakedMenuPosition position;
@@ -166,6 +174,20 @@ class _NakedTooltipState extends State<NakedTooltip>
     });
   }
 
+  Widget _buildTooltipWidget(BuildContext _) {
+    return NakedMenuAnchor(
+      controller: controller,
+      overlayBuilder: widget.tooltipBuilder,
+      position: widget.position,
+      fallbackPositions: widget.fallbackPositions,
+      child: MouseRegion(
+        onEnter: _handleMouseEnter,
+        onExit: _handleMouseExit,
+        child: widget.child,
+      ),
+    );
+  }
+
   @override
   void dispose() {
     _showTimer?.cancel();
@@ -178,19 +200,14 @@ class _NakedTooltipState extends State<NakedTooltip>
     return ListenableBuilder(
       listenable: showNotifier,
       builder: (context, child) {
-        return NakedMenuAnchor(
-          controller: controller,
-          overlayBuilder: widget.tooltipBuilder,
-          position: widget.position,
-          fallbackPositions: widget.fallbackPositions,
-          child: MouseRegion(
-            onEnter: _handleMouseEnter,
-            onExit: _handleMouseExit,
-            child: Semantics(
-              tooltip: widget.semanticsLabel,
-              child: widget.child,
-            ),
-          ),
+        Widget tooltipWidget = _buildTooltipWidget(context);
+
+        if (!widget.addSemantics) return tooltipWidget;
+
+        return Semantics(
+          excludeSemantics: widget.excludeChildSemantics,
+          tooltip: widget.semanticsLabel,
+          child: tooltipWidget,
         );
       },
     );

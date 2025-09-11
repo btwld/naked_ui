@@ -137,6 +137,9 @@ class NakedMenuItem extends StatelessWidget {
     this.onHoverChange,
     this.onPressChange,
     this.builder,
+    this.semanticLabel,
+    this.addSemantics = true,
+    this.excludeChildSemantics = false,
   }) : assert(
          child != null || builder != null,
          'Either child or builder must be provided',
@@ -183,6 +186,15 @@ class NakedMenuItem extends StatelessWidget {
   /// Whether to automatically focus when created.
   final bool autofocus;
 
+  /// Semantic label for accessibility.
+  final String? semanticLabel;
+
+  /// Whether to add semantics to this menu item.
+  final bool addSemantics;
+
+  /// Whether to exclude child semantics.
+  final bool excludeChildSemantics;
+
   void _handlePress(MenuController? controller) {
     if (!_effectiveEnabled) return;
     if (enableFeedback) {
@@ -210,6 +222,9 @@ class NakedMenuItem extends StatelessWidget {
       onFocusChange: onFocusChange,
       onHoverChange: onHoverChange,
       onPressChange: onPressChange,
+      semanticLabel: semanticLabel,
+      addSemantics: addSemantics,
+      excludeChildSemantics: excludeChildSemantics,
       child: child,
       builder: builder != null
           ? (context, states, child) => builder!(context, states, child)

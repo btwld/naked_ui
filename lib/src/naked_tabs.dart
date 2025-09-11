@@ -258,6 +258,8 @@ class NakedTab extends StatefulWidget {
     this.onHoverChange,
     this.onPressChange,
     this.builder,
+    this.semanticLabel,
+    this.excludeChildSemantics = false,
   }) : assert(
          child != null || builder != null,
          'Either child or builder must be provided',
@@ -277,9 +279,14 @@ class NakedTab extends StatefulWidget {
   /// Called when highlight (pressed) state changes.
   final ValueChanged<bool>? onPressChange;
 
-
   /// Optional builder that receives the current states for visuals.
   final ValueWidgetBuilder<Set<WidgetState>>? builder;
+
+  /// Semantic label for accessibility.
+  final String? semanticLabel;
+
+  /// Whether to exclude child semantics.
+  final bool excludeChildSemantics;
 
   /// Whether this tab is enabled.
   final bool enabled;
@@ -362,22 +369,32 @@ class _NakedTabState extends State<NakedTab> {
 
   @override
   Widget build(BuildContext context) {
-    final isSelected = _tabsScope.isTabSelected(widget.tabId);
-
     assert(widget.tabId.isNotEmpty, 'tabId cannot be empty');
 
+    final isSelected = _tabsScope.isTabSelected(widget.tabId);
 
     // Use NakedButton for consistent gesture and cursor behavior
-    return NakedButton(
+    return Semantics(
+      excludeSemantics: widget.excludeChildSemantics,
+      enabled: _isEnabled,
+      selected: isSelected,
+      button: true,
+      focusable: _isEnabled,
+      focused: _focusNode.hasFocus,
+      label: widget.semanticLabel,
+      onTap: _isEnabled ? _handleTap : null,
+      onFocus: () => _focusNode.requestFocus(),
+      child: NakedButton(
         onPressed: _isEnabled ? _handleTap : null,
         enabled: widget.enabled,
-        focusNode: _focusNode,
-        autofocus: widget.autofocus,
         mouseCursor: widget.mouseCursor,
         enableFeedback: false,
+        focusNode: _focusNode,
+        autofocus: widget.autofocus,
         onFocusChange: widget.onFocusChange,
         onHoverChange: widget.onHoverChange,
         onPressChange: widget.onPressChange,
+        addSemantics: false,
         child: widget.child,
         builder: (context, states, child) {
           if (widget.builder != null) {
@@ -386,6 +403,7 @@ class _NakedTabState extends State<NakedTab> {
 
           return widget.child!;
         },
+      ),
     );
   }
 }

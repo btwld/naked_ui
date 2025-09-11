@@ -26,6 +26,10 @@ class NakedButton extends StatefulWidget {
     this.onPressChange,
     this.builder,
     this.focusOnPress = false,
+    this.semanticLabel,
+    this.tooltip,
+    this.addSemantics = true,
+    this.excludeChildSemantics = false,
   }) : assert(
          child != null || builder != null,
          'Either child or builder must be provided',
@@ -51,7 +55,6 @@ class NakedButton extends StatefulWidget {
 
   /// Called when highlight (pressed) state changes.
   final ValueChanged<bool>? onPressChange;
-
 
   /// Optional builder that receives the current states for visuals.
   final ValueWidgetBuilder<Set<WidgetState>>? builder;
@@ -83,6 +86,18 @@ class NakedButton extends StatefulWidget {
   /// Defaults to false to maintain Material Design consistency.
   final bool focusOnPress;
 
+  /// Semantic label for accessibility.
+  final String? semanticLabel;
+
+  /// Tooltip message for accessibility.
+  final String? tooltip;
+
+  /// Whether to add semantics to this button.
+  final bool addSemantics;
+
+  /// Whether to exclude child semantics.
+  final bool excludeChildSemantics;
+
   bool get _effectiveEnabled => enabled && onPressed != null;
 
   @override
@@ -90,25 +105,14 @@ class NakedButton extends StatefulWidget {
 }
 
 class _NakedButtonState extends State<NakedButton>
-    with
-        SimpleWidgetStatesMixin<NakedButton>,
-        NakedFocusableMixin<NakedButton>,
-        NakedHoverableMixin<NakedButton>,
-        NakedPressableMixin<NakedButton> {
+    with WidgetStatesMixin<NakedButton> {
   static const Duration _activationDuration = Duration(milliseconds: 100);
 
   Timer? _activationTimer;
 
-  @override
   void initializeWidgetStates() {
-    updateState(WidgetState.disabled, !widget.enabled);
+    updateDisabledState(!widget._effectiveEnabled);
   }
-
-  @override
-  FocusNode? get providedFocusNode => widget.focusNode;
-
-  @override
-  String get focusDebugLabel => 'NakedButton';
 
   void _handleKeyboardActivation([Intent? _]) {
     if (!widget._effectiveEnabled || widget.onPressed == null) return;
@@ -125,7 +129,6 @@ class _NakedButtonState extends State<NakedButton>
       }
     });
   }
-
 
   void _handleTap() {
     if (widget._effectiveEnabled) {
@@ -146,27 +149,18 @@ class _NakedButtonState extends State<NakedButton>
   }
 
   void _handleTapDown(TapDownDetails _) {
-    if (widget.focusOnPress && providedFocusNode != null) {
-      providedFocusNode!.requestFocus();
+    if (widget.focusOnPress && widget.focusNode != null) {
+      widget.focusNode!.requestFocus();
     }
-    // Ensure pressed state is visible immediately on tap down
-    if (updateState(WidgetState.pressed, true)) {
-      widget.onPressChange?.call(true);
-    }
-  }
-
-  Widget _buildContent(BuildContext context) {
-    final states = widgetStates;
-
-    return widget.builder != null
-        ? widget.builder!(context, states, widget.child)
-        : widget.child!;
+    updatePressState(true, widget.onPressChange);
   }
 
   @override
   void didUpdateWidget(covariant NakedButton oldWidget) {
     super.didUpdateWidget(oldWidget);
-    syncWidgetStates();
+    if (oldWidget.enabled != widget.enabled) {
+      updateDisabledState(!widget._effectiveEnabled);
+    }
   }
 
   @override
@@ -175,71 +169,76 @@ class _NakedButtonState extends State<NakedButton>
     super.dispose();
   }
 
-
-  MouseCursor get _effectiveCursor =>
-      widget._effectiveEnabled ? widget.mouseCursor : SystemMouseCursors.basic;
-
   VoidCallback? get _semanticsTapHandler =>
       widget._effectiveEnabled ? () => _handleKeyboardActivation() : null;
 
   VoidCallback get _semanticsFocusHandler =>
-      () => providedFocusNode?.requestFocus();
+      () => widget.focusNode?.requestFocus();
+
+  bool get isFocused => widgetStates.contains(WidgetState.focused);
 
   @override
   Widget build(BuildContext context) {
-    return Shortcuts(
+    final content = widget.builder != null
+        ? widget.builder!(context, widgetStates, widget.child)
+        : widget.child!;
+
+    Widget buttonWidget = FocusableActionDetector(
+      enabled: widget._effectiveEnabled,
+      focusNode: widget.focusNode,
+      autofocus: widget.autofocus,
       shortcuts: const {
         SingleActivator(LogicalKeyboardKey.enter): ActivateIntent(),
         SingleActivator(LogicalKeyboardKey.space): ActivateIntent(),
       },
-      child: Actions(
-        actions: {
-          ActivateIntent: CallbackAction<ActivateIntent>(
-            onInvoke: _handleKeyboardActivation,
-          ),
-        },
-        child: buildFocus(
-          autofocus: widget.autofocus,
-          onFocusChange: (focused) {
-            if (updateState(WidgetState.focused, focused)) {
-              widget.onFocusChange?.call(focused);
-            }
-          },
-          includeSemantics: false,
-          child: Semantics(
-            enabled: widget._effectiveEnabled,
-            button: true,
-            focusable: true,
-            focused: widgetStates.contains(WidgetState.focused),
-            onTap: _semanticsTapHandler,
-            onFocus: _semanticsFocusHandler,
-            child: buildHoverRegion(
-              cursor: _effectiveCursor,
-              onHoverChange: (hovered) {
-                if (widget.enabled && updateState(WidgetState.hovered, hovered)) {
-                  widget.onHoverChange?.call(hovered);
-                }
-              },
-              child: buildPressDetector(
-                enabled: widget.enabled,
-                behavior: HitTestBehavior.opaque,
-                onPressChange: (pressed) {
-                  if (updateState(WidgetState.pressed, pressed)) {
-                    widget.onPressChange?.call(pressed);
-                  }
-                },
-                onTap: _handleTap,
-                onTapDown: _handleTapDown,
-                onDoubleTap: widget._effectiveEnabled
-                    ? widget.onDoubleTap
-                    : null,
-                onLongPress: _handleLongPress,
-                child: _buildContent(context),
-              ),
-            ),
-          ),
+      actions: {
+        ActivateIntent: CallbackAction<ActivateIntent>(
+          onInvoke: _handleKeyboardActivation,
         ),
+      },
+      onShowHoverHighlight: (hovered) {
+        updateHoverState(hovered, widget.onHoverChange);
+      },
+      onFocusChange: (focused) {
+        updateFocusState(focused, widget.onFocusChange);
+      },
+      mouseCursor: widget._effectiveEnabled
+          ? widget.mouseCursor
+          : SystemMouseCursors.basic,
+      child: GestureDetector(
+        onTapDown: widget._effectiveEnabled ? _handleTapDown : null,
+        onTapUp: widget._effectiveEnabled
+            ? (details) {
+                updatePressState(false, widget.onPressChange);
+              }
+            : null,
+        onTap: widget._effectiveEnabled ? _handleTap : null,
+        onTapCancel: widget._effectiveEnabled
+            ? () {
+                updatePressState(false, widget.onPressChange);
+              }
+            : null,
+        onDoubleTap: widget._effectiveEnabled ? widget.onDoubleTap : null,
+        onLongPress: widget._effectiveEnabled ? _handleLongPress : null,
+        behavior: HitTestBehavior.opaque,
+        excludeFromSemantics: true,
+        child: content,
       ),
+    );
+
+    if (!widget.addSemantics) return buttonWidget;
+
+    return Semantics(
+      excludeSemantics: widget.excludeChildSemantics,
+      enabled: widget._effectiveEnabled,
+      button: true,
+      focusable: true,
+      focused: isFocused,
+      label: widget.semanticLabel,
+      tooltip: widget.tooltip,
+      onTap: _semanticsTapHandler,
+      onFocus: _semanticsFocusHandler,
+      child: buttonWidget,
     );
   }
 }

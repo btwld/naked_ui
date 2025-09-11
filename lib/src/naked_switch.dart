@@ -19,7 +19,9 @@ class NakedSwitch extends StatefulWidget {
     this.onHoverChange,
     this.onPressChange,
     this.builder,
-    this.focusOnPress = false,
+    this.semanticLabel,
+    this.addSemantics = true,
+    this.excludeChildSemantics = false,
   }) : assert(
          value != null,
          'NakedSwitch is binary and requires a non-null value.',
@@ -47,7 +49,6 @@ class NakedSwitch extends StatefulWidget {
   /// Called when highlight (pressed) state changes.
   final ValueChanged<bool>? onPressChange;
 
-
   /// Whether the switch is enabled.
   final bool enabled;
 
@@ -66,8 +67,14 @@ class NakedSwitch extends StatefulWidget {
   /// Optional builder that receives the current states for visuals.
   final ValueWidgetBuilder<Set<WidgetState>>? builder;
 
-  /// Whether to request focus when the switch is pressed.
-  final bool focusOnPress;
+  /// Semantic label for accessibility.
+  final String? semanticLabel;
+
+  /// Whether to add semantics to this switch.
+  final bool addSemantics;
+
+  /// Whether to exclude child semantics.
+  final bool excludeChildSemantics;
 
   bool get _effectiveEnabled => enabled && onChanged != null;
 
@@ -76,24 +83,8 @@ class NakedSwitch extends StatefulWidget {
 }
 
 class _NakedSwitchState extends State<NakedSwitch>
-    with
-        SimpleWidgetStatesMixin<NakedSwitch>,
-        NakedFocusableMixin<NakedSwitch>,
-        NakedHoverableMixin<NakedSwitch>,
-        NakedPressableMixin<NakedSwitch>,
-        NakedSelectableMixin<NakedSwitch> {
-  @override
-  void initializeWidgetStates() {
-    updateState(WidgetState.disabled, !widget.enabled);
-  }
-
-
-  @override
-  FocusNode? get providedFocusNode => widget.focusNode;
-
-  @override
-  String get focusDebugLabel => 'NakedSwitch';
-
+    with WidgetStatesMixin<NakedSwitch>, PressListenerMixin<NakedSwitch> {
+  // Private methods
   void _handleKeyboardActivation([Intent? _]) {
     if (!widget._effectiveEnabled) return;
 
@@ -101,21 +92,14 @@ class _NakedSwitchState extends State<NakedSwitch>
   }
 
   void _handleActivation() {
-    if (!widget._effectiveEnabled) return;
+    if (!widget._effectiveEnabled || widget.onChanged == null) return;
 
-    handleSelectableActivation(
-      selected: widget.value,
-      tristate: false, // Switch is binary
-      onChanged: widget.onChanged,
-      enableFeedback: widget.enableFeedback,
-    );
-  }
-
-
-  void _handleTapDown(TapDownDetails _) {
-    if (widget.focusOnPress && providedFocusNode != null) {
-      providedFocusNode!.requestFocus();
+    if (widget.enableFeedback) {
+      HapticFeedback.selectionClick();
     }
+
+    final current = widget.value ?? false;
+    widget.onChanged!(!(current));
   }
 
   Widget _buildContent(BuildContext context) {
@@ -126,13 +110,7 @@ class _NakedSwitchState extends State<NakedSwitch>
         : widget.child!;
   }
 
-  @override
-  void didUpdateWidget(covariant NakedSwitch oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    syncWidgetStates();
-  }
-
-
+  // Private getters
   MouseCursor get _effectiveCursor => widget._effectiveEnabled
       ? (widget.mouseCursor ?? SystemMouseCursors.click)
       : SystemMouseCursors.basic;
@@ -141,58 +119,77 @@ class _NakedSwitchState extends State<NakedSwitch>
       widget._effectiveEnabled ? _handleActivation : null;
 
   VoidCallback get _semanticsFocusHandler =>
-      () => providedFocusNode?.requestFocus();
+      () => (widget.focusNode ?? FocusScope.of(context)).requestFocus();
+
+  @override
+  void initializeWidgetStates() {
+    updateDisabledState(!widget.enabled);
+  }
+
+  @override
+  void didUpdateWidget(covariant NakedSwitch oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    syncWidgetStates();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Shortcuts(
+    Widget switchWidget = FocusableActionDetector(
+      // Keyboard and focus handling
+      enabled: widget._effectiveEnabled,
+      focusNode: widget.focusNode,
+      autofocus: widget.autofocus,
       shortcuts: const {
         SingleActivator(LogicalKeyboardKey.enter): ActivateIntent(),
         SingleActivator(LogicalKeyboardKey.space): ActivateIntent(),
       },
-      child: Actions(
-        actions: {
-          ActivateIntent: CallbackAction<ActivateIntent>(
-            onInvoke: _handleKeyboardActivation,
-          ),
-        },
-        child: buildFocus(
-          autofocus: widget.autofocus,
-          onFocusChange: (focused) {
-            if (updateState(WidgetState.focused, focused)) {
-              widget.onFocusChange?.call(focused);
-            }
-          },
-          includeSemantics: false,
-          child: Semantics(
-            enabled: widget._effectiveEnabled,
-            toggled: widget.value,
-            onTap: _semanticsTapHandler,
-            onFocus: _semanticsFocusHandler,
-            child: buildHoverRegion(
-              cursor: _effectiveCursor,
-              onHoverChange: (hovered) {
-                if (widget.enabled && updateState(WidgetState.hovered, hovered)) {
-                  widget.onHoverChange?.call(hovered);
-                }
-              },
-              child: buildPressDetector(
-                enabled: widget.enabled,
-                behavior: HitTestBehavior.opaque,
-                excludeFromSemantics: false,
-                onPressChange: (pressed) {
-                  if (updateState(WidgetState.pressed, pressed)) {
-                    widget.onPressChange?.call(pressed);
-                  }
-                },
-                onTap: widget._effectiveEnabled ? _handleActivation : null,
-                onTapDown: _handleTapDown,
-                child: _buildContent(context),
-              ),
-            ),
-          ),
+      actions: {
+        ActivateIntent: CallbackAction<ActivateIntent>(
+          onInvoke: _handleKeyboardActivation,
         ),
+      },
+      onShowHoverHighlight: (hovered) {
+        updateHoverState(hovered, widget.onHoverChange);
+      },
+      onFocusChange: (focused) {
+        updateFocusState(focused, widget.onFocusChange);
+      },
+      mouseCursor: _effectiveCursor,
+      child: GestureDetector(
+        onTapDown: widget._effectiveEnabled
+            ? (details) {
+                updatePressState(true, widget.onPressChange);
+              }
+            : null,
+        onTapUp: widget._effectiveEnabled
+            ? (details) {
+                updatePressState(false, widget.onPressChange);
+              }
+            : null,
+        onTap: widget._effectiveEnabled ? _handleActivation : null,
+        onTapCancel: widget._effectiveEnabled
+            ? () {
+                updatePressState(false, widget.onPressChange);
+              }
+            : null,
+        behavior: HitTestBehavior.opaque,
+        excludeFromSemantics: true,
+        child: _buildContent(context),
       ),
+    );
+
+    if (!widget.addSemantics) return switchWidget;
+
+    return Semantics(
+      excludeSemantics: widget.excludeChildSemantics,
+      enabled: widget._effectiveEnabled,
+      toggled: widget.value,
+      focusable: true,
+      focused: isFocused,
+      label: widget.semanticLabel,
+      onTap: _semanticsTapHandler,
+      onFocus: _semanticsFocusHandler,
+      child: switchWidget,
     );
   }
 }

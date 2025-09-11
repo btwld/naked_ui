@@ -470,4 +470,271 @@ void main() {
       expect(radio2States!.isSelected, isTrue);
     });
   });
+
+  group('Semantics', () {
+    testWidgets('has correct semantic properties when unselected', (
+      WidgetTester tester,
+    ) async {
+      final key = UniqueKey();
+
+      await tester.pumpMaterialWidget(
+        RadioGroup<String>(
+          groupValue: 'other',
+          onChanged: (_) {},
+          child: NakedRadio<String>(
+            key: key,
+            value: 'test',
+            child: const Text('Radio Label'),
+          ),
+        ),
+      );
+
+      expect(
+        tester.getSemantics(find.byKey(key)),
+        matchesSemantics(
+          hasCheckedState: true,
+          isChecked: false,
+          hasEnabledState: true,
+          isEnabled: true,
+          hasTapAction: true,
+          isFocusable: true,
+          hasFocusAction: true,
+          isInMutuallyExclusiveGroup: true,
+        ),
+      );
+    });
+
+    testWidgets('has correct semantic properties when selected', (
+      WidgetTester tester,
+    ) async {
+      final key = UniqueKey();
+
+      await tester.pumpMaterialWidget(
+        RadioGroup<String>(
+          groupValue: 'test',
+          onChanged: (_) {},
+          child: NakedRadio<String>(
+            key: key,
+            value: 'test',
+            child: const Text('Radio Label'),
+          ),
+        ),
+      );
+
+      expect(
+        tester.getSemantics(find.byKey(key)),
+        matchesSemantics(
+          hasCheckedState: true,
+          isChecked: true,
+          hasEnabledState: true,
+          isEnabled: true,
+          hasTapAction: true,
+          isFocusable: true,
+          hasFocusAction: true,
+          isInMutuallyExclusiveGroup: true,
+        ),
+      );
+    });
+
+    testWidgets('has correct semantic properties when disabled', (
+      WidgetTester tester,
+    ) async {
+      final key = UniqueKey();
+
+      await tester.pumpMaterialWidget(
+        RadioGroup<String>(
+          groupValue: null,
+          onChanged: (_) {},
+          child: NakedRadio<String>(
+            key: key,
+            value: 'test',
+            enabled: false,
+            child: const Text('Radio Label'),
+          ),
+        ),
+      );
+
+      expect(
+        tester.getSemantics(find.byKey(key)),
+        matchesSemantics(
+          hasCheckedState: true,
+          isChecked: false,
+          hasEnabledState: true,
+          isEnabled: false,
+          hasTapAction: false,
+          isFocusable: true,
+          hasFocusAction: true,
+          isInMutuallyExclusiveGroup: true,
+        ),
+      );
+    });
+
+    testWidgets('has correct semantic properties when focused', (
+      WidgetTester tester,
+    ) async {
+      final key = UniqueKey();
+      final focusNode = FocusNode();
+      addTearDown(() => focusNode.dispose());
+
+      await tester.pumpMaterialWidget(
+        RadioGroup<String>(
+          groupValue: null,
+          onChanged: (_) {},
+          child: NakedRadio<String>(
+            key: key,
+            value: 'test',
+            focusNode: focusNode,
+            child: const Text('Radio Label'),
+          ),
+        ),
+      );
+
+      focusNode.requestFocus();
+      await tester.pump();
+
+      expect(
+        tester.getSemantics(find.byKey(key)),
+        matchesSemantics(
+          hasCheckedState: true,
+          isChecked: false,
+          hasEnabledState: true,
+          isEnabled: true,
+          hasTapAction: true,
+          isFocusable: true,
+          hasFocusAction: true,
+          isInMutuallyExclusiveGroup: true,
+          isFocused: true,
+        ),
+      );
+    });
+
+    testWidgets('semantic state transitions correctly (enabled/disabled)', (
+      WidgetTester tester,
+    ) async {
+      bool enabled = true;
+      final key = UniqueKey();
+
+      await tester.pumpMaterialWidget(
+        StatefulBuilder(
+          builder: (context, setState) {
+            return Column(
+              children: [
+                RadioGroup<String>(
+                  groupValue: null,
+                  onChanged: (_) {},
+                  child: NakedRadio<String>(
+                    key: key,
+                    value: 'test',
+                    enabled: enabled,
+                    child: const Text('Radio Label'),
+                  ),
+                ),
+                TextButton(
+                  onPressed: () => setState(() => enabled = !enabled),
+                  child: const Text('Toggle'),
+                ),
+              ],
+            );
+          },
+        ),
+      );
+
+      // Initially enabled
+      expect(
+        tester.getSemantics(find.byKey(key)),
+        matchesSemantics(
+          hasCheckedState: true,
+          isChecked: false,
+          hasEnabledState: true,
+          isEnabled: true,
+          hasTapAction: true,
+          isFocusable: true,
+          hasFocusAction: true,
+          isInMutuallyExclusiveGroup: true,
+        ),
+      );
+
+      // Toggle to disabled
+      await tester.tap(find.text('Toggle'));
+      await tester.pump();
+
+      expect(
+        tester.getSemantics(find.byKey(key)),
+        matchesSemantics(
+          hasCheckedState: true,
+          isChecked: false,
+          hasEnabledState: true,
+          isEnabled: false,
+          hasTapAction: false,
+          isFocusable: true,
+          hasFocusAction: true,
+          isInMutuallyExclusiveGroup: true,
+        ),
+      );
+    });
+
+    testWidgets('semantic state transitions correctly (selection)', (
+      WidgetTester tester,
+    ) async {
+      String? groupValue;
+      final key = UniqueKey();
+
+      await tester.pumpMaterialWidget(
+        StatefulBuilder(
+          builder: (context, setState) {
+            return RadioGroup<String>(
+              groupValue: groupValue,
+              onChanged: (value) => setState(() => groupValue = value),
+              child: Column(
+                children: [
+                  NakedRadio<String>(
+                    key: key,
+                    value: 'test',
+                    child: const Text('Radio Label'),
+                  ),
+                  TextButton(
+                    onPressed: () => setState(() => groupValue = 'test'),
+                    child: const Text('Select'),
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
+      );
+
+      // Initially unselected
+      expect(
+        tester.getSemantics(find.byKey(key)),
+        matchesSemantics(
+          hasCheckedState: true,
+          isChecked: false,
+          hasEnabledState: true,
+          isEnabled: true,
+          hasTapAction: true,
+          isFocusable: true,
+          hasFocusAction: true,
+          isInMutuallyExclusiveGroup: true,
+        ),
+      );
+
+      // Select the radio
+      await tester.tap(find.text('Select'));
+      await tester.pump();
+
+      expect(
+        tester.getSemantics(find.byKey(key)),
+        matchesSemantics(
+          hasCheckedState: true,
+          isChecked: true,
+          hasEnabledState: true,
+          isEnabled: true,
+          hasTapAction: true,
+          isFocusable: true,
+          hasFocusAction: true,
+          isInMutuallyExclusiveGroup: true,
+        ),
+      );
+    });
+  });
 }

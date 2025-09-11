@@ -14,8 +14,8 @@ extension KeyboardTestHelpers on WidgetTester {
 
     // Then advance focus using Focus traversal (no raw key events)
     for (int i = 1; i < expectedOrder.length; i++) {
-      final BuildContext ctx = element(expectedOrder[i - 1]);
-      FocusScope.of(ctx).nextFocus();
+      // Get context and use immediately to avoid async gaps
+      FocusScope.of(element(expectedOrder[i - 1])).nextFocus();
       await pump();
 
       // Just verify the widget exists - focus detection is complex and platform-dependent

@@ -20,7 +20,9 @@ class NakedCheckbox extends StatefulWidget {
     this.onHoverChange,
     this.onPressChange,
     this.builder,
-    this.focusOnPress = false,
+    this.semanticLabel,
+    this.addSemantics = true,
+    this.excludeChildSemantics = false,
   }) : assert(
          (tristate || value != null),
          'Non-tristate checkbox must have a non-null value',
@@ -60,7 +62,6 @@ class NakedCheckbox extends StatefulWidget {
   /// Called when highlight (pressed) state changes.
   final ValueChanged<bool>? onPressChange;
 
-
   /// Whether the checkbox is enabled.
   final bool enabled;
 
@@ -82,14 +83,14 @@ class NakedCheckbox extends StatefulWidget {
   /// Optional builder that receives the current states for visuals.
   final ValueWidgetBuilder<Set<WidgetState>>? builder;
 
-  /// Whether to request focus when the checkbox is pressed.
-  ///
-  /// When true, tapping the checkbox will request focus in addition to
-  /// toggling the value. This is useful for form controls where focus
-  /// indication after interaction improves user experience.
-  ///
-  /// Defaults to false to maintain Material Design consistency.
-  final bool focusOnPress;
+  /// Semantic label for accessibility.
+  final String? semanticLabel;
+
+  /// Whether to add semantics to this checkbox.
+  final bool addSemantics;
+
+  /// Whether to exclude child semantics.
+  final bool excludeChildSemantics;
 
   bool get _effectiveEnabled => enabled && onChanged != null;
 
@@ -98,23 +99,8 @@ class NakedCheckbox extends StatefulWidget {
 }
 
 class _NakedCheckboxState extends State<NakedCheckbox>
-    with
-        SimpleWidgetStatesMixin<NakedCheckbox>,
-        NakedFocusableMixin<NakedCheckbox>,
-        NakedHoverableMixin<NakedCheckbox>,
-        NakedPressableMixin<NakedCheckbox>,
-        NakedSelectableMixin<NakedCheckbox> {
-  @override
-  void initializeWidgetStates() {
-    updateState(WidgetState.disabled, !widget.enabled);
-  }
-
-  @override
-  FocusNode? get providedFocusNode => widget.focusNode;
-
-  @override
-  String get focusDebugLabel => 'NakedCheckbox';
-
+    with WidgetStatesMixin<NakedCheckbox>, PressListenerMixin<NakedCheckbox> {
+  // Private methods
   void _handleKeyboardActivation([Intent? _]) {
     if (!widget._effectiveEnabled) return;
 
@@ -122,21 +108,27 @@ class _NakedCheckboxState extends State<NakedCheckbox>
   }
 
   void _handleActivation() {
-    if (!widget._effectiveEnabled) return;
+    if (!widget._effectiveEnabled || widget.onChanged == null) return;
 
-    handleSelectableActivation(
-      selected: widget.value,
-      tristate: widget.tristate,
-      onChanged: widget.onChanged,
-      enableFeedback: widget.enableFeedback,
-    );
-  }
-
-
-  void _handleTapDown(TapDownDetails _) {
-    if (widget.focusOnPress && providedFocusNode != null) {
-      providedFocusNode!.requestFocus();
+    if (widget.enableFeedback) {
+      HapticFeedback.selectionClick();
     }
+
+    final bool? nextValue;
+    if (widget.tristate) {
+      if (widget.value == null) {
+        nextValue = false;
+      } else if (widget.value == false) {
+        nextValue = true;
+      } else {
+        nextValue = null; // true → null
+      }
+    } else {
+      final current = widget.value ?? false;
+      nextValue = !current;
+    }
+
+    widget.onChanged!(nextValue);
   }
 
   Widget _buildContent(BuildContext context) {
@@ -147,13 +139,7 @@ class _NakedCheckboxState extends State<NakedCheckbox>
         : widget.child!;
   }
 
-  @override
-  void didUpdateWidget(covariant NakedCheckbox oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    syncWidgetStates();
-  }
-
-
+  // Private getters
   MouseCursor get _effectiveCursor => widget._effectiveEnabled
       ? (widget.mouseCursor ?? SystemMouseCursors.click)
       : SystemMouseCursors.basic;
@@ -162,59 +148,79 @@ class _NakedCheckboxState extends State<NakedCheckbox>
       widget._effectiveEnabled ? _handleActivation : null;
 
   VoidCallback get _semanticsFocusHandler =>
-      () => providedFocusNode?.requestFocus();
+      () => (widget.focusNode ?? FocusScope.of(context)).requestFocus();
+
+  @override
+  void initializeWidgetStates() {
+    updateDisabledState(!widget.enabled);
+  }
+
+  @override
+  void didUpdateWidget(covariant NakedCheckbox oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    syncWidgetStates();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Shortcuts(
+    Widget checkboxWidget = FocusableActionDetector(
+      // Keyboard and focus handling
+      enabled: widget._effectiveEnabled,
+      focusNode: widget.focusNode,
+      autofocus: widget.autofocus,
       shortcuts: const {
         SingleActivator(LogicalKeyboardKey.enter): ActivateIntent(),
         SingleActivator(LogicalKeyboardKey.space): ActivateIntent(),
       },
-      child: Actions(
-        actions: {
-          ActivateIntent: CallbackAction<ActivateIntent>(
-            onInvoke: _handleKeyboardActivation,
-          ),
-        },
-        child: buildFocus(
-          autofocus: widget.autofocus,
-          onFocusChange: (focused) {
-            if (updateState(WidgetState.focused, focused)) {
-              widget.onFocusChange?.call(focused);
-            }
-          },
-          includeSemantics: false,
-          child: Semantics(
-            enabled: widget._effectiveEnabled,
-            checked: widget.value,
-            mixed: widget.tristate && widget.value == null,
-            onTap: _semanticsTapHandler,
-            onFocus: _semanticsFocusHandler,
-            child: buildHoverRegion(
-              cursor: _effectiveCursor,
-              onHoverChange: (hovered) {
-                if (widget.enabled && updateState(WidgetState.hovered, hovered)) {
-                  widget.onHoverChange?.call(hovered);
-                }
-              },
-              child: buildPressDetector(
-                enabled: widget.enabled,
-                behavior: HitTestBehavior.opaque,
-                excludeFromSemantics: false,
-                onPressChange: (pressed) {
-                  if (updateState(WidgetState.pressed, pressed)) {
-                    widget.onPressChange?.call(pressed);
-                  }
-                },
-                onTap: widget._effectiveEnabled ? _handleActivation : null,
-                onTapDown: _handleTapDown,
-                child: _buildContent(context),
-              ),
-            ),
-          ),
+      actions: {
+        ActivateIntent: CallbackAction<ActivateIntent>(
+          onInvoke: _handleKeyboardActivation,
         ),
+      },
+      onShowHoverHighlight: (hovered) {
+        updateHoverState(hovered, widget.onHoverChange);
+      },
+      onFocusChange: (focused) {
+        updateFocusState(focused, widget.onFocusChange);
+      },
+      mouseCursor: _effectiveCursor,
+      child: GestureDetector(
+        onTapDown: widget._effectiveEnabled
+            ? (details) {
+                updatePressState(true, widget.onPressChange);
+              }
+            : null,
+        onTapUp: widget._effectiveEnabled
+            ? (details) {
+                updatePressState(false, widget.onPressChange);
+              }
+            : null,
+        onTap: widget._effectiveEnabled ? _handleActivation : null,
+        onTapCancel: widget._effectiveEnabled
+            ? () {
+                updatePressState(false, widget.onPressChange);
+              }
+            : null,
+        behavior: HitTestBehavior.opaque,
+        excludeFromSemantics: true,
+        child: _buildContent(context),
       ),
+    );
+
+    if (!widget.addSemantics) return checkboxWidget;
+
+    return Semantics(
+      excludeSemantics: widget.excludeChildSemantics,
+      enabled: widget._effectiveEnabled,
+      checked: widget.value,
+      mixed: widget.tristate && widget.value == null,
+      focusable: true,
+      focused: isFocused,
+      inMutuallyExclusiveGroup: false,
+      label: widget.semanticLabel,
+      onTap: _semanticsTapHandler,
+      onFocus: _semanticsFocusHandler,
+      child: checkboxWidget,
     );
   }
 }

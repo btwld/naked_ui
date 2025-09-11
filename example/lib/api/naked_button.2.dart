@@ -31,7 +31,6 @@ class DisabledButtonExample extends StatefulWidget {
 class _DisabledButtonExampleState extends State<DisabledButtonExample> {
   bool _isEnabled = true;
   bool _enableFeedback = true;
-  bool _focusOnPress = false;
   String _lastAction = 'None';
 
   void _toggleEnabled() {
@@ -49,11 +48,6 @@ class _DisabledButtonExampleState extends State<DisabledButtonExample> {
     });
   }
 
-  void _toggleFocusOnPress() {
-    setState(() {
-      _focusOnPress = !_focusOnPress;
-    });
-  }
 
   void _onButtonPressed() {
     setState(() {
@@ -84,7 +78,6 @@ class _DisabledButtonExampleState extends State<DisabledButtonExample> {
             child: _SemanticButton(
               enabled: _isEnabled,
               enableFeedback: _enableFeedback,
-              focusOnPress: _focusOnPress,
               onPressed: _onButtonPressed,
               lastAction: _lastAction,
             ),
@@ -96,10 +89,8 @@ class _DisabledButtonExampleState extends State<DisabledButtonExample> {
           _ControlPanel(
             isEnabled: _isEnabled,
             enableFeedback: _enableFeedback,
-            focusOnPress: _focusOnPress,
             onToggleEnabled: _toggleEnabled,
             onToggleFeedback: _toggleFeedback,
-            onToggleFocusOnPress: _toggleFocusOnPress,
           ),
           
           const SizedBox(height: 32),
@@ -121,14 +112,12 @@ class _SemanticButton extends StatefulWidget {
   const _SemanticButton({
     required this.enabled,
     required this.enableFeedback,
-    required this.focusOnPress,
     required this.onPressed,
     required this.lastAction,
   });
 
   final bool enabled;
   final bool enableFeedback;
-  final bool focusOnPress;
   final VoidCallback onPressed;
   final String lastAction;
 
@@ -186,7 +175,6 @@ class _SemanticButtonState extends State<_SemanticButton> {
     return NakedButton(
       enabled: widget.enabled,
       enableFeedback: widget.enableFeedback,
-      focusOnPress: widget.focusOnPress,
       onPressed: widget.enabled ? widget.onPressed : null,
       onFocusChange: (focused) => setState(() => _isFocused = focused),
       onHoverChange: (hovered) => setState(() => _isHovered = hovered),
@@ -260,18 +248,14 @@ class _ControlPanel extends StatelessWidget {
   const _ControlPanel({
     required this.isEnabled,
     required this.enableFeedback,
-    required this.focusOnPress,
     required this.onToggleEnabled,
     required this.onToggleFeedback,
-    required this.onToggleFocusOnPress,
   });
 
   final bool isEnabled;
   final bool enableFeedback;
-  final bool focusOnPress;
   final VoidCallback onToggleEnabled;
   final VoidCallback onToggleFeedback;
-  final VoidCallback onToggleFocusOnPress;
 
   @override
   Widget build(BuildContext context) {
@@ -305,12 +289,6 @@ class _ControlPanel extends StatelessWidget {
             description: 'Enable/disable platform feedback on tap',
             value: enableFeedback,
             onChanged: onToggleFeedback,
-          ),
-          _ControlToggle(
-            label: 'Focus on Press',
-            description: 'Request focus when button is pressed',
-            value: focusOnPress,
-            onChanged: onToggleFocusOnPress,
           ),
         ],
       ),

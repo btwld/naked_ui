@@ -39,6 +39,9 @@ class NakedSelect<T> extends StatefulWidget implements OverlayChildLifecycle {
       ),
     ],
     this.closeOnClickOutside = true,
+    this.addSemantics = true,
+    this.excludeChildSemantics = false,
+    this.semanticLabel,
   }) : allowMultiple = false,
        selectedValues = null,
        onSelectedValuesChanged = null;
@@ -69,6 +72,9 @@ class NakedSelect<T> extends StatefulWidget implements OverlayChildLifecycle {
       ),
     ],
     this.closeOnClickOutside = true,
+    this.addSemantics = true,
+    this.excludeChildSemantics = false,
+    this.semanticLabel,
   }) : allowMultiple = true,
        selectedValue = null,
        onSelectedValueChanged = null;
@@ -130,6 +136,15 @@ class NakedSelect<T> extends StatefulWidget implements OverlayChildLifecycle {
 
   /// Whether to close the menu when clicking outside.
   final bool closeOnClickOutside;
+
+  /// Whether to add semantics to this select.
+  final bool addSemantics;
+
+  /// Whether to exclude child semantics.
+  final bool excludeChildSemantics;
+
+  /// Semantic label for accessibility.
+  final String? semanticLabel;
 
   /// The duration to wait before removing the Widget from the Overlay after the menu is closed.
   @override
@@ -257,7 +272,14 @@ class _NakedSelectState<T> extends State<NakedSelect<T>>
 
   @override
   Widget build(BuildContext context) {
-    return NakedSelectScope<T>(
+    final isExpanded = showNotifier.value;
+    final selectedValueString =
+        widget.selectedValue?.toString() ??
+        (widget.selectedValues?.isNotEmpty == true
+            ? widget.selectedValues!.map((v) => v.toString()).join(', ')
+            : null);
+
+    Widget selectWidget = NakedSelectScope<T>(
       selectedValue: widget.selectedValue,
       selectedValues: widget.selectedValues,
       allowMultiple: widget.allowMultiple,
@@ -282,6 +304,18 @@ class _NakedSelectState<T> extends State<NakedSelect<T>>
         },
         child: widget.child,
       ),
+    );
+
+    if (!widget.addSemantics) return selectWidget;
+
+    return Semantics(
+      excludeSemantics: widget.excludeChildSemantics,
+      enabled: widget._effectiveEnabled,
+      button: !isExpanded,
+      expanded: isExpanded,
+      label: widget.semanticLabel,
+      value: selectedValueString,
+      child: selectWidget,
     );
   }
 }
@@ -400,7 +434,6 @@ class NakedSelectTrigger extends StatelessWidget {
   /// Called when highlight (pressed) state changes.
   final ValueChanged<bool>? onPressChange;
 
-
   /// The cursor to show when hovering over the trigger.
   /// Defaults to [SystemMouseCursors.click].
   final MouseCursor mouseCursor;
@@ -512,7 +545,6 @@ class NakedSelectItem<T> extends StatefulWidget {
 
   /// Called when highlight (pressed) state changes.
   final ValueChanged<bool>? onPressChange;
-
 
   /// Whether this item is enabled and can be selected.
   /// When false, all interaction is disabled.
