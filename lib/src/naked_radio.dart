@@ -3,6 +3,9 @@ import 'package:flutter/material.dart';
 import 'mixins/naked_mixins.dart';
 
 /// Radio button built with simplified architecture.
+///
+/// Provides radio functionality while letting users control presentation
+/// and semantics through the child or builder parameter.
 class NakedRadio<T> extends StatefulWidget {
   const NakedRadio({
     super.key,
@@ -17,9 +20,6 @@ class NakedRadio<T> extends StatefulWidget {
     this.onHoverChange,
     this.onPressChange,
     this.builder,
-    this.semanticLabel,
-    this.addSemantics = true,
-    this.excludeChildSemantics = false,
   }) : assert(
          child != null || builder != null,
          'Either child or builder must be provided',
@@ -40,15 +40,6 @@ class NakedRadio<T> extends StatefulWidget {
   /// Called when pressed state changes.
   final ValueChanged<bool>? onPressChange;
   final ValueWidgetBuilder<Set<WidgetState>>? builder;
-
-  /// Semantic label for accessibility.
-  final String? semanticLabel;
-
-  /// Whether to add semantics to this radio.
-  final bool addSemantics;
-
-  /// Whether to exclude child semantics.
-  final bool excludeChildSemantics;
 
   @override
   State<NakedRadio<T>> createState() => _NakedRadioState<T>();
@@ -183,21 +174,8 @@ class _NakedRadioState<T> extends State<NakedRadio<T>>
     final isSelected = registry.groupValue == widget.value;
     Widget radioWidget = _buildRadioWidget(context, registry, isSelected);
 
-    if (!widget.addSemantics) return radioWidget;
-
-    return Semantics(
-      excludeSemantics: widget.excludeChildSemantics,
-      enabled: widget.enabled,
-      checked: isSelected,
-      focusable: widget.enabled,
-      focused: _focusNode.hasFocus,
-      inMutuallyExclusiveGroup: true,
-      label: widget.semanticLabel,
-      onTap: widget.enabled
-          ? () => _handlePointerTap(registry, isSelected)
-          : null,
-      onFocus: () => _focusNode.requestFocus(),
-      child: radioWidget,
-    );
+    // RawRadio handles all radio-specific semantics (checked, mutually exclusive, focus, etc.)
+    // Users can control child semantics through their child or builder
+    return radioWidget;
   }
 }

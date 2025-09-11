@@ -78,8 +78,6 @@ class NakedSlider extends StatefulWidget {
     this.keyboardStep = 0.01,
     this.largeKeyboardStep = 0.1,
     this.semanticLabel,
-    this.addSemantics = true,
-    this.excludeChildSemantics = false,
   }) : assert(min < max, 'min must be less than max');
 
   /// Child widget to display.
@@ -141,12 +139,6 @@ class NakedSlider extends StatefulWidget {
 
   /// Semantic label for accessibility.
   final String? semanticLabel;
-
-  /// Whether to add semantics to this slider.
-  final bool addSemantics;
-
-  /// Whether to exclude child semantics.
-  final bool excludeChildSemantics;
 
   @override
   State<NakedSlider> createState() => _NakedSliderState();
@@ -364,12 +356,8 @@ class _NakedSliderState extends State<NakedSlider>
 
   @override
   Widget build(BuildContext context) {
-    Widget sliderWidget = _buildSliderInteractable();
-
-    if (!widget.addSemantics) return sliderWidget;
-
     return Semantics(
-      excludeSemantics: widget.excludeChildSemantics,
+      container: true,
       enabled: _isEnabled,
       slider: true,
       focusable: _isEnabled,
@@ -394,7 +382,7 @@ class _NakedSliderState extends State<NakedSlider>
               _callOnChangeIfNeeded(_normalizeValue(widget.value - step));
             }
           : null,
-      child: sliderWidget,
+      child: _buildSliderInteractable(),
     );
   }
 }

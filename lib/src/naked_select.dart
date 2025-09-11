@@ -39,8 +39,6 @@ class NakedSelect<T> extends StatefulWidget implements OverlayChildLifecycle {
       ),
     ],
     this.closeOnClickOutside = true,
-    this.addSemantics = true,
-    this.excludeChildSemantics = false,
     this.semanticLabel,
   }) : allowMultiple = false,
        selectedValues = null,
@@ -72,8 +70,6 @@ class NakedSelect<T> extends StatefulWidget implements OverlayChildLifecycle {
       ),
     ],
     this.closeOnClickOutside = true,
-    this.addSemantics = true,
-    this.excludeChildSemantics = false,
     this.semanticLabel,
   }) : allowMultiple = true,
        selectedValue = null,
@@ -136,12 +132,6 @@ class NakedSelect<T> extends StatefulWidget implements OverlayChildLifecycle {
 
   /// Whether to close the menu when clicking outside.
   final bool closeOnClickOutside;
-
-  /// Whether to add semantics to this select.
-  final bool addSemantics;
-
-  /// Whether to exclude child semantics.
-  final bool excludeChildSemantics;
 
   /// Semantic label for accessibility.
   final String? semanticLabel;
@@ -306,15 +296,14 @@ class _NakedSelectState<T> extends State<NakedSelect<T>>
       ),
     );
 
-    if (!widget.addSemantics) return selectWidget;
-
     return Semantics(
-      excludeSemantics: widget.excludeChildSemantics,
+      container: true,
       enabled: widget._effectiveEnabled,
-      button: !isExpanded,
+      button: true,
       expanded: isExpanded,
       label: widget.semanticLabel,
       value: selectedValueString,
+      onTap: widget._effectiveEnabled ? toggleMenu : null,
       child: selectWidget,
     );
   }

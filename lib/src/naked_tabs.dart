@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import 'naked_button.dart';
-
 /// Provides tab interaction behavior without visual styling.
 ///
 /// Includes keyboard navigation for tabbed interfaces.
@@ -259,7 +257,6 @@ class NakedTab extends StatefulWidget {
     this.onPressChange,
     this.builder,
     this.semanticLabel,
-    this.excludeChildSemantics = false,
   }) : assert(
          child != null || builder != null,
          'Either child or builder must be provided',
@@ -284,9 +281,6 @@ class NakedTab extends StatefulWidget {
 
   /// Semantic label for accessibility.
   final String? semanticLabel;
-
-  /// Whether to exclude child semantics.
-  final bool excludeChildSemantics;
 
   /// Whether this tab is enabled.
   final bool enabled;
@@ -373,36 +367,59 @@ class _NakedTabState extends State<NakedTab> {
 
     final isSelected = _tabsScope.isTabSelected(widget.tabId);
 
-    // Use NakedButton for consistent gesture and cursor behavior
-    return Semantics(
-      excludeSemantics: widget.excludeChildSemantics,
+    // For tabs, we need custom semantics with selected state
+    // We'll use FocusableActionDetector directly instead of NakedButton to avoid duplicate button semantics
+    return FocusableActionDetector(
       enabled: _isEnabled,
-      selected: isSelected,
-      button: true,
-      focusable: _isEnabled,
-      focused: _focusNode.hasFocus,
-      label: widget.semanticLabel,
-      onTap: _isEnabled ? _handleTap : null,
-      onFocus: () => _focusNode.requestFocus(),
-      child: NakedButton(
-        onPressed: _isEnabled ? _handleTap : null,
-        enabled: widget.enabled,
-        mouseCursor: widget.mouseCursor,
-        enableFeedback: false,
-        focusNode: _focusNode,
-        autofocus: widget.autofocus,
-        onFocusChange: widget.onFocusChange,
-        onHoverChange: widget.onHoverChange,
-        onPressChange: widget.onPressChange,
-        addSemantics: false,
-        child: widget.child,
-        builder: (context, states, child) {
-          if (widget.builder != null) {
-            return widget.builder!(context, states, child);
-          }
+      focusNode: _focusNode,
+      autofocus: widget.autofocus,
+      // Use default includeFocusSemantics: true to let it handle focus semantics automatically
+      shortcuts: const {
+        SingleActivator(LogicalKeyboardKey.enter): ActivateIntent(),
+        SingleActivator(LogicalKeyboardKey.space): ActivateIntent(),
+      },
+      actions: {
+        ActivateIntent: CallbackAction<ActivateIntent>(
+          onInvoke: (_) => _isEnabled ? _handleTap() : null,
+        ),
+      },
+      onShowHoverHighlight: widget.onHoverChange,
+      onFocusChange: widget.onFocusChange,
+      mouseCursor: widget.mouseCursor,
+      child: Semantics(
+        container: true,
+        enabled: _isEnabled,
+        selected: isSelected,
+        button: true,
+        label: widget.semanticLabel,
+        onTap: _isEnabled ? _handleTap : null,
+        child: GestureDetector(
+          onTapDown: _isEnabled && widget.onPressChange != null
+              ? (_) => widget.onPressChange!(true)
+              : null,
+          onTapUp: _isEnabled && widget.onPressChange != null
+              ? (_) => widget.onPressChange!(false)
+              : null,
+          onTap: _isEnabled ? _handleTap : null,
+          onTapCancel: _isEnabled && widget.onPressChange != null
+              ? () => widget.onPressChange!(false)
+              : null,
+          behavior: HitTestBehavior.opaque,
+          excludeFromSemantics: true,
+          child: widget.builder != null
+              ? Builder(
+                  builder: (context) {
+                    // Create widget states for the builder
+                    final states = <WidgetState>{
+                      if (!_isEnabled) WidgetState.disabled,
+                      if (isSelected) WidgetState.selected,
+                    };
 
-          return widget.child!;
-        },
+                    return widget.builder!(context, states, widget.child);
+                  },
+                )
+              : widget.child!,
+        ),
       ),
     );
   }

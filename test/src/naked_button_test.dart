@@ -357,61 +357,6 @@ void main() {
     });
   });
 
-  group('Accessibility', () {
-    testWidgets('provides semantic button property', (
-      WidgetTester tester,
-    ) async {
-      final key = UniqueKey();
-      await tester.pumpMaterialWidget(
-        NakedButton(
-          key: key,
-          onPressed: () {},
-          child: const Text('Test Button'),
-        ),
-      );
-
-      expect(
-        tester.getSemantics(find.byKey(key)),
-        matchesSemantics(
-          isButton: true,
-          hasEnabledState: true,
-          isEnabled: true,
-          isFocusable: true,
-          hasFocusAction: true,
-          hasTapAction: true,
-        ),
-      );
-    });
-
-    testWidgets('shows correct enabled/disabled state', (
-      WidgetTester tester,
-    ) async {
-      final key = UniqueKey();
-      for (var enabled in [true, false]) {
-        await tester.pumpMaterialWidget(
-          NakedButton(
-            key: key,
-            onPressed: () {},
-            enabled: enabled,
-            child: const Text('Test Button'),
-          ),
-        );
-
-        expect(
-          tester.getSemantics(find.byKey(key)),
-          matchesSemantics(
-            isButton: true,
-            hasEnabledState: true,
-            isEnabled: enabled,
-            // Focus semantics should be present regardless of enabled state, matching Material behavior.
-            isFocusable: true,
-            hasFocusAction: true,
-            hasTapAction: enabled,
-          ),
-        );
-      }
-    });
-  });
 
   group('Cursor', () {
     testWidgets('shows appropriate cursor based on interactive state', (

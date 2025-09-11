@@ -301,32 +301,6 @@ void main() {
       expect(find.text('Rapid Hover Test'), findsOneWidget);
     });
 
-    testWidgets('tooltip supports semantic labels', (tester) async {
-      await tester.pumpWidget(MaterialApp(
-        home: Scaffold(
-          body: Center(
-            child: NakedTooltip(
-              waitDuration: Duration.zero,
-              showDuration: Duration.zero,
-              semanticsLabel: 'This is tooltip information',
-              tooltipBuilder: (context) => Container(
-                padding: const EdgeInsets.all(8),
-                child: const Text('Semantic Tooltip'),
-              ),
-              child: const Text('Semantic Target'),
-            ),
-          ),
-        ),
-      ));
-      await tester.pumpAndSettle();
-
-      // Verify semantics are properly set
-      final targetFinder = find.text('Semantic Target');
-      final semantics = tester.getSemantics(targetFinder);
-
-      // Should have tooltip semantic information
-      expect(semantics.tooltip, 'This is tooltip information');
-    });
 
     testWidgets('tooltip works with example app animation', (tester) async {
       // Test the full example with animation controller

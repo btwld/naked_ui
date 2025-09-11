@@ -81,8 +81,6 @@ class NakedTextField extends StatefulWidget {
     this.style,
     required this.builder,
     this.ignorePointers,
-    this.addSemantics = true,
-    this.excludeChildSemantics = false,
     this.semanticLabel,
     this.semanticHint,
   }) : assert(obscuringCharacter.length == 1),
@@ -297,12 +295,6 @@ class NakedTextField extends StatefulWidget {
   ///
   /// Receives context and the core EditableText widget.
   final Widget Function(BuildContext context, Widget editableText) builder;
-
-  /// Whether to add semantics to this text field.
-  final bool addSemantics;
-
-  /// Whether to exclude child semantics.
-  final bool excludeChildSemantics;
 
   /// Semantic label for accessibility.
   final String? semanticLabel;
@@ -754,10 +746,9 @@ class _NakedTextFieldState extends State<NakedTextField>
     );
 
     Widget _wrapWithSemantics(Widget textField) {
-      if (!widget.addSemantics) return textField;
-
       return Semantics(
-        excludeSemantics: widget.excludeChildSemantics,
+        container: true,
+        enabled: widget.enabled,
         textField: true,
         readOnly: widget.readOnly,
         obscured: widget.obscureText,
@@ -765,7 +756,8 @@ class _NakedTextFieldState extends State<NakedTextField>
         maxValueLength: widget.maxLength,
         currentValueLength: _effectiveController.text.length,
         label: widget.semanticLabel,
-        value: _effectiveController.text,
+        // CRITICAL: Never expose obscured text values per security guidelines
+        value: widget.obscureText ? null : _effectiveController.text,
         hint: widget.semanticHint,
         child: textField,
       );

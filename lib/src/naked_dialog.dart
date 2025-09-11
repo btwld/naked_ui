@@ -79,7 +79,6 @@ class NakedDialog extends StatelessWidget {
     super.key,
     required this.child,
     this.modal = true,
-    this.addSemantics = true,
     this.semanticLabel,
   });
 
@@ -89,19 +88,16 @@ class NakedDialog extends StatelessWidget {
   /// Whether this is a modal dialog that blocks background interaction.
   final bool modal;
 
-  /// Whether to add semantics to this dialog.
-  final bool addSemantics;
-
   /// Semantic label for accessibility.
   final String? semanticLabel;
 
   @override
   Widget build(BuildContext context) {
-    if (!addSemantics) return child;
-
     Widget dialog = Semantics(
+      container: true,
       scopesRoute: modal,
       namesRoute: modal,
+      explicitChildNodes: true,
       label: semanticLabel,
       child: child,
     );

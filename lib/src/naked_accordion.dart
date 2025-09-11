@@ -2,8 +2,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
-import 'naked_button.dart';
-
 /// Manages accordion state with optional min/max expansion constraints.
 ///
 /// Uses a controller-based approach to handle complex state constraints,
@@ -228,7 +226,6 @@ class NakedAccordionItem<T> extends StatelessWidget {
     this.onHoverChange,
     this.onPressChange,
     this.semanticLabel,
-    this.excludeChildSemantics = false,
   });
 
   /// Builder function that creates the trigger widget.
@@ -260,9 +257,6 @@ class NakedAccordionItem<T> extends StatelessWidget {
 
   /// Semantic label for accessibility.
   final String? semanticLabel;
-
-  /// Whether to exclude child semantics.
-  final bool excludeChildSemantics;
 
   /// Whether the accordion item is enabled.
   final bool enabled;
@@ -298,38 +292,45 @@ class NakedAccordionItem<T> extends StatelessWidget {
         return Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Shortcuts(
+            // Use FocusableActionDetector directly to avoid duplicate keyboard shortcuts
+            FocusableActionDetector(
+              enabled: enabled,
+              focusNode: focusNode,
+              autofocus: autofocus,
+              // Use default includeFocusSemantics: true to let it handle focus semantics automatically
               shortcuts: const {
                 SingleActivator(LogicalKeyboardKey.enter): ActivateIntent(),
                 SingleActivator(LogicalKeyboardKey.space): ActivateIntent(),
               },
-              child: Actions(
-                actions: {
-                  ActivateIntent: CallbackAction<ActivateIntent>(
-                    onInvoke: (intent) => enabled ? onTap() : null,
-                  ),
-                },
-                child: Semantics(
-                  excludeSemantics: excludeChildSemantics,
-                  enabled: enabled,
-                  button: true,
-                  expanded: isExpanded,
-                  label: semanticLabel,
+              actions: {
+                ActivateIntent: CallbackAction<ActivateIntent>(
+                  onInvoke: (intent) => enabled ? onTap() : null,
+                ),
+              },
+              onShowHoverHighlight: onHoverChange,
+              onFocusChange: onFocusChange,
+              mouseCursor: enabled ? mouseCursor : SystemMouseCursors.basic,
+              child: Semantics(
+                container: true,
+                enabled: enabled,
+                button: true,
+                expanded: isExpanded,
+                label: semanticLabel,
+                onTap: enabled ? onTap : null,
+                child: GestureDetector(
+                  onTapDown: enabled && onPressChange != null
+                      ? (_) => onPressChange!(true)
+                      : null,
+                  onTapUp: enabled && onPressChange != null
+                      ? (_) => onPressChange!(false)
+                      : null,
                   onTap: enabled ? onTap : null,
-                  child: NakedButton(
-                    onPressed: onTap,
-                    enabled: enabled,
-                    mouseCursor: mouseCursor,
-                    enableFeedback: enableFeedback,
-                    focusNode: focusNode,
-                    autofocus: autofocus,
-                    onFocusChange: onFocusChange,
-                    onHoverChange: onHoverChange,
-                    onPressChange: onPressChange,
-                    addSemantics: false,
-                    builder: (context, states, child) =>
-                        trigger(context, isExpanded),
-                  ),
+                  onTapCancel: enabled && onPressChange != null
+                      ? () => onPressChange!(false)
+                      : null,
+                  behavior: HitTestBehavior.opaque,
+                  excludeFromSemantics: true,
+                  child: trigger(context, isExpanded),
                 ),
               ),
             ),

@@ -20,8 +20,6 @@ class NakedSwitch extends StatefulWidget {
     this.onPressChange,
     this.builder,
     this.semanticLabel,
-    this.addSemantics = true,
-    this.excludeChildSemantics = false,
   }) : assert(
          value != null,
          'NakedSwitch is binary and requires a non-null value.',
@@ -70,12 +68,6 @@ class NakedSwitch extends StatefulWidget {
   /// Semantic label for accessibility.
   final String? semanticLabel;
 
-  /// Whether to add semantics to this switch.
-  final bool addSemantics;
-
-  /// Whether to exclude child semantics.
-  final bool excludeChildSemantics;
-
   bool get _effectiveEnabled => enabled && onChanged != null;
 
   @override
@@ -118,9 +110,6 @@ class _NakedSwitchState extends State<NakedSwitch>
   VoidCallback? get _semanticsTapHandler =>
       widget._effectiveEnabled ? _handleActivation : null;
 
-  VoidCallback get _semanticsFocusHandler =>
-      () => (widget.focusNode ?? FocusScope.of(context)).requestFocus();
-
   @override
   void initializeWidgetStates() {
     updateDisabledState(!widget.enabled);
@@ -134,11 +123,12 @@ class _NakedSwitchState extends State<NakedSwitch>
 
   @override
   Widget build(BuildContext context) {
-    Widget switchWidget = FocusableActionDetector(
+    return FocusableActionDetector(
       // Keyboard and focus handling
       enabled: widget._effectiveEnabled,
       focusNode: widget.focusNode,
       autofocus: widget.autofocus,
+      // Use default includeFocusSemantics: true to let it handle focus semantics automatically
       shortcuts: const {
         SingleActivator(LogicalKeyboardKey.enter): ActivateIntent(),
         SingleActivator(LogicalKeyboardKey.space): ActivateIntent(),
@@ -155,41 +145,34 @@ class _NakedSwitchState extends State<NakedSwitch>
         updateFocusState(focused, widget.onFocusChange);
       },
       mouseCursor: _effectiveCursor,
-      child: GestureDetector(
-        onTapDown: widget._effectiveEnabled
-            ? (details) {
-                updatePressState(true, widget.onPressChange);
-              }
-            : null,
-        onTapUp: widget._effectiveEnabled
-            ? (details) {
-                updatePressState(false, widget.onPressChange);
-              }
-            : null,
-        onTap: widget._effectiveEnabled ? _handleActivation : null,
-        onTapCancel: widget._effectiveEnabled
-            ? () {
-                updatePressState(false, widget.onPressChange);
-              }
-            : null,
-        behavior: HitTestBehavior.opaque,
-        excludeFromSemantics: true,
-        child: _buildContent(context),
+      child: Semantics(
+        container: true,
+        enabled: widget._effectiveEnabled,
+        toggled: widget.value,
+        label: widget.semanticLabel,
+        onTap: _semanticsTapHandler,
+        child: GestureDetector(
+          onTapDown: widget._effectiveEnabled
+              ? (details) {
+                  updatePressState(true, widget.onPressChange);
+                }
+              : null,
+          onTapUp: widget._effectiveEnabled
+              ? (details) {
+                  updatePressState(false, widget.onPressChange);
+                }
+              : null,
+          onTap: widget._effectiveEnabled ? _handleActivation : null,
+          onTapCancel: widget._effectiveEnabled
+              ? () {
+                  updatePressState(false, widget.onPressChange);
+                }
+              : null,
+          behavior: HitTestBehavior.opaque,
+          excludeFromSemantics: true,
+          child: _buildContent(context),
+        ),
       ),
-    );
-
-    if (!widget.addSemantics) return switchWidget;
-
-    return Semantics(
-      excludeSemantics: widget.excludeChildSemantics,
-      enabled: widget._effectiveEnabled,
-      toggled: widget.value,
-      focusable: true,
-      focused: isFocused,
-      label: widget.semanticLabel,
-      onTap: _semanticsTapHandler,
-      onFocus: _semanticsFocusHandler,
-      child: switchWidget,
     );
   }
 }

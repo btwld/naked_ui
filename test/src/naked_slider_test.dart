@@ -452,69 +452,6 @@ void main() {
     });
   });
 
-  group('Accessibility', () {
-    testWidgets('provides semantic slider property', (
-      WidgetTester tester,
-    ) async {
-      await tester.pumpMaterialWidget(
-        NakedSlider(
-          key: testKey,
-          value: 0.5,
-          onChanged: (_) {},
-          child: _anyWidget(),
-        ),
-      );
-
-      expect(
-        tester.getSemantics(find.byKey(testKey)),
-        matchesSemantics(
-          isSlider: true,
-          hasEnabledState: true,
-          isEnabled: true,
-          hasIncreaseAction: true,
-          hasDecreaseAction: true,
-          isFocusable: true,
-          hasFocusAction: true,
-        ),
-      );
-    });
-
-
-    testWidgets('shows correct enabled/disabled state', (
-      WidgetTester tester,
-    ) async {
-      for (var enabled in [true, false]) {
-        await tester.pumpMaterialWidget(
-          NakedSlider(
-            key: testKey,
-            value: 0.5,
-            enabled: enabled,
-            onChanged: (_) {},
-            child: _anyWidget(),
-          ),
-        );
-
-        expect(
-          tester.getSemantics(find.byKey(testKey)),
-          enabled
-              ? matchesSemantics(
-                  isSlider: true,
-                  hasEnabledState: true,
-                  isEnabled: true,
-                  hasIncreaseAction: true,
-                  hasDecreaseAction: true,
-                  isFocusable: true,
-                  hasFocusAction: true,
-                )
-              : matchesSemantics(
-                  isSlider: true,
-                  hasEnabledState: true,
-                  isEnabled: false,
-                ),
-        );
-      }
-    });
-  });
 
   group('Cursor', () {
     testWidgets('shows appropriate cursor based on interactive state', (

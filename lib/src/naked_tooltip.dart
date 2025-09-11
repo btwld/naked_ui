@@ -109,8 +109,6 @@ class NakedTooltip extends StatefulWidget implements OverlayChildLifecycle {
     this.removalDelay = Duration.zero,
     this.onStateChange,
     this.semanticsLabel,
-    this.addSemantics = true,
-    this.excludeChildSemantics = false,
   });
 
   /// Widget that triggers the tooltip.
@@ -123,11 +121,6 @@ class NakedTooltip extends StatefulWidget implements OverlayChildLifecycle {
   /// Screen readers announce this on focus/hover.
   final String? semanticsLabel;
 
-  /// Whether to add semantics to this tooltip.
-  final bool addSemantics;
-
-  /// Whether to exclude child semantics.
-  final bool excludeChildSemantics;
 
   /// Tooltip position relative to the target.
   final NakedMenuPosition position;
@@ -202,10 +195,8 @@ class _NakedTooltipState extends State<NakedTooltip>
       builder: (context, child) {
         Widget tooltipWidget = _buildTooltipWidget(context);
 
-        if (!widget.addSemantics) return tooltipWidget;
-
         return Semantics(
-          excludeSemantics: widget.excludeChildSemantics,
+          container: true,
           tooltip: widget.semanticsLabel,
           child: tooltipWidget,
         );

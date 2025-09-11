@@ -21,8 +21,6 @@ class NakedCheckbox extends StatefulWidget {
     this.onPressChange,
     this.builder,
     this.semanticLabel,
-    this.addSemantics = true,
-    this.excludeChildSemantics = false,
   }) : assert(
          (tristate || value != null),
          'Non-tristate checkbox must have a non-null value',
@@ -86,12 +84,6 @@ class NakedCheckbox extends StatefulWidget {
   /// Semantic label for accessibility.
   final String? semanticLabel;
 
-  /// Whether to add semantics to this checkbox.
-  final bool addSemantics;
-
-  /// Whether to exclude child semantics.
-  final bool excludeChildSemantics;
-
   bool get _effectiveEnabled => enabled && onChanged != null;
 
   @override
@@ -147,9 +139,6 @@ class _NakedCheckboxState extends State<NakedCheckbox>
   VoidCallback? get _semanticsTapHandler =>
       widget._effectiveEnabled ? _handleActivation : null;
 
-  VoidCallback get _semanticsFocusHandler =>
-      () => (widget.focusNode ?? FocusScope.of(context)).requestFocus();
-
   @override
   void initializeWidgetStates() {
     updateDisabledState(!widget.enabled);
@@ -163,64 +152,59 @@ class _NakedCheckboxState extends State<NakedCheckbox>
 
   @override
   Widget build(BuildContext context) {
-    Widget checkboxWidget = FocusableActionDetector(
-      // Keyboard and focus handling
-      enabled: widget._effectiveEnabled,
-      focusNode: widget.focusNode,
-      autofocus: widget.autofocus,
-      shortcuts: const {
-        SingleActivator(LogicalKeyboardKey.enter): ActivateIntent(),
-        SingleActivator(LogicalKeyboardKey.space): ActivateIntent(),
-      },
-      actions: {
-        ActivateIntent: CallbackAction<ActivateIntent>(
-          onInvoke: _handleKeyboardActivation,
+    return MergeSemantics(
+      child: FocusableActionDetector(
+        // Keyboard and focus handling
+        enabled: widget._effectiveEnabled,
+        focusNode: widget.focusNode,
+        autofocus: widget.autofocus,
+        // Use default includeFocusSemantics: true to let it handle focus semantics automatically
+        shortcuts: const {
+          SingleActivator(LogicalKeyboardKey.enter): ActivateIntent(),
+          SingleActivator(LogicalKeyboardKey.space): ActivateIntent(),
+        },
+        actions: {
+          ActivateIntent: CallbackAction<ActivateIntent>(
+            onInvoke: _handleKeyboardActivation,
+          ),
+        },
+        onShowHoverHighlight: (hovered) {
+          updateHoverState(hovered, widget.onHoverChange);
+        },
+        onFocusChange: (focused) {
+          updateFocusState(focused, widget.onFocusChange);
+        },
+        mouseCursor: _effectiveCursor,
+        child: Semantics(
+          container: true,
+          enabled: widget._effectiveEnabled,
+          checked: widget.value == true,
+          mixed: widget.tristate && widget.value == null,
+          label: widget.semanticLabel,
+          onTap: _semanticsTapHandler,
+          child: GestureDetector(
+            onTapDown: widget._effectiveEnabled
+                ? (details) {
+                    updatePressState(true, widget.onPressChange);
+                  }
+                : null,
+            onTapUp: widget._effectiveEnabled
+                ? (details) {
+                    updatePressState(false, widget.onPressChange);
+                  }
+                : null,
+            onTap: widget._effectiveEnabled ? _handleActivation : null,
+            onTapCancel: widget._effectiveEnabled
+                ? () {
+                    updatePressState(false, widget.onPressChange);
+                  }
+                : null,
+            behavior: HitTestBehavior.opaque,
+            excludeFromSemantics: true,
+            child: _buildContent(context),
+          ),
         ),
-      },
-      onShowHoverHighlight: (hovered) {
-        updateHoverState(hovered, widget.onHoverChange);
-      },
-      onFocusChange: (focused) {
-        updateFocusState(focused, widget.onFocusChange);
-      },
-      mouseCursor: _effectiveCursor,
-      child: GestureDetector(
-        onTapDown: widget._effectiveEnabled
-            ? (details) {
-                updatePressState(true, widget.onPressChange);
-              }
-            : null,
-        onTapUp: widget._effectiveEnabled
-            ? (details) {
-                updatePressState(false, widget.onPressChange);
-              }
-            : null,
-        onTap: widget._effectiveEnabled ? _handleActivation : null,
-        onTapCancel: widget._effectiveEnabled
-            ? () {
-                updatePressState(false, widget.onPressChange);
-              }
-            : null,
-        behavior: HitTestBehavior.opaque,
-        excludeFromSemantics: true,
-        child: _buildContent(context),
       ),
-    );
-
-    if (!widget.addSemantics) return checkboxWidget;
-
-    return Semantics(
-      excludeSemantics: widget.excludeChildSemantics,
-      enabled: widget._effectiveEnabled,
-      checked: widget.value,
-      mixed: widget.tristate && widget.value == null,
-      focusable: true,
-      focused: isFocused,
-      inMutuallyExclusiveGroup: false,
-      label: widget.semanticLabel,
-      onTap: _semanticsTapHandler,
-      onFocus: _semanticsFocusHandler,
-      child: checkboxWidget,
     );
   }
 }

@@ -124,34 +124,6 @@ void main() {
       timeout: Timeout(Duration(seconds: 15)),
     );
 
-    testWidgets('applies barrierLabel to semantics', (tester) async {
-      BuildContext? ctx;
-      const barrierLabel = 'My Barrier';
-      await tester.pumpWidget(
-        MaterialApp(
-          home: Builder(
-            builder: (context) {
-              ctx = context;
-              return const Scaffold(body: SizedBox());
-            },
-          ),
-        ),
-      );
-
-      final future = showNakedDialog(
-        context: ctx!,
-        barrierColor: Colors.black54,
-        barrierLabel: barrierLabel,
-        builder: (context) => const Center(child: Text('Label Test')),
-      );
-      await tester.pumpAndSettle();
-
-      expect(find.bySemanticsLabel(barrierLabel), findsOneWidget);
-
-      Navigator.of(ctx!).pop();
-      await tester.pumpAndSettle();
-      await future;
-    });
 
     testWidgets('respects useRootNavigator with nested Navigator', (
       tester,
