@@ -248,57 +248,41 @@ class _NakedSliderState extends State<NakedSlider>
 
   // No bulk state setter; we update individual flags per event.
 
-  Widget _buildSliderInteractable() {
-    return FocusableActionDetector(
-      // Keyboard and focus handling
-      enabled: _isEnabled,
-      focusNode: _focusNode,
-      autofocus: widget.autofocus,
-      descendantsAreTraversable: false,
-      shortcuts: _shortcuts,
-      actions: _actions,
-      onShowHoverHighlight: (value) {
-        updateHoverState(value, widget.onHoverChange);
+  Widget _buildPointerRegion() {
+    return MouseRegion(
+      onEnter: (_) {
+        updateHoverState(true, widget.onHoverChange);
       },
-      onFocusChange: (value) {
-        updateFocusState(value, widget.onFocusChange);
+      onExit: (_) {
+        updateHoverState(false, widget.onHoverChange);
       },
-      mouseCursor: _cursor,
-      child: MouseRegion(
-        onEnter: (_) {
-          updateHoverState(true, widget.onHoverChange);
-        },
-        onExit: (_) {
-          updateHoverState(false, widget.onHoverChange);
-        },
-        cursor: _cursor,
-        child: GestureDetector(
-          // CRITICAL: Prevents duplicate semantic nodes
-          onVerticalDragStart: widget.direction == Axis.vertical && _isEnabled
-              ? _handleDragStart
-              : null,
-          onVerticalDragUpdate: widget.direction == Axis.vertical && _isEnabled
-              ? _handleDragUpdate
-              : null,
-          onVerticalDragEnd: widget.direction == Axis.vertical && _isEnabled
-              ? _handleDragEnd
-              : null,
-          onHorizontalDragStart:
-              widget.direction == Axis.horizontal && _isEnabled
-              ? _handleDragStart
-              : null,
-          onHorizontalDragUpdate:
-              widget.direction == Axis.horizontal && _isEnabled
-              ? _handleDragUpdate
-              : null,
-          onHorizontalDragEnd: widget.direction == Axis.horizontal && _isEnabled
-              ? _handleDragEnd
-              : null,
-          behavior: HitTestBehavior.opaque,
-          // Visual interaction handling only
-          excludeFromSemantics: true,
-          child: widget.child,
-        ),
+      cursor: _cursor,
+      child: GestureDetector(
+        // CRITICAL: Prevents duplicate semantic nodes
+        onVerticalDragStart: widget.direction == Axis.vertical && _isEnabled
+            ? _handleDragStart
+            : null,
+        onVerticalDragUpdate: widget.direction == Axis.vertical && _isEnabled
+            ? _handleDragUpdate
+            : null,
+        onVerticalDragEnd: widget.direction == Axis.vertical && _isEnabled
+            ? _handleDragEnd
+            : null,
+        onHorizontalDragStart:
+            widget.direction == Axis.horizontal && _isEnabled
+            ? _handleDragStart
+            : null,
+        onHorizontalDragUpdate:
+            widget.direction == Axis.horizontal && _isEnabled
+            ? _handleDragUpdate
+            : null,
+        onHorizontalDragEnd: widget.direction == Axis.horizontal && _isEnabled
+            ? _handleDragEnd
+            : null,
+        behavior: HitTestBehavior.opaque,
+        // Visual interaction handling only
+        excludeFromSemantics: true,
+        child: widget.child,
       ),
     );
   }
@@ -356,33 +340,49 @@ class _NakedSliderState extends State<NakedSlider>
 
   @override
   Widget build(BuildContext context) {
-    return Semantics(
-      container: true,
+    return FocusableActionDetector(
+      // Keyboard and focus handling should be on the ancestor to expose a focus action
       enabled: _isEnabled,
-      slider: true,
-      focusable: _isEnabled,
-      focused: isFocused,
-      label: widget.semanticLabel,
-      value: _percentString(widget.value),
-      increasedValue: _percentString(
-        _normalizeValue(widget.value + _calculateStep(false)),
+      focusNode: _focusNode,
+      autofocus: widget.autofocus,
+      descendantsAreTraversable: false,
+      shortcuts: _shortcuts,
+      actions: _actions,
+      onShowHoverHighlight: (value) {
+        updateHoverState(value, widget.onHoverChange);
+      },
+      onFocusChange: (value) {
+        updateFocusState(value, widget.onFocusChange);
+      },
+      mouseCursor: _cursor,
+      child: Semantics(
+        container: true,
+        enabled: _isEnabled,
+        slider: true,
+        focusable: _isEnabled,
+        focused: isFocused,
+        label: widget.semanticLabel,
+        value: _percentString(widget.value),
+        increasedValue: _percentString(
+          _normalizeValue(widget.value + _calculateStep(false)),
+        ),
+        decreasedValue: _percentString(
+          _normalizeValue(widget.value - _calculateStep(false)),
+        ),
+        onIncrease: _isEnabled
+            ? () {
+                final step = _calculateStep(false);
+                _callOnChangeIfNeeded(_normalizeValue(widget.value + step));
+              }
+            : null,
+        onDecrease: _isEnabled
+            ? () {
+                final step = _calculateStep(false);
+                _callOnChangeIfNeeded(_normalizeValue(widget.value - step));
+              }
+            : null,
+        child: _buildPointerRegion(),
       ),
-      decreasedValue: _percentString(
-        _normalizeValue(widget.value - _calculateStep(false)),
-      ),
-      onIncrease: _isEnabled
-          ? () {
-              final step = _calculateStep(false);
-              _callOnChangeIfNeeded(_normalizeValue(widget.value + step));
-            }
-          : null,
-      onDecrease: _isEnabled
-          ? () {
-              final step = _calculateStep(false);
-              _callOnChangeIfNeeded(_normalizeValue(widget.value - step));
-            }
-          : null,
-      child: _buildSliderInteractable(),
     );
   }
 }

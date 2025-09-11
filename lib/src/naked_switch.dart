@@ -146,7 +146,8 @@ class _NakedSwitchState extends State<NakedSwitch>
       },
       mouseCursor: _effectiveCursor,
       child: Semantics(
-        container: true,
+        // Let semantics merge into the FocusableActionDetector node so the
+        // control exposes a single node with both focus and toggle semantics.
         enabled: widget._effectiveEnabled,
         toggled: widget.value,
         label: widget.semanticLabel,

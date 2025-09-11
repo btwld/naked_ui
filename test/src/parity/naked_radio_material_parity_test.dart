@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart' as rendering;
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:naked_ui/naked_ui.dart';
@@ -272,7 +271,6 @@ void main() {
       expect(mValue, 'a'); // already selected; no toggle
     });
 
-
     testWidgets('hover cursor parity (enabled vs disabled)', (tester) async {
       const mEnabledKey = Key('m-enabled');
       const mDisabledKey = Key('m-disabled');
@@ -352,6 +350,5 @@ void main() {
       );
       tester.expectCursor(SystemMouseCursors.basic, on: nDisabledKey);
     });
-
   });
 }

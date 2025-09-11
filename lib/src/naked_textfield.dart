@@ -745,12 +745,30 @@ class _NakedTextFieldState extends State<NakedTextField>
       ),
     );
 
+    void _handleSemanticTap() {
+      // Mirror tap behavior for accessibility users.
+      widget.onPressed?.call();
+
+      if (!widget.readOnly) {
+        // Ensure a valid caret position before requesting keyboard.
+        final controller = _effectiveController;
+        if (!controller.selection.isValid) {
+          controller.selection = TextSelection.collapsed(
+            offset: controller.text.length,
+          );
+        }
+        _requestKeyboard();
+      }
+    }
+
     Widget _wrapWithSemantics(Widget textField) {
       return Semantics(
         container: true,
         enabled: widget.enabled,
         textField: true,
-        readOnly: widget.readOnly,
+        readOnly: widget.readOnly || !widget.enabled,
+        // Expose focused state only; focus action comes from ancestor.
+        focused: _effectiveFocusNode.hasFocus,
         obscured: widget.obscureText,
         multiline: (widget.maxLines ?? 1) > 1,
         maxValueLength: widget.maxLength,
@@ -759,11 +777,14 @@ class _NakedTextFieldState extends State<NakedTextField>
         // CRITICAL: Never expose obscured text values per security guidelines
         value: widget.obscureText ? null : _effectiveController.text,
         hint: widget.semanticHint,
+        // Provide a semantics tap to request focus/keyboard like Material.
+        // Do not expose tap when readOnly, matching Material behavior.
+        onTap: widget.enabled && !widget.readOnly ? _handleSemanticTap : null,
         child: textField,
       );
     }
 
-    return widget.enabled
+    final core = widget.enabled
         ? MouseRegion(
             onEnter: _handleMouseEnter,
             onExit: _handleMouseExit,
@@ -777,6 +798,13 @@ class _NakedTextFieldState extends State<NakedTextField>
             behavior: HitTestBehavior.translucent,
             child: _wrapWithSemantics(widget.builder(context, child)),
           );
+
+    // Expose a focus action at an ancestor so parity utils can merge it.
+    return FocusableActionDetector(
+      enabled: widget.enabled,
+      autofocus: widget.autofocus,
+      child: core,
+    );
   }
 }
 

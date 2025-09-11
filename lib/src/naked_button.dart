@@ -194,7 +194,6 @@ class _NakedButtonState extends State<NakedButton>
           ? widget.mouseCursor
           : SystemMouseCursors.basic,
       child: Semantics(
-        container: true,
         enabled: widget._effectiveEnabled,
         button: true,
         label: widget.semanticLabel,
