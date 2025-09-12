@@ -88,26 +88,38 @@ class _NakedRadioState<T> extends State<NakedRadio<T>>
       enabled: widget.enabled,
       behavior: HitTestBehavior.translucent,
       onPressChange: widget.onPressChange,
-      child: RawRadio<T>(
-        value: widget.value,
-        mouseCursor: WidgetStateMouseCursor.resolveWith((_) => effectiveCursor),
-        toggleable: widget.toggleable,
-        focusNode: effectiveFocusNode!,
-        autofocus: widget.autofocus && widget.enabled,
-        groupRegistry: registry,
-        enabled: widget.enabled,
-        builder: (context, radioState) {
-          if (widget.builder != null) {
-            final states = <WidgetState>{
-              if (!widget.enabled) WidgetState.disabled,
-              if (isSelected) WidgetState.selected,
-            };
-
-            return widget.builder!(context, states, widget.child);
-          }
-
-          return widget.child!;
+      child: Listener(
+        onPointerUp: (_) {
+          if (!widget.enabled) return;
+          // If not toggleable and already selected, do nothing (no change).
+          if (!widget.toggleable && isSelected) return;
+          final next = widget.toggleable && isSelected ? null : widget.value;
+          registry.onChanged(next);
         },
+        behavior: HitTestBehavior.translucent,
+        child: RawRadio<T>(
+          value: widget.value,
+          mouseCursor: WidgetStateMouseCursor.resolveWith(
+            (_) => effectiveCursor,
+          ),
+          toggleable: widget.toggleable,
+          focusNode: effectiveFocusNode!,
+          autofocus: widget.autofocus && widget.enabled,
+          groupRegistry: registry,
+          enabled: widget.enabled,
+          builder: (context, radioState) {
+            if (widget.builder != null) {
+              final states = <WidgetState>{
+                if (!widget.enabled) WidgetState.disabled,
+                if (isSelected) WidgetState.selected,
+              };
+
+              return widget.builder!(context, states, widget.child);
+            }
+
+            return widget.child!;
+          },
+        ),
       ),
     );
   }
