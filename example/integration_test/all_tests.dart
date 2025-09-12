@@ -1,5 +1,6 @@
 import 'package:integration_test/integration_test.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter/widgets.dart';
 
 // Import all integration test files
 import 'components/naked_accordion_integration.dart' as accordion_tests;
@@ -17,6 +18,8 @@ void main() {
   // Initialize integration test binding and configure timeout
   final binding = IntegrationTestWidgetsFlutterBinding.ensureInitialized();
   binding.defaultTestTimeout = const Timeout(Duration(minutes: 30)); // Long timeout for all tests
+  // Ensure hover highlights are enabled across all integration tests
+  FocusManager.instance.highlightStrategy = FocusHighlightStrategy.alwaysTraditional;
   
   group('All NakedUI Integration Tests', () {
     // Add teardown to help with process termination

@@ -192,6 +192,7 @@ void main() {
             child: NakedButton(
               key: buttonKey,
               focusNode: focusNode,
+              focusOnPress: true,
               onPressed: () => wasPressed = true,
               child: const Text('Focus Test Button'),
             ),
