@@ -13,54 +13,45 @@ extension WidgetTesterExtension on WidgetTester {
     );
   }
 
-  /// Simulates hover by moving a mouse pointer slightly inside the widget's rect
-  /// and giving the framework a couple of frames to dispatch onEnter/onExit.
+  /// Simulates hover more robustly by moving a mouse pointer to the center of
+  /// the target, ensuring highlight mode is traditional, and giving extra
+  /// frames for pointer enter/exit to propagate reliably in integration runs.
   Future<void> simulateHover(Key key, {VoidCallback? onHover}) async {
+    FocusManager.instance.highlightStrategy =
+        FocusHighlightStrategy.alwaysTraditional;
+
     final gesture = await createGesture(kind: PointerDeviceKind.mouse);
-    await gesture.addPointer(location: const Offset(1, 1));
+    await gesture.addPointer();
     addTearDown(gesture.removePointer);
-    await pump(const Duration(milliseconds: 16));
 
-    // Move to a position clearly inside the target to avoid edge hit-test flakiness
-    final rect = getRect(find.byKey(key));
-    final inside = Offset(rect.left + 2, rect.top + 2);
-    await gesture.moveTo(inside);
-    // Give at least one frame for MouseRegion.onEnter to fire
-    await pump(const Duration(milliseconds: 16));
+    // Move to center of the target to avoid any edge hit-test ambiguity.
+    final center = getCenter(find.byKey(key));
+    await gesture.moveTo(center);
+    await pump(const Duration(milliseconds: 32)); // allow onEnter
 
-    // Call onHover callback if provided
     onHover?.call();
 
-    // Move away far outside and allow onExit to fire
-    await gesture.moveTo(const Offset(0, 0));
-    await pump(const Duration(milliseconds: 16));
+    // Move well outside the app window to trigger a clean exit.
+    await gesture.moveTo(const Offset(-1000, -1000));
+    await pump(const Duration(milliseconds: 32)); // allow onExit
   }
 
   Future<void> simulatePress(
     Key key, {
     required VoidCallback? onPressed,
   }) async {
-    // Use a precise inside point like simulateHover to avoid hit-test flakiness
-    final rect = getRect(find.byKey(key));
-    final inside = Offset(rect.left + 2, rect.top + 2);
+    final center = getCenter(find.byKey(key));
 
-    final gesture = await startGesture(inside);
+    final gesture = await startGesture(center);
     addTearDown(() async {
       try {
         await gesture.up();
       } catch (_) {}
     });
 
-    // Wait for pressed state to become true (with timeout)
-    const maxWaitMs = 250;
-    const incrementMs = 10;
-    var waitedMs = 0;
-
-    while (waitedMs < maxWaitMs) {
-      await pump(const Duration(milliseconds: incrementMs));
-      waitedMs += incrementMs;
-      // We intentionally wait up to maxWaitMs to allow onTapDown/press callbacks to propagate
-    }
+    // Give UI plenty of time to reflect pressed state in integration env.
+    await pump(const Duration(milliseconds: 100));
+    await pump(const Duration(milliseconds: 100));
 
     onPressed?.call();
     await gesture.up();

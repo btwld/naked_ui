@@ -41,7 +41,7 @@ class NakedRadio<T> extends StatefulWidget {
   /// Called when pressed state changes.
   final ValueChanged<bool>? onPressChange;
   final ValueWidgetBuilder<Set<WidgetState>>? builder;
-  
+
   /// Optional registry override for advanced usage and testing.
   /// When null, the nearest RadioGroup<T> ancestor is used.
   final RadioGroupRegistry<T>? groupRegistry;
@@ -51,24 +51,26 @@ class NakedRadio<T> extends StatefulWidget {
 }
 
 class _NakedRadioState<T> extends State<NakedRadio<T>>
-    with PressListenerMixin<NakedRadio<T>> {
-  FocusNode? _internalFocusNode;
+    with PressListenerMixin<NakedRadio<T>>, FocusableMixin<NakedRadio<T>> {
+  // Track which node currently has our listener so we can move it safely.
+  FocusNode? _listenedFocusNode;
 
-  FocusNode get _focusNode =>
-      widget.focusNode ?? (_internalFocusNode ??= FocusNode());
+  @protected
+  @override
+  FocusNode? get focusableExternalNode => widget.focusNode;
 
   @override
   void initState() {
     super.initState();
-    // Ensure internal node exists if needed and listen for focus changes
-    // so we can surface onFocusChange from the single RawRadio focus node.
-    _focusNode.addListener(_handleFocusNodeChanged);
+    // Attach listener to the effective focus node to surface onFocusChange.
+    _listenedFocusNode = effectiveFocusNode;
+    _listenedFocusNode?.addListener(_handleFocusNodeChanged);
   }
 
   // Removed unused _handlePointerTap (selection is handled by RawRadio).
 
   void _handleFocusNodeChanged() {
-    widget.onFocusChange?.call(_focusNode.hasFocus);
+    widget.onFocusChange?.call(effectiveFocusNode?.hasFocus ?? false);
   }
 
   Widget _buildRadioWidget(
@@ -82,33 +84,30 @@ class _NakedRadioState<T> extends State<NakedRadio<T>>
         ? SystemMouseCursors.click
         : SystemMouseCursors.basic;
 
-    return ConstrainedBox(
-      constraints: const BoxConstraints.tightFor(width: 48, height: 48),
-      child: buildPressListener(
+    return buildPressListener(
+      enabled: widget.enabled,
+      behavior: HitTestBehavior.translucent,
+      onPressChange: widget.onPressChange,
+      child: RawRadio<T>(
+        value: widget.value,
+        mouseCursor: WidgetStateMouseCursor.resolveWith((_) => effectiveCursor),
+        toggleable: widget.toggleable,
+        focusNode: effectiveFocusNode!,
+        autofocus: widget.autofocus && widget.enabled,
+        groupRegistry: registry,
         enabled: widget.enabled,
-        behavior: HitTestBehavior.opaque,
-        onPressChange: widget.onPressChange,
-        child: RawRadio<T>(
-          value: widget.value,
-          mouseCursor: WidgetStateMouseCursor.resolveWith((_) => effectiveCursor),
-          toggleable: widget.toggleable,
-          focusNode: _focusNode,
-          autofocus: widget.autofocus && widget.enabled,
-          groupRegistry: registry,
-          enabled: widget.enabled,
-          builder: (context, radioState) {
-            if (widget.builder != null) {
-              final states = <WidgetState>{
-                if (!widget.enabled) WidgetState.disabled,
-                if (isSelected) WidgetState.selected,
-              };
+        builder: (context, radioState) {
+          if (widget.builder != null) {
+            final states = <WidgetState>{
+              if (!widget.enabled) WidgetState.disabled,
+              if (isSelected) WidgetState.selected,
+            };
 
-              return widget.builder!(context, states, widget.child);
-            }
+            return widget.builder!(context, states, widget.child);
+          }
 
-            return widget.child!;
-          },
-        ),
+          return widget.child!;
+        },
       ),
     );
   }
@@ -116,21 +115,22 @@ class _NakedRadioState<T> extends State<NakedRadio<T>>
   @override
   void didUpdateWidget(NakedRadio<T> oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.focusNode != widget.focusNode) {
-      // Move listener to the new effective node
-      (oldWidget.focusNode ?? _internalFocusNode)?.removeListener(
-        _handleFocusNodeChanged,
-      );
-      // ignore: always-remove-listener
-      _focusNode.addListener(_handleFocusNodeChanged);
+
+    // If the effective focus node changed (external swap or internal allocation),
+    // move the listener to the new node.
+    final FocusNode? newNode = effectiveFocusNode;
+    if (!identical(newNode, _listenedFocusNode)) {
+      _listenedFocusNode?.removeListener(_handleFocusNodeChanged);
+      _listenedFocusNode = newNode;
+      _listenedFocusNode?.addListener(_handleFocusNodeChanged);
     }
   }
 
   @override
   void dispose() {
-    // Detach listener from the current effective node before disposing.
-    _focusNode.removeListener(_handleFocusNodeChanged);
-    _internalFocusNode?.dispose();
+    // Detach our listener; FocusableMixin handles internal node disposal.
+    _listenedFocusNode?.removeListener(_handleFocusNodeChanged);
+    _listenedFocusNode = null;
     super.dispose();
   }
 

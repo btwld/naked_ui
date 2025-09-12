@@ -193,28 +193,23 @@ mixin PressListenerMixin<T extends StatefulWidget> on State<T> {
     HitTestBehavior behavior = HitTestBehavior.opaque,
     ValueChanged<bool>? onPressChange,
   }) {
-    if (!enabled) {
-      // Clear pressed when disabled
-      onPressChange?.call(false);
-
-      return Listener(behavior: behavior, child: child);
-    }
-
     return Listener(
       key: key,
       onPointerDown: (event) {
-        onPressChange?.call(true);
+        if (enabled) onPressChange?.call(true);
       },
       onPointerMove: (event) {
-        if (!_isPointerWithinBounds(event.localPosition)) {
-          onPressChange?.call(false);
+        if (enabled) {
+          if (!_isPointerWithinBounds(event.localPosition)) {
+            onPressChange?.call(false);
+          }
         }
       },
       onPointerUp: (event) {
-        onPressChange?.call(false);
+        if (enabled) onPressChange?.call(false);
       },
       onPointerCancel: (event) {
-        onPressChange?.call(false);
+        if (enabled) onPressChange?.call(false);
       },
       behavior: behavior,
       child: child,

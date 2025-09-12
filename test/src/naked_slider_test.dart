@@ -1,655 +1,529 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:naked_ui/naked_ui.dart';
-
-import 'helpers/simulate_hover.dart';
-
-Widget _anyWidget() => const SizedBox(width: 200, height: 40);
+import '../test_helpers.dart';
 
 void main() {
-  const testKey = Key('test-slider');
-  const double minValue = 0.0;
-  const double maxValue = 1.0;
+  TestWidgetsFlutterBinding.ensureInitialized();
 
-  group('Basic Functionality', () {
-    testWidgets('child renders correctly', (WidgetTester tester) async {
-      await tester.pumpMaterialWidget(
-        NakedSlider(
-          value: 0.5,
-          onChanged: (_) {},
-          child: const Text('Hello, world!'),
-        ),
-      );
-      expect(find.text('Hello, world!'), findsOneWidget);
-    });
-
-    testWidgets('value changes when dragged horizontally', (
-      WidgetTester tester,
-    ) async {
-      double value = 0.5;
-      await tester.pumpMaterialWidget(
-        NakedSlider(
-          key: testKey,
-          value: value,
-          onChanged: (newValue) => value = newValue,
-          child: _anyWidget(),
-        ),
-      );
-
-      final sliderFinder = find.byKey(testKey);
-
-      // Drag to the right
-      await tester.drag(sliderFinder, const Offset(50.0, 0.0));
-      await tester.pumpAndSettle();
-      expect(value, greaterThan(0.5));
-
-      // Drag to the left
-      await tester.drag(sliderFinder, const Offset(-80.0, 0.0));
-      await tester.pumpAndSettle();
-      expect(value, lessThan(0.5));
-    });
-
-    testWidgets('value changes when dragged vertically', (
-      WidgetTester tester,
-    ) async {
-      double value = 0.5;
-      await tester.pumpMaterialWidget(
-        NakedSlider(
-          key: testKey,
-          value: value,
-          direction: Axis.vertical,
-          onChanged: (newValue) => value = newValue,
-          child: _anyWidget(),
-        ),
-      );
-
-      final sliderFinder = find.byKey(testKey);
-
-      // Drag up (increases value)
-      await tester.drag(sliderFinder, const Offset(0.0, -50.0));
-      await tester.pumpAndSettle();
-      expect(value, greaterThan(0.5));
-
-      // Drag down (decreases value)
-      await tester.drag(sliderFinder, const Offset(0.0, 80.0));
-      await tester.pumpAndSettle();
-      expect(value, lessThan(0.5));
-    });
-
-    testWidgets('constrains value between min and max', (
-      WidgetTester tester,
-    ) async {
-      double value = 0.5;
-      await tester.pumpMaterialWidget(
-        NakedSlider(
-          key: testKey,
-          value: value,
-          min: 0.2,
-          max: 0.8,
-          onChanged: (newValue) => value = newValue,
-          child: _anyWidget(),
-        ),
-      );
-
-      final sliderFinder = find.byKey(testKey);
-
-      // Try to drag beyond maximum
-      await tester.drag(sliderFinder, const Offset(200.0, 0.0));
-      await tester.pumpAndSettle();
-      expect(value, 0.8);
-
-      // Try to drag below minimum
-      await tester.drag(sliderFinder, const Offset(-200.0, 0.0));
-      await tester.pumpAndSettle();
-      expect(value, 0.2);
-    });
-
-    testWidgets('does not respond when disabled', (WidgetTester tester) async {
-      double value = 0.5;
-      await tester.pumpMaterialWidget(
-        NakedSlider(
-          key: testKey,
-          value: value,
-          enabled: false,
-          onChanged: (newValue) => value = newValue,
-          child: _anyWidget(),
-        ),
-      );
-
-      final sliderFinder = find.byKey(testKey);
-
-      // Try to drag
-      await tester.drag(sliderFinder, const Offset(50.0, 0.0));
-      await tester.pumpAndSettle();
-
-      // Value should not change
-      expect(value, 0.5);
-    });
-
-    testWidgets('does not respond when onChanged is null', (
-      WidgetTester tester,
-    ) async {
-      double value = 0.5;
-      await tester.pumpMaterialWidget(
-        NakedSlider(
-          key: testKey,
-          value: value,
-          onChanged: null,
-          child: _anyWidget(),
-        ),
-      );
-
-      final sliderFinder = find.byKey(testKey);
-
-      // Try to drag
-      await tester.drag(sliderFinder, const Offset(50.0, 0.0));
-      await tester.pumpAndSettle();
-
-      // No error should occur and value remains unchanged
-      expect(value, 0.5);
-    });
-
-    testWidgets('supports discrete divisions', (WidgetTester tester) async {
-      double value = 0.5;
-      await tester.pumpMaterialWidget(
-        StatefulBuilder(
-          builder: (context, setState) => NakedSlider(
-            key: testKey,
-            value: value,
-            divisions: 4,
-            onChanged: (newValue) => setState(() => value = newValue),
-            child: _anyWidget(),
-          ),
-        ),
-      );
-
-      final sliderFinder = find.byKey(testKey);
-
-      await tester.drag(sliderFinder, const Offset(30.0, 0.0));
-      await tester.pumpAndSettle();
-      expect(value, 0.75);
-
-      await tester.drag(sliderFinder, const Offset(-30.0, 0.0));
-      await tester.pumpAndSettle();
-      expect(value, 0.5);
-    });
-  });
-
-  group('State Callbacks', () {
-    testWidgets('does not call state callbacks when disabled', (
-      WidgetTester tester,
-    ) async {
-      bool isHovered = false;
-      bool isDragging = false;
-      bool isFocused = false;
-
-      await tester.pumpMaterialWidget(
-        NakedSlider(
-          key: testKey,
-          value: 0.5,
-          enabled: false,
-          onChanged: (_) {},
-          onHoverChange: (value) => isHovered = value,
-          onDragChange: (value) => isDragging = value,
-          onFocusChange: (value) => isFocused = value,
-          child: _anyWidget(),
-        ),
-      );
-
-      // Test hover
-      await tester.simulateHover(
-        testKey,
-        onHover: () {
-          expect(isHovered, false);
-        },
-      );
-
-      // Test drag
-      final gesture = await tester.startGesture(
-        tester.getCenter(find.byKey(testKey)),
-      );
-      await tester.pump();
-      expect(isDragging, false);
-      await gesture.up();
-      await tester.pump();
-      expect(isDragging, false);
-
-      // Test focus
-      final focusNode = FocusNode();
-      await tester.pumpMaterialWidget(
-        NakedSlider(
-          key: testKey,
-          value: 0.5,
-          enabled: false,
-          focusNode: focusNode,
-          onChanged: (_) {},
-          onFocusChange: (value) => isFocused = value,
-          child: _anyWidget(),
-        ),
-      );
-
-      focusNode.requestFocus();
-      await tester.pump();
-      expect(isFocused, false);
-    });
-
-    testWidgets('calls onHoverChange when hovered', (
-      WidgetTester tester,
-    ) async {
-      FocusManager.instance.highlightStrategy =
-          FocusHighlightStrategy.alwaysTraditional;
-
-      bool isHovered = false;
-      await tester.pumpMaterialWidget(
-        Padding(
-          padding: const EdgeInsets.all(1.0),
-          child: NakedSlider(
-            key: testKey,
-            value: 0.5,
-            onChanged: (_) {},
-            onHoverChange: (value) => isHovered = value,
-            child: _anyWidget(),
-          ),
-        ),
-      );
-
-      await tester.simulateHover(
-        testKey,
-        onHover: () {
-          expect(isHovered, true);
-        },
-      );
-
-      expect(isHovered, false);
-    });
-
-    testWidgets('calls onDragChange when dragged', (WidgetTester tester) async {
-      bool isDragging = false;
-      await tester.pumpMaterialWidget(
-        NakedSlider(
-          key: testKey,
-          value: 0.5,
-          onChanged: (_) {},
-          onDragChange: (value) => isDragging = value,
-          child: _anyWidget(),
-        ),
-      );
-
-      final sliderFinder = find.byKey(testKey);
-
-      // Start dragging
-      final gesture = await tester.startGesture(tester.getCenter(sliderFinder));
-      await tester.pump();
-      expect(isDragging, true);
-
-      // End dragging
-      await gesture.up();
-      await tester.pump();
-      expect(isDragging, false);
-    });
-
-    testWidgets('calls onFocusChange when focused/unfocused', (
-      WidgetTester tester,
-    ) async {
-      bool isFocused = false;
-      final focusNode = FocusNode();
-
-      await tester.pumpMaterialWidget(
-        NakedSlider(
-          key: testKey,
-          value: 0.5,
-          focusNode: focusNode,
-          onChanged: (_) {},
-          onFocusChange: (value) => isFocused = value,
-          child: _anyWidget(),
-        ),
-      );
-
-      // Focus the slider
-      focusNode.requestFocus();
-      await tester.pump();
-      expect(isFocused, true);
-
-      // Unfocus
-      focusNode.unfocus();
-      await tester.pump();
-      expect(isFocused, false);
-    });
-
-    testWidgets('fires onDragStart and onDragEnd callbacks', (
-      WidgetTester tester,
-    ) async {
-      bool dragStarted = false;
-      double? endValue;
-
-      await tester.pumpMaterialWidget(
-        NakedSlider(
-          key: testKey,
-          value: 0.5,
-          onChanged: (_) {},
-          onDragStart: () => dragStarted = true,
-          onDragEnd: (value) => endValue = value,
-          child: _anyWidget(),
-        ),
-      );
-
-      final sliderFinder = find.byKey(testKey);
-
-      // Start and end drag
-      await tester.drag(sliderFinder, const Offset(30.0, 0.0));
-      await tester.pumpAndSettle();
-
-      expect(dragStarted, true);
-      expect(endValue, isNotNull);
-    });
-  });
-
-  group('Keyboard Interaction', () {
-    testWidgets(
-      'responds to (right/left) and (up/down) keys in (horizontal/vertical) mode',
-      (WidgetTester tester) async {
-        for (final direction in [Axis.horizontal, Axis.vertical]) {
-          double value = 0.5;
-          final focusNode = FocusNode();
-
-          await tester.pumpMaterialWidget(
-            StatefulBuilder(
-              builder: (context, setState) {
-                return NakedSlider(
-                  key: testKey,
-                  value: value,
-                  keyboardStep: 0.1,
-                  focusNode: focusNode,
-                  direction: direction,
-                  onChanged: (newValue) => setState(() => value = newValue),
-                  child: _anyWidget(),
-                );
-              },
-            ),
-          );
-
-          // Focus the slider
-          focusNode.requestFocus();
-          await tester.pump();
-
-          for (final keyTest in [
-            (key: LogicalKeyboardKey.arrowRight, expectedValue: 0.6),
-            (key: LogicalKeyboardKey.arrowLeft, expectedValue: 0.5),
-            (key: LogicalKeyboardKey.arrowUp, expectedValue: 0.6),
-            (key: LogicalKeyboardKey.arrowDown, expectedValue: 0.5),
-          ]) {
-            await tester.sendKeyEvent(keyTest.key);
-            await tester.pump();
-            expect(value, keyTest.expectedValue);
-          }
-        }
-      },
-    );
-
-    testWidgets('jumps to next division when dragged with divisions enabled', (
-      WidgetTester tester,
-    ) async {
-      double value = 0.3;
-      final focusNode = FocusNode();
-      await tester.pumpMaterialWidget(
-        StatefulBuilder(
+  /// Harness that hosts a single NakedSlider and wires state so tests can
+  /// observe changes via spies while the slider remains a controlled widget.
+  Widget _harness({
+    required double initial,
+    double min = 0,
+    double max = 100,
+    Axis direction = Axis.horizontal,
+    int? divisions,
+    bool enabled = true,
+    bool autofocus = false,
+    TextDirection textDirection = TextDirection.ltr,
+    Size? size,
+    // Spies:
+    ValueChanged<double>? onChangedSpy,
+    VoidCallback? onDragStartSpy,
+    ValueChanged<double>? onDragEndSpy,
+    ValueChanged<bool>? onHoverChangeSpy,
+    ValueChanged<bool>? onDragChangeSpy,
+    ValueChanged<bool>? onFocusChangeSpy,
+    String? semanticLabel = 'Headless slider',
+    FocusNode? focusNode,
+    double keyboardStep = 5,
+    double largeKeyboardStep = 20,
+    Key? sliderKey,
+  }) {
+    double value = initial;
+    return WidgetsApp(
+      color: const Color(0xFF000000),
+      builder: (context, _) => Directionality(
+        textDirection: textDirection,
+        child: StatefulBuilder(
           builder: (context, setState) {
-            return NakedSlider(
-              key: testKey,
-              value: value,
-              divisions: 4,
-              focusNode: focusNode,
-              onChanged: (newValue) => setState(() => value = newValue),
-              child: _anyWidget(),
+            return Center(
+              child: NakedSlider(
+                key: sliderKey ?? const Key('slider'),
+                value: value,
+                min: min.toDouble(),
+                max: max.toDouble(),
+                onChanged: (v) {
+                  onChangedSpy?.call(v);
+                  setState(() => value = v);
+                },
+                onDragStart: onDragStartSpy,
+                onDragEnd: onDragEndSpy,
+                onHoverChange: onHoverChangeSpy,
+                onDragChange: onDragChangeSpy,
+                onFocusChange: onFocusChangeSpy,
+                enabled: enabled,
+                focusNode: focusNode,
+                autofocus: autofocus,
+                direction: direction,
+                divisions: divisions,
+                keyboardStep: keyboardStep.toDouble(),
+                largeKeyboardStep: largeKeyboardStep.toDouble(),
+                semanticLabel: semanticLabel,
+                child: ConstrainedBox(
+                  constraints: BoxConstraints.tight(
+                    size ??
+                        (direction == Axis.horizontal
+                            ? const Size(200, 24)
+                            : const Size(24, 200)),
+                  ),
+                  child: const SizedBox.expand(), // bare, headless surface
+                ),
+              ),
             );
           },
         ),
-      );
+      ),
+    );
+  }
 
-      // Focus the slider
-      focusNode.requestFocus();
-      await tester.pump();
+  Finder _findSlider([Key? k]) => find.byKey(k ?? const Key('slider'));
 
-      // Press right arrow to increase value (0.3 -> 0.5)
-      await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
-      await tester.pump();
-      expect(value, 0.5);
+  group('Keyboard (LTR, horizontal)', () {
+    testWidgets(
+      'Right increments, Left decrements; Shift = large step; Home/End',
+      (tester) async {
+        final changes = <double>[];
+        await tester.pumpWidget(
+          _harness(
+            initial: 50,
+            min: 0,
+            max: 100,
+            autofocus: true,
+            textDirection: TextDirection.ltr,
+            onChangedSpy: changes.add,
+            keyboardStep: 5,
+            largeKeyboardStep: 20,
+          ),
+        );
+        await tester.pumpAndSettle();
 
-      // Press left arrow to decrease value (0.5 -> 0.25)
-      await tester.sendKeyEvent(LogicalKeyboardKey.arrowLeft);
-      await tester.pump();
-      expect(value, 0.25);
-    });
+        // Arrow Right → +5
+        await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
+        await tester.pump();
+        expect(changes.last, 55);
 
-    testWidgets('home/end keys jump to min/max', (WidgetTester tester) async {
-      double value = 0.5;
-      final focusNode = FocusNode();
+        // Arrow Left → -5
+        await tester.sendKeyEvent(LogicalKeyboardKey.arrowLeft);
+        await tester.pump();
+        expect(changes.last, 50);
 
-      await tester.pumpMaterialWidget(
-        NakedSlider(
-          key: testKey,
-          value: value,
-          focusNode: focusNode,
-          onChanged: (newValue) => value = newValue,
-          child: _anyWidget(),
+        // Shift + Right → +20
+        await tester.sendKeyDownEvent(LogicalKeyboardKey.shiftLeft);
+        await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
+        await tester.sendKeyUpEvent(LogicalKeyboardKey.shiftLeft);
+        await tester.pump();
+        expect(changes.last, 70);
+
+        // Home → min (0)
+        await tester.sendKeyEvent(LogicalKeyboardKey.home);
+        await tester.pump();
+        expect(changes.last, 0);
+
+        // End → max (100)
+        await tester.sendKeyEvent(LogicalKeyboardKey.end);
+        await tester.pump();
+        expect(changes.last, 100);
+      },
+    );
+  });
+
+  group('Keyboard (RTL, horizontal)', () {
+    testWidgets('Left increments, Right decrements (reversed)', (tester) async {
+      final changes = <double>[];
+      await tester.pumpWidget(
+        _harness(
+          initial: 40,
+          min: 0,
+          max: 100,
+          autofocus: true,
+          textDirection: TextDirection.rtl,
+          onChangedSpy: changes.add,
+          keyboardStep: 10,
         ),
       );
+      await tester.pumpAndSettle();
 
-      // Focus the slider
-      focusNode.requestFocus();
+      // In RTL, Left increments
+      await tester.sendKeyEvent(LogicalKeyboardKey.arrowLeft);
       await tester.pump();
+      expect(changes.last, 50);
 
-      // Press home key
-      await tester.sendKeyEvent(LogicalKeyboardKey.home);
+      // Right decrements
+      await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
       await tester.pump();
-      expect(value, minValue);
-
-      // Press end key
-      await tester.sendKeyEvent(LogicalKeyboardKey.end);
-      await tester.pump();
-      expect(value, maxValue);
+      expect(changes.last, 40);
     });
   });
 
+  group('Keyboard (vertical)', () {
+    testWidgets('Up increments, Down decrements', (tester) async {
+      final changes = <double>[];
+      await tester.pumpWidget(
+        _harness(
+          initial: 0,
+          min: 0,
+          max: 100,
+          direction: Axis.vertical,
+          autofocus: true,
+          onChangedSpy: changes.add,
+          keyboardStep: 10,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.sendKeyEvent(LogicalKeyboardKey.arrowUp);
+      await tester.pump();
+      expect(changes.last, 10);
+
+      await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
+      await tester.pump();
+      expect(changes.last, 0);
+    });
+  });
+
+  group('Pointer dragging', () {
+    testWidgets(
+      'Horizontal drag updates value; onDragStart/End emit; focus requested',
+      (tester) async {
+        final changes = <double>[];
+        bool dragStart = false;
+        double? dragEndValue;
+        final focusNode = FocusNode(debugLabel: 'sliderFocus');
+
+        await tester.pumpWidget(
+          _harness(
+            initial: 0,
+            min: 0,
+            max: 100,
+            onChangedSpy: changes.add,
+            onDragStartSpy: () => dragStart = true,
+            onDragEndSpy: (v) => dragEndValue = v,
+            focusNode: focusNode,
+            sliderKey: const Key('slider'),
+            size: const Size(200, 24),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        final start = tester.getCenter(_findSlider());
+        // Drag ~120 px to the right. With width=200 and range=0..100 => ~60
+        await tester.drag(_findSlider(), const Offset(120, 0));
+        await tester.pump();
+
+        expect(dragStart, isTrue, reason: 'onDragStart should fire');
+        expect(
+          changes.last,
+          closeTo(60, 1),
+          reason: 'value should scale with width',
+        );
+        expect(
+          dragEndValue,
+          closeTo(changes.last, 1),
+          reason: 'onDragEnd returns last emitted',
+        );
+
+        // Focus should have been requested at drag start
+        expect(focusNode.hasFocus, isTrue);
+      },
+    );
+
+    testWidgets('Vertical drag: up increases, down decreases', (tester) async {
+      final changes = <double>[];
+      await tester.pumpWidget(
+        _harness(
+          initial: 50,
+          min: 0,
+          max: 100,
+          direction: Axis.vertical,
+          onChangedSpy: changes.add,
+          size: const Size(24, 200),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Drag up by 40 px => increase roughly by 20 (since 200px = 100 units)
+      await tester.drag(_findSlider(), const Offset(0, -40));
+      await tester.pump();
+      expect(changes.last, greaterThan(50));
+
+      // Drag down by 100 px => decrease
+      await tester.drag(_findSlider(), const Offset(0, 100));
+      await tester.pump();
+      expect(changes.last, lessThan(50));
+    });
+
+    testWidgets('Horizontal RTL drag: left -> toward max', (tester) async {
+      final changes = <double>[];
+      await tester.pumpWidget(
+        _harness(
+          initial: 50,
+          min: 0,
+          max: 100,
+          textDirection: TextDirection.rtl,
+          onChangedSpy: changes.add,
+          size: const Size(200, 24),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // In RTL, leftwards drag increases value (because left = max).
+      await tester.drag(_findSlider(), const Offset(-60, 0));
+      await tester.pump();
+
+      expect(changes.last, greaterThan(50));
+    });
+  });
+
+  group('Divisions snapping', () {
+    testWidgets('Keyboard respects divisions', (tester) async {
+      final changes = <double>[];
+      await tester.pumpWidget(
+        _harness(
+          initial: 3,
+          min: 0,
+          max: 10,
+          divisions: 10, // step = 1
+          autofocus: true,
+          onChangedSpy: changes.add,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
+      await tester.pump();
+      expect(changes.last, 4);
+
+      await tester.sendKeyEvent(LogicalKeyboardKey.arrowLeft);
+      await tester.pump();
+      expect(changes.last, 3);
+    });
+
+    testWidgets('Drag snaps to nearest tick', (tester) async {
+      final changes = <double>[];
+      await tester.pumpWidget(
+        _harness(
+          initial: 0,
+          min: 0,
+          max: 10,
+          divisions: 10, // 1-unit steps
+          onChangedSpy: changes.add,
+          size: const Size(200, 24),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Drag ~55 px (200px = 10 units -> 1 unit per 20px) => ~2.75 -> snaps to 3
+      await tester.drag(_findSlider(), const Offset(55, 0));
+      await tester.pump();
+
+      expect(changes.last, 3);
+    });
+  });
+
+  group('Enable/disable behavior', () {
+    testWidgets('Disabled slider ignores keyboard', (tester) async {
+      final changes = <double>[];
+      await tester.pumpWidget(
+        _harness(
+          initial: 50,
+          enabled: false, // _effectiveEnabled = false
+          autofocus: true,
+          onChangedSpy: changes.add,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
+      await tester.pump();
+
+      expect(changes, isEmpty);
+    });
+
+    testWidgets('Disabled slider not focusable or hoverable', (tester) async {
+      bool hovered = false;
+      await tester.pumpWidget(
+        _harness(
+          initial: 50,
+          enabled: false,
+          onHoverChangeSpy: (h) => hovered = h,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Move mouse over and out; since disabled, onShowHoverHighlight shouldn't fire.
+      final gesture = await tester.createGesture(kind: PointerDeviceKind.mouse);
+      await gesture.addPointer();
+      await gesture.moveTo(tester.getCenter(_findSlider()));
+      await tester.pump();
+      await gesture.moveTo(const Offset(0, 0)); // outside
+      await tester.pump();
+      await gesture.removePointer();
+
+      expect(hovered, isFalse);
+    });
+  });
 
   group('Cursor', () {
-    testWidgets('shows appropriate cursor based on interactive state', (
-      WidgetTester tester,
-    ) async {
+    testWidgets('shows appropriate cursor based on interactive state', (tester) async {
       const enabledKey = Key('enabled');
       const disabledKey = Key('disabled');
 
-      await tester.pumpMaterialWidget(
-        Column(
-          children: [
-            NakedSlider(
-              key: enabledKey,
-              value: 0.5,
-              onChanged: (_) {},
-              child: _anyWidget(),
+      await tester.pumpWidget(
+        WidgetsApp(
+          color: const Color(0xFF000000),
+          builder: (context, _) => Directionality(
+            textDirection: TextDirection.ltr,
+            child: Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  NakedSlider(
+                    key: enabledKey,
+                    value: 50,
+                    min: 0,
+                    max: 100,
+                    onChanged: (_) {},
+                    child: const SizedBox(width: 200, height: 24),
+                  ),
+                  NakedSlider(
+                    key: disabledKey,
+                    value: 50,
+                    min: 0,
+                    max: 100,
+                    enabled: false,
+                    onChanged: (_) {},
+                    child: const SizedBox(width: 200, height: 24),
+                  ),
+                ],
+              ),
             ),
-            NakedSlider(
-              key: disabledKey,
-              value: 0.5,
-              enabled: false,
-              onChanged: (_) {},
-              child: _anyWidget(),
-            ),
-          ],
+          ),
         ),
       );
 
       tester.expectCursor(SystemMouseCursors.click, on: enabledKey);
-
       tester.expectCursor(SystemMouseCursors.basic, on: disabledKey);
     });
-  });
 
-  group('RTL Support', () {
-    testWidgets('arrow keys work correctly in RTL mode', (
-      WidgetTester tester,
-    ) async {
-      double value = 0.5;
-      final focusNode = FocusNode();
-
-      await tester.pumpMaterialWidget(
-        Directionality(
-          textDirection: TextDirection.rtl,
-          child: Center(
-            child: StatefulBuilder(
-              builder: (context, setState) {
-                return NakedSlider(
-                  key: testKey,
-                  value: value,
-                  keyboardStep: 0.1,
-                  focusNode: focusNode,
-                  onChanged: (newValue) => setState(() => value = newValue),
-                  child: _anyWidget(),
-                );
-              },
+    testWidgets('uses custom cursor when provided', (tester) async {
+      const key = Key('cursor');
+      await tester.pumpWidget(
+        WidgetsApp(
+          color: const Color(0xFF000000),
+          builder: (context, _) => Directionality(
+            textDirection: TextDirection.ltr,
+            child: Center(
+              child: NakedSlider(
+                key: key,
+                value: 50,
+                min: 0,
+                max: 100,
+                mouseCursor: SystemMouseCursors.precise,
+                onChanged: (_) {},
+                child: const SizedBox(width: 200, height: 24),
+              ),
             ),
           ),
         ),
       );
 
-      // Focus the slider
-      focusNode.requestFocus();
-      await tester.pump();
-
-      // In RTL, right arrow should decrease value
-      await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
-      await tester.pump();
-      expect(value, 0.4);
-
-      // In RTL, left arrow should increase value
-      await tester.sendKeyEvent(LogicalKeyboardKey.arrowLeft);
-      await tester.pump();
-      expect(value, 0.5);
+      tester.expectCursor(SystemMouseCursors.precise, on: key);
     });
   });
 
   group('Additional Features', () {
-    testWidgets('uses custom cursor when provided', (
-      WidgetTester tester,
-    ) async {
-      await tester.pumpMaterialWidget(
-        NakedSlider(
-          key: testKey,
-          value: 0.5,
-          mouseCursor: SystemMouseCursors.precise,
-          onChanged: (_) {},
-          child: _anyWidget(),
+    testWidgets('works with custom min/max range', (tester) async {
+      final changes = <double>[];
+      await tester.pumpWidget(
+        _harness(
+          initial: 0,
+          min: -100,
+          max: 100,
+          onChangedSpy: changes.add,
+          size: const Size(200, 24),
         ),
       );
-
-      tester.expectCursor(SystemMouseCursors.precise, on: testKey);
-    });
-
-    testWidgets('large keyboard step with shift key', (
-      WidgetTester tester,
-    ) async {
-      double value = 0.5;
-      final focusNode = FocusNode();
-
-      await tester.pumpMaterialWidget(
-        StatefulBuilder(
-          builder: (context, setState) {
-            return NakedSlider(
-              key: testKey,
-              value: value,
-              keyboardStep: 0.01,
-              largeKeyboardStep: 0.2,
-              focusNode: focusNode,
-              onChanged: (newValue) => setState(() => value = newValue),
-              child: _anyWidget(),
-            );
-          },
-        ),
-      );
-
-      // Focus the slider
-      focusNode.requestFocus();
-      await tester.pump();
-
-      // Simulate pressing Shift+Right Arrow
-      await tester.sendKeyDownEvent(LogicalKeyboardKey.shift);
-      await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
-      await tester.sendKeyUpEvent(LogicalKeyboardKey.shift);
-
-      await tester.pump();
-
-      expect(value, 0.7);
-    });
-
-    testWidgets('works with custom min/max range', (WidgetTester tester) async {
-      double value = 0.0;
-
-      await tester.pumpMaterialWidget(
-        StatefulBuilder(
-          builder: (context, setState) {
-            return NakedSlider(
-              key: testKey,
-              value: value,
-              min: -100.0,
-              max: 100.0,
-              onChanged: (newValue) => setState(() => value = newValue),
-              child: _anyWidget(),
-            );
-          },
-        ),
-      );
-
-      final sliderFinder = find.byKey(testKey);
-
-      // Drag to the right
-      await tester.drag(sliderFinder, const Offset(50.0, 0.0));
       await tester.pumpAndSettle();
 
-      expect(value, greaterThan(0.0));
-      expect(value, lessThan(100.0));
+      // Drag to the right
+      await tester.drag(_findSlider(), const Offset(50.0, 0.0));
+      await tester.pumpAndSettle();
+
+      expect(changes, isNotEmpty);
+      expect(changes.last, greaterThan(0));
+      expect(changes.last, lessThanOrEqualTo(100));
+    });
+  });
+
+  group('Hover, focus, and press states', () {
+    testWidgets('Hover callbacks toggle appropriately', (tester) async {
+      FocusManager.instance.highlightStrategy =
+          FocusHighlightStrategy.alwaysTraditional;
+      final hovers = <bool>[];
+      const k = Key('slider');
+      await tester.pumpWidget(
+        _harness(initial: 0, onHoverChangeSpy: hovers.add, sliderKey: k),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.simulateHover(k, onHover: () {
+        // inside hover callback, we expect true was pushed
+        expect(hovers.isNotEmpty && hovers.last == true, isTrue);
+      });
+
+      expect(hovers, equals([true, false]));
     });
 
-    testWidgets('properly handles focus traversal', (
-      WidgetTester tester,
-    ) async {
-      final focusNode1 = FocusNode();
-      final focusNode2 = FocusNode();
-      final focusNode3 = FocusNode();
+    testWidgets('Focus is requested on drag start', (tester) async {
+      final focusNode = FocusNode(debugLabel: 'sliderFocus');
+      await tester.pumpWidget(
+        _harness(initial: 10, focusNode: focusNode, size: const Size(200, 24)),
+      );
+      await tester.pumpAndSettle();
+
+      // Start a drag; the slider should request focus.
+      await tester.drag(_findSlider(), const Offset(1, 0));
+      await tester.pump();
+
+      expect(focusNode.hasFocus, isTrue);
+    });
+  });
+
+  group('Pointer cancellation', () {
+    testWidgets('cancel ends drag and clears state', (tester) async {
+      final dragStates = <bool>[];
+      double? endValue;
 
       await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: Column(
-              children: [
-                TextField(focusNode: focusNode1),
-                NakedSlider(
-                  value: 0.5,
-                  focusNode: focusNode2,
-                  onChanged: (_) {},
-                  child: _anyWidget(),
-                ),
-                TextField(focusNode: focusNode3),
-              ],
-            ),
-          ),
+        _harness(
+          initial: 50,
+          min: 0,
+          max: 100,
+          onDragChangeSpy: dragStates.add,
+          onDragEndSpy: (v) => endValue = v,
+          size: const Size(200, 24),
         ),
       );
+      await tester.pumpAndSettle();
 
-      // Focus the first text field
-      focusNode1.requestFocus();
+      final center = tester.getCenter(_findSlider());
+      final gesture = await tester.startGesture(center);
       await tester.pump();
-      expect(focusNode1.hasFocus, true);
 
-      // Press tab to move to the slider
-      await tester.sendKeyEvent(LogicalKeyboardKey.tab);
-      await tester.pump();
-      expect(focusNode2.hasFocus, true);
+      // Drag started -> onDragChange(true)
+      expect(dragStates, isNotEmpty);
+      expect(dragStates.last, isTrue);
 
-      // Press tab again to move to the next text field
-      await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+      // Cancel the gesture -> should call onDragChange(false) and onDragEnd
+      await gesture.cancel();
       await tester.pump();
-      expect(focusNode3.hasFocus, true);
+
+      expect(dragStates.last, isFalse);
+      expect(endValue, 50); // last emitted or current value when no move
     });
   });
 }

@@ -1,5 +1,5 @@
-import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/widgets.dart';
 
 import 'mixins/naked_mixins.dart';
 
@@ -32,7 +32,7 @@ class NakedSwitch extends StatefulWidget {
   /// Visual representation of the switch.
   final Widget? child;
 
-  /// Whether this switch is on.
+  /// Whether this switch is on (non-null enforced by assertion).
   final bool? value;
 
   /// Called when the switch is toggled.
@@ -53,7 +53,7 @@ class NakedSwitch extends StatefulWidget {
   /// Cursor when hovering over the switch.
   final MouseCursor? mouseCursor;
 
-  /// Whether to provide haptic feedback on tap.
+  /// Whether to provide haptic feedback on activation.
   final bool enableFeedback;
 
   /// Optional focus node to control focus behavior.
@@ -63,6 +63,7 @@ class NakedSwitch extends StatefulWidget {
   final bool autofocus;
 
   /// Optional builder that receives the current states for visuals.
+  /// States may include: disabled, focused, hovered, pressed, selected.
   final ValueWidgetBuilder<Set<WidgetState>>? builder;
 
   /// Semantic label for accessibility.
@@ -75,11 +76,10 @@ class NakedSwitch extends StatefulWidget {
 }
 
 class _NakedSwitchState extends State<NakedSwitch>
-    with WidgetStatesMixin<NakedSwitch>, PressListenerMixin<NakedSwitch> {
-  // Private methods
+    with WidgetStatesMixin<NakedSwitch> {
+  // ---- Activation ----
   void _handleKeyboardActivation([Intent? _]) {
     if (!widget._effectiveEnabled) return;
-
     _handleActivation();
   }
 
@@ -89,20 +89,20 @@ class _NakedSwitchState extends State<NakedSwitch>
     if (widget.enableFeedback) {
       HapticFeedback.selectionClick();
     }
-
-    final current = widget.value ?? false;
-    widget.onChanged!(!(current));
+    final bool current = widget.value ?? false;
+    widget.onChanged!(!current);
   }
 
+  // ---- Builder ----
   Widget _buildContent(BuildContext context) {
-    final states = widgetStates;
+    final states = widgetStates; // copy from mixin
 
     return widget.builder != null
         ? widget.builder!(context, states, widget.child)
         : widget.child!;
   }
 
-  // Private getters
+  // ---- Helpers ----
   MouseCursor get _effectiveCursor => widget._effectiveEnabled
       ? (widget.mouseCursor ?? SystemMouseCursors.click)
       : SystemMouseCursors.basic;
@@ -110,15 +110,33 @@ class _NakedSwitchState extends State<NakedSwitch>
   VoidCallback? get _semanticsTapHandler =>
       widget._effectiveEnabled ? _handleActivation : null;
 
+  // ---- Lifecycle ----
   @override
   void initializeWidgetStates() {
-    updateDisabledState(!widget.enabled);
+    // Track both disabled and selected on init.
+    updateDisabledState(!widget._effectiveEnabled);
+    updateSelectedState(widget.value == true, null);
   }
 
   @override
   void didUpdateWidget(covariant NakedSwitch oldWidget) {
     super.didUpdateWidget(oldWidget);
-    syncWidgetStates();
+
+    // Keep disabled in sync with effective enabled.
+    if (oldWidget._effectiveEnabled != widget._effectiveEnabled) {
+      updateDisabledState(!widget._effectiveEnabled);
+
+      // Clear transient states if disabling.
+      if (!widget._effectiveEnabled) {
+        updateState(WidgetState.hovered, false);
+        updateState(WidgetState.pressed, false);
+      }
+    }
+
+    // Reflect on/off into "selected" for builder consumers.
+    if (oldWidget.value != widget.value) {
+      updateSelectedState(widget.value == true, null);
+    }
   }
 
   @override
@@ -146,31 +164,25 @@ class _NakedSwitchState extends State<NakedSwitch>
       },
       mouseCursor: _effectiveCursor,
       child: Semantics(
-        // Let semantics merge into the FocusableActionDetector node so the
-        // control exposes a single node with both focus and toggle semantics.
+        // Allow semantics to merge up into FocusableActionDetector,
+        // so we expose a single node with focus + toggle semantics.
         enabled: widget._effectiveEnabled,
         toggled: widget.value,
         label: widget.semanticLabel,
         onTap: _semanticsTapHandler,
         child: GestureDetector(
           onTapDown: widget._effectiveEnabled
-              ? (details) {
-                  updatePressState(true, widget.onPressChange);
-                }
+              ? (_) => updatePressState(true, widget.onPressChange)
               : null,
           onTapUp: widget._effectiveEnabled
-              ? (details) {
-                  updatePressState(false, widget.onPressChange);
-                }
+              ? (_) => updatePressState(false, widget.onPressChange)
               : null,
           onTap: widget._effectiveEnabled ? _handleActivation : null,
           onTapCancel: widget._effectiveEnabled
-              ? () {
-                  updatePressState(false, widget.onPressChange);
-                }
+              ? () => updatePressState(false, widget.onPressChange)
               : null,
           behavior: HitTestBehavior.opaque,
-          excludeFromSemantics: true,
+          excludeFromSemantics: true, // semantics provided by the wrapper
           child: _buildContent(context),
         ),
       ),

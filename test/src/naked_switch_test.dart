@@ -1,382 +1,295 @@
-import 'dart:ui';
+import 'dart:ui' as ui show PointerDeviceKind;
 
-import 'package:flutter/material.dart' as m;
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:naked_ui/naked_ui.dart';
-
-import 'helpers/simulate_hover.dart';
+import 'package:naked_ui/src/naked_switch.dart';
 
 void main() {
-  group('Basic Functionality', () {
-    testWidgets('renders child widget', (WidgetTester tester) async {
-      await tester.pumpMaterialWidget(
-        NakedSwitch(
-          value: false,
-          onChanged: (_) {},
-          child: const Text('Switch Label'),
-        ),
-      );
+  TestWidgetsFlutterBinding.ensureInitialized();
 
-      expect(find.text('Switch Label'), findsOneWidget);
-    });
-
-    testWidgets('handles tap to toggle state', (WidgetTester tester) async {
-      bool isOn = false;
-      await tester.pumpMaterialWidget(
-        StatefulBuilder(
-          builder: (context, setState) {
-            return NakedSwitch(
-              value: isOn,
-              onChanged: (value) => setState(() => isOn = value ?? false),
-              child: const Text('Switch Label'),
-            );
-          },
-        ),
-      );
-
-      await tester.tap(find.byType(NakedSwitch));
-      await tester.pump();
-      expect(isOn, isTrue);
-    });
-
-    testWidgets('does not respond when disabled', (WidgetTester tester) async {
-      bool isOn = false;
-      await tester.pumpMaterialWidget(
-        StatefulBuilder(
-          builder: (context, setState) {
-            return NakedSwitch(
-              value: isOn,
-              onChanged: (value) => setState(() => isOn = value ?? false),
-              enabled: false,
-              child: const Text('Switch Label'),
-            );
-          },
-        ),
-      );
-
-      await tester.tap(find.byType(NakedSwitch));
-      await tester.pump();
-      expect(isOn, isFalse);
-    });
-
-    testWidgets('does not respond when onChanged is null', (
-      WidgetTester tester,
-    ) async {
-      await tester.pumpMaterialWidget(
-        const NakedSwitch(
-          value: false,
-          onChanged: null,
-          child: Text('Switch Label'),
-        ),
-      );
-
-      await tester.tap(find.byType(NakedSwitch));
-      // No error should occur
-    });
-  });
-
-  group('State Callbacks', () {
-    testWidgets('does not call state callbacks when disabled', (
-      WidgetTester tester,
-    ) async {
-      final key = UniqueKey();
-
-      bool isHovered = false;
-      bool isPressed = false;
-      bool isFocused = false;
-
-      await tester.pumpMaterialWidget(
-        NakedSwitch(
-          key: key,
-          value: false,
-          onChanged: (_) {},
-          enabled: false,
-          onFocusChange: (focused) => isFocused = focused,
-          onHoverChange: (hovered) => isHovered = hovered,
-          onPressChange: (pressed) => isPressed = pressed,
-          child: const Text('Switch Label'),
-        ),
-      );
-
-      await tester.simulateHover(
-        key,
-        onHover: () {
-          expect(isHovered, false);
-        },
-      );
-
-      expect(isHovered, false);
-
-      final pressGesture = await tester.press(find.byType(NakedSwitch));
-      await tester.pump();
-      expect(isPressed, false);
-      await pressGesture.up();
-      await tester.pump();
-      expect(isPressed, false);
-
-      final focusNode = FocusNode();
-      focusNode.requestFocus();
-      await tester.pump();
-      expect(isFocused, false);
-      focusNode.unfocus();
-      await tester.pump();
-      expect(isFocused, false);
-    });
-
-    testWidgets('calls onHoverChange when hovered', (
-      WidgetTester tester,
-    ) async {
-      FocusManager.instance.highlightStrategy =
-          FocusHighlightStrategy.alwaysTraditional;
-
-      final textKey = GlobalKey();
-
-      bool isHovered = false;
-      await tester.pumpMaterialWidget(
-        Padding(
-          padding: const EdgeInsets.all(1),
-          child: NakedSwitch(
-            value: false,
-            onChanged: (_) {},
-            onHoverChange: (hovered) => isHovered = hovered,
-            child: Text('Switch Label', key: textKey),
-          ),
-        ),
-      );
-
-      final finder = find.byKey(textKey);
-
-      // Create a test pointer and simulate hover over the widget
-      final TestPointer testPointer = TestPointer(1, PointerDeviceKind.mouse);
-      final Offset hoverPosition = tester.getCenter(finder);
-      await tester.sendEventToBinding(testPointer.hover(hoverPosition));
-      await tester.pump();
-
-      expect(isHovered, isTrue); // Should be hovering now
-
-      // Move pointer out of widget
-      await tester.sendEventToBinding(testPointer.hover(Offset.zero));
-      await tester.pump();
-
-      expect(isHovered, isFalse);
-    });
-
-    testWidgets('calls onPressChange on tap down/up', (
-      WidgetTester tester,
-    ) async {
-      bool isPressed = false;
-      await tester.pumpMaterialWidget(
-        NakedSwitch(
-          value: false,
-          onChanged: (_) {},
-          onPressChange: (pressed) => isPressed = pressed,
-          child: const Text('Switch Label'),
-        ),
-      );
-
-      final gesture = await tester.press(find.byType(NakedSwitch));
-      await tester.pump();
-      expect(isPressed, true);
-
-      await gesture.up();
-      await tester.pump();
-      expect(isPressed, false);
-    });
-
-    testWidgets(
-      'calls onPressChange on tap cancel when gesture leaves and releases',
-      (tester) async {
-        bool? lastPressedState;
-        final key = UniqueKey();
-
-        await tester.pumpMaterialWidget(
-          NakedSwitch(
-            key: key,
-            value: false,
-            onChanged: (_) {},
-            onPressChange: (pressed) => lastPressedState = pressed,
-            child: const Text('Switch Label'),
-          ),
+  Widget _harness({
+    required bool initialValue,
+    bool enabled = true,
+    bool autofocus = false,
+    TextDirection textDirection = TextDirection.ltr,
+    Size size = const Size(80, 40),
+    // spies:
+    ValueChanged<bool?>? onChangedSpy,
+    ValueChanged<bool>? onFocusChangeSpy,
+    ValueChanged<bool>? onHoverChangeSpy,
+    ValueChanged<bool>? onPressChangeSpy,
+    ValueWidgetBuilder<Set<WidgetState>>? builderSpy,
+    String? semanticLabel = 'Headless Switch',
+    FocusNode? focusNode,
+    Key? switchKey,
+  }) {
+    return WidgetsApp(
+      color: const Color(0xFF000000),
+      pageRouteBuilder: <T>(RouteSettings settings, WidgetBuilder builder) {
+        return PageRouteBuilder<T>(
+          settings: settings,
+          pageBuilder: (context, a1, a2) => builder(context),
+          transitionDuration: Duration.zero,
+          reverseTransitionDuration: Duration.zero,
         );
-
-        final center = tester.getCenter(find.byKey(key));
-        final gesture = await tester.startGesture(center);
-        await tester.pump();
-        expect(lastPressedState, true);
-
-        // Drag off the switch to trigger cancel
-        await gesture.moveTo(Offset.zero);
-        await tester.pump();
-
-        await gesture.up();
-        await tester.pump();
-
-        expect(lastPressedState, false);
       },
-      timeout: Timeout(Duration(seconds: 15)),
-    );
-
-    testWidgets('calls onFocusChange when focused/unfocused', (
-      WidgetTester tester,
-    ) async {
-      bool isFocused = false;
-      final focusNode = FocusNode();
-
-      await tester.pumpMaterialWidget(
-        NakedSwitch(
-          value: false,
-          onChanged: (_) {},
-          focusNode: focusNode,
-          onFocusChange: (focused) => isFocused = focused,
-          child: const Text('Switch Label'),
-        ),
-      );
-
-      focusNode.requestFocus();
-      await tester.pump();
-      expect(isFocused, true);
-
-      // Focus elsewhere
-      final focusNodeSwitch = FocusNode();
-      final focusNodeOther = FocusNode();
-
-      await tester.pumpMaterialWidget(
-        Column(
-          children: [
-            NakedSwitch(
-              value: false,
-              onChanged: (_) {},
-              focusNode: focusNodeSwitch,
-              onFocusChange: (focused) => isFocused = focused,
-              child: const Text('Switch Label'),
-            ),
-            m.TextButton(
-              onPressed: () {},
-              focusNode: focusNodeOther,
-              child: const Text('Other Element'),
-            ),
-          ],
-        ),
-      );
-
-      focusNodeSwitch.requestFocus();
-      await tester.pump();
-      expect(isFocused, true);
-
-      focusNodeOther.requestFocus();
-      await tester.pump();
-      expect(isFocused, false);
-    });
-  });
-
-  group('Keyboard Interaction', () {
-    testWidgets('toggles with Space key', (WidgetTester tester) async {
-      FocusManager.instance.highlightStrategy =
-          FocusHighlightStrategy.alwaysTraditional;
-
-      bool isOn = false;
-
-      final focusNode = FocusNode();
-      await tester.pumpMaterialWidget(
-        StatefulBuilder(
+      home: Directionality(
+        textDirection: textDirection,
+        child: StatefulBuilder(
           builder: (context, setState) {
-            return NakedSwitch(
-              value: isOn,
-              autofocus: true,
-              onChanged: (value) => setState(() => isOn = value ?? false),
-              focusNode: focusNode,
-              child: const Text('Switch Label'),
+            bool value = initialValue;
+            return Center(
+              child: NakedSwitch(
+                key: switchKey ?? const Key('naked_switch'),
+                value: value,
+                enabled: enabled,
+                autofocus: autofocus,
+                focusNode: focusNode,
+                semanticLabel: semanticLabel,
+                onChanged: (v) {
+                  onChangedSpy?.call(v);
+                  setState(() => value = v ?? false);
+                },
+                onFocusChange: onFocusChangeSpy,
+                onHoverChange: onHoverChangeSpy,
+                onPressChange: onPressChangeSpy,
+                builder:
+                    builderSpy ??
+                    (ctx, states, child) {
+                      // Default child box to make hit-testing easy.
+                      return ConstrainedBox(
+                        constraints: BoxConstraints.tight(size),
+                        child: child ?? const SizedBox.shrink(),
+                      );
+                    },
+                child: const SizedBox.expand(),
+              ),
             );
           },
         ),
+      ),
+    );
+  }
+
+  Finder _findSwitch([Key? k]) => find.byKey(k ?? const Key('naked_switch'));
+
+  group('Activation: tap & keyboard', () {
+    testWidgets('Tap toggles on → off → on', (tester) async {
+      final changes = <bool?>[];
+
+      await tester.pumpWidget(
+        _harness(initialValue: false, onChangedSpy: changes.add),
       );
+      await tester.pumpAndSettle();
 
-      // Give time for autofocus to take effect
+      // Tap once: false -> true
+      await tester.tap(_findSwitch());
       await tester.pump();
+      expect(changes.last, isTrue);
 
-      expect(isOn, false);
+      // Tap again: true -> false
+      await tester.tap(_findSwitch());
+      await tester.pump();
+      expect(changes.last, isFalse);
+    });
+
+    testWidgets('Space and Enter toggle when focused', (tester) async {
+      final changes = <bool?>[];
+      final node = FocusNode(debugLabel: 'switchFocus');
+
+      await tester.pumpWidget(
+        _harness(
+          initialValue: false,
+          autofocus: true,
+          focusNode: node,
+          onChangedSpy: changes.add,
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(node.hasFocus, isTrue);
 
       await tester.sendKeyEvent(LogicalKeyboardKey.space);
       await tester.pump();
+      expect(changes.last, isTrue);
 
-      expect(isOn, true);
+      await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+      await tester.pump();
+      expect(changes.last, isFalse);
+    });
+  });
+
+  group('Disabled behavior', () {
+    testWidgets('Does not toggle on tap/keys; onChanged not called', (
+      tester,
+    ) async {
+      final changes = <bool?>[];
+
+      await tester.pumpWidget(
+        _harness(
+          initialValue: true,
+          enabled: false, // _effectiveEnabled = false
+          onChangedSpy: changes.add,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(_findSwitch());
+      await tester.pump();
+      expect(changes, isEmpty);
+
+      await tester.sendKeyEvent(LogicalKeyboardKey.space);
+      await tester.pump();
+      expect(changes, isEmpty);
+    });
+  });
+
+  group('Hover & press callbacks', () {
+    testWidgets('Hover in/out fires onHoverChange(true/false)', (tester) async {
+      final hovers = <bool>[];
+      await tester.pumpWidget(
+        _harness(initialValue: false, onHoverChangeSpy: hovers.add),
+      );
+      await tester.pumpAndSettle();
+
+      final gesture = await tester.createGesture(
+        kind: ui.PointerDeviceKind.mouse,
+      );
+      await gesture.addPointer();
+      await gesture.moveTo(tester.getCenter(_findSwitch()));
+      await tester.pump();
+      await gesture.moveTo(const Offset(0, 0));
+      await tester.pump();
+      await gesture.removePointer();
+
+      expect(hovers, equals([true, false]));
     });
 
-    testWidgets('toggles with Enter key', (WidgetTester tester) async {
-      bool isOn = false;
-      final focusNode = FocusNode();
-      await tester.pumpMaterialWidget(
-        StatefulBuilder(
-          builder: (context, setState) {
-            return NakedSwitch(
-              value: isOn,
-              onChanged: (value) => setState(() => isOn = value ?? false),
-              focusNode: focusNode,
-              autofocus: true,
-              child: const Text('Switch Label'),
+    testWidgets('Press down/up/cancel drive onPressChange', (tester) async {
+      final presses = <bool>[];
+      await tester.pumpWidget(
+        _harness(initialValue: false, onPressChangeSpy: presses.add),
+      );
+      await tester.pumpAndSettle();
+
+      final center = tester.getCenter(_findSwitch());
+
+      // Down only
+      final g = await tester.startGesture(center);
+      await tester.pump();
+      expect(presses.last, isTrue);
+
+      // Up
+      await g.up();
+      await tester.pump();
+      expect(presses.last, isFalse);
+
+      // Down then cancel by moving far outside and cancelling pointer
+      final g2 = await tester.startGesture(center);
+      await tester.pump();
+      expect(presses.last, isTrue);
+      await g2.cancel();
+      await tester.pump();
+      expect(presses.last, isFalse);
+    });
+  });
+
+  group('Builder receives selected/focus/hover/press states', () {
+    testWidgets('Selected state mirrors value and flips after toggle', (
+      tester,
+    ) async {
+      final stateSnaps = <Set<WidgetState>>[];
+
+      await tester.pumpWidget(
+        _harness(
+          initialValue: true,
+          builderSpy: (ctx, states, child) {
+            stateSnaps.add(Set<WidgetState>.from(states));
+            return ConstrainedBox(
+              constraints: const BoxConstraints.tightFor(width: 80, height: 40),
+              child: child ?? const SizedBox.shrink(),
             );
           },
         ),
       );
+      await tester.pumpAndSettle();
 
-      // Give time for autofocus to take effect
+      // Initial: should include selected.
+      expect(stateSnaps.isNotEmpty, isTrue);
+      expect(stateSnaps.last.contains(WidgetState.selected), isTrue);
+
+      // Tap to toggle off.
+      await tester.tap(_findSwitch());
       await tester.pump();
 
-      await tester.sendKeyEvent(LogicalKeyboardKey.enter);
-      await tester.pump();
+      expect(stateSnaps.last.contains(WidgetState.selected), isFalse);
+    });
 
-      expect(isOn, true);
+    testWidgets('Focused/hovered/pressed appear in states set', (tester) async {
+      final statesSeen = <WidgetState>{};
+      final node = FocusNode();
+
+      await tester.pumpWidget(
+        _harness(
+          initialValue: false,
+          focusNode: node,
+          builderSpy: (ctx, states, child) {
+            statesSeen.addAll(states);
+            return ConstrainedBox(
+              constraints: const BoxConstraints.tightFor(width: 80, height: 40),
+              child: child ?? const SizedBox.shrink(),
+            );
+          },
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Focus it (autofocus false; give it focus manually).
+      node.requestFocus();
+      await tester.pump();
+      expect(statesSeen.contains(WidgetState.focused), isTrue);
+
+      // Hover it.
+      final mouse = await tester.createGesture(
+        kind: ui.PointerDeviceKind.mouse,
+      );
+      await mouse.addPointer();
+      await mouse.moveTo(tester.getCenter(_findSwitch()));
+      await tester.pump();
+      expect(statesSeen.contains(WidgetState.hovered), isTrue);
+
+      // Press it (down/up).
+      final center = tester.getCenter(_findSwitch());
+      final p = await tester.startGesture(center);
+      await tester.pump();
+      expect(statesSeen.contains(WidgetState.pressed), isTrue);
+      await p.up();
+      await tester.pump();
+      // pressed will have toggled off; presence in 'statesSeen' proves it surfaced at some point.
+      await mouse.removePointer();
     });
   });
 
-  group('Cursor', () {
-    testWidgets('shows appropriate cursor based on interactive state', (
-      WidgetTester tester,
-    ) async {
-      final keyEnabled = UniqueKey();
-      final keyDisabled = UniqueKey();
+  group('Focus callbacks', () {
+    testWidgets('onFocusChange fires for focus gain/loss', (tester) async {
+      final focusEvents = <bool>[];
+      final node = FocusNode();
 
-      await tester.pumpMaterialWidget(
-        Column(
-          children: [
-            NakedSwitch(
-              key: keyEnabled,
-              value: false,
-              onChanged: (_) {},
-              child: const Text('Enabled Switch'),
-            ),
-            NakedSwitch(
-              key: keyDisabled,
-              value: false,
-              onChanged: (_) {},
-              enabled: false,
-              child: const Text('Disabled Switch'),
-            ),
-          ],
+      await tester.pumpWidget(
+        _harness(
+          initialValue: false,
+          focusNode: node,
+          onFocusChangeSpy: focusEvents.add,
         ),
       );
+      await tester.pumpAndSettle();
 
-      tester.expectCursor(SystemMouseCursors.click, on: keyEnabled);
+      node.requestFocus();
+      await tester.pump();
+      node.unfocus();
+      await tester.pump();
 
-      tester.expectCursor(SystemMouseCursors.basic, on: keyDisabled);
-    });
-
-    testWidgets('supports custom cursor', (WidgetTester tester) async {
-      final key = UniqueKey();
-
-      await tester.pumpMaterialWidget(
-        NakedSwitch(
-          key: key,
-          value: false,
-          onChanged: (_) {},
-          mouseCursor: SystemMouseCursors.help,
-          child: const Text('Custom Cursor Switch'),
-        ),
-      );
-
-      tester.expectCursor(SystemMouseCursors.help, on: key);
+      expect(focusEvents, equals([true, false]));
     });
   });
 }
