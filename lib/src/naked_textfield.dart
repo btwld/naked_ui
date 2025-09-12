@@ -655,7 +655,7 @@ class _NakedTextFieldState extends State<NakedTextField>
         container: true,
         enabled: widget.enabled,
         textField: true,
-        readOnly: widget.readOnly,
+        readOnly: widget.readOnly || !widget.enabled,
         focusable: widget.enabled,
         focused: focusNode.hasFocus,
         obscured: widget.obscureText,
@@ -665,18 +665,24 @@ class _NakedTextFieldState extends State<NakedTextField>
         label: widget.semanticLabel,
         value: widget.obscureText ? null : controller.text,
         hint: widget.semanticHint,
-        onTap: widget.enabled ? _semanticTap : null,
+        onTap: (widget.enabled && !widget.readOnly) ? _semanticTap : null,
         child: child,
       );
     }
 
     final Widget composed = withSemantics(widget.builder(context, editable));
+    // Ensure a focus action is exposed in semantics parity with Material.
+    final Widget composedWithFocusSemantics = FocusableActionDetector(
+      enabled: widget.enabled,
+      includeFocusSemantics: true,
+      child: composed,
+    );
 
     // Selection/gesture plumbing
     final Widget detector = _selectionGestureDetectorBuilder
         .buildGestureDetector(
           behavior: HitTestBehavior.translucent,
-          child: composed,
+          child: composedWithFocusSemantics,
         );
 
     // Hover affordance only when enabled.

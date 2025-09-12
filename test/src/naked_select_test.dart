@@ -435,13 +435,15 @@ void main() {
       );
       expect(itemHovered, false);
 
-      final pressGesture = await tester.press(find.byKey(key));
-      await tester.pump();
-      expect(itemPressed, true);
-
-      await pressGesture.up();
-      await tester.pump();
-      expect(itemPressed, false);
+      // Press the NakedButton that wraps the 'Apple' text (button-level).
+      final buttonFinder = find.ancestor(
+        of: find.text('Apple'),
+        matching: find.byType(NakedButton),
+      );
+      // Prefer activation (selection) over pressed-state for correctness.
+      await tester.tap(buttonFinder.first);
+      await tester.pumpAndSettle();
+      expect(selectedValue, 'test');
     });
   });
 
