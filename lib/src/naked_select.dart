@@ -7,12 +7,9 @@ import 'package:flutter/services.dart';
 import 'naked_button.dart';
 import 'utilities/utilities.dart';
 
-/// Provides select/dropdown behavior without visual styling.
-///
-/// Supports single and multiple selection with keyboard navigation.
-/// Renders menu content in overlay with automatic positioning.
+/// Headless select/dropdown with keyboard navigation and overlay positioning.
+/// No Material widgets or semantics are introduced by this control.
 class NakedSelect<T> extends StatefulWidget implements OverlayChildLifecycle {
-  /// Creates a naked select dropdown.
   const NakedSelect({
     super.key,
     required this.child,
@@ -75,72 +72,52 @@ class NakedSelect<T> extends StatefulWidget implements OverlayChildLifecycle {
        selectedValue = null,
        onSelectedValueChanged = null;
 
-  /// Target widget that triggers the dropdown.
+  /// Trigger widget (usually a [NakedSelectTrigger]).
   final Widget child;
 
-  /// Menu widget to display when dropdown is open.
+  /// Menu content when open.
   final Widget menu;
 
-  /// Called when the menu closes, either through selection or external interaction.
   final VoidCallback? onClose;
+  final VoidCallback? onOpen;
 
-  /// Currently selected value in single selection mode.
+  // Single-select.
   final T? selectedValue;
-
-  /// Called when the selected value changes in single selection mode.
   final ValueChanged<T?>? onSelectedValueChanged;
 
-  /// Currently selected values in multiple selection mode.
+  // Multi-select.
   final Set<T>? selectedValues;
-
-  /// Called when selected values change in multiple selection mode.
   final ValueChanged<Set<T>>? onSelectedValuesChanged;
 
-  /// Whether to allow multiple item selection.
   final bool allowMultiple;
-
-  /// Whether the select can be interacted with.
   final bool enabled;
 
-  /// Whether this select is effectively enabled (has enabled=true AND has callbacks).
+  /// Interactive only if we can emit changes.
   bool get _effectiveEnabled =>
       enabled &&
       (onSelectedValueChanged != null || onSelectedValuesChanged != null);
 
-  /// Whether to automatically close the dropdown when an item is selected.
   final bool closeOnSelect;
-
-  /// Whether to automatically focus the menu when opened.
   final bool autofocus;
 
-  /// Whether to enable type-ahead selection for quick keyboard navigation.
+  // Type-ahead.
   final bool enableTypeAhead;
-
-  /// Duration before resetting the type-ahead search buffer.
   final Duration typeAheadDebounceTime;
 
-  /// The alignment of the menu relative to its trigger.
-  /// Specifies how to position the menu when it opens.
+  // Positioning.
   final NakedMenuPosition menuPosition;
-
-  /// Alternative alignments to try if the menu doesn't fit in the preferred position.
-  /// The menu will try each alignment in order until finding one that fits.
   final List<NakedMenuPosition> fallbackPositions;
 
-  /// Called when the menu is opened.
-  final VoidCallback? onOpen;
-
-  /// Whether to close the menu when clicking outside.
+  // Overlay policy.
   final bool closeOnClickOutside;
 
-  /// Semantic label for accessibility.
+  // A11y label/value.
   final String? semanticLabel;
 
-  /// The duration to wait before removing the Widget from the Overlay after the menu is closed.
+  // Overlay lifecycle.
   @override
   final Duration removalDelay;
 
-  /// The event handler for the menu.
   @override
   final void Function(OverlayChildLifecycleState state)? onStateChange;
 
@@ -150,16 +127,22 @@ class NakedSelect<T> extends StatefulWidget implements OverlayChildLifecycle {
 
 class _NakedSelectState<T> extends State<NakedSelect<T>>
     with MenuAnchorChildLifecycleMixin {
-  late final _isMultipleSelection =
+  // Derived each build so runtime changes to selectedValues are reflected.
+  bool get _isMultipleSelection =>
       widget.allowMultiple && widget.selectedValues != null;
+
   final List<_SelectItemInfo<T>> _selectableItems = [];
 
-  bool get hasSelectionCallback =>
-      widget.onSelectedValueChanged != null ||
-      widget.onSelectedValuesChanged != null;
+  bool get _isOpen => controller.isOpen;
+  bool get isOpen => _isOpen;
+  bool get isEnabled => widget.enabled;
+
+  // Type-ahead tracking.
+  String _typeAheadBuffer = '';
+  Timer? _typeAheadResetTimer;
 
   void _handleTriggerTap() {
-    if (!isEnabled) return;
+    if (!widget._effectiveEnabled) return;
     toggleMenu();
   }
 
@@ -179,11 +162,9 @@ class _NakedSelectState<T> extends State<NakedSelect<T>>
     _cancelTypeAheadTimer();
     _typeAheadBuffer += character.toLowerCase();
 
-    // Find the first matching item
     for (final item in _selectableItems) {
       final stringValue = item.value.toString().toLowerCase();
       if (stringValue.startsWith(_typeAheadBuffer)) {
-        // Focus this item
         if (item.focusNode.canRequestFocus) {
           item.focusNode.requestFocus();
         }
@@ -191,17 +172,22 @@ class _NakedSelectState<T> extends State<NakedSelect<T>>
       }
     }
 
-    // Reset the buffer after a delay
     _typeAheadResetTimer = Timer(
       widget.typeAheadDebounceTime,
       _resetTypeAheadBuffer,
     );
   }
 
+  /// Register or update a selectable item mapping for focus traversal/type-ahead.
   void _registerSelectableItem(T value, FocusNode focusNode) {
-    final itemExists = _selectableItems.any((item) => item.value == value);
-    if (!itemExists) {
+    final index = _selectableItems.indexWhere((it) => it.value == value);
+    if (index == -1) {
       _selectableItems.add(_SelectItemInfo(value: value, focusNode: focusNode));
+    } else if (!identical(_selectableItems[index].focusNode, focusNode)) {
+      _selectableItems[index] = _SelectItemInfo(
+        value: value,
+        focusNode: focusNode,
+      );
     }
   }
 
@@ -213,38 +199,15 @@ class _NakedSelectState<T> extends State<NakedSelect<T>>
       newValues.contains(value)
           ? newValues.remove(value)
           : newValues.add(value);
-
       widget.onSelectedValuesChanged?.call(newValues);
     } else {
       widget.onSelectedValueChanged?.call(value);
     }
 
-    if (widget.closeOnSelect) {
-      closeMenu();
-    }
+    if (widget.closeOnSelect) closeMenu();
   }
 
-  bool get _isOpen => controller.isOpen;
-
-  // For type-ahead functionality
-  String _typeAheadBuffer = '';
-
-  Timer? _typeAheadResetTimer;
-
-  @override
-  void dispose() {
-    _typeAheadResetTimer?.cancel();
-    _typeAheadResetTimer = null;
-    super.dispose();
-  }
-
-  void toggleMenu() {
-    if (_isOpen) {
-      closeMenu();
-    } else {
-      openMenu();
-    }
-  }
+  void toggleMenu() => _isOpen ? closeMenu() : openMenu();
 
   void openMenu() {
     widget.onOpen?.call();
@@ -254,11 +217,15 @@ class _NakedSelectState<T> extends State<NakedSelect<T>>
   void closeMenu() {
     widget.onClose?.call();
     _selectableItems.clear();
+    _resetTypeAheadBuffer();
     showNotifier.value = false;
   }
 
-  bool get isOpen => _isOpen;
-  bool get isEnabled => widget.enabled;
+  @override
+  void dispose() {
+    _cancelTypeAheadTimer();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -269,7 +236,7 @@ class _NakedSelectState<T> extends State<NakedSelect<T>>
             ? widget.selectedValues!.map((v) => v.toString()).join(', ')
             : null);
 
-    Widget selectWidget = NakedSelectScope<T>(
+    final selectWidget = NakedSelectScope<T>(
       selectedValue: widget.selectedValue,
       selectedValues: widget.selectedValues,
       allowMultiple: widget.allowMultiple,
@@ -283,19 +250,27 @@ class _NakedSelectState<T> extends State<NakedSelect<T>>
         onClose: closeMenu,
         onOpen: openMenu,
         onKeyEvent: (event) {
-          // Type-ahead with character keys
-          final character = event.character;
+          // Only react on key-down to avoid double handling on key-up.
+          if (event is KeyDownEvent) {
+            final key = event.logicalKey;
+            if (key == LogicalKeyboardKey.escape) {
+              closeMenu();
 
-          if (character != null &&
-              character.isNotEmpty &&
-              widget.enableTypeAhead) {
-            _handleTypeAhead(character);
+              return;
+            }
+            final character = event.character;
+            if (character != null &&
+                character.isNotEmpty &&
+                widget.enableTypeAhead) {
+              _handleTypeAhead(character);
+            }
           }
         },
         child: widget.child,
       ),
     );
 
+    // Headless semantics: one "button" with expanded state & current value.
     return Semantics(
       container: true,
       enabled: widget._effectiveEnabled,
@@ -309,10 +284,7 @@ class _NakedSelectState<T> extends State<NakedSelect<T>>
   }
 }
 
-/// An InheritedWidget that provides access to the selected values in a NakedSelect.
-///
-/// This allows descendant widgets to efficiently access the current selection state
-/// without passing it explicitly through the widget tree.
+/// Inherited selection snapshot for descendants.
 class NakedSelectScope<T> extends InheritedWidget {
   const NakedSelectScope({
     super.key,
@@ -323,7 +295,6 @@ class NakedSelectScope<T> extends InheritedWidget {
     required this.enabled,
   });
 
-  /// Gets the nearest NakedSelectScope ancestor of the given context.
   static NakedSelectScope<T>? maybeOf<T>(BuildContext context) {
     return context.dependOnInheritedWidgetOfExactType();
   }
@@ -340,21 +311,13 @@ class NakedSelectScope<T> extends InheritedWidget {
     return inherited;
   }
 
-  /// The currently selected value for single selection mode.
   final T? selectedValue;
-
-  /// The currently selected values for multiple selection mode.
   final Set<T>? selectedValues;
-
-  /// Whether multiple selection is enabled.
   final bool allowMultiple;
-
-  /// Whether the select can be interacted with.
   final bool enabled;
 
   bool isSelected(BuildContext context, T value) {
     final inheritedValues = NakedSelectScope.of<T>(context);
-
     if (inheritedValues.allowMultiple) {
       return inheritedValues.selectedValues?.contains(value) ?? false;
     }
@@ -374,30 +337,14 @@ class NakedSelectScope<T> extends InheritedWidget {
 class _SelectItemInfo<T> {
   final T value;
   final FocusNode focusNode;
-
   const _SelectItemInfo({required this.value, required this.focusNode});
 }
 
-/// A customizable trigger button that controls the select dropdown.
+/// Trigger that controls the select dropdown.
 ///
-/// Key features:
-/// - Customizable cursor and interaction states
-/// - Keyboard navigation support (Space, Enter, Arrow keys)
-/// - Optional haptic feedback
-/// - Accessibility support with ARIA attributes
-///
-/// Example:
-/// ```dart
-/// NakedSelectTrigger(
-///   onHoverChange: (isHovered) => setState(() => _isHovered = isHovered),
-///   onPressChange: (isPressed) => setState(() => _isPressed = isPressed),
-///   child: Container(
-///     color: _isHovered ? Colors.blue[100] : Colors.white,
-///     child: Text('Select an option'),
-///   ),
-/// )
-/// ```
-class NakedSelectTrigger extends StatelessWidget {
+/// Kept headless (no internal Semantics) to avoid duplicating the root
+/// NakedSelect's "button + expanded" semantics.
+class NakedSelectTrigger extends StatefulWidget {
   const NakedSelectTrigger({
     super.key,
     required this.child,
@@ -410,95 +357,106 @@ class NakedSelectTrigger extends StatelessWidget {
     this.onPressChange,
   });
 
-  /// The child widget to display.
-  /// This widget will be wrapped with interaction handlers.
   final Widget child;
 
-  /// Called when focus state changes.
   final ValueChanged<bool>? onFocusChange;
-
-  /// Called when hover state changes.
   final ValueChanged<bool>? onHoverChange;
-
-  /// Called when highlight (pressed) state changes.
   final ValueChanged<bool>? onPressChange;
 
-  /// The cursor to show when hovering over the trigger.
-  /// Defaults to [SystemMouseCursors.click].
   final MouseCursor mouseCursor;
-
-  /// Whether to provide haptic feedback when tapped.
-  /// Defaults to true.
   final bool enableFeedback;
 
-  /// Optional focus node to control focus behavior.
-  /// If not provided, a new focus node will be created.
   final FocusNode? focusNode;
-
-  /// Whether to automatically focus the trigger when opened.
-  /// When true, enables immediate keyboard navigation.
   final bool autofocus;
 
   @override
+  State<NakedSelectTrigger> createState() => _NakedSelectTriggerState();
+}
+
+class _NakedSelectTriggerState extends State<NakedSelectTrigger>
+    with FocusableMixin<NakedSelectTrigger> {
+  static const Duration _activationDuration = Duration(milliseconds: 100);
+  Timer? _pressFlashTimer;
+
+  @override
+  FocusNode? get focusableExternalNode => widget.focusNode;
+
+  @override
+  void dispose() {
+    _pressFlashTimer?.cancel();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final state = context.findAncestorStateOfType<_NakedSelectState>();
+    final selectState = context.findAncestorStateOfType<_NakedSelectState>();
+    final bool interactiveEnabled =
+        selectState?.widget._effectiveEnabled ?? true;
 
     void handleTap() {
-      // For parity with tests, emit a pressed=true state on tap ONLY when the
-      // select has selection callbacks (effectively enabled for selection).
-      if (state?.hasSelectionCallback ?? false) {
-        onPressChange?.call(true);
+      if (!interactiveEnabled) return;
+      if (widget.enableFeedback) {
+        Feedback.forTap(context);
       }
-      state?._handleTriggerTap();
+      selectState?._handleTriggerTap();
     }
 
-    // Interaction should reflect the base enabled flag, so hover/press/focus
-    // still work when no selection callbacks are provided. Menu opening is
-    // controlled by handleTap itself.
-    final bool interactiveEnabled = state?.widget.enabled ?? true;
+    void flashPressed() {
+      widget.onPressChange?.call(true);
+      _pressFlashTimer?.cancel();
+      _pressFlashTimer = Timer(_activationDuration, () {
+        widget.onPressChange?.call(false);
+      });
+    }
 
-    return NakedButton(
-      // Keep onPressed active so the menu can open/close regardless of whether
-      // selection callbacks are provided. Disabled only when the select itself
-      // is disabled via its `enabled` flag.
-      onPressed: interactiveEnabled ? handleTap : null,
+    return FocusableActionDetector(
       enabled: interactiveEnabled,
-      mouseCursor: mouseCursor,
-      enableFeedback: enableFeedback,
-      focusNode: focusNode,
-      autofocus: autofocus,
-      onFocusChange: onFocusChange,
-      onHoverChange: onHoverChange,
-      onPressChange: onPressChange,
-      child: child,
+      focusNode: effectiveFocusNode,
+      autofocus: widget.autofocus,
+      shortcuts: const {
+        SingleActivator(LogicalKeyboardKey.enter): ActivateIntent(),
+        SingleActivator(LogicalKeyboardKey.space): ActivateIntent(),
+      },
+      actions: {
+        ActivateIntent: CallbackAction<ActivateIntent>(
+          // ignore: body_might_complete_normally_nullable
+          onInvoke: (_) {
+            flashPressed();
+            if (widget.enableFeedback) {
+              Feedback.forTap(context);
+            }
+            handleTap();
+          },
+        ),
+      },
+      onShowHoverHighlight: widget.onHoverChange,
+      onFocusChange: widget.onFocusChange,
+      mouseCursor: interactiveEnabled
+          ? widget.mouseCursor
+          : SystemMouseCursors.basic,
+      child: GestureDetector(
+        // semantics come from the NakedSelect root
+        onTapDown: interactiveEnabled ? (_) => flashPressed() : null,
+        onTapUp: interactiveEnabled
+            ? (_) => widget.onPressChange?.call(false)
+            : null,
+        onTap: interactiveEnabled ? handleTap : null,
+        onTapCancel: interactiveEnabled
+            ? () => widget.onPressChange?.call(false)
+            : null,
+        behavior: HitTestBehavior.opaque,
+        excludeFromSemantics: true,
+        child: widget.child,
+      ),
     );
   }
 }
 
 /// A selectable item within the dropdown menu.
 ///
-/// This component handles the interaction and selection state for individual menu items,
-/// providing callbacks for hover, press, focus and selection states to enable complete styling control.
-///
-/// Key features:
-/// - Customizable cursor and interaction states
-/// - Keyboard selection support
-/// - Optional haptic feedback
-/// - Accessibility support with ARIA attributes
-/// - Selection state tracking
-///
-/// Example:
-/// ```dart
-/// NakedSelectItem<int>(
-///   value: 1,
-///   onHoverChange: (isHovered) => setState(() => _isHovered = isHovered),
-///   onSelectChange: (isSelected) => setState(() => _isSelected = isSelected),
-///   child: Container(
-///     color: _isSelected ? Colors.blue : (_isHovered ? Colors.blue[100] : Colors.white),
-///     child: Text('Option 1'),
-///   ),
-/// )
-/// ```
+/// Reuses `NakedButton` for input modality parity and state callbacks,
+/// and augments semantics with "selected" using MergeSemantics so screen
+/// readers see a single node.
 class NakedSelectItem<T> extends StatefulWidget {
   const NakedSelectItem({
     super.key,
@@ -515,153 +473,103 @@ class NakedSelectItem<T> extends StatefulWidget {
     this.onPressChange,
   });
 
-  /// The child widget to display.
-  /// This widget will be wrapped with interaction handlers.
   final Widget child;
-
-  /// The value associated with this item.
-  /// This value will be passed to the select's onChange callback when selected.
   final T value;
 
-  /// Called when the select state changes.
   final ValueChanged<bool>? onSelectChange;
 
-  /// Called when focus state changes.
   final ValueChanged<bool>? onFocusChange;
-
-  /// Called when hover state changes.
   final ValueChanged<bool>? onHoverChange;
-
-  /// Called when highlight (pressed) state changes.
   final ValueChanged<bool>? onPressChange;
 
-  /// Whether this item is enabled and can be selected.
-  /// When false, all interaction is disabled.
   final bool enabled;
-
-  /// The cursor to show when hovering over this item.
-  /// Defaults to [SystemMouseCursors.click].
   final MouseCursor mouseCursor;
-
-  /// Whether to provide haptic feedback when selected.
-  /// Defaults to true.
   final bool enableFeedback;
 
-  /// Optional focus node to control focus behavior.
-  /// If not provided, a new focus node will be created.
   final FocusNode? focusNode;
-
   final bool autofocus;
 
   @override
   State<NakedSelectItem<T>> createState() => _NakedSelectItemState<T>();
 }
 
-class _NakedSelectItemState<T> extends State<NakedSelectItem<T>> {
+class _NakedSelectItemState<T> extends State<NakedSelectItem<T>>
+    with FocusableMixin<NakedSelectItem<T>> {
+  bool _registered = false;
+  bool? _lastReportedSelection;
+
+  @override
+  FocusNode? get focusableExternalNode => widget.focusNode;
+
   @override
   void initState() {
     super.initState();
-    _focusNode = widget.focusNode ?? FocusNode();
-
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _registerWithSelect();
-    });
-  }
-
-  void _handleSelect(_NakedSelectState<T>? state, bool isEffectivelyEnabled) {
-    if (!isEffectivelyEnabled) return;
-    if (widget.enableFeedback) {
-      HapticFeedback.selectionClick();
-    }
-    state?._handleSelectValue(widget.value);
+    // Register after first layout so ancestor state is available.
+    WidgetsBinding.instance.addPostFrameCallback((_) => _registerWithSelect());
   }
 
   void _registerWithSelect() {
-    if (_isRegistered) return;
-
+    if (_registered) return;
     final state = context.findAncestorStateOfType<_NakedSelectState<T>>();
-    if (state != null) {
-      state._registerSelectableItem(widget.value, _focusNode);
-      _isRegistered = true;
+    final node = effectiveFocusNode;
+    if (state != null && node != null) {
+      state._registerSelectableItem(widget.value, node);
+      _registered = true;
     }
   }
-
-  late FocusNode _focusNode;
-
-  bool _isRegistered = false;
-
-  bool? _lastReportedSelection;
 
   @override
   void didUpdateWidget(NakedSelectItem<T> oldWidget) {
     super.didUpdateWidget(oldWidget);
-
-    if (widget.focusNode != oldWidget.focusNode) {
-      if (oldWidget.focusNode == null) {
-        _focusNode.dispose();
-      }
-      _focusNode = widget.focusNode ?? FocusNode();
-    }
-
-    if (widget.value != oldWidget.value) {
-      _registerWithSelect();
+    // If value or external focus node changes, refresh registration post-frame.
+    if (widget.value != oldWidget.value ||
+        widget.focusNode != oldWidget.focusNode) {
+      _registered = false;
+      WidgetsBinding.instance.addPostFrameCallback(
+        (_) => _registerWithSelect(),
+      );
     }
   }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    // Check if selection state has changed and notify
+    // Notify consumer only on real selection flips.
     final inherited = NakedSelectScope.maybeOf<T>(context);
     if (inherited != null) {
       final isSelected = inherited.isSelected(context, widget.value);
       if (_lastReportedSelection != isSelected) {
         _lastReportedSelection = isSelected;
-        // Safe to call synchronously in didChangeDependencies
         widget.onSelectChange?.call(isSelected);
       }
     }
   }
 
   @override
-  void dispose() {
-    if (widget.focusNode == null) {
-      _focusNode.dispose();
-    }
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final state = context.findAncestorStateOfType<_NakedSelectState<T>>();
-    final isSelectEnabled = state?.isEnabled ?? true;
-
-    final isEffectivelyEnabled = widget.enabled && isSelectEnabled;
-
-    void handleSelect() => _handleSelect(state, isEffectivelyEnabled);
+    final selectState = context.findAncestorStateOfType<_NakedSelectState<T>>();
+    final bool parentEnabled = selectState?.widget._effectiveEnabled ?? true;
+    final bool isEffectivelyEnabled = widget.enabled && parentEnabled;
 
     final inherited = NakedSelectScope.of<T>(context);
     final isSelected = inherited.isSelected(context, widget.value);
-    // State change notification is now handled in didChangeDependencies
-    // Only use addPostFrameCallback if state changed during build (edge case)
-    if (_lastReportedSelection != isSelected) {
-      _lastReportedSelection = isSelected;
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        widget.onSelectChange?.call(isSelected);
-      });
-    }
 
-    return NakedButton(
-      onPressed: handleSelect,
-      enabled: isEffectivelyEnabled,
-      mouseCursor: widget.mouseCursor,
-      enableFeedback: widget.enableFeedback,
-      focusNode: _focusNode,
-      autofocus: widget.autofocus,
-      onFocusChange: widget.onFocusChange,
-      onHoverChange: widget.onHoverChange,
-      onPressChange: widget.onPressChange,
-      child: widget.child,
+    return MergeSemantics(
+      child: Semantics(
+        selected: isSelected,
+        child: NakedButton(
+          onPressed: () => selectState?._handleSelectValue(widget.value),
+          enabled: isEffectivelyEnabled,
+          mouseCursor: widget.mouseCursor,
+          enableFeedback: widget.enableFeedback,
+          focusNode: effectiveFocusNode,
+          autofocus: widget.autofocus,
+          onFocusChange: widget.onFocusChange,
+          onHoverChange: widget.onHoverChange,
+          onPressChange: widget.onPressChange,
+          child: widget.child,
+        ),
+      ),
     );
   }
 }

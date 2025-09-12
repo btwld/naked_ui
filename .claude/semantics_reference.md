@@ -1,158 +1,193 @@
-# Flutter Headless Widgets — Complete Semantics Guide (v2)
+Flutter Headless Widgets — Complete Semantics Guide (v3, Role‑First)
 
-A production-ready, API-accurate reference for implementing accessibility semantics in headless Flutter component libraries. This guide provides correct, tested patterns for all common UI components.
+A production‑ready, API‑accurate reference for implementing accessibility semantics in headless Flutter component libraries. This version emphasizes roles first (where applicable), eliminates duplicate actions, and bakes in the latest platform guidance.
 
-> **Version 2 Updates:**
-> - Added FocusableActionDetector patterns
-> - Critical GestureDetector exclusion rule
-> - Dual implementation variants (basic & focusable)
-> - Expanded testing and debugging sections
+What’s new in v3
+	•	Role‑first semantics: Prefer role: SemanticsRole.* when an appropriate role exists (tabs, dialogs, lists, menus, progress, etc.). Keep boolean flags (button, checked, toggled, link, etc.) for states and for controls that have no corresponding role.
+	•	Radio redesign: Note the new RadioGroup API and how it centralizes selection + semantics.
+	•	Links: Use link: true and linkUrl for destinations.
+	•	Dialogs: Clarified namesRoute vs scopesRoute and iOS duplication caveat.
+	•	Testing: Use SemanticsData.hasAction(...) in tests; sample helpers included.
+	•	Adjustables: Added increasedValue/decreasedValue patterns for sliders.
+	•	Traversal: Added SemanticsSortKey/OrdinalSortKey examples.
 
-## Table of Contents
-- [Critical Rules](#critical-rules)
-- [Core Principles](#core-principles)
-- [Focus Management Strategies](#focus-management-strategies)
-- [Component Implementations](#component-implementations)
-- [Testing & Debugging](#testing--debugging)
-- [Common Pitfalls](#common-pitfalls)
-- [References](#references)
+Target: Flutter 3.35 (stable)
 
----
+⸻
 
-## Critical Rules
+Table of Contents
+	•	Critical Rules
+	•	Roles vs. Flags: Quick Map
+	•	Core Principles
+	•	Focus Management Strategies
+	•	Component Implementations
+	•	Testing & Debugging
+	•	Common Pitfalls
+	•	Platform Considerations
+	•	Migration Notes
+	•	References
 
-### 🚨 Rule 1: Always Exclude GestureDetectors from Semantics
+⸻
 
-**Whenever you provide explicit Semantics with action handlers, ALWAYS set `excludeFromSemantics: true` on GestureDetector, InkWell, or similar widgets.**
+Critical Rules
 
-```dart
+🚨 Rule 0: Prefer Roles (when they exist)
+
+Use role: SemanticsRole.* to declare the purpose of a subtree when an applicable role exists (e.g., dialog, alertDialog, list, listItem, tab, tabBar, tabPanel, menu, menuItem, comboBox, progressBar, loadingSpinner, radioGroup).
+	•	Roles do not replace control state flags (button, checked, toggled, selected, textField, link, etc.). Keep using those flags for interaction/state.
+	•	Don’t invent roles. If there is no role for a given control (e.g., button, checkbox, switch, slider), use the flags.
+
+🚨 Rule 1: Exclude Gesture Detectors When You Provide Actions
+
+If a parent Semantics provides actions (onTap, onLongPress, onIncrease/onDecrease, etc.), set excludeFromSemantics: true on GestureDetector, InkWell, or InkResponse to avoid duplicate actions.
+
 // ✅ CORRECT
 Semantics(
   onTap: onPressed,
   child: GestureDetector(
     onTap: onPressed,
-    excludeFromSemantics: true,  // CRITICAL!
+    excludeFromSemantics: true, // Avoid duplicate actions
     child: child,
   ),
-)
+);
 
-// ❌ WRONG - Creates duplicate semantic actions
-Semantics(
-  onTap: onPressed,
-  child: GestureDetector(
-    onTap: onPressed,  // Missing excludeFromSemantics!
-    child: child,
-  ),
-)
-```
+🚨 Rule 2: Place Semantics inside FocusableActionDetector
 
-### 🚨 Rule 2: Semantics Inside FocusableActionDetector
+FocusableActionDetector(includeFocusSemantics: true) injects focus semantics (focusable/focused). Wrapping Semantics inside keeps role/flags and focus on the same node. Only set includeFocusSemantics: false if you’re deliberately controlling focus semantics elsewhere.
 
-When using FocusableActionDetector, place Semantics INSIDE it, not around it.
+🚨 Rule 3: Prefer MergeSemantics over nuking children
 
-```dart
-// ✅ CORRECT
+Use MergeSemantics (or Semantics(excludeSemantics: true) only when absolutely necessary) to combine label + control semantics.
+
+🚨 Rule 4: Never expose obscured values
+
+For password fields, set obscured: true and omit value.
+
+⸻
+
+Container Semantics: when to create a node (and when not to)
+
+Short answer: Don’t default to container: true in a headless library. Only create a node when you truly need a dedicated, addressable control in the semantics tree.
+
+Use container: true when…
+	•	The subtree should be announced as a single unit (e.g., an icon + label button that must be one focus target).
+	•	You need a stable node to attach things like SemanticsSortKey, tooltip, or keyboard/focus semantics that shouldn’t merge upward.
+	•	You’re deliberately preventing child semantics from merging into an ancestor that has different meaning.
+
+Avoid container: true when…
+	•	The host (parent) widget is providing the label/description and you want that to merge with your control’s actions; prefer MergeSemantics at the parent.
+	•	The widget is a simple leaf where the parent already supplies the correct semantics.
+
+Important nuances
+	•	Flutter implicitly introduces container boundaries in common cases (e.g., a parent with multiple semantics-providing children) so you often don’t need to set container yourself.
+	•	BlockSemantics hides nodes “painted before it in the same semantic container.” Put BlockSemantics at the overlay/dialog root. Sprinkling extra containers inside your dialog usually isn’t necessary and can change what’s considered “previous” locally.
+	•	For dialogs with scopesRoute: true, remember explicitChildNodes: true is required. That’s orthogonal to container.
+
+Headless-library default
+	•	Expose a knob like createSemanticsNode (default false). Let integrators opt-in when they want a dedicated node.
+
+⸻
+
+Roles vs. Flags: Quick Map
+
+UI pattern	Prefer Role	Keep Flags
+Dialog / Alert	role: SemanticsRole.dialog or SemanticsRole.alertDialog	scopesRoute: true, explicitChildNodes: true, optional namesRoute + label
+Tabs	tabBar on the container, tab on each tab, tabPanel for active panel	selected, button: true (optional for custom tab buttons)
+Dropdown / Select	Collapsed: comboBox	button: true, value, expanded (when open)
+Expanded menu popup	menu on list, menuItem on each option	selected, onTap
+Lists	list on container, listItem on rows	selected, button: true (if tappable)
+Progress	progressBar (linear), loadingSpinner (indeterminate/circular)	value (localized), liveRegion: true for polite updates
+Radio sets	radioGroup on container	Each item: checked, inMutuallyExclusiveGroup: true
+Links	(no role)	link: true, linkUrl
+Buttons	(no role)	button: true
+Checkbox / Switch / Slider	(no role)	checked/mixed, toggled, onIncrease/onDecrease, value
+
+If both a role and a traditional flag make sense (e.g., a tab that acts like a button), set the role and the necessary flags. Keep them consistent.
+
+⸻
+
+Core Principles
+	•	Container nodes: Use container: true to create a dedicated node for composite widgets (e.g., icon + label buttons) and to prevent odd merges.
+	•	Human‑readable values: Provide localized, human strings in value, increasedValue, and decreasedValue (e.g., "45%", "Volume 8 of 10").
+	•	Traversal order: When visual and logical orders diverge, set sortKey: OrdinalSortKey(n) on siblings to shape screen reader traversal.
+	•	Input fields: For custom text fields, set textField: true, and when relevant inputType: SemanticsInputType.* (e.g., number, password).
+
+⸻
+
+Headless composition recipe (no painting)
+
+Headless components contribute behavior + semantics and let the host render visuals. Keep rendering in the builder; keep actions/semantics in the wrapper.
+
+class HeadlessButton extends StatelessWidget {
+  const HeadlessButton({
+    super.key,
+    required this.onPressed,
+    required this.builder,
+    this.semanticLabel,
+    this.createSemanticsNode = false,
+  });
+
+  final VoidCallback? onPressed;
+  final Widget Function(BuildContext context, FocusNode focusNode) builder; // host paints
+  final String? semanticLabel;
+  final bool createSemanticsNode; // default false; opt-in boundary
+
+  @override
+  Widget build(BuildContext context) {
+    final focusNode = FocusNode(skipTraversal: onPressed == null);
+    return FocusableActionDetector(
+      focusNode: focusNode,
+      enabled: onPressed != null,
+      actions: {
+        ActivateIntent: CallbackAction<ActivateIntent>(
+          onInvoke: (_) { onPressed?.call(); return null; },
+        ),
+      },
+      child: Semantics(
+        // No role for a generic button; use flags
+        button: true,
+        enabled: onPressed != null,
+        label: semanticLabel,
+        onTap: onPressed,
+        container: createSemanticsNode, // usually false for headless
+        child: builder(context, focusNode), // host renders visuals
+      ),
+    );
+  }
+}
+
+Tip: start with createSemanticsNode: false and rely on the parent to merge label+control using MergeSemantics. Flip it to true only when you need an explicit node.
+
+⸻
+
+Focus Management Strategies
+	•	Use FocusableActionDetector when you need hover, shortcuts, focus highlights, or complex interactions.
+	•	Use Focus for simple focus only. Note: Focus.includeSemantics defaults to true (it creates focusable/focused semantics automatically).
+
 FocusableActionDetector(
-  includeFocusSemantics: true,
+  includeFocusSemantics: true, // default
+  actions: {
+    ActivateIntent: CallbackAction<ActivateIntent>(onInvoke: (_) { onActivate(); return null; }),
+  },
   child: Semantics(
-    button: true,
-    label: label,
+    // role/flags/state here
     child: child,
   ),
-)
+);
 
-// ❌ WRONG
-Semantics(
-  child: FocusableActionDetector(  // Focus semantics get buried
-    child: child,
-  ),
-)
-```
 
-### 🚨 Rule 3: Prefer MergeSemantics Over excludeSemantics
+⸻
 
-Use `MergeSemantics` to combine label + control semantics rather than excluding child semantics entirely.
+Component Implementations
 
-### 🚨 Rule 4: Never Expose Obscured Values
+For each component, we show role‑first patterns (when roles exist) and the required flags/actions.
 
-For password fields, set `obscured: true` AND `value: null` to prevent leaking sensitive text.
+Button
 
----
+No SemanticsRole exists for a generic button; use flags + actions.
 
-## Core Principles
-
-### Semantic Properties Reference
-
-| Property | Use Case | Mutually Exclusive With |
-|----------|----------|-------------------------|
-| `checked` | Checkbox state | `toggled`, `mixed` (when null) |
-| `toggled` | Switch state | `checked`, `mixed` |
-| `mixed` | Tristate checkbox (null state) | - |
-| `button` | Clickable elements | - |
-| `focused` | Current focus state | - |
-| `focusable` | Can receive focus | - |
-| `enabled` | Interactive state | - |
-| `container` | Semantic boundary | - |
-| `scopesRoute` | Dialog/modal scope | - |
-| `namesRoute` | Route naming | - |
-
-### Container Semantics
-
-Use `container: true` to create a dedicated node in the semantics tree:
-- Prevents odd merges with parent/sibling semantics
-- Improves hit testing for assistive technologies
-- Required for composite widgets (e.g., button with icon + label)
-
----
-
-## Focus Management Strategies
-
-### When to Use FocusableActionDetector
-
-Use FocusableActionDetector when you need:
-- ✅ Keyboard shortcuts and actions
-- ✅ Hover detection and visual feedback
-- ✅ Focus highlight visualization
-- ✅ Complex interaction patterns
-- ✅ Mouse cursor changes
-
-### When to Use Basic Focus Widget
-
-Use basic Focus widget when you need:
-- ✅ Simple focus management only
-- ✅ Minimal overhead
-- ✅ No hover or keyboard shortcuts
-- ✅ Just focus traversal
-
-### FocusableActionDetector Semantics
-
-```dart
-FocusableActionDetector(
-  includeFocusSemantics: true,    // Default, provides focusable/focused
-  includeFocusSemantics: false,   // When you want full control
-)
-```
-
-With `includeFocusSemantics: true` (default), it automatically provides:
-- `focusable` property based on enabled state
-- `focused` property based on current focus state
-
----
-
-## Component Implementations
-
-For each component, we provide two variants:
-1. **Basic**: Using Focus widget or no focus management
-2. **With FocusableActionDetector**: For rich keyboard/hover interactions
-
----
-
-### Button
-
-#### Basic Implementation
-```dart
 return Semantics(
-  container: true,
+  container: true, // Only if you need a dedicated node; omit otherwise (see Container Semantics)
   button: true,
   enabled: onPressed != null,
   label: semanticLabel,
@@ -164,174 +199,80 @@ return Semantics(
   child: GestureDetector(
     onTap: onPressed,
     onLongPress: onLongPress,
-    excludeFromSemantics: true,  // Critical!
-    child: Focus(
-      focusNode: focusNode,
-      child: child,
-    ),
+    excludeFromSemantics: true,
+    child: Focus(focusNode: focusNode, child: child),
   ),
 );
-```
 
-#### With FocusableActionDetector
-```dart
-return FocusableActionDetector(
-  focusNode: focusNode,
-  enabled: onPressed != null,
-  onShowFocusHighlight: (highlight) => // Update visual state
-  onShowHoverHighlight: (highlight) => // Update visual state
-  shortcuts: {
-    LogicalKeySet(LogicalKeyboardKey.enter): const ActivateIntent(),
-    LogicalKeySet(LogicalKeyboardKey.space): const ActivateIntent(),
-  },
-  actions: {
-    ActivateIntent: CallbackAction<ActivateIntent>(
-      onInvoke: (_) => onPressed?.call(),
-    ),
-  },
-  child: Semantics(
-    container: true,
-    button: true,
-    enabled: onPressed != null,
-    label: semanticLabel,
-    tooltip: tooltip,
-    onTap: onPressed,
-    onLongPress: onLongPress,
-    child: GestureDetector(
-      onTap: onPressed,
-      onLongPress: onLongPress,
-      excludeFromSemantics: true,
-      child: child,
-    ),
-  ),
-);
-```
 
-**Key Points:**
-- `container: true` for composite buttons
-- FocusableActionDetector handles `focusable`/`focused` automatically
-- GestureDetector always excluded from semantics
+⸻
 
----
+Checkbox (Tristate‑aware)
 
-### Checkbox (Tristate Aware)
-
-#### Basic Implementation
-```dart
 return MergeSemantics(
   child: Semantics(
-    container: true,
-    checked: value == true,  // false when null for tristate
-    mixed: tristate && value == null,  // true only for indeterminate
+    container: true, // Only if you need a dedicated node; omit otherwise (see Container Semantics)
+    checked: value == true,
+    mixed: tristate && value == null,
     enabled: onChanged != null,
     label: semanticLabel,
-    onTap: onChanged != null ? () => _toggleValue() : null,
+    onTap: onChanged != null ? _toggleValue : null,
     focusable: onChanged != null,
     focused: focusNode?.hasFocus == true,
     child: GestureDetector(
-      onTap: onChanged != null ? () => _toggleValue() : null,
+      onTap: onChanged != null ? _toggleValue : null,
       excludeFromSemantics: true,
-      child: Focus(
-        focusNode: focusNode,
-        child: child,
-      ),
+      child: Focus(focusNode: focusNode, child: child),
     ),
   ),
 );
 
 void _toggleValue() {
   if (tristate) {
-    // false -> true -> null -> false
-    final newValue = value == false ? true : 
-                     value == true ? null : false;
+    final newValue = value == false ? true : value == true ? null : false;
     onChanged?.call(newValue);
   } else {
-    onChanged?.call(!value);
+    onChanged?.call(!(value ?? false));
   }
 }
-```
 
-#### With FocusableActionDetector
-```dart
-return MergeSemantics(
-  child: FocusableActionDetector(
-    focusNode: focusNode,
-    enabled: onChanged != null,
-    shortcuts: {
-      LogicalKeySet(LogicalKeyboardKey.space): const ActivateIntent(),
-    },
-    actions: {
-      ActivateIntent: CallbackAction<ActivateIntent>(
-        onInvoke: (_) {
-          _toggleValue();
-          return null;
-        },
-      ),
-    },
-    child: Semantics(
-      container: true,
-      checked: value == true,
-      mixed: tristate && value == null,
-      enabled: onChanged != null,
-      label: semanticLabel,
-      onTap: onChanged != null ? () => _toggleValue() : null,
-      child: GestureDetector(
-        onTap: onChanged != null ? () => _toggleValue() : null,
-        excludeFromSemantics: true,
-        child: child,
-      ),
-    ),
-  ),
+
+⸻
+
+Radio / Radio Group
+
+Prefer the built‑in Radio with RadioGroup. If you must build from scratch:
+
+// Container for a set of radios
+Semantics(
+  container: true, // Only if you need a dedicated node; omit otherwise (see Container Semantics)
+  role: SemanticsRole.radioGroup,
+  child: childListOfCustomRadios,
 );
-```
 
-**Key Points:**
-- `checked: value == true` (not just `value` which could be null)
-- `mixed` only true when tristate checkbox is null
-- MergeSemantics combines with label text
-
----
-
-### Radio Button
-
-> **Note:** If you're using Flutter's built-in `Radio` widget or extending `RawRadio`, it already handles ALL necessary semantics correctly. The patterns below are only needed when building a radio button completely from scratch.
-
-#### Basic Implementation
-```dart
-return Semantics(
-  container: true,
+// Individual radio
+Semantics(
+  container: true, // Only if you need a dedicated node; omit otherwise (see Container Semantics)
   checked: isSelected,
   inMutuallyExclusiveGroup: true,
   enabled: onChanged != null,
   label: semanticLabel,
   onTap: onChanged != null ? () => onChanged!(value) : null,
-  focusable: onChanged != null,
-  focused: focusNode?.hasFocus == true,
   child: GestureDetector(
     onTap: onChanged != null ? () => onChanged!(value) : null,
     excludeFromSemantics: true,
-    child: Focus(
-      focusNode: focusNode,
-      child: child,
-    ),
+    child: Focus(focusNode: focusNode, child: child),
   ),
 );
-```
 
-**Key Points:**
-- `inMutuallyExclusiveGroup: true` for radio button semantics
-- `checked` indicates selection state
-- Consider using `Radio` or extending `RawRadio` instead of implementing from scratch
 
----
+⸻
 
-### Switch
+Switch
 
-#### Basic Implementation
-```dart
 return Semantics(
-  container: true,
-  toggled: value,  // Use toggled, not checked!
+  container: true, // Only if you need a dedicated node; omit otherwise (see Container Semantics)
+  toggled: value, // use toggled for switches
   enabled: onChanged != null,
   label: semanticLabel,
   onTap: onChanged != null ? () => onChanged!(!value) : null,
@@ -340,125 +281,45 @@ return Semantics(
   child: GestureDetector(
     onTap: onChanged != null ? () => onChanged!(!value) : null,
     excludeFromSemantics: true,
-    child: Focus(
-      focusNode: focusNode,
-      child: child,
-    ),
+    child: Focus(focusNode: focusNode, child: child),
   ),
 );
-```
 
-**Key Points:**
-- Use `toggled` for switches, not `checked`
-- `toggled` is mutually exclusive with `checked`/`mixed`
 
----
+⸻
 
-### Slider
+Slider (Adjustable)
 
-#### Basic Implementation
-```dart
+Add localized value plus onIncrease/onDecrease and the future value hints.
+
 return Semantics(
-  container: true,
-  slider: true,
+  container: true, // Only if you need a dedicated node; omit otherwise (see Container Semantics)
+  // No role for slider; use flags + actions
   label: semanticLabel,
-  value: _localizeValue(value),  // e.g., "45%", "Volume 7 of 10"
+  value: _valueLabel(value),              // e.g., "45%" or "7 of 10"
+  increasedValue: _valueLabel(_stepUp(value)),
+  decreasedValue: _valueLabel(_stepDown(value)),
   enabled: onChanged != null,
-  onIncrease: (onChanged != null && value < max)
-      ? () => _adjustValue(true)
-      : null,
-  onDecrease: (onChanged != null && value > min)
-      ? () => _adjustValue(false)
-      : null,
+  onIncrease: (onChanged != null && value < max) ? () => _bump(true) : null,
+  onDecrease: (onChanged != null && value > min) ? () => _bump(false) : null,
   focusable: onChanged != null,
   focused: focusNode?.hasFocus == true,
   child: GestureDetector(
-    onHorizontalDragUpdate: onChanged != null 
-        ? (details) => _handleDrag(details)
-        : null,
+    onHorizontalDragUpdate: onChanged != null ? _handleDrag : null,
     excludeFromSemantics: true,
-    child: Focus(
-      focusNode: focusNode,
-      child: child,
-    ),
+    child: Focus(focusNode: focusNode, child: child),
   ),
 );
 
-String _localizeValue(double value) {
-  // Return human-readable value
-  if (divisions != null) {
-    final int position = ((value - min) / (max - min) * divisions!).round();
-    return '$position of $divisions';
-  }
-  final percent = ((value - min) / (max - min) * 100).round();
-  return '$percent%';
-}
 
-void _adjustValue(bool increase) {
-  final step = (max - min) / (divisions ?? 100);
-  final newValue = increase 
-      ? (value + step).clamp(min, max)
-      : (value - step).clamp(min, max);
-  onChanged?.call(newValue);
-}
-```
+⸻
 
-#### With FocusableActionDetector
-```dart
-return FocusableActionDetector(
-  focusNode: focusNode,
-  enabled: onChanged != null,
-  shortcuts: {
-    LogicalKeySet(LogicalKeyboardKey.arrowRight): const _IncreaseIntent(),
-    LogicalKeySet(LogicalKeyboardKey.arrowUp): const _IncreaseIntent(),
-    LogicalKeySet(LogicalKeyboardKey.arrowLeft): const _DecreaseIntent(),
-    LogicalKeySet(LogicalKeyboardKey.arrowDown): const _DecreaseIntent(),
-  },
-  actions: {
-    _IncreaseIntent: CallbackAction<_IncreaseIntent>(
-      onInvoke: (_) => value < max ? _adjustValue(true) : null,
-    ),
-    _DecreaseIntent: CallbackAction<_DecreaseIntent>(
-      onInvoke: (_) => value > min ? _adjustValue(false) : null,
-    ),
-  },
-  child: Semantics(
-    container: true,
-    slider: true,
-    label: semanticLabel,
-    value: _localizeValue(value),
-    enabled: onChanged != null,
-    onIncrease: (onChanged != null && value < max)
-        ? () => _adjustValue(true)
-        : null,
-    onDecrease: (onChanged != null && value > min)
-        ? () => _adjustValue(false)
-        : null,
-    child: GestureDetector(
-      onHorizontalDragUpdate: onChanged != null 
-          ? (details) => _handleDrag(details)
-          : null,
-      excludeFromSemantics: true,
-      child: child,
-    ),
-  ),
-);
-```
+TextField (Headless EditableText)
 
-**Key Points:**
-- Localized `value` string (not raw numbers)
-- Guard `onIncrease`/`onDecrease` with min/max checks
-- Keyboard navigation with arrow keys
-
----
-
-### TextField
-
-#### Basic Implementation
-```dart
 return Semantics(
-  container: true,
+  container: true, // Only if you need a dedicated node; omit otherwise (see Container Semantics)
   textField: true,
+  inputType: isNumeric ? SemanticsInputType.number : null,
   multiline: (maxLines ?? 1) > 1,
   obscured: obscureText,
   readOnly: readOnly,
@@ -466,7 +327,7 @@ return Semantics(
   currentValueLength: (maxLength != null && controller != null)
       ? controller!.text.characters.length
       : null,
-  value: obscureText ? null : controller?.text,  // NEVER expose passwords!
+  value: obscureText ? null : controller?.text,
   label: semanticLabel,
   hint: semanticHint,
   focusable: !readOnly,
@@ -474,179 +335,159 @@ return Semantics(
   child: EditableText(
     controller: controller,
     focusNode: focusNode,
-    // ... other EditableText properties
+    // ... platform text config
   ),
 );
-```
 
-**Key Points:**
-- `value: null` when `obscured: true` (security!)
-- Character count for length-limited fields
-- `multiline` for text areas
 
----
+⸻
 
-### Dropdown / Select
+Dropdown / Select
 
-#### Collapsed State
-```dart
+Collapsed (button‑like) — use the combo box role.
+
 return Semantics(
-  container: true,
-  button: true,  // It's a button when collapsed
+  container: true, // Only if you need a dedicated node; omit otherwise (see Container Semantics)
+  role: SemanticsRole.comboBox,
   enabled: onChanged != null,
   label: semanticLabel,
   value: selectedValue?.toString() ?? 'None selected',
-  onTap: onChanged != null ? () => _openDropdown() : null,
+  onTap: onChanged != null ? _openDropdown : null,
   focusable: onChanged != null,
   focused: focusNode?.hasFocus == true,
   child: GestureDetector(
-    onTap: onChanged != null ? () => _openDropdown() : null,
+    onTap: onChanged != null ? _openDropdown : null,
     excludeFromSemantics: true,
-    child: Focus(
-      focusNode: focusNode,
-      child: child,
-    ),
+    child: Focus(focusNode: focusNode, child: child),
   ),
 );
-```
 
-#### Expanded State
-```dart
+Expanded (popup list) — model as menu with menu items.
+
 return Semantics(
-  container: true,
-  expanded: true,  // Indicates expanded state
+  container: true, // Only if you need a dedicated node; omit otherwise (see Container Semantics)
+  role: SemanticsRole.menu,
+  expanded: true,
   enabled: onChanged != null,
   label: semanticLabel,
-  focusable: onChanged != null,
-  focused: focusNode?.hasFocus == true,
   child: ListView.builder(
     itemCount: options.length,
     itemBuilder: (context, index) {
+      final option = options[index];
       return Semantics(
-        container: true,
-        button: true,
-        selected: options[index] == selectedValue,
-        label: options[index].toString(),
-        onTap: () => _selectOption(options[index]),
+        container: true, // Only if you need a dedicated node; omit otherwise (see Container Semantics)
+        role: SemanticsRole.menuItem,
+        selected: option == selectedValue,
+        label: option.toString(),
+        onTap: () => _selectOption(option),
         child: GestureDetector(
-          onTap: () => _selectOption(options[index]),
+          onTap: () => _selectOption(option),
           excludeFromSemantics: true,
-          child: _buildOption(options[index]),
+          child: _buildOption(option),
         ),
       );
     },
   ),
 );
-```
 
-**Key Points:**
-- `button: true` when collapsed
-- `expanded: true` when open
-- Each option has `selected` state
+Need a strict listbox pattern? Combine role: menu/menuItem with sortKey for deterministic traversal.
 
----
+⸻
 
-### Tab
+Tabs
 
-#### Basic Implementation
-```dart
-return Semantics(
-  container: true,
-  button: true,
+// Tab bar container
+final tabBar = Semantics(
+  container: true, // Only if you need a dedicated node; omit otherwise (see Container Semantics)
+  role: SemanticsRole.tabBar,
+  child: Row(children: tabs),
+);
+
+// Individual tab
+Semantics(
+  container: true, // Only if you need a dedicated node; omit otherwise (see Container Semantics)
+  role: SemanticsRole.tab,
   selected: isSelected,
   enabled: onTap != null,
   label: semanticLabel,
   onTap: onTap,
-  focusable: onTap != null,
-  focused: focusNode?.hasFocus == true,
   child: GestureDetector(
     onTap: onTap,
     excludeFromSemantics: true,
-    child: Focus(
-      focusNode: focusNode,
-      child: child,
-    ),
+    child: Focus(focusNode: focusNode, child: child),
   ),
 );
-```
 
-**Key Points:**
-- Tabs are buttons with `selected` state
-- Focus management for keyboard navigation
+// Active panel area
+Semantics(
+  container: true, // Only if you need a dedicated node; omit otherwise (see Container Semantics)
+  role: SemanticsRole.tabPanel,
+  child: panelChild,
+);
 
----
 
-### Dialog
+⸻
 
-#### Basic Implementation
-```dart
+Dialog
+
 Widget dialog = Semantics(
-  container: true,
-  namesRoute: true,  // Always true for dialogs
-  scopesRoute: true,  // Always true for dialogs
-  explicitChildNodes: true,  // Required with scopesRoute
+  container: true, // Only if you need a dedicated node; omit otherwise (see Container Semantics)
+  role: isAlert ? SemanticsRole.alertDialog : SemanticsRole.dialog,
+  scopesRoute: true,
+  explicitChildNodes: true,     // pair with scopesRoute
+  // Consider namesRoute + label for non‑iOS to avoid double title announcement on iOS
+  namesRoute: announceTitleOnThisPlatform,
   label: semanticLabel ?? dialogTitle,
   child: child,
 );
 
-// Only use BlockSemantics for modal dialogs
+// Only for modal dialogs
 if (modal) {
-  dialog = BlockSemantics(
-    child: dialog,
-  );
+  dialog = BlockSemantics(child: dialog);
 }
-
 return dialog;
-```
 
-**Key Points:**
-- `namesRoute` and `scopesRoute` always true for dialogs
-- `explicitChildNodes` required when using `scopesRoute`
-- `BlockSemantics` ONLY for modal dialogs (not all dialogs)
-- BlockSemantics prevents interaction with background
+Notes
+	•	scopesRoute: true + explicitChildNodes: true are recommended for dialog containers.
+	•	Use namesRoute + label thoughtfully. Some platforms (notably iOS) can announce the title twice if both the title widget and the route name are read.
 
----
+⸻
 
-### Tooltip
+Tooltip
 
-```dart
+Prefer the built‑in Tooltip. If you supply your own description:
+
 return Semantics(
   tooltip: message,
+  // Optional role if you’re exposing a persistent helper region
+  role: SemanticsRole.tooltip,
   child: child,
 );
-```
 
-**Key Points:**
-- Tooltips augment, don't replace child semantics
-- Don't use `excludeSemantics` on tooltips
+If you also use Tooltip(message: ...), don’t duplicate labels. You can set Tooltip.excludeFromSemantics: true if you are providing a custom Semantics(tooltip: ...).
 
----
+⸻
 
-### Progress Indicator
+Progress Indicator
 
-```dart
 return Semantics(
-  container: true,
+  container: true, // Only if you need a dedicated node; omit otherwise (see Container Semantics)
+  role: value == null ? SemanticsRole.loadingSpinner : SemanticsRole.progressBar,
   label: semanticLabel ?? (value == null ? 'Loading' : 'Progress'),
   value: value != null ? '${(value * 100).round()}%' : null,
-  liveRegion: true,  // Announces updates
+  liveRegion: true, // asks AT to politely announce updates
   child: child,
 );
-```
 
-**Key Points:**
-- `liveRegion: true` for polite announcements
-- Localized value string
 
----
+⸻
 
-### Link
+Link
 
-#### Basic Implementation
-```dart
 return Semantics(
-  container: true,
+  container: true, // Only if you need a dedicated node; omit otherwise (see Container Semantics)
   link: true,
+  linkUrl: (url != null) ? Uri.parse(url!) : null, // provide when available
   enabled: onTap != null,
   label: semanticLabel,
   onTap: onTap,
@@ -657,96 +498,89 @@ return Semantics(
     excludeFromSemantics: true,
     child: MouseRegion(
       cursor: SystemMouseCursors.click,
-      child: Focus(
-        focusNode: focusNode,
-        child: child,
-      ),
+      child: Focus(focusNode: focusNode, child: child),
     ),
   ),
 );
-```
 
----
 
-### List Item
+⸻
 
-#### Basic Implementation
-```dart
-return Semantics(
-  container: true,
+List / List Item
+
+// List container
+Semantics(
+  container: true, // Only if you need a dedicated node; omit otherwise (see Container Semantics)
+  role: SemanticsRole.list,
+  child: listView,
+);
+
+// Individual row
+Semantics(
+  container: true, // Only if you need a dedicated node; omit otherwise (see Container Semantics)
+  role: SemanticsRole.listItem,
   button: onTap != null,
   enabled: onTap != null,
   label: label,
   selected: isSelected,
   onTap: onTap,
-  focusable: onTap != null,
-  focused: focusNode?.hasFocus == true,
   child: onTap != null
       ? GestureDetector(
           onTap: onTap,
           excludeFromSemantics: true,
-          child: Focus(
-            focusNode: focusNode,
-            child: child,
-          ),
+          child: Focus(focusNode: focusNode, child: child),
         )
       : child,
 );
-```
 
-**Key Points:**
-- Only `button: true` if tappable
-- Don't manually inject "Item 1 of 5" - let the framework handle it
 
----
+⸻
 
-### Toggle / Collapsible
+Toggle / Collapsible
 
-```dart
 return Semantics(
-  container: true,
+  container: true, // Only if you need a dedicated node; omit otherwise (see Container Semantics)
   button: true,
   expanded: expanded,
   enabled: onToggle != null,
   label: semanticLabel,
   onTap: onToggle,
-  focusable: onToggle != null,
-  focused: focusNode?.hasFocus == true,
   child: GestureDetector(
     onTap: onToggle,
     excludeFromSemantics: true,
-    child: Focus(
-      focusNode: focusNode,
-      child: child,
-    ),
+    child: Focus(focusNode: focusNode, child: child),
   ),
 );
-```
 
----
 
-## Testing & Debugging
+⸻
 
-### Enable Semantics Debugger
+Testing & Debugging
+
+Visualize semantics
+
+MaterialApp(
+  showSemanticsDebugger: true,
+)
+
+Dump the tree in logs (useful in tests/dev tools):
+
+debugDumpSemanticsTree();
+// or with order
+debugDumpSemanticsTree(DebugSemanticsDumpOrder.inverseHitTest);
 ```dart
 MaterialApp(
-  showSemanticsDebugger: true,  // Shows semantic overlay
+  showSemanticsDebugger: true,
   // ...
 )
-```
 
-### Test Semantics with SemanticsTester
-```dart
+Matchers and nodes
+
 testWidgets('button has correct semantics', (tester) async {
-  final SemanticsHandle handle = tester.ensureSemantics();
-  
-  await tester.pumpWidget(
-    MyButton(
-      onPressed: () {},
-      label: 'Submit',
-    ),
-  );
-  
+  final handle = tester.ensureSemantics();
+
+  await tester.pumpWidget(MyButton(onPressed: () {}, label: 'Submit'));
+
   expect(
     tester.getSemantics(find.byType(MyButton)),
     matchesSemantics(
@@ -758,272 +592,84 @@ testWidgets('button has correct semantics', (tester) async {
       hasTapAction: true,
     ),
   );
-  
+
   handle.dispose();
 });
-```
 
-### Verify No Duplicate Semantics
-```dart
-testWidgets('no duplicate tap actions', (tester) async {
-  final SemanticsHandle handle = tester.ensureSemantics();
-  
-  await tester.pumpWidget(MyButton());
-  
-  // Get the semantics tree
-  final SemanticsNode root = tester.getSemantics(find.byType(MyButton));
-  
-  // Count tap actions in tree
-  int tapActionCount = 0;
-  void countTapActions(SemanticsNode node) {
-    if (node.hasAction(SemanticsAction.tap)) {
-      tapActionCount++;
-    }
-    node.visitChildren(countTapActions);
-  }
-  
-  countTapActions(root);
-  expect(tapActionCount, 1);  // Should only have one tap action
-  
-  handle.dispose();
-});
-```
+Count (or verify) actions using SemanticsData
 
-### Test Focus Semantics
-```dart
+final SemanticsNode root = tester.getSemantics(find.byType(MyButton));
+int tapActions = 0;
+void visit(SemanticsNode n) {
+  final data = n.getSemanticsData();
+  if (data.hasAction(SemanticsAction.tap)) tapActions++;
+  n.visitChildren(visit);
+}
+visit(root);
+expect(tapActions, 1);
+
+Perform actions in tests
+
+final node = tester.getSemantics(find.byType(MyButton));
+await tester.binding.pipelineOwner.semanticsOwner!.performAction(
+  node.id,
+  SemanticsAction.tap,
+);
+
+Focus semantics
+
 testWidgets('focus updates semantics', (tester) async {
   final focusNode = FocusNode();
-  
-  await tester.pumpWidget(
-    MaterialApp(
-      home: MyButton(
-        focusNode: focusNode,
-        label: 'Test',
-      ),
-    ),
-  );
-  
+  await tester.pumpWidget(MaterialApp(home: MyButton(focusNode: focusNode, label: 'Test')));
+
   expect(tester.getSemantics(find.byType(MyButton)).isFocused, false);
-  
   focusNode.requestFocus();
   await tester.pump();
-  
   expect(tester.getSemantics(find.byType(MyButton)).isFocused, true);
-  
   focusNode.dispose();
 });
-```
 
----
+Shape traversal order
 
-## Common Pitfalls
-
-### ❌ Duplicate Semantic Actions
-```dart
-// WRONG - Two tap handlers in semantics tree
 Semantics(
-  onTap: onPressed,
-  child: GestureDetector(
-    onTap: onPressed,  // Missing excludeFromSemantics!
-    child: child,
-  ),
-)
-```
-
-### ❌ Semantics Outside FocusableActionDetector
-```dart
-// WRONG - Focus semantics get buried
+  sortKey: const OrdinalSortKey(1),
+  child: first,
+);
 Semantics(
-  button: true,
-  child: FocusableActionDetector(
-    child: child,
-  ),
-)
-```
+  sortKey: const OrdinalSortKey(2),
+  child: second,
+);
 
-### ❌ Using Raw Values
-```dart
-// WRONG - Not human-readable
-Semantics(
-  value: value.toString(),  // "0.4523"
-)
 
-// CORRECT - Localized
-Semantics(
-  value: '${(value * 100).round()}%',  // "45%"
-)
-```
+⸻
 
-### ❌ Exposing Password Values
-```dart
-// WRONG - Security issue!
-Semantics(
-  obscured: true,
-  value: passwordController.text,  // NEVER do this!
-)
+Common Pitfalls
+	•	Duplicate actions: Don’t leave GestureDetector semantics enabled when a parent Semantics already supplies onTap/onLongPress.
+	•	Roles where none exist: There is no SemanticsRole.button/checkbox/switch/slider. Use flags.
+	•	Missing linkUrl: When link: true, set linkUrl if you have a destination.
+	•	Dialog announcements: Unconditional namesRoute: true can cause duplicate title announcements on some platforms. Be intentional.
+	•	Raw values: Provide human‑readable value/increasedValue/decreasedValue instead of raw numbers.
 
-// CORRECT
-Semantics(
-  obscured: true,
-  value: null,  // Don't expose
-)
-```
+⸻
 
-### ❌ Wrong Checkbox Semantics
-```dart
-// WRONG - value could be null
-Semantics(
-  checked: value,  // Bad if tristate!
-)
+Platform Considerations
+	•	iOS VoiceOver: May announce dialog titles via both the title widget and route name. Tune namesRoute accordingly.
+	•	Android TalkBack: Swipe up/down can trigger onIncrease/onDecrease for adjustables.
+	•	Desktop/Web: Keyboard traversal expects focusable nodes; roles improve mapping to ARIA. Flutter Web maps scopesRoute/namesRoute to dialog semantics and uses roles where available.
 
-// CORRECT
-Semantics(
-  checked: value == true,
-  mixed: tristate && value == null,
-)
-```
+⸻
 
-### ❌ Missing Container
-```dart
-// WRONG - May merge oddly
-Semantics(
-  button: true,
-  label: 'Click me',
-  child: Row(children: [icon, text]),
-)
+Migration Notes
+	•	Add excludeFromSemantics: true to all GestureDetector/InkWell/InkResponse where a parent Semantics provides actions.
+	•	Consider FocusableActionDetector for custom interactive controls needing keyboard/hover.
+	•	Update radio sets to RadioGroup where using stock widgets.
+	•	Add roles where available (tabs/lists/dialogs/menus/progress) and keep legacy flags for control state.
+	•	Use linkUrl with link: true.
 
-// CORRECT - Clear boundary
-Semantics(
-  container: true,  // Creates dedicated node
-  button: true,
-  label: 'Click me',
-  child: Row(children: [icon, text]),
-)
-```
+⸻
 
----
+References
+	•	API: Semantics (widgets), SemanticsProperties (semantics), Focus/FocusableActionDetector, MergeSemantics/ExcludeSemantics, BlockSemantics, SemanticsSortKey/OrdinalSortKey, SemanticsRole, SemanticsAction
+	•	Guides: Flutter Accessibility docs; Material Accessibility; WCAG quick ref
+	•	Notes: Radio API redesign (RadioGroup), tooltip semantics/exclusion, route naming (scopesRoute/namesRoute)
 
-## Platform Considerations
-
-### iOS VoiceOver
-- Swipe up/down triggers `onIncrease`/`onDecrease` for sliders
-- Double-tap activates buttons
-- Rotor navigation for different element types
-
-### Android TalkBack
-- Volume keys can trigger `onIncrease`/`onDecrease`
-- Double-tap activates
-- Reading order follows widget tree by default
-- May require `namesRoute` + `label` for dialogs (Issue #53924)
-
-### Desktop (Windows Narrator, NVDA, JAWS)
-- Tab navigation follows focus order
-- Space/Enter activate buttons
-- Arrow keys for sliders and radio groups
-
-### Web
-- ARIA roles mapped from Flutter semantics
-- `scopesRoute`/`namesRoute` map to `role="dialog"`
-- Focus semantics critical for keyboard navigation
-
----
-
-## Migration from v1
-
-### Updating Existing Components
-
-1. **Add `excludeFromSemantics: true` to all GestureDetectors**
-```dart
-// Before
-GestureDetector(
-  onTap: onPressed,
-  child: child,
-)
-
-// After
-GestureDetector(
-  onTap: onPressed,
-  excludeFromSemantics: true,  // ADD THIS
-  child: child,
-)
-```
-
-2. **Consider FocusableActionDetector for complex interactions**
-```dart
-// Before
-Focus(
-  focusNode: focusNode,
-  child: Semantics(...)
-)
-
-// After (if you need hover/shortcuts)
-FocusableActionDetector(
-  focusNode: focusNode,
-  child: Semantics(...)
-)
-```
-
-3. **Fix tristate checkbox semantics**
-```dart
-// Before
-checked: value
-
-// After
-checked: value == true,
-mixed: tristate && value == null
-```
-
----
-
-## References
-
-### Official Flutter Documentation
-- [Semantics class](https://api.flutter.dev/flutter/widgets/Semantics-class.html)
-- [SemanticsProperties](https://api.flutter.dev/flutter/semantics/SemanticsProperties-class.html)
-- [FocusableActionDetector](https://api.flutter.dev/flutter/widgets/FocusableActionDetector-class.html)
-- [Focus system](https://api.flutter.dev/flutter/widgets/Focus-class.html)
-- [BlockSemantics](https://api.flutter.dev/flutter/widgets/BlockSemantics-class.html)
-- [MergeSemantics](https://api.flutter.dev/flutter/widgets/MergeSemantics-class.html)
-
-### Key Flutter Issues
-- [#110107](https://github.com/flutter/flutter/issues/110107) - Tristate checkbox semantics
-- [#53924](https://github.com/flutter/flutter/issues/53924) - TalkBack scopesRoute behavior
-- [#115831](https://github.com/flutter/flutter/issues/115831) - FocusableActionDetector semantics control
-- [#96485](https://github.com/flutter/flutter/issues/96485) - Semantics enabled property with checked/toggled
-
-### Accessibility Guidelines
-- [Flutter Accessibility](https://docs.flutter.dev/ui/accessibility-and-internationalization/accessibility)
-- [Material Design Accessibility](https://m3.material.io/foundations/accessibility)
-- [WCAG Guidelines](https://www.w3.org/WAI/WCAG21/quickref/)
-
----
-
-## Changelog
-
-### v2.0 (Current)
-- Added FocusableActionDetector implementation patterns
-- Critical rule: `excludeFromSemantics` on all GestureDetectors
-- Dual variants (basic/focusable) for all interactive components
-- Expanded platform-specific considerations
-- Enhanced testing patterns and debugging section
-- Added migration guide from v1
-
-### v1.0
-- Initial guide with correct semantics implementations
-- Fixed tristate checkbox handling
-- Proper Dialog semantics with BlockSemantics
-- Security considerations for obscured text
-
----
-
-## Contributing
-
-Found an issue or have a suggestion? Please contribute:
-1. Test your semantics with real assistive technologies
-2. Verify against Flutter's latest stable API
-3. Include platform-specific testing results
-4. Document any edge cases discovered
-
----
-
-*This guide is maintained by the Flutter community. Last updated with Flutter 3.x stable.*

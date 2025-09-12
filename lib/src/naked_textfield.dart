@@ -1,24 +1,38 @@
+// lib/naked_text_field.dart
+//
+// NakedTextField: a builder-first text input that *still* feels native by default.
+// - Adaptive OS styling (selection handles, magnifier, cursor/selection color)
+// - Fully headless visuals via `builder`
+// - Tight lifecycle: restoration, controller/focus ownership, selection plumbing
+//
+// You can still override any of the adaptive choices, but the widget works out
+// of the box with platform-appropriate behavior.
+
 import 'dart:ui' as ui show BoxHeightStyle, BoxWidthStyle;
 
-import 'package:flutter/cupertino.dart';
+import 'package:flutter/cupertino.dart'
+    show
+        cupertinoTextSelectionHandleControls,
+        cupertinoDesktopTextSelectionHandleControls;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
+// We import just what we need from Material/Cupertino to keep surface minimal,
+// but we intentionally *opt in* to OS-adaptive selection/magnifier.
 import 'package:flutter/material.dart'
     show
+        TextMagnifier,
         materialTextSelectionHandleControls,
-        desktopTextSelectionHandleControls,
-        TextMagnifier;
-import 'package:flutter/scheduler.dart';
+        desktopTextSelectionHandleControls;
 import 'package:flutter/services.dart';
+import 'package:flutter/widgets.dart';
 
-/// Provides text editing functionality without visual styling.
-///
-/// Uses a builder pattern for complete customization of appearance.
+typedef NakedTextFieldBuilder =
+    Widget Function(BuildContext context, Widget editableText);
+
 class NakedTextField extends StatefulWidget {
-  /// Creates a naked text field.
   const NakedTextField({
     super.key,
-    this.groupId = EditableText,
+    this.groupId = EditableText, // Keeps parity with EditableText default.
     this.controller,
     this.focusNode,
     this.undoController,
@@ -51,17 +65,17 @@ class NakedTextField extends StatefulWidget {
     this.cursorHeight,
     this.cursorRadius,
     this.cursorOpacityAnimates,
-    this.cursorColor,
+    this.cursorColor, // override adaptive color if needed
     this.selectionHeightStyle = ui.BoxHeightStyle.tight,
     this.selectionWidthStyle = ui.BoxWidthStyle.tight,
     this.keyboardAppearance,
     this.scrollPadding = const EdgeInsets.all(20.0),
     this.dragStartBehavior = DragStartBehavior.start,
     this.enableInteractiveSelection = true,
-    this.selectionControls,
-    this.onPressed,
+    this.selectionControls, // override adaptive controls if needed
+    this.onTap, // prefer this name for a field tap
     this.onTapAlwaysCalled = false,
-    this.onPressChange,
+    this.onTapChange,
     this.onTapOutside,
     this.scrollController,
     this.scrollPhysics,
@@ -69,7 +83,7 @@ class NakedTextField extends StatefulWidget {
     this.contentInsertionConfiguration,
     this.clipBehavior = Clip.hardEdge,
     this.restorationId,
-    this.onPressUpOutside,
+    this.onTapUpOutside,
     this.stylusHandwritingEnabled = true,
     this.enableIMEPersonalizedLearning = true,
     this.contextMenuBuilder,
@@ -78,6 +92,7 @@ class NakedTextField extends StatefulWidget {
     this.magnifierConfiguration,
     this.onHoverChange,
     this.onFocusChange,
+    this.onPressChange,
     this.style,
     required this.builder,
     this.ignorePointers,
@@ -106,7 +121,9 @@ class NakedTextField extends StatefulWidget {
        ),
        assert(maxLength == null || maxLength > 0);
 
-  /// Magnifier configuration for this text field.
+  // ==== Public API ====
+
+  /// Adaptive magnifier configuration (defaults to platform-appropriate).
   final TextMagnifierConfiguration? magnifierConfiguration;
 
   /// Controls the text being edited.
@@ -115,191 +132,126 @@ class NakedTextField extends StatefulWidget {
   /// Defines the keyboard focus for this widget.
   final FocusNode? focusNode;
 
-  /// Controller for undo/redo history.
+  /// Undo/redo controller.
   final UndoHistoryController? undoController;
 
-  /// Keyboard type for editing the text.
+  /// Keyboard type and action.
   final TextInputType? keyboardType;
-
-  /// Action button type for the keyboard.
   final TextInputAction? textInputAction;
 
-  /// How the platform keyboard selects uppercase or lowercase.
+  /// Keyboard text behavior & alignment.
   final TextCapitalization textCapitalization;
-
-  /// How the text should be aligned horizontally.
   final TextAlign textAlign;
-
-  /// Text directionality.
   final TextDirection? textDirection;
 
-  /// Whether the text can be changed.
+  /// Read-only & cursor visibility.
   final bool readOnly;
-
-  /// Whether to show the cursor.
   final bool? showCursor;
 
-  /// Whether to autofocus if nothing else is focused.
   final bool autofocus;
 
-  /// Character used for obscuring text.
+  /// Obscuring configuration.
   final String obscuringCharacter;
-
-  /// Whether to hide the text being edited.
   final bool obscureText;
 
-  /// Whether to enable autocorrect.
+  /// Text intelligence.
   final bool autocorrect;
-
-  /// Smart dashes behavior configuration.
   final SmartDashesType smartDashesType;
-
-  /// Smart quotes behavior configuration.
   final SmartQuotesType smartQuotesType;
-
-  /// Whether to show input suggestions as the user types.
   final bool enableSuggestions;
 
-  /// Maximum number of lines for the text.
+  /// Lines & expansion
   final int? maxLines;
-
-  /// Minimum number of lines to occupy.
   final int? minLines;
-
-  /// Whether to size height to fill parent.
   final bool expands;
 
-  /// Maximum number of characters allowed.
+  /// Length limiting.
   final int? maxLength;
-
-  /// How the maxLength limit is enforced.
   final MaxLengthEnforcement? maxLengthEnforcement;
 
-  /// Called when text field value changes.
+  /// Callbacks
   final ValueChanged<String>? onChanged;
-
-  /// Called when editing is complete.
   final VoidCallback? onEditingComplete;
-
-  /// Called when content is submitted.
   final ValueChanged<String>? onSubmitted;
-
-  /// Platform-specific customization API.
   final AppPrivateCommandCallback? onAppPrivateCommand;
 
-  /// Input validation and formatting overrides.
+  /// Input formatters
   final List<TextInputFormatter>? inputFormatters;
 
-  /// Whether the text field is enabled.
+  /// Enabled state
   final bool enabled;
 
-  /// Cursor width.
+  /// Cursor visuals
   final double cursorWidth;
-
-  /// Cursor height.
   final double? cursorHeight;
-
-  /// Cursor radius.
   final Radius? cursorRadius;
-
-  /// Whether cursor opacity animates.
   final bool? cursorOpacityAnimates;
-
-  /// Cursor color.
   final Color? cursorColor;
 
-  /// How tall selection highlight boxes are computed.
+  /// Selection visuals
   final ui.BoxHeightStyle selectionHeightStyle;
-
-  /// How wide selection highlight boxes are computed.
   final ui.BoxWidthStyle selectionWidthStyle;
 
-  /// Keyboard appearance.
+  /// Keyboard appearance (iOS)
   final Brightness? keyboardAppearance;
 
-  /// Scrollable content padding.
+  /// Scrolling
   final EdgeInsets scrollPadding;
-
-  /// Whether the value can be selected.
-  final bool enableInteractiveSelection;
-
-  /// Selection handles and contextual toolbar controls.
-  final TextSelectionControls? selectionControls;
-
-  /// Called when the field is tapped.
-  final GestureTapCallback? onPressed;
-
-  /// Whether to call onPressed for every tap.
-  final bool onTapAlwaysCalled;
-
-  /// Called when pressed state changes.
-  final ValueChanged<bool>? onPressChange;
-
-  /// Called when tapping outside the field.
-  final TapRegionCallback? onTapOutside;
-
-  /// Called when tap up occurs outside the field.
-  final TapRegionUpCallback? onPressUpOutside;
-
-  /// Behavior when drag starts.
   final DragStartBehavior dragStartBehavior;
-
-  /// Controls text field scrolling.
   final ScrollController? scrollController;
-
-  /// Scroll physics for scrollable content.
   final ScrollPhysics? scrollPhysics;
 
-  /// Autofill hint information.
-  final Iterable<String>? autofillHints;
-
-  /// Content insertion handling configuration.
-  final ContentInsertionConfiguration? contentInsertionConfiguration;
-
-  /// Clip behavior for content inside the field.
+  /// Clipping behavior for the underlying EditableText.
   final Clip clipBehavior;
 
-  /// Widget restoration ID.
-  final String? restorationId;
-
-  final bool stylusHandwritingEnabled;
-
-  /// Whether to enable IME personalized learning.
-  final bool enableIMEPersonalizedLearning;
-
-  /// Context menu builder (right-click or long press).
+  /// Selection & context menu
+  final bool enableInteractiveSelection;
+  final TextSelectionControls? selectionControls;
   final EditableTextContextMenuBuilder? contextMenuBuilder;
 
-  /// Whether the field can request focus.
+  /// Taps, hover, and outside taps
+  final GestureTapCallback? onTap;
+  final bool onTapAlwaysCalled;
+  final ValueChanged<bool>? onTapChange;
+  final TapRegionCallback? onTapOutside;
+  final TapRegionUpCallback? onTapUpOutside;
+  final ValueChanged<bool>? onHoverChange;
+  final ValueChanged<bool>? onPressChange;
+
+  /// Autofill & content insertion
+  final Iterable<String>? autofillHints;
+  final ContentInsertionConfiguration? contentInsertionConfiguration;
+
+  /// Focus management
   final bool canRequestFocus;
 
-  /// Spell check behavior configuration.
-  final SpellCheckConfiguration? spellCheckConfiguration;
-
-  /// Called when hover state changes.
-  final ValueChanged<bool>? onHoverChange;
-
-  /// Called when focus state changes.
+  /// Notifies when focus changes (true when focused).
   final ValueChanged<bool>? onFocusChange;
 
-  /// Group ID for the text field.
+  /// Restoration
+  final String? restorationId;
+
+  /// IME / stylus features
+  final bool stylusHandwritingEnabled;
+  final bool enableIMEPersonalizedLearning;
+
+  /// Spell check
+  final SpellCheckConfiguration? spellCheckConfiguration;
+
+  /// Grouping for IME (matches EditableText)
   final Object groupId;
 
-  /// Text field style.
+  /// Text style override (else derives from DefaultTextStyle)
   final TextStyle? style;
 
-  /// Whether to ignore pointers.
+  /// Ignore pointers
   final bool? ignorePointers;
 
-  /// Required builder for complete text field customization.
-  ///
-  /// Receives context and the core EditableText widget.
-  final Widget Function(BuildContext context, Widget editableText) builder;
+  /// Builder to wrap the underlying EditableText with any visuals.
+  final NakedTextFieldBuilder builder;
 
-  /// Semantic label for accessibility.
+  /// Semantics
   final String? semanticLabel;
-
-  /// Semantic hint for accessibility.
   final String? semanticHint;
 
   @override
@@ -309,12 +261,12 @@ class NakedTextField extends StatefulWidget {
 class _NakedTextFieldState extends State<NakedTextField>
     with RestorationMixin
     implements TextSelectionGestureDetectorBuilderDelegate, AutofillClient {
-  // Color constants to avoid Material dependency
+  // Neutral base colors that don't imply a design system.
   static const Color _defaultTextColor = Color(0xFF000000);
   static const Color _defaultDisabledColor = Color(0xFF9E9E9E);
-  static const Color _androidCursorColor = Color(0xFF2196F3);
+  static const Color _neutralBgCursor = Color(0xFFBDBDBD);
 
-  // iOS cursor offset constant (from Material library)
+  // iOS cursor horizontal offset (native-looking nudge).
   static const int _iOSHorizontalOffset = -2;
 
   RestorableTextEditingController? _controller;
@@ -331,11 +283,14 @@ class _NakedTextFieldState extends State<NakedTextField>
         defaultTargetPlatform,
       );
 
-  bool _showSelectionHandles = false;
-
   late TextSelectionGestureDetectorBuilder _selectionGestureDetectorBuilder;
 
-  // API for TextSelectionGestureDetectorBuilderDelegate.
+  bool _showSelectionHandles = false;
+
+  // Keep track of the current navigation mode from MediaQuery.
+  NavigationMode? _navMode;
+
+  // TextSelectionGestureDetectorBuilderDelegate
   @override
   late bool forcePressEnabled;
 
@@ -346,34 +301,37 @@ class _NakedTextFieldState extends State<NakedTextField>
   @override
   bool get selectionEnabled => widget.enableInteractiveSelection;
 
-  // End of API for TextSelectionGestureDetectorBuilderDelegate.
+  EditableTextState? get _editableText => editableTextKey.currentState;
+
+  // === Lifecycle ===
 
   @override
   void initState() {
     super.initState();
-    _selectionGestureDetectorBuilder =
-        _TextFieldSelectionGestureDetectorBuilder(state: this);
+    _selectionGestureDetectorBuilder = _NakedSelectionGestureDetectorBuilder(
+      state: this,
+    );
+
     if (widget.controller == null) {
       _createLocalController();
     }
-    _effectiveFocusNode.canRequestFocus =
-        widget.canRequestFocus && widget.enabled;
+
+    // IMPORTANT: No MediaQuery reads here.
+    _effectiveFocusNode.canRequestFocus = widget.canRequestFocus && widget.enabled;
     _effectiveFocusNode.addListener(_handleFocusChange);
   }
 
-  bool get _canRequestFocus {
-    final NavigationMode mode =
-        MediaQuery.maybeNavigationModeOf(context) ?? NavigationMode.traditional;
+  // === Helpers ===
 
-    return switch (mode) {
-      NavigationMode.traditional => widget.canRequestFocus && widget.enabled,
-      NavigationMode.directional => true,
-    };
-  }
-
-  void _registerController() {
-    assert(_controller != null);
-    registerForRestoration(_controller!, 'controller');
+  // Compute focusability from a cached nav mode (no MediaQuery reads here).
+  bool _canRequestFocusFor(NavigationMode? mode) {
+    switch (mode) {
+      case NavigationMode.directional:
+        return true; // TV/gamepad mode can always request focus
+      case NavigationMode.traditional:
+      case null:
+        return widget.canRequestFocus && widget.enabled;
+    }
   }
 
   void _createLocalController([TextEditingValue? value]) {
@@ -381,128 +339,102 @@ class _NakedTextFieldState extends State<NakedTextField>
     _controller = value == null
         ? RestorableTextEditingController()
         : RestorableTextEditingController.fromValue(value);
-
     if (!restorePending) {
-      _registerController();
+      registerForRestoration(_controller!, 'controller');
     }
   }
 
-  void _requestKeyboard() {
-    _editableText?.requestKeyboard();
+  void _requestKeyboard() => _editableText?.requestKeyboard();
+
+  void _handleFocusChange() {
+    widget.onFocusChange?.call(_effectiveFocusNode.hasFocus);
+    if (!mounted) return;
+    // Rebuild for selection highlight & semantics updates tied to focus.
+    // ignore: avoid-empty-setstate, no-empty-block
+    setState(() {});
   }
 
   bool _shouldShowSelectionHandles(SelectionChangedCause? cause) {
-    // When the text field is activated by something that doesn't trigger the
-    // selection overlay, we shouldn't show the handles either.
     if (!_selectionGestureDetectorBuilder.shouldShowSelectionToolbar) {
       return false;
     }
-
-    if (cause == SelectionChangedCause.keyboard) {
-      return false;
-    }
-
+    if (cause == SelectionChangedCause.keyboard) return false;
+    if (!widget.enabled) return false;
     if (widget.readOnly && _effectiveController.selection.isCollapsed) {
       return false;
     }
-
-    if (!widget.enabled) {
-      return false;
+    switch (cause) {
+      case SelectionChangedCause.longPress:
+      case SelectionChangedCause.stylusHandwriting:
+        return true;
+      case SelectionChangedCause.doubleTap:
+      case SelectionChangedCause.drag:
+      case SelectionChangedCause.forcePress:
+      case SelectionChangedCause.toolbar:
+      case SelectionChangedCause.keyboard:
+      case SelectionChangedCause.tap:
+      case null:
+        break;
     }
 
-    // ignore: prefer-switch-with-enums
-    if (cause == SelectionChangedCause.longPress ||
-        cause == SelectionChangedCause.stylusHandwriting) {
-      return true;
-    }
-
-    if (_effectiveController.text.isNotEmpty) {
-      return true;
-    }
-
-    return false;
-  }
-
-  void _handleFocusChange() {
-    final hasFocus = _effectiveFocusNode.hasFocus;
-    // Rebuild only if selection handles visibility could change
-    // or if there is an external listener.
-    if (widget.onFocusChange != null || _showSelectionHandles != hasFocus) {
-      // Use addPostFrameCallback to avoid setState during build
-      // This follows Flutter's official recommendation for listener callbacks
-      SchedulerBinding.instance.addPostFrameCallback((_) {
-        if (mounted) {
-          // ignore: avoid-empty-setstate, no-empty-block
-          setState(() {
-            // Rebuild the widget on focus change to show/hide the text selection highlight.
-          });
-        }
-      });
-    }
-    widget.onFocusChange?.call(hasFocus);
+    return _effectiveController.text.isNotEmpty;
   }
 
   void _handleSelectionChanged(
     TextSelection selection,
     SelectionChangedCause? cause,
   ) {
-    final bool willShowSelectionHandles = _shouldShowSelectionHandles(cause);
-    if (willShowSelectionHandles != _showSelectionHandles) {
-      setState(() {
-        _showSelectionHandles = willShowSelectionHandles;
-      });
+    final willShow = _shouldShowSelectionHandles(cause);
+    if (willShow != _showSelectionHandles) {
+      setState(() => _showSelectionHandles = willShow);
     }
 
-    switch (defaultTargetPlatform) {
-      case TargetPlatform.iOS:
-      case TargetPlatform.macOS:
-      case TargetPlatform.linux:
-      case TargetPlatform.windows:
-      case TargetPlatform.fuchsia:
-      case TargetPlatform.android:
-        if (cause == SelectionChangedCause.longPress) {
-          _editableText?.bringIntoView(selection.extent);
-        }
+    // Bring caret into view on long press to match native behavior.
+    if (cause == SelectionChangedCause.longPress) {
+      _editableText?.bringIntoView(selection.extent);
     }
 
+    // Desktop UX: hide toolbar while dragging.
     switch (defaultTargetPlatform) {
-      case TargetPlatform.iOS:
-      case TargetPlatform.fuchsia:
-      case TargetPlatform.android:
-        break;
       case TargetPlatform.macOS:
       case TargetPlatform.linux:
       case TargetPlatform.windows:
         if (cause == SelectionChangedCause.drag) {
           _editableText?.hideToolbar();
         }
+        break;
+      case TargetPlatform.iOS:
+      case TargetPlatform.android:
+      case TargetPlatform.fuchsia:
+        break;
     }
   }
 
-  /// Toggle the toolbar when a selection handle is tapped.
   void _handleSelectionHandleTapped() {
     if (_effectiveController.selection.isCollapsed) {
-      _editableText!.toggleToolbar();
+      _editableText?.toggleToolbar();
     }
   }
 
-  void _handleMouseEnter(PointerEnterEvent event) {
-    widget.onHoverChange?.call(true);
-  }
+  void _handleMouseEnter(PointerEnterEvent _) =>
+      widget.onHoverChange?.call(true);
 
-  void _handleMouseExit(PointerExitEvent event) {
-    widget.onHoverChange?.call(false);
-  }
+  void _handleMouseExit(PointerExitEvent _) =>
+      widget.onHoverChange?.call(false);
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    _effectiveFocusNode.canRequestFocus = _canRequestFocus;
+    // Now it's legal to read MediaQuery.
+    _navMode = MediaQuery.maybeNavigationModeOf(context);
+    _effectiveFocusNode.canRequestFocus = _canRequestFocusFor(_navMode);
   }
 
   @override
   void didUpdateWidget(NakedTextField oldWidget) {
     super.didUpdateWidget(oldWidget);
+
+    // Controller ownership swap while preserving state/restoration.
     if (widget.controller == null && oldWidget.controller != null) {
       _createLocalController(oldWidget.controller!.value);
     } else if (widget.controller != null && oldWidget.controller == null) {
@@ -511,18 +443,25 @@ class _NakedTextFieldState extends State<NakedTextField>
       _controller = null;
     }
 
+    // Focus node swap: keep our listener correct.
     if (widget.focusNode != oldWidget.focusNode) {
       (oldWidget.focusNode ?? _focusNode)?.removeListener(_handleFocusChange);
       (widget.focusNode ?? _focusNode)?.addListener(_handleFocusChange);
     }
 
-    _effectiveFocusNode.canRequestFocus = _canRequestFocus;
+    // DO NOT read MediaQuery here; reuse cached mode (updated in didChangeDependencies).
+    _effectiveFocusNode.canRequestFocus = _canRequestFocusFor(_navMode);
 
+    // If readOnly changed while focused, recompute handle visibility.
     if (_effectiveFocusNode.hasFocus &&
         widget.readOnly != oldWidget.readOnly &&
         widget.enabled) {
-      if (_effectiveController.selection.isCollapsed) {
-        _showSelectionHandles = !widget.readOnly;
+      final willShow = _shouldShowSelectionHandles(
+        SelectionChangedCause.longPress,
+      );
+      if (willShow != _showSelectionHandles) {
+        // In didUpdateWidget, a rebuild is already scheduled; no setState needed.
+        _showSelectionHandles = willShow;
       }
     }
   }
@@ -530,7 +469,7 @@ class _NakedTextFieldState extends State<NakedTextField>
   @override
   void restoreState(RestorationBucket? oldBucket, bool initialRestore) {
     if (_controller != null) {
-      _registerController();
+      registerForRestoration(_controller!, 'controller');
     }
   }
 
@@ -544,52 +483,53 @@ class _NakedTextFieldState extends State<NakedTextField>
 
   @override
   void autofill(TextEditingValue newEditingValue) =>
-      _editableText!.autofill(newEditingValue);
+      _editableText?.autofill(newEditingValue);
 
-  @override
-  String? get restorationId => widget.restorationId;
+  // === AutofillClient ===
 
-  EditableTextState? get _editableText => editableTextKey.currentState;
-
-  // AutofillClient implementation start.
   @override
   String get autofillId => _editableText!.autofillId;
+
   @override
   TextInputConfiguration get textInputConfiguration {
-    final List<String>? autofillHints = widget.autofillHints?.toList(
-      growable: false,
-    );
-    final AutofillConfiguration autofillConfiguration = autofillHints != null
+    final List<String>? hints = widget.autofillHints?.toList(growable: false);
+    final AutofillConfiguration ac = hints != null
         ? AutofillConfiguration(
             uniqueIdentifier: autofillId,
-            autofillHints: autofillHints,
+            autofillHints: hints,
             currentEditingValue: _effectiveController.value,
             hintText: null,
           )
         : AutofillConfiguration.disabled;
 
     return _editableText!.textInputConfiguration.copyWith(
-      autofillConfiguration: autofillConfiguration,
+      autofillConfiguration: ac,
     );
   }
 
-  // AutofillClient implementation end.
+  @override
+  String? get restorationId => widget.restorationId;
+
+  // === Build ===
 
   @override
   Widget build(BuildContext context) {
     assert(debugCheckHasDirectionality(context));
 
-    final TextStyle style =
-        widget.style ??
-        TextStyle(
+    // Derive text style from ambient DefaultTextStyle unless overridden.
+    final TextStyle baseStyle =
+        (widget.style ?? DefaultTextStyle.of(context).style).copyWith(
           color: widget.enabled ? _defaultTextColor : _defaultDisabledColor,
-          fontSize: 16.0,
         );
+
     final Brightness keyboardAppearance =
         widget.keyboardAppearance ?? Brightness.light;
-    final TextEditingController controller = _effectiveController;
-    final FocusNode focusNode = _effectiveFocusNode;
-    final List<TextInputFormatter> formatters = <TextInputFormatter>[
+
+    final controller = _effectiveController;
+    final focusNode = _effectiveFocusNode;
+
+    // Input formatters including length limiting.
+    final formatters = <TextInputFormatter>[
       ...?widget.inputFormatters,
       if (widget.maxLength != null)
         LengthLimitingTextInputFormatter(
@@ -598,236 +538,179 @@ class _NakedTextFieldState extends State<NakedTextField>
         ),
     ];
 
-    // Configure platform-specific spell check
-    final SpellCheckConfiguration spellCheckConfiguration;
-    switch (defaultTargetPlatform) {
-      case TargetPlatform.iOS:
-      case TargetPlatform.macOS:
-        spellCheckConfiguration = const SpellCheckConfiguration.disabled();
-      case TargetPlatform.android:
-      case TargetPlatform.fuchsia:
-      case TargetPlatform.linux:
-      case TargetPlatform.windows:
-        spellCheckConfiguration =
-            widget.spellCheckConfiguration ??
-            const SpellCheckConfiguration.disabled();
-    }
+    // Caller-controlled or default disabled (consistent across platforms by default).
+    final SpellCheckConfiguration effectiveSpellCheck =
+        widget.spellCheckConfiguration ??
+        const SpellCheckConfiguration.disabled();
 
-    TextSelectionControls? textSelectionControls = widget.selectionControls;
-    final bool paintCursorAboveText;
-    bool? cursorOpacityAnimates = widget.cursorOpacityAnimates;
-    Offset? cursorOffset;
-    Color cursorColor;
-    Color selectionColor;
-    Radius? cursorRadius = widget.cursorRadius;
+    // Resolve adaptive platform visuals & behavior in one place.
+    final _PlatformDefaults p = _PlatformDefaults.resolve(
+      context: context,
+      cursorColorOverride: widget.cursorColor,
+      cursorRadiusOverride: widget.cursorRadius,
+      cursorOpacityAnimatesOverride: widget.cursorOpacityAnimates,
+    );
+    forcePressEnabled = p.forcePressEnabled;
 
-    // Configure platform-specific properties
-    switch (defaultTargetPlatform) {
-      case TargetPlatform.iOS:
-        forcePressEnabled = true;
-        textSelectionControls ??= cupertinoTextSelectionHandleControls;
-        paintCursorAboveText = true;
-        cursorOpacityAnimates ??= true;
-        cursorColor = widget.cursorColor ?? CupertinoColors.activeBlue;
-        selectionColor = CupertinoColors.activeBlue.withValues(alpha: 0.40);
-        cursorRadius ??= const Radius.circular(2.0);
-        cursorOffset = Offset(
-          _iOSHorizontalOffset / MediaQuery.devicePixelRatioOf(context),
-          0,
-        );
-      case TargetPlatform.macOS:
-        forcePressEnabled = false;
-        textSelectionControls ??= cupertinoDesktopTextSelectionHandleControls;
-        paintCursorAboveText = true;
-        cursorOpacityAnimates ??= false;
-        cursorColor = widget.cursorColor ?? CupertinoColors.activeBlue;
-        selectionColor = CupertinoColors.activeBlue.withValues(alpha: 0.40);
-        cursorRadius ??= const Radius.circular(2.0);
-        cursorOffset = Offset(
-          _iOSHorizontalOffset / MediaQuery.devicePixelRatioOf(context),
-          0,
-        );
-      case TargetPlatform.android:
-      case TargetPlatform.fuchsia:
-        forcePressEnabled = false;
-        textSelectionControls ??= materialTextSelectionHandleControls;
-        paintCursorAboveText = false;
-        cursorOpacityAnimates ??= false;
-        cursorColor = widget.cursorColor ?? _androidCursorColor;
-        selectionColor = _androidCursorColor.withValues(alpha: 0.40);
-      case TargetPlatform.linux:
-      case TargetPlatform.windows:
-        forcePressEnabled = false;
-        textSelectionControls ??= desktopTextSelectionHandleControls;
-        paintCursorAboveText = false;
-        cursorOpacityAnimates ??= false;
-        cursorColor = widget.cursorColor ?? _androidCursorColor;
-        selectionColor = _androidCursorColor.withValues(alpha: 0.40);
-    }
+    // Selection controls: caller override or adaptive default.
+    final TextSelectionControls? controls = widget.enableInteractiveSelection
+        ? (widget.selectionControls ?? p.platformSelectionControls)
+        : null;
 
-    Widget child = TextFieldTapRegion(
+    // Magnifier: caller override or adaptive.
+    final TextMagnifierConfiguration magnifier =
+        widget.magnifierConfiguration ??
+        TextMagnifier.adaptiveMagnifierConfiguration;
+
+    Widget editable = EditableText(
+      key: editableTextKey,
+      controller: controller,
+      focusNode: focusNode,
+      readOnly: widget.readOnly || !widget.enabled,
+      obscuringCharacter: widget.obscuringCharacter,
+      obscureText: widget.obscureText,
+      autocorrect: widget.autocorrect,
+      smartDashesType: widget.smartDashesType,
+      smartQuotesType: widget.smartQuotesType,
+      enableSuggestions: widget.enableSuggestions,
+      style: baseStyle,
+      cursorColor: p.cursorColor,
+      backgroundCursorColor: _neutralBgCursor,
+      textAlign: widget.textAlign,
+      textDirection: widget.textDirection,
+      maxLines: widget.maxLines,
+      minLines: widget.minLines,
+      expands: widget.expands,
+      autofocus: widget.autofocus,
+      showCursor: widget.showCursor,
+      showSelectionHandles: _showSelectionHandles,
+      selectionColor: focusNode.hasFocus ? p.selectionColor : null,
+      selectionControls: controls,
+      keyboardType: widget.keyboardType,
+      textInputAction: widget.textInputAction,
+      textCapitalization: widget.textCapitalization,
+      onChanged: widget.onChanged,
+      onEditingComplete: widget.onEditingComplete,
+      onSubmitted: widget.onSubmitted,
+      onAppPrivateCommand: widget.onAppPrivateCommand,
+      onSelectionChanged: _handleSelectionChanged,
+      onSelectionHandleTapped: _handleSelectionHandleTapped,
+      groupId: widget.groupId,
+      onTapOutside: widget.onTapOutside,
+      onTapUpOutside: widget.onTapUpOutside,
+      inputFormatters: formatters,
+      rendererIgnoresPointer: true,
+      cursorWidth: widget.cursorWidth,
+      cursorHeight: widget.cursorHeight,
+      cursorRadius: p.cursorRadius,
+      cursorOpacityAnimates: p.cursorOpacityAnimates,
+      cursorOffset: p.cursorOffset,
+      paintCursorAboveText: p.paintCursorAboveText,
+      selectionHeightStyle: widget.selectionHeightStyle,
+      selectionWidthStyle: widget.selectionWidthStyle,
+      scrollPadding: widget.scrollPadding,
+      keyboardAppearance: keyboardAppearance,
+      dragStartBehavior: widget.dragStartBehavior,
+      enableInteractiveSelection: widget.enableInteractiveSelection,
+      scrollController: widget.scrollController,
+      scrollPhysics: widget.scrollPhysics,
+      autofillClient: this,
+      clipBehavior: widget.clipBehavior,
+      restorationId: widget.restorationId == null
+          ? null
+          : '${widget.restorationId!}.editable',
+      stylusHandwritingEnabled: widget.stylusHandwritingEnabled,
+      enableIMEPersonalizedLearning: widget.enableIMEPersonalizedLearning,
+      contentInsertionConfiguration: widget.contentInsertionConfiguration,
+      contextMenuBuilder: widget.contextMenuBuilder,
+      spellCheckConfiguration: effectiveSpellCheck,
+      magnifierConfiguration: magnifier,
+      undoController: widget.undoController,
+    );
+
+    // Tap region & restoration scoping; keep pointer-ignoring atop EditableText.
+    editable = TextFieldTapRegion(
       child: IgnorePointer(
         ignoring: widget.ignorePointers ?? !widget.enabled,
         child: RepaintBoundary(
-          child: UnmanagedRestorationScope(
-            bucket: bucket,
-            child: EditableText(
-              key: editableTextKey,
-              controller: controller,
-              focusNode: focusNode,
-              readOnly: widget.readOnly || !widget.enabled,
-              obscuringCharacter: widget.obscuringCharacter,
-              obscureText: widget.obscureText,
-              autocorrect: widget.autocorrect,
-              smartDashesType: widget.smartDashesType,
-              smartQuotesType: widget.smartQuotesType,
-              enableSuggestions: widget.enableSuggestions,
-              style: widget.style ?? style,
-              cursorColor: cursorColor,
-              backgroundCursorColor: CupertinoColors.inactiveGray,
-              textAlign: widget.textAlign,
-              textDirection: widget.textDirection,
-              maxLines: widget.maxLines,
-              minLines: widget.minLines,
-              expands: widget.expands,
-              autofocus: widget.autofocus,
-              showCursor: widget.showCursor,
-              showSelectionHandles: _showSelectionHandles,
-              selectionColor: focusNode.hasFocus ? selectionColor : null,
-              selectionControls: widget.enableInteractiveSelection
-                  ? textSelectionControls
-                  : null,
-              keyboardType: widget.keyboardType,
-              textInputAction: widget.textInputAction,
-              textCapitalization: widget.textCapitalization,
-              onChanged: widget.onChanged,
-              onEditingComplete: widget.onEditingComplete,
-              onSubmitted: widget.onSubmitted,
-              onAppPrivateCommand: widget.onAppPrivateCommand,
-              onSelectionChanged: _handleSelectionChanged,
-              onSelectionHandleTapped: _handleSelectionHandleTapped,
-              groupId: widget.groupId,
-              onTapOutside: widget.onTapOutside,
-              onTapUpOutside: widget.onPressUpOutside,
-              inputFormatters: formatters,
-              rendererIgnoresPointer: true,
-              cursorWidth: widget.cursorWidth,
-              cursorHeight: widget.cursorHeight,
-              cursorRadius: cursorRadius,
-              cursorOpacityAnimates: cursorOpacityAnimates,
-              cursorOffset: cursorOffset,
-              paintCursorAboveText: paintCursorAboveText,
-              selectionHeightStyle: widget.selectionHeightStyle,
-              selectionWidthStyle: widget.selectionWidthStyle,
-              scrollPadding: widget.scrollPadding,
-              keyboardAppearance: keyboardAppearance,
-              dragStartBehavior: widget.dragStartBehavior,
-              enableInteractiveSelection: widget.enableInteractiveSelection,
-              scrollController: widget.scrollController,
-              scrollPhysics: widget.scrollPhysics,
-              autofillClient: this,
-              clipBehavior: widget.clipBehavior,
-              restorationId: 'editable',
-              stylusHandwritingEnabled: widget.stylusHandwritingEnabled,
-              enableIMEPersonalizedLearning:
-                  widget.enableIMEPersonalizedLearning,
-              contentInsertionConfiguration:
-                  widget.contentInsertionConfiguration,
-              contextMenuBuilder: widget.contextMenuBuilder,
-              spellCheckConfiguration: spellCheckConfiguration,
-              magnifierConfiguration:
-                  widget.magnifierConfiguration ??
-                  TextMagnifier.adaptiveMagnifierConfiguration,
-              undoController: widget.undoController,
-            ),
-          ),
+          child: UnmanagedRestorationScope(bucket: bucket, child: editable),
         ),
       ),
     );
 
-    void _handleSemanticTap() {
-      // Mirror tap behavior for accessibility users.
-      widget.onPressed?.call();
-
+    // Semantics: mirror tap, hide obscured values, expose state.
+    void _semanticTap() {
+      widget.onTap?.call();
       if (!widget.readOnly) {
-        // Ensure a valid caret position before requesting keyboard.
-        final controller = _effectiveController;
-        if (!controller.selection.isValid) {
-          controller.selection = TextSelection.collapsed(
-            offset: controller.text.length,
-          );
+        final c = controller;
+        if (!c.selection.isValid) {
+          c.selection = TextSelection.collapsed(offset: c.text.length);
         }
         _requestKeyboard();
       }
     }
 
-    Widget _wrapWithSemantics(Widget textField) {
+    Widget withSemantics(Widget child) {
       return Semantics(
         container: true,
         enabled: widget.enabled,
         textField: true,
-        readOnly: widget.readOnly || !widget.enabled,
-        // Expose focused state only; focus action comes from ancestor.
-        focused: _effectiveFocusNode.hasFocus,
+        readOnly: widget.readOnly,
+        focusable: widget.enabled,
+        focused: focusNode.hasFocus,
         obscured: widget.obscureText,
         multiline: (widget.maxLines ?? 1) > 1,
         maxValueLength: widget.maxLength,
-        currentValueLength: _effectiveController.text.length,
+        currentValueLength: controller.text.length,
         label: widget.semanticLabel,
-        // CRITICAL: Never expose obscured text values per security guidelines
-        value: widget.obscureText ? null : _effectiveController.text,
+        value: widget.obscureText ? null : controller.text,
         hint: widget.semanticHint,
-        // Provide a semantics tap to request focus/keyboard like Material.
-        // Do not expose tap when readOnly, matching Material behavior.
-        onTap: widget.enabled && !widget.readOnly ? _handleSemanticTap : null,
-        child: textField,
+        onTap: widget.enabled ? _semanticTap : null,
+        child: child,
       );
     }
 
-    final core = widget.enabled
+    final Widget composed = withSemantics(widget.builder(context, editable));
+
+    // Selection/gesture plumbing
+    final Widget detector = _selectionGestureDetectorBuilder
+        .buildGestureDetector(
+          behavior: HitTestBehavior.translucent,
+          child: composed,
+        );
+
+    // Hover affordance only when enabled.
+    final Widget maybeMouseRegion = widget.enabled
         ? MouseRegion(
             onEnter: _handleMouseEnter,
             onExit: _handleMouseExit,
             cursor: SystemMouseCursors.text,
-            child: _selectionGestureDetectorBuilder.buildGestureDetector(
-              behavior: HitTestBehavior.translucent,
-              child: _wrapWithSemantics(widget.builder(context, child)),
-            ),
+            child: detector,
           )
-        : _selectionGestureDetectorBuilder.buildGestureDetector(
-            behavior: HitTestBehavior.translucent,
-            child: _wrapWithSemantics(widget.builder(context, child)),
-          );
+        : detector;
 
-    // Expose a focus action at an ancestor so parity utils can merge it.
-    return FocusableActionDetector(
-      enabled: widget.enabled,
-      autofocus: widget.autofocus,
-      child: core,
-    );
+    return maybeMouseRegion;
   }
 }
 
-class _TextFieldSelectionGestureDetectorBuilder
+// == Selection gesture builder ==
+
+class _NakedSelectionGestureDetectorBuilder
     extends TextSelectionGestureDetectorBuilder {
   final _NakedTextFieldState _state;
 
-  _TextFieldSelectionGestureDetectorBuilder({
-    required _NakedTextFieldState state,
-  }) : _state = state,
-       super(delegate: state);
+  _NakedSelectionGestureDetectorBuilder({required _NakedTextFieldState state})
+    : _state = state,
+      super(delegate: state);
 
   @override
   void onUserTap() {
-    _state.widget.onPressed?.call();
+    _state.widget.onTap?.call();
 
-    // Handle keyboard request for accessibility and functionality
     if (!_state.widget.readOnly) {
-      final controller = _state._effectiveController;
-      if (!controller.selection.isValid) {
-        controller.selection = TextSelection.collapsed(
-          offset: controller.text.length,
-        );
+      final c = _state._effectiveController;
+      if (!c.selection.isValid) {
+        c.selection = TextSelection.collapsed(offset: c.text.length);
       }
       _state._requestKeyboard();
     }
@@ -836,15 +719,108 @@ class _TextFieldSelectionGestureDetectorBuilder
   @override
   void onTapDown(TapDragDownDetails details) {
     super.onTapDown(details);
+    _state.widget.onTapChange?.call(true);
     _state.widget.onPressChange?.call(true);
   }
 
   @override
   void onSingleTapUp(TapDragUpDetails details) {
     super.onSingleTapUp(details);
+    _state.widget.onTapChange?.call(false);
     _state.widget.onPressChange?.call(false);
   }
 
   @override
   bool get onUserTapAlwaysCalled => _state.widget.onTapAlwaysCalled;
+}
+
+// == Centralized platform defaults (adaptive styling & behavior) ==
+
+class _PlatformDefaults {
+  final bool forcePressEnabled;
+  final bool paintCursorAboveText;
+  final bool cursorOpacityAnimates;
+  final Color cursorColor;
+  final Color selectionColor;
+  final Radius? cursorRadius;
+  final Offset? cursorOffset;
+  final TextSelectionControls? platformSelectionControls;
+
+  static const Color _androidBlue = Color(0xFF2196F3);
+
+  const _PlatformDefaults({
+    required this.forcePressEnabled,
+    required this.paintCursorAboveText,
+    required this.cursorOpacityAnimates,
+    required this.cursorColor,
+    required this.selectionColor,
+    this.cursorRadius,
+    this.cursorOffset,
+    this.platformSelectionControls,
+  });
+
+  static _PlatformDefaults resolve({
+    required BuildContext context,
+    Color? cursorColorOverride,
+    Radius? cursorRadiusOverride,
+    bool? cursorOpacityAnimatesOverride,
+  }) {
+    switch (defaultTargetPlatform) {
+      case TargetPlatform.iOS:
+        return _PlatformDefaults(
+          forcePressEnabled: true,
+          paintCursorAboveText: true,
+          cursorOpacityAnimates: cursorOpacityAnimatesOverride ?? true,
+          cursorColor: cursorColorOverride ?? const Color(0xFF007AFF),
+          selectionColor: const Color(0x66007AFF), // ~40% alpha
+          cursorRadius: cursorRadiusOverride ?? const Radius.circular(2),
+          cursorOffset: Offset(
+            _NakedTextFieldState._iOSHorizontalOffset /
+                MediaQuery.devicePixelRatioOf(context),
+            0,
+          ),
+          platformSelectionControls: cupertinoTextSelectionHandleControls,
+        );
+      case TargetPlatform.macOS:
+        return _PlatformDefaults(
+          forcePressEnabled: false,
+          paintCursorAboveText: true,
+          cursorOpacityAnimates: cursorOpacityAnimatesOverride ?? false,
+          cursorColor: cursorColorOverride ?? const Color(0xFF007AFF),
+          selectionColor: const Color(0x66007AFF),
+          cursorRadius: cursorRadiusOverride ?? const Radius.circular(2),
+          cursorOffset: Offset(
+            _NakedTextFieldState._iOSHorizontalOffset /
+                MediaQuery.devicePixelRatioOf(context),
+            0,
+          ),
+          platformSelectionControls:
+              cupertinoDesktopTextSelectionHandleControls,
+        );
+      case TargetPlatform.android:
+      case TargetPlatform.fuchsia:
+        return _PlatformDefaults(
+          forcePressEnabled: false,
+          paintCursorAboveText: false,
+          cursorOpacityAnimates: cursorOpacityAnimatesOverride ?? false,
+          cursorColor: cursorColorOverride ?? _androidBlue,
+          selectionColor: _androidBlue.withValues(alpha: 0.40),
+          cursorRadius: cursorRadiusOverride,
+          cursorOffset: null,
+          platformSelectionControls: materialTextSelectionHandleControls,
+        );
+      case TargetPlatform.linux:
+      case TargetPlatform.windows:
+        return _PlatformDefaults(
+          forcePressEnabled: false,
+          paintCursorAboveText: false,
+          cursorOpacityAnimates: cursorOpacityAnimatesOverride ?? false,
+          cursorColor: cursorColorOverride ?? _androidBlue,
+          selectionColor: _androidBlue.withValues(alpha: 0.40),
+          cursorRadius: cursorRadiusOverride,
+          cursorOffset: null,
+          platformSelectionControls: desktopTextSelectionHandleControls,
+        );
+    }
+  }
 }

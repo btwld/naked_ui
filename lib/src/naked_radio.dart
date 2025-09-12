@@ -20,6 +20,7 @@ class NakedRadio<T> extends StatefulWidget {
     this.onHoverChange,
     this.onPressChange,
     this.builder,
+    this.groupRegistry,
   }) : assert(
          child != null || builder != null,
          'Either child or builder must be provided',
@@ -40,6 +41,10 @@ class NakedRadio<T> extends StatefulWidget {
   /// Called when pressed state changes.
   final ValueChanged<bool>? onPressChange;
   final ValueWidgetBuilder<Set<WidgetState>>? builder;
+  
+  /// Optional registry override for advanced usage and testing.
+  /// When null, the nearest RadioGroup<T> ancestor is used.
+  final RadioGroupRegistry<T>? groupRegistry;
 
   @override
   State<NakedRadio<T>> createState() => _NakedRadioState<T>();
@@ -60,14 +65,7 @@ class _NakedRadioState<T> extends State<NakedRadio<T>>
     _focusNode.addListener(_handleFocusNodeChanged);
   }
 
-  void _handlePointerTap(RadioGroupRegistry<T> registry, bool isSelected) {
-    if (!widget.enabled) return;
-    if (widget.toggleable && isSelected) {
-      registry.onChanged(null);
-    } else if (!isSelected) {
-      registry.onChanged(widget.value);
-    }
-  }
+  // Removed unused _handlePointerTap (selection is handled by RawRadio).
 
   void _handleFocusNodeChanged() {
     widget.onFocusChange?.call(_focusNode.hasFocus);
@@ -86,39 +84,30 @@ class _NakedRadioState<T> extends State<NakedRadio<T>>
 
     return ConstrainedBox(
       constraints: const BoxConstraints.tightFor(width: 48, height: 48),
-      child: GestureDetector(
-        onTap: widget.enabled
-            ? () => _handlePointerTap(registry, isSelected)
-            : null,
+      child: buildPressListener(
+        enabled: widget.enabled,
         behavior: HitTestBehavior.opaque,
-        excludeFromSemantics: true,
-        child: buildPressListener(
+        onPressChange: widget.onPressChange,
+        child: RawRadio<T>(
+          value: widget.value,
+          mouseCursor: WidgetStateMouseCursor.resolveWith((_) => effectiveCursor),
+          toggleable: widget.toggleable,
+          focusNode: _focusNode,
+          autofocus: widget.autofocus && widget.enabled,
+          groupRegistry: registry,
           enabled: widget.enabled,
-          behavior: HitTestBehavior.opaque,
-          onPressChange: widget.onPressChange,
-          child: RawRadio<T>(
-            value: widget.value,
-            mouseCursor: WidgetStateMouseCursor.resolveWith(
-              (_) => effectiveCursor,
-            ),
-            toggleable: widget.toggleable,
-            focusNode: _focusNode,
-            autofocus: widget.autofocus && widget.enabled,
-            groupRegistry: registry,
-            enabled: widget.enabled,
-            builder: (context, radioState) {
-              if (widget.builder != null) {
-                final states = <WidgetState>{
-                  if (!widget.enabled) WidgetState.disabled,
-                  if (isSelected) WidgetState.selected,
-                };
+          builder: (context, radioState) {
+            if (widget.builder != null) {
+              final states = <WidgetState>{
+                if (!widget.enabled) WidgetState.disabled,
+                if (isSelected) WidgetState.selected,
+              };
 
-                return widget.builder!(context, states, widget.child);
-              }
+              return widget.builder!(context, states, widget.child);
+            }
 
-              return widget.child!;
-            },
-          ),
+            return widget.child!;
+          },
         ),
       ),
     );
@@ -147,7 +136,7 @@ class _NakedRadioState<T> extends State<NakedRadio<T>>
 
   @override
   Widget build(BuildContext context) {
-    final registry = RadioGroup.maybeOf<T>(context);
+    final registry = widget.groupRegistry ?? RadioGroup.maybeOf<T>(context);
 
     if (registry == null) {
       throw FlutterError.fromParts([

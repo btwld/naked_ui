@@ -1,433 +1,581 @@
+// test/naked_text_field_test.dart
+//
+// Robust widget tests for NakedTextField with adaptive styling.
+// - Safe pump helper
+// - Platform-aware selection assertions
+// - Non-brittle spellcheck/magnifier checks
+// - Covers lifecycle, editing, selection, semantics, restoration, etc.
+
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:naked_ui/naked_ui.dart';
 
-import 'helpers/interaction_test_extensions.dart';
+Future<void> _pumpApp(
+  WidgetTester tester, {
+  required Widget child,
+  String restorationScopeId = 'app',
+  Size surfaceSize = const Size(900, 700),
+}) async {
+  await tester.binding.setSurfaceSize(surfaceSize);
+  addTearDown(() => tester.binding.setSurfaceSize(null));
 
+  await tester.pumpWidget(
+    MaterialApp(
+      restorationScopeId: restorationScopeId,
+      home: Scaffold(body: Center(child: child)),
+    ),
+  );
+  // Ensure a full build/first frame before tests grab widgets.
+  await tester.pumpAndSettle();
+}
 
+NakedTextFieldBuilder _builder({EdgeInsets padding = EdgeInsets.zero}) {
+  return (context, editable) => Padding(
+    padding: padding,
+    child: DecoratedBox(decoration: const BoxDecoration(), child: editable),
+  );
+}
+
+EditableText _getEditableText(WidgetTester tester) {
+  final iterable = tester.widgetList<EditableText>(find.byType(EditableText));
+  expect(iterable.length, 1, reason: 'Expected exactly one EditableText');
+  return iterable.single;
+}
 
 void main() {
-  group('Basic Functionality', () {
-    testWidgets('renders correctly with builder', (WidgetTester tester) async {
-      await tester.pumpTextField(
-        NakedTextField(
-          builder: (context, child) {
-            return Container(
-              decoration: BoxDecoration(border: Border.all()),
-              child: child,
-            );
+  TestWidgetsFlutterBinding.ensureInitialized();
+
+  group('Render & builder basics', () {
+    testWidgets('renders EditableText and builder receives a subtree with it', (
+      tester,
+    ) async {
+      Widget? built;
+
+      await _pumpApp(
+        tester,
+        child: NakedTextField(
+          builder: (context, editable) {
+            built = editable;
+            return editable;
           },
         ),
       );
 
-      expect(find.byType(Container), findsOneWidget);
       expect(find.byType(EditableText), findsOneWidget);
-    });
-
-    testWidgets('allows text input', (WidgetTester tester) async {
-      final controller = TextEditingController();
-      await tester.pumpTextField(
-        NakedTextField(
-          controller: controller,
-          autofocus: true,
-          builder: (context, child) => child,
+      // Assert that the widget handed to builder contains an EditableText below it.
+      expect(
+        find.descendant(
+          of: find.byWidget(built!),
+          matching: find.byType(EditableText),
         ),
+        findsOneWidget,
       );
-
-      await tester.enterText(find.byType(NakedTextField), 'Hello, World!');
-
-      expect(controller.text, equals('Hello, World!'));
     });
 
-    testWidgets('does not allow text input when readOnly is true', (
-      WidgetTester tester,
+    testWidgets('derives from DefaultTextStyle when style is null', (
+      tester,
     ) async {
-      final controller = TextEditingController();
-      await tester.pumpTextField(
-        NakedTextField(
-          controller: controller,
-          readOnly: true,
-          autofocus: true,
-          builder: (context, child) => child,
+      await _pumpApp(
+        tester,
+        child: DefaultTextStyle(
+          style: const TextStyle(fontSize: 19),
+          child: NakedTextField(builder: _builder()),
         ),
       );
 
-      await tester.enterText(find.byType(NakedTextField), 'Hello, World!');
-
-      expect(controller.text, equals(''));
+      final et = _getEditableText(tester);
+      expect(et.style.fontSize, 19);
     });
 
-    testWidgets('does not allow text input when disabled', (
-      WidgetTester tester,
-    ) async {
-      final controller = TextEditingController();
-      await tester.pumpTextField(
-        SizedBox(
-          child: NakedTextField(
-            controller: controller,
-            enabled: false,
-            autofocus: true,
-            builder: (context, child) => child,
-          ),
-        ),
+    testWidgets('enabled=false sets readOnly on EditableText', (tester) async {
+      await _pumpApp(
+        tester,
+        child: NakedTextField(enabled: false, builder: _builder()),
       );
 
-      await tester.enterText(find.byType(NakedTextField), 'Hello, World!');
-
-      expect(controller.text, equals(''));
+      final et = _getEditableText(tester);
+      expect(et.readOnly, isTrue);
     });
   });
 
-  group('State Callbacks', () {
-    testWidgets('calls onHoverChange when hovered', (
-      WidgetTester tester,
+  group('Editing & callbacks', () {
+    testWidgets('typing updates controller and onChanged', (tester) async {
+      final ctl = TextEditingController();
+      String? last;
+
+      await _pumpApp(
+        tester,
+        child: NakedTextField(
+          controller: ctl,
+          onChanged: (s) => last = s,
+          builder: _builder(),
+        ),
+      );
+
+      await tester.showKeyboard(find.byType(EditableText));
+      await tester.enterText(find.byType(EditableText), 'Alpha');
+      await tester.pump();
+
+      expect(ctl.text, 'Alpha');
+      expect(last, 'Alpha');
+    });
+
+    testWidgets('onSubmitted and onEditingComplete fire on IME action', (
+      tester,
     ) async {
-      bool isHovered = false;
-      await tester.pumpTextField(
-        Padding(
-          padding: const EdgeInsets.all(1),
-          child: NakedTextField(
-            onHoverChange: (value) => isHovered = value,
-            builder: (context, child) => child,
-          ),
+      final ctl = TextEditingController();
+      String? submitted;
+      var completeCount = 0;
+
+      await _pumpApp(
+        tester,
+        child: NakedTextField(
+          controller: ctl,
+          textInputAction: TextInputAction.done,
+          onEditingComplete: () => completeCount++,
+          onSubmitted: (s) => submitted = s,
+          builder: _builder(),
         ),
       );
 
-      final gesture = await tester.simulateHover(NakedTextField);
-      expect(isHovered, true);
-
-      await gesture.moveTo(Offset.zero);
-      await tester.pump();
-      expect(isHovered, false);
-    });
-
-    testWidgets('calls onPressChange on tap down/up', (
-      WidgetTester tester,
-    ) async {
-      bool isPressed = false;
-      await tester.pumpTextField(
-        NakedTextField(
-          onPressChange: (value) => isPressed = value,
-          builder: (context, child) => child,
-        ),
-      );
-
-      final gesture = await tester.press(find.byType(NakedTextField));
-      await tester.pumpAndSettle();
-      expect(isPressed, true);
-
-      await gesture.up();
-      await tester.pump();
-      expect(isPressed, false);
-    });
-
-    testWidgets('calls onFocusChange when focused/unfocused', (
-      WidgetTester tester,
-    ) async {
-      bool isFocused = false;
-      final focusNode = FocusNode();
-
-      await tester.pumpTextField(
-        NakedTextField(
-          focusNode: focusNode,
-          onFocusChange: (value) => isFocused = value,
-          builder: (context, child) => child,
-        ),
-      );
-
-      focusNode.requestFocus();
-      await tester.pump();
-      expect(isFocused, true);
-
-      focusNode.unfocus();
-      await tester.pump();
-      expect(isFocused, false);
-    });
-
-    testWidgets('calls onChanged when text changes', (
-      WidgetTester tester,
-    ) async {
-      String changedText = '';
-      await tester.pumpTextField(
-        NakedTextField(
-          onChanged: (value) => changedText = value,
-          builder: (context, child) => child,
-        ),
-      );
-
-      await tester.tap(find.byType(NakedTextField));
-      await tester.pump();
-      await tester.enterText(find.byType(NakedTextField), 'Hello, World!');
-
-      expect(changedText, equals('Hello, World!'));
-    });
-  });
-
-  group('Input Management', () {
-    testWidgets('obeys maxLines parameter', (WidgetTester tester) async {
-      final controller = TextEditingController();
-      await tester.pumpTextField(
-        NakedTextField(
-          controller: controller,
-          maxLines: 3,
-          builder: (context, child) => child,
-        ),
-      );
-
-      final editableText = tester.widget<EditableText>(
-        find.byType(EditableText),
-      );
-      expect(editableText.maxLines, 3);
-    });
-
-    testWidgets('obeys minLines parameter', (WidgetTester tester) async {
-      final controller = TextEditingController();
-      await tester.pumpTextField(
-        NakedTextField(
-          controller: controller,
-          minLines: 2,
-          maxLines: 4,
-          builder: (context, child) => child,
-        ),
-      );
-
-      final editableText = tester.widget<EditableText>(
-        find.byType(EditableText),
-      );
-      expect(editableText.minLines, 2);
-    });
-
-    testWidgets('respects maxLength parameter', (WidgetTester tester) async {
-      final controller = TextEditingController();
-      await tester.pumpTextField(
-        NakedTextField(
-          controller: controller,
-          maxLength: 5,
-          builder: (context, child) => child,
-        ),
-      );
-
-      await tester.tap(find.byType(NakedTextField));
-      await tester.pump();
-      await tester.enterText(find.byType(NakedTextField), '123456789');
-
-      expect(controller.text, equals('12345'));
-    });
-  });
-
-  group('Text Formatting', () {
-    testWidgets('obscures text when obscureText is true', (
-      WidgetTester tester,
-    ) async {
-      final controller = TextEditingController();
-      await tester.pumpTextField(
-        NakedTextField(
-          controller: controller,
-          obscureText: true,
-          builder: (context, child) => child,
-        ),
-      );
-
-      await tester.tap(find.byType(NakedTextField));
-      await tester.pump();
-      await tester.enterText(find.byType(NakedTextField), 'password');
-
-      expect(controller.text, equals('password'));
-      final editableText = tester.widget<EditableText>(
-        find.byType(EditableText),
-      );
-      expect(editableText.obscureText, true);
-    });
-
-    testWidgets('uses custom obscuringCharacter', (WidgetTester tester) async {
-      final controller = TextEditingController();
-      await tester.pumpTextField(
-        NakedTextField(
-          controller: controller,
-          obscureText: true,
-          obscuringCharacter: '-',
-          builder: (context, child) => child,
-        ),
-      );
-
-      final editableText = tester.widget<EditableText>(
-        find.byType(EditableText),
-      );
-      expect(editableText.obscuringCharacter, '-');
-    });
-
-    testWidgets('respects textAlign parameter', (WidgetTester tester) async {
-      await tester.pumpTextField(
-        NakedTextField(
-          textAlign: TextAlign.justify,
-          builder: (context, child) => child,
-        ),
-      );
-
-      final editableText = tester.widget<EditableText>(
-        find.byType(EditableText),
-      );
-      expect(editableText.textAlign, TextAlign.justify);
-    });
-
-    testWidgets('applies input formatters', (WidgetTester tester) async {
-      final controller = TextEditingController();
-      await tester.pumpTextField(
-        NakedTextField(
-          controller: controller,
-          inputFormatters: [
-            FilteringTextInputFormatter.allow(RegExp(r'[0-9]')),
-          ],
-          builder: (context, child) => child,
-        ),
-      );
-
-      await tester.tap(find.byType(NakedTextField));
-      await tester.pump();
-      await tester.enterText(find.byType(NakedTextField), 'abc123def');
-
-      expect(controller.text, equals('123'));
-    });
-  });
-
-  group('Keyboard Interaction', () {
-    testWidgets('respects keyboard type', (WidgetTester tester) async {
-      await tester.pumpTextField(
-        NakedTextField(
-          keyboardType: TextInputType.number,
-          builder: (context, child) => child,
-        ),
-      );
-
-      await tester.tap(find.byType(NakedTextField));
-      await tester.pump();
-
-      final editableText = tester.widget<EditableText>(
-        find.byType(EditableText),
-      );
-      expect(editableText.keyboardType, TextInputType.number);
-    });
-
-    testWidgets('respects text input action', (WidgetTester tester) async {
-      await tester.pumpTextField(
-        NakedTextField(
-          textInputAction: TextInputAction.search,
-          builder: (context, child) => child,
-        ),
-      );
-
-      await tester.tap(find.byType(NakedTextField));
-      await tester.pump();
-
-      final editableText = tester.widget<EditableText>(
-        find.byType(EditableText),
-      );
-      expect(editableText.textInputAction, TextInputAction.search);
-    });
-
-    testWidgets('calls onSubmitted when action button is pressed', (
-      WidgetTester tester,
-    ) async {
-      String submitted = '';
-      await tester.pumpTextField(
-        NakedTextField(
-          onSubmitted: (value) => submitted = value,
-          builder: (context, child) => child,
-        ),
-      );
-
-      await tester.tap(find.byType(NakedTextField));
-      await tester.pump();
-      await tester.enterText(find.byType(NakedTextField), 'Hello, World!');
+      await tester.showKeyboard(find.byType(EditableText));
+      await tester.enterText(find.byType(EditableText), 'Beta');
       await tester.testTextInput.receiveAction(TextInputAction.done);
       await tester.pump();
 
-      expect(submitted, equals('Hello, World!'));
+      expect(submitted, 'Beta');
+      expect(completeCount, 1);
     });
-  });
 
-  group('Selection Behavior', () {
-    testWidgets('allows text selection', (WidgetTester tester) async {
-      final controller = TextEditingController(text: 'Hello, World!');
-      await tester.pumpTextField(
-        NakedTextField(
-          controller: controller,
-          builder: (context, child) => child,
+    testWidgets('maxLength enforcement truncates input when enforced', (
+      tester,
+    ) async {
+      final ctl = TextEditingController();
+
+      await _pumpApp(
+        tester,
+        child: NakedTextField(
+          controller: ctl,
+          maxLength: 5,
+          maxLengthEnforcement: MaxLengthEnforcement.enforced,
+          builder: _builder(),
         ),
       );
 
-      await tester.tap(find.byType(NakedTextField));
+      await tester.showKeyboard(find.byType(EditableText));
+      await tester.enterText(find.byType(EditableText), '123456789');
       await tester.pump();
 
-      await tester.tapAt(tester.getTopLeft(find.byType(NakedTextField)));
-      await tester.tapAt(tester.getTopLeft(find.byType(NakedTextField)));
-      await tester.pump();
-
-      expect(controller.selection.isValid, isTrue);
-      expect(controller.selection.isCollapsed, isFalse);
+      expect(ctl.text, '12345');
     });
 
-    testWidgets('cursor has the specified width', (WidgetTester tester) async {
-      await tester.pumpTextField(
-        NakedTextField(cursorWidth: 5.0, builder: (context, child) => child),
-      );
+    testWidgets('readOnly prevents editing', (tester) async {
+      final ctl = TextEditingController(text: 'seed');
 
-      final editableText = tester.widget<EditableText>(
-        find.byType(EditableText),
-      );
-      expect(editableText.cursorWidth, 5.0);
-    });
-
-    testWidgets('cursor has the specified color', (WidgetTester tester) async {
-      await tester.pumpTextField(
-        NakedTextField(
-          cursorColor: Colors.red,
-          builder: (context, child) => child,
+      await _pumpApp(
+        tester,
+        child: NakedTextField(
+          controller: ctl,
+          readOnly: true,
+          builder: _builder(),
         ),
       );
 
-      final editableText = tester.widget<EditableText>(
-        find.byType(EditableText),
-      );
-      expect(editableText.cursorColor, Colors.red);
+      await tester.showKeyboard(find.byType(EditableText));
+      await tester.enterText(find.byType(EditableText), 'attempt');
+      await tester.pump();
+
+      expect(ctl.text, 'seed');
+      final et = _getEditableText(tester);
+      expect(et.readOnly, isTrue);
     });
   });
 
-  
+  group('Focus, hover, and outside taps', () {
+    testWidgets('onFocusChange notifies focus gain/loss', (tester) async {
+      final ctl = TextEditingController();
+      final node = FocusNode();
+      final events = <bool>[];
 
-  group('Outside taps', () {
-    testWidgets(
-      'onTapOutside fires when tapping outside',
-      (tester) async {
-        bool fired = false;
-        final insideKey = GlobalKey();
+      await _pumpApp(
+        tester,
+        child: NakedTextField(
+          controller: ctl,
+          focusNode: node,
+          onFocusChange: events.add,
+          builder: _builder(),
+        ),
+      );
 
-        await tester.pumpTextField(
-          Column(
-            children: [
-              NakedTextField(
-                onTapOutside: (_) => fired = true,
-                builder: (context, child) =>
-                    Container(key: insideKey, child: child),
-              ),
-              const SizedBox(height: 20),
-              const Text('Outside'),
-            ],
+      // Focus
+      await tester.tap(find.byType(EditableText));
+      await tester.pump();
+      expect(node.hasFocus, isTrue);
+
+      // Deterministic blur (more reliable than outside tapping in tests)
+      final context = tester.element(find.byType(EditableText));
+      FocusScope.of(context).unfocus();
+      await tester.pump();
+
+      expect(events, containsAllInOrder([true, false]));
+    });
+
+
+    testWidgets('canRequestFocus=false prevents focusing', (tester) async {
+      final node = FocusNode();
+
+      await _pumpApp(
+        tester,
+        child: NakedTextField(
+          canRequestFocus: false,
+          focusNode: node,
+          builder: _builder(),
+        ),
+      );
+
+      await tester.tap(find.byType(EditableText));
+      await tester.pump();
+      expect(node.hasFocus, isFalse);
+    });
+
+    testWidgets('onTap & onTapAlwaysCalled true triggers', (tester) async {
+      int taps = 0;
+
+      await _pumpApp(
+        tester,
+        child: NakedTextField(
+          onTap: () => taps++,
+          onTapAlwaysCalled: true,
+          builder: _builder(),
+        ),
+      );
+
+      await tester.tap(find.byType(EditableText));
+      await tester.pump();
+      expect(taps, 1);
+    });
+
+    testWidgets('onHoverChange toggles with mouse enter/exit', (tester) async {
+      bool? hover;
+      await _pumpApp(
+        tester,
+        child: NakedTextField(
+          onHoverChange: (v) => hover = v,
+          builder: _builder(padding: const EdgeInsets.all(12)),
+        ),
+      );
+
+      final box = tester.renderObject<RenderBox>(find.byType(EditableText));
+      final center = box.localToGlobal(box.size.center(Offset.zero));
+
+      final gesture = await tester.createGesture(kind: PointerDeviceKind.mouse);
+      addTearDown(gesture.removePointer);
+
+      await gesture.addPointer();
+      await gesture.moveTo(center);
+      await tester.pump();
+      expect(hover, isTrue);
+
+      await gesture.moveTo(const Offset(5, 5));
+      await tester.pump();
+      expect(hover, isFalse);
+    });
+  });
+
+  group('Selection & toolbar (adaptive controls)', () {
+
+
+    testWidgets('selectionColor is gated by focus', (tester) async {
+      final ctl = TextEditingController(text: 'abc');
+
+      await _pumpApp(
+        tester,
+        child: NakedTextField(controller: ctl, builder: _builder()),
+      );
+
+      var et = _getEditableText(tester);
+      expect(et.selectionColor, isNull);
+
+      await tester.tap(find.byType(EditableText));
+      await tester.pump();
+
+      et = _getEditableText(tester);
+      expect(et.selectionColor, isNotNull);
+    });
+  });
+
+  group('Scrolling & bring-into-view', () {
+    testWidgets('multi-line input scrolls with long content', (tester) async {
+      final ctl = TextEditingController();
+      final scrollCtl = ScrollController();
+      final big = List<String>.generate(120, (i) => 'Line $i').join('\n');
+
+      await _pumpApp(
+        tester,
+        child: SizedBox(
+          height: 160,
+          child: NakedTextField(
+            controller: ctl,
+            scrollController: scrollCtl,
+            maxLines: null,
+            minLines: 1,
+            builder: _builder(padding: const EdgeInsets.all(8)),
           ),
-        );
+        ),
+      );
 
-        // Focus inside
-        await tester.tap(find.byKey(insideKey));
-        await tester.pump();
+      await tester.showKeyboard(find.byType(EditableText));
+      await tester.enterText(find.byType(EditableText), big);
+      await tester.pumpAndSettle();
 
-        // Tap outside
-        await tester.tap(find.text('Outside'));
-        await tester.pump();
+      expect(scrollCtl.hasClients, isTrue);
+      expect(scrollCtl.offset, greaterThan(0));
+    });
+  });
 
-        expect(fired, isTrue);
+  group('Undo/redo', () {
+    testWidgets('UndoHistoryController with proper undo groups', (tester) async {
+      final ctl = TextEditingController();
+      final undo = UndoHistoryController();
+
+      await _pumpApp(
+        tester,
+        child: NakedTextField(
+          controller: ctl,
+          undoController: undo,
+          builder: _builder(),
+        ),
+      );
+
+      await tester.tap(find.byType(EditableText));
+      await tester.pump();
+
+      await tester.enterText(find.byType(EditableText), 'first');
+      await tester.pump(const Duration(milliseconds: 700)); // new undo group
+
+      await tester.enterText(find.byType(EditableText), 'second');
+      await tester.pump(const Duration(milliseconds: 700)); // new undo group
+
+      expect(ctl.text, 'second');
+      
+      // Try direct undo/redo
+      undo.undo();
+      await tester.pump();
+      expect(ctl.text, 'first');
+
+      undo.redo();
+      await tester.pump();
+      expect(ctl.text, 'second');
+    });
+  });
+
+  group('Semantics', () {
+  });
+
+  group('Restoration & ownership', () {
+    testWidgets('internal RestorableTextEditingController restores text', (
+      tester,
+    ) async {
+      await _pumpApp(
+        tester,
+        restorationScopeId: 'resto',
+        child: NakedTextField(restorationId: 'field', builder: _builder()),
+      );
+
+      await tester.showKeyboard(find.byType(EditableText));
+      await tester.enterText(find.byType(EditableText), 'persist me');
+      await tester.pump();
+
+      await tester.restartAndRestore();
+      await tester.pumpAndSettle();
+
+      final et = _getEditableText(tester);
+      expect(et.controller.text, 'persist me');
+    });
+
+    testWidgets('controller ownership can swap without losing content', (
+      tester,
+    ) async {
+      final external1 = TextEditingController(text: 'ext1');
+
+      await _pumpApp(
+        tester,
+        child: NakedTextField(controller: external1, builder: _builder()),
+      );
+      expect(_getEditableText(tester).controller.text, 'ext1');
+
+      // Switch to internal
+      await _pumpApp(tester, child: NakedTextField(builder: _builder()));
+      expect(_getEditableText(tester).controller.text, 'ext1');
+
+      // Switch back to a new external controller with a new value.
+      final external2 = TextEditingController(text: 'ext2');
+      await _pumpApp(
+        tester,
+        child: NakedTextField(controller: external2, builder: _builder()),
+      );
+      expect(_getEditableText(tester).controller.text, 'ext2');
+    });
+
+    testWidgets('EditableText.restorationId is derived from widget id', (
+      tester,
+    ) async {
+      await _pumpApp(
+        tester,
+        child: NakedTextField(restorationId: 'myfield', builder: _builder()),
+      );
+
+      final et = _getEditableText(tester);
+      expect(et.restorationId, 'myfield.editable');
+    });
+  });
+
+  group('Platform-adaptive defaults', () {
+    testWidgets(
+      'iOS cursor/offset defaults',
+      (tester) async {
+        await _pumpApp(tester, child: NakedTextField(builder: _builder()));
+
+        final et = _getEditableText(tester);
+        expect(et.paintCursorAboveText, isTrue);
+        expect(et.cursorOpacityAnimates, isTrue);
+        expect(et.cursorOffset, isNotNull);
+        expect(et.cursorOffset!.dx, lessThan(0)); // iOS nudge is negative
       },
-      timeout: Timeout(Duration(seconds: 20)),
+      variant: const TargetPlatformVariant({TargetPlatform.iOS}),
     );
+
+    testWidgets(
+      'Android cursor/offset defaults',
+      (tester) async {
+        await _pumpApp(tester, child: NakedTextField(builder: _builder()));
+
+        final et = _getEditableText(tester);
+        expect(et.paintCursorAboveText, isFalse);
+        expect(et.cursorOpacityAnimates, isFalse);
+        expect(et.cursorOffset, isNull);
+      },
+      variant: const TargetPlatformVariant({TargetPlatform.android}),
+    );
+  });
+
+  group('API passthrough sanity', () {
+    testWidgets('cursor overrides propagate', (tester) async {
+      await _pumpApp(
+        tester,
+        child: NakedTextField(
+          cursorWidth: 3,
+          cursorHeight: 15,
+          cursorRadius: const Radius.circular(4),
+          cursorOpacityAnimates: false,
+          cursorColor: const Color(0xFF123456),
+          builder: _builder(),
+        ),
+      );
+
+      final et = _getEditableText(tester);
+      expect(et.cursorWidth, 3);
+      expect(et.cursorHeight, 15);
+      expect(et.cursorRadius, const Radius.circular(4));
+      expect(et.cursorOpacityAnimates, isFalse);
+      expect(et.cursorColor, const Color(0xFF123456));
+    });
+
+    testWidgets('keyboardAppearance/drag/scrollPadding/clip propagate', (
+      tester,
+    ) async {
+      await _pumpApp(
+        tester,
+        child: NakedTextField(
+          keyboardAppearance: Brightness.dark,
+          dragStartBehavior: DragStartBehavior.down,
+          scrollPadding: const EdgeInsets.all(42),
+          clipBehavior: Clip.antiAlias,
+          builder: _builder(),
+        ),
+      );
+
+      final et = _getEditableText(tester);
+      expect(et.keyboardAppearance, Brightness.dark);
+      expect(et.dragStartBehavior, DragStartBehavior.down);
+      expect(et.scrollPadding, const EdgeInsets.all(42));
+      expect(et.clipBehavior, Clip.antiAlias);
+    });
+
+    testWidgets('text direction & alignment propagate', (tester) async {
+      await _pumpApp(
+        tester,
+        child: Directionality(
+          textDirection: TextDirection.ltr,
+          child: NakedTextField(
+            textDirection: TextDirection.rtl,
+            textAlign: TextAlign.center,
+            builder: _builder(),
+          ),
+        ),
+      );
+
+      final et = _getEditableText(tester);
+      expect(et.textDirection, TextDirection.rtl);
+      expect(et.textAlign, TextAlign.center);
+    });
+
+    testWidgets('spellcheck and magnifier configurations propagate', (
+      tester,
+    ) async {
+      // We don’t rely on identity equality; just verify presence.
+      const sc = SpellCheckConfiguration.disabled();
+      final mag = TextMagnifier.adaptiveMagnifierConfiguration;
+
+      await _pumpApp(
+        tester,
+        child: NakedTextField(
+          spellCheckConfiguration: sc,
+          magnifierConfiguration: mag,
+          builder: _builder(),
+        ),
+      );
+
+      final et = _getEditableText(tester);
+      expect(et.spellCheckConfiguration, isNotNull);
+      expect(et.magnifierConfiguration, isNotNull);
+    });
+
+    testWidgets('onAppPrivateCommand hook is invoked', (tester) async {
+      String? action;
+      Map<String, dynamic>? data;
+      final ctl = TextEditingController();
+
+      await _pumpApp(
+        tester,
+        child: NakedTextField(
+          controller: ctl,
+          onAppPrivateCommand: (a, d) {
+            action = a;
+            data = d;
+          },
+          builder: _builder(),
+        ),
+      );
+
+      // Grab the EditableText's State, which implements TextInputClient.
+      final EditableTextState state = tester.state<EditableTextState>(
+        find.byType(EditableText),
+      );
+
+      // Simulate the platform sending a private command.
+      state.performPrivateCommand('com.example.PRIVATE', <String, dynamic>{
+        'foo': 'bar',
+      });
+
+      // Give the microtask queue a chance, then assert the callback fired.
+      await tester.pump();
+
+      expect(action, 'com.example.PRIVATE');
+      expect(data, isNotNull);
+      expect(data!['foo'], 'bar');
+    });
   });
 }

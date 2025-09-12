@@ -11,8 +11,8 @@ SemanticsNode _findToggleNode(WidgetTester tester) {
   SemanticsNode? found;
   bool dfs(SemanticsNode n) {
     final d = n.getSemanticsData();
-    final hasToggle = d.hasFlag(SemanticsFlag.hasToggledState) ||
-        d.hasFlag(SemanticsFlag.hasCheckedState);
+    final hasToggle = d.flagsCollection.hasToggledState ||
+        d.flagsCollection.hasCheckedState;
     if (hasToggle && found == null) {
       found = n;
       return true;

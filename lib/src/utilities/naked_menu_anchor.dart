@@ -1,67 +1,36 @@
 import 'dart:async';
 
-import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
 
-const Map<ShortcutActivator, Intent> _shortcuts = <ShortcutActivator, Intent>{
-  SingleActivator(LogicalKeyboardKey.gameButtonA): ActivateIntent(),
-  SingleActivator(LogicalKeyboardKey.escape): DismissIntent(),
-  SingleActivator(LogicalKeyboardKey.arrowDown): DirectionalFocusIntent(
-    TraversalDirection.down,
-  ),
-  SingleActivator(LogicalKeyboardKey.arrowUp): DirectionalFocusIntent(
-    TraversalDirection.up,
-  ),
-  SingleActivator(LogicalKeyboardKey.arrowLeft): DirectionalFocusIntent(
-    TraversalDirection.left,
-  ),
-  SingleActivator(LogicalKeyboardKey.arrowRight): DirectionalFocusIntent(
-    TraversalDirection.right,
-  ),
-};
-
-/// An action that closes the menu when a dismiss intent is received.
-///
-/// Typically triggered by the Escape key to close the currently open menu.
+/// Dismiss with Escape using the app's default shortcut mapping.
+/// We only need to provide an Action that knows how to close *this* menu.
 class NakedDismissMenuAction extends DismissAction {
-  /// The [MenuController] that manages the menu to be dismissed.
   final MenuController controller;
-
-  /// Creates a [NakedDismissMenuAction].
   NakedDismissMenuAction({required this.controller});
+  @override
+  void invoke(DismissIntent intent) => controller.close();
 
   @override
-  void invoke(DismissIntent intent) {
-    controller.close();
-  }
-
-  @override
-  bool isEnabled(DismissIntent intent) {
-    return controller.isOpen;
-  }
+  bool isEnabled(DismissIntent intent) => controller.isOpen;
 }
 
 /// Defines how an overlay (follower) is positioned relative to its target.
-///
-/// The [target] alignment picks a point within the target's bounds and the
-/// [follower] alignment picks a point within the overlay's bounds. The overlay
-/// is positioned so that these points coincide. For example, the default
-/// [Alignment.bottomLeft] target with [Alignment.topLeft] follower positions
-/// the overlay directly below the target, left aligned.
 class NakedMenuPosition {
   final Alignment target;
-  final Alignment follower;
 
+  final Alignment follower;
   const NakedMenuPosition({
     this.target = Alignment.bottomLeft,
     this.follower = Alignment.topLeft,
   });
 }
 
-/// Anchors an overlay to a target widget and manages its lifecycle.
+/// Anchors an overlay to a target and manages its lifecycle, headlessly.
 ///
-/// This widget wires up keyboard navigation, focus management, outside-tap
-/// dismissal, and fallback positioning for overlays such as menus and selects.
+/// - Uses RawMenuAnchor to handle open/close and outside taps
+/// - Groups overlay + anchor via TapRegion to define "inside"
+/// - Lets default Shortcuts handle arrows/activate; adds Dismiss (Esc) action
 class NakedMenuAnchor extends StatefulWidget {
   const NakedMenuAnchor({
     super.key,
@@ -79,16 +48,22 @@ class NakedMenuAnchor extends StatefulWidget {
     this.onOpen,
     this.onKeyEvent,
   });
+
   final MenuController controller;
   final WidgetBuilder overlayBuilder;
-  final bool useRootOverlay;
-  final bool consumeOutsideTaps;
   final Widget? child;
+
+  /// Whether the outside tap that closes the menu is swallowed.
+  final bool consumeOutsideTaps;
+
+  final bool useRootOverlay;
   final NakedMenuPosition position;
   final List<NakedMenuPosition> fallbackPositions;
+
   final VoidCallback? onClose;
   final VoidCallback? onOpen;
 
+  /// Optional raw key listener (e.g., type‑ahead).
   final void Function(KeyEvent)? onKeyEvent;
 
   @override
@@ -96,24 +71,16 @@ class NakedMenuAnchor extends StatefulWidget {
 }
 
 class _NakedMenuAnchorState extends State<NakedMenuAnchor> {
-  final _focusScopeNode = FocusScopeNode();
-  ScrollPosition? _scrollPosition;
-  Size? _viewSize;
-
-  void _handleScroll() {
-    // Close menu when ancestor scrolls (but not when menu content itself scrolls)
-    if (widget.controller.isOpen) {
-      widget.controller.close();
-    }
-  }
+  // Focus so overlay receives key events immediately on open.
+  final FocusNode _overlayFocusNode = FocusNode(
+    debugLabel: 'NakedMenu overlay',
+  );
 
   Widget _overlayBuilder(BuildContext context, RawMenuOverlayInfo info) {
     return Positioned.fill(
-      bottom: MediaQuery.of(context).viewInsets.bottom,
+      bottom: MediaQuery.viewInsetsOf(context).bottom,
       child: TapRegion(
-        onTapOutside: (PointerDownEvent event) {
-          widget.controller.close();
-        },
+        // Group anchor + overlay so taps inside either aren't "outside".
         groupId: info.tapRegionGroupId,
         child: CustomSingleChildLayout(
           delegate: _NakedPositionDelegate(
@@ -128,14 +95,16 @@ class _NakedMenuAnchorState extends State<NakedMenuAnchor> {
                 controller: widget.controller,
               ),
             },
-            child: Shortcuts(
-              shortcuts: _shortcuts,
-              child: KeyboardListener(
-                focusNode: _focusScopeNode,
-                autofocus: true,
-                onKeyEvent: widget.onKeyEvent,
-                child: widget.overlayBuilder(context),
-              ),
+            // Let default Shortcuts handle arrows/activate; we still read raw keys.
+            child: Focus(
+              focusNode: _overlayFocusNode,
+              autofocus: true,
+              onKeyEvent: (node, event) {
+                widget.onKeyEvent?.call(event);
+
+                return KeyEventResult.ignored; // allow bubbling
+              },
+              child: widget.overlayBuilder(context),
             ),
           ),
         ),
@@ -144,27 +113,8 @@ class _NakedMenuAnchorState extends State<NakedMenuAnchor> {
   }
 
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-
-    // Set up scroll listener for auto-close behavior
-    _scrollPosition?.isScrollingNotifier.removeListener(_handleScroll);
-    _scrollPosition = Scrollable.maybeOf(context)?.position;
-    _scrollPosition?.isScrollingNotifier.addListener(_handleScroll);
-
-    // Monitor view size changes for auto-close on resize
-    final Size newSize = MediaQuery.sizeOf(context);
-    if (_viewSize != null && newSize != _viewSize && widget.controller.isOpen) {
-      // Close the menu if the view changes size while open
-      widget.controller.close();
-    }
-    _viewSize = newSize;
-  }
-
-  @override
   void dispose() {
-    _scrollPosition?.isScrollingNotifier.removeListener(_handleScroll);
-    _focusScopeNode.dispose();
+    _overlayFocusNode.dispose();
     super.dispose();
   }
 
@@ -183,9 +133,11 @@ class _NakedMenuAnchorState extends State<NakedMenuAnchor> {
 }
 
 abstract class OverlayChildLifecycle {
-  final Duration removalDelay;
-
+  /// Called as the overlay transitions through states.
   final OverlayChildLifecycleCallback? onStateChange;
+
+  /// Delay removal after close (for exit animations).
+  final Duration removalDelay;
 
   const OverlayChildLifecycle({
     this.onStateChange,
@@ -201,12 +153,12 @@ mixin MenuAnchorChildLifecycleMixin<T extends StatefulWidget> on State<T> {
       widget as OverlayChildLifecycle;
 
   final MenuController controller = MenuController();
+  final ValueNotifier<bool> showNotifier = ValueNotifier(false);
 
   Timer? _removalTimer;
+
   OverlayChildLifecycleCallback? get _onStateChange =>
       overlayChildLifecycle.onStateChange;
-
-  final showNotifier = ValueNotifier<bool>(false);
 
   @override
   void initState() {
@@ -238,81 +190,21 @@ mixin MenuAnchorChildLifecycleMixin<T extends StatefulWidget> on State<T> {
 }
 
 class _NakedPositionDelegate extends SingleChildLayoutDelegate {
-  /// The offset of the target the tooltip is positioned near in the global
-  /// coordinate system.
+  /// Target's top-left in global coords.
   final Offset target;
 
-  /// The amount of vertical distance between the target and the displayed
-  /// tooltip.
+  /// Target's size.
   final Size targetSize;
 
   final NakedMenuPosition alignment;
 
   final List<NakedMenuPosition> fallbackAlignments;
-
-  const
-  /// Creates a delegate for computing the layout of a tooltip.
-  _NakedPositionDelegate({
+  const _NakedPositionDelegate({
     required this.target,
     required this.targetSize,
     required this.alignment,
     required this.fallbackAlignments,
   });
-
-  Offset _calculateOverlayPosition({
-    required Size screenSize,
-    required Size targetSize,
-    required Offset targetPosition,
-    required Size overlaySize,
-    required NakedMenuPosition alignment,
-    List<NakedMenuPosition> fallbackAlignments = const [],
-  }) {
-    final allAlignments = [alignment, ...fallbackAlignments];
-
-    for (final pair in allAlignments) {
-      final candidate = _calculateAlignedOffset(
-        targetTopLeft: targetPosition,
-        targetSize: targetSize,
-        overlaySize: overlaySize,
-        alignment: pair,
-      );
-
-      if (_isOverlayFullyVisible(candidate, overlaySize, screenSize)) {
-        return candidate;
-      }
-    }
-
-    // Return first attempt even if it overflows
-    return _calculateAlignedOffset(
-      targetTopLeft: targetPosition,
-      targetSize: targetSize,
-      overlaySize: overlaySize,
-      alignment: alignment,
-    );
-  }
-
-  Offset _calculateAlignedOffset({
-    required Offset targetTopLeft,
-    required Size targetSize,
-    required Size overlaySize,
-    required NakedMenuPosition alignment,
-  }) {
-    final targetAnchorOffset = alignment.target.alongSize(targetSize);
-    final followerAnchorOffset = alignment.follower.alongSize(overlaySize);
-
-    return targetTopLeft + targetAnchorOffset - followerAnchorOffset;
-  }
-
-  bool _isOverlayFullyVisible(
-    Offset overlayTopLeft,
-    Size overlaySize,
-    Size screenSize,
-  ) {
-    return overlayTopLeft.dx >= 0 &&
-        overlayTopLeft.dy >= 0 &&
-        overlayTopLeft.dx + overlaySize.width <= screenSize.width &&
-        overlayTopLeft.dy + overlaySize.height <= screenSize.height;
-  }
 
   @override
   BoxConstraints getConstraintsForChild(BoxConstraints constraints) =>
@@ -320,19 +212,35 @@ class _NakedPositionDelegate extends SingleChildLayoutDelegate {
 
   @override
   Offset getPositionForChild(Size size, Size childSize) {
-    return _calculateOverlayPosition(
-      screenSize: size,
-      targetSize: targetSize,
-      targetPosition: target,
-      overlaySize: childSize,
-      alignment: alignment,
-      fallbackAlignments: fallbackAlignments,
-    );
+    Offset aligned(NakedMenuPosition pos) {
+      final targetAnchor = pos.target.alongSize(targetSize);
+      final followerAnchor = pos.follower.alongSize(childSize);
+
+      return target + targetAnchor - followerAnchor;
+    }
+
+    // Try preferred + fallbacks; pick first that fits fully on screen.
+    final candidates = [alignment, ...fallbackAlignments];
+    for (final pos in candidates) {
+      final off = aligned(pos);
+      final fullyVisible =
+          off.dx >= 0 &&
+          off.dy >= 0 &&
+          off.dx + childSize.width <= size.width &&
+          off.dy + childSize.height <= size.height;
+      if (fullyVisible) return off;
+    }
+
+    // Otherwise return preferred (may overflow slightly).
+    return aligned(alignment);
   }
 
   @override
-  bool shouldRelayout(_NakedPositionDelegate oldDelegate) {
-    return target != oldDelegate.target || targetSize != oldDelegate.targetSize;
+  bool shouldRelayout(_NakedPositionDelegate old) {
+    return target != old.target ||
+        targetSize != old.targetSize ||
+        alignment != old.alignment ||
+        !listEquals(fallbackAlignments, old.fallbackAlignments);
   }
 }
 

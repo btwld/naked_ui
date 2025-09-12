@@ -1,93 +1,86 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+// Material exports widgets; no separate widgets import needed.
+import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:naked_ui/naked_ui.dart';
 
 import 'semantics_test_utils.dart';
+
+class _FakeRegistry<T> extends RadioGroupRegistry<T> {
+  _FakeRegistry(this._groupValue);
+  final T? _groupValue;
+  @override
+  T? get groupValue => _groupValue;
+  @override
+  ValueChanged<T?> get onChanged => (_) {};
+  @override
+  void registerClient(RadioClient<T> radio) {}
+  @override
+  void unregisterClient(RadioClient<T> radio) {}
+}
+
+SemanticsNode _findRadioNode(WidgetTester tester) {
+  final SemanticsNode root = tester.getSemantics(find.byType(Scaffold));
+  SemanticsNode? found;
+  bool dfs(SemanticsNode n) {
+    final d = n.getSemanticsData();
+    if (d.flagsCollection.isInMutuallyExclusiveGroup) {
+      found = n;
+      return true;
+    }
+    n.visitChildren(dfs);
+    return true;
+  }
+
+  root.visitChildren(dfs);
+  if (found == null) throw StateError('No radio node found');
+  return found!;
+}
 
 void main() {
   Widget _buildTestApp(Widget child) {
     return MaterialApp(home: Scaffold(body: Center(child: child)));
   }
 
+
   group('NakedRadio Semantics', () {
-    testWidgets('parity with Material Radio - selected vs unselected', (
+    testWidgets('parity with Material Radio - selected', (
       tester,
     ) async {
       final handle = tester.ensureSemantics();
 
-      // Use two radios under the group to avoid registration edge cases.
-      // Selected state (groupValue 'a')
+      final reg = _FakeRegistry<String>('a');
       await expectSemanticsParity(
         tester: tester,
         material: _buildTestApp(
-          RadioGroup<String>(
-            groupValue: 'a',
-            onChanged: (_) {},
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: const [
-                Radio<String>(value: 'a'),
-                Radio<String>(value: 'b'),
-              ],
-            ),
-          ),
+          Radio<String>(value: 'a', groupRegistry: reg),
         ),
         naked: _buildTestApp(
-          RadioGroup<String>(
-            groupValue: 'a',
-            onChanged: (_) {},
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: const [
-                NakedRadio<String>(
-                  value: 'a',
-                  child: SizedBox(width: 20, height: 20),
-                ),
-                NakedRadio<String>(
-                  value: 'b',
-                  child: SizedBox(width: 20, height: 20),
-                ),
-              ],
-            ),
+          NakedRadio<String>(
+            value: 'a',
+            groupRegistry: reg,
+            child: const SizedBox(width: 20, height: 20),
           ),
         ),
         control: ControlType.radio,
       );
+      handle.dispose();
+    });
 
-      // Unselected state (groupValue 'b')
+    testWidgets('parity with Material Radio - unselected', (tester) async {
+      final handle = tester.ensureSemantics();
+      final reg = _FakeRegistry<String>('b');
       await expectSemanticsParity(
         tester: tester,
         material: _buildTestApp(
-          RadioGroup<String>(
-            groupValue: 'b',
-            onChanged: (_) {},
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: const [
-                Radio<String>(value: 'a'),
-                Radio<String>(value: 'b'),
-              ],
-            ),
-          ),
+          Radio<String>(value: 'a', groupRegistry: reg),
         ),
         naked: _buildTestApp(
-          RadioGroup<String>(
-            groupValue: 'b',
-            onChanged: (_) {},
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: const [
-                NakedRadio<String>(
-                  value: 'a',
-                  child: SizedBox(width: 20, height: 20),
-                ),
-                NakedRadio<String>(
-                  value: 'b',
-                  child: SizedBox(width: 20, height: 20),
-                ),
-              ],
-            ),
+          NakedRadio<String>(
+            value: 'a',
+            groupRegistry: reg,
+            child: const SizedBox(width: 20, height: 20),
           ),
         ),
         control: ControlType.radio,
@@ -100,20 +93,9 @@ void main() {
       final fm = FocusNode();
       final fn = FocusNode();
 
+      final reg = _FakeRegistry<String>('a');
       await tester.pumpWidget(
-        _buildTestApp(
-          RadioGroup<String>(
-            groupValue: 'a',
-            onChanged: (_) {},
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Radio<String>(value: 'a', focusNode: fm),
-                const Radio<String>(value: 'b'),
-              ],
-            ),
-          ),
-        ),
+        _buildTestApp(Radio<String>(value: 'a', focusNode: fm, groupRegistry: reg)),
       );
       fm.requestFocus();
       await tester.pump();
@@ -124,23 +106,11 @@ void main() {
 
       await tester.pumpWidget(
         _buildTestApp(
-          RadioGroup<String>(
-            groupValue: 'a',
-            onChanged: (_) {},
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                NakedRadio<String>(
-                  value: 'a',
-                  focusNode: fn,
-                  child: const SizedBox(width: 20, height: 20),
-                ),
-                const NakedRadio<String>(
-                  value: 'b',
-                  child: SizedBox(width: 20, height: 20),
-                ),
-              ],
-            ),
+          NakedRadio<String>(
+            value: 'a',
+            groupRegistry: reg,
+            focusNode: fn,
+            child: const SizedBox(width: 20, height: 20),
           ),
         ),
       );
@@ -164,20 +134,9 @@ void main() {
       await mouse.addPointer();
       await tester.pump();
 
+      final reg = _FakeRegistry<String>('a');
       await tester.pumpWidget(
-        _buildTestApp(
-          RadioGroup<String>(
-            groupValue: 'a',
-            onChanged: (_) {},
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: const [
-                Radio<String>(value: 'a'),
-                Radio<String>(value: 'b'),
-              ],
-            ),
-          ),
-        ),
+        _buildTestApp(Radio<String>(value: 'a', groupRegistry: reg)),
       );
       await mouse.moveTo(tester.getCenter(find.byType(Radio<String>)));
       await tester.pump();
@@ -188,22 +147,10 @@ void main() {
 
       await tester.pumpWidget(
         _buildTestApp(
-          RadioGroup<String>(
-            groupValue: 'a',
-            onChanged: (_) {},
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: const [
-                NakedRadio<String>(
-                  value: 'a',
-                  child: SizedBox(width: 20, height: 20),
-                ),
-                NakedRadio<String>(
-                  value: 'b',
-                  child: SizedBox(width: 20, height: 20),
-                ),
-              ],
-            ),
+          NakedRadio<String>(
+            value: 'a',
+            groupRegistry: reg,
+            child: const SizedBox(width: 20, height: 20),
           ),
         ),
       );
@@ -222,34 +169,27 @@ void main() {
     testWidgets('disabled strict parity', (tester) async {
       final handle = tester.ensureSemantics();
 
+      final reg = _FakeRegistry<String>('a');
       await tester.pumpWidget(
-        _buildTestApp(
-          RadioGroup<String>(
-            groupValue: 'a',
-            onChanged: (_) {},
-            child: const Radio<String>(value: 'a', enabled: false),
-          ),
-        ),
+        _buildTestApp(Radio<String>(value: 'a', enabled: false, groupRegistry: reg)),
       );
       final mNode = tester.getSemantics(find.byType(Radio<String>));
       final strict = buildStrictMatcherFromSemanticsData(mNode.getSemanticsData());
 
+      final reg2 = _FakeRegistry<String>('a');
       await tester.pumpWidget(
         _buildTestApp(
-          RadioGroup<String>(
-            groupValue: 'a',
-            onChanged: (_) {},
-            child: const NakedRadio<String>(
-              value: 'a',
-              enabled: false,
-              child: SizedBox(width: 20, height: 20),
-            ),
+          NakedRadio<String>(
+            value: 'a',
+            groupRegistry: reg2,
+            enabled: false,
+            child: const SizedBox(width: 20, height: 20),
           ),
         ),
       );
-      expect(tester.getSemantics(find.byType(NakedRadio<String>)), strict);
+      expect(_findRadioNode(tester), strict);
 
       handle.dispose();
     });
-  }, skip: true);
+  });
 }

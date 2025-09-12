@@ -1,28 +1,11 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:flutter/rendering.dart';
 import 'package:naked_ui/naked_ui.dart';
 
 import 'semantics_test_utils.dart';
 
-SemanticsNode _findTextFieldNode(WidgetTester tester) {
-  final SemanticsNode root = tester.getSemantics(find.byType(Scaffold));
-  SemanticsNode? found;
-  bool dfs(SemanticsNode n) {
-    final d = n.getSemanticsData();
-    if (d.hasFlag(SemanticsFlag.isTextField)) {
-      found = n;
-      return true;
-    }
-    n.visitChildren(dfs);
-    return true;
-  }
-
-  root.visitChildren(dfs);
-  if (found == null) throw StateError('No textField node found');
-  return found!;
-}
+// Removed unused helper and unneeded rendering import.
 
 void main() {
   Widget _buildTestApp(Widget child) {

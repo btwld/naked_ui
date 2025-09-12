@@ -221,3 +221,101 @@ mixin PressListenerMixin<T extends StatefulWidget> on State<T> {
     );
   }
 }
+
+/// Reusable focus lifecycle for headless widgets.
+///
+/// Responsibilities:
+/// - Provide an internal FocusNode when the widget doesn't supply one
+/// - Swap safely between external <-> internal nodes at runtime
+/// - Preserve focus across swaps (post-frame handoff)
+/// - Expose the single source of truth: [effectiveFocusNode]
+///
+/// Host requirements:
+/// - The host State must implement [focusableExternalNode] to surface any
+///   user-provided FocusNode (typically `widget.focusNode`).
+///
+/// Mixin order:
+/// - Place this mixin to the RIGHT of other mixins so its overrides participate
+///   correctly in `super.*` chaining, e.g.:
+///   `class _State extends State<W>
+///       with SomeMixin<W>, FocusableMixin<W> { ... }`
+mixin FocusableMixin<T extends StatefulWidget> on State<T> {
+  /// The FocusNode provided by the widget (external). May be null.
+  @protected
+  FocusNode? get focusableExternalNode;
+
+  FocusNode? _internalFocusNode;
+  FocusNode? _lastExternalNode;
+
+  /// The node actually used by the widget: external if provided, otherwise internal.
+  @protected
+  FocusNode? get effectiveFocusNode =>
+      focusableExternalNode ?? _internalFocusNode;
+
+  /// Request focus on whichever node is effective right now.
+  @protected
+  void requestEffectiveFocus() => effectiveFocusNode?.requestFocus();
+
+  @override
+  @mustCallSuper
+  void initState() {
+    super.initState();
+    _lastExternalNode = focusableExternalNode;
+
+    // Create an internal node only if the host didn't provide one.
+    if (_lastExternalNode == null) {
+      _internalFocusNode = FocusNode(
+        debugLabel: '${widget.runtimeType} (internal)',
+      );
+    }
+  }
+
+  @override
+  @mustCallSuper
+  void didUpdateWidget(covariant T oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    final FocusNode? newExternal = focusableExternalNode;
+    if (identical(newExternal, _lastExternalNode)) {
+      return; // No change in external node presence/identity.
+    }
+
+    // Capture whether the previously effective node had focus.
+    final bool hadFocus = (effectiveFocusNode?.hasFocus ?? false);
+
+    // Handle transitions:
+    // - internal -> external : dispose internal
+    // - external -> internal : create internal
+    // - external(A) -> external(B) : just switch references
+    if (_lastExternalNode == null && newExternal != null) {
+      // Adopt external.
+      _internalFocusNode?.dispose();
+      _internalFocusNode = null;
+    } else if (_lastExternalNode != null && newExternal == null) {
+      // Fall back to a fresh internal node.
+      _internalFocusNode = FocusNode(
+        debugLabel: '${widget.runtimeType} (internal)',
+      );
+    } // else: external changed to another external; nothing to allocate/dispose.
+
+    _lastExternalNode = newExternal;
+
+    // Preserve focus across the swap on the next frame.
+    if (hadFocus) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          effectiveFocusNode?.requestFocus();
+        }
+      });
+    }
+  }
+
+  @override
+  @mustCallSuper
+  void dispose() {
+    _internalFocusNode?.dispose();
+    _internalFocusNode = null;
+    _lastExternalNode = null;
+    super.dispose();
+  }
+}

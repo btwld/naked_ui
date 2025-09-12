@@ -6,7 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 typedef SemanticsPredicate = bool Function(SemanticsNode node);
 
 /// Minimal control kinds supported for parity comparisons
-enum ControlType { button, checkbox, radio, slider, textField, toggle }
+enum ControlType { button, checkbox, radio, slider, textField, toggle, tab }
 
 class SemanticsSummary {
   SemanticsSummary({
@@ -82,25 +82,25 @@ SemanticsSummary summarizeNode(SemanticsNode node) {
     if (value == true) flags.add(name);
   }
 
-  addFlag('isButton', data.hasFlag(SemanticsFlag.isButton));
-  addFlag('isEnabled', data.hasFlag(SemanticsFlag.isEnabled));
-  addFlag('hasEnabledState', data.hasFlag(SemanticsFlag.hasEnabledState));
-  addFlag('isFocusable', data.hasFlag(SemanticsFlag.isFocusable));
-  addFlag('isFocused', data.hasFlag(SemanticsFlag.isFocused));
-  addFlag('hasCheckedState', data.hasFlag(SemanticsFlag.hasCheckedState));
-  addFlag('isChecked', data.hasFlag(SemanticsFlag.isChecked));
-  addFlag('isCheckStateMixed', data.hasFlag(SemanticsFlag.isCheckStateMixed));
-  addFlag('isSelected', data.hasFlag(SemanticsFlag.isSelected));
-  addFlag('isSlider', data.hasFlag(SemanticsFlag.isSlider));
-  addFlag('isTextField', data.hasFlag(SemanticsFlag.isTextField));
-  addFlag('isReadOnly', data.hasFlag(SemanticsFlag.isReadOnly));
-  addFlag('isMultiline', data.hasFlag(SemanticsFlag.isMultiline));
+  addFlag('isButton', data.flagsCollection.isButton);
+  addFlag('isEnabled', data.flagsCollection.isEnabled);
+  addFlag('hasEnabledState', data.flagsCollection.hasEnabledState);
+  addFlag('isFocusable', data.flagsCollection.isFocusable);
+  addFlag('isFocused', data.flagsCollection.isFocused);
+  addFlag('hasCheckedState', data.flagsCollection.hasCheckedState);
+  addFlag('isChecked', data.flagsCollection.isChecked);
+  addFlag('isCheckStateMixed', data.flagsCollection.isCheckStateMixed);
+  addFlag('isSelected', data.flagsCollection.isSelected);
+  addFlag('isSlider', data.flagsCollection.isSlider);
+  addFlag('isTextField', data.flagsCollection.isTextField);
+  addFlag('isReadOnly', data.flagsCollection.isReadOnly);
+  addFlag('isMultiline', data.flagsCollection.isMultiline);
   addFlag(
     'isInMutuallyExclusiveGroup',
-    data.hasFlag(SemanticsFlag.isInMutuallyExclusiveGroup),
+    data.flagsCollection.isInMutuallyExclusiveGroup,
   );
-  addFlag('hasToggledState', data.hasFlag(SemanticsFlag.hasToggledState));
-  addFlag('isToggled', data.hasFlag(SemanticsFlag.isToggled));
+  addFlag('hasToggledState', data.flagsCollection.hasToggledState);
+  addFlag('isToggled', data.flagsCollection.isToggled);
 
   final Set<String> actions = <String>{};
   void addAction(String name, SemanticsAction action) {
@@ -141,15 +141,15 @@ SemanticsSummary summarizeMergedButtonFromRoot(WidgetTester tester) {
 
   bool dfs(SemanticsNode node) {
     final data = node.getSemanticsData();
-    final bool isFocusable = data.hasFlag(SemanticsFlag.isFocusable);
-    final bool isFocused = data.hasFlag(SemanticsFlag.isFocused);
+    final bool isFocusable = data.flagsCollection.isFocusable;
+    final bool isFocused = data.flagsCollection.isFocused;
     final bool hasFocusAction = data.hasAction(SemanticsAction.focus);
     focusableStack.add(isFocusable);
     focusedStack.add(isFocused);
     hasFocusActionStack.add(hasFocusAction);
 
     final bool isButtonLike =
-        data.hasFlag(SemanticsFlag.isButton) ||
+        data.flagsCollection.isButton ||
         data.hasAction(SemanticsAction.tap);
     if (isButtonLike && found == null) {
       final summary = summarizeNode(node);
@@ -199,8 +199,8 @@ SemanticsSummary summarizeMergedFromRoot(
 
   bool dfs(SemanticsNode node) {
     final data = node.getSemanticsData();
-    final bool isFocusable = data.hasFlag(SemanticsFlag.isFocusable);
-    final bool isFocused = data.hasFlag(SemanticsFlag.isFocused);
+    final bool isFocusable = data.flagsCollection.isFocusable;
+    final bool isFocused = data.flagsCollection.isFocused;
     final bool hasFocusAction = data.hasAction(SemanticsAction.focus);
     focusableStack.add(isFocusable);
     focusedStack.add(isFocused);
@@ -242,19 +242,23 @@ SemanticsSummary summarizeMergedFromRoot(
 bool _isControlNode(SemanticsData data, ControlType control) {
   switch (control) {
     case ControlType.button:
-      return data.hasFlag(SemanticsFlag.isButton) ||
+      return data.flagsCollection.isButton ||
+          data.hasAction(SemanticsAction.tap);
+    case ControlType.tab:
+      // Tabs are generally button-like; rely on tap/button semantics.
+      return data.flagsCollection.isButton ||
           data.hasAction(SemanticsAction.tap);
     case ControlType.checkbox:
-      return data.hasFlag(SemanticsFlag.hasCheckedState);
+      return data.flagsCollection.hasCheckedState;
     case ControlType.toggle:
-      return data.hasFlag(SemanticsFlag.hasToggledState) ||
-          data.hasFlag(SemanticsFlag.hasCheckedState);
+      return data.flagsCollection.hasToggledState ||
+          data.flagsCollection.hasCheckedState;
     case ControlType.radio:
-      return data.hasFlag(SemanticsFlag.isInMutuallyExclusiveGroup);
+      return data.flagsCollection.isInMutuallyExclusiveGroup;
     case ControlType.slider:
-      return data.hasFlag(SemanticsFlag.isSlider);
+      return data.flagsCollection.isSlider;
     case ControlType.textField:
-      return data.hasFlag(SemanticsFlag.isTextField);
+      return data.flagsCollection.isTextField;
   }
 }
 
@@ -284,6 +288,20 @@ Future<void> expectSemanticsParity({
         );
     materialSummary = stripFocusable(materialSummary);
     nakedSummary = stripFocusable(nakedSummary);
+  }
+
+  // Tabs (Material) may not expose button/enabled flags. Normalize them out.
+  if (control == ControlType.tab) {
+    SemanticsSummary normalizeTab(SemanticsSummary s) => SemanticsSummary(
+          label: s.label,
+          value: s.value,
+          flags: s.flags
+              .where((f) => f != 'isButton' && f != 'isEnabled' && f != 'hasEnabledState')
+              .toSet(),
+          actions: s.actions,
+        );
+    materialSummary = normalizeTab(materialSummary);
+    nakedSummary = normalizeTab(nakedSummary);
   }
   expect(nakedSummary, equals(materialSummary));
 }

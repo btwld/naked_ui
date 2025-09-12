@@ -95,9 +95,9 @@ class NakedDialog extends StatelessWidget {
   Widget build(BuildContext context) {
     Widget dialog = Semantics(
       container: true,
+      explicitChildNodes: true,
       scopesRoute: modal,
       namesRoute: modal,
-      explicitChildNodes: true,
       label: semanticLabel,
       child: child,
     );
