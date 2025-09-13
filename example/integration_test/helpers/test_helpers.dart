@@ -5,3 +5,5 @@ export 'focus_test_helpers.dart';
 export 'keyboard_test_helpers.dart';
 export 'simulate_hover.dart';
 export 'state_test_helpers.dart';
+export 'slider_test_helpers.dart';
+export 'text_field_test_helpers.dart';

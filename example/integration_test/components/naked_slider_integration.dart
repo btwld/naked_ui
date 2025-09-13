@@ -6,7 +6,6 @@ import 'package:naked_ui/naked_ui.dart';
 import 'package:example/api/naked_slider.0.dart' as slider_example;
 
 import '../helpers/test_helpers.dart';
-import '../helpers/slider_test_helpers.dart';
 
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
