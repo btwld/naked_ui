@@ -25,7 +25,7 @@ void main() {
 
       expect(find.text('Hover Me'), findsOneWidget);
       expect(find.text('Tooltip Content'), findsNothing);
-    });
+    }, timeout: const Timeout(Duration(seconds: 10)));
 
     testWidgets('shows and hides tooltip on hover', (
       WidgetTester tester,
@@ -55,7 +55,7 @@ void main() {
       );
 
       expect(find.text('Tooltip Content'), findsNothing);
-    });
+    }, timeout: const Timeout(Duration(seconds: 10)));
   });
 
   group('Positioning', () {
@@ -113,7 +113,7 @@ void main() {
         tester.getTopLeft(targetFinder),
         50,
       );
-    });
+    }, timeout: const Timeout(Duration(seconds: 10)));
   });
 
   group('Timing and State Changes', () {
@@ -164,7 +164,7 @@ void main() {
 
       await gesture.moveTo(Offset.zero);
       await tester.pumpAndSettle();
-    });
+    }, timeout: const Timeout(Duration(seconds: 10)));
 
     testWidgets('showDuration auto-hides tooltip', (WidgetTester tester) async {
       final targetKey = GlobalKey();
@@ -216,7 +216,7 @@ void main() {
         OverlayChildLifecycleState.pendingRemoval,
         OverlayChildLifecycleState.removed,
       ]);
-    });
+    }, timeout: const Timeout(Duration(seconds: 10)));
 
     testWidgets('removalDelay delays removing tooltip from overlay', (
       WidgetTester tester,
@@ -266,6 +266,6 @@ void main() {
         OverlayChildLifecycleState.pendingRemoval,
         OverlayChildLifecycleState.removed,
       ]);
-    });
+    }, timeout: const Timeout(Duration(seconds: 10)));
   });
 }

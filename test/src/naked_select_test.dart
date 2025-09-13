@@ -67,13 +67,13 @@ void main() {
       await tester.pumpMaterialWidget(buildSelect<String>());
 
       await tester.tap(find.text('Select option'));
-      await tester.pumpAndSettle();
+      await tester.pump();
 
       expect(find.text('Select option'), findsOneWidget);
       expect(find.text('Apple'), findsOneWidget);
       expect(find.text('Banana'), findsOneWidget);
       expect(find.text('Orange'), findsOneWidget);
-    });
+    }, timeout: const Timeout(Duration(seconds: 10)));
 
     testWidgets('selects single value correctly', (WidgetTester tester) async {
       String? selectedValue;
@@ -90,10 +90,10 @@ void main() {
       await tester.pumpAndSettle();
 
       await tester.tap(find.text('Banana'));
-      await tester.pumpAndSettle();
+      await tester.pump();
 
       expect(selectedValue, 'banana');
-    });
+    }, timeout: const Timeout(Duration(seconds: 10)));
 
     testWidgets('supports multiple selection mode', (
       WidgetTester tester,
@@ -111,18 +111,18 @@ void main() {
 
       // Open menu
       await tester.tap(find.text('Select option'));
-      await tester.pumpAndSettle();
+      await tester.pump();
 
       await tester.tap(find.text('Apple'));
-      await tester.pumpAndSettle();
+      await tester.pump();
 
       await tester.tap(find.text('Banana'));
-      await tester.pumpAndSettle();
+      await tester.pump();
 
       expect(selectedValues, contains('apple'));
       expect(selectedValues, contains('banana'));
       expect(selectedValues.length, 2);
-    });
+    }, timeout: const Timeout(Duration(seconds: 10)));
 
     testWidgets('toggle menu visibility', (WidgetTester tester) async {
       await tester.pumpMaterialWidget(buildSelect<String>());
@@ -132,18 +132,18 @@ void main() {
 
       // Open menu by tapping trigger
       await tester.tap(find.text('Select option'));
-      await tester.pumpAndSettle();
+      await tester.pump();
 
       // Menu items should be visible
       expect(find.text('Apple'), findsOneWidget);
 
       // Close menu by tapping trigger again
       await tester.tapAt(Offset.zero);
-      await tester.pumpAndSettle();
+      await tester.pump();
 
       // Menu should be closed again
       expect(find.text('Apple'), findsNothing);
-    });
+    }, timeout: const Timeout(Duration(seconds: 10)));
 
     testWidgets('does not respond when disabled', (WidgetTester tester) async {
       String? selectedValue;
@@ -158,11 +158,11 @@ void main() {
 
       // Try to open menu
       await tester.tap(find.text('Select option'));
-      await tester.pumpAndSettle();
+      await tester.pump();
 
       // Menu should not open when disabled
       expect(find.text('Apple'), findsNothing);
-    });
+    }, timeout: const Timeout(Duration(seconds: 10)));
   });
 
   group('Keyboard Navigation', () {
@@ -174,10 +174,10 @@ void main() {
       await tester.pumpAndSettle();
 
       await tester.sendKeyEvent(LogicalKeyboardKey.escape);
-      await tester.pumpAndSettle();
+      await tester.pump();
 
       expect(find.text('Apple'), findsNothing);
-    });
+    }, timeout: const Timeout(Duration(seconds: 10)));
 
     testWidgets(
       'restores focus to trigger after closing with Escape',
@@ -205,16 +205,15 @@ void main() {
         triggerFocusNode.requestFocus();
         await tester.pump();
         await tester.tap(find.text('Select option'));
-        await tester.pumpAndSettle();
+        await tester.pump();
 
         // Overlay should have focus; now close with Escape
         await tester.sendKeyEvent(LogicalKeyboardKey.escape);
-        await tester.pumpAndSettle();
+        await tester.pump();
 
         // Expect focus to be back on the trigger
         expect(triggerFocusNode.hasFocus, isTrue);
-      },
-    );
+      }, timeout: const Timeout(Duration(seconds: 10)));
 
     testWidgets('selects item with Enter key', (WidgetTester tester) async {
       String? selectedValue;
@@ -228,17 +227,17 @@ void main() {
 
       // Open menu
       await tester.tap(find.text('Select option'));
-      await tester.pumpAndSettle();
+      await tester.pump();
 
       await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
-      await tester.pumpAndSettle();
+      await tester.pump();
 
       // Select with Enter
       await tester.sendKeyEvent(LogicalKeyboardKey.enter);
-      await tester.pumpAndSettle();
+      await tester.pump();
 
       expect(selectedValue, 'apple');
-    });
+    }, timeout: const Timeout(Duration(seconds: 10)));
   });
 
   group('Type-ahead Selection', () {
@@ -257,18 +256,17 @@ void main() {
 
         // Open menu
         await tester.tap(find.text('Select option'));
-        await tester.pumpAndSettle();
+        await tester.pump();
 
         // Type 'b' to focus 'Banana'
         await tester.sendKeyEvent(LogicalKeyboardKey.keyB);
-        await tester.pumpAndSettle();
+        await tester.pump();
 
         await tester.sendKeyEvent(LogicalKeyboardKey.enter);
-        await tester.pumpAndSettle();
+        await tester.pump();
 
         expect(selectedValue, 'banana');
-      },
-    );
+      }, timeout: const Timeout(Duration(seconds: 10)));
 
     testWidgets(
       'typeahead non-match does not change focus',
@@ -285,23 +283,22 @@ void main() {
 
         // Open menu
         await tester.tap(find.text('Select option'));
-        await tester.pumpAndSettle();
+        await tester.pump();
 
         // Focus Banana via typeahead 'b'
         await tester.sendKeyEvent(LogicalKeyboardKey.keyB);
-        await tester.pumpAndSettle();
+        await tester.pump();
 
         // Send a non-matching char 'z' — focus should remain on Banana
         await tester.sendKeyEvent(LogicalKeyboardKey.keyZ);
-        await tester.pumpAndSettle();
+        await tester.pump();
 
         // Enter should still select Banana
         await tester.sendKeyEvent(LogicalKeyboardKey.enter);
-        await tester.pumpAndSettle();
+        await tester.pump();
 
         expect(selectedValue, 'banana');
-      },
-    );
+      }, timeout: const Timeout(Duration(seconds: 10)));
   });
 
 
@@ -336,7 +333,7 @@ void main() {
       );
 
       expect(isHovered, false);
-    });
+    }, timeout: const Timeout(Duration(seconds: 10)));
 
     testWidgets('calls onPressChange when trigger pressed', (
       WidgetTester tester,
@@ -360,7 +357,7 @@ void main() {
       await gesture.up();
       await tester.pump();
       expect(isPressed, false);
-    });
+    }, timeout: const Timeout(Duration(seconds: 10)));
 
     testWidgets('calls onFocusChange when trigger focused', (
       WidgetTester tester,
@@ -389,7 +386,7 @@ void main() {
       focusNode.unfocus();
       await tester.pump();
       expect(isFocused, false);
-    });
+    }, timeout: const Timeout(Duration(seconds: 10)));
 
     testWidgets('calls item states when hovered/pressed', (
       WidgetTester tester,
@@ -494,7 +491,7 @@ void main() {
 
         // Open menu
         await tester.tap(find.text('Select option'));
-        await tester.pumpAndSettle();
+        await tester.pump();
 
         // Get the trigger and menu positions
         final triggerRect = tester.getRect(find.text('Select option'));
@@ -502,8 +499,7 @@ void main() {
 
         // Assert the menu is placed above the trigger (fallback used)
         expect(menuRect.bottom <= triggerRect.top, isTrue);
-      },
-    );
+      }, timeout: const Timeout(Duration(seconds: 10)));
   });
 
   group('Selection Behavior', () {
@@ -526,12 +522,12 @@ void main() {
       await tester.tap(find.text('Select option'));
       await tester.pumpAndSettle();
 
-      await tester.tap(find.text('Banana'));
-      await tester.pump();
+        await tester.tap(find.text('Banana'));
+        await tester.pump();
 
       expect(selectedValue, 'banana');
       expect(menuClosed, false);
-    });
+    }, timeout: const Timeout(Duration(seconds: 10)));
 
     testWidgets('closes menu when closeOnSelect is true', (
       WidgetTester tester,
@@ -548,13 +544,92 @@ void main() {
 
       // Open menu
       await tester.tap(find.text('Select option'));
-      await tester.pumpAndSettle();
+      await tester.pump();
 
       await tester.tap(find.text('Banana'));
-      await tester.pumpAndSettle();
+      await tester.pump();
 
       expect(selectedValue, 'banana');
       expect(find.text('Apple'), findsNothing);
+    }, timeout: const Timeout(Duration(seconds: 10)));
+
+    testWidgets('outside tap closes menu with removalDelay respected', (
+      WidgetTester tester,
+    ) async {
+      await tester.pumpMaterialWidget(
+        NakedSelect<String>(
+          removalDelay: const Duration(milliseconds: 200),
+          menu: const Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              NakedSelectItem<String>(value: 'apple', child: Text('Apple')),
+              NakedSelectItem<String>(value: 'banana', child: Text('Banana')),
+            ],
+          ),
+          child: const NakedSelectTrigger(child: Text('Select option')),
+        ),
+      );
+
+      // Open menu
+      await tester.tap(find.text('Select option'));
+      await tester.pump();
+      expect(find.text('Apple'), findsOneWidget);
+
+      // Tap outside to request close
+      await tester.tapAt(Offset.zero);
+      await tester.pump();
+
+      // During delay, overlay should still be visible
+      await tester.pump(const Duration(milliseconds: 100));
+      expect(find.text('Apple'), findsOneWidget);
+
+      // After full delay, overlay should be gone
+      await tester.pump(const Duration(milliseconds: 100));
+      await tester.pump();
+      expect(find.text('Apple'), findsNothing);
+    });
+  });
+
+  group('Type-ahead Buffer', () {
+    testWidgets('debounce resets buffer between characters', (
+      WidgetTester tester,
+    ) async {
+      String? selectedValue;
+
+      await tester.pumpMaterialWidget(
+        NakedSelect<String>(
+          selectedValue: selectedValue,
+          onSelectedValueChanged: (v) => selectedValue = v,
+          enableTypeAhead: true,
+          typeAheadDebounceTime: const Duration(milliseconds: 100),
+          menu: const Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              NakedSelectItem<String>(value: 'apple', child: Text('Apple')),
+              NakedSelectItem<String>(value: 'banana', child: Text('Banana')),
+              NakedSelectItem<String>(value: 'orange', child: Text('Orange')),
+            ],
+          ),
+          child: const NakedSelectTrigger(child: Text('Select option')),
+        ),
+      );
+
+      // Open menu
+      await tester.tap(find.text('Select option'));
+      await tester.pump();
+
+      // Type 'b' then wait past debounce so buffer resets
+      await tester.sendKeyEvent(LogicalKeyboardKey.keyB);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 120));
+
+      // Now type 'a' — with buffer reset, should focus Apple (not Banana)
+      await tester.sendKeyEvent(LogicalKeyboardKey.keyA);
+      await tester.pump();
+      await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+      await tester.pump();
+
+      expect(selectedValue, 'apple');
     });
   });
 

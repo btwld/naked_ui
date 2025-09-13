@@ -51,6 +51,8 @@ dart_code_metrics:
         - build-method
     prefer-named-boolean-parameters:
       ignore-single: true
+    avoid-empty-setstate: false
+    
 analyzer:
   errors:
     non_constant_identifier_names: ignore

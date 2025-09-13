@@ -121,6 +121,9 @@ class _NakedSelectState<T> extends State<NakedSelect<T>>
 
   final List<_SelectItemInfo<T>> _selectableItems = [];
 
+  // Tracks actual overlay visibility (driven by onOpen/onClose) for Semantics.expanded
+  final _overlayOpen = ValueNotifier(false);
+
   bool get _isOpen => controller.isOpen;
   bool get isOpen => _isOpen;
   bool get isEnabled => widget.enabled;
@@ -146,7 +149,8 @@ class _NakedSelectState<T> extends State<NakedSelect<T>>
 
   void _handleAnchorOpen() {
     widget.onOpen?.call();
-    if (mounted) setState(() {}); // refresh semantics (expanded)
+    // Reflect actual overlay visibility for semantics without rebuilding the whole widget.
+    _overlayOpen.value = true;
   }
 
   void _handleAnchorClose() {
@@ -158,7 +162,8 @@ class _NakedSelectState<T> extends State<NakedSelect<T>>
     if (child is NakedSelectTrigger) {
       child.focusNode?.requestFocus();
     }
-    if (mounted) setState(() {}); // refresh semantics (expanded)
+    // Reflect actual overlay visibility for semantics without rebuilding the whole widget.
+    _overlayOpen.value = false;
   }
 
   void _cancelTypeAheadTimer() {
@@ -229,12 +234,12 @@ class _NakedSelectState<T> extends State<NakedSelect<T>>
   @override
   void dispose() {
     _cancelTypeAheadTimer();
+    _overlayOpen.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final isExpanded = showNotifier.value;
     final selectedValueString =
         widget.selectedValue?.toString() ??
         (widget.selectedValues?.isNotEmpty == true
@@ -289,15 +294,21 @@ class _NakedSelectState<T> extends State<NakedSelect<T>>
       ),
     );
 
-    return Semantics(
-      container: true,
-      enabled: widget._effectiveEnabled,
-      button: true,
-      expanded: isExpanded,
-      label: widget.semanticLabel,
-      value: selectedValueString,
-      onTap: widget._effectiveEnabled ? toggleMenu : null,
+    return ValueListenableBuilder<bool>(
+      valueListenable: _overlayOpen,
       child: selectWidget,
+      builder: (context, expanded, child) {
+        return Semantics(
+          container: true,
+          enabled: widget._effectiveEnabled,
+          button: true,
+          expanded: expanded,
+          label: widget.semanticLabel,
+          value: selectedValueString,
+          onTap: widget._effectiveEnabled ? toggleMenu : null,
+          child: child,
+        );
+      },
     );
   }
 }

@@ -5,7 +5,6 @@ import 'package:integration_test/integration_test.dart';
 import 'package:naked_ui/naked_ui.dart';
 
 import '../helpers/test_helpers.dart';
-import '../helpers/text_field_test_helpers.dart';
 
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();

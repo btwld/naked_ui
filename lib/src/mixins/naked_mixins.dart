@@ -1,3 +1,4 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/widgets.dart';
 
 /// Widget states management mixin.
@@ -102,7 +103,7 @@ mixin WidgetStatesMixin<T extends StatefulWidget> on State<T> {
     }
 
     if (mounted) {
-      // ignore: avoid-empty-setstate, no-empty-block
+      // ignore: no-empty-block
       setState(() {}); // Trigger rebuild when widget state changes
     }
 
@@ -168,51 +169,103 @@ mixin WidgetStatesMixin<T extends StatefulWidget> on State<T> {
   }
 }
 
-/// Press listener mixin: stateless helper that forwards press lifecycle via callbacks.
-///
-/// Behavior:
-///  - Emits onPressChange(true) on pointer down
-///  - Emits onPressChange(false) when pointer moves outside, on up, or cancel
-///
-/// Usage:
-///  - mixin on a State class: `with PressListenerMixin<YourWidget>`
-///  - call [buildPressListener] to wrap your child
-mixin PressListenerMixin<T extends StatefulWidget> on State<T> {
-  @protected
-  bool _isPointerWithinBounds(Offset localPosition) {
-    final RenderBox? box = context.findRenderObject() as RenderBox?;
+/// Headless press tracker:
+/// - onPressChange(true) on primary pointer down
+/// - onPressChange(false) when pointer leaves bounds, on up, or on cancel
+/// - Re-activates when re-entering while still held (configurable)
+class PressDetector extends StatefulWidget {
+  const PressDetector({
+    super.key,
+    required this.child,
+    this.enabled = true,
+    this.behavior = HitTestBehavior.opaque,
+    this.onPressChange,
+    this.reactivateOnReenter = true,
+    this.buttonsPredicate,
+  });
 
-    return box != null && box.size.contains(localPosition);
+  final Widget child;
+  final bool enabled;
+  final HitTestBehavior behavior;
+  final ValueChanged<bool>? onPressChange;
+
+  /// If true, pressing becomes true again when the active pointer re-enters.
+  final bool reactivateOnReenter;
+
+  /// Return true to accept a down event as the press "starter".
+  /// Defaults: primary mouse button only; always true for touch/stylus.
+  final bool Function(PointerDownEvent event)? buttonsPredicate;
+
+  @override
+  State<PressDetector> createState() => _PressDetectorState();
+}
+
+class _PressDetectorState extends State<PressDetector> {
+  final GlobalKey _listenerKey = GlobalKey();
+  int? _activePointer; // tracks the primary pointer id for this press sequence
+  bool _pressed = false;
+
+  bool _isInside(Offset localPosition) {
+    final renderObject = _listenerKey.currentContext?.findRenderObject();
+    final box = renderObject is RenderBox ? renderObject : null;
+    if (box == null) return false;
+    final size = box.size;
+
+    return localPosition.dx >= 0 &&
+        localPosition.dy >= 0 &&
+        localPosition.dx <= size.width &&
+        localPosition.dy <= size.height;
   }
 
-  @protected
-  Widget buildPressListener({
-    Key? key,
-    required Widget child,
-    bool enabled = true,
-    HitTestBehavior behavior = HitTestBehavior.opaque,
-    ValueChanged<bool>? onPressChange,
-  }) {
+  bool _defaultButtonsPredicate(PointerDownEvent e) {
+    if (e.kind == PointerDeviceKind.mouse) {
+      return e.buttons == kPrimaryButton; // primary button only
+    }
+
+    return true; // touch, stylus, trackpad
+  }
+
+  void _notify(bool value) {
+    if (_pressed == value) return; // change-detect
+    _pressed = value;
+    widget.onPressChange?.call(value);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final accept = widget.buttonsPredicate ?? _defaultButtonsPredicate;
+
     return Listener(
-      key: key,
-      onPointerDown: (event) {
-        if (enabled) onPressChange?.call(true);
+      key: _listenerKey,
+      onPointerDown: (e) {
+        if (!widget.enabled) return;
+        if (_activePointer != null) return; // ignore additional touches
+        if (!accept(e)) return;
+        _activePointer = e.pointer;
+        _notify(true);
       },
-      onPointerMove: (event) {
-        if (enabled) {
-          if (!_isPointerWithinBounds(event.localPosition)) {
-            onPressChange?.call(false);
-          }
+      onPointerMove: (e) {
+        if (!widget.enabled) return;
+        if (e.pointer != _activePointer) return;
+        final inside = _isInside(e.localPosition);
+        if (inside) {
+          if (widget.reactivateOnReenter) _notify(true);
+        } else {
+          _notify(false);
         }
       },
-      onPointerUp: (event) {
-        if (enabled) onPressChange?.call(false);
+      onPointerUp: (e) {
+        if (e.pointer != _activePointer) return;
+        _activePointer = null;
+        _notify(false);
       },
-      onPointerCancel: (event) {
-        if (enabled) onPressChange?.call(false);
+      onPointerCancel: (e) {
+        if (e.pointer != _activePointer) return;
+        _activePointer = null;
+        _notify(false);
       },
-      behavior: behavior,
-      child: child,
+      behavior: widget.behavior,
+      child: widget.child,
     );
   }
 }
@@ -235,34 +288,40 @@ mixin PressListenerMixin<T extends StatefulWidget> on State<T> {
 ///   `class _State extends State<W>
 ///       with SomeMixin<W>, FocusableMixin<W> { ... }`
 mixin FocusableMixin<T extends StatefulWidget> on State<T> {
-  /// The FocusNode provided by the widget (external). May be null.
   @protected
   FocusNode? get focusableExternalNode;
+
+  // NEW: optional hook; host can override to receive focus changes.
+  @protected
+  ValueChanged<bool>? get focusableOnFocusChange => null;
 
   FocusNode? _internalFocusNode;
   FocusNode? _lastExternalNode;
 
-  /// The node actually used by the widget: external if provided, otherwise internal.
   @protected
   FocusNode? get effectiveFocusNode =>
       focusableExternalNode ?? _internalFocusNode;
 
-  /// Request focus on whichever node is effective right now.
-  @protected
-  void requestEffectiveFocus() => effectiveFocusNode?.requestFocus();
+  void _notifyFocusChanged() {
+    final focused = effectiveFocusNode?.hasFocus ?? false;
+    focusableOnFocusChange?.call(focused);
+  }
 
   @override
   @mustCallSuper
   void initState() {
     super.initState();
     _lastExternalNode = focusableExternalNode;
-
-    // Create an internal node only if the host didn't provide one.
     if (_lastExternalNode == null) {
       _internalFocusNode = FocusNode(
         debugLabel: '${widget.runtimeType} (internal)',
       );
     }
+    effectiveFocusNode?.addListener(_notifyFocusChanged);
+  }
+
+  void requestEffectiveFocus() {
+    effectiveFocusNode?.requestFocus();
   }
 
   @override
@@ -270,37 +329,43 @@ mixin FocusableMixin<T extends StatefulWidget> on State<T> {
   void didUpdateWidget(covariant T oldWidget) {
     super.didUpdateWidget(oldWidget);
 
+    // BEFORE: snapshot and (later) detach listener safely
+    final FocusNode? oldEffective = effectiveFocusNode;
     final FocusNode? newExternal = focusableExternalNode;
+
+    // Nothing changed wrt external node identity → no swap needed
     if (identical(newExternal, _lastExternalNode)) {
-      return; // No change in external node presence/identity.
+      return;
     }
 
-    // Capture whether the previously effective node had focus.
-    final bool hadFocus = (effectiveFocusNode?.hasFocus ?? false);
+    final bool hadFocus = oldEffective?.hasFocus ?? false;
 
-    // Handle transitions:
-    // - internal -> external : dispose internal
-    // - external -> internal : create internal
-    // - external(A) -> external(B) : just switch references
+    // Detach BEFORE we might dispose the old node
+    oldEffective?.removeListener(_notifyFocusChanged);
+
+    // Transition handling
     if (_lastExternalNode == null && newExternal != null) {
-      // Adopt external.
+      // internal -> external
       _internalFocusNode?.dispose();
       _internalFocusNode = null;
     } else if (_lastExternalNode != null && newExternal == null) {
-      // Fall back to a fresh internal node.
+      // external -> internal
       _internalFocusNode = FocusNode(
         debugLabel: '${widget.runtimeType} (internal)',
       );
-    } // else: external changed to another external; nothing to allocate/dispose.
-
+    }
     _lastExternalNode = newExternal;
 
-    // Preserve focus across the swap on the next frame.
+    // AFTER: recompute from the updated fields using a different initializer
+    final FocusNode? newEffective = _lastExternalNode ?? _internalFocusNode;
+
+    // Reattach listener to the current effective node
+    newEffective?.addListener(_notifyFocusChanged);
+
+    // Preserve focus across the swap
     if (hadFocus) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) {
-          effectiveFocusNode?.requestFocus();
-        }
+        if (mounted) newEffective?.requestFocus();
       });
     }
   }
@@ -308,6 +373,7 @@ mixin FocusableMixin<T extends StatefulWidget> on State<T> {
   @override
   @mustCallSuper
   void dispose() {
+    effectiveFocusNode?.removeListener(_notifyFocusChanged);
     _internalFocusNode?.dispose();
     _internalFocusNode = null;
     _lastExternalNode = null;

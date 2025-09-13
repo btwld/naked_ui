@@ -17,8 +17,8 @@ class NakedDismissMenuAction extends DismissAction {
 /// Alignment pair for target (anchor) and follower (overlay).
 class NakedMenuPosition {
   final Alignment target;
-
   final Alignment follower;
+
   const NakedMenuPosition({
     this.target = Alignment.bottomLeft,
     this.follower = Alignment.topLeft,

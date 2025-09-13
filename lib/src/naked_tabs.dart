@@ -1,4 +1,4 @@
-// ignore_for_file: avoid-empty-setstate, no-empty-block
+// ignore_for_file: no-empty-block
 
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';

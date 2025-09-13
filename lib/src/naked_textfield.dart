@@ -317,7 +317,8 @@ class _NakedTextFieldState extends State<NakedTextField>
     }
 
     // IMPORTANT: No MediaQuery reads here.
-    _effectiveFocusNode.canRequestFocus = widget.canRequestFocus && widget.enabled;
+    _effectiveFocusNode.canRequestFocus =
+        widget.canRequestFocus && widget.enabled;
     _effectiveFocusNode.addListener(_handleFocusChange);
   }
 
@@ -350,7 +351,7 @@ class _NakedTextFieldState extends State<NakedTextField>
     widget.onFocusChange?.call(_effectiveFocusNode.hasFocus);
     if (!mounted) return;
     // Rebuild for selection highlight & semantics updates tied to focus.
-    // ignore: avoid-empty-setstate, no-empty-block
+    // ignore: no-empty-block
     setState(() {});
   }
 

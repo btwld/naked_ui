@@ -91,7 +91,7 @@ class NakedCheckbox extends StatefulWidget {
 }
 
 class _NakedCheckboxState extends State<NakedCheckbox>
-    with WidgetStatesMixin<NakedCheckbox>, PressListenerMixin<NakedCheckbox> {
+    with WidgetStatesMixin<NakedCheckbox> {
   // Private methods
   void _handleKeyboardActivation([Intent? _]) {
     if (!widget._effectiveEnabled) return;

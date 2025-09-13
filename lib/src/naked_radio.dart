@@ -51,152 +51,70 @@ class NakedRadio<T> extends StatefulWidget {
 }
 
 class _NakedRadioState<T> extends State<NakedRadio<T>>
-    with PressListenerMixin<NakedRadio<T>>, FocusableMixin<NakedRadio<T>> {
-  // Track which node currently has our listener so we can move it safely.
-  FocusNode? _listenedFocusNode;
-  bool _hovered = false;
+    with FocusableMixin<NakedRadio<T>> {
   bool _pressed = false;
+  bool? _lastReportedHover;
 
   @protected
   @override
   FocusNode? get focusableExternalNode => widget.focusNode;
 
+  @protected
   @override
-  void initState() {
-    super.initState();
-    // Attach listener to the effective focus node to surface onFocusChange.
-    _listenedFocusNode = effectiveFocusNode;
-    _listenedFocusNode?.addListener(_handleFocusNodeChanged);
-  }
-
-  // Removed unused _handlePointerTap (selection is handled by RawRadio).
-
-  void _handleFocusNodeChanged() {
-    widget.onFocusChange?.call(effectiveFocusNode?.hasFocus ?? false);
-  }
-
-  Widget _buildRadioWidget(
-    BuildContext _,
-    RadioGroupRegistry<T> registry,
-    bool isSelected,
-  ) {
-    final effectiveCursor = widget.mouseCursor != null
-        ? widget.mouseCursor!
-        : widget.enabled
-        ? SystemMouseCursors.click
-        : SystemMouseCursors.basic;
-
-    return buildPressListener(
-      enabled: widget.enabled,
-      behavior: HitTestBehavior.translucent,
-      onPressChange: (pressed) {
-        if (mounted) setState(() => _pressed = pressed);
-        widget.onPressChange?.call(pressed);
-      },
-      child: Listener(
-        onPointerUp: (_) {
-          if (!widget.enabled) return;
-          // If not toggleable and already selected, do nothing (no change).
-          if (!widget.toggleable && isSelected) return;
-          final next = widget.toggleable && isSelected ? null : widget.value;
-          registry.onChanged(next);
-        },
-        behavior: HitTestBehavior.translucent,
-        child: MouseRegion(
-          onEnter: (_) {
-            if (!widget.enabled) return;
-            if (mounted) setState(() => _hovered = true);
-            widget.onHoverChange?.call(true);
-          },
-          onExit: (_) {
-            if (!widget.enabled) return;
-            if (mounted) setState(() => _hovered = false);
-            widget.onHoverChange?.call(false);
-          },
-          cursor: effectiveCursor,
-          child: RawRadio<T>(
-            value: widget.value,
-            mouseCursor: WidgetStateMouseCursor.resolveWith(
-              (_) => effectiveCursor,
-            ),
-            toggleable: widget.toggleable,
-            focusNode: effectiveFocusNode!,
-            autofocus: widget.autofocus && widget.enabled,
-            groupRegistry: registry,
-            enabled: widget.enabled,
-            builder: (context, radioState) {
-              if (widget.builder != null) {
-                final states = <WidgetState>{
-                  if (!widget.enabled) WidgetState.disabled,
-                  if (isSelected) WidgetState.selected,
-                  if (_hovered) WidgetState.hovered,
-                  if (_pressed) WidgetState.pressed,
-                };
-
-                return widget.builder!(context, states, widget.child);
-              }
-
-              return widget.child!;
-            },
-          ),
-        ),
-      ),
-    );
-  }
-
-  @override
-  void didUpdateWidget(NakedRadio<T> oldWidget) {
-    super.didUpdateWidget(oldWidget);
-
-    // If the effective focus node changed (external swap or internal allocation),
-    // move the listener to the new node.
-    final FocusNode? newNode = effectiveFocusNode;
-    if (!identical(newNode, _listenedFocusNode)) {
-      _listenedFocusNode?.removeListener(_handleFocusNodeChanged);
-      _listenedFocusNode = newNode;
-      _listenedFocusNode?.addListener(_handleFocusNodeChanged);
-    }
-  }
-
-  @override
-  void dispose() {
-    // Detach our listener; FocusableMixin handles internal node disposal.
-    _listenedFocusNode?.removeListener(_handleFocusNodeChanged);
-    _listenedFocusNode = null;
-    super.dispose();
-  }
+  ValueChanged<bool>? get focusableOnFocusChange => widget.onFocusChange;
 
   @override
   Widget build(BuildContext context) {
     final registry = widget.groupRegistry ?? RadioGroup.maybeOf<T>(context);
-
     if (registry == null) {
-      throw FlutterError.fromParts([
-        ErrorSummary('NakedRadio<$T> must be used within a RadioGroup<$T>.'),
-        ErrorDescription(
-          'No RadioGroup<$T> ancestor was found in the widget tree.',
-        ),
-        ErrorHint(
-          'Wrap your NakedRadio widgets with a RadioGroup:\n'
-          'RadioGroup<$T>(\n'
-          '  groupValue: selectedValue,\n'
-          '  onChanged: (value) { ... },\n'
-          '  child: Column(\n'
-          '    children: [\n'
-          '      NakedRadio<$T>(value: ...),\n'
-          '      NakedRadio<$T>(value: ...),\n'
-          '    ],\n'
-          '  ),\n'
-          ')',
-        ),
-      ]);
+      throw FlutterError(
+        'NakedRadio<$T> must be used within a RadioGroup<$T>.',
+      );
     }
 
-    final isSelected = registry.groupValue == widget.value;
-    Widget radioWidget = _buildRadioWidget(context, registry, isSelected);
+    final effectiveCursor =
+        widget.mouseCursor ??
+        (widget.enabled ? SystemMouseCursors.click : SystemMouseCursors.basic);
 
-    // RawRadio handles all radio-specific semantics (checked, mutually exclusive, focus, etc.)
-    // Users can control child semantics through their child or builder
-    return radioWidget;
+    // Press detector: still needed to expose a "pressed" bit (not provided by RawRadio)
+    return PressDetector(
+      enabled: widget.enabled,
+      behavior: HitTestBehavior.deferToChild,
+      onPressChange: (pressed) {
+        if (mounted) setState(() => _pressed = pressed);
+        widget.onPressChange?.call(pressed);
+      },
+      child: RawRadio<T>(
+        value: widget.value,
+        mouseCursor: WidgetStateMouseCursor.resolveWith((_) => effectiveCursor),
+        toggleable: widget.toggleable,
+        focusNode: effectiveFocusNode!, // from FocusableMixin
+        autofocus: widget.autofocus && widget.enabled,
+        groupRegistry: registry,
+        enabled: widget.enabled,
+        builder: (context, radioState) {
+          // Compose states from RawRadio + our "pressed"
+          final states = {
+            ...radioState.states,
+            if (_pressed) WidgetState.pressed,
+          };
+
+          // Optionally notify external hover changes without doing setState in build
+          final hovered = states.contains(WidgetState.hovered);
+          if (_lastReportedHover != hovered) {
+            _lastReportedHover = hovered;
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (mounted) widget.onHoverChange?.call(hovered);
+            });
+          }
+
+          if (widget.builder != null) {
+            return widget.builder!(context, states, widget.child);
+          }
+
+          return widget.child!;
+        },
+      ),
+    );
   }
 }
