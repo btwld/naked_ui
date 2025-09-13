@@ -38,7 +38,7 @@ void main() {
     });
 
     testWidgets('NakedSelect with callback responds to trigger', (tester) async {
-      bool triggerPressed = false;
+      final pressEvents = <bool>[];
       
       await tester.pumpWidget(MaterialApp(
         home: Scaffold(
@@ -55,7 +55,7 @@ void main() {
               ],
             ),
             child: NakedSelectTrigger(
-              onPressChange: (pressed) => triggerPressed = pressed,
+              onPressChange: pressEvents.add,
               child: const Text('Select'),
             ),
           ),
@@ -65,9 +65,9 @@ void main() {
       // Tap the select - it should respond since callback is provided
       await tester.tap(find.text('Select'));
       await tester.pump();
-      
-      // The trigger should have been pressed since select is effectively enabled
-      expect(triggerPressed, true);
+      // The trigger should have emitted press true then false
+      expect(pressEvents, isNotEmpty);
+      expect(pressEvents.first, isTrue);
     });
 
     testWidgets('NakedMenuItem disables when onPressed is null', (tester) async {

@@ -54,6 +54,8 @@ class _NakedRadioState<T> extends State<NakedRadio<T>>
     with PressListenerMixin<NakedRadio<T>>, FocusableMixin<NakedRadio<T>> {
   // Track which node currently has our listener so we can move it safely.
   FocusNode? _listenedFocusNode;
+  bool _hovered = false;
+  bool _pressed = false;
 
   @protected
   @override
@@ -87,7 +89,10 @@ class _NakedRadioState<T> extends State<NakedRadio<T>>
     return buildPressListener(
       enabled: widget.enabled,
       behavior: HitTestBehavior.translucent,
-      onPressChange: widget.onPressChange,
+      onPressChange: (pressed) {
+        if (mounted) setState(() => _pressed = pressed);
+        widget.onPressChange?.call(pressed);
+      },
       child: Listener(
         onPointerUp: (_) {
           if (!widget.enabled) return;
@@ -97,28 +102,43 @@ class _NakedRadioState<T> extends State<NakedRadio<T>>
           registry.onChanged(next);
         },
         behavior: HitTestBehavior.translucent,
-        child: RawRadio<T>(
-          value: widget.value,
-          mouseCursor: WidgetStateMouseCursor.resolveWith(
-            (_) => effectiveCursor,
-          ),
-          toggleable: widget.toggleable,
-          focusNode: effectiveFocusNode!,
-          autofocus: widget.autofocus && widget.enabled,
-          groupRegistry: registry,
-          enabled: widget.enabled,
-          builder: (context, radioState) {
-            if (widget.builder != null) {
-              final states = <WidgetState>{
-                if (!widget.enabled) WidgetState.disabled,
-                if (isSelected) WidgetState.selected,
-              };
-
-              return widget.builder!(context, states, widget.child);
-            }
-
-            return widget.child!;
+        child: MouseRegion(
+          onEnter: (_) {
+            if (!widget.enabled) return;
+            if (mounted) setState(() => _hovered = true);
+            widget.onHoverChange?.call(true);
           },
+          onExit: (_) {
+            if (!widget.enabled) return;
+            if (mounted) setState(() => _hovered = false);
+            widget.onHoverChange?.call(false);
+          },
+          cursor: effectiveCursor,
+          child: RawRadio<T>(
+            value: widget.value,
+            mouseCursor: WidgetStateMouseCursor.resolveWith(
+              (_) => effectiveCursor,
+            ),
+            toggleable: widget.toggleable,
+            focusNode: effectiveFocusNode!,
+            autofocus: widget.autofocus && widget.enabled,
+            groupRegistry: registry,
+            enabled: widget.enabled,
+            builder: (context, radioState) {
+              if (widget.builder != null) {
+                final states = <WidgetState>{
+                  if (!widget.enabled) WidgetState.disabled,
+                  if (isSelected) WidgetState.selected,
+                  if (_hovered) WidgetState.hovered,
+                  if (_pressed) WidgetState.pressed,
+                };
+
+                return widget.builder!(context, states, widget.child);
+              }
+
+              return widget.child!;
+            },
+          ),
         ),
       ),
     );

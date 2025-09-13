@@ -10,6 +10,14 @@ import 'package:flutter_test/flutter_test.dart';
 /// and will appear in VS Code Test Explorer for easy execution.
 /// Uses flutter test (recommended) with timeout and kill handling.
 void main() {
+  // Gate integration launcher behind an opt-in env flag to keep unit tests headless
+  final shouldRunIntegration = () {
+    final env = Platform.environment['RUN_INTEGRATION'];
+    if (env == null) return false;
+    final v = env.toLowerCase();
+    return v == '1' || v == 'true' || v == 'yes';
+  }();
+
   group('Integration Tests', () {
     test(
       'run all integration tests',
@@ -92,6 +100,9 @@ void main() {
         }
       },
       timeout: const Timeout(Duration(minutes: 6)),
+      skip: shouldRunIntegration
+          ? null
+          : 'Skipped by default. Set RUN_INTEGRATION=1 to run external example integration tests.',
     ); // Slightly longer than kill timer
 
     test(
@@ -148,6 +159,9 @@ void main() {
         }
       },
       timeout: const Timeout(Duration(minutes: 4)),
+      skip: shouldRunIntegration
+          ? null
+          : 'Skipped by default. Set RUN_INTEGRATION=1 to run external example integration tests.',
     );
 
     test(
@@ -204,9 +218,11 @@ void main() {
         }
       },
       timeout: const Timeout(Duration(minutes: 4)),
-      skip: Platform.isMacOS
-          ? 'Skipped on macOS: flaky HardwareKeyboard KeyUp mismatch in isolated slider run. Covered by the "run all integration tests" suite.'
-          : null,
+      skip: shouldRunIntegration
+          ? (Platform.isMacOS
+              ? 'Skipped on macOS: flaky HardwareKeyboard KeyUp mismatch in isolated slider run. Covered by the "run all integration tests" suite.'
+              : null)
+          : 'Skipped by default. Set RUN_INTEGRATION=1 to run external example integration tests.',
     );
   });
 }

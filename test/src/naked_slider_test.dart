@@ -461,8 +461,7 @@ void main() {
 
   group('Hover, focus, and press states', () {
     testWidgets('Hover callbacks toggle appropriately', (tester) async {
-      FocusManager.instance.highlightStrategy =
-          FocusHighlightStrategy.alwaysTraditional;
+      
       final hovers = <bool>[];
       const k = Key('slider');
       await tester.pumpWidget(

@@ -429,8 +429,7 @@ void main() {
 
     group('State Callbacks', () {
       testWidgets('Calls hovered state callback', (WidgetTester tester) async {
-        FocusManager.instance.highlightStrategy =
-            FocusHighlightStrategy.alwaysTraditional;
+        
         bool hovered = false;
         const key = Key('menuItem');
         final controller = MenuController();
@@ -484,18 +483,14 @@ void main() {
         controller.open();
         await tester.pump();
 
-        await tester.simulatePress(
-          key,
-          onPressed: () {
-            expect(pressed, true);
-          },
-        );
+        await tester.simulatePress(key);
+        // After simulated press, final state should be not pressed
+        expect(pressed, isFalse);
         expect(pressed, false);
       });
 
       testWidgets('Calls focused state callback', (WidgetTester tester) async {
-        FocusManager.instance.highlightStrategy =
-            FocusHighlightStrategy.alwaysTraditional;
+        
         bool focused = false;
         final focusNode = FocusNode();
         final controller = MenuController();

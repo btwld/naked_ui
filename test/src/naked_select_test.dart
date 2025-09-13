@@ -309,8 +309,7 @@ void main() {
     testWidgets('calls onHoverChange when trigger hovered', (
       WidgetTester tester,
     ) async {
-      FocusManager.instance.highlightStrategy =
-          FocusHighlightStrategy.alwaysTraditional;
+      
 
       bool isHovered = false;
       const key = Key('trigger');
@@ -395,8 +394,7 @@ void main() {
     testWidgets('calls item states when hovered/pressed', (
       WidgetTester tester,
     ) async {
-      FocusManager.instance.highlightStrategy =
-          FocusHighlightStrategy.alwaysTraditional;
+      
 
       bool itemHovered = false;
       bool itemPressed = false;

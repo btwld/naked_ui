@@ -171,6 +171,7 @@ class _NakedTooltipState extends State<NakedTooltip>
     return NakedMenuAnchor(
       controller: controller,
       overlayBuilder: widget.tooltipBuilder,
+      removalDelay: widget.removalDelay,
       position: widget.position,
       fallbackPositions: widget.fallbackPositions,
       child: MouseRegion(

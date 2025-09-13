@@ -118,8 +118,7 @@ void main() {
     testWidgets('calls onHoverChange when hovered', (
       WidgetTester tester,
     ) async {
-      FocusManager.instance.highlightStrategy =
-          FocusHighlightStrategy.alwaysTraditional;
+      
 
       final textKey = GlobalKey();
 
@@ -136,20 +135,13 @@ void main() {
         ),
       );
 
-      final finder = find.byKey(textKey);
-
-      // Create a test pointer and simulate hover over the widget
-      final TestPointer testPointer = TestPointer(1, PointerDeviceKind.mouse);
-      final Offset hoverPosition = tester.getCenter(finder);
-      await tester.sendEventToBinding(testPointer.hover(hoverPosition));
-      await tester.pump();
-
-      expect(isHovered, isTrue); // Should be hovering now
-
-      // Move pointer out of widget
-      await tester.sendEventToBinding(testPointer.hover(Offset.zero));
-      await tester.pump();
-
+      // Use helper to simulate hover enter/exit robustly
+      await tester.simulateHover(
+        textKey,
+        onHover: () {
+          expect(isHovered, isTrue);
+        },
+      );
       expect(isHovered, isFalse);
     });
 
@@ -263,8 +255,7 @@ void main() {
 
   group('Keyboard Interaction', () {
     testWidgets('toggles with Space key', (WidgetTester tester) async {
-      FocusManager.instance.highlightStrategy =
-          FocusHighlightStrategy.alwaysTraditional;
+      
 
       bool isChecked = false;
 
@@ -315,7 +306,7 @@ void main() {
 
   group('Tristate', () {
     testWidgets(
-      'cycles through states false -> true -> false when tristate is enabled (Material parity)',
+      'cycles false → true → null → false when tristate is enabled (Material parity)',
       (WidgetTester tester) async {
         bool? value = false;
 
@@ -341,11 +332,11 @@ void main() {
 
         await tester.pump();
         await tester.tap(find.byType(NakedCheckbox));
-        expect(value, false);
+        expect(value, isNull);
 
         await tester.pump();
         await tester.tap(find.byType(NakedCheckbox));
-        expect(value, true);
+        expect(value, false);
       },
     );
 

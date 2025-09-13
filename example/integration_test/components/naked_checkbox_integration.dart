@@ -167,7 +167,7 @@ void main() {
       expect(hoverChanged, isFalse);
     });
 
-    testWidgets('focusOnPress requests focus when enabled', (tester) async {
+    testWidgets('tap toggles value and does not request focus by default', (tester) async {
       final checkboxKey = UniqueKey();
       final focusNode = tester.createManagedFocusNode();
       bool checkboxValue = false;
@@ -190,16 +190,16 @@ void main() {
       // Initially not focused
       expect(focusNode.hasFocus, isFalse);
 
-      // Tap checkbox - should request focus
+      // Tap checkbox - should NOT request focus by default
       await tester.tap(find.byKey(checkboxKey));
       await tester.pump();
 
-      // Now should be focused
-      expect(focusNode.hasFocus, isTrue);
-      expect(checkboxValue, isTrue); // And value should be changed
+      // Should still not be focused, but value should be toggled
+      expect(focusNode.hasFocus, isFalse);
+      expect(checkboxValue, isTrue);
     });
 
-    testWidgets('focusOnPress disabled does not request focus', (tester) async {
+    testWidgets('tap does not request focus (explicit focusNode present)', (tester) async {
       final checkboxKey = UniqueKey();
       final focusNode = tester.createManagedFocusNode();
       bool checkboxValue = false;

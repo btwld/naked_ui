@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:naked_ui/naked_ui.dart';
 
-import 'helpers/interaction_test_extensions.dart';
 import '../test_helpers.dart';
 
 
@@ -48,7 +47,7 @@ void main() {
 
       expect(find.text('Tooltip Content'), findsNothing);
 
-      await tester.simulateHoverOnTooltip(
+      await tester.simulateHover(
         targetKey,
         onHover: () {
           expect(find.text('Tooltip Content'), findsOneWidget);
@@ -90,7 +89,7 @@ void main() {
         ),
       );
 
-      await tester.simulateHoverOnTooltip(
+      await tester.simulateHover(
         targetKey,
         onHover: () {
           expect(find.text('tooltip'), findsOneWidget);
@@ -201,6 +200,7 @@ void main() {
       // Move mouse away - tooltip should still be visible
       await gesture.moveTo(Offset.zero);
       await tester.pump();
+      await tester.pump(const Duration(milliseconds: 1)); // allow zero-duration timer to flip state
       expect(find.text('Tooltip Content'), findsOneWidget);
 
       // Wait for half the show duration - tooltip should still be visible
@@ -238,32 +238,26 @@ void main() {
         ),
       );
 
-      // Custom hover simulation to control timing
-      final gesture = await tester.createGesture(kind: PointerDeviceKind.mouse);
-      await gesture.addPointer(location: Offset.zero);
-      addTearDown(gesture.removePointer);
-      await tester.pump();
-
-      // Move to hover position
-      await gesture.moveTo(tester.getCenter(find.byKey(targetKey)));
-      await tester.pumpAndSettle();
-
-      expect(find.text('Tooltip Content'), findsOneWidget);
-      expect(stateChanges, [OverlayChildLifecycleState.present]);
-
-      // Move mouse away - tooltip should still be visible
-      await gesture.moveTo(Offset.zero);
-      await tester.pumpAndSettle();
+      // Enter via helper (which then exits); keep timing under our control
+      await tester.simulateHover(
+        targetKey,
+        onHover: () {
+          expect(find.text('Tooltip Content'), findsOneWidget);
+          expect(stateChanges, [OverlayChildLifecycleState.present]);
+        },
+      );
+      // After helper returns, exit happened; allow immediate flip work to run
+      await tester.pump(const Duration(milliseconds: 1));
 
       expect(stateChanges, [
         OverlayChildLifecycleState.present,
         OverlayChildLifecycleState.pendingRemoval,
       ]);
-      // Wait for half the show duration - tooltip should still be visible
+      // Wait for half the removal delay - tooltip should still be visible
       await tester.pump(const Duration(milliseconds: 250));
       expect(find.text('Tooltip Content'), findsOneWidget);
 
-      // Wait for the full show duration - tooltip should be hidden
+      // Wait for the full removal delay - tooltip should be hidden
       await tester.pump(const Duration(milliseconds: 250));
       await tester.pump();
 

@@ -92,8 +92,7 @@ void main() {
 
   group('State Callback Tests', () {
     testWidgets('reports hovered state changes', (WidgetTester tester) async {
-      FocusManager.instance.highlightStrategy =
-          FocusHighlightStrategy.alwaysTraditional;
+      
       bool isHovered = false;
 
       await tester.pumpMaterialWidget(

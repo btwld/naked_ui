@@ -24,7 +24,7 @@ extension KeyboardTestHelpers on WidgetTester {
   }
 
   /// Simulates keyboard activation using raw key down events (Enter/Space).
-  /// Uses only key down to avoid HardwareKeyboard key-up mismatch in integration envs.
+  /// Uses full press (down+up) via sendKeyEvent to keep pressed set consistent.
   Future<void> testKeyboardActivation(
     Finder target, {
     bool testSpace = true,
@@ -35,11 +35,11 @@ extension KeyboardTestHelpers on WidgetTester {
     await pump();
 
     if (testEnter) {
-      await sendKeyDownEvent(LogicalKeyboardKey.enter);
+      await sendKeyEvent(LogicalKeyboardKey.enter);
       await pump();
     }
     if (testSpace) {
-      await sendKeyDownEvent(LogicalKeyboardKey.space);
+      await sendKeyEvent(LogicalKeyboardKey.space);
       await pump();
     }
   }

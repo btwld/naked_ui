@@ -142,12 +142,17 @@ class _NakedCheckboxState extends State<NakedCheckbox>
   @override
   void initializeWidgetStates() {
     updateDisabledState(!widget.enabled);
+    // Reflect current value into selected state for builder consumers.
+    updateSelectedState(widget.value == true, null);
   }
 
   @override
   void didUpdateWidget(covariant NakedCheckbox oldWidget) {
     super.didUpdateWidget(oldWidget);
     syncWidgetStates();
+    if (oldWidget.value != widget.value) {
+      updateSelectedState(widget.value == true, null);
+    }
   }
 
   @override

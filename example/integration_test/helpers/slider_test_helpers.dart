@@ -38,17 +38,16 @@ extension SliderTestHelpers on WidgetTester {
     expect(slider.value, closeTo(expected, tolerance));
   }
 
-  /// Send keyboard arrow keys to slider
-  /// Use only a key down event to avoid IntegrationTest key-up state mismatch.
+  /// Send keyboard arrow keys to slider as a full press (down+up).
+  /// Using sendKeyEvent keeps the pressed-set consistent in Live bindings.
   Future<void> sendArrowKey(LogicalKeyboardKey key) async {
-    await sendKeyDownEvent(key);
+    await sendKeyEvent(key);
     await pump();
   }
 
-  /// Send Home/End keys to slider
-  /// Use only a key down event to trigger Shortcuts without key-up assertions.
+  /// Send Home/End keys to slider as a full press (down+up).
   Future<void> sendHomeEndKey(LogicalKeyboardKey key) async {
-    await sendKeyDownEvent(key);
+    await sendKeyEvent(key);
     await pump();
   }
 }
