@@ -52,7 +52,7 @@ class NakedRadio<T> extends StatefulWidget {
 
 class _NakedRadioState<T> extends State<NakedRadio<T>>
     with FocusableMixin<NakedRadio<T>> {
-  bool _pressed = false;
+  bool? _lastReportedPressed;
   bool? _lastReportedHover;
 
   @protected
@@ -76,45 +76,48 @@ class _NakedRadioState<T> extends State<NakedRadio<T>>
         widget.mouseCursor ??
         (widget.enabled ? SystemMouseCursors.click : SystemMouseCursors.basic);
 
-    // Press detector: still needed to expose a "pressed" bit (not provided by RawRadio)
-    return PressDetector(
+    return RawRadio<T>(
+      value: widget.value,
+      mouseCursor: WidgetStateMouseCursor.resolveWith((_) => effectiveCursor),
+      toggleable: widget.toggleable,
+      focusNode: effectiveFocusNode!, // from FocusableMixin
+      autofocus: widget.autofocus && widget.enabled,
+      groupRegistry: registry,
       enabled: widget.enabled,
-      behavior: HitTestBehavior.deferToChild,
-      onPressChange: (pressed) {
-        if (mounted) setState(() => _pressed = pressed);
-        widget.onPressChange?.call(pressed);
+      builder: (context, radioState) {
+        // Derive "pressed" from RawRadio's internal down position to avoid
+        // intercepting gestures with an external Listener.
+        final bool pressed = radioState.downPosition != null;
+        final states = {...radioState.states, if (pressed) WidgetState.pressed};
+
+        // Notify hover changes without setState in build
+        final hovered = states.contains(WidgetState.hovered);
+        if (_lastReportedHover != hovered) {
+          _lastReportedHover = hovered;
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) widget.onHoverChange?.call(hovered);
+          });
+        }
+
+        // Notify press changes derived from RawRadio
+        if (_lastReportedPressed != pressed) {
+          _lastReportedPressed = pressed;
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) widget.onPressChange?.call(pressed);
+          });
+        }
+
+        if (widget.builder != null) {
+          final built = widget.builder!(context, states, widget.child);
+
+          // Ensure the area is hit-testable so RawRadio's GestureDetector
+          // can receive taps even if the built widget has no gesture handlers.
+          return ColoredBox(color: Colors.transparent, child: built);
+        }
+
+        // Ensure the child area is hit-testable for taps.
+        return ColoredBox(color: Colors.transparent, child: widget.child!);
       },
-      child: RawRadio<T>(
-        value: widget.value,
-        mouseCursor: WidgetStateMouseCursor.resolveWith((_) => effectiveCursor),
-        toggleable: widget.toggleable,
-        focusNode: effectiveFocusNode!, // from FocusableMixin
-        autofocus: widget.autofocus && widget.enabled,
-        groupRegistry: registry,
-        enabled: widget.enabled,
-        builder: (context, radioState) {
-          // Compose states from RawRadio + our "pressed"
-          final states = {
-            ...radioState.states,
-            if (_pressed) WidgetState.pressed,
-          };
-
-          // Optionally notify external hover changes without doing setState in build
-          final hovered = states.contains(WidgetState.hovered);
-          if (_lastReportedHover != hovered) {
-            _lastReportedHover = hovered;
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              if (mounted) widget.onHoverChange?.call(hovered);
-            });
-          }
-
-          if (widget.builder != null) {
-            return widget.builder!(context, states, widget.child);
-          }
-
-          return widget.child!;
-        },
-      ),
     );
   }
 }
