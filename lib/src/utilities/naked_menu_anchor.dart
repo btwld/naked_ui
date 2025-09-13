@@ -1,18 +1,8 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
-
-/// Dismiss with Escape using default shortcuts; we only tell *this* anchor how to close.
-class NakedDismissMenuAction extends DismissAction {
-  final MenuController controller;
-  NakedDismissMenuAction({required this.controller});
-  @override
-  void invoke(DismissIntent intent) => controller.close();
-
-  @override
-  bool isEnabled(DismissIntent intent) => controller.isOpen;
-}
 
 /// Alignment pair for target (anchor) and follower (overlay).
 class NakedMenuPosition {
@@ -56,7 +46,8 @@ class NakedMenuAnchor extends StatefulWidget {
   final WidgetBuilder overlayBuilder;
   final Widget? child;
 
-  /// If supplied, forwarded to RawMenuAnchor.childFocusNode.
+  /// If supplied, forwarded to RawMenuAnchor.childFocusNode
+  /// (lets Raw restore focus to the trigger on close).
   final FocusNode? childFocusNode;
 
   /// Whether the outside tap that *closes* the menu is swallowed.
@@ -76,6 +67,8 @@ class NakedMenuAnchor extends StatefulWidget {
   final VoidCallback? onOpen;
 
   /// Optional raw key listener (e.g., type‑ahead). Return handled/ignored.
+  /// If null, we still handle ESC/Up/Down via Shortcuts, but only request
+  /// overlay focus when appropriate (see heuristic below).
   final KeyEventResult Function(KeyEvent)? onKeyEvent;
 
   @override
@@ -87,33 +80,52 @@ class _NakedMenuAnchorState extends State<NakedMenuAnchor> {
     debugLabel: 'NakedMenu overlay',
   );
 
+  // Cancelable delayed hide (prevents closing a just‑reopened overlay).
+  Timer? _pendingHide;
+
   @override
   void dispose() {
+    _pendingHide?.cancel();
     _overlayFocusNode.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    // Heuristic:
+    // - Menus (default closeOnOutsideTap == true) should get overlay focus.
+    // - Tooltips (closeOnOutsideTap == false) should not steal focus,
+    //   unless the caller explicitly supplies onKeyEvent.
+    final bool wantsOverlayFocus =
+        widget.onKeyEvent != null || widget.closeOnOutsideTap;
+
     return RawMenuAnchor(
       childFocusNode: widget.childFocusNode,
       consumeOutsideTaps: widget.consumeOutsideTaps,
       onOpen: widget.onOpen,
       onClose: widget.onClose,
-      // Animation-friendly: show immediately on open request; delay hide on close request.
+
+      // Animation-friendly hooks.
       onOpenRequested: (Offset? _, VoidCallback showOverlay) {
+        _pendingHide?.cancel();
         showOverlay();
       },
       onCloseRequested: (VoidCallback hideOverlay) {
+        _pendingHide?.cancel();
         if (widget.removalDelay == Duration.zero) {
           hideOverlay();
 
           return;
         }
-        Future<void>.delayed(widget.removalDelay, hideOverlay);
+        _pendingHide = Timer(widget.removalDelay, () {
+          _pendingHide = null;
+          hideOverlay();
+        });
       },
+
       useRootOverlay: widget.useRootOverlay,
       controller: widget.controller,
+
       overlayBuilder: (context, info) {
         return Positioned.fill(
           bottom: MediaQuery.viewInsetsOf(context).bottom,
@@ -122,31 +134,50 @@ class _NakedMenuAnchorState extends State<NakedMenuAnchor> {
                 ? (PointerDownEvent _) => widget.controller.close()
                 : null,
             groupId: info.tapRegionGroupId,
-            child: CustomSingleChildLayout(
-              delegate: _NakedPositionDelegate(
-                anchorRect: info.anchorRect,
-                overlaySize: info.overlaySize,
-                anchorAlignment: widget.position,
-                fallbackAlignments: widget.fallbackPositions,
-                pointerPosition:
-                    info.position, // respects MenuController.open(position: …)
-              ),
+            child: Shortcuts(
+              shortcuts: const {
+                // Escape/Gamepad‑B dismiss via default shortcut mapping.
+                SingleActivator(LogicalKeyboardKey.escape): DismissIntent(),
+                // Focus traversal inside the menu.
+                SingleActivator(LogicalKeyboardKey.arrowDown):
+                    NextFocusIntent(),
+                SingleActivator(LogicalKeyboardKey.arrowUp):
+                    PreviousFocusIntent(),
+              },
               child: Actions(
                 actions: {
-                  // Esc/Gamepad-B: dismiss via default shortcut mapping.
-                  DismissIntent: NakedDismissMenuAction(
+                  // Built-in action that closes menus controlled by this controller.
+                  DismissIntent: DismissMenuAction(
                     controller: widget.controller,
                   ),
+                  NextFocusIntent: CallbackAction<NextFocusIntent>(
+                    onInvoke: (_) => FocusScope.of(context).nextFocus(),
+                  ),
+                  PreviousFocusIntent: CallbackAction<PreviousFocusIntent>(
+                    onInvoke: (_) => FocusScope.of(context).previousFocus(),
+                  ),
                 },
-                child: Focus(
-                  focusNode: _overlayFocusNode,
-                  autofocus: true,
-                  onKeyEvent: (node, event) {
-                    final res = widget.onKeyEvent?.call(event);
+                child: FocusTraversalGroup(
+                  child: CustomSingleChildLayout(
+                    delegate: _NakedPositionDelegate(
+                      anchorRect: info.anchorRect,
+                      overlaySize: info.overlaySize,
+                      anchorAlignment: widget.position,
+                      fallbackAlignments: widget.fallbackPositions,
+                      pointerPosition: info
+                          .position, // honors MenuController.open(position: …)
+                    ),
+                    child: Focus(
+                      focusNode: _overlayFocusNode,
+                      autofocus: wantsOverlayFocus,
+                      onKeyEvent: (node, event) {
+                        final res = widget.onKeyEvent?.call(event);
 
-                    return res ?? KeyEventResult.ignored;
-                  },
-                  child: widget.overlayBuilder(context),
+                        return res ?? KeyEventResult.ignored;
+                      },
+                      child: widget.overlayBuilder(context),
+                    ),
+                  ),
                 ),
               ),
             ),
@@ -160,12 +191,11 @@ class _NakedMenuAnchorState extends State<NakedMenuAnchor> {
 
 class _NakedPositionDelegate extends SingleChildLayoutDelegate {
   final Rect anchorRect;
-
   final Size overlaySize;
   final NakedMenuPosition anchorAlignment;
   final List<NakedMenuPosition> fallbackAlignments;
-  final Offset? pointerPosition;
-  // RawMenuOverlayInfo.position (if open(position: …))
+  final Offset?
+  pointerPosition; // RawMenuOverlayInfo.position (if open(position: …))
 
   const _NakedPositionDelegate({
     required this.anchorRect,
@@ -236,9 +266,9 @@ enum OverlayChildLifecycleState { present, pendingRemoval, removed }
 typedef OverlayChildLifecycleCallback =
     void Function(OverlayChildLifecycleState state);
 
+/// Marker interface with timing + callback; used by [MenuAnchorChildLifecycleMixin].
 abstract class OverlayChildLifecycle {
   final OverlayChildLifecycleCallback? onStateChange;
-
   final Duration removalDelay;
   const OverlayChildLifecycle({
     this.onStateChange,
@@ -246,7 +276,7 @@ abstract class OverlayChildLifecycle {
   });
 }
 
-/// Turns a `showNotifier` into `controller.open/close` and emits lifecycle states.
+/// Converts a `showNotifier` boolean into controller.open/close and emits lifecycle states.
 /// Note: the actual *hide* is delayed by `NakedMenuAnchor.onCloseRequested`.
 mixin MenuAnchorChildLifecycleMixin<T extends StatefulWidget> on State<T> {
   OverlayChildLifecycle get overlayChildLifecycle =>

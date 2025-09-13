@@ -90,17 +90,17 @@ class _NakedRadioState<T> extends State<NakedRadio<T>>
         final bool pressed = radioState.downPosition != null;
         final states = {...radioState.states, if (pressed) WidgetState.pressed};
 
-        // Notify hover changes without setState in build
+        // Notify hover changes only when interactive, without setState in build
         final hovered = states.contains(WidgetState.hovered);
-        if (_lastReportedHover != hovered) {
+        if (widget.enabled && _lastReportedHover != hovered) {
           _lastReportedHover = hovered;
           WidgetsBinding.instance.addPostFrameCallback((_) {
             if (mounted) widget.onHoverChange?.call(hovered);
           });
         }
 
-        // Notify press changes derived from RawRadio
-        if (_lastReportedPressed != pressed) {
+        // Notify press changes only when interactive
+        if (widget.enabled && _lastReportedPressed != pressed) {
           _lastReportedPressed = pressed;
           WidgetsBinding.instance.addPostFrameCallback((_) {
             if (mounted) widget.onPressChange?.call(pressed);
