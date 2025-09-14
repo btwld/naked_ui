@@ -2,14 +2,14 @@
 title: NakedTooltip
 ---
 
-NakedTooltip provides core tooltip behavior and accessibility without imposing any visual styling, giving consumers complete design freedom. It handles showing and hiding tooltips, positioning the tooltip relative to the target widget, and automatically dismissing the tooltip after a specified duration.
+NakedTooltip provides core tooltip behavior and accessibility without imposing any visual styling. It handles show/hide, positions relative to a target, and supports auto‑dismiss with an optional removal delay for exit animations.
 
 <Info>
-  You can find this example in our [GitHub repository](https://github.com/btwld/mix/blob/main/packages/naked/example/lib/api/naked_tooltip.0.dart).
+  You can find this example in our [GitHub repository](https://github.com/btwld/naked_ui/blob/main/example/lib/api/naked_tooltip.0.dart).
 </Info>
 <CodeGroup title="Usage Example" defaultLanguage="dart">
 ```dart
-lass TooltipExample extends StatefulWidget {
+class TooltipExample extends StatefulWidget {
   const TooltipExample({super.key});
 
   @override
@@ -134,3 +134,6 @@ The duration to wait before removing the Widget from the Overlay after the toolt
 
 #### onStateChange → `void Function(OverlayChildLifecycleState state)?`
 Event handler for tooltip lifecycle state changes: `present`, `pendingRemoval`, `removed`.
+
+#### semanticsLabel → `String?`
+Optional semantics tooltip label applied to the trigger. Screen readers announce this on focus/hover.

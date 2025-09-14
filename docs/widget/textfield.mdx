@@ -5,7 +5,7 @@ title: NakedTextField
 NakedTextField provides all the core functionality of a text field without imposing any visual styling or decoration, giving developers complete design freedom. It maintains all behavior including text editing, keyboard input, selection, and accessibility features while allowing custom visual representation.
 
 <Info>
-  You can find examples in our [GitHub repository](https://github.com/btwld/mix/blob/main/packages/naked/example/lib/api/naked_textfield.0.dart).
+  You can find examples in our [GitHub repository](https://github.com/btwld/naked_ui/blob/main/example/lib/api/naked_textfield.0.dart).
 </Info>
 
 <CodeGroup title="Usage Example" defaultLanguage="dart">
@@ -119,10 +119,12 @@ const NakedTextField({
   this.dragStartBehavior = DragStartBehavior.start,
   this.enableInteractiveSelection = true,
   this.selectionControls,
-  this.onPressed,
+  this.onTap,
   this.onTapAlwaysCalled = false,
+  this.onTapChange,
   this.onPressChange,
   this.onTapOutside,
+  this.onTapUpOutside,
   this.scrollController,
   this.scrollPhysics,
   this.autofillHints = const <String>[],
@@ -140,6 +142,8 @@ const NakedTextField({
   this.style,
   required this.builder,
   this.ignorePointers,
+  this.semanticLabel,
+  this.semanticHint,
 })
 ```
 
@@ -265,11 +269,14 @@ Whether the value can be selected. Defaults to true.
 #### selectionControls → `TextSelectionControls?`
 Controls the selection handles and contextual toolbar.
 
-#### onPressed → `GestureTapCallback?`
+#### onTap → `GestureTapCallback?`
 Triggered when the user taps on the field.
 
 #### onTapAlwaysCalled → `bool`
-Whether onPressed should be called for every tap. Defaults to false.
+Whether onTap should be called for every tap. Defaults to false.
+
+#### onTapChange → `ValueChanged<bool>?`
+Called when tap state changes (down/up inside).
 
 #### onPressChange → `ValueChanged<bool>?`
 Called when the pressed state changes. Provides the current pressed state as a boolean parameter:
@@ -279,7 +286,7 @@ Called when the pressed state changes. Provides the current pressed state as a b
 #### onTapOutside → `TapRegionCallback?`
 Called when a tap is detected outside of the field.
 
-#### onPressUpOutside → `TapRegionUpCallback?`
+#### onTapUpOutside → `TapRegionUpCallback?`
 Called when a tap up occurs outside of the field.
 
 #### scrollController → `ScrollController?`
@@ -340,3 +347,9 @@ Whether to ignore pointers. When true, the text field will not respond to pointe
 #### builder → `Widget Function(BuildContext context, Widget child)`
 Required builder function to create the custom appearance of the text field.
 The child parameter is the editable text content that should be integrated into your custom UI. 
+
+#### semanticLabel → `String?`
+Optional semantic label announced by screen readers.
+
+#### semanticHint → `String?`
+Optional hint announced by screen readers.

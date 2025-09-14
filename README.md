@@ -1,47 +1,53 @@
-# Naked
+# Naked UI
 
-Zero-styling UI components giving you complete design freedom
+Behavior‑first, zero‑styling Flutter components that give you complete design freedom.
 
 ## Introduction
 
-The **Naked** library provides UI components that handle only the functionality, behavior, and accessibility aspects of UI elements without imposing any visual styling. This approach gives you complete control over your design system while ensuring all components work correctly and meet accessibility standards.
+The Naked UI library provides headless components that handle functionality, interaction, and accessibility without imposing visual styles. You keep full control of your design system while the components take care of correct behavior and a11y.
 
 ## Key Features
 
-- **Zero-styling approach**: Components handle behavior only, you control 100% of the visual design
-- **Accessibility built-in**: All components implement proper ARIA roles and keyboard navigation
-- **Flexible state management**: Callback functions for all component states (hover, focus, pressed, etc.)
-- **Customizable**: Simple API with sensible defaults and extensive customization options
+- **Zero‑styling**: Behavior only — you own 100% of presentation
+- **Accessible**: Correct semantics and keyboard navigation
+- **Composable**: Small, predictable APIs with sensible defaults
+- **Observable state**: Callbacks for hover, focus, press, drag, select
 
-## Available Components
+## Components
 
-The library includes the following components:
-
-- **NakedButton**: Interactive button behavior with state callbacks
-- **NakedCheckbox**: Toggle component with customizable states
-- **NakedTooltip**: Positioned tooltip behavior with lifecycle management
-- **NakedTextField**: Text input with validation and state management
-- **NakedSelect**: Dropdown/select implementation with keyboard navigation
-- **NakedSlider**: Draggable slider with keyboard support and value constraints
-- **NakedTabs**: Tab navigation behavior with accessibility controls
-- **NakedAccordion**: Expandable/collapsible section behavior
-- **NakedMenu**: Menu component with keyboard navigation
+- **NakedButton** — button interactions (hover, press, focus)
+- **NakedCheckbox** — toggle behavior and semantics
+- **NakedRadio** — single‑select radio with group management
+- **NakedSelect** — dropdown/select with keyboard nav
+- **NakedSlider** — value slider with drag + keys
+- **NakedSwitch** — on/off switch behavior
+- **NakedTabs** — tablist + roving focus
+- **NakedAccordion** — expandable/collapsible sections
+- **NakedMenu** — anchored overlay menu
+- **NakedDialog** — modal dialog behavior + focus trap
+- **NakedTooltip** — anchored tooltip with lifecycle
 
 ## Getting Started
 
 ### Installation
 
-Add the Naked UI library to your Flutter project:
+Add the package to your Flutter project:
 
 ```yaml
 dependencies:
-  naked: ^latest_version  # Check for the latest version at https://pub.dev/packages/naked
+  naked_ui: ^latest_version  # See https://pub.dev/packages/naked_ui
 ```
 
-Then run:
+Then:
 
 ```bash
 flutter pub get
+```
+
+Import:
+
+```dart
+import 'package:naked_ui/naked_ui.dart';
 ```
 
 ### Basic Usage Pattern
@@ -52,7 +58,7 @@ All Naked components follow a similar pattern:
 2. **Wrap with Naked behavior**: Wrap your design with the appropriate Naked component
 3. **Handle state changes**: Use the provided callbacks to update your visual design based on component state
 
-## Example: Creating a Custom Button
+## Quick Example: Custom Button
 
 ```dart
 class MyCustomButton extends StatefulWidget {
@@ -139,4 +145,10 @@ NakedButton(
 )
 ```
 
-See each component's documentation for details on all available configuration options.
+## Docs & Examples
+
+- Documentation: https://docs.page/btwld/naked_ui
+- Example app: example/lib/main.dart
+- Migration guide: MIGRATION.md
+
+Supported Flutter: `>= 3.27.0` (see `pubspec.yaml`).

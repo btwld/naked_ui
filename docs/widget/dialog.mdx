@@ -1,0 +1,98 @@
+---
+title: NakedDialog
+---
+
+Headless dialog API that separates behavior from presentation. Use `showNakedDialog` to present any widget as a modal or non‑modal dialog with full control over visuals. Wrap your dialog content with `NakedDialog` to get correct semantics when modal.
+
+<Info>
+  Examples: 
+  - Basic: https://github.com/btwld/naked_ui/blob/main/example/lib/api/naked_dialog.0.dart
+  - Transitions: https://github.com/btwld/naked_ui/blob/main/example/lib/api/naked_dialog.1.dart
+</Info>
+
+## Usage
+
+```dart
+final result = await showNakedDialog<String>(
+  context: context,
+  barrierColor: Colors.black54,
+  builder: (context) => NakedDialog(
+    modal: true,
+    semanticLabel: 'Confirm Action',
+    child: Container(
+      margin: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Padding(
+            padding: EdgeInsets.all(16),
+            child: Text('Are you sure?'),
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              TextButton(onPressed: () => Navigator.pop(context, 'cancel'), child: const Text('Cancel')),
+              const SizedBox(width: 8),
+              FilledButton(onPressed: () => Navigator.pop(context, 'ok'), child: const Text('OK')),
+            ],
+          ),
+        ],
+      ),
+    ),
+  ),
+);
+```
+
+## API
+
+### `showNakedDialog`
+
+```dart
+Future<T?> showNakedDialog<T>({
+  required BuildContext context,
+  required WidgetBuilder builder,
+  required Color barrierColor,
+  bool barrierDismissible = true,
+  String? barrierLabel,
+  bool useRootNavigator = true,
+  RouteSettings? routeSettings,
+  Offset? anchorPoint,
+  Duration transitionDuration = const Duration(milliseconds: 400),
+  RouteTransitionsBuilder? transitionBuilder,
+  bool requestFocus = true,
+  TraversalEdgeBehavior? traversalEdgeBehavior,
+})
+```
+
+- barrierColor: Required background overlay color.
+- barrierDismissible: Tap outside to dismiss (default true).
+- transitionDuration/transitionBuilder: Customize entry/exit animations.
+- requestFocus: Whether route requests initial focus.
+- useRootNavigator: Present on root navigator.
+
+### `NakedDialog`
+
+```dart
+class NakedDialog extends StatelessWidget {
+  const NakedDialog({
+    Key? key,
+    required this.child,
+    this.modal = true,
+    this.semanticLabel,
+  });
+}
+```
+
+- child: Your dialog content.
+- modal: When true, blocks background semantics and interaction.
+- semanticLabel: Optional screen reader label.
+
+## Notes
+
+- `NakedDialog` only sets semantics; visuals are entirely up to you.
+- For non‑modal popovers, set `modal: false` and manage dismissal yourself.
+

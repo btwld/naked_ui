@@ -5,7 +5,7 @@ title: NakedSlider
 NakedSlider provides interaction behavior and accessibility features without imposing any visual styling, giving consumers complete design freedom. It integrates with `FocusableActionDetector` to provide enhanced keyboard accessibility, hover detection, and focus management.
 
 <Info>
-  You can find this example in our [GitHub repository](https://github.com/btwld/mix/blob/main/packages/naked/example/lib/api/naked_slider.0.dart).
+  You can find this example in our [GitHub repository](https://github.com/btwld/naked_ui/blob/main/example/lib/api/naked_slider.0.dart).
 </Info>
 <CodeGroup title="Usage Example" defaultLanguage="dart">
 ```dart
@@ -171,7 +171,6 @@ const NakedSlider({
   this.onDragChange,
   this.onFocusChange,
   this.enabled = true,
-  
   this.mouseCursor = SystemMouseCursors.click,
   this.enableFeedback = true,
   this.focusNode,
@@ -179,8 +178,8 @@ const NakedSlider({
   this.direction = Axis.horizontal,
   this.divisions,
   this.keyboardStep = 0.01,
-  
-  this.statesController,
+  this.largeKeyboardStep = 0.1,
+  this.semanticLabel,
 })
 ```
 
@@ -239,7 +238,13 @@ Step size for keyboard navigation. This value is used when arrow keys are presse
 #### largeKeyboardStep → `double`
 Step size for large keyboard navigation. This value is used when arrow keys are pressed while holding Shift. Defaults to 0.1 (10% of the slider range).
 
+#### mouseCursor → `MouseCursor`
+Cursor to show when hovering. Defaults to click.
+
+#### enableFeedback → `bool`
+Whether to provide haptic feedback on drag start. Defaults to true.
+
+#### semanticLabel → `String?`
+Semantic label for screen readers.
 
 
-#### statesController → `WidgetStatesController?`
-Optional external controller for interaction states.

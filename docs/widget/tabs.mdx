@@ -5,7 +5,7 @@ title: NakedTabs
 NakedTabs provides interaction behavior and accessibility features for a tabbed interface without imposing any visual styling, giving consumers complete control over appearance through direct state callbacks. It integrates with keyboard navigation for enhanced accessibility.
 
 <Info>
-  You can find this example in our [GitHub repository](https://github.com/btwld/mix/blob/main/packages/naked/example/lib/api/naked_tabs.0.dart).
+  You can find this example in our [GitHub repository](https://github.com/btwld/naked_ui/blob/main/example/lib/api/naked_tabs.0.dart).
 </Info>
 <CodeGroup title="Usage Example" defaultLanguage="dart">
 ```dart
@@ -233,9 +233,8 @@ const NakedTab({
   this.onFocusChange,
   this.onHoverChange,
   this.onPressChange,
-  this.onStatesChange,
-  this.statesController,
   this.builder,
+  this.semanticLabel,
 })
 ```
 
@@ -269,11 +268,8 @@ Optional focus node to control focus behavior.
 
 
 
-#### onStatesChange → `ValueChanged<Set<WidgetState>>?`
-Called when any widget state changes.
-
-#### statesController → `WidgetStatesController?`
-Optional external controller for interaction states.
+#### semanticLabel → `String?`
+Optional accessibility label for the tab trigger.
 
 #### builder → `ValueWidgetBuilder<Set<WidgetState>>?`
 Optional builder that receives current interaction states to drive visuals.

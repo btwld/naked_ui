@@ -67,7 +67,7 @@ class _TooltipExampleState extends State<TooltipExample>
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
               color: Colors.grey[700],
-              borderRadius: BorderRadius.circular(4),
+              borderRadius: BorderRadius.circular(8),
             ),
             child: const Text(
               'This is a tooltip',
@@ -80,7 +80,7 @@ class _TooltipExampleState extends State<TooltipExample>
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
           color: const Color(0xFF3D3D3D),
-          borderRadius: BorderRadius.circular(4),
+          borderRadius: BorderRadius.circular(8),
         ),
         child: const Text(
           'Hover me',

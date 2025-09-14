@@ -12,81 +12,76 @@ import 'utilities/utilities.dart';
 ///
 /// Example:
 /// ```dart
-/// class MyTooltip extends StatefulWidget {
+/// class TooltipExample extends StatefulWidget {
+///   const TooltipExample({super.key});
 ///   @override
-///   _MyTooltipState createState() => _MyTooltipState();
+///   State<TooltipExample> createState() => _TooltipExampleState();
 /// }
 ///
-/// class _MyTooltipState extends State<MyTooltip>
+/// class _TooltipExampleState extends State<TooltipExample>
 ///     with SingleTickerProviderStateMixin {
-///   late final _controller = OverlayPortalController();
-///   late final animationController = AnimationController(
-///     duration: const Duration(milliseconds: 2000),
+///   late final _controller = AnimationController(
+///     duration: const Duration(milliseconds: 300),
 ///     vsync: this,
 ///   );
-///   late final CurvedAnimation _animation;
-///
-///   @override
-///   void initState() {
-///     super.initState();
-///     _animation = CurvedAnimation(
-///       parent: animationController,
-///       curve: Curves.easeInOut,
-///     );
-///   }
 ///
 ///   @override
 ///   void dispose() {
-///     animationController.dispose();
+///     _controller.dispose();
 ///     super.dispose();
 ///   }
 ///
 ///   @override
 ///   Widget build(BuildContext context) {
 ///     return NakedTooltip(
-///       fallbackAlignments: [
-///         AlignmentPair(
-///           target: Alignment.topCenter,
-///           follower: Alignment.bottomCenter,
-///           offset: const Offset(0, -8),
-///         ),
-///       ],
-///       targetAnchor: Alignment.bottomCenter,
-///       followerAnchor: Alignment.topCenter,
-///       offset: const Offset(0, 8),
-///       tooltipWidgetBuilder:
-///           (context) => FadeTransition(
-///             opacity: _animation,
-///             child: Container(
-///               padding: EdgeInsets.all(8),
-///               decoration: BoxDecoration(
-///                 color: Colors.grey[800],
-///                 borderRadius: BorderRadius.circular(4),
-///               ),
-///               child: Text(
-///                 'This is a tooltip',
-///                 style: TextStyle(color: Colors.white),
-///               ),
+///       position: const NakedMenuPosition(
+///         target: Alignment.topCenter,
+///         follower: Alignment.bottomCenter,
+///       ),
+///       waitDuration: const Duration(milliseconds: 0),
+///       showDuration: const Duration(milliseconds: 0),
+///       removalDelay: const Duration(milliseconds: 300),
+///       onStateChange: (state) {
+///         switch (state) {
+///           case OverlayChildLifecycleState.present:
+///             _controller.forward();
+///             break;
+///           case OverlayChildLifecycleState.pendingRemoval:
+///             _controller.reverse();
+///             break;
+///           case OverlayChildLifecycleState.removed:
+///             break;
+///         }
+///       },
+///       tooltipBuilder: (context) => SlideTransition(
+///         position: _controller.drive(Tween<Offset>(
+///           begin: const Offset(0, 0.1),
+///           end: const Offset(0, 0),
+///         )),
+///         child: FadeTransition(
+///           opacity: _controller,
+///           child: Container(
+///             padding: const EdgeInsets.all(8),
+///             decoration: BoxDecoration(
+///               color: Colors.grey[800],
+///               borderRadius: BorderRadius.circular(4),
+///             ),
+///             child: const Text(
+///               'This is a tooltip',
+///               style: TextStyle(color: Colors.white),
 ///             ),
 ///           ),
-///       controller: _controller,
-///       child: MouseRegion(
-///         onEnter: (_) {
-///           _controller.show();
-///           animationController.forward();
-///         },
-///         onExit: (_) {
-///           animationController.reverse().then((_) {
-///             _controller.hide();
-///           });
-///         },
-///         child: Container(
-///           padding: EdgeInsets.all(8),
-///           decoration: BoxDecoration(
-///             color: const Color(0xFF2196F3),
-///             borderRadius: BorderRadius.circular(4),
-///           ),
-///           child: Text('Hover me', style: TextStyle(color: Colors.white)),
+///         ),
+///       ),
+///       child: Container(
+///         padding: const EdgeInsets.all(8),
+///         decoration: BoxDecoration(
+///           color: const Color(0xFF2196F3),
+///           borderRadius: BorderRadius.circular(4),
+///         ),
+///         child: const Text(
+///           'Hover me',
+///           style: TextStyle(color: Colors.white),
 ///         ),
 ///       ),
 ///     );

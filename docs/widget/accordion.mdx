@@ -5,7 +5,7 @@ title: NakedAccordion
 NakedAccordion provides expandable/collapsible sections without imposing any visual styling, giving consumers complete design freedom. It manages the state of expanded sections through an `NakedAccordionController` and allows for fully customizable transitions.
 
 <Info>
-  You can find this example in our [GitHub repository](https://github.com/btwld/mix/blob/main/packages/naked/example/lib/api/naked_accordion.0.dart).
+  You can find this example in our [GitHub repository](https://github.com/btwld/naked_ui/blob/main/example/lib/api/naked_accordion.0.dart).
 </Info>
 
 <CodeGroup title="Usage Example" defaultLanguage="dart">
@@ -224,8 +224,7 @@ const NakedAccordionItem({
   this.onFocusChange,
   this.onHoverChange,
   this.onPressChange,
-  this.onStatesChange,
-  this.statesController,
+  this.semanticLabel,
 })
 ```
 
@@ -269,8 +268,5 @@ Called when hover state changes.
 #### onPressChange → `ValueChanged<bool>?`
 Called when pressed state changes.
 
-#### onStatesChange → `ValueChanged<Set<WidgetState>>?`
-Called when any widget state changes.
-
-#### statesController → `WidgetStatesController?`
-Optional external controller for interaction states.
+#### semanticLabel → `String?`
+Accessibility label for the header button.

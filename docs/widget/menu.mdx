@@ -5,7 +5,7 @@ title: NakedMenu
 NakedMenu provides dropdown menu behavior and accessibility features without imposing any visual styling, giving consumers complete design freedom. It anchors an overlay to a trigger, using `RawMenuAnchor` under the hood for correct layering and focus/keyboard handling.
 
 <Info>
-  You can find this example in our [GitHub repository](https://github.com/btwld/mix/blob/main/packages/naked/example/lib/api/naked_menu.0.dart).
+  You can find this example in our [GitHub repository](https://github.com/btwld/naked_ui/blob/main/example/lib/api/naked_menu.0.dart).
 </Info>
 <CodeGroup title="Usage Example" defaultLanguage="dart">
 ```dart
@@ -207,9 +207,8 @@ const NakedMenuItem({
   this.onFocusChange,
   this.onHoverChange,
   this.onPressChange,
-  this.onStatesChange,
-  this.statesController,
   this.builder,
+  this.semanticLabel,
 })
 ```
 
@@ -224,6 +223,5 @@ const NakedMenuItem({
 - enableFeedback: Whether to provide feedback on selection.
 - focusNode/autofocus: Focus handling.
 - onFocusChange/onHoverChange/onPressChange: State callbacks.
-- onStatesChange: Called when any widget state changes.
-- statesController: Optional external states controller.
 - builder: Optional builder receiving `Set<WidgetState>`.
+- semanticLabel: Optional accessibility label for the item.

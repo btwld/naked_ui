@@ -5,7 +5,7 @@ title: NakedSelect
 NakedSelect provides a fully customizable dropdown/select component with no default styling, giving developers complete control over appearance while maintaining all the complex interaction patterns and accessibility features of a dropdown menu.
 
 <Info>
-  You can find examples in our [GitHub repository](https://github.com/btwld/mix/blob/main/packages/naked/example/lib/api/naked_select.0.dart).
+  You can find examples in our [GitHub repository](https://github.com/btwld/naked_ui/blob/main/example/lib/api/naked_select.0.dart).
 </Info>
 
 <CodeGroup title="Usage Example" defaultLanguage="dart">
@@ -256,6 +256,7 @@ const NakedSelect({
     ),
   ],
   this.closeOnClickOutside = true,
+  this.semanticLabel,
 })
 
 const NakedSelect.multiple({
@@ -305,6 +306,9 @@ The duration to wait before removing the widget from the overlay after the menu 
 
 #### onStateChange → `Function(OverlayChildLifecycleState state)?`
 Optional callback for handling overlay state changes.
+
+#### semanticLabel → `String?`
+Optional semantic label announced by screen readers on the trigger.
 
 #### selectedValue → `T?`
 The currently selected value in single selection mode. Only used in the default constructor.
@@ -358,7 +362,6 @@ const NakedSelectTrigger({
   this.enableFeedback = true,
   this.focusNode,
   this.autofocus = false,
-  this.statesController,
 })
 ```
 
@@ -404,7 +407,6 @@ const NakedSelectItem({
   this.enableFeedback = true,
   this.focusNode,
   this.autofocus = false,
-  this.statesController,
 })
 ```
 
@@ -438,5 +440,3 @@ Whether to provide haptic feedback when selected. Defaults to true.
 
 #### focusNode → `FocusNode?`
 Optional focus node to control focus behavior.
-
-
