@@ -56,7 +56,12 @@ class NakedButton extends StatefulWidget {
   final String? tooltip;
   final String? semanticLabel;
 
-  bool get _effectiveEnabled => enabled && onPressed != null;
+  // Consider button interactive if any handler is provided.
+  bool get _hasAnyHandler =>
+      onPressed != null || onLongPress != null || onDoubleTap != null;
+
+  // Effective enabled combines `enabled` with having at least one handler.
+  bool get _effectiveEnabled => enabled && _hasAnyHandler;
 
   @override
   State<NakedButton> createState() => _NakedButtonState();
@@ -153,7 +158,7 @@ class _NakedButtonState extends State<NakedButton>
   // --- Semantics -------------------------------------------------------------
 
   VoidCallback? get _semanticsTapHandler =>
-      widget._effectiveEnabled ? _handleTap : null;
+      (widget.enabled && widget.onPressed != null) ? _handleTap : null;
 
   // --- Build ----------------------------------------------------------------
 
@@ -191,23 +196,26 @@ class _NakedButtonState extends State<NakedButton>
         label: widget.semanticLabel,
         tooltip: widget.tooltip,
         onTap: _semanticsTapHandler,
-        onLongPress: widget._effectiveEnabled ? widget.onLongPress : null,
+        onLongPress:
+            (widget.enabled && widget.onLongPress != null) ? _handleLongPress : null,
         child: GestureDetector(
           onTapDown: widget._effectiveEnabled ? _handleTapDown : null,
           onTapUp: widget._effectiveEnabled
               ? (_) => updatePressState(false, widget.onPressChange)
               : null,
-          onTap: widget._effectiveEnabled ? _handleTap : null,
+          onTap: (widget.enabled && widget.onPressed != null) ? _handleTap : null,
           onTapCancel: widget._effectiveEnabled
               ? () => updatePressState(false, widget.onPressChange)
               : null,
-          onDoubleTap: widget._effectiveEnabled ? widget.onDoubleTap : null,
-          onLongPress: widget._effectiveEnabled ? _handleLongPress : null,
+          onDoubleTap:
+              (widget.enabled && widget.onDoubleTap != null) ? widget.onDoubleTap : null,
+          onLongPress:
+              (widget.enabled && widget.onLongPress != null) ? _handleLongPress : null,
           // Long-press symmetry: pressed while holding, clear on end.
-          onLongPressStart: widget._effectiveEnabled
+          onLongPressStart: (widget.enabled && widget.onLongPress != null)
               ? (_) => updatePressState(true, widget.onPressChange)
               : null,
-          onLongPressEnd: widget._effectiveEnabled
+          onLongPressEnd: (widget.enabled && widget.onLongPress != null)
               ? (_) => updatePressState(false, widget.onPressChange)
               : null,
           behavior: HitTestBehavior.opaque,

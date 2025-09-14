@@ -47,16 +47,16 @@ class _RadioExampleState extends State<RadioExample> {
         mainAxisSize: MainAxisSize.min,
         spacing: 8,
         children: [
-          Radio(value: RadioOption.banana),
-          Radio(value: RadioOption.apple),
+          RadioButton(value: RadioOption.banana),
+          RadioButton(value: RadioOption.apple),
         ],
       ),
     );
   }
 }
 
-class Radio extends StatefulWidget {
-  const Radio({
+class RadioButton extends StatefulWidget {
+  const RadioButton({
     super.key,
     required this.value,
   });
@@ -64,10 +64,10 @@ class Radio extends StatefulWidget {
   final RadioOption value;
 
   @override
-  State<Radio> createState() => _RadioState();
+  State<RadioButton> createState() => _RadioButtonState();
 }
 
-class _RadioState extends State<Radio> {
+class _RadioButtonState extends State<RadioButton> {
   bool _isHovered = false;
   bool _isPressed = false;
   bool _isFocused = false;

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart' as m;
+import 'package:flutter/gestures.dart' show kLongPressTimeout;
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -281,6 +282,56 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(wasDoubleTapped, isFalse);
+    });
+
+    testWidgets('calls onLongPress when only long-press provided', (
+      WidgetTester tester,
+    ) async {
+      bool wasLongPressed = false;
+      await tester.pumpMaterialWidget(
+        NakedButton(
+          onPressed: null,
+          onLongPress: () => wasLongPressed = true,
+          child: const Text('Test Button'),
+        ),
+      );
+
+      await tester.longPress(find.byType(NakedButton));
+      expect(wasLongPressed, isTrue);
+    });
+
+    testWidgets('press state toggles on long-press when only long-press provided', (
+      WidgetTester tester,
+    ) async {
+      final key = UniqueKey();
+      final pressStates = <bool>[];
+      bool wasLongPressed = false;
+
+      await tester.pumpMaterialWidget(
+        NakedButton(
+          key: key,
+          onPressed: null,
+          onLongPress: () => wasLongPressed = true,
+          onPressChange: (v) => pressStates.add(v),
+          child: const Text('Hold Me'),
+        ),
+      );
+
+      // Manually perform a long-press gesture: down, hold past threshold, up.
+      final center = tester.getCenter(find.byKey(key));
+      final gesture = await tester.startGesture(center);
+      // Allow the framework to process down and then exceed the long-press timeout
+      await tester.pump(kLongPressTimeout + const Duration(milliseconds: 50));
+      // Release
+      await gesture.up();
+      await tester.pump();
+
+      expect(wasLongPressed, isTrue, reason: 'onLongPress should fire');
+      expect(pressStates.isNotEmpty, isTrue,
+          reason: 'onPressChange should update during long-press');
+      // We expect it to have gone pressed (true) during hold and false on end.
+      expect(pressStates.first, isTrue);
+      expect(pressStates.last, isFalse);
     });
   });
 

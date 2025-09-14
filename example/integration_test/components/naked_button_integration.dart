@@ -1,5 +1,7 @@
 import 'package:example/api/naked_button.0.dart' as button_example;
+import 'package:example/api/naked_button.1.dart' as button_advanced_example;
 import 'package:flutter/material.dart';
+import 'package:flutter/gestures.dart' show kLongPressTimeout;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:naked_ui/naked_ui.dart';
@@ -322,6 +324,32 @@ void main() {
       expect(wasLongPressed, isTrue);
     });
 
+    testWidgets('button onLongPress works when only long-press is provided', (tester) async {
+      final buttonKey = UniqueKey();
+      bool wasLongPressed = false;
+
+      await tester.pumpWidget(MaterialApp(
+        home: Scaffold(
+          body: Center(
+            child: NakedButton(
+              key: buttonKey,
+              onPressed: null,
+              onLongPress: () => wasLongPressed = true,
+              child: const Text('Long Press Only Button'),
+            ),
+          ),
+        ),
+      ));
+      await tester.pumpAndSettle();
+
+      // Long press the button
+      await tester.longPress(find.byKey(buttonKey));
+      await tester.pumpAndSettle();
+
+      // Verify long press callback was called
+      expect(wasLongPressed, isTrue);
+    });
+
     testWidgets('button onDoubleTap works correctly', (tester) async {
       final buttonKey = UniqueKey();
       bool wasDoubleTapped = false;
@@ -348,6 +376,43 @@ void main() {
 
       // Verify double tap callback was called
       expect(wasDoubleTapped, isTrue);
+    });
+
+    testWidgets('advanced example long-press updates UI and feedback', (tester) async {
+      // Pump the advanced example content inside a scroll view to avoid overflow
+      await tester.pumpWidget(MaterialApp(
+        home: Scaffold(
+          body: SingleChildScrollView(
+            child: Center(
+              child: button_advanced_example.AdvancedButtonExample(),
+            ),
+          ),
+        ),
+      ));
+      await tester.pumpAndSettle();
+
+      // Initially shows the interactive button text
+      expect(find.text('Interactive Button'), findsOneWidget);
+      // Before interaction, only the counter tile contributes one 'Long Press' label
+      expect(find.text('Long Press'), findsOneWidget);
+
+      // Start a long-press gesture on the button
+      final target = find.text('Interactive Button');
+      final center = tester.getCenter(target);
+      final gesture = await tester.startGesture(center);
+      await tester.pump(kLongPressTimeout + const Duration(milliseconds: 50));
+
+      // During hold, the UI should indicate long-pressing state
+      expect(find.text('Long Pressing...'), findsOneWidget);
+
+      // Release to trigger the callback and update feedback
+      await gesture.up();
+      await tester.pumpAndSettle();
+
+      // After release, 'Last Action' should display 'Long Press'
+      // which increases total occurrences of the text 'Long Press' to 2
+      // (tile label + last action value)
+      expect(find.text('Long Press'), findsNWidgets(2));
     });
 
     testWidgets('button works with different child widgets', (tester) async {
