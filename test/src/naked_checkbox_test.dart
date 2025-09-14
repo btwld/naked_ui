@@ -1,5 +1,3 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart' as m;
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
@@ -118,8 +116,6 @@ void main() {
     testWidgets('calls onHoverChange when hovered', (
       WidgetTester tester,
     ) async {
-      
-
       final textKey = GlobalKey();
 
       bool isHovered = false;
@@ -255,8 +251,6 @@ void main() {
 
   group('Keyboard Interaction', () {
     testWidgets('toggles with Space key', (WidgetTester tester) async {
-      
-
       bool isChecked = false;
 
       final focusNode = FocusNode();

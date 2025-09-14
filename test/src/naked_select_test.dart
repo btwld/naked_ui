@@ -391,8 +391,6 @@ void main() {
     testWidgets('calls item states when hovered/pressed', (
       WidgetTester tester,
     ) async {
-      
-
       bool itemHovered = false;
       bool itemPressed = false;
       const key = Key('item');
@@ -430,14 +428,16 @@ void main() {
       );
       expect(itemHovered, false);
 
-      // Press the NakedButton that wraps the 'Apple' text (button-level).
-      final buttonFinder = find.ancestor(
-        of: find.text('Apple'),
-        matching: find.byType(NakedButton),
-      );
-      // Prefer activation (selection) over pressed-state for correctness.
-      await tester.tap(buttonFinder.first);
-      await tester.pumpAndSettle();
+      // Press down and release to verify press state callbacks fire
+      final center = tester.getCenter(find.byKey(key));
+      final gesture = await tester.startGesture(center);
+      await tester.pump();
+      expect(itemPressed, isTrue, reason: 'Press should toggle to true on down');
+      await gesture.up();
+      await tester.pump();
+      expect(itemPressed, isFalse, reason: 'Press should toggle back to false on up');
+
+      // Press/release also selects the item; verify selection occurred.
       expect(selectedValue, 'test');
     });
   });

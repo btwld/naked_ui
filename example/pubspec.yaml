@@ -39,10 +39,7 @@ dependencies:
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.6
   
-  # URL strategy for web
-  url_strategy: ^0.2.0
-  flutter_web_plugins:
-    sdk: flutter
+  # No explicit web URL strategy dependency; default hash strategy is fine
   
   # Routing
   go_router: ^13.1.0

@@ -1,7 +1,7 @@
 import 'package:example/api/naked_button.0.dart' as button_example;
 import 'package:example/api/naked_button.1.dart' as button_advanced_example;
-import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart' show kLongPressTimeout;
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:naked_ui/naked_ui.dart';
@@ -324,7 +324,8 @@ void main() {
       expect(wasLongPressed, isTrue);
     });
 
-    testWidgets('button onLongPress works when only long-press is provided', (tester) async {
+    testWidgets('button onLongPress works when only long-press is provided',
+        (tester) async {
       final buttonKey = UniqueKey();
       bool wasLongPressed = false;
 
@@ -378,9 +379,10 @@ void main() {
       expect(wasDoubleTapped, isTrue);
     });
 
-    testWidgets('advanced example long-press updates UI and feedback', (tester) async {
+    testWidgets('advanced example long-press updates UI and feedback',
+        (tester) async {
       // Pump the advanced example content inside a scroll view to avoid overflow
-      await tester.pumpWidget(MaterialApp(
+      await tester.pumpWidget(const MaterialApp(
         home: Scaffold(
           body: SingleChildScrollView(
             child: Center(

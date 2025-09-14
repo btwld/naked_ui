@@ -209,7 +209,6 @@ void main() {
         );
         await tester.pumpAndSettle();
 
-        final start = tester.getCenter(_findSlider());
         // Drag ~120 px to the right. With width=200 and range=0..100 => ~60
         await tester.drag(_findSlider(), const Offset(120, 0));
         await tester.pump();

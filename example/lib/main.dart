@@ -1,14 +1,9 @@
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
-import 'package:flutter_web_plugins/flutter_web_plugins.dart';
 
 import 'registry.dart';
 import 'shell/shell.dart';
 
 void main() {
-  if (kIsWeb) {
-    setUrlStrategy(const HashUrlStrategy());
-  }
   runApp(const MyApp());
 }
 
