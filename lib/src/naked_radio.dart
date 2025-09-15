@@ -2,10 +2,31 @@ import 'package:flutter/material.dart';
 
 import 'mixins/naked_mixins.dart';
 
-/// Radio button built with simplified architecture.
+/// A headless radio that participates in a [RadioGroup] without default visuals.
 ///
-/// Provides radio functionality while letting users control presentation
-/// and semantics through the child or builder parameter.
+/// - Must be placed under a [RadioGroup] (or provide a custom [groupRegistry]).
+/// - No visuals are provided; pass a [child] or [builder] to render UI.
+/// - States are exposed to [builder] as a `Set<WidgetState>` including
+///   at least hovered/pressed/focused/selected/disabled.
+/// - Keyboard: focus + Enter/Space select; semantics exposed as a radio.
+///
+/// Example:
+/// ```dart
+/// RadioGroup<int>(
+///   value: selected,
+///   onChanged: (v) => setState(() => selected = v),
+///   child: Row(children: [
+///     NakedRadio<int>(value: 1, child: const Text('One')),
+///     NakedRadio<int>(value: 2, child: const Text('Two')),
+///   ]),
+/// )
+/// ```
+///
+/// See also:
+/// - [RawRadio], the underlying primitive widget used to implement radio
+///   interaction and semantics.
+/// - [RadioGroup], which manages the selected value and provides the grouping
+///   context for radios.
 class NakedRadio<T> extends StatefulWidget {
   const NakedRadio({
     super.key,
@@ -26,24 +47,49 @@ class NakedRadio<T> extends StatefulWidget {
          'Either child or builder must be provided',
        );
 
+  /// Value represented by this radio.
   final T value;
+
+  /// Visual contents when not using [builder].
   final Widget? child;
+
+  /// Whether this radio is enabled.
   final bool enabled;
+
+  /// Mouse cursor when enabled.
+  ///
+  /// Defaults to [SystemMouseCursors.click] when interactive and
+  /// [SystemMouseCursors.basic] when disabled.
   final MouseCursor? mouseCursor;
+
+  /// External [FocusNode] to control focus ownership.
   final FocusNode? focusNode;
+
+  /// Whether to autofocus when built.
   final bool autofocus;
+
+  /// Whether tapping the selected radio clears the selection (nullable group).
   final bool toggleable;
 
   // State change callbacks
+  /// Notifies when focus changes.
   final ValueChanged<bool>? onFocusChange;
+
+  /// Notifies when hover changes.
   final ValueChanged<bool>? onHoverChange;
 
-  /// Called when pressed state changes.
+  /// Notifies when pressed (highlight) changes.
   final ValueChanged<bool>? onPressChange;
+
+  /// Builder that receives the current interaction [WidgetState]s.
+  ///
+  /// Includes the `selected` state when this radio's [value] matches the
+  /// group's selected value.
   final ValueWidgetBuilder<Set<WidgetState>>? builder;
 
-  /// Optional registry override for advanced usage and testing.
-  /// When null, the nearest RadioGroup<T> ancestor is used.
+  /// Registry override for advanced usage and testing.
+  ///
+  /// When null, the nearest [RadioGroup] ancestor is used.
   final RadioGroupRegistry<T>? groupRegistry;
 
   @override

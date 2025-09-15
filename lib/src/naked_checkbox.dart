@@ -1,9 +1,12 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter/services.dart';
 
 import 'mixins/naked_mixins.dart';
 
-/// Headless checkbox built with mixins for proper semantics and callbacks.
+/// A headless checkbox: no visuals, exposes states and proper semantics.
+///
+/// See also:
+/// - [Checkbox], the Material-styled checkbox for typical apps.
 class NakedCheckbox extends StatefulWidget {
   const NakedCheckbox({
     super.key,
@@ -78,7 +81,10 @@ class NakedCheckbox extends StatefulWidget {
   /// Whether to autofocus when created.
   final bool autofocus;
 
-  /// Optional builder that receives the current states for visuals.
+  /// Builder that receives the current interaction [WidgetState]s.
+  ///
+  /// States include at least: disabled, focused, hovered, pressed, selected.
+  /// The `selected` state reflects `value == true`.
   final ValueWidgetBuilder<Set<WidgetState>>? builder;
 
   /// Semantic label for accessibility.

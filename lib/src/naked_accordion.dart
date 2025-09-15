@@ -9,6 +9,10 @@ import 'package:flutter/widgets.dart';
 /// - `min` prevents closing below a floor when toggling/closing individual items.
 /// - `max` caps the number of expanded items; when exceeded, the *oldest* is closed.
 /// - All operations are idempotent (no redundant notifications).
+///
+/// See also:
+/// - [NakedAccordion], the headless accordion that uses this controller.
+/// - [NakedAccordionItem], the item widget that toggles values via this controller.
 class NakedAccordionController<T> with ChangeNotifier {
   /// Minimum number of expanded items allowed when *closing* via user actions.
   final int min;
@@ -145,6 +149,11 @@ class NakedAccordionScope<T> extends InheritedWidget {
 ///
 /// The [children] should be [NakedAccordionItem<T>] widgets.
 /// State is managed by [NakedAccordionController<T>].
+///
+/// See also:
+/// - [NakedAccordionController], which stores expanded values and enforces
+///   min/max constraints.
+/// - [NakedAccordionItem], which renders the trigger and panel.
 class NakedAccordion<T> extends StatefulWidget {
   const NakedAccordion({
     super.key,
@@ -213,6 +222,10 @@ typedef NakedAccordionTriggerBuilder =
 /// Headless: you provide the trigger visuals and the panel content.
 /// Keyboard: Enter/Space toggle the header (via ActivateIntent).
 /// Semantics: the header is exposed as a "button" with `expanded` state.
+///
+/// See also:
+/// - [NakedAccordion], the container that hosts items and provides traversal.
+/// - [NakedAccordionController], which stores and updates expanded values.
 class NakedAccordionItem<T> extends StatelessWidget {
   const NakedAccordionItem({
     super.key,
@@ -245,8 +258,11 @@ class NakedAccordionItem<T> extends StatelessWidget {
   final T value;
 
   // Interaction hooks (headless state reporting).
+  /// Notifies when header focus changes.
   final ValueChanged<bool>? onFocusChange;
+  /// Notifies when header hover changes.
   final ValueChanged<bool>? onHoverChange;
+  /// Notifies when header pressed (highlight) changes.
   final ValueChanged<bool>? onPressChange;
 
   /// Accessibility label for the header.
@@ -258,7 +274,10 @@ class NakedAccordionItem<T> extends StatelessWidget {
   final bool enableFeedback;
 
   /// Focus configuration for the header.
+  ///
+  /// When [autofocus] is true, the header will request focus on build.
   final bool autofocus;
+  /// External [FocusNode] to control header focus.
   final FocusNode? focusNode;
 
   void _toggle(NakedAccordionController<T> controller) =>

@@ -9,6 +9,36 @@ import 'mixins/naked_mixins.dart';
 import 'naked_button.dart';
 import 'utilities/naked_menu_anchor.dart';
 
+/// A headless select/dropdown that renders its menu in an overlay.
+///
+/// - Use the default constructor for single-select, or [NakedSelect.multiple]
+///   for multi‑select.
+/// - No visuals are provided; pass a trigger [child] and an overlay [menu].
+/// - Keyboard: Down focuses the first item; optional type-ahead can focus
+///   items by their string representation.
+/// - Semantics: the root exposes a button role with expanded state and value.
+///
+/// Example:
+/// ```dart
+/// NakedSelect<String>(
+///   selectedValue: value,
+///   onSelectedValueChanged: (v) => setState(() => value = v),
+///   child: const NakedSelectTrigger(child: Text('Open')),
+///   menu: Column(
+///     mainAxisSize: MainAxisSize.min,
+///     children: [
+///       NakedSelectItem(value: 'A', child: Text('A')),
+///       NakedSelectItem(value: 'B', child: Text('B')),
+///     ],
+///   ),
+/// )
+/// ```
+///
+/// See also:
+/// - [NakedMenuAnchor], which provides the underlying overlay positioning.
+/// - [NakedMenu], a simpler headless dropdown built on top of the same anchor.
+/// - [NakedButton], which is commonly used by select triggers and items.
+
 class NakedSelect<T> extends StatefulWidget {
   const NakedSelect({
     super.key,
@@ -72,45 +102,70 @@ class NakedSelect<T> extends StatefulWidget {
        selectedValue = null,
        onSelectedValueChanged = null;
 
-  // Trigger & overlay content (headless).
+  /// Trigger (inline) and overlay contents (menu), both headless.
   final Widget child;
   final Widget menu;
 
-  // Open/close callbacks.
+  /// Called when the overlay closes.
   final VoidCallback? onClose;
+
+  /// Called when the overlay opens.
   final VoidCallback? onOpen;
+
+  /// Notifies lifecycle changes for enter/exit animations.
   final OverlayChildLifecycleCallback? onStateChange;
 
   // Single-select
+  /// Currently selected value in single-select mode.
   final T? selectedValue;
+
+  /// Called when the selected value changes (single-select).
   final ValueChanged<T?>? onSelectedValueChanged;
 
   // Multi-select
+  /// Currently selected values in multi-select mode.
   final Set<T>? selectedValues;
+
+  /// Called when the set of selected values changes (multi-select).
   final ValueChanged<Set<T>>? onSelectedValuesChanged;
 
+  /// Whether this instance allows selecting multiple values.
   final bool allowMultiple;
+
+  /// Whether the control is enabled.
   final bool enabled;
   bool get _effectiveEnabled => enabled;
 
+  /// Whether selecting an item closes the menu.
   final bool closeOnSelect;
+
+  /// Whether to autofocus the overlay when opened.
   final bool autofocus;
 
   // Type-ahead
+  /// Whether to enable type-ahead navigation within the menu.
   final bool enableTypeAhead;
+
+  /// Debounce duration for type-ahead buffering.
   final Duration typeAheadDebounceTime;
 
   // Positioning
+  /// Preferred position of the overlay relative to the trigger.
   final NakedMenuPosition menuPosition;
+
+  /// Fallback positions when the preferred position does not fit.
   final List<NakedMenuPosition> fallbackPositions;
 
   // Dismissal
+  /// Whether clicking outside closes the menu.
   final bool closeOnClickOutside;
 
   // Semantics
+  /// Optional semantic label for the trigger/button.
   final String? semanticLabel;
 
   // Exit animation timing (handled by anchor’s onCloseRequested).
+  /// Delay before removing the overlay after closing.
   final Duration removalDelay;
 
   @override
@@ -316,7 +371,10 @@ class _NakedSelectState<T> extends State<NakedSelect<T>> {
     );
   }
 }
-
+/// Inherited scope that exposes selection state for [NakedSelect].
+///
+/// Use [NakedSelectScope.of] to read selection and [isSelected] to test a
+/// value. Items register with the parent to support type-ahead focus.
 class NakedSelectScope<T> extends InheritedWidget {
   const NakedSelectScope({
     super.key,
@@ -361,7 +419,10 @@ class NakedSelectScope<T> extends InheritedWidget {
   }
 }
 
-/// Trigger: no semantics; the container (`NakedSelect`) provides them.
+/// Trigger for [NakedSelect]; semantics are provided by the parent select.
+///
+/// See also:
+/// - [NakedSelect], which renders this trigger and provides overlay semantics.
 class NakedSelectTrigger extends StatefulWidget {
   const NakedSelectTrigger({
     super.key,
@@ -375,16 +436,28 @@ class NakedSelectTrigger extends StatefulWidget {
     this.onPressChange,
   });
 
+  /// Visual contents of the trigger button.
   final Widget child;
 
+  /// Notifies when focus changes.
   final ValueChanged<bool>? onFocusChange;
+
+  /// Notifies when hover changes.
   final ValueChanged<bool>? onHoverChange;
+
+  /// Notifies when pressed (highlight) changes.
   final ValueChanged<bool>? onPressChange;
 
+  /// Mouse cursor when the trigger is interactive.
   final MouseCursor mouseCursor;
+
+  /// Whether to provide haptic/aural feedback on activation.
   final bool enableFeedback;
 
+  /// External [FocusNode] to control focus ownership.
   final FocusNode? focusNode;
+
+  /// Whether to autofocus when built.
   final bool autofocus;
 
   @override
@@ -467,6 +540,10 @@ class _NakedSelectTriggerState extends State<NakedSelectTrigger>
 
 /// Item: exposes "selected" semantics and uses a focusable activator surface.
 /// Assumes `NakedButton` is a headless, focusable, activatable control.
+///
+/// See also:
+/// - [NakedSelect], which provides selection state and overlay.
+/// - [NakedButton], which implements the activation surface.
 class NakedSelectItem<T> extends StatefulWidget {
   const NakedSelectItem({
     super.key,
@@ -483,20 +560,37 @@ class NakedSelectItem<T> extends StatefulWidget {
     this.onPressChange,
   });
 
+  /// Visual contents of the option.
   final Widget child;
+
+  /// Value represented by this option.
   final T value;
 
+  /// Notifies when the selection status of this option changes.
   final ValueChanged<bool>? onSelectChange;
 
+  /// Notifies when focus changes.
   final ValueChanged<bool>? onFocusChange;
+
+  /// Notifies when hover changes.
   final ValueChanged<bool>? onHoverChange;
+
+  /// Notifies when pressed (highlight) changes.
   final ValueChanged<bool>? onPressChange;
 
+  /// Whether this option can be interacted with.
   final bool enabled;
+
+  /// Mouse cursor when the option is interactive.
   final MouseCursor mouseCursor;
+
+  /// Whether to provide haptic/aural feedback on activation.
   final bool enableFeedback;
 
+  /// External [FocusNode] to control focus ownership.
   final FocusNode? focusNode;
+
+  /// Whether to autofocus when the menu opens.
   final bool autofocus;
 
   @override
@@ -507,8 +601,8 @@ class _NakedSelectItemState<T> extends State<NakedSelectItem<T>>
     with FocusableMixin<NakedSelectItem<T>> {
   bool _registered = false;
   bool? _lastReportedSelection;
-  _NakedSelectState<T>?
-  _selectState; // cached; avoid ancestor lookup in dispose
+  // cached; avoid ancestor lookup in dispose
+  _NakedSelectState<T>? _selectState;
 
   @override
   FocusNode? get focusableExternalNode => widget.focusNode;

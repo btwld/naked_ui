@@ -1,7 +1,7 @@
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
-import 'mixins/naked_mixins.dart'; // uses your WidgetStatesMixin
+import 'mixins/naked_mixins.dart'; // uses WidgetStatesMixin
 
 // Slider keyboard shortcuts (left-to-right layout)
 const Map<ShortcutActivator, Intent> _kSliderShortcutsLtr =
@@ -51,9 +51,20 @@ const Map<ShortcutActivator, Intent> _kSliderShortcutsRtl =
       SingleActivator(LogicalKeyboardKey.end): _SliderSetToMaxIntent(),
     };
 
-/// Provides slider interaction behavior without visual styling.
-/// Supports discrete divisions and both horizontal and vertical orientation.
-/// Headless: only core widgets/services; no Material/Cupertino.
+/// A headless, focusable slider without default visuals.
+///
+/// - Controlled by [value] in the range [[min], [max]].
+/// - Supports discrete [divisions] or continuous values.
+/// - Orientation via [direction].
+/// - Keyboard: Arrow keys/Home/End increment, decrement, and jump to bounds.
+/// - Semantics: exposes slider role, value, and increase/decrease actions.
+///
+/// Provide a visual [child] (track/handle/etc). Gesture handling and semantics
+/// are applied by the wrapper; the [child] does not need to be focusable.
+///
+/// See also:
+/// - [Slider], the Material-styled slider for typical apps.
+/// - [FocusableActionDetector], used to integrate keyboard and focus handling.
 class NakedSlider extends StatefulWidget {
   const NakedSlider({
     super.key,
@@ -79,39 +90,64 @@ class NakedSlider extends StatefulWidget {
     this.semanticLabel,
   }) : assert(min < max, 'min must be less than max');
 
+  /// Visual contents of the slider (track/handle/etc.).
   final Widget child;
 
-  /// Controlled value.
+  /// Current value of the slider.
   final double value;
 
+  /// Minimum value of the slider range.
   final double min;
+
+  /// Maximum value of the slider range.
   final double max;
 
+  /// Called when the value changes due to user interaction.
   final ValueChanged<double>? onChanged;
 
+  /// Called when a drag begins.
   final VoidCallback? onDragStart;
+
+  /// Called when a drag ends. Receives the last emitted value.
   final ValueChanged<double>? onDragEnd;
 
+  /// Notifies when hover changes.
   final ValueChanged<bool>? onHoverChange;
+
+  /// Notifies when a drag is active. `true` on start, `false` on end/cancel.
   final ValueChanged<bool>? onDragChange;
+
+  /// Notifies when focus changes.
   final ValueChanged<bool>? onFocusChange;
 
+  /// Whether the slider is enabled.
   final bool enabled;
+
+  /// Mouse cursor when enabled.
   final MouseCursor mouseCursor;
+
+  /// Whether to provide haptic/aural feedback on keyboard steps.
   final bool enableFeedback;
 
+  /// External [FocusNode] to control focus ownership.
   final FocusNode? focusNode;
+
+  /// Whether to autofocus when built.
   final bool autofocus;
 
+  /// Slider orientation.
   final Axis direction;
+
+  /// Number of discrete divisions between [min] and [max]. When null, continuous.
   final int? divisions;
 
-  /// Small keyboard step when no divisions are specified.
+  /// Small keyboard step used when [divisions] is null.
   final double keyboardStep;
 
-  /// Large step when holding Shift (or mapped via your shortcuts).
+  /// Large keyboard step (e.g., when holding Shift).
   final double largeKeyboardStep;
 
+  /// Optional semantic label announced by assistive technologies.
   final String? semanticLabel;
 
   @override

@@ -3,9 +3,14 @@
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
-/// Provides tab interaction behavior without visual styling.
-/// Headless, no Material/Cupertino dependencies.
-/// Pattern: selection follows focus + optional ActivateIntent (Enter/Space).
+/// Headless tabs: focusable triggers + panels, no default visuals.
+///
+/// - Selection follows focus; Enter/Space also activate the focused tab.
+/// - No visuals are provided; use [NakedTabList], [NakedTab], and [NakedTabPanel].
+/// - Semantics: triggers expose a button role with `selected` state.
+///
+/// See also:
+/// - [TabBar], the Material-styled tabs widget for typical apps.
 class NakedTabGroup extends StatelessWidget {
   const NakedTabGroup({
     super.key,
@@ -28,10 +33,10 @@ class NakedTabGroup extends StatelessWidget {
   /// Whether the tabs component is enabled.
   final bool enabled;
 
-  /// Orientation (affects traversal expectations for users; we rely on default focus traversal).
+  /// Orientation of the tab list (affects traversal expectations).
   final Axis orientation;
 
-  /// Invoked when ESC is pressed and any tab within the group has focus.
+  /// Invoked when Escape is pressed while a tab has focus.
   final VoidCallback? onEscapePressed;
 
   bool get _effectiveEnabled => enabled && onChanged != null;
@@ -149,23 +154,40 @@ class NakedTab extends StatefulWidget {
          'Either child or builder must be provided',
        );
 
+  /// Visual contents of the tab trigger when not using [builder].
   final Widget? child;
+
+  /// Identifier for this tab. Must be unique within the [NakedTabGroup].
   final String tabId;
 
+  /// Notifies when focus changes.
   final ValueChanged<bool>? onFocusChange;
+
+  /// Notifies when hover changes.
   final ValueChanged<bool>? onHoverChange;
+
+  /// Notifies when pressed (highlight) changes.
   final ValueChanged<bool>? onPressChange;
 
-  /// Builder receives: {disabled, selected, focused, hovered, pressed}.
+  /// Builder that receives `{disabled, selected, focused, hovered, pressed}`.
   final ValueWidgetBuilder<Set<WidgetState>>? builder;
 
+  /// Optional semantic label for the trigger.
   final String? semanticLabel;
 
+  /// Whether this tab is enabled.
   final bool enabled;
+
+  /// Mouse cursor when the tab is enabled.
   final MouseCursor mouseCursor;
+
+  /// Whether to provide haptic/aural feedback on activation.
   final bool enableFeedback;
 
+  /// External [FocusNode] to control focus ownership.
   final FocusNode? focusNode;
+
+  /// Whether to autofocus when built.
   final bool autofocus;
 
   @override
@@ -267,22 +289,7 @@ class _NakedTabState extends State<NakedTab> {
         setState(() {}); // update focused state for builder
       },
       mouseCursor: _isEnabled ? widget.mouseCursor : SystemMouseCursors.basic,
-      child: MouseRegion(
-        onEnter: (_) {
-          if (_isEnabled && !_hovered) {
-            _hovered = true;
-            widget.onHoverChange?.call(true);
-            setState(() {});
-          }
-        },
-        onExit: (_) {
-          if (_isEnabled && _hovered) {
-            _hovered = false;
-            widget.onHoverChange?.call(false);
-            setState(() {});
-          }
-        },
-        child: Semantics(
+      child: Semantics(
           container: true,
           enabled: _isEnabled,
           selected: isSelected,
@@ -317,7 +324,6 @@ class _NakedTabState extends State<NakedTab> {
             excludeFromSemantics: true,
             child: content,
           ),
-        ),
       ),
     );
   }
@@ -332,8 +338,13 @@ class NakedTabPanel extends StatelessWidget {
     this.maintainState = true,
   });
 
+  /// Panel contents for the associated [tabId].
   final Widget child;
+
+  /// Identifier of the tab this panel corresponds to.
   final String tabId;
+
+  /// Whether to keep the subtree alive when hidden.
   final bool maintainState;
 
   @override

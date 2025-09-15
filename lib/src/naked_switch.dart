@@ -3,7 +3,13 @@ import 'package:flutter/widgets.dart';
 
 import 'mixins/naked_mixins.dart';
 
-/// Headless switch built with mixins for proper semantics and callbacks.
+/// A headless switch: binary toggle without default visuals.
+///
+/// See also:
+/// - [Switch], the Material-styled switch for typical apps.
+///
+/// - Builder receives [WidgetState]s including disabled/focused/hovered/pressed/selected.
+/// - Semantics: exposes a toggle role and `toggled` state.
 class NakedSwitch extends StatefulWidget {
   const NakedSwitch({
     super.key,

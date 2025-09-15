@@ -29,6 +29,18 @@ import 'package:flutter/widgets.dart';
 typedef NakedTextFieldBuilder =
     Widget Function(BuildContext context, Widget editableText);
 
+/// A headless, builder-first text input built on [EditableText].
+///
+/// - Exposes native-feeling defaults (cursor, selection handles, magnifier)
+///   while remaining design-system agnostic.
+/// - Renders no visuals by itself; wrap the provided `editableText` via
+///   [builder] to style or decorate.
+/// - Maintains tight lifecycle around controller/focus/restoration to mirror
+///   [EditableText] behavior while staying ergonomic.
+///
+/// See also:
+/// - [EditableText], the underlying primitive text input.
+/// - [TextField], the Material-styled text input for typical apps.
 class NakedTextField extends StatefulWidget {
   const NakedTextField({
     super.key,

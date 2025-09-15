@@ -1,13 +1,23 @@
 import 'dart:async';
 
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter/services.dart';
 
-import 'mixins/naked_mixins.dart'; // your WidgetStatesMixin, etc.
+import 'mixins/naked_mixins.dart'; // WidgetStatesMixin, FocusableMixin
 
-/// Provides button interaction behavior without visual styling.
+/// A headless, focusable button that exposes interaction states.
 ///
-/// Users control presentation and semantics through the child or builder parameter.
+/// - No visuals are provided; pass a [child] or a [builder] to render UI.
+/// - Keyboard: Enter/Space activate the button. Optional [focusOnPress].
+/// - Semantics: exposes a "button" role and supports [tooltip]/[semanticLabel].
+/// - States: when using [builder], you receive a `Set<WidgetState>` that
+///   reflects the current hovered/pressed/focused/disabled states.
+///
+/// See also:
+/// - [NakedMenuItem], which composes a menu item from [NakedButton].
+/// - [FocusableActionDetector], the underlying keyboard/hover integration.
+/// - [TextButton], [ElevatedButton], and [FilledButton] for Material-styled
+///   buttons when you don’t need a headless control.
 class NakedButton extends StatefulWidget {
   const NakedButton({
     super.key,
@@ -32,28 +42,60 @@ class NakedButton extends StatefulWidget {
          'Either child or builder must be provided',
        );
 
+  /// Visual contents of the button when not using [builder].
   final Widget? child;
+
+  /// Called when the button is activated (tap, Enter/Space).
   final VoidCallback? onPressed;
+
+  /// Called when the button is long-pressed.
   final VoidCallback? onLongPress;
+
+  /// Called when the button is double-tapped.
   final VoidCallback? onDoubleTap;
 
+  /// Notifies when focus changes. Receives `true` when focused.
   final ValueChanged<bool>? onFocusChange;
+
+  /// Notifies when hover changes. Receives `true` when hovered.
   final ValueChanged<bool>? onHoverChange;
+
+  /// Notifies when pressed (highlight) changes. Receives `true` when down.
   final ValueChanged<bool>? onPressChange;
 
+  /// Builder that receives the current interaction [WidgetState]s.
+  ///
+  /// The signature is `(BuildContext, Set<WidgetState>, Widget? child)`.
+  /// Use this to render custom visuals based on button state.
   final ValueWidgetBuilder<Set<WidgetState>>? builder;
 
+  /// Whether the button is enabled.
+  ///
+  /// The button is effectively enabled only if [enabled] is true and at least
+  /// one handler among [onPressed], [onLongPress], or [onDoubleTap] is set.
   final bool enabled;
+
+  /// Mouse cursor when the button is enabled.
   final MouseCursor mouseCursor;
+
+  /// Whether to provide platform haptic/aural feedback on activation.
   final bool enableFeedback;
 
+  /// Optional external [FocusNode] to control focus ownership.
   final FocusNode? focusNode;
+
+  /// Whether to autofocus this button on build.
   final bool autofocus;
 
-  /// When true, pressing requests focus in addition to activating.
+  /// Whether pressing requests focus in addition to activating.
   final bool focusOnPress;
 
+  /// Optional tooltip exposed to assistive technologies.
+  ///
+  /// Consider providing concise text; long labels are read verbosely.
   final String? tooltip;
+
+  /// Optional semantic label announced by screen readers.
   final String? semanticLabel;
 
   // Consider button interactive if any handler is provided.

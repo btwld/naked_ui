@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/gestures.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 
 import 'utilities/utilities.dart';
 
@@ -105,6 +105,10 @@ class NakedTooltip extends StatefulWidget implements OverlayChildLifecycle {
     this.onStateChange,
     this.semanticsLabel,
   });
+
+  /// See also:
+  /// - [NakedMenuAnchor], which is used to position the tooltip overlay
+  ///   relative to its trigger.
 
   /// Widget that triggers the tooltip.
   final Widget child;

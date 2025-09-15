@@ -1,10 +1,10 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter/services.dart';
 
 import 'naked_button.dart';
 import 'utilities/utilities.dart';
 
-/// Provides dropdown menu behavior without visual styling.
+/// A headless dropdown menu without default styling.
 ///
 /// Uses Flutter's RawMenuAnchor to render menu content in the app overlay,
 /// ensuring proper z-index and context inheritance.
@@ -51,6 +51,11 @@ import 'utilities/utilities.dart';
 ///
 /// Menu items use [NakedMenuItem] and automatically close the menu when selected
 /// unless [NakedMenuItem.closeOnSelect] is set to false.
+///
+/// See also:
+/// - [NakedMenuAnchor], which handles overlay placement, focus, and keyboard
+///   traversal for this menu.
+/// - [NakedButton], often used to build the trigger and items.
 class NakedMenu extends StatelessWidget {
   /// Creates a naked menu.
   ///
@@ -119,6 +124,10 @@ class NakedMenu extends StatelessWidget {
 ///
 /// Provides interaction states and accessibility features.
 /// Handles keyboard navigation and screen reader support.
+///
+/// See also:
+/// - [NakedMenu], the container that provides the overlay and positioning.
+/// - [NakedButton], the headless activator used to implement this item.
 class NakedMenuItem extends StatelessWidget {
   /// Creates a naked menu item.
   ///
@@ -183,7 +192,7 @@ class NakedMenuItem extends StatelessWidget {
   /// Whether to automatically focus when created.
   final bool autofocus;
 
-  /// Semantic label for accessibility.
+  /// Semantic label for accessibility (forwarded as a tooltip on the trigger).
   final String? semanticLabel;
 
   void _handlePress(MenuController? controller) {

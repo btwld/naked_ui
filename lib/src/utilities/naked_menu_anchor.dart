@@ -6,9 +6,17 @@ import 'package:flutter/widgets.dart';
 
 /// Alignment pair for target (anchor) and follower (overlay).
 class NakedMenuPosition {
+  /// Alignment on the target (anchor) used for positioning the follower.
   final Alignment target;
+
+  /// Alignment on the follower (overlay) used to meet the target.
   final Alignment follower;
 
+  /// Creates an alignment pair for target and follower.
+  ///
+  /// For example, `target: Alignment.bottomLeft` with
+  /// `follower: Alignment.topLeft` places the follower directly below the
+  /// target, left aligned.
   const NakedMenuPosition({
     this.target = Alignment.bottomLeft,
     this.follower = Alignment.topLeft,
@@ -21,6 +29,10 @@ class NakedMenuPosition {
 /// - Lets `consumeOutsideTaps` decide if that outside tap propagates
 /// - Supports delayed hide via `removalDelay` using onCloseRequested
 /// - Respects `RawMenuOverlayInfo.position` when provided (context menus)
+///
+/// See also:
+/// - [NakedMenu], a headless dropdown menu built on this anchor.
+/// - [NakedTooltip], which uses this anchor to position tooltips.
 class NakedMenuAnchor extends StatefulWidget {
   const NakedMenuAnchor({
     super.key,
@@ -59,14 +71,19 @@ class NakedMenuAnchor extends StatefulWidget {
   /// Delay before the overlay is actually hidden (for exit animations).
   final Duration removalDelay;
 
+  /// Whether to insert the overlay in the root [Overlay].
   final bool useRootOverlay;
+
+  /// Preferred position of the follower relative to the target.
   final NakedMenuPosition position;
+
+  /// Fallback positions when the preferred position does not fit.
   final List<NakedMenuPosition> fallbackPositions;
 
   final VoidCallback? onClose;
   final VoidCallback? onOpen;
 
-  /// Optional raw key listener (e.g., type‑ahead). Return handled/ignored.
+  /// Optional raw key listener (e.g., type-ahead). Return handled/ignored.
   /// If null, we still handle ESC/Up/Down via Shortcuts, but only request
   /// overlay focus when appropriate (see heuristic below).
   final KeyEventResult Function(KeyEvent)? onKeyEvent;
@@ -136,7 +153,7 @@ class _NakedMenuAnchorState extends State<NakedMenuAnchor> {
             groupId: info.tapRegionGroupId,
             child: Shortcuts(
               shortcuts: const {
-                // Escape/Gamepad‑B dismiss via default shortcut mapping.
+                // Escape/Gamepad-B dismiss via default shortcut mapping.
                 SingleActivator(LogicalKeyboardKey.escape): DismissIntent(),
                 // Focus traversal inside the menu.
                 SingleActivator(LogicalKeyboardKey.arrowDown):
