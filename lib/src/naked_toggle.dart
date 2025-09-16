@@ -3,9 +3,11 @@ import 'package:flutter/widgets.dart';
 
 import 'mixins/naked_mixins.dart';
 
-/// A headless toggle button: binary pressed/selected control without visuals.
+/// A headless toggle control: binary pressed/selected control without visuals.
 ///
-/// - Semantics: exposes toggled state; behaves like a button with on/off value.
+/// Can represent either a toggle button or a switch based on the [asSwitch] parameter.
+/// - When [asSwitch] is false: behaves as a toggle button with button semantics
+/// - When [asSwitch] is true: behaves as a switch with switch semantics
 /// - Builder receives WidgetStates including disabled/focused/hovered/pressed/selected.
 class NakedToggle extends StatefulWidget {
   const NakedToggle({
@@ -23,6 +25,7 @@ class NakedToggle extends StatefulWidget {
     this.onPressChange,
     this.builder,
     this.semanticLabel,
+    this.asSwitch = false,
   }) : assert(
          child != null || builder != null,
          'Either child or builder must be provided',
@@ -63,6 +66,10 @@ class NakedToggle extends StatefulWidget {
   /// Semantic label read by screen readers.
   final String? semanticLabel;
 
+  /// Whether to use switch semantics instead of button semantics.
+  /// When true, uses switch-style haptic feedback and omits button semantics.
+  final bool asSwitch;
+
   bool get _effectiveEnabled => enabled && onChanged != null;
 
   @override
@@ -75,7 +82,16 @@ class _NakedToggleState extends State<NakedToggle>
 
   void _activate() {
     if (!widget._effectiveEnabled) return;
-    if (widget.enableFeedback) Feedback.forTap(context);
+
+    // Use appropriate feedback based on widget type
+    if (widget.enableFeedback) {
+      if (widget.asSwitch) {
+        HapticFeedback.selectionClick();
+      } else {
+        Feedback.forTap(context);
+      }
+    }
+
     widget.onChanged?.call(!widget.value);
   }
 
@@ -129,12 +145,7 @@ class _NakedToggleState extends State<NakedToggle>
       },
       actions: {
         ActivateIntent: CallbackAction<ActivateIntent>(
-          onInvoke: (_) {
-            if (widget._effectiveEnabled) {
-              _activate();
-            }
-            return null;
-          },
+          onInvoke: (_) => widget._effectiveEnabled ? _activate() : null,
         ),
       },
       onShowHoverHighlight: (h) => updateHoverState(h, widget.onHoverChange),
@@ -143,7 +154,7 @@ class _NakedToggleState extends State<NakedToggle>
       child: Semantics(
         enabled: widget._effectiveEnabled,
         toggled: widget.value,
-        button: true,
+        button: !widget.asSwitch,
         label: widget.semanticLabel,
         onTap: widget._effectiveEnabled ? _activate : null,
         child: GestureDetector(

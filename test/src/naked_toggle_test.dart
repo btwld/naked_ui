@@ -134,5 +134,42 @@ void main() {
       await tester.pump();
       expect(selected, 'a');
     });
+
+    group('asSwitch parameter', () {
+      testWidgets('behaves as toggle button by default', (tester) async {
+        bool value = false;
+        await tester.pumpMaterialWidget(
+          StatefulBuilder(
+            builder: (context, setState) => NakedToggle(
+              value: value,
+              onChanged: (v) => setState(() => value = v),
+              child: const Text('Toggle'),
+            ),
+          ),
+        );
+
+        await tester.tap(find.text('Toggle'));
+        await tester.pump();
+        expect(value, isTrue);
+      });
+
+      testWidgets('behaves as switch when asSwitch=true', (tester) async {
+        bool value = false;
+        await tester.pumpMaterialWidget(
+          StatefulBuilder(
+            builder: (context, setState) => NakedToggle(
+              value: value,
+              asSwitch: true,
+              onChanged: (v) => setState(() => value = v),
+              child: const Text('Switch'),
+            ),
+          ),
+        );
+
+        await tester.tap(find.text('Switch'));
+        await tester.pump();
+        expect(value, isTrue);
+      });
+    });
   });
 }

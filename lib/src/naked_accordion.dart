@@ -45,7 +45,10 @@ class NakedAccordionController<T> with ChangeNotifier {
     if (values.contains(value)) return; // no-op
     if (max != null && values.length >= max!) {
       // Close oldest to make room.
-      if (values.isNotEmpty) values.remove(values.first);
+      if (values.isNotEmpty) {
+        final oldest = values.first;
+        values.remove(oldest);
+      }
     }
     values.add(value);
     notifyListeners();
@@ -92,7 +95,10 @@ class NakedAccordionController<T> with ChangeNotifier {
     for (final v in newValues) {
       if (values.contains(v)) continue;
       if (max != null && values.length >= max!) {
-        if (values.isNotEmpty) values.remove(values.first);
+        if (values.isNotEmpty) {
+          final oldest = values.first;
+          values.remove(oldest);
+        }
       }
       values.add(v);
       changed = true;
@@ -260,8 +266,10 @@ class NakedAccordionItem<T> extends StatelessWidget {
   // Interaction hooks (headless state reporting).
   /// Notifies when header focus changes.
   final ValueChanged<bool>? onFocusChange;
+
   /// Notifies when header hover changes.
   final ValueChanged<bool>? onHoverChange;
+
   /// Notifies when header pressed (highlight) changes.
   final ValueChanged<bool>? onPressChange;
 
@@ -277,6 +285,7 @@ class NakedAccordionItem<T> extends StatelessWidget {
   ///
   /// When [autofocus] is true, the header will request focus on build.
   final bool autofocus;
+
   /// External [FocusNode] to control header focus.
   final FocusNode? focusNode;
 

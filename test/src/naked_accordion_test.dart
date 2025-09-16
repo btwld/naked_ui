@@ -17,12 +17,14 @@ void main() {
         children: [
           NakedAccordionItem<String>(
             value: 'item1',
-            trigger: (_, _) => const Text('Trigger 1'),
+            trigger: (_, isExpanded) =>
+                const Text('Trigger 1'),
             child: const Text('Content 1'),
           ),
           NakedAccordionItem<String>(
             value: 'item2',
-            trigger: (_, _) => const Text('Trigger 2'),
+            trigger: (_, isExpanded) =>
+                const Text('Trigger 2'),
             child: const Text('Content 2'),
           ),
         ],
@@ -68,7 +70,8 @@ void main() {
         children: [
           NakedAccordionItem<String>(
             value: 'item1',
-            trigger: (_, _) => const Text('Trigger 1'),
+            trigger: (_, isExpanded) =>
+                const Text('Trigger 1'),
             onFocusChange: (focused) => focusState = focused,
             autofocus: autofocus,
             focusNode: focusNode,
@@ -107,7 +110,8 @@ void main() {
           children: [
             NakedAccordionItem<String>(
               value: 'item1',
-              trigger: (_, _) => const Text('Trigger 1'),
+              trigger: (_, isExpanded) =>
+                  const Text('Trigger 1'),
               onFocusChange: (focused) => focusState = focused,
               autofocus: true,
               child: const Text('Content 1'),

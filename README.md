@@ -20,7 +20,7 @@ The Naked UI library provides headless components that handle functionality, int
 - **NakedRadio** — single‑select radio with group management
 - **NakedSelect** — dropdown/select with keyboard nav
 - **NakedSlider** — value slider with drag + keys
-- **NakedSwitch** — on/off switch behavior
+- **NakedToggle** — toggle button or switch behavior
 - **NakedTabs** — tablist + roving focus
 - **NakedAccordion** — expandable/collapsible sections
 - **NakedMenu** — anchored overlay menu

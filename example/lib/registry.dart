@@ -21,9 +21,6 @@ import 'api/naked_tabs.0.dart' as tabs_example;
 // Slider
 import 'api/naked_slider.0.dart' as slider_example;
 
-// Switch
-import 'api/naked_switch.0.dart' as switch_example;
-
 // TextField
 import 'api/naked_textfield.0.dart' as textfield_example;
 
@@ -139,15 +136,6 @@ class DemoRegistry {
       sourceUrl:
           'https://github.com/btwld/naked_ui/blob/main/example/lib/api/naked_slider.0.dart',
       tags: ['slider'],
-    ),
-    Demo(
-      id: 'switch-basic',
-      title: 'Switch – Basic',
-      category: 'Switch',
-      builder: (_) => const switch_example.SwitchExample(),
-      sourceUrl:
-          'https://github.com/btwld/naked_ui/blob/main/example/lib/api/naked_switch.0.dart',
-      tags: ['switch'],
     ),
     Demo(
       id: 'textfield-basic',

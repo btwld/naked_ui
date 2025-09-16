@@ -37,7 +37,8 @@ void main() {
               NakedAccordionItem<String>(
                 value: 'item',
                 semanticLabel: 'Header',
-                trigger: (context, isExpanded) => const Text('Header'),
+                trigger: (context, isExpanded) =>
+                    const Text('Header'),
                 child: const Text('Body'),
               ),
             ],
@@ -82,7 +83,8 @@ void main() {
               NakedAccordionItem<String>(
                 value: 'item',
                 semanticLabel: 'Header',
-                trigger: (context, isExpanded) => const Text('Header'),
+                trigger: (context, isExpanded) =>
+                    const Text('Header'),
                 child: const Text('Body'),
               ),
             ],

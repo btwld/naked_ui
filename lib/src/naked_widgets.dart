@@ -7,7 +7,6 @@ export 'naked_popover.dart';
 export 'naked_radio.dart';
 export 'naked_select.dart';
 export 'naked_slider.dart';
-export 'naked_switch.dart';
 export 'naked_tabs.dart';
 export 'naked_textfield.dart';
 export 'naked_toggle.dart';

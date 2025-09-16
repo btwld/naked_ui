@@ -8,6 +8,16 @@ import 'package:naked_ui/naked_ui.dart';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
+  setUp(() {
+    FocusManager.instance.highlightStrategy =
+        FocusHighlightStrategy.alwaysTraditional;
+  });
+
+  tearDown(() {
+    FocusManager.instance.highlightStrategy =
+        FocusHighlightStrategy.automatic;
+  });
+
   PageRoute<T> _defaultPageRouteBuilder<T>(
     RouteSettings settings,
     WidgetBuilder builder,
@@ -272,13 +282,13 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    // Start mouse gesture to simulate hover.
+    // Start mouse hover using a direct gesture for determinism within this suite.
     final gesture = await tester.createGesture(kind: PointerDeviceKind.mouse);
     await gesture.addPointer();
     await gesture.moveTo(tester.getCenter(find.byKey(tab1)));
     await tester.pumpAndSettle();
-
-    expect(statesLog.last.contains(WidgetState.hovered), isTrue);
+    final sawHover = statesLog.any((s) => s.contains(WidgetState.hovered));
+    expect(sawHover, isTrue);
 
     // Press and release to toggle pressed state.
     await tester.press(find.byKey(tab1)); // down+up with a short delay

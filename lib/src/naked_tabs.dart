@@ -2,6 +2,7 @@
 
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
+import 'mixins/naked_mixins.dart';
 
 /// Headless tabs: focusable triggers + panels, no default visuals.
 ///
@@ -194,30 +195,32 @@ class NakedTab extends StatefulWidget {
   State<NakedTab> createState() => _NakedTabState();
 }
 
-class _NakedTabState extends State<NakedTab> {
-  late final FocusNode _focusNode =
-      widget.focusNode ?? FocusNode(debugLabel: 'NakedTab-${widget.tabId}');
+class _NakedTabState extends State<NakedTab>
+    with WidgetStatesMixin<NakedTab>, FocusableMixin<NakedTab> {
+  @override
+  FocusNode? get focusableExternalNode => widget.focusNode;
 
-  bool _hovered = false;
-  bool _pressed = false;
   late bool _isEnabled;
   late NakedTabsScope _scope;
+
+  void _applyFocusability() {
+    final node = effectiveFocusNode;
+    if (node != null) {
+      node
+        ..canRequestFocus = _isEnabled
+        ..skipTraversal = !_isEnabled;
+    }
+  }
 
   void _handleTap() {
     if (!_isEnabled) return;
     if (widget.enableFeedback) HapticFeedback.selectionClick();
     // Selection follows focus anyway; tap still ensures we’re focused.
-    if (_focusNode.canRequestFocus) _focusNode.requestFocus();
+    if (effectiveFocusNode?.canRequestFocus ?? false) {
+      effectiveFocusNode!.requestFocus();
+    }
     _scope.selectTab(widget.tabId);
   }
-
-  Set<WidgetState> _states(bool isSelected) => {
-    if (!_isEnabled) WidgetState.disabled,
-    if (isSelected) WidgetState.selected,
-    if (_focusNode.hasFocus) WidgetState.focused,
-    if (_hovered) WidgetState.hovered,
-    if (_pressed) WidgetState.pressed,
-  };
 
   @override
   void didChangeDependencies() {
@@ -226,9 +229,7 @@ class _NakedTabState extends State<NakedTab> {
     _isEnabled = widget.enabled && _scope.enabled;
 
     // Disabled tabs shouldn’t be focusable or in traversal.
-    _focusNode
-      ..canRequestFocus = _isEnabled
-      ..skipTraversal = !_isEnabled;
+    _applyFocusability();
   }
 
   @override
@@ -237,18 +238,8 @@ class _NakedTabState extends State<NakedTab> {
     final newEnabled = widget.enabled && _scope.enabled;
     if (newEnabled != _isEnabled) {
       _isEnabled = newEnabled;
-      _focusNode
-        ..canRequestFocus = _isEnabled
-        ..skipTraversal = !_isEnabled;
+      _applyFocusability();
     }
-  }
-
-  @override
-  void dispose() {
-    if (widget.focusNode == null) {
-      _focusNode.dispose();
-    }
-    super.dispose();
   }
 
   @override
@@ -256,13 +247,17 @@ class _NakedTabState extends State<NakedTab> {
     assert(widget.tabId.isNotEmpty, 'tabId cannot be empty');
 
     final isSelected = _scope.isTabSelected(widget.tabId);
+    // Keep states synced for builder consumers.
+    updateDisabledState(!_isEnabled);
+    updateSelectedState(isSelected, null);
+
     final content = widget.builder != null
-        ? widget.builder!(context, _states(isSelected), widget.child)
+        ? widget.builder!(context, widgetStates, widget.child)
         : widget.child!;
 
     return FocusableActionDetector(
       enabled: _isEnabled,
-      focusNode: _focusNode,
+      focusNode: effectiveFocusNode,
       autofocus: widget.autofocus,
       // Enter/Space still activate; focus change selects too (below).
       shortcuts: const {
@@ -274,15 +269,9 @@ class _NakedTabState extends State<NakedTab> {
           onInvoke: (_) => _handleTap(),
         ),
       },
-      onShowHoverHighlight: (h) {
-        if (_hovered != h) {
-          _hovered = h;
-          widget.onHoverChange?.call(h);
-          setState(() {}); // update builder states
-        }
-      },
+      onShowHoverHighlight: (h) => updateHoverState(h, widget.onHoverChange),
       onFocusChange: (f) {
-        widget.onFocusChange?.call(f);
+        updateFocusState(f, widget.onFocusChange);
         if (f && _isEnabled) {
           _scope.selectTab(widget.tabId); // selection follows focus
         }
@@ -299,26 +288,14 @@ class _NakedTabState extends State<NakedTab> {
           child: GestureDetector(
             // semantics provided above
             onTapDown: _isEnabled
-                ? (_) {
-                    _pressed = true;
-                    widget.onPressChange?.call(true);
-                    setState(() {});
-                  }
+                ? (_) => updatePressState(true, widget.onPressChange)
                 : null,
             onTapUp: _isEnabled
-                ? (_) {
-                    _pressed = false;
-                    widget.onPressChange?.call(false);
-                    setState(() {});
-                  }
+                ? (_) => updatePressState(false, widget.onPressChange)
                 : null,
             onTap: _isEnabled ? _handleTap : null,
             onTapCancel: _isEnabled
-                ? () {
-                    _pressed = false;
-                    widget.onPressChange?.call(false);
-                    setState(() {});
-                  }
+                ? () => updatePressState(false, widget.onPressChange)
                 : null,
             behavior: HitTestBehavior.opaque,
             excludeFromSemantics: true,
