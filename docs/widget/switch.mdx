@@ -1,8 +1,14 @@
 ---
 title: NakedSwitch
+description: Headless switch component for Flutter settings and preferences with proper ARIA switch semantics
+keywords: [flutter, switch, toggle, settings, preferences, headless, accessibility, ARIA, on-off]
 ---
 
 NakedSwitch provides binary switch control behavior without imposing any visual styling. It's implemented using `NakedToggle` with `asSwitch: true`, which provides proper switch semantics for accessibility. This gives consumers complete design freedom while maintaining proper ARIA switch roles.
+
+<Note>
+  NakedSwitch is actually implemented using NakedToggle with `asSwitch: true`. This ensures proper accessibility semantics for on/off controls like settings and preferences.
+</Note>
 
 <Info>
   NakedSwitch functionality is provided by `NakedToggle` with `asSwitch: true`. You can find switch examples in our [GitHub repository](https://github.com/btwld/naked_ui/blob/main/example/lib/api/naked_toggle.1.dart).

@@ -1,8 +1,14 @@
 ---
 title: NakedPopover
+description: Flexible headless popover component with smart positioning, lifecycle management, and focus handling
+keywords: [flutter, popover, overlay, positioning, headless, tooltip, dropdown, modal, anchored]
 ---
 
 NakedPopover provides a flexible popover overlay system without imposing any visual styling. It handles positioning, outside-tap dismissal, focus management, and lifecycle callbacks, giving consumers complete design freedom while maintaining proper accessibility.
+
+<Tip>
+  Always provide fallback positions to ensure your popover displays correctly on different screen sizes and orientations.
+</Tip>
 
 <Info>
   You can find this example in our [GitHub repository](https://github.com/btwld/naked_ui/blob/main/example/lib/api/naked_popover.0.dart).
@@ -377,7 +383,6 @@ Defines positioning for the popover relative to its trigger:
 const NakedMenuPosition({
   this.target = Alignment.bottomLeft,
   this.follower = Alignment.topLeft,
-  this.offset = Offset.zero,
 })
 ```
 
@@ -386,9 +391,6 @@ The anchor point on the trigger widget.
 
 #### follower → `Alignment`
 The anchor point on the popover that aligns with the target.
-
-#### offset → `Offset`
-Additional offset to apply to the positioning.
 
 ## Common Positioning Patterns
 
@@ -419,6 +421,20 @@ NakedMenuPosition(
 ```
 
 ## Best Practices
+
+<Warning>
+  Always test your popovers on different screen sizes and orientations to ensure they display correctly in all scenarios.
+</Warning>
+
+<Tip>
+  Use `removalDelay` when implementing exit animations to ensure smooth transitions and prevent flickering.
+</Tip>
+
+<Note>
+  When a popover contains interactive elements, ensure proper focus management by returning focus to the trigger element when the popover closes.
+</Note>
+
+**Essential Guidelines:**
 
 1. **Always provide fallback positions** to handle edge cases where the popover might not fit
 2. **Use removalDelay for animations** to ensure smooth transitions

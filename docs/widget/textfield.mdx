@@ -73,6 +73,73 @@ class _TextFieldExampleState extends State<TextFieldExample> {
 ```
 </CodeGroup>
 
+<CodeGroup title="Search Input with Icon" defaultLanguage="dart">
+```dart
+class SearchInputExample extends StatefulWidget {
+  const SearchInputExample({super.key});
+
+  @override
+  State<SearchInputExample> createState() => _SearchInputExampleState();
+}
+
+class _SearchInputExampleState extends State<SearchInputExample> {
+  final _controller = TextEditingController();
+  bool _isFocused = false;
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.grey.shade50,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: _isFocused ? Colors.blue : Colors.grey.shade300,
+          width: _isFocused ? 2 : 1,
+        ),
+      ),
+      child: Row(
+        children: [
+          const Padding(
+            padding: EdgeInsets.all(12),
+            child: Icon(
+              Icons.search,
+              color: Colors.grey,
+              size: 20,
+            ),
+          ),
+          Expanded(
+            child: NakedTextField(
+              controller: _controller,
+              onFocusChange: (focused) => setState(() => _isFocused = focused),
+              decoration: const InputDecoration(
+                hintText: 'Search...',
+                border: InputBorder.none,
+                contentPadding: EdgeInsets.symmetric(vertical: 12),
+              ),
+            ),
+          ),
+          if (_controller.text.isNotEmpty)
+            IconButton(
+              onPressed: () {
+                _controller.clear();
+                setState(() {});
+              },
+              icon: const Icon(Icons.clear, size: 18),
+            ),
+        ],
+      ),
+    );
+  }
+}
+```
+</CodeGroup>
+
 ## Constructor
 
 ```dart

@@ -1,8 +1,14 @@
 ---
 title: NakedToggle
+description: Versatile headless toggle component that can function as either a toggle button or switch with proper accessibility semantics
+keywords: [flutter, toggle, switch, button, headless, accessibility, ARIA, semantics, binary control]
 ---
 
 NakedToggle provides binary toggle control behavior without imposing any visual styling. It can represent either a toggle button or a switch based on the `asSwitch` parameter, giving consumers complete design freedom while maintaining proper accessibility semantics.
+
+<Warning>
+  Choose the correct semantic role: Use `asSwitch: false` for UI toggles (like formatting buttons) and `asSwitch: true` for settings/preferences. This affects accessibility announcements.
+</Warning>
 
 <Info>
   You can find toggle button examples in our [GitHub repository](https://github.com/btwld/naked_ui/blob/main/example/lib/api/naked_toggle.0.dart) and switch examples [here](https://github.com/btwld/naked_ui/blob/main/example/lib/api/naked_toggle.1.dart).
@@ -511,33 +517,41 @@ Whether to use switch semantics instead of toggle button semantics. This affects
 
 The `asSwitch` parameter determines the semantic role and accessibility behavior:
 
-### Toggle Button (`asSwitch: false`)
-- **Use for**: UI state toggles, formatting options, view modes
-- **Semantics**: Button role with pressed state
-- **Examples**: Bold/italic buttons, view toggles, filter buttons
+<Tabs>
+  <Tab title="Toggle Button">
+    **Use for**: UI state toggles, formatting options, view modes
 
-```dart
-NakedToggle(
-  value: isBold,
-  asSwitch: false, // Button semantics
-  onChanged: (value) => setState(() => isBold = value),
-  child: Icon(Icons.format_bold),
-)
-```
+    **Semantics**: Button role with pressed state
 
-### Switch (`asSwitch: true`)
-- **Use for**: Settings, preferences, binary on/off states
-- **Semantics**: Switch role with on/off state
-- **Examples**: Notification settings, feature toggles, connectivity options
+    **Examples**: Bold/italic buttons, view toggles, filter buttons
 
-```dart
-NakedToggle(
-  value: notificationsEnabled,
-  asSwitch: true, // Switch semantics
-  onChanged: (value) => setState(() => notificationsEnabled = value),
-  child: SwitchWidget(),
-)
-```
+    ```dart
+    NakedToggle(
+      value: isBold,
+      asSwitch: false, // Button semantics
+      onChanged: (value) => setState(() => isBold = value),
+      child: Icon(Icons.format_bold),
+    )
+    ```
+  </Tab>
+
+  <Tab title="Switch">
+    **Use for**: Settings, preferences, binary on/off states
+
+    **Semantics**: Switch role with on/off state
+
+    **Examples**: Notification settings, feature toggles, connectivity options
+
+    ```dart
+    NakedToggle(
+      value: notificationsEnabled,
+      asSwitch: true, // Switch semantics
+      onChanged: (value) => setState(() => notificationsEnabled = value),
+      child: SwitchWidget(),
+    )
+    ```
+  </Tab>
+</Tabs>
 
 ## Accessibility
 

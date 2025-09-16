@@ -140,6 +140,131 @@ class _AccordionItemState extends State<AccordionItem> {
 ```
 </CodeGroup>
 
+<CodeGroup title="FAQ Section" defaultLanguage="dart">
+```dart
+class FAQExample extends StatefulWidget {
+  const FAQExample({super.key});
+
+  @override
+  State<FAQExample> createState() => _FAQExampleState();
+}
+
+class _FAQExampleState extends State<FAQExample> {
+  final _controller = NakedAccordionController<int>();
+
+  final List<FAQItem> _faqItems = [
+    FAQItem(
+      id: 1,
+      question: 'What is Naked UI?',
+      answer: 'Naked UI is a headless widget library for Flutter that provides behavior without styling, giving you complete design freedom.',
+    ),
+    FAQItem(
+      id: 2,
+      question: 'How do I customize the appearance?',
+      answer: 'Since Naked UI widgets are headless, you have complete control over styling. Use the builder patterns or child widgets to create your desired appearance.',
+    ),
+    FAQItem(
+      id: 3,
+      question: 'Is it accessible?',
+      answer: 'Yes! All Naked UI widgets include proper accessibility features like screen reader support, keyboard navigation, and semantic labels.',
+    ),
+    FAQItem(
+      id: 4,
+      question: 'Can I use it with existing UI libraries?',
+      answer: 'Absolutely! Naked UI works great alongside Material, Cupertino, or any custom design system.',
+    ),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.1),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: NakedAccordion<int>(
+        controller: _controller,
+        children: _faqItems.map((faq) =>
+          FAQItemWidget(key: ValueKey(faq.id), faq: faq)
+        ).toList(),
+      ),
+    );
+  }
+}
+
+class FAQItem {
+  final int id;
+  final String question;
+  final String answer;
+
+  FAQItem({required this.id, required this.question, required this.answer});
+}
+
+class FAQItemWidget extends StatelessWidget {
+  const FAQItemWidget({super.key, required this.faq});
+
+  final FAQItem faq;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        border: Border(
+          bottom: BorderSide(color: Colors.grey.shade200),
+        ),
+      ),
+      child: NakedAccordionItem<int>(
+        value: faq.id,
+        trigger: (context, isExpanded) => Container(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  faq.question,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+              AnimatedRotation(
+                turns: isExpanded ? 0.5 : 0,
+                duration: const Duration(milliseconds: 200),
+                child: const Icon(Icons.keyboard_arrow_down),
+              ),
+            ],
+          ),
+        ),
+        transitionBuilder: (child) => AnimatedSize(
+          duration: const Duration(milliseconds: 200),
+          child: child,
+        ),
+        child: Container(
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+          child: Text(
+            faq.answer,
+            style: TextStyle(
+              fontSize: 14,
+              color: Colors.grey.shade700,
+              height: 1.5,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+```
+</CodeGroup>
+
 ## NakedAccordionController
 
 The `NakedAccordionController` manages the state of the accordion, keeping track of which items are expanded or collapsed.
