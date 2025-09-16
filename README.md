@@ -26,6 +26,7 @@ The Naked UI library provides headless components that handle functionality, int
 - **NakedMenu** — anchored overlay menu
 - **NakedDialog** — modal dialog behavior + focus trap
 - **NakedTooltip** — anchored tooltip with lifecycle
+- **NakedPopover** — anchored, dismissible popover overlay
 
 ## Getting Started
 

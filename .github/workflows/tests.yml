@@ -41,6 +41,9 @@ jobs:
           channel: stable
       - name: Pub get
         run: flutter pub get
+      - name: Pub get (example)
+        run: flutter pub get
+        working-directory: example
       - name: Run integration test
         working-directory: example
         run: flutter test -r compact ${{ matrix.file }} -d macos --no-enable-impeller
