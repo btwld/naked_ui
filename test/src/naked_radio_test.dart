@@ -92,7 +92,6 @@ void main() {
 
   group('State Callback Tests', () {
     testWidgets('reports hovered state changes', (WidgetTester tester) async {
-      
       bool isHovered = false;
 
       await tester.pumpMaterialWidget(

@@ -21,4 +21,3 @@ Future<void> testExecutable(FutureOr<void> Function() testMain) async {
     FocusManager.instance.highlightStrategy = prev;
   }
 }
-

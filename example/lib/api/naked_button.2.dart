@@ -48,10 +48,10 @@ class _DisabledButtonExampleState extends State<DisabledButtonExample> {
     });
   }
 
-
   void _onButtonPressed() {
     setState(() {
-      _lastAction = 'Button pressed${_enableFeedback ? ' (with feedback)' : ''}';
+      _lastAction =
+          'Button pressed${_enableFeedback ? ' (with feedback)' : ''}';
     });
   }
 
@@ -72,7 +72,7 @@ class _DisabledButtonExampleState extends State<DisabledButtonExample> {
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 32),
-          
+
           // Main interactive button
           Center(
             child: _SemanticButton(
@@ -82,9 +82,9 @@ class _DisabledButtonExampleState extends State<DisabledButtonExample> {
               lastAction: _lastAction,
             ),
           ),
-          
+
           const SizedBox(height: 32),
-          
+
           // Control panel
           _ControlPanel(
             isEnabled: _isEnabled,
@@ -92,14 +92,14 @@ class _DisabledButtonExampleState extends State<DisabledButtonExample> {
             onToggleEnabled: _toggleEnabled,
             onToggleFeedback: _toggleFeedback,
           ),
-          
+
           const SizedBox(height: 32),
-          
+
           // Examples of different disabled states
           const _DisabledStatesShowcase(),
-          
+
           const SizedBox(height: 32),
-          
+
           // Accessibility features showcase
           const _AccessibilityShowcase(),
         ],
@@ -133,11 +133,11 @@ class _SemanticButtonState extends State<_SemanticButton> {
   Color get backgroundColor {
     const enabledColor = Color(0xFF3D3D3D);
     const disabledColor = Color(0xFFBDBDBD);
-    
+
     if (!widget.enabled) {
       return disabledColor;
     }
-    
+
     if (_isPressed) {
       return enabledColor.withValues(alpha: 0.8);
     }
@@ -179,9 +179,9 @@ class _SemanticButtonState extends State<_SemanticButton> {
       onFocusChange: (focused) => setState(() => _isFocused = focused),
       onHoverChange: (hovered) => setState(() => _isHovered = hovered),
       onPressChange: (pressed) => setState(() => _isPressed = pressed),
-      mouseCursor: widget.enabled 
-        ? SystemMouseCursors.click 
-        : SystemMouseCursors.forbidden,
+      mouseCursor: widget.enabled
+          ? SystemMouseCursors.click
+          : SystemMouseCursors.forbidden,
       child: Container(
         padding: const EdgeInsets.all(4),
         decoration: BoxDecoration(
@@ -223,9 +223,9 @@ class _SemanticButtonState extends State<_SemanticButton> {
                     vertical: 4,
                   ),
                   decoration: BoxDecoration(
-                    color: widget.enabled 
-                      ? Colors.white.withValues(alpha: 0.2)
-                      : Colors.grey.shade300,
+                    color: widget.enabled
+                        ? Colors.white.withValues(alpha: 0.2)
+                        : Colors.grey.shade300,
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
@@ -377,12 +377,14 @@ class _ToggleState extends State<_Toggle> {
           width: 48,
           height: 28,
           decoration: BoxDecoration(
-            color: widget.value ? const Color(0xFF4CAF50) : Colors.grey.shade300,
+            color:
+                widget.value ? const Color(0xFF4CAF50) : Colors.grey.shade300,
             borderRadius: BorderRadius.circular(14),
           ),
           child: AnimatedAlign(
             duration: const Duration(milliseconds: 200),
-            alignment: widget.value ? Alignment.centerRight : Alignment.centerLeft,
+            alignment:
+                widget.value ? Alignment.centerRight : Alignment.centerLeft,
             child: Container(
               width: 24,
               height: 24,
@@ -477,9 +479,7 @@ class _DisabledButtonExample extends StatelessWidget {
         decoration: BoxDecoration(
           color: backgroundColor,
           borderRadius: BorderRadius.circular(8),
-          border: borderColor != null 
-            ? Border.all(color: borderColor!)
-            : null,
+          border: borderColor != null ? Border.all(color: borderColor!) : null,
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -512,7 +512,8 @@ class _AccessibilityShowcase extends StatelessWidget {
       decoration: BoxDecoration(
         color: const Color(0xFFE3F2FD),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFF2196F3).withValues(alpha: 0.3)),
+        border:
+            Border.all(color: const Color(0xFF2196F3).withValues(alpha: 0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

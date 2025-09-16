@@ -81,6 +81,101 @@ class _ButtonExampleState extends State<ButtonExample> {
 ```
 </CodeGroup>
 
+<CodeGroup title="Icon Button with Tooltip" defaultLanguage="dart">
+```dart
+class IconButtonExample extends StatefulWidget {
+  const IconButtonExample({super.key});
+
+  @override
+  State<IconButtonExample> createState() => _IconButtonExampleState();
+}
+
+class _IconButtonExampleState extends State<IconButtonExample> {
+  bool _isFavorited = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return NakedButton(
+      onPressed: () {
+        setState(() => _isFavorited = !_isFavorited);
+      },
+      tooltip: _isFavorited ? 'Remove from favorites' : 'Add to favorites',
+      child: Container(
+        width: 48,
+        height: 48,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: Colors.grey.shade100,
+        ),
+        child: Icon(
+          _isFavorited ? Icons.favorite : Icons.favorite_border,
+          color: _isFavorited ? Colors.red : Colors.grey.shade600,
+        ),
+      ),
+    );
+  }
+}
+```
+</CodeGroup>
+
+<CodeGroup title="Loading Button" defaultLanguage="dart">
+```dart
+class LoadingButtonExample extends StatefulWidget {
+  const LoadingButtonExample({super.key});
+
+  @override
+  State<LoadingButtonExample> createState() => _LoadingButtonExampleState();
+}
+
+class _LoadingButtonExampleState extends State<LoadingButtonExample> {
+  bool _isLoading = false;
+
+  Future<void> _handleSubmit() async {
+    setState(() => _isLoading = true);
+
+    // Simulate API call
+    await Future.delayed(const Duration(seconds: 2));
+
+    setState(() => _isLoading = false);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return NakedButton(
+      onPressed: _isLoading ? null : _handleSubmit,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+        decoration: BoxDecoration(
+          color: _isLoading ? Colors.grey.shade300 : Colors.blue,
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (_isLoading) ...[
+              const SizedBox(
+                width: 16,
+                height: 16,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+              const SizedBox(width: 8),
+            ],
+            Text(
+              _isLoading ? 'Loading...' : 'Submit',
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+```
+</CodeGroup>
+
 ## Constructor
 
 ```dart

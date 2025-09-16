@@ -76,7 +76,6 @@ void main() {
       await tester.tap(find.byType(NakedButton));
       // No error should occur
     });
-
   });
 
   group('State Callbacks', () {
@@ -105,9 +104,7 @@ void main() {
       expect(pressCalled, isFalse);
     });
 
-    testWidgets('reports hover state changes', (
-      WidgetTester tester,
-    ) async {
+    testWidgets('reports hover state changes', (WidgetTester tester) async {
       bool isHovered = false;
 
       final key = UniqueKey();
@@ -300,39 +297,43 @@ void main() {
       expect(wasLongPressed, isTrue);
     });
 
-    testWidgets('press state toggles on long-press when only long-press provided', (
-      WidgetTester tester,
-    ) async {
-      final key = UniqueKey();
-      final pressStates = <bool>[];
-      bool wasLongPressed = false;
+    testWidgets(
+      'press state toggles on long-press when only long-press provided',
+      (WidgetTester tester) async {
+        final key = UniqueKey();
+        final pressStates = <bool>[];
+        bool wasLongPressed = false;
 
-      await tester.pumpMaterialWidget(
-        NakedButton(
-          key: key,
-          onPressed: null,
-          onLongPress: () => wasLongPressed = true,
-          onPressChange: (v) => pressStates.add(v),
-          child: const Text('Hold Me'),
-        ),
-      );
+        await tester.pumpMaterialWidget(
+          NakedButton(
+            key: key,
+            onPressed: null,
+            onLongPress: () => wasLongPressed = true,
+            onPressChange: (v) => pressStates.add(v),
+            child: const Text('Hold Me'),
+          ),
+        );
 
-      // Manually perform a long-press gesture: down, hold past threshold, up.
-      final center = tester.getCenter(find.byKey(key));
-      final gesture = await tester.startGesture(center);
-      // Allow the framework to process down and then exceed the long-press timeout
-      await tester.pump(kLongPressTimeout + const Duration(milliseconds: 50));
-      // Release
-      await gesture.up();
-      await tester.pump();
+        // Manually perform a long-press gesture: down, hold past threshold, up.
+        final center = tester.getCenter(find.byKey(key));
+        final gesture = await tester.startGesture(center);
+        // Allow the framework to process down and then exceed the long-press timeout
+        await tester.pump(kLongPressTimeout + const Duration(milliseconds: 50));
+        // Release
+        await gesture.up();
+        await tester.pump();
 
-      expect(wasLongPressed, isTrue, reason: 'onLongPress should fire');
-      expect(pressStates.isNotEmpty, isTrue,
-          reason: 'onPressChange should update during long-press');
-      // We expect it to have gone pressed (true) during hold and false on end.
-      expect(pressStates.first, isTrue);
-      expect(pressStates.last, isFalse);
-    });
+        expect(wasLongPressed, isTrue, reason: 'onLongPress should fire');
+        expect(
+          pressStates.isNotEmpty,
+          isTrue,
+          reason: 'onPressChange should update during long-press',
+        );
+        // We expect it to have gone pressed (true) during hold and false on end.
+        expect(pressStates.first, isTrue);
+        expect(pressStates.last, isFalse);
+      },
+    );
   });
 
   group('Keyboard Interaction', () {
@@ -371,7 +372,6 @@ void main() {
       expect(wasPressed, true);
     });
   });
-
 
   group('Cursor', () {
     testWidgets('shows appropriate cursor based on interactive state', (

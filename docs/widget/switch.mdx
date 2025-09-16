@@ -1,0 +1,313 @@
+---
+title: NakedSwitch
+---
+
+NakedSwitch provides binary switch control behavior without imposing any visual styling. It's implemented using `NakedToggle` with `asSwitch: true`, which provides proper switch semantics for accessibility. This gives consumers complete design freedom while maintaining proper ARIA switch roles.
+
+<Info>
+  NakedSwitch functionality is provided by `NakedToggle` with `asSwitch: true`. You can find switch examples in our [GitHub repository](https://github.com/btwld/naked_ui/blob/main/example/lib/api/naked_toggle.1.dart).
+</Info>
+
+<CodeGroup title="Basic Switch Example" defaultLanguage="dart">
+```dart
+class SwitchExample extends StatefulWidget {
+  const SwitchExample({super.key});
+
+  @override
+  State<SwitchExample> createState() => _SwitchExampleState();
+}
+
+class _SwitchExampleState extends State<SwitchExample> {
+  bool _isEnabled = false;
+  bool _isHovered = false;
+  bool _isFocused = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return NakedToggle(
+      value: _isEnabled,
+      asSwitch: true,
+      onChanged: (value) => setState(() => _isEnabled = value),
+      onHoverChange: (isHovered) => setState(() => _isHovered = isHovered),
+      onFocusChange: (isFocused) => setState(() => _isFocused = isFocused),
+      semanticLabel: 'Enable notifications',
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        width: 50,
+        height: 28,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(14),
+          color: _isEnabled ? Colors.green : Colors.grey.shade300,
+          border: _isFocused
+            ? Border.all(color: Colors.blue, width: 2)
+            : null,
+        ),
+        child: AnimatedAlign(
+          duration: const Duration(milliseconds: 200),
+          alignment: _isEnabled ? Alignment.centerRight : Alignment.centerLeft,
+          child: Container(
+            width: 24,
+            height: 24,
+            margin: const EdgeInsets.all(2),
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: Colors.white,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.2),
+                  blurRadius: 2,
+                  offset: const Offset(0, 1),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+```
+</CodeGroup>
+
+<CodeGroup title="Advanced Switch with Label" defaultLanguage="dart">
+```dart
+class LabeledSwitchExample extends StatefulWidget {
+  const LabeledSwitchExample({super.key});
+
+  @override
+  State<LabeledSwitchExample> createState() => _LabeledSwitchExampleState();
+}
+
+class _LabeledSwitchExampleState extends State<LabeledSwitchExample> {
+  bool _darkMode = false;
+  bool _notifications = true;
+  bool _location = false;
+
+  Widget _buildSwitchRow({
+    required String label,
+    required String description,
+    required bool value,
+    required ValueChanged<bool> onChanged,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  description,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey.shade600,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 16),
+          NakedToggle(
+            value: value,
+            asSwitch: true,
+            onChanged: onChanged,
+            semanticLabel: label,
+            builder: (context, states) {
+              final isSelected = states.contains(WidgetState.selected);
+              final isHovered = states.contains(WidgetState.hovered);
+              final isFocused = states.contains(WidgetState.focused);
+              final isDisabled = states.contains(WidgetState.disabled);
+
+              return AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                width: 44,
+                height: 24,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                  color: isDisabled
+                    ? Colors.grey.shade300
+                    : isSelected
+                      ? Colors.blue
+                      : Colors.grey.shade400,
+                  border: isFocused
+                    ? Border.all(color: Colors.blue.shade700, width: 2)
+                    : null,
+                  boxShadow: isHovered && !isDisabled
+                    ? [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.1),
+                          blurRadius: 4,
+                          offset: const Offset(0, 2),
+                        ),
+                      ]
+                    : null,
+                ),
+                child: AnimatedAlign(
+                  duration: const Duration(milliseconds: 200),
+                  alignment: isSelected ? Alignment.centerRight : Alignment.centerLeft,
+                  child: Container(
+                    width: 20,
+                    height: 20,
+                    margin: const EdgeInsets.all(2),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.white,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.2),
+                          blurRadius: 2,
+                          offset: const Offset(0, 1),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.1),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Settings',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 16),
+          _buildSwitchRow(
+            label: 'Dark Mode',
+            description: 'Use dark theme throughout the app',
+            value: _darkMode,
+            onChanged: (value) => setState(() => _darkMode = value),
+          ),
+          _buildSwitchRow(
+            label: 'Push Notifications',
+            description: 'Receive notifications for updates and messages',
+            value: _notifications,
+            onChanged: (value) => setState(() => _notifications = value),
+          ),
+          _buildSwitchRow(
+            label: 'Location Services',
+            description: 'Allow app to access your location',
+            value: _location,
+            onChanged: (value) => setState(() => _location = value),
+          ),
+        ],
+      ),
+    );
+  }
+}
+```
+</CodeGroup>
+
+## Implementation Note
+
+NakedSwitch is implemented using `NakedToggle` with the `asSwitch` parameter set to `true`. This ensures proper accessibility semantics:
+
+```dart
+// Switch implementation
+NakedToggle(
+  value: switchValue,
+  asSwitch: true,  // This enables switch semantics
+  onChanged: (value) => setSwitchValue(value),
+  child: YourSwitchUI(),
+)
+```
+
+## Properties
+
+Since NakedSwitch uses `NakedToggle` with `asSwitch: true`, all properties are identical to NakedToggle:
+
+#### value → `bool`
+Whether this switch is on (true) or off (false).
+
+#### onChanged → `ValueChanged<bool>?`
+Called when the switch changes state. If null, the switch will be disabled.
+
+#### child → `Widget?`
+Optional content; ignored if [builder] is provided.
+
+#### enabled → `bool`
+Whether the control is interactive. Defaults to true.
+
+#### mouseCursor → `MouseCursor?`
+Mouse cursor when interactive. Defaults to SystemMouseCursors.click.
+
+#### enableFeedback → `bool`
+Platform feedback on activation. Defaults to true.
+
+#### focusNode → `FocusNode?`
+Optional focus node to control focus behavior.
+
+#### autofocus → `bool`
+Whether to automatically focus this widget when first built. Defaults to false.
+
+#### onFocusChange → `ValueChanged<bool>?`
+Called when focus state changes.
+
+#### onHoverChange → `ValueChanged<bool>?`
+Called when hover state changes.
+
+#### onPressChange → `ValueChanged<bool>?`
+Called when pressed state changes.
+
+#### builder → `ValueWidgetBuilder<Set<WidgetState>>?`
+Optional builder that receives the current states to drive visuals. Available states include:
+- `WidgetState.disabled`
+- `WidgetState.focused`
+- `WidgetState.hovered`
+- `WidgetState.pressed`
+- `WidgetState.selected` (true when switch is on)
+
+#### semanticLabel → `String?`
+Optional semantic label for screen readers.
+
+#### asSwitch → `bool`
+Must be set to `true` for switch semantics. This is what differentiates a switch from a toggle button.
+
+## Accessibility
+
+When `asSwitch` is true, the widget:
+- Uses proper ARIA switch role
+- Announces state changes to screen readers
+- Supports keyboard navigation (Space to toggle)
+- Provides proper semantic labels
+
+## Best Practices
+
+1. **Always provide semantic labels** for switches, especially when the visual context might not be clear to screen readers
+2. **Use consistent visual patterns** across your app for switch states
+3. **Provide immediate visual feedback** for state changes
+4. **Consider disabled states** and make them visually distinct
+5. **Test with keyboard navigation** to ensure accessibility

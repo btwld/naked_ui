@@ -120,7 +120,6 @@ class NakedTooltip extends StatefulWidget implements OverlayChildLifecycle {
   /// Screen readers announce this on focus/hover.
   final String? semanticsLabel;
 
-
   /// Tooltip position relative to the target.
   final NakedMenuPosition position;
 

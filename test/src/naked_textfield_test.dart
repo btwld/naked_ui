@@ -222,7 +222,6 @@ void main() {
       expect(events, containsAllInOrder([true, false]));
     });
 
-
     testWidgets('canRequestFocus=false prevents focusing', (tester) async {
       final node = FocusNode();
 
@@ -285,8 +284,6 @@ void main() {
   });
 
   group('Selection & toolbar (adaptive controls)', () {
-
-
     testWidgets('selectionColor is gated by focus', (tester) async {
       final ctl = TextEditingController(text: 'abc');
 
@@ -336,7 +333,9 @@ void main() {
   });
 
   group('Undo/redo', () {
-    testWidgets('UndoHistoryController with proper undo groups', (tester) async {
+    testWidgets('UndoHistoryController with proper undo groups', (
+      tester,
+    ) async {
       final ctl = TextEditingController();
       final undo = UndoHistoryController();
 
@@ -359,7 +358,7 @@ void main() {
       await tester.pump(const Duration(milliseconds: 700)); // new undo group
 
       expect(ctl.text, 'second');
-      
+
       // Try direct undo/redo
       undo.undo();
       await tester.pump();
@@ -371,8 +370,7 @@ void main() {
     });
   });
 
-  group('Semantics', () {
-  });
+  group('Semantics', () {});
 
   group('Restoration & ownership', () {
     testWidgets('internal RestorableTextEditingController restores text', (

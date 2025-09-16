@@ -200,48 +200,44 @@ void main() {
         },
       );
 
-      testWidgets(
-        'keeps menu open when closeOnSelect is false on menu item',
-        (WidgetTester tester) async {
-          bool onMenuCloseCalled = false;
-          const menuKey = Key('menu');
-          const item1Key = Key('item1');
-          final controller = MenuController();
+      testWidgets('keeps menu open when closeOnSelect is false on menu item', (
+        WidgetTester tester,
+      ) async {
+        bool onMenuCloseCalled = false;
+        const menuKey = Key('menu');
+        const item1Key = Key('item1');
+        final controller = MenuController();
 
-          await tester.pumpMaterialWidget(
-            NakedMenu(
-              controller: controller,
-              onClose: () => onMenuCloseCalled = true,
-              overlayBuilder: (_) => Container(
-                key: menuKey,
-                constraints: const BoxConstraints(
-                  maxWidth: 100,
-                  maxHeight: 100,
-                ),
-                child: NakedMenuItem(
-                  key: item1Key,
-                  closeOnSelect: false,
-                  onPressed: () {},
-                  child: const Text('Item 1'),
-                ),
+        await tester.pumpMaterialWidget(
+          NakedMenu(
+            controller: controller,
+            onClose: () => onMenuCloseCalled = true,
+            overlayBuilder: (_) => Container(
+              key: menuKey,
+              constraints: const BoxConstraints(maxWidth: 100, maxHeight: 100),
+              child: NakedMenuItem(
+                key: item1Key,
+                closeOnSelect: false,
+                onPressed: () {},
+                child: const Text('Item 1'),
               ),
-              builder: (_) => const Text('child'),
             ),
-          );
+            builder: (_) => const Text('child'),
+          ),
+        );
 
-          controller.open();
+        controller.open();
 
-          await tester.pump();
-          expect(find.byKey(menuKey), findsOneWidget);
+        await tester.pump();
+        expect(find.byKey(menuKey), findsOneWidget);
 
-          await tester.tap(find.text('Item 1'));
-          await tester.pumpAndSettle();
+        await tester.tap(find.text('Item 1'));
+        await tester.pumpAndSettle();
 
-          // Menu should still be open since closeOnSelect is false
-          expect(onMenuCloseCalled, false);
-          expect(find.byKey(menuKey), findsOneWidget);
-        },
-      );
+        // Menu should still be open since closeOnSelect is false
+        expect(onMenuCloseCalled, false);
+        expect(find.byKey(menuKey), findsOneWidget);
+      });
     });
 
     group('Keyboard Interaction', () {
@@ -429,7 +425,6 @@ void main() {
 
     group('State Callbacks', () {
       testWidgets('Calls hovered state callback', (WidgetTester tester) async {
-        
         bool hovered = false;
         const key = Key('menuItem');
         final controller = MenuController();
@@ -490,7 +485,6 @@ void main() {
       });
 
       testWidgets('Calls focused state callback', (WidgetTester tester) async {
-        
         bool focused = false;
         final focusNode = FocusNode();
         final controller = MenuController();
@@ -519,9 +513,7 @@ void main() {
     });
 
     group('Keyboard Interaction', () {
-      testWidgets('Activates with Space key', (
-        WidgetTester tester,
-      ) async {
+      testWidgets('Activates with Space key', (WidgetTester tester) async {
         bool pressed = false;
         final focusNode = FocusNode();
         final controller = MenuController();

@@ -149,8 +149,7 @@ SemanticsSummary summarizeMergedButtonFromRoot(WidgetTester tester) {
     hasFocusActionStack.add(hasFocusAction);
 
     final bool isButtonLike =
-        data.flagsCollection.isButton ||
-        data.hasAction(SemanticsAction.tap);
+        data.flagsCollection.isButton || data.hasAction(SemanticsAction.tap);
     if (isButtonLike && found == null) {
       final summary = summarizeNode(node);
       final Set<String> mergedFlags = Set<String>.from(summary.flags);
@@ -270,22 +269,26 @@ Future<void> expectSemanticsParity({
   required ControlType control,
 }) async {
   await tester.pumpWidget(material);
-  SemanticsSummary materialSummary =
-      summarizeMergedFromRoot(tester, control: control);
+  SemanticsSummary materialSummary = summarizeMergedFromRoot(
+    tester,
+    control: control,
+  );
   await tester.pumpWidget(naked);
-  SemanticsSummary nakedSummary =
-      summarizeMergedFromRoot(tester, control: control);
+  SemanticsSummary nakedSummary = summarizeMergedFromRoot(
+    tester,
+    control: control,
+  );
 
   // Certain controls (e.g., TextField) can surface focusability either on the
   // control node or an ancestor. Allow focusable flag parity to vary while
   // still requiring a focus action.
   if (control == ControlType.textField) {
     SemanticsSummary stripFocusable(SemanticsSummary s) => SemanticsSummary(
-          label: s.label,
-          value: s.value,
-          flags: s.flags.where((f) => f != 'isFocusable').toSet(),
-          actions: s.actions,
-        );
+      label: s.label,
+      value: s.value,
+      flags: s.flags.where((f) => f != 'isFocusable').toSet(),
+      actions: s.actions,
+    );
     materialSummary = stripFocusable(materialSummary);
     nakedSummary = stripFocusable(nakedSummary);
   }
@@ -293,13 +296,16 @@ Future<void> expectSemanticsParity({
   // Tabs (Material) may not expose button/enabled flags. Normalize them out.
   if (control == ControlType.tab) {
     SemanticsSummary normalizeTab(SemanticsSummary s) => SemanticsSummary(
-          label: s.label,
-          value: s.value,
-          flags: s.flags
-              .where((f) => f != 'isButton' && f != 'isEnabled' && f != 'hasEnabledState')
-              .toSet(),
-          actions: s.actions,
-        );
+      label: s.label,
+      value: s.value,
+      flags: s.flags
+          .where(
+            (f) =>
+                f != 'isButton' && f != 'isEnabled' && f != 'hasEnabledState',
+          )
+          .toSet(),
+      actions: s.actions,
+    );
     materialSummary = normalizeTab(materialSummary);
     nakedSummary = normalizeTab(nakedSummary);
   }

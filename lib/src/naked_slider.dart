@@ -401,8 +401,9 @@ class _NakedSliderState extends State<NakedSlider>
       onVerticalDragEnd: widget.direction == Axis.vertical && _isEnabled
           ? _handleDragEnd
           : null,
-      onVerticalDragCancel:
-          widget.direction == Axis.vertical && _isEnabled ? _handleDragCancel : null,
+      onVerticalDragCancel: widget.direction == Axis.vertical && _isEnabled
+          ? _handleDragCancel
+          : null,
       // Only one axis active to avoid competing recognizers.
       onHorizontalDragStart: widget.direction == Axis.horizontal && _isEnabled
           ? _handleDragStart
@@ -413,8 +414,9 @@ class _NakedSliderState extends State<NakedSlider>
       onHorizontalDragEnd: widget.direction == Axis.horizontal && _isEnabled
           ? _handleDragEnd
           : null,
-      onHorizontalDragCancel:
-          widget.direction == Axis.horizontal && _isEnabled ? _handleDragCancel : null,
+      onHorizontalDragCancel: widget.direction == Axis.horizontal && _isEnabled
+          ? _handleDragCancel
+          : null,
       behavior: HitTestBehavior.opaque,
       excludeFromSemantics: true, // semantics provided by the wrapper below
       child: widget.child,

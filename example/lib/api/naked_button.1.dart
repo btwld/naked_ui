@@ -217,9 +217,9 @@ class _InteractiveButtonState extends State<_InteractiveButton>
         child: AnimatedBuilder(
           animation: Listenable.merge([_pulseAnimation, _scaleAnimation]),
           builder: (context, child) {
-            final scale = _scaleAnimation.value * 
+            final scale = _scaleAnimation.value *
                 (_isLongPressing ? _pulseAnimation.value : 1.0);
-            
+
             return Transform.scale(
               scale: scale,
               child: Container(
@@ -258,17 +258,17 @@ class _InteractiveButtonState extends State<_InteractiveButton>
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(
-                        _isLongPressing 
-                          ? Icons.touch_app 
-                          : Icons.touch_app_outlined,
+                        _isLongPressing
+                            ? Icons.touch_app
+                            : Icons.touch_app_outlined,
                         color: Colors.white,
                         size: 32,
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        _isLongPressing 
-                          ? 'Long Pressing...' 
-                          : 'Interactive Button',
+                        _isLongPressing
+                            ? 'Long Pressing...'
+                            : 'Interactive Button',
                         style: const TextStyle(
                           color: Colors.white,
                           fontSize: 16,
@@ -416,21 +416,19 @@ class _FeedbackRow extends StatelessWidget {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           decoration: BoxDecoration(
-            color: isHighlighted 
-              ? const Color(0xFF3D3D3D).withValues(alpha: 0.1)
-              : Colors.transparent,
+            color: isHighlighted
+                ? const Color(0xFF3D3D3D).withValues(alpha: 0.1)
+                : Colors.transparent,
             borderRadius: BorderRadius.circular(8),
           ),
           child: Text(
             value,
             style: TextStyle(
               fontSize: 14,
-              fontWeight: isHighlighted 
-                ? FontWeight.w600 
-                : FontWeight.normal,
-              color: isHighlighted 
-                ? const Color(0xFF3D3D3D) 
-                : Colors.grey.shade600,
+              fontWeight: isHighlighted ? FontWeight.w600 : FontWeight.normal,
+              color: isHighlighted
+                  ? const Color(0xFF3D3D3D)
+                  : Colors.grey.shade600,
             ),
           ),
         ),
@@ -533,7 +531,8 @@ class _InstructionCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: const Color(0xFFFFF3E0),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFFFCC02).withValues(alpha: 0.3)),
+        border:
+            Border.all(color: const Color(0xFFFFCC02).withValues(alpha: 0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

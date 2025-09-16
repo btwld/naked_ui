@@ -108,7 +108,8 @@ class _ValidationExampleState extends State<ValidationExample> {
     setState(() {
       if (value.isEmpty) {
         _urlError = 'URL is required';
-      } else if (!Uri.tryParse(value)!.hasAbsolutePath && !value.startsWith('http')) {
+      } else if (!Uri.tryParse(value)!.hasAbsolutePath &&
+          !value.startsWith('http')) {
         _urlError = 'Please enter a valid URL';
       } else {
         _urlError = null;
@@ -165,10 +166,10 @@ class _ValidationExampleState extends State<ValidationExample> {
               _validatePhone(_phoneController.text);
               _validateCreditCard(_creditCardController.text);
               _validateUrl(_urlController.text);
-              
-              if (_emailError == null && 
-                  _phoneError == null && 
-                  _creditCardError == null && 
+
+              if (_emailError == null &&
+                  _phoneError == null &&
+                  _creditCardError == null &&
                   _urlError == null &&
                   _emailController.text.isNotEmpty &&
                   _phoneController.text.isNotEmpty &&
@@ -210,7 +211,7 @@ class _EmailFieldState extends State<_EmailField> {
   @override
   Widget build(BuildContext context) {
     final hasError = widget.error != null;
-    
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -246,10 +247,12 @@ class _EmailFieldState extends State<_EmailField> {
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
                 child: Row(
                   children: [
-                    const Icon(Icons.email_outlined, size: 20, color: Color(0xFF999999)),
+                    const Icon(Icons.email_outlined,
+                        size: 20, color: Color(0xFF999999)),
                     const SizedBox(width: 12),
                     Expanded(child: editableText),
                   ],
@@ -295,7 +298,7 @@ class _PhoneFieldState extends State<_PhoneField> {
   @override
   Widget build(BuildContext context) {
     final hasError = widget.error != null;
-    
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -332,10 +335,12 @@ class _PhoneFieldState extends State<_PhoneField> {
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
                 child: Row(
                   children: [
-                    const Icon(Icons.phone_outlined, size: 20, color: Color(0xFF999999)),
+                    const Icon(Icons.phone_outlined,
+                        size: 20, color: Color(0xFF999999)),
                     const SizedBox(width: 12),
                     Expanded(child: editableText),
                   ],
@@ -381,7 +386,7 @@ class _CreditCardFieldState extends State<_CreditCardField> {
   @override
   Widget build(BuildContext context) {
     final hasError = widget.error != null;
-    
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -418,10 +423,12 @@ class _CreditCardFieldState extends State<_CreditCardField> {
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
                 child: Row(
                   children: [
-                    const Icon(Icons.credit_card_outlined, size: 20, color: Color(0xFF999999)),
+                    const Icon(Icons.credit_card_outlined,
+                        size: 20, color: Color(0xFF999999)),
                     const SizedBox(width: 12),
                     Expanded(child: editableText),
                   ],
@@ -467,7 +474,7 @@ class _UrlFieldState extends State<_UrlField> {
   @override
   Widget build(BuildContext context) {
     final hasError = widget.error != null;
-    
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -503,10 +510,12 @@ class _UrlFieldState extends State<_UrlField> {
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
                 child: Row(
                   children: [
-                    const Icon(Icons.link_outlined, size: 20, color: Color(0xFF999999)),
+                    const Icon(Icons.link_outlined,
+                        size: 20, color: Color(0xFF999999)),
                     const SizedBox(width: 12),
                     Expanded(child: editableText),
                   ],

@@ -417,8 +417,7 @@ void main() {
       SemanticsNode? nakedNode;
       bool visitor(SemanticsNode n) {
         final d = n.getSemanticsData();
-        if (d.flagsCollection.isButton ||
-            d.hasAction(SemanticsAction.tap)) {
+        if (d.flagsCollection.isButton || d.hasAction(SemanticsAction.tap)) {
           nakedNode = n;
           return true;
         }
@@ -471,8 +470,7 @@ void main() {
       SemanticsNode? nNode;
       bool visit(SemanticsNode n) {
         final d = n.getSemanticsData();
-        if (d.flagsCollection.isButton ||
-            d.hasAction(SemanticsAction.tap)) {
+        if (d.flagsCollection.isButton || d.hasAction(SemanticsAction.tap)) {
           nNode = n;
           return true;
         }
@@ -520,8 +518,7 @@ void main() {
       SemanticsNode? nNode;
       bool visit(SemanticsNode n) {
         final d = n.getSemanticsData();
-        if (d.flagsCollection.isButton ||
-            d.hasAction(SemanticsAction.tap)) {
+        if (d.flagsCollection.isButton || d.hasAction(SemanticsAction.tap)) {
           nNode = n;
           return true;
         }
@@ -568,8 +565,7 @@ void main() {
       SemanticsNode? nNode;
       bool visit(SemanticsNode n) {
         final d = n.getSemanticsData();
-        if (d.flagsCollection.isButton ||
-            d.hasAction(SemanticsAction.tap)) {
+        if (d.flagsCollection.isButton || d.hasAction(SemanticsAction.tap)) {
           nNode = n;
           return true;
         }
@@ -633,8 +629,7 @@ void main() {
       SemanticsNode? nNode;
       bool visit(SemanticsNode n) {
         final d = n.getSemanticsData();
-        if (d.flagsCollection.isButton ||
-            d.hasAction(SemanticsAction.tap)) {
+        if (d.flagsCollection.isButton || d.hasAction(SemanticsAction.tap)) {
           nNode = n;
           return true;
         }
@@ -686,8 +681,7 @@ void main() {
       SemanticsNode? nNode2;
       bool visit2(SemanticsNode n) {
         final d = n.getSemanticsData();
-        if (d.flagsCollection.isButton ||
-            d.hasAction(SemanticsAction.tap)) {
+        if (d.flagsCollection.isButton || d.hasAction(SemanticsAction.tap)) {
           nNode2 = n;
           return true;
         }

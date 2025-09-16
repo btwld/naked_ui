@@ -371,6 +371,7 @@ class _NakedSelectState<T> extends State<NakedSelect<T>> {
     );
   }
 }
+
 /// Inherited scope that exposes selection state for [NakedSelect].
 ///
 /// Use [NakedSelectScope.of] to read selection and [isSelected] to test a

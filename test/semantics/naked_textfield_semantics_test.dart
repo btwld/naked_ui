@@ -9,7 +9,9 @@ import 'semantics_test_utils.dart';
 
 void main() {
   Widget _buildTestApp(Widget child) {
-    return MaterialApp(home: Scaffold(body: Center(child: child)));
+    return MaterialApp(
+      home: Scaffold(body: Center(child: child)),
+    );
   }
 
   group('NakedTextField Semantics', () {
@@ -57,9 +59,7 @@ void main() {
       await mouse.addPointer();
       await tester.pump();
 
-      await tester.pumpWidget(
-        _buildTestApp(TextField(focusNode: fm)),
-      );
+      await tester.pumpWidget(_buildTestApp(TextField(focusNode: fm)));
       fm.requestFocus();
       await tester.pump();
       await mouse.moveTo(tester.getCenter(find.byType(TextField)));
@@ -87,11 +87,11 @@ void main() {
       );
       // Normalize focusable flag differences from ancestor placement.
       SemanticsSummary stripFocusable(SemanticsSummary s) => SemanticsSummary(
-            label: s.label,
-            value: s.value,
-            flags: s.flags.where((f) => f != 'isFocusable').toSet(),
-            actions: s.actions,
-          );
+        label: s.label,
+        value: s.value,
+        flags: s.flags.where((f) => f != 'isFocusable').toSet(),
+        actions: s.actions,
+      );
       materialFocused = stripFocusable(materialFocused);
       nakedFocused = stripFocusable(nakedFocused);
       expect(nakedFocused, equals(materialFocused));
@@ -122,11 +122,11 @@ void main() {
       var nak = summarizeMergedFromRoot(tester, control: ControlType.textField);
       // Normalize focusable differences
       SemanticsSummary stripFocusable(SemanticsSummary s) => SemanticsSummary(
-            label: s.label,
-            value: s.value,
-            flags: s.flags.where((f) => f != 'isFocusable').toSet(),
-            actions: s.actions,
-          );
+        label: s.label,
+        value: s.value,
+        flags: s.flags.where((f) => f != 'isFocusable').toSet(),
+        actions: s.actions,
+      );
       expect(stripFocusable(nak), equals(stripFocusable(mat)));
 
       handle.dispose();

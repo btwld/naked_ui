@@ -14,8 +14,7 @@ void main() {
   });
 
   tearDown(() {
-    FocusManager.instance.highlightStrategy =
-        FocusHighlightStrategy.automatic;
+    FocusManager.instance.highlightStrategy = FocusHighlightStrategy.automatic;
   });
 
   PageRoute<T> _defaultPageRouteBuilder<T>(

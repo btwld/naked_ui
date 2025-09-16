@@ -186,8 +186,11 @@ void main() {
       await tester.tapAt(const Offset(5, 5));
       await tester.pumpAndSettle();
       expect(find.text('Popover Content'), findsNothing);
-      expect(backgroundTaps, greaterThan(0),
-          reason: 'outside tap propagates when not consumed');
+      expect(
+        backgroundTaps,
+        greaterThan(0),
+        reason: 'outside tap propagates when not consumed',
+      );
     });
 
     testWidgets('ESC closes even when no outside space is tappable', (

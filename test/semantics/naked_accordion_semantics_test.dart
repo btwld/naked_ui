@@ -6,7 +6,9 @@ import 'semantics_test_utils.dart';
 
 void main() {
   Widget _buildTestApp(Widget child) {
-    return MaterialApp(home: Scaffold(body: Center(child: child)));
+    return MaterialApp(
+      home: Scaffold(body: Center(child: child)),
+    );
   }
 
   group('NakedAccordion Semantics', () {
@@ -27,7 +29,9 @@ void main() {
       );
 
       final mNode = tester.getSemantics(find.bySemanticsLabel('Header'));
-      final strict = buildStrictMatcherFromSemanticsData(mNode.getSemanticsData());
+      final strict = buildStrictMatcherFromSemanticsData(
+        mNode.getSemanticsData(),
+      );
 
       await tester.pumpWidget(
         _buildTestApp(
@@ -37,8 +41,7 @@ void main() {
               NakedAccordionItem<String>(
                 value: 'item',
                 semanticLabel: 'Header',
-                trigger: (context, isExpanded) =>
-                    const Text('Header'),
+                trigger: (context, isExpanded) => const Text('Header'),
                 child: const Text('Body'),
               ),
             ],
@@ -72,7 +75,9 @@ void main() {
       );
 
       final mNode = tester.getSemantics(find.bySemanticsLabel('Header'));
-      final strict = buildStrictMatcherFromSemanticsData(mNode.getSemanticsData());
+      final strict = buildStrictMatcherFromSemanticsData(
+        mNode.getSemanticsData(),
+      );
 
       await tester.pumpWidget(
         _buildTestApp(
@@ -83,8 +88,7 @@ void main() {
               NakedAccordionItem<String>(
                 value: 'item',
                 semanticLabel: 'Header',
-                trigger: (context, isExpanded) =>
-                    const Text('Header'),
+                trigger: (context, isExpanded) => const Text('Header'),
                 child: const Text('Body'),
               ),
             ],

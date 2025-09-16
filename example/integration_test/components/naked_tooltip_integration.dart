@@ -301,7 +301,6 @@ void main() {
       expect(find.text('Rapid Hover Test'), findsOneWidget);
     });
 
-
     testWidgets('tooltip works with example app animation', (tester) async {
       // Test the full example with animation controller
       await tester.pumpWidget(const tooltip_example.MyApp());

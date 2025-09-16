@@ -25,7 +25,8 @@ class SearchableSelectExample extends StatefulWidget {
   const SearchableSelectExample({super.key});
 
   @override
-  State<SearchableSelectExample> createState() => _SearchableSelectExampleState();
+  State<SearchableSelectExample> createState() =>
+      _SearchableSelectExampleState();
 }
 
 class _SearchableSelectExampleState extends State<SearchableSelectExample> {
@@ -58,7 +59,6 @@ class _SearchableSelectExampleState extends State<SearchableSelectExample> {
     _SelectOption('ko', 'Korean', '🈴'),
     _SelectOption('zh', 'Chinese', '🈂'),
   ];
-
 
   @override
   Widget build(BuildContext context) {
@@ -243,7 +243,7 @@ class _SearchableSelectState extends State<_SearchableSelect> {
     if (_searchQuery.isEmpty) return widget.options;
     return widget.options.where((option) {
       return option.label.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-             option.value.toLowerCase().contains(_searchQuery.toLowerCase());
+          option.value.toLowerCase().contains(_searchQuery.toLowerCase());
     }).toList();
   }
 
@@ -393,7 +393,8 @@ class _SearchableSelectState extends State<_SearchableSelect> {
         decoration: InputDecoration(
           hintText: widget.searchHint,
           prefixIcon: const Icon(Icons.search, size: 18),
-          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(6),
             borderSide: BorderSide(color: Colors.grey.shade300),
@@ -411,7 +412,7 @@ class _SearchableSelectState extends State<_SearchableSelect> {
 
   Widget _buildOptionsList() {
     final filtered = _filteredOptions;
-    
+
     if (filtered.isEmpty) {
       return Padding(
         padding: const EdgeInsets.all(20),
@@ -523,7 +524,9 @@ class _OptionItemState extends State<_OptionItem> {
         widget.option.label,
         style: TextStyle(
           fontSize: 14,
-          color: widget.isSelected ? Colors.blue.shade700 : const Color(0xFF1A1A1A),
+          color: widget.isSelected
+              ? Colors.blue.shade700
+              : const Color(0xFF1A1A1A),
         ),
       );
     }
@@ -531,13 +534,15 @@ class _OptionItemState extends State<_OptionItem> {
     final text = widget.option.label;
     final query = widget.searchQuery.toLowerCase();
     final index = text.toLowerCase().indexOf(query);
-    
+
     if (index == -1) {
       return Text(
         text,
         style: TextStyle(
           fontSize: 14,
-          color: widget.isSelected ? Colors.blue.shade700 : const Color(0xFF1A1A1A),
+          color: widget.isSelected
+              ? Colors.blue.shade700
+              : const Color(0xFF1A1A1A),
         ),
       );
     }
@@ -549,14 +554,18 @@ class _OptionItemState extends State<_OptionItem> {
             text: text.substring(0, index),
             style: TextStyle(
               fontSize: 14,
-              color: widget.isSelected ? Colors.blue.shade700 : const Color(0xFF1A1A1A),
+              color: widget.isSelected
+                  ? Colors.blue.shade700
+                  : const Color(0xFF1A1A1A),
             ),
           ),
           TextSpan(
             text: text.substring(index, index + widget.searchQuery.length),
             style: TextStyle(
               fontSize: 14,
-              color: widget.isSelected ? Colors.blue.shade700 : const Color(0xFF1A1A1A),
+              color: widget.isSelected
+                  ? Colors.blue.shade700
+                  : const Color(0xFF1A1A1A),
               backgroundColor: Colors.yellow.shade200,
               fontWeight: FontWeight.bold,
             ),
@@ -565,7 +574,9 @@ class _OptionItemState extends State<_OptionItem> {
             text: text.substring(index + widget.searchQuery.length),
             style: TextStyle(
               fontSize: 14,
-              color: widget.isSelected ? Colors.blue.shade700 : const Color(0xFF1A1A1A),
+              color: widget.isSelected
+                  ? Colors.blue.shade700
+                  : const Color(0xFF1A1A1A),
             ),
           ),
         ],

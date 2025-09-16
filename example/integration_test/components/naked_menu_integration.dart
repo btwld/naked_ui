@@ -8,37 +8,37 @@ import '../helpers/test_helpers.dart';
 
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
-  
+
   group('NakedMenu Integration Tests', () {
     testWidgets('menu opens and closes via controller', (tester) async {
       // Use the actual example app
       await tester.pumpWidget(const menu_example.MyApp());
       await tester.pump(const Duration(milliseconds: 100));
-      
+
       final menuFinder = find.byType(NakedMenu);
       expect(menuFinder, findsOneWidget);
-      
+
       // Find the trigger button
       final triggerButton = find.byType(NakedButton);
       expect(triggerButton, findsOneWidget);
-      
+
       // Initially menu should be closed (no overlay content)
       expect(find.text('Menu Item 1'), findsNothing);
-      
+
       // Tap to open menu
       await tester.tap(triggerButton);
       await tester.pump();
-      
+
       // Menu should be open now
       expect(find.text('Menu Item 1'), findsOneWidget);
       expect(find.text('Menu Item 2'), findsOneWidget);
       expect(find.text('Menu Item 3'), findsOneWidget);
     });
-    
+
     testWidgets('menu items respond to selection', (tester) async {
       final menuController = MenuController();
       String selectedItem = '';
-      
+
       await tester.pumpWidget(MaterialApp(
         home: Scaffold(
           body: Center(
@@ -80,26 +80,26 @@ void main() {
         ),
       ));
       await tester.pumpAndSettle();
-      
+
       // Open menu
       await tester.tap(find.text('Open Menu'));
       await tester.pump();
-      
+
       // Tap menu item
       await tester.tap(find.text('Item 1'));
       await tester.pump();
-      
+
       // Verify selection
       expect(selectedItem, 'Item 1');
-      
+
       // Menu should be closed after selection
       expect(find.text('Item 1'), findsNothing);
     });
-    
+
     testWidgets('menu onClose callback works', (tester) async {
       final menuController = MenuController();
       bool menuClosed = false;
-      
+
       await tester.pumpWidget(MaterialApp(
         home: Scaffold(
           body: Center(
@@ -123,25 +123,25 @@ void main() {
         ),
       ));
       await tester.pumpAndSettle();
-      
+
       // Open menu
       await tester.tap(find.text('Open Menu'));
       await tester.pump();
       expect(find.text('Menu Content'), findsOneWidget);
-      
+
       // Close menu programmatically
       menuController.close();
       await tester.pump();
-      
+
       // Verify callback was called
       expect(menuClosed, isTrue);
       expect(find.text('Menu Content'), findsNothing);
     });
-    
+
     testWidgets('menu responds to keyboard navigation', (tester) async {
       final menuController = MenuController();
       final menuKey = UniqueKey();
-      
+
       await tester.pumpWidget(MaterialApp(
         home: Scaffold(
           body: Center(
@@ -165,23 +165,23 @@ void main() {
         ),
       ));
       await tester.pumpAndSettle();
-      
+
       // Open menu
       await tester.tap(find.text('Open Menu'));
       await tester.pump();
       expect(find.text('Menu Content'), findsOneWidget);
-      
+
       // Test keyboard navigation - Escape should close menu
       await tester.testKeyboardActivation(find.byKey(menuKey));
       await tester.pump();
-      
+
       // Menu should still be open (keyboard activation tests Enter, not Escape)
       expect(find.text('Menu Content'), findsOneWidget);
     });
-    
+
     testWidgets('menu closes on outside tap when enabled', (tester) async {
       final menuController = MenuController();
-      
+
       await tester.pumpWidget(MaterialApp(
         home: Scaffold(
           body: Center(
@@ -211,41 +211,41 @@ void main() {
         ),
       ));
       await tester.pumpAndSettle();
-      
+
       // Open menu
       await tester.tap(find.text('Open Menu'));
       await tester.pump();
       expect(find.text('Menu Content'), findsOneWidget);
-      
+
       // Tap outside the menu
       await tester.tap(find.text('Outside Area'));
       await tester.pump();
-      
+
       // Menu should close
       expect(find.text('Menu Content'), findsNothing);
     });
-    
+
     testWidgets('works with example app complex interaction', (tester) async {
       // Test the full example with real menu items and snackbar
       await tester.pumpWidget(const menu_example.MyApp());
       await tester.pump(const Duration(milliseconds: 100));
-      
+
       final triggerButton = find.byType(NakedButton);
-      
+
       // Open menu
       await tester.tap(triggerButton);
       await tester.pump();
-      
+
       // Find and tap a menu item
       final menuItem = find.text('Menu Item 1');
       expect(menuItem, findsOneWidget);
-      
+
       await tester.tap(menuItem);
       await tester.pump();
-      
+
       // Check that snackbar appears (from the example's onPressed callback)
       expect(find.text('Item 1 selected'), findsOneWidget);
-      
+
       // Menu should be closed after item selection
       expect(find.text('Menu Item 1'), findsNothing);
     });

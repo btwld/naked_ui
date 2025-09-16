@@ -5,8 +5,6 @@ import 'package:naked_ui/naked_ui.dart';
 
 import '../test_helpers.dart';
 
-
-
 void main() {
   const kMenuKey = Key('menu');
 
@@ -61,68 +59,76 @@ void main() {
   }
 
   group('Core Functionality', () {
-    testWidgets('renders trigger and menu when opened', (
-      WidgetTester tester,
-    ) async {
-      await tester.pumpMaterialWidget(buildSelect<String>());
+    testWidgets(
+      'renders trigger and menu when opened',
+      (WidgetTester tester) async {
+        await tester.pumpMaterialWidget(buildSelect<String>());
 
-      await tester.tap(find.text('Select option'));
-      await tester.pump();
+        await tester.tap(find.text('Select option'));
+        await tester.pump();
 
-      expect(find.text('Select option'), findsOneWidget);
-      expect(find.text('Apple'), findsOneWidget);
-      expect(find.text('Banana'), findsOneWidget);
-      expect(find.text('Orange'), findsOneWidget);
-    }, timeout: const Timeout(Duration(seconds: 10)));
+        expect(find.text('Select option'), findsOneWidget);
+        expect(find.text('Apple'), findsOneWidget);
+        expect(find.text('Banana'), findsOneWidget);
+        expect(find.text('Orange'), findsOneWidget);
+      },
+      timeout: const Timeout(Duration(seconds: 10)),
+    );
 
-    testWidgets('selects single value correctly', (WidgetTester tester) async {
-      String? selectedValue;
+    testWidgets(
+      'selects single value correctly',
+      (WidgetTester tester) async {
+        String? selectedValue;
 
-      await tester.pumpMaterialWidget(
-        buildSelect<String>(
-          selectedValue: selectedValue,
-          onSelectedValueChanged: (value) => selectedValue = value,
-        ),
-      );
+        await tester.pumpMaterialWidget(
+          buildSelect<String>(
+            selectedValue: selectedValue,
+            onSelectedValueChanged: (value) => selectedValue = value,
+          ),
+        );
 
-      // Open menu
-      await tester.tap(find.text('Select option'));
-      await tester.pumpAndSettle();
+        // Open menu
+        await tester.tap(find.text('Select option'));
+        await tester.pumpAndSettle();
 
-      await tester.tap(find.text('Banana'));
-      await tester.pump();
+        await tester.tap(find.text('Banana'));
+        await tester.pump();
 
-      expect(selectedValue, 'banana');
-    }, timeout: const Timeout(Duration(seconds: 10)));
+        expect(selectedValue, 'banana');
+      },
+      timeout: const Timeout(Duration(seconds: 10)),
+    );
 
-    testWidgets('supports multiple selection mode', (
-      WidgetTester tester,
-    ) async {
-      final selectedValues = <String>{};
+    testWidgets(
+      'supports multiple selection mode',
+      (WidgetTester tester) async {
+        final selectedValues = <String>{};
 
-      await tester.pumpMaterialWidget(
-        buildSelect<String>(
-          allowMultiple: true,
-          selectedValues: selectedValues,
-          onSelectedValuesChanged: (values) => selectedValues.addAll(values),
-          closeOnSelect: false,
-        ),
-      );
+        await tester.pumpMaterialWidget(
+          buildSelect<String>(
+            allowMultiple: true,
+            selectedValues: selectedValues,
+            onSelectedValuesChanged: (values) => selectedValues.addAll(values),
+            closeOnSelect: false,
+          ),
+        );
 
-      // Open menu
-      await tester.tap(find.text('Select option'));
-      await tester.pump();
+        // Open menu
+        await tester.tap(find.text('Select option'));
+        await tester.pump();
 
-      await tester.tap(find.text('Apple'));
-      await tester.pump();
+        await tester.tap(find.text('Apple'));
+        await tester.pump();
 
-      await tester.tap(find.text('Banana'));
-      await tester.pump();
+        await tester.tap(find.text('Banana'));
+        await tester.pump();
 
-      expect(selectedValues, contains('apple'));
-      expect(selectedValues, contains('banana'));
-      expect(selectedValues.length, 2);
-    }, timeout: const Timeout(Duration(seconds: 10)));
+        expect(selectedValues, contains('apple'));
+        expect(selectedValues, contains('banana'));
+        expect(selectedValues.length, 2);
+      },
+      timeout: const Timeout(Duration(seconds: 10)),
+    );
 
     testWidgets('toggle menu visibility', (WidgetTester tester) async {
       await tester.pumpMaterialWidget(buildSelect<String>());
@@ -145,24 +151,28 @@ void main() {
       expect(find.text('Apple'), findsNothing);
     }, timeout: const Timeout(Duration(seconds: 10)));
 
-    testWidgets('does not respond when disabled', (WidgetTester tester) async {
-      String? selectedValue;
+    testWidgets(
+      'does not respond when disabled',
+      (WidgetTester tester) async {
+        String? selectedValue;
 
-      await tester.pumpMaterialWidget(
-        buildSelect<String>(
-          selectedValue: selectedValue,
-          onSelectedValueChanged: (value) => selectedValue = value,
-          enabled: false,
-        ),
-      );
+        await tester.pumpMaterialWidget(
+          buildSelect<String>(
+            selectedValue: selectedValue,
+            onSelectedValueChanged: (value) => selectedValue = value,
+            enabled: false,
+          ),
+        );
 
-      // Try to open menu
-      await tester.tap(find.text('Select option'));
-      await tester.pump();
+        // Try to open menu
+        await tester.tap(find.text('Select option'));
+        await tester.pump();
 
-      // Menu should not open when disabled
-      expect(find.text('Apple'), findsNothing);
-    }, timeout: const Timeout(Duration(seconds: 10)));
+        // Menu should not open when disabled
+        expect(find.text('Apple'), findsNothing);
+      },
+      timeout: const Timeout(Duration(seconds: 10)),
+    );
   });
 
   group('Keyboard Navigation', () {
@@ -213,7 +223,9 @@ void main() {
 
         // Expect focus to be back on the trigger
         expect(triggerFocusNode.hasFocus, isTrue);
-      }, timeout: const Timeout(Duration(seconds: 10)));
+      },
+      timeout: const Timeout(Duration(seconds: 10)),
+    );
 
     testWidgets('selects item with Enter key', (WidgetTester tester) async {
       String? selectedValue;
@@ -266,7 +278,9 @@ void main() {
         await tester.pump();
 
         expect(selectedValue, 'banana');
-      }, timeout: const Timeout(Duration(seconds: 10)));
+      },
+      timeout: const Timeout(Duration(seconds: 10)),
+    );
 
     testWidgets(
       'typeahead non-match does not change focus',
@@ -298,95 +312,100 @@ void main() {
         await tester.pump();
 
         expect(selectedValue, 'banana');
-      }, timeout: const Timeout(Duration(seconds: 10)));
+      },
+      timeout: const Timeout(Duration(seconds: 10)),
+    );
   });
 
-
   group('Interaction States', () {
-    testWidgets('calls onHoverChange when trigger hovered', (
-      WidgetTester tester,
-    ) async {
-      
+    testWidgets(
+      'calls onHoverChange when trigger hovered',
+      (WidgetTester tester) async {
+        bool isHovered = false;
+        const key = Key('trigger');
 
-      bool isHovered = false;
-      const key = Key('trigger');
+        await tester.pumpMaterialWidget(
+          Padding(
+            padding: const EdgeInsets.all(1),
+            child: NakedSelect<String>(
+              menu: const SizedBox(),
+              child: NakedSelectTrigger(
+                key: key,
+                onHoverChange: (hovered) => isHovered = hovered,
+                child: const Text('Select option'),
+              ),
+            ),
+          ),
+        );
 
-      await tester.pumpMaterialWidget(
-        Padding(
-          padding: const EdgeInsets.all(1),
-          child: NakedSelect<String>(
+        await tester.simulateHover(
+          key,
+          onHover: () {
+            expect(isHovered, true);
+          },
+        );
+
+        expect(isHovered, false);
+      },
+      timeout: const Timeout(Duration(seconds: 10)),
+    );
+
+    testWidgets(
+      'calls onPressChange when trigger pressed',
+      (WidgetTester tester) async {
+        bool isPressed = false;
+
+        await tester.pumpMaterialWidget(
+          NakedSelect<String>(
             menu: const SizedBox(),
             child: NakedSelectTrigger(
-              key: key,
-              onHoverChange: (hovered) => isHovered = hovered,
+              onPressChange: (pressed) => isPressed = pressed,
               child: const Text('Select option'),
             ),
           ),
-        ),
-      );
+        );
 
-      await tester.simulateHover(
-        key,
-        onHover: () {
-          expect(isHovered, true);
-        },
-      );
+        final gesture = await tester.press(find.byType(NakedSelectTrigger));
+        await tester.pump();
+        expect(isPressed, true);
 
-      expect(isHovered, false);
-    }, timeout: const Timeout(Duration(seconds: 10)));
+        await gesture.up();
+        await tester.pump();
+        expect(isPressed, false);
+      },
+      timeout: const Timeout(Duration(seconds: 10)),
+    );
 
-    testWidgets('calls onPressChange when trigger pressed', (
-      WidgetTester tester,
-    ) async {
-      bool isPressed = false;
+    testWidgets(
+      'calls onFocusChange when trigger focused',
+      (WidgetTester tester) async {
+        bool isFocused = false;
+        final focusNode = FocusNode();
+        final overlayPortalController = OverlayPortalController();
 
-      await tester.pumpMaterialWidget(
-        NakedSelect<String>(
-          menu: const SizedBox(),
-          child: NakedSelectTrigger(
-            onPressChange: (pressed) => isPressed = pressed,
-            child: const Text('Select option'),
+        await tester.pumpMaterialWidget(
+          NakedSelect<String>(
+            onClose: () => overlayPortalController.hide(),
+            onOpen: () => overlayPortalController.show(),
+            menu: const SizedBox(),
+            child: NakedSelectTrigger(
+              focusNode: focusNode,
+              onFocusChange: (focused) => isFocused = focused,
+              child: const Text('Select option'),
+            ),
           ),
-        ),
-      );
+        );
 
-      final gesture = await tester.press(find.byType(NakedSelectTrigger));
-      await tester.pump();
-      expect(isPressed, true);
+        focusNode.requestFocus();
+        await tester.pump();
+        expect(isFocused, true);
 
-      await gesture.up();
-      await tester.pump();
-      expect(isPressed, false);
-    }, timeout: const Timeout(Duration(seconds: 10)));
-
-    testWidgets('calls onFocusChange when trigger focused', (
-      WidgetTester tester,
-    ) async {
-      bool isFocused = false;
-      final focusNode = FocusNode();
-      final overlayPortalController = OverlayPortalController();
-
-      await tester.pumpMaterialWidget(
-        NakedSelect<String>(
-          onClose: () => overlayPortalController.hide(),
-          onOpen: () => overlayPortalController.show(),
-          menu: const SizedBox(),
-          child: NakedSelectTrigger(
-            focusNode: focusNode,
-            onFocusChange: (focused) => isFocused = focused,
-            child: const Text('Select option'),
-          ),
-        ),
-      );
-
-      focusNode.requestFocus();
-      await tester.pump();
-      expect(isFocused, true);
-
-      focusNode.unfocus();
-      await tester.pump();
-      expect(isFocused, false);
-    }, timeout: const Timeout(Duration(seconds: 10)));
+        focusNode.unfocus();
+        await tester.pump();
+        expect(isFocused, false);
+      },
+      timeout: const Timeout(Duration(seconds: 10)),
+    );
 
     testWidgets('calls item states when hovered/pressed', (
       WidgetTester tester,
@@ -432,10 +451,18 @@ void main() {
       final center = tester.getCenter(find.byKey(key));
       final gesture = await tester.startGesture(center);
       await tester.pump();
-      expect(itemPressed, isTrue, reason: 'Press should toggle to true on down');
+      expect(
+        itemPressed,
+        isTrue,
+        reason: 'Press should toggle to true on down',
+      );
       await gesture.up();
       await tester.pump();
-      expect(itemPressed, isFalse, reason: 'Press should toggle back to false on up');
+      expect(
+        itemPressed,
+        isFalse,
+        reason: 'Press should toggle back to false on up',
+      );
 
       // Press/release also selects the item; verify selection occurred.
       expect(selectedValue, 'test');
@@ -499,59 +526,65 @@ void main() {
 
         // Assert the menu is placed above the trigger (fallback used)
         expect(menuRect.bottom <= triggerRect.top, isTrue);
-      }, timeout: const Timeout(Duration(seconds: 10)));
+      },
+      timeout: const Timeout(Duration(seconds: 10)),
+    );
   });
 
   group('Selection Behavior', () {
-    testWidgets('keeps menu open when closeOnSelect is false', (
-      WidgetTester tester,
-    ) async {
-      String? selectedValue;
-      bool menuClosed = false;
+    testWidgets(
+      'keeps menu open when closeOnSelect is false',
+      (WidgetTester tester) async {
+        String? selectedValue;
+        bool menuClosed = false;
 
-      await tester.pumpMaterialWidget(
-        buildSelect<String>(
-          selectedValue: selectedValue,
-          onSelectedValueChanged: (value) => selectedValue = value,
-          onMenuClose: () => menuClosed = true,
-          closeOnSelect: false,
-        ),
-      );
+        await tester.pumpMaterialWidget(
+          buildSelect<String>(
+            selectedValue: selectedValue,
+            onSelectedValueChanged: (value) => selectedValue = value,
+            onMenuClose: () => menuClosed = true,
+            closeOnSelect: false,
+          ),
+        );
 
-      // Open menu
-      await tester.tap(find.text('Select option'));
-      await tester.pumpAndSettle();
+        // Open menu
+        await tester.tap(find.text('Select option'));
+        await tester.pumpAndSettle();
 
         await tester.tap(find.text('Banana'));
         await tester.pump();
 
-      expect(selectedValue, 'banana');
-      expect(menuClosed, false);
-    }, timeout: const Timeout(Duration(seconds: 10)));
+        expect(selectedValue, 'banana');
+        expect(menuClosed, false);
+      },
+      timeout: const Timeout(Duration(seconds: 10)),
+    );
 
-    testWidgets('closes menu when closeOnSelect is true', (
-      WidgetTester tester,
-    ) async {
-      String? selectedValue;
+    testWidgets(
+      'closes menu when closeOnSelect is true',
+      (WidgetTester tester) async {
+        String? selectedValue;
 
-      await tester.pumpMaterialWidget(
-        buildSelect<String>(
-          selectedValue: selectedValue,
-          onSelectedValueChanged: (value) => selectedValue = value,
-          closeOnSelect: true,
-        ),
-      );
+        await tester.pumpMaterialWidget(
+          buildSelect<String>(
+            selectedValue: selectedValue,
+            onSelectedValueChanged: (value) => selectedValue = value,
+            closeOnSelect: true,
+          ),
+        );
 
-      // Open menu
-      await tester.tap(find.text('Select option'));
-      await tester.pump();
+        // Open menu
+        await tester.tap(find.text('Select option'));
+        await tester.pump();
 
-      await tester.tap(find.text('Banana'));
-      await tester.pump();
+        await tester.tap(find.text('Banana'));
+        await tester.pump();
 
-      expect(selectedValue, 'banana');
-      expect(find.text('Apple'), findsNothing);
-    }, timeout: const Timeout(Duration(seconds: 10)));
+        expect(selectedValue, 'banana');
+        expect(find.text('Apple'), findsNothing);
+      },
+      timeout: const Timeout(Duration(seconds: 10)),
+    );
 
     testWidgets('outside tap closes menu with removalDelay respected', (
       WidgetTester tester,

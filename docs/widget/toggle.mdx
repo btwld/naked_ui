@@ -1,0 +1,567 @@
+---
+title: NakedToggle
+---
+
+NakedToggle provides binary toggle control behavior without imposing any visual styling. It can represent either a toggle button or a switch based on the `asSwitch` parameter, giving consumers complete design freedom while maintaining proper accessibility semantics.
+
+<Info>
+  You can find toggle button examples in our [GitHub repository](https://github.com/btwld/naked_ui/blob/main/example/lib/api/naked_toggle.0.dart) and switch examples [here](https://github.com/btwld/naked_ui/blob/main/example/lib/api/naked_toggle.1.dart).
+</Info>
+
+<CodeGroup title="Toggle Button Example" defaultLanguage="dart">
+```dart
+class ToggleButtonExample extends StatefulWidget {
+  const ToggleButtonExample({super.key});
+
+  @override
+  State<ToggleButtonExample> createState() => _ToggleButtonExampleState();
+}
+
+class _ToggleButtonExampleState extends State<ToggleButtonExample> {
+  bool _isBold = false;
+  bool _isItalic = false;
+  bool _isUnderlined = false;
+
+  Widget _buildToggleButton({
+    required IconData icon,
+    required bool isSelected,
+    required ValueChanged<bool> onChanged,
+    required String tooltip,
+  }) {
+    return NakedToggle(
+      value: isSelected,
+      asSwitch: false, // Toggle button semantics
+      onChanged: onChanged,
+      semanticLabel: tooltip,
+      builder: (context, states) {
+        final isSelected = states.contains(WidgetState.selected);
+        final isHovered = states.contains(WidgetState.hovered);
+        final isFocused = states.contains(WidgetState.focused);
+        final isPressed = states.contains(WidgetState.pressed);
+
+        return AnimatedContainer(
+          duration: const Duration(milliseconds: 150),
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            color: isSelected
+              ? Colors.blue.shade600
+              : isHovered
+                ? Colors.grey.shade200
+                : Colors.transparent,
+            borderRadius: BorderRadius.circular(6),
+            border: isFocused
+              ? Border.all(color: Colors.blue, width: 2)
+              : Border.all(color: Colors.grey.shade300),
+            boxShadow: isPressed
+              ? [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.1),
+                    blurRadius: 2,
+                    offset: const Offset(0, 1),
+                  ),
+                ]
+              : null,
+          ),
+          child: Icon(
+            icon,
+            color: isSelected ? Colors.white : Colors.grey.shade700,
+            size: 18,
+          ),
+        );
+      },
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.grey.shade300),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Text Formatting',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              _buildToggleButton(
+                icon: Icons.format_bold,
+                isSelected: _isBold,
+                onChanged: (value) => setState(() => _isBold = value),
+                tooltip: 'Bold',
+              ),
+              const SizedBox(width: 8),
+              _buildToggleButton(
+                icon: Icons.format_italic,
+                isSelected: _isItalic,
+                onChanged: (value) => setState(() => _isItalic = value),
+                tooltip: 'Italic',
+              ),
+              const SizedBox(width: 8),
+              _buildToggleButton(
+                icon: Icons.format_underlined,
+                isSelected: _isUnderlined,
+                onChanged: (value) => setState(() => _isUnderlined = value),
+                tooltip: 'Underline',
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.grey.shade50,
+              borderRadius: BorderRadius.circular(4),
+              border: Border.all(color: Colors.grey.shade200),
+            ),
+            child: Text(
+              'Sample Text',
+              style: TextStyle(
+                fontWeight: _isBold ? FontWeight.bold : FontWeight.normal,
+                fontStyle: _isItalic ? FontStyle.italic : FontStyle.normal,
+                decoration: _isUnderlined ? TextDecoration.underline : null,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+```
+</CodeGroup>
+
+<CodeGroup title="Switch Example" defaultLanguage="dart">
+```dart
+class SwitchExample extends StatefulWidget {
+  const SwitchExample({super.key});
+
+  @override
+  State<SwitchExample> createState() => _SwitchExampleState();
+}
+
+class _SwitchExampleState extends State<SwitchExample> {
+  bool _airplaneMode = false;
+  bool _wifi = true;
+  bool _bluetooth = false;
+  bool _locationServices = true;
+
+  Widget _buildSwitchRow({
+    required String title,
+    required String subtitle,
+    required bool value,
+    required ValueChanged<bool> onChanged,
+    IconData? icon,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        children: [
+          if (icon != null) ...[
+            Container(
+              width: 32,
+              height: 32,
+              decoration: BoxDecoration(
+                color: Colors.grey.shade100,
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: Icon(icon, size: 18, color: Colors.grey.shade600),
+            ),
+            const SizedBox(width: 12),
+          ],
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                Text(
+                  subtitle,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey.shade600,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          NakedToggle(
+            value: value,
+            asSwitch: true, // Switch semantics
+            onChanged: onChanged,
+            semanticLabel: title,
+            builder: (context, states) {
+              final isSelected = states.contains(WidgetState.selected);
+              final isHovered = states.contains(WidgetState.hovered);
+              final isFocused = states.contains(WidgetState.focused);
+              final isDisabled = states.contains(WidgetState.disabled);
+
+              return AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                width: 44,
+                height: 26,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(13),
+                  color: isDisabled
+                    ? Colors.grey.shade300
+                    : isSelected
+                      ? Colors.green.shade500
+                      : Colors.grey.shade400,
+                  border: isFocused
+                    ? Border.all(color: Colors.blue, width: 2)
+                    : null,
+                  boxShadow: isHovered && !isDisabled
+                    ? [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.1),
+                          blurRadius: 4,
+                          offset: const Offset(0, 2),
+                        ),
+                      ]
+                    : null,
+                ),
+                child: AnimatedAlign(
+                  duration: const Duration(milliseconds: 200),
+                  alignment: isSelected
+                    ? Alignment.centerRight
+                    : Alignment.centerLeft,
+                  child: Container(
+                    width: 22,
+                    height: 22,
+                    margin: const EdgeInsets.all(2),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.white,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.2),
+                          blurRadius: 2,
+                          offset: const Offset(0, 1),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.1),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Connectivity',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 16),
+          _buildSwitchRow(
+            title: 'Airplane Mode',
+            subtitle: 'Disable all wireless connections',
+            value: _airplaneMode,
+            onChanged: (value) => setState(() => _airplaneMode = value),
+            icon: Icons.airplanemode_active,
+          ),
+          _buildSwitchRow(
+            title: 'Wi-Fi',
+            subtitle: 'Connect to wireless networks',
+            value: _wifi,
+            onChanged: (value) => setState(() => _wifi = value),
+            icon: Icons.wifi,
+          ),
+          _buildSwitchRow(
+            title: 'Bluetooth',
+            subtitle: 'Connect to nearby devices',
+            value: _bluetooth,
+            onChanged: (value) => setState(() => _bluetooth = value),
+            icon: Icons.bluetooth,
+          ),
+          _buildSwitchRow(
+            title: 'Location Services',
+            subtitle: 'Allow apps to access your location',
+            value: _locationServices,
+            onChanged: (value) => setState(() => _locationServices = value),
+            icon: Icons.location_on,
+          ),
+        ],
+      ),
+    );
+  }
+}
+```
+</CodeGroup>
+
+<CodeGroup title="Advanced Toggle with Builder" defaultLanguage="dart">
+```dart
+class AdvancedToggleExample extends StatefulWidget {
+  const AdvancedToggleExample({super.key});
+
+  @override
+  State<AdvancedToggleExample> createState() => _AdvancedToggleExampleState();
+}
+
+class _AdvancedToggleExampleState extends State<AdvancedToggleExample> {
+  bool _isPremium = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return NakedToggle(
+      value: _isPremium,
+      asSwitch: false,
+      onChanged: (value) => setState(() => _isPremium = value),
+      semanticLabel: 'Premium membership toggle',
+      builder: (context, states) {
+        final isSelected = states.contains(WidgetState.selected);
+        final isHovered = states.contains(WidgetState.hovered);
+        final isFocused = states.contains(WidgetState.focused);
+        final isPressed = states.contains(WidgetState.pressed);
+
+        return AnimatedContainer(
+          duration: const Duration(milliseconds: 300),
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            gradient: isSelected
+              ? const LinearGradient(
+                  colors: [Color(0xFFFFD700), Color(0xFFFFA500)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                )
+              : null,
+            color: isSelected
+              ? null
+              : isHovered
+                ? Colors.grey.shade100
+                : Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: isSelected
+                ? Colors.orange.shade300
+                : isFocused
+                  ? Colors.blue
+                  : Colors.grey.shade300,
+              width: isFocused ? 2 : 1,
+            ),
+            boxShadow: [
+              if (isPressed)
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.1),
+                  blurRadius: 4,
+                  offset: const Offset(0, 2),
+                )
+              else if (isSelected)
+                BoxShadow(
+                  color: Colors.orange.withValues(alpha: 0.3),
+                  blurRadius: 8,
+                  offset: const Offset(0, 4),
+                ),
+            ],
+          ),
+          child: Column(
+            children: [
+              Icon(
+                isSelected ? Icons.star : Icons.star_border,
+                size: 32,
+                color: isSelected ? Colors.white : Colors.grey.shade600,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                isSelected ? 'Premium Active' : 'Go Premium',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: isSelected ? Colors.white : Colors.grey.shade800,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                isSelected
+                  ? 'Enjoying premium features'
+                  : 'Unlock advanced features',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: isSelected
+                    ? Colors.white.withValues(alpha: 0.9)
+                    : Colors.grey.shade600,
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+```
+</CodeGroup>
+
+## Constructor
+
+```dart
+const NakedToggle({
+  Key? key,
+  required this.value,
+  this.onChanged,
+  this.child,
+  this.enabled = true,
+  this.mouseCursor,
+  this.enableFeedback = true,
+  this.focusNode,
+  this.autofocus = false,
+  this.onFocusChange,
+  this.onHoverChange,
+  this.onPressChange,
+  this.builder,
+  this.semanticLabel,
+  this.asSwitch = false,
+})
+```
+
+## Properties
+
+#### value → `bool`
+Whether this toggle is selected (pressed/on). This determines the toggle's current state.
+
+#### onChanged → `ValueChanged<bool>?`
+Called when the toggle changes state. Receives the new boolean value. If null, the toggle will be disabled.
+
+#### child → `Widget?`
+Optional content to display. Ignored if [builder] is provided. Use either `child` or `builder`, not both.
+
+#### enabled → `bool`
+Whether the control is interactive. When false, the toggle cannot be activated and will have disabled styling. Defaults to true.
+
+#### mouseCursor → `MouseCursor?`
+Mouse cursor to display when hovering over the toggle. Defaults to SystemMouseCursors.click when enabled.
+
+#### enableFeedback → `bool`
+Whether to provide platform-specific haptic/audio feedback when activated. Defaults to true.
+
+#### focusNode → `FocusNode?`
+Optional focus node to control focus behavior. If not provided, a focus node will be created internally.
+
+#### autofocus → `bool`
+Whether to automatically focus this toggle when first built. Defaults to false.
+
+#### onFocusChange → `ValueChanged<bool>?`
+Called when the focus state changes. Receives true when focused, false when focus is lost.
+
+#### onHoverChange → `ValueChanged<bool>?`
+Called when the hover state changes. Receives true when mouse enters, false when mouse exits.
+
+#### onPressChange → `ValueChanged<bool>?`
+Called when the pressed state changes. Receives true when pressed down, false when released.
+
+#### builder → `ValueWidgetBuilder<Set<WidgetState>>?`
+Optional builder function that receives the current widget states and returns the toggle's visual representation. This provides more control than using `child`.
+
+Available states include:
+- `WidgetState.disabled`: Toggle is not interactive
+- `WidgetState.focused`: Toggle has keyboard focus
+- `WidgetState.hovered`: Mouse is hovering over toggle
+- `WidgetState.pressed`: Toggle is currently being pressed
+- `WidgetState.selected`: Toggle is in the "on" state (value is true)
+
+#### semanticLabel → `String?`
+Optional semantic label for screen readers. Important for accessibility, especially when the visual context might not be clear.
+
+#### asSwitch → `bool`
+Whether to use switch semantics instead of toggle button semantics. This affects accessibility announcements and keyboard behavior:
+- `false` (default): Button role, typically for toggleable UI states
+- `true`: Switch role, typically for settings that can be on/off
+
+## Toggle Button vs Switch
+
+The `asSwitch` parameter determines the semantic role and accessibility behavior:
+
+### Toggle Button (`asSwitch: false`)
+- **Use for**: UI state toggles, formatting options, view modes
+- **Semantics**: Button role with pressed state
+- **Examples**: Bold/italic buttons, view toggles, filter buttons
+
+```dart
+NakedToggle(
+  value: isBold,
+  asSwitch: false, // Button semantics
+  onChanged: (value) => setState(() => isBold = value),
+  child: Icon(Icons.format_bold),
+)
+```
+
+### Switch (`asSwitch: true`)
+- **Use for**: Settings, preferences, binary on/off states
+- **Semantics**: Switch role with on/off state
+- **Examples**: Notification settings, feature toggles, connectivity options
+
+```dart
+NakedToggle(
+  value: notificationsEnabled,
+  asSwitch: true, // Switch semantics
+  onChanged: (value) => setState(() => notificationsEnabled = value),
+  child: SwitchWidget(),
+)
+```
+
+## Accessibility
+
+NakedToggle provides comprehensive accessibility support:
+
+1. **Keyboard Navigation**:
+   - Space bar activates the toggle
+   - Tab/Shift+Tab for focus navigation
+
+2. **Screen Reader Support**:
+   - Proper ARIA roles (button vs switch)
+   - State announcements (pressed/not pressed, on/off)
+   - Custom semantic labels
+
+3. **Focus Management**:
+   - Visual focus indicators
+   - Focus callbacks for custom styling
+
+## Best Practices
+
+1. **Choose the right semantic role** using `asSwitch` based on the context
+2. **Always provide semantic labels** for screen readers
+3. **Use consistent visual patterns** for selected/unselected states
+4. **Provide immediate visual feedback** for state changes
+5. **Consider disabled states** and make them clearly distinguishable
+6. **Test keyboard navigation** to ensure accessibility
+7. **Use animation sparingly** to avoid interfering with accessibility features

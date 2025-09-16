@@ -25,13 +25,14 @@ class ReadOnlySubmissionExample extends StatefulWidget {
   const ReadOnlySubmissionExample({super.key});
 
   @override
-  State<ReadOnlySubmissionExample> createState() => _ReadOnlySubmissionExampleState();
+  State<ReadOnlySubmissionExample> createState() =>
+      _ReadOnlySubmissionExampleState();
 }
 
 class _ReadOnlySubmissionExampleState extends State<ReadOnlySubmissionExample> {
   final _titleController = TextEditingController();
   final _descriptionController = TextEditingController();
-  
+
   bool _isReadOnly = false;
   bool _isSubmitting = false;
 
@@ -39,7 +40,8 @@ class _ReadOnlySubmissionExampleState extends State<ReadOnlySubmissionExample> {
   void initState() {
     super.initState();
     _titleController.text = 'Sample Article Title';
-    _descriptionController.text = 'This is a sample article description that demonstrates read-only mode.';
+    _descriptionController.text =
+        'This is a sample article description that demonstrates read-only mode.';
   }
 
   @override
@@ -51,9 +53,9 @@ class _ReadOnlySubmissionExampleState extends State<ReadOnlySubmissionExample> {
 
   Future<void> _handleSubmit() async {
     setState(() => _isSubmitting = true);
-    
+
     await Future.delayed(const Duration(seconds: 2));
-    
+
     if (mounted) {
       setState(() => _isSubmitting = false);
       ScaffoldMessenger.of(context).showSnackBar(
@@ -92,16 +94,16 @@ class _ReadOnlySubmissionExampleState extends State<ReadOnlySubmissionExample> {
             ],
           ),
           const SizedBox(height: 32),
-          
+
           // Title field
           _TextField(
             label: 'Title',
             controller: _titleController,
             readOnly: _isReadOnly,
           ),
-          
+
           const SizedBox(height: 24),
-          
+
           // Description field
           _TextField(
             label: 'Description',
@@ -109,9 +111,9 @@ class _ReadOnlySubmissionExampleState extends State<ReadOnlySubmissionExample> {
             readOnly: _isReadOnly,
             maxLines: 4,
           ),
-          
+
           const SizedBox(height: 32),
-          
+
           // Submit button or read-only info
           if (!_isReadOnly)
             _SubmitButton(
@@ -185,7 +187,8 @@ class _ReadOnlyToggle extends StatelessWidget {
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
-                color: isReadOnly ? Colors.orange.shade700 : Colors.blue.shade700,
+                color:
+                    isReadOnly ? Colors.orange.shade700 : Colors.blue.shade700,
               ),
             ),
           ],
@@ -225,7 +228,9 @@ class _TextFieldState extends State<_TextField> {
           style: TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w500,
-            color: widget.readOnly ? Colors.grey.shade500 : const Color(0xFF666666),
+            color: widget.readOnly
+                ? Colors.grey.shade500
+                : const Color(0xFF666666),
           ),
         ),
         const SizedBox(height: 8),
@@ -249,14 +254,17 @@ class _TextFieldState extends State<_TextField> {
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 child: editableText,
               ),
             );
           },
           style: TextStyle(
             fontSize: 14,
-            color: widget.readOnly ? Colors.grey.shade700 : const Color(0xFF1A1A1A),
+            color: widget.readOnly
+                ? Colors.grey.shade700
+                : const Color(0xFF1A1A1A),
           ),
         ),
       ],

@@ -17,10 +17,12 @@ import 'components/naked_tooltip_integration.dart' as tooltip_tests;
 void main() {
   // Initialize integration test binding and configure timeout
   final binding = IntegrationTestWidgetsFlutterBinding.ensureInitialized();
-  binding.defaultTestTimeout = const Timeout(Duration(minutes: 30)); // Long timeout for all tests
+  binding.defaultTestTimeout =
+      const Timeout(Duration(minutes: 30)); // Long timeout for all tests
   // Ensure hover highlights are enabled across all integration tests
-  FocusManager.instance.highlightStrategy = FocusHighlightStrategy.alwaysTraditional;
-  
+  FocusManager.instance.highlightStrategy =
+      FocusHighlightStrategy.alwaysTraditional;
+
   group('All NakedUI Integration Tests', () {
     // Add teardown to help with process termination
     tearDownAll(() async {
@@ -28,7 +30,7 @@ void main() {
       await Future.delayed(const Duration(seconds: 2));
       // This helps ensure the test process terminates properly
     });
-    
+
     // Run all component integration tests
     group('Accordion Tests', accordion_tests.main);
     group('Button Tests', button_tests.main);

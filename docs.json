@@ -61,6 +61,14 @@
         {
           "title": "NakedTooltip",
           "href": "/widget/tooltip"
+        },
+        {
+          "title": "NakedToggle",
+          "href": "/widget/toggle"
+        },
+        {
+          "title": "NakedPopover",
+          "href": "/widget/popover"
         }
       ]
     }

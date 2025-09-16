@@ -25,20 +25,21 @@ class TristateCheckboxExample extends StatefulWidget {
   const TristateCheckboxExample({super.key});
 
   @override
-  State<TristateCheckboxExample> createState() => _TristateCheckboxExampleState();
+  State<TristateCheckboxExample> createState() =>
+      _TristateCheckboxExampleState();
 }
 
 class _TristateCheckboxExampleState extends State<TristateCheckboxExample> {
   bool? _mainCheckboxValue = false;
-  
+
   // Child checkboxes for the main example
   bool _option1 = false;
   bool _option2 = true;
   bool _option3 = false;
-  
+
   // Individual tristate checkbox
   bool? _individualTristate;
-  
+
   // Form validation checkboxes
   bool _required1 = false;
   bool _required2 = false;
@@ -46,7 +47,7 @@ class _TristateCheckboxExampleState extends State<TristateCheckboxExample> {
 
   void _updateMainCheckbox() {
     final checkedCount = [_option1, _option2, _option3].where((v) => v).length;
-    
+
     setState(() {
       if (checkedCount == 0) {
         _mainCheckboxValue = false;
@@ -107,8 +108,9 @@ class _TristateCheckboxExampleState extends State<TristateCheckboxExample> {
   }
 
   bool? get _requiredGroupState {
-    final checkedCount = [_required1, _required2, _required3].where((v) => v).length;
-    
+    final checkedCount =
+        [_required1, _required2, _required3].where((v) => v).length;
+
     if (checkedCount == 0) return false;
     if (checkedCount == 3) return true;
     return null; // Indeterminate
@@ -146,7 +148,7 @@ class _TristateCheckboxExampleState extends State<TristateCheckboxExample> {
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 32),
-          
+
           // Main hierarchical checkbox example
           _HierarchicalCheckboxGroup(
             mainValue: _mainCheckboxValue,
@@ -158,17 +160,17 @@ class _TristateCheckboxExampleState extends State<TristateCheckboxExample> {
             onOption2Changed: _onOption2Changed,
             onOption3Changed: _onOption3Changed,
           ),
-          
+
           const SizedBox(height: 32),
-          
+
           // Individual tristate checkbox
           _IndividualTristateSection(
             value: _individualTristate,
             onChanged: _onIndividualTristateChanged,
           ),
-          
+
           const SizedBox(height: 32),
-          
+
           // Form validation example
           _FormValidationExample(
             required1: _required1,
@@ -176,13 +178,16 @@ class _TristateCheckboxExampleState extends State<TristateCheckboxExample> {
             required3: _required3,
             groupState: _requiredGroupState,
             allRequiredSelected: _allRequiredSelected,
-            onRequired1Changed: (value) => setState(() => _required1 = value ?? false),
-            onRequired2Changed: (value) => setState(() => _required2 = value ?? false),
-            onRequired3Changed: (value) => setState(() => _required3 = value ?? false),
+            onRequired1Changed: (value) =>
+                setState(() => _required1 = value ?? false),
+            onRequired2Changed: (value) =>
+                setState(() => _required2 = value ?? false),
+            onRequired3Changed: (value) =>
+                setState(() => _required3 = value ?? false),
           ),
-          
+
           const SizedBox(height: 32),
-          
+
           // State explanation
           const _StateExplanation(),
         ],
@@ -243,7 +248,7 @@ class _HierarchicalCheckboxGroup extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 16),
-          
+
           // Main parent checkbox
           _TristateCheckboxTile(
             value: mainValue,
@@ -253,9 +258,9 @@ class _HierarchicalCheckboxGroup extends StatelessWidget {
             subtitle: _getMainSubtitle(mainValue),
             isParent: true,
           ),
-          
+
           const SizedBox(height: 12),
-          
+
           // Child checkboxes with indentation
           Container(
             padding: const EdgeInsets.only(left: 24),
@@ -337,7 +342,6 @@ class _IndividualTristateSection extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 16),
-          
           _TristateCheckboxTile(
             value: value,
             tristate: true,
@@ -345,9 +349,7 @@ class _IndividualTristateSection extends StatelessWidget {
             title: 'Tristate Checkbox',
             subtitle: 'Cycles through: false → true → null → false',
           ),
-          
           const SizedBox(height: 12),
-          
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
@@ -439,7 +441,6 @@ class _FormValidationExample extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 16),
-          
           Text(
             'Required fields (all must be selected):',
             style: TextStyle(
@@ -449,7 +450,6 @@ class _FormValidationExample extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 12),
-          
           _TristateCheckboxTile(
             value: required1,
             tristate: false,
@@ -474,20 +474,18 @@ class _FormValidationExample extends StatelessWidget {
             subtitle: 'I confirm I am 18 years or older',
             isRequired: true,
           ),
-          
           const SizedBox(height: 16),
-          
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: allRequiredSelected 
-                ? Colors.green.shade100 
-                : Colors.red.shade100,
+              color: allRequiredSelected
+                  ? Colors.green.shade100
+                  : Colors.red.shade100,
               borderRadius: BorderRadius.circular(8),
               border: Border.all(
-                color: allRequiredSelected 
-                  ? Colors.green.shade300
-                  : Colors.red.shade300,
+                color: allRequiredSelected
+                    ? Colors.green.shade300
+                    : Colors.red.shade300,
               ),
             ),
             child: Row(
@@ -495,21 +493,21 @@ class _FormValidationExample extends StatelessWidget {
                 Icon(
                   allRequiredSelected ? Icons.check_circle : Icons.error,
                   size: 20,
-                  color: allRequiredSelected 
-                    ? Colors.green.shade700
-                    : Colors.red.shade700,
+                  color: allRequiredSelected
+                      ? Colors.green.shade700
+                      : Colors.red.shade700,
                 ),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    allRequiredSelected 
-                      ? 'Form validation passed! All required fields selected.'
-                      : 'Form validation failed. Please select all required fields.',
+                    allRequiredSelected
+                        ? 'Form validation passed! All required fields selected.'
+                        : 'Form validation failed. Please select all required fields.',
                     style: TextStyle(
                       fontSize: 12,
-                      color: allRequiredSelected 
-                        ? Colors.green.shade800
-                        : Colors.red.shade800,
+                      color: allRequiredSelected
+                          ? Colors.green.shade800
+                          : Colors.red.shade800,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
@@ -608,9 +606,7 @@ class _TristateCheckboxTileState extends State<_TristateCheckboxTile> {
             color: backgroundColor,
             borderRadius: BorderRadius.circular(8),
             border: Border.all(
-              color: _isFocused 
-                ? checkboxColor
-                : Colors.transparent,
+              color: _isFocused ? checkboxColor : Colors.transparent,
               width: 1,
             ),
           ),
@@ -621,7 +617,8 @@ class _TristateCheckboxTileState extends State<_TristateCheckboxTile> {
                 width: 24,
                 height: 24,
                 decoration: BoxDecoration(
-                  color: widget.value == true ? checkboxColor : Colors.transparent,
+                  color:
+                      widget.value == true ? checkboxColor : Colors.transparent,
                   border: Border.all(
                     color: borderColor,
                     width: 2,
@@ -629,18 +626,18 @@ class _TristateCheckboxTileState extends State<_TristateCheckboxTile> {
                   borderRadius: BorderRadius.circular(4),
                 ),
                 child: widget.value == true
-                  ? const Icon(
-                      Icons.check,
-                      size: 16,
-                      color: Colors.white,
-                    )
-                  : widget.value == null
-                    ? Icon(
-                        Icons.remove,
+                    ? const Icon(
+                        Icons.check,
                         size: 16,
-                        color: checkboxColor,
+                        color: Colors.white,
                       )
-                    : null,
+                    : widget.value == null
+                        ? Icon(
+                            Icons.remove,
+                            size: 16,
+                            color: checkboxColor,
+                          )
+                        : null,
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -654,9 +651,9 @@ class _TristateCheckboxTileState extends State<_TristateCheckboxTile> {
                             widget.title,
                             style: TextStyle(
                               fontSize: widget.isParent ? 16 : 14,
-                              fontWeight: widget.isParent 
-                                ? FontWeight.bold 
-                                : FontWeight.w600,
+                              fontWeight: widget.isParent
+                                  ? FontWeight.bold
+                                  : FontWeight.w600,
                               color: const Color(0xFF1A1A1A),
                             ),
                           ),

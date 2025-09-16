@@ -40,22 +40,19 @@ SemanticsNode _findRadioNode(WidgetTester tester) {
 
 void main() {
   Widget _buildTestApp(Widget child) {
-    return MaterialApp(home: Scaffold(body: Center(child: child)));
+    return MaterialApp(
+      home: Scaffold(body: Center(child: child)),
+    );
   }
 
-
   group('NakedRadio Semantics', () {
-    testWidgets('parity with Material Radio - selected', (
-      tester,
-    ) async {
+    testWidgets('parity with Material Radio - selected', (tester) async {
       final handle = tester.ensureSemantics();
 
       final reg = _FakeRegistry<String>('a');
       await expectSemanticsParity(
         tester: tester,
-        material: _buildTestApp(
-          Radio<String>(value: 'a', groupRegistry: reg),
-        ),
+        material: _buildTestApp(Radio<String>(value: 'a', groupRegistry: reg)),
         naked: _buildTestApp(
           NakedRadio<String>(
             value: 'a',
@@ -73,9 +70,7 @@ void main() {
       final reg = _FakeRegistry<String>('b');
       await expectSemanticsParity(
         tester: tester,
-        material: _buildTestApp(
-          Radio<String>(value: 'a', groupRegistry: reg),
-        ),
+        material: _buildTestApp(Radio<String>(value: 'a', groupRegistry: reg)),
         naked: _buildTestApp(
           NakedRadio<String>(
             value: 'a',
@@ -95,7 +90,9 @@ void main() {
 
       final reg = _FakeRegistry<String>('a');
       await tester.pumpWidget(
-        _buildTestApp(Radio<String>(value: 'a', focusNode: fm, groupRegistry: reg)),
+        _buildTestApp(
+          Radio<String>(value: 'a', focusNode: fm, groupRegistry: reg),
+        ),
       );
       fm.requestFocus();
       await tester.pump();
@@ -171,10 +168,14 @@ void main() {
 
       final reg = _FakeRegistry<String>('a');
       await tester.pumpWidget(
-        _buildTestApp(Radio<String>(value: 'a', enabled: false, groupRegistry: reg)),
+        _buildTestApp(
+          Radio<String>(value: 'a', enabled: false, groupRegistry: reg),
+        ),
       );
       final mNode = tester.getSemantics(find.byType(Radio<String>));
-      final strict = buildStrictMatcherFromSemanticsData(mNode.getSemanticsData());
+      final strict = buildStrictMatcherFromSemanticsData(
+        mNode.getSemanticsData(),
+      );
 
       final reg2 = _FakeRegistry<String>('a');
       await tester.pumpWidget(

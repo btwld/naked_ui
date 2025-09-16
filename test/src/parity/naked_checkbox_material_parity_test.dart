@@ -160,7 +160,6 @@ void main() {
       expect(nakedValue, isFalse);
     });
 
-
     testWidgets('hover cursor parity (enabled vs disabled)', (tester) async {
       const materialEnabledKey = Key('material-enabled');
       const materialDisabledKey = Key('material-disabled');
@@ -231,7 +230,6 @@ void main() {
       tester.expectCursor(SystemMouseCursors.basic, on: nakedDisabledKey);
     });
 
-
     testWidgets(
       'tristate behavior parity: activation parity starting from null',
       (tester) async {
@@ -283,14 +281,22 @@ void main() {
         expect(FocusManager.instance.primaryFocus, same(materialFocus));
         await tester.sendKeyEvent(LogicalKeyboardKey.space);
         await tester.pump();
-        expect(materialValue, equals(false), reason: 'Material checkbox should go null → false');
+        expect(
+          materialValue,
+          equals(false),
+          reason: 'Material checkbox should go null → false',
+        );
 
         nakedFocus.requestFocus();
         await tester.pump();
         expect(FocusManager.instance.primaryFocus, same(nakedFocus));
         await tester.sendKeyEvent(LogicalKeyboardKey.space);
         await tester.pump();
-        expect(nakedValue, equals(false), reason: 'Naked checkbox should go null → false');
+        expect(
+          nakedValue,
+          equals(false),
+          reason: 'Naked checkbox should go null → false',
+        );
 
         // Second tap: false → true
         materialFocus.requestFocus();
@@ -298,14 +304,22 @@ void main() {
         expect(FocusManager.instance.primaryFocus, same(materialFocus));
         await tester.sendKeyEvent(LogicalKeyboardKey.space);
         await tester.pump();
-        expect(materialValue, equals(true), reason: 'Material checkbox should go false → true');
+        expect(
+          materialValue,
+          equals(true),
+          reason: 'Material checkbox should go false → true',
+        );
 
         nakedFocus.requestFocus();
         await tester.pump();
         expect(FocusManager.instance.primaryFocus, same(nakedFocus));
         await tester.sendKeyEvent(LogicalKeyboardKey.space);
         await tester.pump();
-        expect(nakedValue, equals(true), reason: 'Naked checkbox should go false → true');
+        expect(
+          nakedValue,
+          equals(true),
+          reason: 'Naked checkbox should go false → true',
+        );
 
         // Third tap: true → null (complete the cycle)
         materialFocus.requestFocus();
@@ -313,14 +327,22 @@ void main() {
         expect(FocusManager.instance.primaryFocus, same(materialFocus));
         await tester.sendKeyEvent(LogicalKeyboardKey.space);
         await tester.pump();
-        expect(materialValue, equals(null), reason: 'Material checkbox should go true → null');
+        expect(
+          materialValue,
+          equals(null),
+          reason: 'Material checkbox should go true → null',
+        );
 
         nakedFocus.requestFocus();
         await tester.pump();
         expect(FocusManager.instance.primaryFocus, same(nakedFocus));
         await tester.sendKeyEvent(LogicalKeyboardKey.space);
         await tester.pump();
-        expect(nakedValue, equals(null), reason: 'Naked checkbox should go true → null');
+        expect(
+          nakedValue,
+          equals(null),
+          reason: 'Naked checkbox should go true → null',
+        );
       },
     );
   });

@@ -167,7 +167,8 @@ void main() {
       expect(hoverChanged, isFalse);
     });
 
-    testWidgets('tap toggles value and does not request focus by default', (tester) async {
+    testWidgets('tap toggles value and does not request focus by default',
+        (tester) async {
       final checkboxKey = UniqueKey();
       final focusNode = tester.createManagedFocusNode();
       bool checkboxValue = false;
@@ -199,7 +200,8 @@ void main() {
       expect(checkboxValue, isTrue);
     });
 
-    testWidgets('tap does not request focus (explicit focusNode present)', (tester) async {
+    testWidgets('tap does not request focus (explicit focusNode present)',
+        (tester) async {
       final checkboxKey = UniqueKey();
       final focusNode = tester.createManagedFocusNode();
       bool checkboxValue = false;

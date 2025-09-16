@@ -170,7 +170,6 @@ void main() {
       expect(nakedPressed, 0);
     });
 
-
     testWidgets('hover cursor parity (enabled vs disabled)', (tester) async {
       const nakedEnabledKey = Key('naked-enabled');
       const nakedDisabledKey = Key('naked-disabled');
@@ -246,6 +245,5 @@ void main() {
         reason: 'Disabled cursor must be identical for parity',
       );
     });
-
   });
 }

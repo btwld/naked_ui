@@ -268,11 +268,11 @@ class _MaterialStyleCheckboxState extends State<_MaterialStyleCheckbox> {
         return Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: _isPressed 
-                ? Colors.grey.shade100 
-                : _isHovered 
-                  ? Colors.grey.shade50 
-                  : Colors.white,
+            color: _isPressed
+                ? Colors.grey.shade100
+                : _isHovered
+                    ? Colors.grey.shade50
+                    : Colors.white,
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
               color: widget.value ? Colors.blue.shade300 : Colors.grey.shade300,

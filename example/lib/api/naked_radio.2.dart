@@ -31,7 +31,7 @@ class _RadioGroupExampleState extends State<RadioGroupExample> {
   String? _selectedTheme = 'dark';
   String? _selectedSize = 'medium';
   String? _selectedPayment;
-  
+
   bool _enableValidation = false;
 
   @override
@@ -66,7 +66,8 @@ class _RadioGroupExampleState extends State<RadioGroupExample> {
             title: 'Theme Preference',
             icon: Icons.palette,
             options: const [
-              _RadioOption('light', 'Light Theme', 'Bright and clean interface'),
+              _RadioOption(
+                  'light', 'Light Theme', 'Bright and clean interface'),
               _RadioOption('dark', 'Dark Theme', 'Easy on the eyes'),
               _RadioOption('auto', 'Auto', 'Matches system theme'),
             ],
@@ -74,7 +75,7 @@ class _RadioGroupExampleState extends State<RadioGroupExample> {
             onChanged: (value) => setState(() => _selectedTheme = value),
             color: Colors.blue,
           ),
-          
+
           const SizedBox(height: 32),
 
           // Size Selection
@@ -106,7 +107,9 @@ class _RadioGroupExampleState extends State<RadioGroupExample> {
             onChanged: (value) => setState(() => _selectedPayment = value),
             color: Colors.orange,
             isRequired: _enableValidation,
-            errorText: _enableValidation && _selectedPayment == null ? 'Please select a payment method' : null,
+            errorText: _enableValidation && _selectedPayment == null
+                ? 'Please select a payment method'
+                : null,
           ),
 
           const SizedBox(height: 32),
@@ -116,7 +119,8 @@ class _RadioGroupExampleState extends State<RadioGroupExample> {
             children: [
               Checkbox(
                 value: _enableValidation,
-                onChanged: (value) => setState(() => _enableValidation = value ?? false),
+                onChanged: (value) =>
+                    setState(() => _enableValidation = value ?? false),
               ),
               const SizedBox(width: 8),
               const Text('Enable validation for payment method'),
@@ -188,7 +192,9 @@ class _RadioGroup extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: hasError ? Colors.red.shade100 : color.withValues(alpha: 0.2),
+                  color: hasError
+                      ? Colors.red.shade100
+                      : color.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Icon(
@@ -209,7 +215,9 @@ class _RadioGroup extends StatelessWidget {
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
-                            color: hasError ? Colors.red.shade700 : const Color(0xFF1A1A1A),
+                            color: hasError
+                                ? Colors.red.shade700
+                                : const Color(0xFF1A1A1A),
                           ),
                         ),
                         if (isRequired) ...[
@@ -240,19 +248,19 @@ class _RadioGroup extends StatelessWidget {
               ),
             ],
           ),
-          
+
           const SizedBox(height: 16),
 
           // Options
           ...options.map((option) => Padding(
-            padding: const EdgeInsets.only(bottom: 8),
-            child: _CustomRadioTile(
-              option: option,
-              isSelected: selectedValue == option.value,
-              onTap: () => onChanged(option.value),
-              color: hasError ? Colors.red : color,
-            ),
-          )),
+                padding: const EdgeInsets.only(bottom: 8),
+                child: _CustomRadioTile(
+                  option: option,
+                  isSelected: selectedValue == option.value,
+                  onTap: () => onChanged(option.value),
+                  color: hasError ? Colors.red : color,
+                ),
+              )),
         ],
       ),
     );
@@ -289,16 +297,14 @@ class _CustomRadioTileState extends State<_CustomRadioTile> {
         child: Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: widget.isSelected 
+            color: widget.isSelected
                 ? widget.color.withValues(alpha: 0.1)
-                : _isHovered 
+                : _isHovered
                     ? Colors.grey.shade50
                     : Colors.transparent,
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color: widget.isSelected 
-                  ? widget.color
-                  : Colors.grey.shade300,
+              color: widget.isSelected ? widget.color : Colors.grey.shade300,
               width: widget.isSelected ? 2 : 1,
             ),
           ),
@@ -310,7 +316,8 @@ class _CustomRadioTileState extends State<_CustomRadioTile> {
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   border: Border.all(
-                    color: widget.isSelected ? widget.color : Colors.grey.shade400,
+                    color:
+                        widget.isSelected ? widget.color : Colors.grey.shade400,
                     width: 2,
                   ),
                 ),
@@ -336,7 +343,9 @@ class _CustomRadioTileState extends State<_CustomRadioTile> {
                       widget.option.title,
                       style: TextStyle(
                         fontSize: 16,
-                        fontWeight: widget.isSelected ? FontWeight.w600 : FontWeight.w500,
+                        fontWeight: widget.isSelected
+                            ? FontWeight.w600
+                            : FontWeight.w500,
                         color: const Color(0xFF1A1A1A),
                       ),
                     ),
@@ -454,28 +463,40 @@ class _SelectionSummary extends StatelessWidget {
 
   String _getThemeLabel(String theme) {
     switch (theme) {
-      case 'light': return 'Light Theme';
-      case 'dark': return 'Dark Theme';
-      case 'auto': return 'Auto Theme';
-      default: return theme;
+      case 'light':
+        return 'Light Theme';
+      case 'dark':
+        return 'Dark Theme';
+      case 'auto':
+        return 'Auto Theme';
+      default:
+        return theme;
     }
   }
 
   String _getSizeLabel(String size) {
     switch (size) {
-      case 'small': return 'Small Size';
-      case 'medium': return 'Medium Size';
-      case 'large': return 'Large Size';
-      default: return size;
+      case 'small':
+        return 'Small Size';
+      case 'medium':
+        return 'Medium Size';
+      case 'large':
+        return 'Large Size';
+      default:
+        return size;
     }
   }
 
   String _getPaymentLabel(String payment) {
     switch (payment) {
-      case 'card': return 'Credit Card';
-      case 'paypal': return 'PayPal';
-      case 'bank': return 'Bank Transfer';
-      default: return payment;
+      case 'card':
+        return 'Credit Card';
+      case 'paypal':
+        return 'PayPal';
+      case 'bank':
+        return 'Bank Transfer';
+      default:
+        return payment;
     }
   }
 }

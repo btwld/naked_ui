@@ -37,4 +37,3 @@ class _HasFocusMatcher extends Matcher {
     );
   }
 }
-

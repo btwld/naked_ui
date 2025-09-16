@@ -89,10 +89,13 @@ void main() {
         expect(find.text('HOVERED'), findsNothing);
 
         // Hover shows alternate content
-        await tester.simulateHover(key, onHover: () {
-          expect(find.text('HOVERED'), findsOneWidget);
-          expect(find.text('NORMAL'), findsNothing);
-        });
+        await tester.simulateHover(
+          key,
+          onHover: () {
+            expect(find.text('HOVERED'), findsOneWidget);
+            expect(find.text('NORMAL'), findsNothing);
+          },
+        );
 
         // After exit, back to normal
         expect(find.text('NORMAL'), findsOneWidget);
@@ -304,9 +307,12 @@ void main() {
         expect(lastStates, contains(WidgetState.focused));
 
         // Test hover state toggling
-        await tester.simulateHover(key, onHover: () {
-          expect(lastStates, contains(WidgetState.hovered));
-        });
+        await tester.simulateHover(
+          key,
+          onHover: () {
+            expect(lastStates, contains(WidgetState.hovered));
+          },
+        );
         expect(lastStates, isNot(contains(WidgetState.hovered)));
       });
 

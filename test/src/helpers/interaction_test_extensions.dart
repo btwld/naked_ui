@@ -41,15 +41,20 @@ extension InteractionTestExtensions on WidgetTester {
 
     await gesture.moveTo(getCenter(find.byKey(key)));
     await pumpAndSettle();
-    
+
     onHover?.call();
-    
+
     await gesture.moveTo(Offset.zero);
     await pumpAndSettle();
   }
+
   /// Wraps a child in a MaterialApp+Scaffold for predictable environment.
   Future<void> pumpInApp(Widget child) async {
-    await pumpWidget(MaterialApp(home: Scaffold(body: Center(child: child))));
+    await pumpWidget(
+      MaterialApp(
+        home: Scaffold(body: Center(child: child)),
+      ),
+    );
   }
 
   /// Drives a basic interaction cycle against [target]:
@@ -57,7 +62,8 @@ extension InteractionTestExtensions on WidgetTester {
   /// - Press down and up (touch)
   /// - Request and release focus (keyboard)
   /// Returns a summary Map useful for ad‑hoc asserts.
-  Future<Map<String, dynamic>> fullInteractionCycle(Finder target, {
+  Future<Map<String, dynamic>> fullInteractionCycle(
+    Finder target, {
     FocusNode? focusNode,
   }) async {
     final result = <String, dynamic>{
@@ -108,4 +114,3 @@ extension InteractionTestExtensions on WidgetTester {
     return result;
   }
 }
-

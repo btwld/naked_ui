@@ -279,28 +279,28 @@ class _NakedTabState extends State<NakedTab>
       },
       mouseCursor: _isEnabled ? widget.mouseCursor : SystemMouseCursors.basic,
       child: Semantics(
-          container: true,
-          enabled: _isEnabled,
-          selected: isSelected,
-          button: true,
-          label: widget.semanticLabel,
+        container: true,
+        enabled: _isEnabled,
+        selected: isSelected,
+        button: true,
+        label: widget.semanticLabel,
+        onTap: _isEnabled ? _handleTap : null,
+        child: GestureDetector(
+          // semantics provided above
+          onTapDown: _isEnabled
+              ? (_) => updatePressState(true, widget.onPressChange)
+              : null,
+          onTapUp: _isEnabled
+              ? (_) => updatePressState(false, widget.onPressChange)
+              : null,
           onTap: _isEnabled ? _handleTap : null,
-          child: GestureDetector(
-            // semantics provided above
-            onTapDown: _isEnabled
-                ? (_) => updatePressState(true, widget.onPressChange)
-                : null,
-            onTapUp: _isEnabled
-                ? (_) => updatePressState(false, widget.onPressChange)
-                : null,
-            onTap: _isEnabled ? _handleTap : null,
-            onTapCancel: _isEnabled
-                ? () => updatePressState(false, widget.onPressChange)
-                : null,
-            behavior: HitTestBehavior.opaque,
-            excludeFromSemantics: true,
-            child: content,
-          ),
+          onTapCancel: _isEnabled
+              ? () => updatePressState(false, widget.onPressChange)
+              : null,
+          behavior: HitTestBehavior.opaque,
+          excludeFromSemantics: true,
+          child: content,
+        ),
       ),
     );
   }

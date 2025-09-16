@@ -238,21 +238,26 @@ class _NakedButtonState extends State<NakedButton>
         label: widget.semanticLabel,
         tooltip: widget.tooltip,
         onTap: _semanticsTapHandler,
-        onLongPress:
-            (widget.enabled && widget.onLongPress != null) ? _handleLongPress : null,
+        onLongPress: (widget.enabled && widget.onLongPress != null)
+            ? _handleLongPress
+            : null,
         child: GestureDetector(
           onTapDown: widget._effectiveEnabled ? _handleTapDown : null,
           onTapUp: widget._effectiveEnabled
               ? (_) => updatePressState(false, widget.onPressChange)
               : null,
-          onTap: (widget.enabled && widget.onPressed != null) ? _handleTap : null,
+          onTap: (widget.enabled && widget.onPressed != null)
+              ? _handleTap
+              : null,
           onTapCancel: widget._effectiveEnabled
               ? () => updatePressState(false, widget.onPressChange)
               : null,
-          onDoubleTap:
-              (widget.enabled && widget.onDoubleTap != null) ? widget.onDoubleTap : null,
-          onLongPress:
-              (widget.enabled && widget.onLongPress != null) ? _handleLongPress : null,
+          onDoubleTap: (widget.enabled && widget.onDoubleTap != null)
+              ? widget.onDoubleTap
+              : null,
+          onLongPress: (widget.enabled && widget.onLongPress != null)
+              ? _handleLongPress
+              : null,
           // Long-press symmetry: pressed while holding, clear on end.
           onLongPressStart: (widget.enabled && widget.onLongPress != null)
               ? (_) => updatePressState(true, widget.onPressChange)

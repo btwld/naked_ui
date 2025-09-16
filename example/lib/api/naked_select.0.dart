@@ -112,7 +112,8 @@ class _SelectExampleState extends State<SelectExample>
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(_selectedValue ?? 'Select an option'),
-                Icon(Icons.arrow_drop_down, size: 24, color: Colors.grey.shade600),
+                Icon(Icons.arrow_drop_down,
+                    size: 24, color: Colors.grey.shade600),
               ],
             ),
           ),

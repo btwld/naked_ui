@@ -220,8 +220,8 @@ void main() {
       timeout: const Timeout(Duration(minutes: 4)),
       skip: shouldRunIntegration
           ? (Platform.isMacOS
-              ? 'Skipped on macOS: flaky HardwareKeyboard KeyUp mismatch in isolated slider run. Covered by the "run all integration tests" suite.'
-              : null)
+                ? 'Skipped on macOS: flaky HardwareKeyboard KeyUp mismatch in isolated slider run. Covered by the "run all integration tests" suite.'
+                : null)
           : 'Skipped by default. Set RUN_INTEGRATION=1 to run external example integration tests.',
     );
   });

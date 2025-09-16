@@ -7,7 +7,9 @@ import 'semantics_test_utils.dart';
 
 void main() {
   Widget _buildTestApp(Widget child) {
-    return MaterialApp(home: Scaffold(body: Center(child: child)));
+    return MaterialApp(
+      home: Scaffold(body: Center(child: child)),
+    );
   }
 
   group('NakedSlider Semantics', () {
@@ -17,12 +19,7 @@ void main() {
       await expectSemanticsParity(
         tester: tester,
         material: _buildTestApp(
-          Slider(
-            value: 0.5,
-            min: 0,
-            max: 1,
-            onChanged: (_) {},
-          ),
+          Slider(value: 0.5, min: 0, max: 1, onChanged: (_) {}),
         ),
         naked: _buildTestApp(
           NakedSlider(
@@ -44,12 +41,7 @@ void main() {
       await expectSemanticsParity(
         tester: tester,
         material: _buildTestApp(
-          const Slider(
-            value: 0.5,
-            min: 0,
-            max: 1,
-            onChanged: null,
-          ),
+          const Slider(value: 0.5, min: 0, max: 1, onChanged: null),
         ),
         naked: _buildTestApp(
           NakedSlider(
@@ -72,13 +64,7 @@ void main() {
 
       await tester.pumpWidget(
         _buildTestApp(
-          Slider(
-            value: 0.2,
-            min: 0,
-            max: 1,
-            onChanged: (_) {},
-            focusNode: fm,
-          ),
+          Slider(value: 0.2, min: 0, max: 1, onChanged: (_) {}, focusNode: fm),
         ),
       );
       fm.requestFocus();
@@ -121,9 +107,7 @@ void main() {
       await tester.pump();
 
       await tester.pumpWidget(
-        _buildTestApp(
-          Slider(value: 0.7, min: 0, max: 1, onChanged: (_) {}),
-        ),
+        _buildTestApp(Slider(value: 0.7, min: 0, max: 1, onChanged: (_) {})),
       );
       await mouse.moveTo(tester.getCenter(find.byType(Slider)));
       await tester.pump();
@@ -156,4 +140,3 @@ void main() {
     });
   });
 }
-

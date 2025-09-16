@@ -62,7 +62,6 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('Material Dialog Content'), findsOneWidget);
 
-
       // Close by tapping barrier
       await tester.tapAt(const Offset(10, 10));
       await tester.pumpAndSettle();
@@ -72,7 +71,6 @@ void main() {
       await tester.tap(find.byKey(nakedOpenKey));
       await tester.pumpAndSettle();
       expect(find.text('Naked Dialog Content'), findsOneWidget);
-
 
       // Close by tapping barrier
       await tester.tapAt(const Offset(10, 10));

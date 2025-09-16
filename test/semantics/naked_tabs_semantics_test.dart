@@ -15,11 +15,17 @@ void main() {
           appBar: AppBar(
             title: const Text('Tabs'),
             bottom: const TabBar(
-              tabs: [Tab(text: 'A'), Tab(text: 'B')],
+              tabs: [
+                Tab(text: 'A'),
+                Tab(text: 'B'),
+              ],
             ),
           ),
           body: const TabBarView(
-            children: [Center(child: Text('A body')), Center(child: Text('B body'))],
+            children: [
+              Center(child: Text('A body')),
+              Center(child: Text('B body')),
+            ],
           ),
         ),
       ),
@@ -100,13 +106,16 @@ void main() {
       final nak = summarizeMergedFromRoot(tester, control: ControlType.tab);
 
       SemanticsSummary normalize(SemanticsSummary s) => SemanticsSummary(
-            label: s.label,
-            value: s.value,
-            flags: s.flags
-                .where((f) => f != 'isButton' && f != 'isEnabled' && f != 'hasEnabledState')
-                .toSet(),
-            actions: s.actions,
-          );
+        label: s.label,
+        value: s.value,
+        flags: s.flags
+            .where(
+              (f) =>
+                  f != 'isButton' && f != 'isEnabled' && f != 'hasEnabledState',
+            )
+            .toSet(),
+        actions: s.actions,
+      );
 
       expect(normalize(nak), equals(normalize(mat)));
       await mouse.removePointer();

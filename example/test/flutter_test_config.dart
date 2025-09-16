@@ -11,4 +11,3 @@ Future<void> testExecutable(FutureOr<void> Function() testMain) async {
       FocusHighlightStrategy.alwaysTraditional;
   await testMain();
 }
-

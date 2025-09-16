@@ -25,13 +25,15 @@ class PasswordAndMultiLineExample extends StatefulWidget {
   const PasswordAndMultiLineExample({super.key});
 
   @override
-  State<PasswordAndMultiLineExample> createState() => _PasswordAndMultiLineExampleState();
+  State<PasswordAndMultiLineExample> createState() =>
+      _PasswordAndMultiLineExampleState();
 }
 
-class _PasswordAndMultiLineExampleState extends State<PasswordAndMultiLineExample> {
+class _PasswordAndMultiLineExampleState
+    extends State<PasswordAndMultiLineExample> {
   final _passwordController = TextEditingController();
   final _multiLineController = TextEditingController();
-  
+
   bool _obscurePassword = true;
 
   @override
@@ -60,16 +62,17 @@ class _PasswordAndMultiLineExampleState extends State<PasswordAndMultiLineExampl
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 32),
-          
+
           // Password field
           _PasswordField(
             controller: _passwordController,
             obscureText: _obscurePassword,
-            onToggleVisibility: () => setState(() => _obscurePassword = !_obscurePassword),
+            onToggleVisibility: () =>
+                setState(() => _obscurePassword = !_obscurePassword),
           ),
-          
+
           const SizedBox(height: 24),
-          
+
           // Multi-line field
           _MultiLineField(
             controller: _multiLineController,
@@ -129,7 +132,8 @@ class _PasswordFieldState extends State<_PasswordField> {
                 children: [
                   Expanded(
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 12),
                       child: editableText,
                     ),
                   ),
@@ -141,7 +145,9 @@ class _PasswordFieldState extends State<_PasswordField> {
                       child: Padding(
                         padding: const EdgeInsets.all(8),
                         child: Icon(
-                          widget.obscureText ? Icons.visibility : Icons.visibility_off,
+                          widget.obscureText
+                              ? Icons.visibility
+                              : Icons.visibility_off,
                           size: 20,
                           color: Colors.grey.shade600,
                         ),

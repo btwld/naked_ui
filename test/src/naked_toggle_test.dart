@@ -59,11 +59,7 @@ void main() {
     testWidgets('disabled does not toggle', (tester) async {
       bool value = false;
       await tester.pumpMaterialWidget(
-        NakedToggle(
-          value: value,
-          onChanged: null,
-          child: const Text('Toggle'),
-        ),
+        NakedToggle(value: value, onChanged: null, child: const Text('Toggle')),
       );
 
       await tester.tap(find.text('Toggle'));

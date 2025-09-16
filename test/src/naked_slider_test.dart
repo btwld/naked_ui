@@ -367,7 +367,9 @@ void main() {
   });
 
   group('Cursor', () {
-    testWidgets('shows appropriate cursor based on interactive state', (tester) async {
+    testWidgets('shows appropriate cursor based on interactive state', (
+      tester,
+    ) async {
       const enabledKey = Key('enabled');
       const disabledKey = Key('disabled');
 
@@ -460,7 +462,6 @@ void main() {
 
   group('Hover, focus, and press states', () {
     testWidgets('Hover callbacks toggle appropriately', (tester) async {
-      
       final hovers = <bool>[];
       const k = Key('slider');
       await tester.pumpWidget(
@@ -468,10 +469,13 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      await tester.simulateHover(k, onHover: () {
-        // inside hover callback, we expect true was pushed
-        expect(hovers.isNotEmpty && hovers.last == true, isTrue);
-      });
+      await tester.simulateHover(
+        k,
+        onHover: () {
+          // inside hover callback, we expect true was pushed
+          expect(hovers.isNotEmpty && hovers.last == true, isTrue);
+        },
+      );
 
       expect(hovers, equals([true, false]));
     });
