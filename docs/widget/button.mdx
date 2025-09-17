@@ -1,12 +1,18 @@
 ---
 title: NakedButton
+description: Headless button component for Flutter with full control over styling, behavior, and accessibility features
+keywords: [flutter, button, headless, unstyled, accessibility, interaction, hover, focus, press]
 ---
 
 NakedButton provides interaction behavior and accessibility features without imposing any visual styling, giving consumers complete design freedom. It integrates with `FocusableActionDetector` to provide enhanced keyboard accessibility, hover detection, and focus management.
 
+<Tip>
+  Use the state callbacks (`onHoverChange`, `onPressChange`, `onFocusChange`) to create responsive visual feedback that enhances user experience.
+</Tip>
+
 
 <Info>
-  You can find this example in our [GitHub repository](https://github.com/btwld/mix/blob/main/packages/naked/example/lib/api/naked_button.0.dart).
+  You can find this example in our [GitHub repository](https://github.com/btwld/naked_ui/blob/main/example/lib/api/naked_button.0.dart).
 </Info>
 <CodeGroup title="Usage Example" defaultLanguage="dart">
 ```dart
@@ -46,9 +52,9 @@ class _ButtonExampleState extends State<ButtonExample> {
       onPressed: () {
         debugPrint('Button pressed!');
       },
-      onHoverState: (isHovered) => setState(() => _isHovered = isHovered),
-      onPressedState: (isPressed) => setState(() => _isPressed = isPressed),
-      onFocusState: (isFocused) => setState(() => _isFocused = isFocused),
+      onHoverChange: (isHovered) => setState(() => _isHovered = isHovered),
+      onPressChange: (isPressed) => setState(() => _isPressed = isPressed),
+      onFocusChange: (isFocused) => setState(() => _isFocused = isFocused),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 2),
         decoration: BoxDecoration(
@@ -81,64 +87,174 @@ class _ButtonExampleState extends State<ButtonExample> {
 ```
 </CodeGroup>
 
+<CodeGroup title="Icon Button with Tooltip" defaultLanguage="dart">
+```dart
+class IconButtonExample extends StatefulWidget {
+  const IconButtonExample({super.key});
+
+  @override
+  State<IconButtonExample> createState() => _IconButtonExampleState();
+}
+
+class _IconButtonExampleState extends State<IconButtonExample> {
+  bool _isFavorited = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return NakedButton(
+      onPressed: () {
+        setState(() => _isFavorited = !_isFavorited);
+      },
+      tooltip: _isFavorited ? 'Remove from favorites' : 'Add to favorites',
+      child: Container(
+        width: 48,
+        height: 48,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: Colors.grey.shade100,
+        ),
+        child: Icon(
+          _isFavorited ? Icons.favorite : Icons.favorite_border,
+          color: _isFavorited ? Colors.red : Colors.grey.shade600,
+        ),
+      ),
+    );
+  }
+}
+```
+</CodeGroup>
+
+<CodeGroup title="Loading Button" defaultLanguage="dart">
+```dart
+class LoadingButtonExample extends StatefulWidget {
+  const LoadingButtonExample({super.key});
+
+  @override
+  State<LoadingButtonExample> createState() => _LoadingButtonExampleState();
+}
+
+class _LoadingButtonExampleState extends State<LoadingButtonExample> {
+  bool _isLoading = false;
+
+  Future<void> _handleSubmit() async {
+    setState(() => _isLoading = true);
+
+    // Simulate API call
+    await Future.delayed(const Duration(seconds: 2));
+
+    setState(() => _isLoading = false);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return NakedButton(
+      onPressed: _isLoading ? null : _handleSubmit,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+        decoration: BoxDecoration(
+          color: _isLoading ? Colors.grey.shade300 : Colors.blue,
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (_isLoading) ...[
+              const SizedBox(
+                width: 16,
+                height: 16,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+              const SizedBox(width: 8),
+            ],
+            Text(
+              _isLoading ? 'Loading...' : 'Submit',
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+```
+</CodeGroup>
+
 ## Constructor
 
 ```dart
 const NakedButton({
   Key? key,
-  required this.child,
+  this.child,
   this.onPressed,
-  this.onHoverState,
-  this.onPressedState,
-  this.onFocusState,
-  this.onDisabledState,
+  this.onLongPress,
+  this.onDoubleTap,
   this.enabled = true,
-  this.isSemanticButton = true,
-  this.semanticLabel,
-  this.cursor = SystemMouseCursors.click,
-  this.enableHapticFeedback = true,
+  this.mouseCursor = SystemMouseCursors.click,
+  this.enableFeedback = true,
   this.focusNode,
   this.autofocus = false,
+  this.onFocusChange,
+  this.onHoverChange,
+  this.onPressChange,
+  this.builder,
+  this.focusOnPress = false,
+  this.tooltip,
+  this.semanticLabel,
 })
 ```
 
 ## Properties
 
-#### child  → `Widget`
-The child widget to display. This widget should represent the visual appearance of the button.
+#### child  → `Widget?`
+The child widget to display. Provide either `child` or `builder`.
 
 #### onPressed → `VoidCallback?`
 Called when the button is tapped or activated via keyboard. If null, the button will be considered disabled.
 
-#### onHoverState → `ValueChanged<bool>?`
+#### onLongPress → `VoidCallback?`
+Called when the button is long pressed.
+
+#### onDoubleTap → `VoidCallback?`
+Called when the button is double tapped.
+
+#### onHoverChange → `ValueChanged<bool>?`
 Called when hover state changes. Provides the current hover state (true when hovered, false otherwise).
 
-#### onPressedState → `ValueChanged<bool>?`
+#### onPressChange → `ValueChanged<bool>?`
 Called when pressed state changes. Provides the current pressed state (true when pressed, false otherwise).
 
-#### onFocusState → `ValueChanged<bool>?`
+#### onFocusChange → `ValueChanged<bool>?`
 Called when focus state changes. Provides the current focus state (true when focused, false otherwise).
 
-#### onDisabledState → `ValueChanged<bool>?`
-Called when disabled state changes. Provides the current disabled state (true when disabled, false otherwise).
 
 #### enabled → `bool`
 Whether the button is enabled. Defaults to true.
 
-#### isSemanticButton → `bool`
-Whether the button should be treated as a semantic button. Defaults to true.
 
-#### semanticLabel → `String?`
-The semantic label for the button used by assistive technologies.
 
-#### cursor → `MouseCursor`
+#### mouseCursor → `MouseCursor`
 The cursor to show when hovering over the button. Defaults to SystemMouseCursors.click.
 
-#### enableHapticFeedback → `bool`
-Whether to provide haptic feedback on press. Defaults to true.
+#### enableFeedback → `bool`
+Whether to provide platform-specific feedback on press. Defaults to true.
 
 #### focusNode → `FocusNode?`
 Optional focus node to control focus behavior.
 
 #### autofocus → `bool`
-Whether the button should be focused when first built. Defaults to false.
+Whether to automatically focus this button when first built. Defaults to false.
+
+#### builder → `ValueWidgetBuilder<Set<WidgetState>>?`
+Optional builder that receives the current states to drive visuals.
+
+#### focusOnPress → `bool`
+Whether to request focus when the button is pressed. Defaults to false.
+
+#### tooltip → `String?`
+Optional tooltip semantics for assistive technologies.
+
+#### semanticLabel → `String?`
+Optional semantic label for screen readers.

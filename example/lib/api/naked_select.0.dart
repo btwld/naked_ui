@@ -55,7 +55,7 @@ class _SelectExampleState extends State<SelectExample>
           padding: const EdgeInsets.symmetric(vertical: 4),
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(12),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withValues(alpha: .1),
@@ -96,8 +96,8 @@ class _SelectExampleState extends State<SelectExample>
           ),
         ),
         child: NakedSelectTrigger(
-          onHoverState: (isHovered) => setState(() => _isHovered = isHovered),
-          onFocusState: (isFocused) => setState(() => _isFocused = isFocused),
+          onFocusChange: (focused) => setState(() => _isFocused = focused),
+          onHoverChange: (hovered) => setState(() => _isHovered = hovered),
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
@@ -105,14 +105,15 @@ class _SelectExampleState extends State<SelectExample>
                 color: borderColor,
                 width: 1,
               ),
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(12),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(_selectedValue ?? 'Select an option'),
-                const Icon(Icons.arrow_drop_down, size: 24),
+                Icon(Icons.arrow_drop_down,
+                    size: 24, color: Colors.grey.shade600),
               ],
             ),
           ),

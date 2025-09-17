@@ -1,0 +1,100 @@
+Resolving dependencies...
+Downloading packages...
+  characters 1.4.0 (1.4.1 available)
+  flutter_lints 3.0.2 (6.0.0 available)
+  flutter_svg 2.2.0 (2.2.1 available)
+  go_router 13.2.5 (16.2.1 available)
+  google_fonts 6.3.0 (6.3.1 available)
+  leak_tracker 11.0.1 (11.0.2 available)
+  lints 3.0.0 (6.0.0 available)
+  material_color_utilities 0.11.1 (0.13.0 available)
+  url_strategy 0.2.0 (discontinued)
+Got dependencies!
+1 package is discontinued.
+9 packages have newer versions incompatible with dependency constraints.
+Try `flutter pub outdated` for more information.
+00:00 +0: loading /Users/leofarias/bitwild/naked_ui/example/integration_test/all_tests.dart
+Building macOS application...                                   
+✓ Built build/macos/Build/Products/Debug/example.app
+00:00 +0: All NakedUI Integration Tests Accordion Tests NakedAccordion Integration Tests accordion expands and collapses correctly
+00:01 +1: All NakedUI Integration Tests Accordion Tests NakedAccordion Integration Tests accordion controller manages state correctly
+00:01 +2: All NakedUI Integration Tests Accordion Tests NakedAccordion Integration Tests accordion respects min/max constraints
+00:01 +3: All NakedUI Integration Tests Accordion Tests NakedAccordion Integration Tests accordion item state callbacks work correctly
+00:01 +4: All NakedUI Integration Tests Accordion Tests NakedAccordion Integration Tests accordion keyboard navigation works
+00:01 +5: All NakedUI Integration Tests Accordion Tests NakedAccordion Integration Tests disabled accordion item blocks interactions
+00:02 +6: All NakedUI Integration Tests Accordion Tests NakedAccordion Integration Tests accordion works with transition animations
+00:02 +7: All NakedUI Integration Tests Button Tests NakedButton Integration Tests button responds to all interaction types
+Button pressed!
+Button pressed!
+00:03 +8: All NakedUI Integration Tests Button Tests NakedButton Integration Tests button handles focus management correctly
+00:03 +9: All NakedUI Integration Tests Button Tests NakedButton Integration Tests button state callbacks work in real app context
+00:03 +10: All NakedUI Integration Tests Button Tests NakedButton Integration Tests button keyboard navigation works correctly
+00:04 +11: All NakedUI Integration Tests Button Tests NakedButton Integration Tests disabled button blocks all interactions
+00:04 +12: All NakedUI Integration Tests Button Tests NakedButton Integration Tests focusOnPress requests focus when enabled
+00:04 +13: All NakedUI Integration Tests Button Tests NakedButton Integration Tests focusOnPress disabled does not request focus
+00:04 +14: All NakedUI Integration Tests Button Tests NakedButton Integration Tests button builder method works with states
+00:04 +15: All NakedUI Integration Tests Button Tests NakedButton Integration Tests button onLongPress works correctly
+00:05 +16: All NakedUI Integration Tests Button Tests NakedButton Integration Tests button onDoubleTap works correctly
+00:06 +17: All NakedUI Integration Tests Button Tests NakedButton Integration Tests button works with different child widgets
+00:06 +18: All NakedUI Integration Tests Checkbox Tests NakedCheckbox Integration Tests checkbox toggles value correctly
+00:07 +19: All NakedUI Integration Tests Checkbox Tests NakedCheckbox Integration Tests checkbox responds to keyboard activation
+00:07 +20: All NakedUI Integration Tests Checkbox Tests NakedCheckbox Integration Tests checkbox state callbacks work correctly
+00:07 +21: All NakedUI Integration Tests Checkbox Tests NakedCheckbox Integration Tests checkbox handles focus management correctly
+00:08 +22: All NakedUI Integration Tests Checkbox Tests NakedCheckbox Integration Tests disabled checkbox blocks all interactions
+00:08 +23: All NakedUI Integration Tests Checkbox Tests NakedCheckbox Integration Tests tap toggles value and does not request focus by default
+00:08 +24: All NakedUI Integration Tests Checkbox Tests NakedCheckbox Integration Tests tap does not request focus (explicit focusNode present)
+00:08 +25: All NakedUI Integration Tests Checkbox Tests NakedCheckbox Integration Tests checkbox builder method works with states
+00:08 +26: All NakedUI Integration Tests Checkbox Tests NakedCheckbox Integration Tests checkbox supports tristate mode
+00:08 +27: All NakedUI Integration Tests Checkbox Tests NakedCheckbox Integration Tests checkbox works with different visual states
+00:09 +28: All NakedUI Integration Tests Menu Tests NakedMenu Integration Tests menu opens and closes via controller
+00:09 +29: All NakedUI Integration Tests Menu Tests NakedMenu Integration Tests menu items respond to selection
+00:09 +30: All NakedUI Integration Tests Menu Tests NakedMenu Integration Tests menu onClose callback works
+00:09 +31: All NakedUI Integration Tests Menu Tests NakedMenu Integration Tests menu responds to keyboard navigation
+00:10 +32: All NakedUI Integration Tests Menu Tests NakedMenu Integration Tests menu closes on outside tap when enabled
+00:10 +33: All NakedUI Integration Tests Menu Tests NakedMenu Integration Tests works with example app complex interaction
+00:10 +34: All NakedUI Integration Tests Radio Tests NakedRadio Integration Tests radio group handles single selection correctly
+00:10 +35: All NakedUI Integration Tests Radio Tests NakedRadio Integration Tests radio responds to keyboard activation
+00:11 +36: All NakedUI Integration Tests Radio Tests NakedRadio Integration Tests radio state callbacks work correctly
+00:11 +37: All NakedUI Integration Tests Radio Tests NakedRadio Integration Tests radio handles focus management correctly
+00:11 +38: All NakedUI Integration Tests Radio Tests NakedRadio Integration Tests disabled radio blocks interactions
+00:12 +39: All NakedUI Integration Tests Radio Tests NakedRadio Integration Tests radio group enforces single selection
+00:12 +40: All NakedUI Integration Tests Radio Tests NakedRadio Integration Tests radio builder method works with states
+00:12 +41: All NakedUI Integration Tests Select Tests NakedSelect Integration Tests select opens and closes correctly
+00:12 +42: All NakedUI Integration Tests Select Tests NakedSelect Integration Tests single selection mode works correctly
+00:13 +43: All NakedUI Integration Tests Select Tests NakedSelect Integration Tests multiple selection mode works correctly
+00:13 +44: All NakedUI Integration Tests Select Tests NakedSelect Integration Tests onSelectedValueChanged callback works
+00:13 +45: All NakedUI Integration Tests Select Tests NakedSelect Integration Tests closeOnSelect behavior works correctly
+00:13 +46: All NakedUI Integration Tests Select Tests NakedSelect Integration Tests disabled select blocks interactions
+00:13 +47: All NakedUI Integration Tests Select Tests NakedSelect Integration Tests works with example app interaction
+00:14 +48: All NakedUI Integration Tests Slider Tests NakedSlider Integration Tests slider value changes via drag
+00:14 +49: All NakedUI Integration Tests Slider Tests NakedSlider Integration Tests slider responds to keyboard navigation
+00:14 +50: All NakedUI Integration Tests Slider Tests NakedSlider Integration Tests slider callbacks work correctly
+00:14 +51: All NakedUI Integration Tests Slider Tests NakedSlider Integration Tests slider state callbacks work correctly
+00:15 +52: All NakedUI Integration Tests Slider Tests NakedSlider Integration Tests disabled slider blocks interactions
+00:15 +53: All NakedUI Integration Tests Slider Tests NakedSlider Integration Tests slider respects min/max bounds
+00:15 +54: All NakedUI Integration Tests Slider Tests NakedSlider Integration Tests slider works with divisions for discrete values
+00:15 +55: All NakedUI Integration Tests Slider Tests NakedSlider Integration Tests works with example app styling
+00:15 +56: All NakedUI Integration Tests Tabs Tests NakedTabs Integration Tests tabs change panel visibility correctly
+00:16 +57: All NakedUI Integration Tests Tabs Tests NakedTabs Integration Tests tabs respond to keyboard navigation
+00:16 +58: All NakedUI Integration Tests Tabs Tests NakedTabs Integration Tests tab state callbacks work correctly
+00:17 +59: All NakedUI Integration Tests Tabs Tests NakedTabs Integration Tests tab builder method works with states
+00:17 +60: All NakedUI Integration Tests Tabs Tests NakedTabs Integration Tests tab panels show/hide based on selection
+00:17 +61: All NakedUI Integration Tests Tabs Tests NakedTabs Integration Tests complex tabs layout works correctly
+00:18 +62: All NakedUI Integration Tests TextField Tests NakedTextField Integration Tests text input updates value correctly
+00:18 +63: All NakedUI Integration Tests TextField Tests NakedTextField Integration Tests text can be cleared and replaced
+00:18 +64: All NakedUI Integration Tests TextField Tests NakedTextField Integration Tests controller synchronizes with input
+00:19 +65: All NakedUI Integration Tests TextField Tests NakedTextField Integration Tests focus and hover callbacks work correctly
+00:19 +66: All NakedUI Integration Tests TextField Tests NakedTextField Integration Tests focus management works properly
+00:19 +67: All NakedUI Integration Tests TextField Tests NakedTextField Integration Tests disabled field blocks all interactions
+00:19 +68: All NakedUI Integration Tests TextField Tests NakedTextField Integration Tests readOnly prevents editing but allows focus
+00:19 +69: All NakedUI Integration Tests TextField Tests NakedTextField Integration Tests works with example app basic interaction
+00:19 +70: All NakedUI Integration Tests Tooltip Tests NakedTooltip Integration Tests tooltip shows on hover and hides on exit
+00:20 +71: All NakedUI Integration Tests Tooltip Tests NakedTooltip Integration Tests tooltip respects wait duration
+00:21 +72: All NakedUI Integration Tests Tooltip Tests NakedTooltip Integration Tests tooltip respects show duration
+00:21 +73: All NakedUI Integration Tests Tooltip Tests NakedTooltip Integration Tests tooltip positioning works correctly
+00:21 +74: All NakedUI Integration Tests Tooltip Tests NakedTooltip Integration Tests tooltip onStateChange callback works
+00:22 +75: All NakedUI Integration Tests Tooltip Tests NakedTooltip Integration Tests tooltip handles rapid hover events correctly
+00:23 +76: All NakedUI Integration Tests Tooltip Tests NakedTooltip Integration Tests tooltip works with example app animation
+00:23 +77: All NakedUI Integration Tests (tearDownAll)
+00:25 +77: (tearDownAll)
+00:25 +77: All tests passed!

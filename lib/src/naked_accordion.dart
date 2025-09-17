@@ -1,138 +1,175 @@
+import 'dart:collection';
+
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
-/// Controller that manages the state of an accordion.
+/// A headless accordion controller without visuals.
 ///
-/// This controller keeps track of which accordion items are expanded or collapsed
-/// and provides methods to open, close, or toggle items. It can also enforce
-/// minimum and maximum limits on the number of expanded items.
+/// Manages accordion state with optional min/max expansion constraints.
+/// Prevents closing below [min] and caps items at [max].
 ///
-/// Generic type [T] represents the unique identifier for each accordion item.
-/// This could be a String, int, or any other type that can uniquely identify sections.
+/// See also:
+/// - [NakedAccordion], the container that uses this controller.
 class NakedAccordionController<T> with ChangeNotifier {
-  /// The minimum number of expanded items allowed.
+  /// The minimum expanded items allowed when closing.
   final int min;
 
-  /// The maximum number of expanded items allowed.
-  /// If null, there is no maximum limit.
+  /// The maximum expanded items allowed. If null, unlimited.
   final int? max;
 
-  /// Set of currently expanded values.
-  final Set<T> values = {};
+  /// The expanded values in insertion order (oldest → newest).
+  final LinkedHashSet<T> values = LinkedHashSet<T>();
 
-  /// Creates an accordion controller.
-  ///
-  /// [min] specifies the minimum number of expanded items (default: 0).
-  /// [max] specifies the maximum number of expanded items (optional).
-  /// When [max] is specified and reached, opening a new item will close the oldest one.
   NakedAccordionController({this.min = 0, this.max})
-    : assert(min >= 0, 'min must be greater than or equal to 0'),
-      assert(
-        max == null || max >= min,
-        'max must be greater than or equal to min',
-      );
+    : assert(min >= 0, 'min must be >= 0'),
+      assert(max == null || max >= min, 'max must be >= min');
 
-  /// Opens the accordion item with the given [value].
-  ///
-  /// If [max] is specified and the maximum number of expanded items is reached,
-  /// this will close the oldest expanded item to maintain the limit.
-  void open(T value) {
-    if (max != null && values.length >= max!) {
-      final first = values.first;
-
-      values.remove(first);
-      values.add(value);
-    } else {
-      values.add(value);
+  bool _setEquals(Set<T> a, Set<T> b) {
+    if (identical(a, b)) return true;
+    if (a.length != b.length) return false;
+    for (final v in a) {
+      if (!b.contains(v)) return false;
     }
+
+    return true;
+  }
+
+  /// Returns whether the item with [value] is currently expanded.
+  bool contains(T value) => values.contains(value);
+
+  /// Open [value]. If at max, closes the oldest first.
+  void open(T value) {
+    if (values.contains(value)) return; // no-op
+    if (max != null && values.length >= max!) {
+      // Close oldest to make room.
+      if (values.isNotEmpty) {
+        final oldest = values.first;
+        values.remove(oldest);
+      }
+    }
+    values.add(value);
     notifyListeners();
   }
 
-  /// Closes the accordion item with the given [value].
-  ///
-  /// Will not close if doing so would violate the [min] constraint.
+  /// Close [value]. Respects [min] floor.
   void close(T value) {
-    if (min > 0 && values.length <= min) {
-      return;
-    }
+    if (!values.contains(value)) return; // no-op
+    if (min > 0 && values.length <= min) return; // floor
     values.remove(value);
     notifyListeners();
   }
 
-  /// Toggles the accordion item with the given [value].
-  ///
-  /// If the item is expanded, it will be closed (subject to [min] constraint).
-  /// If the item is collapsed, it will be opened (subject to [max] constraint).
+  /// Toggle [value], respecting [min]/[max].
   void toggle(T value) {
     if (values.contains(value)) {
-      close(value);
+      close(value); // close() will notify
     } else {
-      open(value);
+      open(value); // open() will notify
     }
-    notifyListeners();
   }
 
-  /// Removes all expanded values.
-  ///
-  /// Note that if [min] is greater than 0, this operation may not be allowed.
+  /// Remove all expanded values, but keep the first [min] if needed.
   void clear() {
-    values.clear();
+    if (values.isEmpty) return;
+    if (min <= 0) {
+      values.clear();
+      notifyListeners();
+
+      return;
+    }
+    if (values.length <= min) return; // already at/under floor
+    final keep = values.take(min).toList(growable: false);
+    values
+      ..clear()
+      ..addAll(keep);
     notifyListeners();
   }
 
-  /// Opens all accordion items with the given [newValues].
-  ///
-  /// Note that if [max] is specified, only the first [max] items will be opened.
-  void openAll(List<T> newValues) {
-    values.addAll(newValues);
-    notifyListeners();
+  /// Open multiple [newValues] (in order), without exceeding [max].
+  /// Existing expanded values are preserved (FIFO).
+  void openAll(Iterable<T> newValues) {
+    var changed = false;
+    for (final v in newValues) {
+      if (values.contains(v)) continue;
+      if (max != null && values.length >= max!) {
+        if (values.isNotEmpty) {
+          final oldest = values.first;
+          values.remove(oldest);
+        }
+      }
+      values.add(v);
+      changed = true;
+    }
+    if (changed) notifyListeners();
   }
 
-  /// Checks if an item with the given [value] is currently expanded.
-  bool contains(T value) => values.contains(value);
+  /// Replace all expanded values with [newValues], respecting [max].
+  /// This may result in fewer than [min] items expanded—by design—since this
+  /// is a direct, programmatic state set. User-initiated closing still honors [min].
+  void replaceAll(Iterable<T> newValues) {
+    final target = (max != null) ? newValues.take(max!) : newValues;
+    final next = LinkedHashSet<T>.of(target);
+    if (_setEquals(values, next)) return; // no change
+    values
+      ..clear()
+      ..addAll(next);
+    notifyListeners();
+  }
 }
 
-/// A fully customizable accordion with no default styling.
+/// Provides accordion controller to descendant items.
+class NakedAccordionScope<T> extends InheritedWidget {
+  const NakedAccordionScope({
+    super.key,
+    required this.controller,
+    required super.child,
+  });
+
+  static NakedAccordionScope<T>? maybeOf<T>(BuildContext context) {
+    return context.dependOnInheritedWidgetOfExactType();
+  }
+
+  static NakedAccordionScope<T> of<T>(BuildContext context) {
+    final scope = maybeOf<T>(context);
+    if (scope == null) {
+      throw StateError('NakedAccordionScope<$T> not found in context.');
+    }
+
+    return scope;
+  }
+
+  final NakedAccordionController<T> controller;
+
+  @override
+  bool updateShouldNotify(covariant NakedAccordionScope<T> oldWidget) {
+    // Controller identity changes are rare; items listen to controller directly.
+    return oldWidget.controller != controller;
+  }
+}
+
+/// A headless accordion without visuals.
 ///
-/// NakedAccordion provides expandable/collapsible sections without imposing any visual styling,
-/// giving consumers complete design freedom. It manages the state of expanded sections through
-/// an [NakedAccordionController].
+/// Contains expandable/collapsible sections managed by
+/// [NakedAccordionController].
 ///
-/// This component includes:
-/// - [NakedAccordionController]: Manages which sections are expanded/collapsed
-/// - [NakedAccordion]: The container for accordion items
-/// - [NakedAccordionItem]: Individual collapsible sections
-///
-/// Example:
 /// ```dart
-/// final controller = AccordionController<String>();
-///
+/// final controller = NakedAccordionController<String>();
 /// NakedAccordion<String>(
 ///   controller: controller,
-///   initialExpandedValues: ['section1'],
 ///   children: [
-///     NakedAccordionItem<String>(
+///     NakedAccordionItem(
 ///       value: 'section1',
-///       trigger: (context, isExpanded, toggle) {
-///         return TextButton(
-///           onPressed: toggle,
-///           child: Text(isExpanded ? 'Close' : 'Open'),
-///         );
-///       },
-///       child: Text('Content for section 1'),
-///       transitionBuilder: (child) => AnimatedSwitcher(
-///         duration: Duration(milliseconds: 300),
-///         child: child,
-///       ),
+///       trigger: (context, isExpanded) => Text('Section 1'),
+///       child: Text('Content 1'),
 ///     ),
 ///   ],
 /// )
 /// ```
+///
+/// See also:
+/// - [ExpansionPanelList], the Material-styled accordion for typical apps.
 class NakedAccordion<T> extends StatefulWidget {
-  /// Creates a naked accordion.
-  ///
-  /// The [children] should be [NakedAccordionItem] widgets with the same
-  /// generic type [T] as the [controller].
   const NakedAccordion({
     super.key,
     required this.children,
@@ -140,13 +177,13 @@ class NakedAccordion<T> extends StatefulWidget {
     this.initialExpandedValues = const [],
   });
 
-  /// The accordion items to display.
+  /// The accordion items.
   final List<Widget> children;
 
-  /// The controller that manages which items are expanded or collapsed.
+  /// The controller managing expanded values.
   final NakedAccordionController<T> controller;
 
-  /// Values that should be expanded when the accordion is first built.
+  /// The values expanded on first build if controller is empty.
   final List<T> initialExpandedValues;
 
   @override
@@ -159,121 +196,173 @@ class _NakedAccordionState<T> extends State<NakedAccordion<T>> {
   @override
   void initState() {
     super.initState();
-    _controller.values.addAll(widget.initialExpandedValues);
+    if (widget.initialExpandedValues.isNotEmpty && _controller.values.isEmpty) {
+      _controller.replaceAll(widget.initialExpandedValues);
+    }
   }
 
   @override
   void didUpdateWidget(covariant NakedAccordion<T> oldWidget) {
     super.didUpdateWidget(oldWidget);
-    final areEqual = listEquals(
+    if (!listEquals(
       oldWidget.initialExpandedValues,
       widget.initialExpandedValues,
-    );
-
-    if (!areEqual) {
-      _controller.clear();
-      _controller.openAll(widget.initialExpandedValues);
+    )) {
+      _controller.replaceAll(widget.initialExpandedValues);
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Column(mainAxisSize: MainAxisSize.min, children: widget.children);
+    // Keep traversal well-defined without hijacking arrow keys globally.
+    return NakedAccordionScope<T>(
+      controller: _controller,
+      child: FocusTraversalGroup(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: widget.children,
+        ),
+      ),
+    );
   }
 }
 
 typedef NakedAccordionTriggerBuilder =
-    // ignore: prefer-named-boolean-parameters
-    Widget Function(BuildContext context, bool isExpanded, VoidCallback toggle);
+    /// Build the *header/trigger* for an accordion item.
+    /// The trigger should visually reflect [isExpanded]; activation toggles it.
+    Widget Function(BuildContext context, bool isExpanded);
 
-/// An individual item in a [NakedAccordion].
+/// A headless accordion item without visuals.
 ///
-/// Each item consists of a trigger widget that toggles expansion state
-/// and content that is shown when expanded. The [transitionBuilder] can be
-/// used to customize how content appears/disappears.
+/// Individual expandable item with custom trigger and panel content.
+/// Supports keyboard toggle and button semantics.
 ///
-/// Generic type [T] should match the type used in the [NakedAccordionController].
+/// See also:
+/// - [NakedAccordion], the container that manages accordion items.
 class NakedAccordionItem<T> extends StatelessWidget {
-  /// Creates a naked accordion item.
-  ///
-  /// The [trigger] and [child] parameters are required.
-  /// The [value] must be unique among all items controlled by the same controller.
   const NakedAccordionItem({
     super.key,
     required this.trigger,
     required this.value,
     required this.child,
     this.transitionBuilder,
-    this.semanticLabel,
-    this.onFocusState,
-    this.autoFocus = false,
+    this.enabled = true,
+    this.mouseCursor = SystemMouseCursors.click,
+    this.enableFeedback = true,
+    this.autofocus = false,
     this.focusNode,
+    this.onFocusChange,
+    this.onHoverChange,
+    this.onPressChange,
+    this.semanticLabel,
   });
 
-  /// Builder function that creates the trigger widget.
-  ///
-  /// The builder provides:
-  /// - [BuildContext] for accessing theme and other data
-  /// - [bool] indicating if the item is expanded
-  /// - [VoidCallback] to toggle expansion state
+  /// The builder for the header/trigger.
   final NakedAccordionTriggerBuilder trigger;
 
-  /// Optional builder to customize the transition when expanding/collapsing.
-  ///
-  /// If not provided, content will appear/disappear instantly.
-  final Widget Function(Widget child)? transitionBuilder;
+  /// The optional transition wrapper around the expanding panel.
+  final Widget Function(Widget panel)? transitionBuilder;
 
-  /// The content displayed when this item is expanded.
+  /// The content shown when expanded.
   final Widget child;
 
-  /// The unique identifier for this accordion item.
-  ///
-  /// This value is used by the [NakedAccordionController] to track expansion state.
+  /// The unique identifier tracked by controller.
   final T value;
 
-  /// Optional semantic label describing the section for screen readers.
+  /// Called when header focus changes.
+  final ValueChanged<bool>? onFocusChange;
+
+  /// Called when header hover changes.
+  final ValueChanged<bool>? onHoverChange;
+
+  /// Called when header press changes.
+  final ValueChanged<bool>? onPressChange;
+
+  /// The semantic label for the header.
   final String? semanticLabel;
 
-  /// Optional callback to handle focus state changes.
-  final ValueChanged<bool>? onFocusState;
+  /// The interactive state of the header.
+  final bool enabled;
+  /// The mouse cursor when interactive.
+  final MouseCursor mouseCursor;
+  /// The platform feedback enablement flag.
+  final bool enableFeedback;
 
-  /// Whether the item should be focused when the accordion is opened.
-  final bool autoFocus;
+  /// The autofocus flag for the header.
+  final bool autofocus;
 
-  /// The focus node for the item.
+  /// The focus node for the header.
   final FocusNode? focusNode;
+
+  void _toggle(NakedAccordionController<T> controller) =>
+      controller.toggle(value);
 
   @override
   Widget build(BuildContext context) {
-    final state = context.findAncestorStateOfType<_NakedAccordionState<T>>();
+    final scope = NakedAccordionScope.of<T>(context);
+    final controller = scope.controller;
 
-    return FocusableActionDetector(
-      focusNode: focusNode,
-      autofocus: autoFocus,
-      onFocusChange: onFocusState,
-      child: ListenableBuilder(
-        listenable: state!._controller,
-        builder: (context, child) {
-          final isExpanded = state._controller.contains(value);
-          final child = isExpanded ? this.child : const SizedBox.shrink();
+    return ListenableBuilder(
+      listenable: controller,
+      builder: (context, _) {
+        final isExpanded = controller.contains(value);
 
-          return Semantics(
-            container: true,
-            label: semanticLabel,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                trigger(
-                  context,
-                  isExpanded,
-                  () => state._controller.toggle(value),
+        // Build the panel *only* when expanded (keeps semantics/reading order clean).
+        final Widget panel = isExpanded ? child : const SizedBox.shrink();
+
+        void onTap() {
+          if (!enabled) return;
+          if (enableFeedback) Feedback.forTap(context);
+          _toggle(controller);
+        }
+
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            FocusableActionDetector(
+              enabled: enabled,
+              focusNode: focusNode,
+              autofocus: autofocus,
+              shortcuts: const {
+                SingleActivator(LogicalKeyboardKey.enter): ActivateIntent(),
+                SingleActivator(LogicalKeyboardKey.space): ActivateIntent(),
+              },
+              actions: {
+                ActivateIntent: CallbackAction<ActivateIntent>(
+                  onInvoke: (_) => onTap(),
                 ),
-                transitionBuilder != null ? transitionBuilder!(child) : child,
-              ],
+              },
+              onShowHoverHighlight: onHoverChange,
+              onFocusChange: onFocusChange,
+              mouseCursor: enabled ? mouseCursor : SystemMouseCursors.basic,
+              child: Semantics(
+                container: true,
+                enabled: enabled,
+                button: true,
+                expanded: isExpanded,
+                label: semanticLabel,
+                onTap: enabled ? onTap : null,
+                child: GestureDetector(
+                  onTapDown: (enabled && onPressChange != null)
+                      ? (_) => onPressChange!(true)
+                      : null,
+                  onTapUp: (enabled && onPressChange != null)
+                      ? (_) => onPressChange!(false)
+                      : null,
+                  onTap: enabled ? onTap : null,
+                  onTapCancel: (enabled && onPressChange != null)
+                      ? () => onPressChange!(false)
+                      : null,
+                  behavior: HitTestBehavior.opaque,
+                  excludeFromSemantics: true,
+                  child: trigger(context, isExpanded),
+                ),
+              ),
             ),
-          );
-        },
-      ),
+            transitionBuilder != null ? transitionBuilder!(panel) : panel,
+          ],
+        );
+      },
     );
   }
 }

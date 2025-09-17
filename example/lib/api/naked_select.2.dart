@@ -169,8 +169,8 @@ class _AnimatedMultiSelectExampleState extends State<AnimatedMultiSelectExample>
           ),
         ),
         child: NakedSelectTrigger(
-          onHoverState: (isHovered) => setState(() => _isHovered = isHovered),
-          onFocusState: (isFocused) => setState(() => _isFocused = isFocused),
+          onFocusChange: (focused) => setState(() => _isFocused = focused),
+          onHoverChange: (hovered) => setState(() => _isHovered = hovered),
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 200),
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -289,9 +289,9 @@ class _SelectItemState extends State<SelectItem> {
   Widget build(BuildContext context) {
     return NakedSelectItem<String>(
       value: widget.value,
-      onHoverState: (isHovered) => setState(() => _isHovered = isHovered),
-      onFocusState: (isFocused) => setState(() => _isFocused = isFocused),
-      onSelectState: (isSelected) => setState(() => _isSelected = isSelected),
+      onFocusChange: (focused) => setState(() => _isFocused = focused),
+      onHoverChange: (hovered) => setState(() => _isHovered = hovered),
+      onSelectChange: (selected) => setState(() => _isSelected = selected),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
         decoration: BoxDecoration(

@@ -58,9 +58,9 @@ class _CheckboxExampleState extends State<CheckboxExample> {
           _isChecked = value!;
         });
       },
-      onHoverState: (isHovered) => setState(() => _isHovered = isHovered),
-      onPressedState: (isPressed) => setState(() => _isPressed = isPressed),
-      onFocusState: (isFocused) => setState(() => _isFocused = isFocused),
+      onFocusChange: (focused) => setState(() => _isFocused = focused),
+      onHoverChange: (hovered) => setState(() => _isHovered = hovered),
+      onPressChange: (pressed) => setState(() => _isPressed = pressed),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         spacing: 8,

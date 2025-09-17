@@ -57,7 +57,7 @@ class _MenuExampleState extends State<MenuExample> {
         decoration: BoxDecoration(
           color: Colors.white,
           border: Border.all(color: Colors.grey.shade200),
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(12),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.05),
@@ -114,7 +114,7 @@ class _ItemContentState extends State<ItemContent> {
   Widget build(BuildContext context) {
     return NakedMenuItem(
       onPressed: widget.onPressed,
-      onHoverState: (isHovered) => setState(() => _isHovered = isHovered),
+      onHoverChange: (hovered) => setState(() => _isHovered = hovered),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.all(8.0),

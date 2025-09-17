@@ -43,6 +43,10 @@
           "href": "/widget/slider"
         },
         {
+          "title": "NakedSwitch",
+          "href": "/widget/switch"
+        },
+        {
           "title": "NakedTabs",
           "href": "/widget/tabs"
         },
@@ -51,8 +55,20 @@
           "href": "/widget/textfield"
         },
         {
+          "title": "NakedDialog",
+          "href": "/widget/dialog"
+        },
+        {
           "title": "NakedTooltip",
           "href": "/widget/tooltip"
+        },
+        {
+          "title": "NakedToggle",
+          "href": "/widget/toggle"
+        },
+        {
+          "title": "NakedPopover",
+          "href": "/widget/popover"
         }
       ]
     }

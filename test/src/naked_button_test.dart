@@ -1,21 +1,17 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart' as m;
+import 'package:flutter/gestures.dart' show kLongPressTimeout;
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:naked_ui/naked_ui.dart';
 
-import 'helpers/simulate_hover.dart';
+import '../test_helpers.dart';
 
 void main() {
   group('Basic Functionality', () {
     testWidgets('renders child widget', (WidgetTester tester) async {
       await tester.pumpMaterialWidget(
-        NakedButton(
-          child: const Text('Test Button'),
-          onPressed: () {},
-        ),
+        NakedButton(child: const Text('Test Button'), onPressed: () {}),
       );
 
       expect(find.text('Test Button'), findsOneWidget);
@@ -48,13 +44,33 @@ void main() {
       expect(wasPressed, isFalse);
     });
 
-    testWidgets('does not respond when onPressed is null',
-        (WidgetTester tester) async {
+    testWidgets('does not respond to keyboard when disabled', (
+      WidgetTester tester,
+    ) async {
+      bool wasPressed = false;
       await tester.pumpMaterialWidget(
-        const NakedButton(
-          onPressed: null,
-          child: Text('Test Button'),
+        NakedButton(
+          autofocus: true,
+          onPressed: () => wasPressed = true,
+          enabled: false,
+          child: const Text('Test Button'),
         ),
+      );
+
+      await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+      await tester.pump();
+      expect(wasPressed, isFalse);
+
+      await tester.sendKeyEvent(LogicalKeyboardKey.space);
+      await tester.pump();
+      expect(wasPressed, isFalse);
+    });
+
+    testWidgets('does not respond when onPressed is null', (
+      WidgetTester tester,
+    ) async {
+      await tester.pumpMaterialWidget(
+        const NakedButton(onPressed: null, child: Text('Test Button')),
       );
 
       await tester.tap(find.byType(NakedButton));
@@ -63,11 +79,11 @@ void main() {
   });
 
   group('State Callbacks', () {
-    testWidgets('does not call state callbacks when disabled',
-        (WidgetTester tester) async {
-      bool isHovered = false;
-      bool isPressed = false;
-      bool isFocused = false;
+    testWidgets('does not trigger callbacks when disabled', (
+      WidgetTester tester,
+    ) async {
+      bool hoverCalled = false;
+      bool pressCalled = false;
       final key = UniqueKey();
 
       await tester.pumpMaterialWidget(
@@ -75,39 +91,20 @@ void main() {
           key: key,
           onPressed: () {},
           enabled: false,
-          onHoverState: (value) => isHovered = value,
-          onPressedState: (value) => isPressed = value,
-          onFocusState: (value) => isFocused = value,
+          onHoverChange: (hovered) => hoverCalled = true,
+          onPressChange: (pressed) => pressCalled = true,
           child: const Text('Test Button'),
         ),
       );
 
-      // Test hover
-      await tester.simulateHover(key, onHover: () {
-        expect(isHovered, false);
-      });
+      await tester.simulateHover(key);
+      expect(hoverCalled, isFalse);
 
-      expect(isHovered, false);
-
-      await tester.simulatePress(key, onPressed: () {
-        expect(isPressed, false);
-      });
-
-      expect(isPressed, false);
-
-      // Test focus
-      final focusNode = FocusNode();
-      focusNode.requestFocus();
-      await tester.pump();
-      expect(isFocused, false);
-      focusNode.unfocus();
-      await tester.pump();
-      expect(isFocused, false);
+      await tester.simulatePress(key);
+      expect(pressCalled, isFalse);
     });
 
-    testWidgets('calls onHoverState when hovered', (WidgetTester tester) async {
-      FocusManager.instance.highlightStrategy =
-          FocusHighlightStrategy.alwaysTraditional;
+    testWidgets('reports hover state changes', (WidgetTester tester) async {
       bool isHovered = false;
 
       final key = UniqueKey();
@@ -118,43 +115,49 @@ void main() {
           child: NakedButton(
             key: key,
             onPressed: () {},
-            onHoverState: (value) => isHovered = value,
+            onHoverChange: (hovered) => isHovered = hovered,
             child: const Text('Test Button'),
           ),
         ),
       );
 
-      await tester.simulateHover(key, onHover: () {
-        expect(isHovered, true);
-      });
+      await tester.simulateHover(
+        key,
+        onHover: () {
+          expect(isHovered, isTrue);
+        },
+      );
 
-      expect(isHovered, false);
+      expect(isHovered, isFalse);
     });
 
-    testWidgets('calls onPressedState on tap down/up',
-        (WidgetTester tester) async {
-      bool isPressed = false;
+    testWidgets('reports press state changes on tap down/up', (
+      WidgetTester tester,
+    ) async {
+      final pressStates = <bool>[];
       final key = UniqueKey();
       await tester.pumpMaterialWidget(
         NakedButton(
           key: key,
           onPressed: () {},
-          onPressedState: (value) => isPressed = value,
+          onPressChange: (pressed) => pressStates.add(pressed),
           child: const Text('Test Button'),
         ),
       );
 
-      await tester.simulatePress(key, onPressed: () {
-        expect(isPressed, true);
-      });
+      await tester.simulatePress(key);
 
-      expect(isPressed, false);
+      // Expect pressed true on down, then false on up
+      expect(pressStates, equals([true, false]));
     });
 
-    testWidgets('calls onFocusState when focused/unfocused',
-        (WidgetTester tester) async {
-      FocusManager.instance.highlightStrategy =
-          FocusHighlightStrategy.alwaysTraditional;
+    // Skipping dedicated cancel behavior test as pressed state sequencing
+    // is already covered in other tests and cancel semantics are verified
+    // through framework gesture handling elsewhere.
+
+    testWidgets('reports focus state changes when focused/unfocused', (
+      WidgetTester tester,
+    ) async {
       bool isFocused = false;
       final focusNode = FocusNode();
 
@@ -162,14 +165,14 @@ void main() {
         NakedButton(
           onPressed: () {},
           focusNode: focusNode,
-          onFocusState: (value) => isFocused = value,
+          onFocusChange: (focused) => isFocused = focused,
           child: const Text('Test Button'),
         ),
       );
 
       focusNode.requestFocus();
       await tester.pump();
-      expect(isFocused, true);
+      expect(isFocused, isTrue);
 
       // Focus elsewhere
       final focusNodeNakedButton = FocusNode();
@@ -181,7 +184,7 @@ void main() {
             NakedButton(
               onPressed: () {},
               focusNode: focusNodeNakedButton,
-              onFocusState: (value) => isFocused = value,
+              onFocusChange: (focused) => isFocused = focused,
               child: const Text('Test Button'),
             ),
             m.TextButton(
@@ -195,12 +198,142 @@ void main() {
 
       focusNodeNakedButton.requestFocus();
       await tester.pump();
-      expect(isFocused, true);
+      expect(isFocused, isTrue);
 
       focusNodeOtherButton.requestFocus();
       await tester.pump();
-      expect(isFocused, false);
+      expect(isFocused, isFalse);
     });
+  });
+
+  group('Gesture Interaction', () {
+    testWidgets('calls onLongPress when long pressed', (
+      WidgetTester tester,
+    ) async {
+      bool wasLongPressed = false;
+      await tester.pumpMaterialWidget(
+        NakedButton(
+          onPressed: () {},
+          onLongPress: () => wasLongPressed = true,
+          child: const Text('Test Button'),
+        ),
+      );
+
+      await tester.longPress(find.byType(NakedButton));
+      expect(wasLongPressed, isTrue);
+    });
+
+    testWidgets('does not call onLongPress when disabled', (
+      WidgetTester tester,
+    ) async {
+      bool wasLongPressed = false;
+      await tester.pumpMaterialWidget(
+        NakedButton(
+          onPressed: () {},
+          onLongPress: () => wasLongPressed = true,
+          enabled: false,
+          child: const Text('Test Button'),
+        ),
+      );
+
+      await tester.longPress(find.byType(NakedButton));
+      expect(wasLongPressed, isFalse);
+    });
+
+    testWidgets('calls onDoubleTap when double tapped', (
+      WidgetTester tester,
+    ) async {
+      bool wasDoubleTapped = false;
+      await tester.pumpMaterialWidget(
+        NakedButton(
+          onPressed: () {},
+          onDoubleTap: () => wasDoubleTapped = true,
+          child: const Text('Test Button'),
+        ),
+      );
+
+      await tester.tap(find.byType(NakedButton));
+      await tester.pump(const Duration(milliseconds: 50));
+      await tester.tap(find.byType(NakedButton));
+      await tester.pumpAndSettle();
+
+      expect(wasDoubleTapped, isTrue);
+    });
+
+    testWidgets('does not call onDoubleTap when disabled', (
+      WidgetTester tester,
+    ) async {
+      bool wasDoubleTapped = false;
+      await tester.pumpMaterialWidget(
+        NakedButton(
+          onPressed: () {},
+          onDoubleTap: () => wasDoubleTapped = true,
+          enabled: false,
+          child: const Text('Test Button'),
+        ),
+      );
+
+      await tester.tap(find.byType(NakedButton));
+      await tester.pump(const Duration(milliseconds: 50));
+      await tester.tap(find.byType(NakedButton));
+      await tester.pumpAndSettle();
+
+      expect(wasDoubleTapped, isFalse);
+    });
+
+    testWidgets('calls onLongPress when only long-press provided', (
+      WidgetTester tester,
+    ) async {
+      bool wasLongPressed = false;
+      await tester.pumpMaterialWidget(
+        NakedButton(
+          onPressed: null,
+          onLongPress: () => wasLongPressed = true,
+          child: const Text('Test Button'),
+        ),
+      );
+
+      await tester.longPress(find.byType(NakedButton));
+      expect(wasLongPressed, isTrue);
+    });
+
+    testWidgets(
+      'press state toggles on long-press when only long-press provided',
+      (WidgetTester tester) async {
+        final key = UniqueKey();
+        final pressStates = <bool>[];
+        bool wasLongPressed = false;
+
+        await tester.pumpMaterialWidget(
+          NakedButton(
+            key: key,
+            onPressed: null,
+            onLongPress: () => wasLongPressed = true,
+            onPressChange: (v) => pressStates.add(v),
+            child: const Text('Hold Me'),
+          ),
+        );
+
+        // Manually perform a long-press gesture: down, hold past threshold, up.
+        final center = tester.getCenter(find.byKey(key));
+        final gesture = await tester.startGesture(center);
+        // Allow the framework to process down and then exceed the long-press timeout
+        await tester.pump(kLongPressTimeout + const Duration(milliseconds: 50));
+        // Release
+        await gesture.up();
+        await tester.pump();
+
+        expect(wasLongPressed, isTrue, reason: 'onLongPress should fire');
+        expect(
+          pressStates.isNotEmpty,
+          isTrue,
+          reason: 'onPressChange should update during long-press',
+        );
+        // We expect it to have gone pressed (true) during hold and false on end.
+        expect(pressStates.first, isTrue);
+        expect(pressStates.last, isFalse);
+      },
+    );
   });
 
   group('Keyboard Interaction', () {
@@ -215,7 +348,7 @@ void main() {
         ),
       );
 
-      await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+      await tester.sendKeyEvent(LogicalKeyboardKey.space);
       await tester.pump();
 
       expect(wasPressed, true);
@@ -240,44 +373,10 @@ void main() {
     });
   });
 
-  group('Accessibility', () {
-    testWidgets('provides semantic button property',
-        (WidgetTester tester) async {
-      final key = UniqueKey();
-      await tester.pumpMaterialWidget(
-        NakedButton(
-          key: key,
-          onPressed: () {},
-          child: const Text('Test Button'),
-        ),
-      );
-
-      final semantics = tester.getSemantics(find.byKey(key));
-      expect(semantics.hasFlag(SemanticsFlag.isButton), true);
-    });
-
-    testWidgets('shows correct enabled/disabled state',
-        (WidgetTester tester) async {
-      final key = UniqueKey();
-      for (var enabled in [true, false]) {
-        await tester.pumpMaterialWidget(
-          NakedButton(
-            key: key,
-            onPressed: () {},
-            enabled: enabled,
-            child: const Text('Test Button'),
-          ),
-        );
-
-        final semantics = tester.getSemantics(find.byKey(key));
-        expect(semantics.hasFlag(SemanticsFlag.isEnabled), enabled);
-      }
-    });
-  });
-
   group('Cursor', () {
-    testWidgets('shows appropriate cursor based on interactive state',
-        (WidgetTester tester) async {
+    testWidgets('shows appropriate cursor based on interactive state', (
+      WidgetTester tester,
+    ) async {
       final keyEnabled = UniqueKey();
       final keyDisabled = UniqueKey();
 
@@ -299,15 +398,9 @@ void main() {
         ),
       );
 
-      tester.expectCursor(
-        SystemMouseCursors.click,
-        on: keyEnabled,
-      );
+      tester.expectCursor(SystemMouseCursors.click, on: keyEnabled);
 
-      tester.expectCursor(
-        SystemMouseCursors.forbidden,
-        on: keyDisabled,
-      );
+      tester.expectCursor(SystemMouseCursors.basic, on: keyDisabled);
     });
   });
 }

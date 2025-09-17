@@ -30,8 +30,7 @@ class AnimatedMenuExample extends StatefulWidget {
 
 class _AnimatedMenuExampleState extends State<AnimatedMenuExample>
     with TickerProviderStateMixin {
-  final _controller = OverlayPortalController();
-  final _isOpened = ValueNotifier(false);
+  final _menuController = MenuController();
 
   late final _animationController = AnimationController(
     duration: const Duration(milliseconds: 200),
@@ -40,19 +39,21 @@ class _AnimatedMenuExampleState extends State<AnimatedMenuExample>
 
   @override
   void initState() {
-    _isOpened.addListener(() {
-      if (_isOpened.value) {
-        _controller.show();
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          _animationController.forward();
-        });
-      } else {
-        _animationController.reverse().then((value) {
-          _controller.hide();
-        });
-      }
-    });
     super.initState();
+  }
+
+  void _onMenuOpen() {
+    _animationController.forward();
+  }
+
+  void _onMenuClose() {
+    _animationController.reverse();
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
   }
 
   void _onItemPressed(String item) {
@@ -65,7 +66,14 @@ class _AnimatedMenuExampleState extends State<AnimatedMenuExample>
   Widget build(BuildContext context) {
     return NakedMenu(
       builder: (context) => NakedButton(
-        onPressed: () => _isOpened.value = !_isOpened.value,
+        onPressed: () {
+          if (_menuController.isOpen) {
+            _menuController.close();
+          } else {
+            _menuController.open();
+            _onMenuOpen();
+          }
+        },
         child: Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
@@ -118,8 +126,8 @@ class _AnimatedMenuExampleState extends State<AnimatedMenuExample>
           ),
         ),
       ),
-      controller: MenuController(),
-      onClose: () => _isOpened.value = false,
+      controller: _menuController,
+      onClose: _onMenuClose,
     );
   }
 }
@@ -145,7 +153,7 @@ class _ItemContentState extends State<ItemContent> {
   Widget build(BuildContext context) {
     return NakedMenuItem(
       onPressed: widget.onPressed,
-      onHoverState: (isHovered) => setState(() => _isHovered = isHovered),
+      onHoverChange: (hovered) => setState(() => _isHovered = hovered),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.all(8.0),

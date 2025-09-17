@@ -31,6 +31,7 @@ dart_code_metrics:
       last:
         - child
         - children
+        - builder
     avoid-nested-conditional-expressions:
       acceptable-level: 3
     member-ordering:
@@ -48,8 +49,9 @@ dart_code_metrics:
         - overridden-public-methods
         - overridden-public-getters
         - build-method
-    prefer-named-boolean-parameters:
-      ignore-single: true
+    prefer-named-boolean-parameters: false
+    avoid-empty-setstate: false
+    
 analyzer:
   errors:
     non_constant_identifier_names: ignore

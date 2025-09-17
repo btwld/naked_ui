@@ -38,7 +38,6 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           channel: 'stable'
-          flutter-version: 3.32.0
           cache: true
 
       - name: Install root dependencies
@@ -57,7 +56,7 @@ jobs:
         shell: bash
 
       - name: Run root tests
-        run: flutter test --coverage 
+        run: flutter test --coverage
 
       - name: Setup LCOV
         uses: hrishikesh-kadam/setup-lcov@v1
@@ -71,3 +70,31 @@ jobs:
           minimum-coverage: 85
           artifact-name: code-coverage-report
           github-token: ${{ secrets.GITHUB_TOKEN }}
+
+  integration-tests:
+    name: Integration Tests
+    runs-on: macos-latest
+    needs: test
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+
+      - name: Enable macOS desktop
+        run: flutter config --enable-macos-desktop
+
+      - name: Install root dependencies
+        run: flutter pub get
+
+      - name: Install example dependencies
+        run: flutter pub get
+        working-directory: example
+
+      - name: Run all integration tests
+        working-directory: example
+        run: flutter test -r compact -d flutter-tester integration_test/all_tests.dart

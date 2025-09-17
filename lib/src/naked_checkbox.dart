@@ -1,234 +1,224 @@
-import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/widgets.dart';
 
-import 'utilities/pressed_state_region.dart';
+import 'mixins/naked_mixins.dart';
 
-/// A fully customizable checkbox with no default styling.
+/// A headless checkbox without visuals.
 ///
-/// NakedCheckbox provides core interaction behavior and accessibility
-/// without imposing any visual styling, giving consumers complete design freedom.
-/// It integrates with [FocusableActionDetector] to provide enhanced keyboard accessibility,
-/// hover detection, and focus management.
+/// Exposes interaction states and semantics for custom styling.
 ///
-/// This component uses direct callbacks for state changes instead of managing its
-/// own state, giving consumers control over their state management approach.
-///
-/// Example:
 /// ```dart
-/// class MyCheckbox extends StatefulWidget {
-///   @override
-///   _MyCheckboxState createState() => _MyCheckboxState();
-/// }
-///
-/// class _MyCheckboxState extends State<MyCheckbox> {
-///   bool _isChecked = false;
-///   bool _isHovered = false;
-///   bool _isPressed = false;
-///   bool _isFocused = false;
-///
-///   @override
-///   Widget build(BuildContext context) {
-///     return NakedCheckbox(
-///       value: _isChecked,
-///       onChanged: (value) {
-///         setState(() {
-///           _isChecked = value!;
-///         });
-///       },
-///       onHoverState: (isHovered) => setState(() => _isHovered = isHovered),
-///       onPressedState: (isPressed) => setState(() => _isPressed = isPressed),
-///       onFocusState: (isFocused) => setState(() => _isFocused = isFocused),
-///       child: Container(
-///         height: 20,
-///         width: 20,
-///         decoration: BoxDecoration(
-///           border: Border.all(
-///             color: _isFocused
-///                 ? Colors.blue.shade400
-///                 : _isHovered || _isPressed
-///                     ? Colors.blue.shade300
-///                     : Colors.grey.shade300,
-///             width: 2,
-///           ),
-///           borderRadius: BorderRadius.circular(4),
-///           color: _isChecked ? Colors.blue.shade500 : Colors.transparent,
-///         ),
-///         child: _isChecked
-///             ? Icon(
-///                 Icons.check,
-///                 size: 16,
-///                 color: Colors.white,
-///               )
-///             : null,
-///       ),
-///     );
-///   }
-/// }
+/// NakedCheckbox(
+///   value: isChecked,
+///   onChanged: (value) => setState(() => isChecked = value),
+///   child: MyCustomCheckboxUI(),
+/// )
 /// ```
 ///
 /// See also:
-///
-///  * [NakedButton], a component that allows users to trigger actions.
-///  * The Flutter `Checkbox` widget, which provides a similar functionality with
-///    Material Design styling.
-///  * The Naked library documentation for more examples and customization options.
+/// - [Checkbox], the Material-styled checkbox for typical apps.
+/// - [NakedToggle], for a headless binary toggle alternative.
+
 class NakedCheckbox extends StatefulWidget {
-  /// Creates a naked checkbox.
-  ///
-  /// The [child] parameter is required and represents the visual appearance
-  /// of the checkbox in all states.
   const NakedCheckbox({
     super.key,
-    required this.child,
+    this.child,
     this.value = false,
     this.tristate = false,
     this.onChanged,
-    this.onHoverState,
-    this.onPressedState,
-    this.onFocusState,
     this.enabled = true,
-    this.semanticLabel,
-    this.cursor = SystemMouseCursors.click,
-    this.enableHapticFeedback = true,
+    this.mouseCursor,
+    this.enableFeedback = true,
     this.focusNode,
     this.autofocus = false,
+    this.onFocusChange,
+    this.onHoverChange,
+    this.onPressChange,
+    this.builder,
+    this.semanticLabel,
   }) : assert(
          (tristate || value != null),
-         'Checkbox cannot be both checked and indeterminate',
+         'Non-tristate checkbox must have a non-null value',
+       ),
+       assert(
+         child != null || builder != null,
+         'Either child or builder must be provided',
        );
 
-  /// The child widget to display.
-  ///
-  /// This widget should represent the visual appearance of the checkbox.
-  /// You're responsible for rendering different visual states based on
-  /// the callback properties (value, onHoverState, etc.).
-  final Widget child;
+  /// The visual representation of the checkbox.
+  final Widget? child;
 
-  /// Whether this checkbox is checked.
+  /// The current checked state.
   ///
-  /// When [tristate] is true, a value of null corresponds to the mixed state.
-  /// When [tristate] is false, this value must not be null.
+  /// When [tristate] is true, null represents mixed state.
   final bool? value;
 
-  /// If true the checkbox's [value] can be true, false, or null.
+  /// The tristate support flag.
   ///
-  /// When a tri-state checkbox ([tristate] is true) is tapped, its [onChanged]
-  /// callback will be applied to true if the current value is false, to null if
-  /// value is true, and to false if value is null (i.e. it cycles through false
-  /// => true => null => false when tapped).
-  ///
-  /// If tristate is false (the default), [value] must not be null.
+  /// When true, tapping cycles through false → true → null → false.
+  /// When false, [value] must not be null.
   final bool tristate;
 
-  /// Called when the checkbox is toggled.
-  ///
-  /// The callback provides the new state of the checkbox (true for checked, false for unchecked).
-  /// If null, the checkbox will be considered disabled and will not respond to user interaction.
+  /// Called when the checkbox value changes.
   final ValueChanged<bool?>? onChanged;
 
-  /// Callback triggered when the checkbox's hover state changes.
-  ///
-  /// Passes `true` when the pointer enters the checkbox bounds, and `false`
-  /// when it exits. Useful for implementing hover effects.
-  final ValueChanged<bool>? onHoverState;
+  /// Called when focus changes.
+  final ValueChanged<bool>? onFocusChange;
 
-  /// Callback triggered when the checkbox is pressed or released.
-  ///
-  /// Passes `true` when the checkbox is pressed down, and `false` when released.
-  /// Useful for implementing press effects.
-  final ValueChanged<bool>? onPressedState;
+  /// Called when hover changes.
+  final ValueChanged<bool>? onHoverChange;
 
-  /// Callback triggered when the checkbox gains or loses focus.
-  ///
-  /// Passes `true` when the checkbox gains focus, and `false` when it loses focus.
-  /// Useful for implementing focus indicators.
-  final ValueChanged<bool>? onFocusState;
+  /// Called when press state changes.
+  final ValueChanged<bool>? onPressChange;
 
-  /// Whether the checkbox is disabled.
-  ///
-  /// When true, the checkbox will not respond to user interaction
-  /// and should be styled accordingly.
+  /// The enabled state of the checkbox.
   final bool enabled;
 
-  /// Optional semantic label for accessibility.
-  ///
-  /// Provides a description of the checkbox's purpose for screen readers.
-  /// If not provided, screen readers will use a default description.
-  final String? semanticLabel;
+  /// The mouse cursor for the checkbox.
+  final MouseCursor? mouseCursor;
 
-  /// The cursor to show when hovering over the checkbox.
-  ///
-  /// Defaults to [SystemMouseCursors.click] when enabled,
-  /// or [SystemMouseCursors.forbidden] when disabled.
-  final MouseCursor cursor;
+  /// The haptic feedback enablement flag.
+  final bool enableFeedback;
 
-  /// Whether to provide haptic feedback on tap.
-  ///
-  /// When true (the default), the device will produce a haptic feedback effect
-  /// when the checkbox is toggled.
-  final bool enableHapticFeedback;
-
-  /// Optional focus node to control focus behavior.
-  ///
-  /// If not provided, the checkbox will create its own focus node.
+  /// The focus node for the checkbox.
   final FocusNode? focusNode;
 
-  /// Whether the checkbox should be autofocused when the widget is created.
-  ///
-  /// Defaults to false.
+  /// The autofocus flag.
   final bool autofocus;
+
+  /// The builder that receives current interaction states.
+  ///
+  /// States include: disabled, focused, hovered, pressed, selected.
+  /// The selected state reflects `value == true`.
+  final ValueWidgetBuilder<Set<WidgetState>>? builder;
+
+  /// The semantic label for accessibility.
+  final String? semanticLabel;
+
+  bool get _effectiveEnabled => enabled && onChanged != null;
 
   @override
   State<NakedCheckbox> createState() => _NakedCheckboxState();
 }
 
-class _NakedCheckboxState extends State<NakedCheckbox> {
-  void toggleValue([Intent? _]) {
-    if (!_isInteractive) return;
+class _NakedCheckboxState extends State<NakedCheckbox>
+    with WidgetStatesMixin<NakedCheckbox> {
+  // Private methods
+  void _handleKeyboardActivation([Intent? _]) {
+    if (!widget._effectiveEnabled) return;
 
-    if (widget.enableHapticFeedback) {
+    _handleActivation();
+  }
+
+  void _handleActivation() {
+    if (!widget._effectiveEnabled || widget.onChanged == null) return;
+
+    if (widget.enableFeedback) {
       HapticFeedback.selectionClick();
     }
 
-    switch (widget.value) {
-      case false:
-        widget.onChanged!(true);
-      case true:
-        widget.onChanged!(widget.tristate ? null : false);
-      case null:
-        widget.onChanged!(false);
+    final bool? nextValue;
+    if (widget.tristate) {
+      if (widget.value == null) {
+        nextValue = false;
+      } else if (widget.value == false) {
+        nextValue = true;
+      } else {
+        nextValue = null; // true → null
+      }
+    } else {
+      final current = widget.value ?? false;
+      nextValue = !current;
+    }
+
+    widget.onChanged!(nextValue);
+  }
+
+  Widget _buildContent(BuildContext context) {
+    final states = widgetStates;
+
+    return widget.builder != null
+        ? widget.builder!(context, states, widget.child)
+        : widget.child!;
+  }
+
+  // Private getters
+  MouseCursor get _effectiveCursor => widget._effectiveEnabled
+      ? (widget.mouseCursor ?? SystemMouseCursors.click)
+      : SystemMouseCursors.basic;
+
+  VoidCallback? get _semanticsTapHandler =>
+      widget._effectiveEnabled ? _handleActivation : null;
+
+  @override
+  void initializeWidgetStates() {
+    updateDisabledState(!widget.enabled);
+    // Reflect current value into selected state for builder consumers.
+    updateSelectedState(widget.value == true, null);
+  }
+
+  @override
+  void didUpdateWidget(covariant NakedCheckbox oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    syncWidgetStates();
+    if (oldWidget.value != widget.value) {
+      updateSelectedState(widget.value == true, null);
     }
   }
 
-  bool get _isInteractive => widget.enabled && widget.onChanged != null;
-
-  late final Map<Type, Action<Intent>> _actionMap = <Type, Action<Intent>>{
-    ActivateIntent: CallbackAction<ActivateIntent>(onInvoke: toggleValue),
-  };
-
   @override
   Widget build(BuildContext context) {
-    return Semantics(
-      enabled: _isInteractive,
-      checked: widget.value ?? false,
-      mixed: widget.tristate ? widget.value == null : null,
-      label: widget.semanticLabel,
+    return MergeSemantics(
       child: FocusableActionDetector(
-        enabled: _isInteractive,
+        // Keyboard and focus handling
+        enabled: widget._effectiveEnabled,
         focusNode: widget.focusNode,
         autofocus: widget.autofocus,
-        actions: _actionMap,
-        onShowFocusHighlight: widget.onFocusState,
-        onShowHoverHighlight: widget.onHoverState,
-        onFocusChange: widget.onFocusState,
-        mouseCursor: _isInteractive
-            ? widget.cursor
-            : SystemMouseCursors.forbidden,
-        child: PressedStateRegion(
-          onPressedState: widget.onPressedState,
-          onTap: toggleValue,
-          enabled: _isInteractive,
-          child: widget.child,
+        // Use default includeFocusSemantics: true to let it handle focus semantics automatically
+        shortcuts: const {
+          SingleActivator(LogicalKeyboardKey.enter): ActivateIntent(),
+          SingleActivator(LogicalKeyboardKey.space): ActivateIntent(),
+        },
+        actions: {
+          ActivateIntent: CallbackAction<ActivateIntent>(
+            onInvoke: _handleKeyboardActivation,
+          ),
+        },
+        onShowHoverHighlight: (hovered) {
+          updateHoverState(hovered, widget.onHoverChange);
+        },
+        onFocusChange: (focused) {
+          updateFocusState(focused, widget.onFocusChange);
+        },
+        mouseCursor: _effectiveCursor,
+        child: Semantics(
+          container: true,
+          enabled: widget._effectiveEnabled,
+          checked: widget.value == true,
+          mixed: widget.tristate && widget.value == null,
+          label: widget.semanticLabel,
+          onTap: _semanticsTapHandler,
+          child: GestureDetector(
+            onTapDown: widget._effectiveEnabled
+                ? (details) {
+                    updatePressState(true, widget.onPressChange);
+                  }
+                : null,
+            onTapUp: widget._effectiveEnabled
+                ? (details) {
+                    updatePressState(false, widget.onPressChange);
+                  }
+                : null,
+            onTap: widget._effectiveEnabled ? _handleActivation : null,
+            onTapCancel: widget._effectiveEnabled
+                ? () {
+                    updatePressState(false, widget.onPressChange);
+                  }
+                : null,
+            behavior: HitTestBehavior.opaque,
+            excludeFromSemantics: true,
+            child: _buildContent(context),
+          ),
         ),
       ),
     );

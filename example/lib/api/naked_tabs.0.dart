@@ -35,7 +35,7 @@ class _TabsExampleState extends State<TabsExample> {
   Widget build(BuildContext context) {
     return NakedTabGroup(
       selectedTabId: _selectedTabId,
-      onSelectedTabIdChanged: (tabId) => setState(() => _selectedTabId = tabId),
+      onChanged: (tabId) => setState(() => _selectedTabId = tabId),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -144,7 +144,7 @@ class _TabItemState extends State<TabItem> {
   Widget build(BuildContext context) {
     return NakedTab(
       tabId: widget.tabId,
-      onHoverState: (isHovered) => setState(() => _isHovered = isHovered),
+      onHoverChange: (hovered) => setState(() => _isHovered = hovered),
       child: Container(
         alignment: Alignment.center,
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),

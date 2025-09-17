@@ -86,46 +86,42 @@ class _AccordionItemState extends State<AccordionItem> {
       ),
       child: NakedAccordionItem<String>(
         value: widget.value,
-        trigger: (context, isExpanded, toggle) {
-          return NakedButton(
-            onPressed: toggle,
-            onHoverState: (isHovering) =>
-                setState(() => _isHovering = isHovering),
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              decoration: BoxDecoration(
-                border: Border.all(
-                  color: _isHovering || isExpanded
-                      ? Colors.grey.shade100
-                      : Colors.grey.shade300,
-                ),
-                borderRadius: BorderRadius.circular(12),
+        onHoverChange: (hovered) => setState(() => _isHovering = hovered),
+        trigger: (context, isExpanded) {
+          return AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            decoration: BoxDecoration(
+              border: Border.all(
                 color: _isHovering || isExpanded
                     ? Colors.grey.shade100
-                    : Colors.white,
+                    : Colors.grey.shade300,
               ),
-              padding: const EdgeInsets.all(12),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    widget.title,
-                    style: TextStyle(
-                      fontWeight: FontWeight.w500,
-                      color: Colors.grey.shade700,
-                    ),
+              borderRadius: BorderRadius.circular(12),
+              color: _isHovering || isExpanded
+                  ? Colors.grey.shade100
+                  : Colors.white,
+            ),
+            padding: const EdgeInsets.all(12),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  widget.title,
+                  style: TextStyle(
+                    fontWeight: FontWeight.w500,
+                    color: Colors.grey.shade700,
                   ),
-                  AnimatedRotation(
-                    turns: isExpanded ? 0.5 : 0,
-                    duration: const Duration(milliseconds: 200),
-                    child: Icon(
-                      Icons.keyboard_arrow_down_rounded,
-                      color: Colors.grey.shade600,
-                      weight: 100,
-                    ),
+                ),
+                AnimatedRotation(
+                  turns: isExpanded ? 0.5 : 0,
+                  duration: const Duration(milliseconds: 200),
+                  child: Icon(
+                    Icons.keyboard_arrow_down_rounded,
+                    color: Colors.grey.shade600,
+                    weight: 100,
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           );
         },

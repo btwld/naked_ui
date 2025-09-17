@@ -1,95 +1,87 @@
 import 'dart:async';
 
-import 'package:flutter/material.dart';
+import 'package:flutter/gestures.dart';
+import 'package:flutter/widgets.dart';
 
 import 'utilities/utilities.dart';
 
-/// A fully customizable tooltip with no default styling.
+/// Provides tooltip behavior without visual styling.
 ///
-/// NakedTooltip provides core tooltip behavior and accessibility
-/// without imposing any visual styling, giving consumers complete design freedom.
-///
-/// This component handles showing and hiding tooltips, positioning the tooltip
-/// relative to the target widget, and automatically dismissing the tooltip
-/// after a specified duration.
+/// Handles showing, hiding, and positioning tooltips with automatic
+/// dismissal after specified duration.
 ///
 /// Example:
 /// ```dart
-/// class MyTooltip extends StatefulWidget {
+/// class TooltipExample extends StatefulWidget {
+///   const TooltipExample({super.key});
 ///   @override
-///   _MyTooltipState createState() => _MyTooltipState();
+///   State<TooltipExample> createState() => _TooltipExampleState();
 /// }
 ///
-/// class _MyTooltipState extends State<MyTooltip>
+/// class _TooltipExampleState extends State<TooltipExample>
 ///     with SingleTickerProviderStateMixin {
-///   late final _controller = OverlayPortalController();
-///   late final animationController = AnimationController(
-///     duration: const Duration(milliseconds: 2000),
+///   late final _controller = AnimationController(
+///     duration: const Duration(milliseconds: 300),
 ///     vsync: this,
 ///   );
-///   late final CurvedAnimation _animation;
-///
-///   @override
-///   void initState() {
-///     super.initState();
-///     _animation = CurvedAnimation(
-///       parent: animationController,
-///       curve: Curves.easeInOut,
-///     );
-///   }
 ///
 ///   @override
 ///   void dispose() {
-///     animationController.dispose();
+///     _controller.dispose();
 ///     super.dispose();
 ///   }
 ///
 ///   @override
 ///   Widget build(BuildContext context) {
 ///     return NakedTooltip(
-///       fallbackAlignments: [
-///         AlignmentPair(
-///           target: Alignment.topCenter,
-///           follower: Alignment.bottomCenter,
-///           offset: const Offset(0, -8),
-///         ),
-///       ],
-///       targetAnchor: Alignment.bottomCenter,
-///       followerAnchor: Alignment.topCenter,
-///       offset: const Offset(0, 8),
-///       tooltipWidgetBuilder:
-///           (context) => FadeTransition(
-///             opacity: _animation,
-///             child: Container(
-///               padding: EdgeInsets.all(8),
-///               decoration: BoxDecoration(
-///                 color: Colors.grey[800],
-///                 borderRadius: BorderRadius.circular(4),
-///               ),
-///               child: Text(
-///                 'This is a tooltip',
-///                 style: TextStyle(color: Colors.white),
-///               ),
+///       position: const NakedMenuPosition(
+///         target: Alignment.topCenter,
+///         follower: Alignment.bottomCenter,
+///       ),
+///       waitDuration: const Duration(milliseconds: 0),
+///       showDuration: const Duration(milliseconds: 0),
+///       removalDelay: const Duration(milliseconds: 300),
+///       onStateChange: (state) {
+///         switch (state) {
+///           case OverlayChildLifecycleState.present:
+///             _controller.forward();
+///             break;
+///           case OverlayChildLifecycleState.pendingRemoval:
+///             _controller.reverse();
+///             break;
+///           case OverlayChildLifecycleState.removed:
+///             break;
+///         }
+///       },
+///       tooltipBuilder: (context) => SlideTransition(
+///         position: _controller.drive(Tween<Offset>(
+///           begin: const Offset(0, 0.1),
+///           end: const Offset(0, 0),
+///         )),
+///         child: FadeTransition(
+///           opacity: _controller,
+///           child: Container(
+///             padding: const EdgeInsets.all(8),
+///             decoration: BoxDecoration(
+///               color: Colors.grey[800],
+///               borderRadius: BorderRadius.circular(4),
+///             ),
+///             child: const Text(
+///               'This is a tooltip',
+///               style: TextStyle(color: Colors.white),
 ///             ),
 ///           ),
-///       controller: _controller,
-///       child: MouseRegion(
-///         onEnter: (_) {
-///           _controller.show();
-///           animationController.forward();
-///         },
-///         onExit: (_) {
-///           animationController.reverse().then((_) {
-///             _controller.hide();
-///           });
-///         },
-///         child: Container(
-///           padding: EdgeInsets.all(8),
-///           decoration: BoxDecoration(
-///             color: const Color(0xFF2196F3),
-///             borderRadius: BorderRadius.circular(4),
-///           ),
-///           child: Text('Hover me', style: TextStyle(color: Colors.white)),
+///         ),
+///       ),
+///       child: Container(
+///         padding: const EdgeInsets.all(8),
+///         decoration: BoxDecoration(
+///           color: const Color(0xFF2196F3),
+///           borderRadius: BorderRadius.circular(4),
+///         ),
+///         child: const Text(
+///           'Hover me',
+///           style: TextStyle(color: Colors.white),
 ///         ),
 ///       ),
 ///     );
@@ -97,9 +89,7 @@ import 'utilities/utilities.dart';
 /// }
 /// ```
 class NakedTooltip extends StatefulWidget implements OverlayChildLifecycle {
-  /// Creates a naked tooltip.
-  ///
-  /// The [child] and [tooltipWidget] parameters are required.
+  /// Creates a headless tooltip.
   const NakedTooltip({
     super.key,
     required this.child,
@@ -110,42 +100,43 @@ class NakedTooltip extends StatefulWidget implements OverlayChildLifecycle {
       target: Alignment.topCenter,
       follower: Alignment.bottomCenter,
     ),
-    this.tooltipSemantics,
-    this.excludeFromSemantics = false,
     this.fallbackPositions = const [],
     this.removalDelay = Duration.zero,
     this.onStateChange,
+    this.semanticsLabel,
   });
+
+  /// See also:
+  /// - [NakedMenuAnchor], which is used to position the tooltip overlay
+  ///   relative to its trigger.
+  /// - [NakedPopover], for anchored, click-triggered overlays.
 
   /// The widget that triggers the tooltip.
   final Widget child;
 
-  /// The widget to display in the tooltip.
+  /// The tooltip content builder.
   final WidgetBuilder tooltipBuilder;
 
-  /// The position of the tooltip relative to the target.
+  /// The semantic label for screen readers.
+  final String? semanticsLabel;
+
+  /// The tooltip position relative to the target.
   final NakedMenuPosition position;
 
-  /// Optional semantic label for accessibility.
-  final String? tooltipSemantics;
-
-  /// Whether to exclude the tooltip from the semantics tree.
-  final bool excludeFromSemantics;
-
-  /// The fallback alignments for the tooltip.
+  /// The fallback positions for the tooltip.
   final List<NakedMenuPosition> fallbackPositions;
 
-  /// The duration for which the tooltip remains visible.
+  /// The duration tooltip remains visible.
   final Duration showDuration;
 
-  /// The duration to wait before showing the tooltip after hover.
+  /// The duration to wait before showing tooltip.
   final Duration waitDuration;
 
-  /// The duration to wait before removing the Widget from the Overlay after the tooltip is hidden.
+  /// The duration before removing from overlay after hiding.
   @override
   final Duration removalDelay;
 
-  /// The event handler for the tooltip.
+  /// Called when tooltip lifecycle state changes.
   @override
   final void Function(OverlayChildLifecycleState state)? onStateChange;
 
@@ -158,6 +149,37 @@ class _NakedTooltipState extends State<NakedTooltip>
   Timer? _showTimer;
   Timer? _waitTimer;
 
+  void _handleMouseEnter(PointerEnterEvent _) {
+    _showTimer?.cancel();
+    _waitTimer?.cancel();
+    _waitTimer = Timer(widget.waitDuration, () {
+      showNotifier.value = true;
+    });
+  }
+
+  void _handleMouseExit(PointerExitEvent _) {
+    _showTimer?.cancel();
+    _waitTimer?.cancel();
+    _showTimer = Timer(widget.showDuration, () {
+      showNotifier.value = false;
+    });
+  }
+
+  Widget _buildTooltipWidget(BuildContext _) {
+    return NakedMenuAnchor(
+      controller: controller,
+      overlayBuilder: widget.tooltipBuilder,
+      removalDelay: widget.removalDelay,
+      position: widget.position,
+      fallbackPositions: widget.fallbackPositions,
+      child: MouseRegion(
+        onEnter: _handleMouseEnter,
+        onExit: _handleMouseExit,
+        child: widget.child,
+      ),
+    );
+  }
+
   @override
   void dispose() {
     _showTimer?.cancel();
@@ -167,38 +189,17 @@ class _NakedTooltipState extends State<NakedTooltip>
 
   @override
   Widget build(BuildContext context) {
-    return Semantics(
-      container: true,
-      excludeSemantics: widget.excludeFromSemantics,
-      tooltip: widget.excludeFromSemantics ? null : widget.tooltipSemantics,
-      child: ListenableBuilder(
-        listenable: showNotifier,
-        builder: (context, child) {
-          return NakedMenuAnchor(
-            controller: controller,
-            overlayBuilder: widget.tooltipBuilder,
-            position: widget.position,
-            fallbackPositions: widget.fallbackPositions,
-            child: MouseRegion(
-              onEnter: (_) {
-                _showTimer?.cancel();
-                _waitTimer?.cancel();
-                _waitTimer = Timer(widget.waitDuration, () {
-                  showNotifier.value = true;
-                });
-              },
-              onExit: (_) {
-                _showTimer?.cancel();
-                _waitTimer?.cancel();
-                _showTimer = Timer(widget.showDuration, () {
-                  showNotifier.value = false;
-                });
-              },
-              child: widget.child,
-            ),
-          );
-        },
-      ),
+    return ListenableBuilder(
+      listenable: showNotifier,
+      builder: (context, child) {
+        Widget tooltipWidget = _buildTooltipWidget(context);
+
+        return Semantics(
+          container: true,
+          tooltip: widget.semanticsLabel,
+          child: tooltipWidget,
+        );
+      },
     );
   }
 }

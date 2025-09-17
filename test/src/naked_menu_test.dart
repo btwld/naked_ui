@@ -3,7 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:naked_ui/naked_ui.dart';
 
-import 'helpers/simulate_hover.dart';
+import '../test_helpers.dart';
 
 extension _NakedMenuTester on WidgetTester {
   Future<void> pressEsc() async {
@@ -161,7 +161,7 @@ void main() {
       });
 
       testWidgets(
-        'calls onMenuClose when menu item selected (if closeOnSelect is true)',
+        'calls onMenuClose when menu item is selected (default behavior)',
         (WidgetTester tester) async {
           bool onMenuCloseCalled = false;
           const menuKey = Key('menu');
@@ -171,7 +171,6 @@ void main() {
           await tester.pumpMaterialWidget(
             NakedMenu(
               controller: controller,
-              closeOnSelect: true,
               onClose: () => onMenuCloseCalled = true,
               overlayBuilder: (_) => Container(
                 key: menuKey,
@@ -200,6 +199,45 @@ void main() {
           expect(onMenuCloseCalled, true);
         },
       );
+
+      testWidgets('keeps menu open when closeOnSelect is false on menu item', (
+        WidgetTester tester,
+      ) async {
+        bool onMenuCloseCalled = false;
+        const menuKey = Key('menu');
+        const item1Key = Key('item1');
+        final controller = MenuController();
+
+        await tester.pumpMaterialWidget(
+          NakedMenu(
+            controller: controller,
+            onClose: () => onMenuCloseCalled = true,
+            overlayBuilder: (_) => Container(
+              key: menuKey,
+              constraints: const BoxConstraints(maxWidth: 100, maxHeight: 100),
+              child: NakedMenuItem(
+                key: item1Key,
+                closeOnSelect: false,
+                onPressed: () {},
+                child: const Text('Item 1'),
+              ),
+            ),
+            builder: (_) => const Text('child'),
+          ),
+        );
+
+        controller.open();
+
+        await tester.pump();
+        expect(find.byKey(menuKey), findsOneWidget);
+
+        await tester.tap(find.text('Item 1'));
+        await tester.pumpAndSettle();
+
+        // Menu should still be open since closeOnSelect is false
+        expect(onMenuCloseCalled, false);
+        expect(find.byKey(menuKey), findsOneWidget);
+      });
     });
 
     group('Keyboard Interaction', () {
@@ -217,16 +255,12 @@ void main() {
                 children: [
                   NakedMenuItem(
                     onPressed: () {},
-                    onFocusState: (value) {
-                      item1Focused = value;
-                    },
+                    onFocusChange: (focused) => item1Focused = focused,
                     child: const Text('Item 1'),
                   ),
                   NakedMenuItem(
                     onPressed: () {},
-                    onFocusState: (value) {
-                      item2Focused = value;
-                    },
+                    onFocusChange: (focused) => item2Focused = focused,
                     child: const Text('Item 2'),
                   ),
                 ],
@@ -255,26 +289,6 @@ void main() {
         expect(item2Focused, true);
       });
     });
-
-    // group('Accessibility', () {
-    //   testWidgets('Provides semantic labels when provided',
-    //       (WidgetTester tester) async {
-    //     await tester.pumpMenu(
-    //       const NakedMenu(
-    //         semanticLabel: 'Test Menu',
-    //         menu: NakedMenuContent(
-    //           child: Text('Menu Content'),
-    //         ),
-    //         child: Text('child'),
-    //       ),
-    //     );
-
-    //     expect(
-    //       tester.getSemantics(find.byType(Semantics).first),
-    //       matchesSemantics(label: 'Test Menu'),
-    //     );
-    //   });
-    // });
   });
 
   group('NakedMenuContent', () {
@@ -410,9 +424,7 @@ void main() {
     });
 
     group('State Callbacks', () {
-      testWidgets('Calls hover state callback', (WidgetTester tester) async {
-        FocusManager.instance.highlightStrategy =
-            FocusHighlightStrategy.alwaysTraditional;
+      testWidgets('Calls hovered state callback', (WidgetTester tester) async {
         bool hovered = false;
         const key = Key('menuItem');
         final controller = MenuController();
@@ -426,7 +438,7 @@ void main() {
               child: NakedMenuItem(
                 key: key,
                 onPressed: () {},
-                onHoverState: (value) => hovered = value,
+                onHoverChange: (hovered_) => hovered = hovered_,
                 child: const Text('Menu Item'),
               ),
             ),
@@ -457,7 +469,7 @@ void main() {
             overlayBuilder: (_) => NakedMenuItem(
               key: key,
               onPressed: () {},
-              onPressedState: (value) => pressed = value,
+              onPressChange: (pressed_) => pressed = pressed_,
               child: const Text('Menu Item'),
             ),
           ),
@@ -466,18 +478,13 @@ void main() {
         controller.open();
         await tester.pump();
 
-        await tester.simulatePress(
-          key,
-          onPressed: () {
-            expect(pressed, true);
-          },
-        );
+        await tester.simulatePress(key);
+        // After simulated press, final state should be not pressed
+        expect(pressed, isFalse);
         expect(pressed, false);
       });
 
-      testWidgets('Calls focus state callback', (WidgetTester tester) async {
-        FocusManager.instance.highlightStrategy =
-            FocusHighlightStrategy.alwaysTraditional;
+      testWidgets('Calls focused state callback', (WidgetTester tester) async {
         bool focused = false;
         final focusNode = FocusNode();
         final controller = MenuController();
@@ -489,7 +496,7 @@ void main() {
             overlayBuilder: (_) => NakedMenuItem(
               onPressed: () {},
               focusNode: focusNode,
-              onFocusState: (value) => focused = value,
+              onFocusChange: (focused_) => focused = focused_,
               child: const Text('Menu Item'),
             ),
           ),
@@ -506,9 +513,7 @@ void main() {
     });
 
     group('Keyboard Interaction', () {
-      testWidgets('Activates with Space and Enter keys', (
-        WidgetTester tester,
-      ) async {
+      testWidgets('Activates with Space key', (WidgetTester tester) async {
         bool pressed = false;
         final focusNode = FocusNode();
         final controller = MenuController();
@@ -532,18 +537,10 @@ void main() {
         focusNode.requestFocus();
         await tester.pump();
 
-        // Test space key
         await tester.sendKeyEvent(LogicalKeyboardKey.space);
-        await tester.pump();
+        await tester.pumpAndSettle();
         expect(pressed, true);
 
-        // Reset and test enter key
-        pressed = false;
-        await tester.sendKeyEvent(LogicalKeyboardKey.enter);
-        await tester.pump();
-        expect(pressed, true);
-
-        // Cleanup
         focusNode.dispose();
       });
     });

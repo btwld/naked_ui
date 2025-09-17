@@ -5,7 +5,7 @@ title: NakedSlider
 NakedSlider provides interaction behavior and accessibility features without imposing any visual styling, giving consumers complete design freedom. It integrates with `FocusableActionDetector` to provide enhanced keyboard accessibility, hover detection, and focus management.
 
 <Info>
-  You can find this example in our [GitHub repository](https://github.com/btwld/mix/blob/main/packages/naked/example/lib/api/naked_slider.0.dart).
+  You can find this example in our [GitHub repository](https://github.com/btwld/naked_ui/blob/main/example/lib/api/naked_slider.0.dart).
 </Info>
 <CodeGroup title="Usage Example" defaultLanguage="dart">
 ```dart
@@ -167,17 +167,19 @@ const NakedSlider({
   this.onChanged,
   this.onDragStart,
   this.onDragEnd,
-  this.onHoverState,
-  this.onDraggingState,
-  this.onFocusState,
+  this.onHoverChange,
+  this.onDragChange,
+  this.onFocusChange,
   this.enabled = true,
-  this.semanticLabel,
-  this.cursor = SystemMouseCursors.click,
+  this.mouseCursor = SystemMouseCursors.click,
+  this.enableFeedback = true,
   this.focusNode,
+  this.autofocus = false,
   this.direction = Axis.horizontal,
   this.divisions,
   this.keyboardStep = 0.01,
   this.largeKeyboardStep = 0.1,
+  this.semanticLabel,
 })
 ```
 
@@ -204,26 +206,25 @@ Called when the user starts dragging the slider.
 #### onDragEnd → `ValueChanged<double>?`
 Called when the user ends dragging the slider.
 
-#### onHoverState → `ValueChanged<bool>?`
+#### onHoverChange → `ValueChanged<bool>?`
 Called when hover state changes. Provides the current hover state (true when hovered, false otherwise).
 
-#### onDraggingState → `ValueChanged<bool>?`
+#### onDragChange → `ValueChanged<bool>?`
 Called when dragging state changes. Provides the current dragging state (true when dragging, false otherwise).
 
-#### onFocusState → `ValueChanged<bool>?`
+#### onFocusChange → `ValueChanged<bool>?`
 Called when focus state changes. Provides the current focus state (true when focused, false otherwise).
 
 #### enabled → `bool`
 Whether the slider is enabled. When true, the slider will respond to user interaction. Defaults to true.
 
-#### semanticLabel → `String?`
-Optional semantic label for accessibility. This is used by screen readers to describe the slider.
 
-#### cursor → `MouseCursor`
-The cursor to show when hovering over the slider. Defaults to SystemMouseCursors.click.
 
 #### focusNode → `FocusNode?`
 Optional focus node to control focus behavior.
+
+#### autofocus → `bool`
+Whether to automatically request focus when first built. Defaults to false.
 
 #### direction → `Axis`
 Direction of the slider. Can be horizontal (left to right) or vertical (bottom to top). Defaults to Axis.horizontal.
@@ -236,4 +237,14 @@ Step size for keyboard navigation. This value is used when arrow keys are presse
 
 #### largeKeyboardStep → `double`
 Step size for large keyboard navigation. This value is used when arrow keys are pressed while holding Shift. Defaults to 0.1 (10% of the slider range).
+
+#### mouseCursor → `MouseCursor`
+Cursor to show when hovering. Defaults to click.
+
+#### enableFeedback → `bool`
+Whether to provide haptic feedback on drag start. Defaults to true.
+
+#### semanticLabel → `String?`
+Semantic label for screen readers.
+
 

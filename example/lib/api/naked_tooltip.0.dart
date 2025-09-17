@@ -44,6 +44,7 @@ class _TooltipExampleState extends State<TooltipExample>
   @override
   Widget build(BuildContext context) {
     return NakedTooltip(
+      semanticsLabel: 'This is a tooltip',
       position: const NakedMenuPosition(
         target: Alignment.topCenter,
         follower: Alignment.bottomCenter,
@@ -64,23 +65,36 @@ class _TooltipExampleState extends State<TooltipExample>
         child: FadeTransition(
           opacity: _animationController,
           child: Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: Colors.grey[700],
-              borderRadius: BorderRadius.circular(4),
-            ),
-            child: const Text(
-              'This is a tooltip',
-              style: TextStyle(color: Colors.white),
+            // Add gap between tooltip and trigger, since follower is aligned on its bottom.
+            margin: const EdgeInsets.only(bottom: 8),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              constraints: const BoxConstraints(maxWidth: 260),
+              decoration: BoxDecoration(
+                color: Colors.grey[800],
+                borderRadius: BorderRadius.circular(10),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.2),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: const DefaultTextStyle(
+                style: TextStyle(color: Colors.white, fontSize: 13),
+                textAlign: TextAlign.center,
+                child: Text('This is a tooltip'),
+              ),
             ),
           ),
         ),
       ),
       child: Container(
-        padding: const EdgeInsets.all(8),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         decoration: BoxDecoration(
           color: const Color(0xFF3D3D3D),
-          borderRadius: BorderRadius.circular(4),
+          borderRadius: BorderRadius.circular(10),
         ),
         child: const Text(
           'Hover me',

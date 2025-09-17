@@ -5,7 +5,7 @@ title: NakedSelect
 NakedSelect provides a fully customizable dropdown/select component with no default styling, giving developers complete control over appearance while maintaining all the complex interaction patterns and accessibility features of a dropdown menu.
 
 <Info>
-  You can find examples in our [GitHub repository](https://github.com/btwld/mix/blob/main/packages/naked/example/lib/api/naked_select.0.dart).
+  You can find examples in our [GitHub repository](https://github.com/btwld/naked_ui/blob/main/example/lib/api/naked_select.0.dart).
 </Info>
 
 <CodeGroup title="Usage Example" defaultLanguage="dart">
@@ -118,7 +118,7 @@ class _AnimatedSelectExampleState extends State<AnimatedSelectExample>
                   borderRadius: BorderRadius.circular(12),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
+                      color: Colors.black.withValues(alpha: 0.1),
                       blurRadius: 8,
                       offset: const Offset(0, 4),
                     ),
@@ -147,8 +147,8 @@ class _AnimatedSelectExampleState extends State<AnimatedSelectExample>
           ),
         ),
         child: NakedSelectTrigger(
-          onHoverState: (isHovered) => setState(() => _isHovered = isHovered),
-          onFocusState: (isFocused) => setState(() => _isFocused = isFocused),
+          onHoverChange: (isHovered) => setState(() => _isHovered = isHovered),
+          onFocusChange: (isFocused) => setState(() => _isFocused = isFocused),
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 200),
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -210,9 +210,9 @@ class _SelectItemState extends State<SelectItem> {
   Widget build(BuildContext context) {
     return NakedSelectItem<String>(
       value: widget.value,
-      onHoverState: (isHovered) => setState(() => _isHovered = isHovered),
-      onFocusState: (isFocused) => setState(() => _isFocused = isFocused),
-      onSelectState: (isSelected) => setState(() => _isSelected = isSelected),
+      onHoverChange: (isHovered) => setState(() => _isHovered = isHovered),
+      onFocusChange: (isFocused) => setState(() => _isFocused = isFocused),
+      onSelectChange: (isSelected) => setState(() => _isSelected = isSelected),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
         decoration: BoxDecoration(
@@ -241,24 +241,22 @@ const NakedSelect({
   this.removalDelay = Duration.zero,
   this.onSelectedValueChanged,
   this.enabled = true,
-  this.semanticLabel,
   this.closeOnSelect = true,
   this.autofocus = false,
   this.enableTypeAhead = true,
   this.typeAheadDebounceTime = const Duration(milliseconds: 500),
-  this.menuAlignment = const PositionConfig(
+  this.menuPosition = const NakedMenuPosition(
     target: Alignment.bottomLeft,
     follower: Alignment.topLeft,
-    offset: Offset(0, 4),
   ),
-  this.fallbackAlignments = const [
-    PositionConfig(
+  this.fallbackPositions = const [
+    NakedMenuPosition(
       target: Alignment.topLeft,
       follower: Alignment.bottomLeft,
-      offset: Offset(0, -8),
     ),
   ],
   this.closeOnClickOutside = true,
+  this.semanticLabel,
 })
 
 const NakedSelect.multiple({
@@ -272,21 +270,18 @@ const NakedSelect.multiple({
   this.selectedValues,
   this.onSelectedValuesChanged,
   this.enabled = true,
-  this.semanticLabel,
   this.closeOnSelect = true,
   this.autofocus = false,
   this.enableTypeAhead = true,
   this.typeAheadDebounceTime = const Duration(milliseconds: 500),
-  this.menuAlignment = const PositionConfig(
+  this.menuPosition = const NakedMenuPosition(
     target: Alignment.bottomLeft,
     follower: Alignment.topLeft,
-    offset: Offset(0, 4),
   ),
-  this.fallbackAlignments = const [
-    PositionConfig(
+  this.fallbackPositions = const [
+    NakedMenuPosition(
       target: Alignment.topLeft,
       follower: Alignment.bottomLeft,
-      offset: Offset(0, -8),
     ),
   ],
   this.closeOnClickOutside = true,
@@ -312,6 +307,9 @@ The duration to wait before removing the widget from the overlay after the menu 
 #### onStateChange → `Function(OverlayChildLifecycleState state)?`
 Optional callback for handling overlay state changes.
 
+#### semanticLabel → `String?`
+Optional semantic label announced by screen readers on the trigger.
+
 #### selectedValue → `T?`
 The currently selected value in single selection mode. Only used in the default constructor.
 
@@ -327,8 +325,7 @@ Called when selected values change in multiple selection mode. Only used in the 
 #### enabled → `bool`
 Whether the select is enabled and can be interacted with. Defaults to true.
 
-#### semanticLabel → `String?`
-Semantic label for accessibility. Used by screen readers to identify the select component.
+
 
 #### closeOnSelect → `bool`
 Whether to automatically close the dropdown when an item is selected. Defaults to true.
@@ -342,10 +339,10 @@ Whether to enable type-ahead selection for quick keyboard navigation. Defaults t
 #### typeAheadDebounceTime → `Duration`
 Duration before resetting the type-ahead search buffer. Defaults to 500ms.
 
-#### menuAlignment → `PositionConfig`
+#### menuPosition → `NakedMenuPosition`
 The alignment of the menu relative to its trigger.
 
-#### fallbackAlignments → `List<PositionConfig>`
+#### fallbackPositions → `List<NakedMenuPosition>`
 Alternative alignments to try if the menu doesn't fit in the preferred position.
 
 #### closeOnClickOutside → `bool`
@@ -358,12 +355,11 @@ Whether to close the menu when clicking outside. Defaults to true.
 const NakedSelectTrigger({
   Key? key,
   required this.child,
-  this.onHoverState,
-  this.onPressedState,
-  this.onFocusState,
-  this.semanticLabel,
-  this.cursor = SystemMouseCursors.click,
-  this.enableHapticFeedback = true,
+  this.onHoverChange,
+  this.onPressChange,
+  this.onFocusChange,
+  this.mouseCursor = SystemMouseCursors.click,
+  this.enableFeedback = true,
   this.focusNode,
   this.autofocus = false,
 })
@@ -374,23 +370,19 @@ const NakedSelectTrigger({
 #### child → `Widget`
 The child widget to display. This widget will be wrapped with interaction handlers.
 
-#### onHoverState → `ValueChanged<bool>?`
+#### onHoverChange → `ValueChanged<bool>?`
 Called when the hover state changes. Use this to update the visual appearance on hover.
 
-#### onPressedState → `ValueChanged<bool>?`
+#### onPressChange → `ValueChanged<bool>?`
 Called when the pressed state changes. Use this to update the visual appearance while pressed.
 
-#### onFocusState → `ValueChanged<bool>?`
-Called when the focus state changes. Use this to update the visual appearance when focused.
 
-#### semanticLabel → `String?`
-Semantic label for accessibility. Used by screen readers to identify the trigger.
 
-#### cursor → `MouseCursor`
+#### mouseCursor → `MouseCursor`
 The cursor to show when hovering over the trigger. Defaults to `SystemMouseCursors.click`.
 
-#### enableHapticFeedback → `bool`
-Whether to provide haptic feedback when tapped. Defaults to true.
+#### enableFeedback → `bool`
+Whether to provide feedback when tapped. Defaults to true.
 
 #### focusNode → `FocusNode?`
 Optional focus node to control focus behavior.
@@ -406,14 +398,13 @@ const NakedSelectItem({
   Key? key,
   required this.child,
   required this.value,
-  this.onHoverState,
-  this.onPressedState,
-  this.onFocusState,
-  this.onSelectState,
+  this.onHoverChange,
+  this.onPressChange,
+  this.onFocusChange,
+  this.onSelectChange,
   this.enabled = true,
-  this.semanticLabel,
-  this.cursor = SystemMouseCursors.click,
-  this.enableHapticFeedback = true,
+  this.mouseCursor = SystemMouseCursors.click,
+  this.enableFeedback = true,
   this.focusNode,
   this.autofocus = false,
 })
@@ -427,32 +418,25 @@ The child widget to display. This widget will be wrapped with interaction handle
 #### value → `T`
 The value associated with this item. This value will be passed to the select's onChange callback when selected.
 
-#### onHoverState → `ValueChanged<bool>?`
+#### onHoverChange → `ValueChanged<bool>?`
 Called when the hover state changes. Use this to update the visual appearance on hover.
 
-#### onPressedState → `ValueChanged<bool>?`
+#### onPressChange → `ValueChanged<bool>?`
 Called when the pressed state changes. Use this to update the visual appearance while pressed.
 
-#### onFocusState → `ValueChanged<bool>?`
+#### onFocusChange → `ValueChanged<bool>?`
 Called when the focus state changes. Use this to update the visual appearance when focused.
 
-#### onSelectState → `ValueChanged<bool>?`
+#### onSelectChange → `ValueChanged<bool>?`
 Called when the selection state changes. Use this to update the visual appearance when this item is selected or deselected.
 
-#### enabled → `bool`
-Whether this item is enabled and can be selected. Defaults to true.
 
-#### semanticLabel → `String?`
-Semantic label for accessibility. Used by screen readers to identify the item.
 
-#### cursor → `MouseCursor`
+#### mouseCursor → `MouseCursor`
 The cursor to show when hovering over this item. Defaults to `SystemMouseCursors.click`.
 
-#### enableHapticFeedback → `bool`
+#### enableFeedback → `bool`
 Whether to provide haptic feedback when selected. Defaults to true.
 
 #### focusNode → `FocusNode?`
 Optional focus node to control focus behavior.
-
-#### autofocus → `bool`
-Whether to automatically focus this item. Defaults to false.

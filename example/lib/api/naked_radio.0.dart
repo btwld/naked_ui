@@ -38,7 +38,7 @@ class _RadioExampleState extends State<RadioExample> {
 
   @override
   Widget build(BuildContext context) {
-    return NakedRadioGroup<RadioOption>(
+    return RadioGroup<RadioOption>(
       groupValue: _selectedValue,
       onChanged: (value) {
         setState(() => _selectedValue = value!);
@@ -47,16 +47,16 @@ class _RadioExampleState extends State<RadioExample> {
         mainAxisSize: MainAxisSize.min,
         spacing: 8,
         children: [
-          Radio(value: RadioOption.banana),
-          Radio(value: RadioOption.apple),
+          RadioButton(value: RadioOption.banana),
+          RadioButton(value: RadioOption.apple),
         ],
       ),
     );
   }
 }
 
-class Radio extends StatefulWidget {
-  const Radio({
+class RadioButton extends StatefulWidget {
+  const RadioButton({
     super.key,
     required this.value,
   });
@@ -64,18 +64,17 @@ class Radio extends StatefulWidget {
   final RadioOption value;
 
   @override
-  State<Radio> createState() => _RadioState();
+  State<RadioButton> createState() => _RadioButtonState();
 }
 
-class _RadioState extends State<Radio> {
+class _RadioButtonState extends State<RadioButton> {
   bool _isHovered = false;
   bool _isPressed = false;
   bool _isFocused = false;
-  bool _isSelected = false;
 
-  Color get borderColor {
+  Color borderColor(bool isSelected) {
     const baseColor = Color(0xFF3D3D3D);
-    if (_isSelected) {
+    if (isSelected) {
       return baseColor;
     }
     if (_isPressed || _isFocused) {
@@ -91,22 +90,24 @@ class _RadioState extends State<Radio> {
   Widget build(BuildContext context) {
     return NakedRadio<RadioOption>(
       value: widget.value,
-      onFocusState: (focused) => setState(() => _isFocused = focused),
-      onHoverState: (hovered) => setState(() => _isHovered = hovered),
-      onSelectState: (selected) => setState(() => _isSelected = selected),
-      onPressedState: (pressed) => setState(() => _isPressed = pressed),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 100),
-        width: 20,
-        height: 20,
-        decoration: BoxDecoration(
-          border: Border.all(
-            color: borderColor,
-            width: _isSelected ? 6 : 2,
+      onFocusChange: (focused) => setState(() => _isFocused = focused),
+      onHoverChange: (hovered) => setState(() => _isHovered = hovered),
+      onPressChange: (pressed) => setState(() => _isPressed = pressed),
+      builder: (context, states, child) {
+        final isSelected = states.isSelected;
+        return AnimatedContainer(
+          duration: const Duration(milliseconds: 100),
+          width: 20,
+          height: 20,
+          decoration: BoxDecoration(
+            border: Border.all(
+              color: borderColor(isSelected),
+              width: isSelected ? 6 : 2,
+            ),
+            borderRadius: BorderRadius.circular(10),
           ),
-          borderRadius: BorderRadius.circular(10),
-        ),
-      ),
+        );
+      },
     );
   }
 }

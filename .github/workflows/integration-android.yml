@@ -1,0 +1,64 @@
+name: Android Integration Tests
+
+on:
+  workflow_dispatch:
+
+# Avoid overlapping runs for same branch/PR
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  integration-tests-android:
+    name: Run integration_test on Android emulator
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: gradle
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+
+      - name: Flutter doctor
+        run: flutter doctor -v
+
+      - name: Resolve root dependencies
+        run: flutter pub get
+
+      - name: Resolve example dependencies
+        run: flutter pub get
+        working-directory: example
+
+      - name: Ensure Android platform files for example
+        run: |
+          if [ ! -d "android" ]; then
+            flutter create --platforms android .
+          fi
+        working-directory: example
+
+      - name: Launch emulator and run integration tests
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          target: default
+          arch: x86_64
+          profile: pixel_6
+          force-avd-creation: true
+          disable-animations: true
+          script: |
+            adb devices -l
+            cd example
+            flutter test integration_test/all_tests.dart -d emulator-5554
+

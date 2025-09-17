@@ -1,110 +1,74 @@
-import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/widgets.dart';
 
-/// A fully customizable slider with no default styling.
+import 'mixins/naked_mixins.dart';
+
+// Slider keyboard shortcuts (left-to-right layout)
+const Map<ShortcutActivator, Intent> _kSliderShortcutsLtr =
+    <ShortcutActivator, Intent>{
+      // Horizontal
+      SingleActivator(LogicalKeyboardKey.arrowRight): _SliderIncrementIntent(),
+      SingleActivator(LogicalKeyboardKey.arrowLeft): _SliderDecrementIntent(),
+      SingleActivator(LogicalKeyboardKey.arrowLeft, shift: true):
+          _SliderShiftDecrementIntent(),
+      SingleActivator(LogicalKeyboardKey.arrowRight, shift: true):
+          _SliderShiftIncrementIntent(),
+
+      // Vertical
+      SingleActivator(LogicalKeyboardKey.arrowUp): _SliderIncrementIntent(),
+      SingleActivator(LogicalKeyboardKey.arrowUp, shift: true):
+          _SliderShiftIncrementIntent(),
+      SingleActivator(LogicalKeyboardKey.arrowDown): _SliderDecrementIntent(),
+      SingleActivator(LogicalKeyboardKey.arrowDown, shift: true):
+          _SliderShiftDecrementIntent(),
+
+      // Home/End
+      SingleActivator(LogicalKeyboardKey.home): _SliderSetToMinIntent(),
+      SingleActivator(LogicalKeyboardKey.end): _SliderSetToMaxIntent(),
+    };
+
+// Slider keyboard shortcuts (right-to-left layout)
+const Map<ShortcutActivator, Intent> _kSliderShortcutsRtl =
+    <ShortcutActivator, Intent>{
+      // Horizontal (swapped for RTL)
+      SingleActivator(LogicalKeyboardKey.arrowLeft): _SliderIncrementIntent(),
+      SingleActivator(LogicalKeyboardKey.arrowRight): _SliderDecrementIntent(),
+      SingleActivator(LogicalKeyboardKey.arrowRight, shift: true):
+          _SliderShiftDecrementIntent(),
+      SingleActivator(LogicalKeyboardKey.arrowLeft, shift: true):
+          _SliderShiftIncrementIntent(),
+
+      // Vertical (unchanged)
+      SingleActivator(LogicalKeyboardKey.arrowUp): _SliderIncrementIntent(),
+      SingleActivator(LogicalKeyboardKey.arrowUp, shift: true):
+          _SliderShiftIncrementIntent(),
+      SingleActivator(LogicalKeyboardKey.arrowDown): _SliderDecrementIntent(),
+      SingleActivator(LogicalKeyboardKey.arrowDown, shift: true):
+          _SliderShiftDecrementIntent(),
+
+      // Home/End
+      SingleActivator(LogicalKeyboardKey.home): _SliderSetToMinIntent(),
+      SingleActivator(LogicalKeyboardKey.end): _SliderSetToMaxIntent(),
+    };
+
+/// A headless slider without visuals.
 ///
-/// NakedSlider provides interaction behavior and accessibility
-/// without imposing any visual styling, allowing complete design freedom.
-/// It uses direct callbacks for state changes, giving consumers control over
-/// their own state management.
+/// Controlled by [value] in range [[min], [max]]. Supports discrete
+/// [divisions] or continuous values. Handles keyboard navigation and
+/// drag gestures.
 ///
-/// The component provides enhanced keyboard navigation and focus handling:
-/// - Arrow keys for small value adjustments (using [keyboardStep])
-/// - Shift + Arrow keys for larger adjustments (using [largeKeyboardStep])
-/// - Home/End keys to jump to min/max values
-/// - RTL (right-to-left) language support for horizontal sliders
-/// - Vertical direction support with appropriate key mappings (up/down arrows)
-/// - Vertical sliders use up arrow to increase and down arrow to decrease values
-///
-/// Example:
 /// ```dart
-/// class MySlider extends StatefulWidget {
-///   @override
-///   _MySliderState createState() => _MySliderState();
-/// }
-///
-/// class _MySliderState extends State<MySlider> {
-///   double _value = 0.5;
-///   bool _isDragging = false;
-///   bool _isHovered = false;
-///   bool _isFocused = false;
-///
-///   @override
-///   Widget build(BuildContext context) {
-///     return NakedSlider(
-///       value: _value,
-///       onChanged: (newValue) {
-///         setState(() {
-///           _value = newValue;
-///         });
-///       },
-///       onHoverState: (isHovered) => setState(() => _isHovered = isHovered),
-///       onDraggingState: (isDragging) => setState(() => _isDragging = isDragging),
-///       onFocusState: (isFocused) => setState(() => _isFocused = isFocused),
-///       child: Container(
-///         height: 40,
-///         width: 200,
-///         color: Colors.transparent,
-///         child: Stack(
-///           children: [
-///             // Track
-///             Container(
-///               margin: EdgeInsets.symmetric(vertical: 18),
-///               decoration: BoxDecoration(
-///                 color: Colors.grey.shade300,
-///                 borderRadius: BorderRadius.circular(2),
-///               ),
-///               height: 4,
-///             ),
-///             // Active Track
-///             FractionallySizedBox(
-///               widthFactor: _value,
-///               child: Container(
-///                 margin: EdgeInsets.symmetric(vertical: 18),
-///                 decoration: BoxDecoration(
-///                   color: Colors.blue.shade600,
-///                   borderRadius: BorderRadius.circular(2),
-///                 ),
-///                 height: 4,
-///               ),
-///             ),
-///             // Thumb
-///             Positioned(
-///               left: _value * 200 - 10,
-///               top: 0,
-///               child: Container(
-///                 height: 20,
-///                 width: 20,
-///                 decoration: BoxDecoration(
-///                   color: _isDragging ? Colors.blue.shade700 :
-///                         _isHovered ? Colors.blue.shade600 : Colors.blue.shade500,
-///                   borderRadius: BorderRadius.circular(10),
-///                   border: Border.all(
-///                     color: _isFocused ? Colors.white : Colors.transparent,
-///                     width: 2,
-///                   ),
-///                   boxShadow: [
-///                     BoxShadow(
-///                       color: Colors.black.withValues(alpha: 0.1),
-///                       blurRadius: 4,
-///                       offset: Offset(0, 2),
-///                     ),
-///                   ],
-///                 ),
-///               ),
-///             ),
-///           ],
-///         ),
-///       ),
-///     );
-///   }
-/// }
+/// NakedSlider(
+///   value: sliderValue,
+///   onChanged: (value) => setState(() => sliderValue = value),
+///   child: MyCustomSliderTrack(),
+/// )
 /// ```
+///
+/// See also:
+/// - [Slider], the Material-styled slider for typical apps.
+/// - [FocusableActionDetector], used to integrate keyboard and focus handling.
 class NakedSlider extends StatefulWidget {
-  /// Creates a naked slider.
-  ///
-  /// The [child] and [value] parameters are required.
-  /// The [min] must be less than [max].
   const NakedSlider({
     super.key,
     required this.child,
@@ -114,140 +78,275 @@ class NakedSlider extends StatefulWidget {
     this.onChanged,
     this.onDragStart,
     this.onDragEnd,
-    this.onHoverState,
-    this.onDraggingState,
-    this.onFocusState,
+    this.onHoverChange,
+    this.onDragChange,
+    this.onFocusChange,
     this.enabled = true,
-    this.semanticLabel,
-    this.cursor = SystemMouseCursors.click,
+    this.mouseCursor = SystemMouseCursors.click,
+    this.enableFeedback = true,
     this.focusNode,
+    this.autofocus = false,
     this.direction = Axis.horizontal,
     this.divisions,
     this.keyboardStep = 0.01,
     this.largeKeyboardStep = 0.1,
+    this.semanticLabel,
   }) : assert(min < max, 'min must be less than max');
 
-  /// The child widget to display.
-  ///
-  /// Typically includes a track and thumb visualization.
+  /// The slider content (track/handle/etc.).
   final Widget child;
 
-  /// The current value of the slider.
+  /// The current slider value.
   final double value;
 
-  /// Minimum value of the slider.
+  /// The minimum value of the range.
   final double min;
 
-  /// Maximum value of the slider.
+  /// The maximum value of the range.
   final double max;
 
-  /// Called when the slider value changes.
+  /// Called when the value changes.
   final ValueChanged<double>? onChanged;
 
-  /// Called when the user starts dragging the slider.
+  /// Called when a drag begins.
   final VoidCallback? onDragStart;
 
-  /// Called when the user ends dragging the slider.
+  /// Called when a drag ends.
   final ValueChanged<double>? onDragEnd;
 
-  /// Called when hover state changes.
-  final ValueChanged<bool>? onHoverState;
+  /// Called when hover changes.
+  final ValueChanged<bool>? onHoverChange;
 
-  /// Called when dragging state changes.
-  final ValueChanged<bool>? onDraggingState;
+  /// Called when drag state changes.
+  final ValueChanged<bool>? onDragChange;
 
-  /// Called when focus state changes.
-  final ValueChanged<bool>? onFocusState;
+  /// Called when focus changes.
+  final ValueChanged<bool>? onFocusChange;
 
-  /// Whether the slider is disabled.
-  ///
-  /// When true, the slider will not respond to user interaction.
+  /// The enabled state of the slider.
   final bool enabled;
 
-  /// Optional semantic label for accessibility.
-  ///
-  /// This is used by screen readers to describe the slider.
-  final String? semanticLabel;
+  /// The mouse cursor when enabled.
+  final MouseCursor mouseCursor;
 
-  /// The cursor to show when hovering over the slider.
-  final MouseCursor cursor;
+  /// The haptic feedback enablement flag.
+  final bool enableFeedback;
 
-  /// Optional focus node to control focus behavior.
+  /// The focus node for the slider.
   final FocusNode? focusNode;
 
-  /// Direction of the slider.
-  ///
-  /// Can be horizontal (left to right) or vertical (bottom to top).
+  /// The autofocus flag.
+  final bool autofocus;
+
+  /// The slider orientation.
   final Axis direction;
 
-  /// Number of discrete divisions.
-  ///
-  /// If null, the slider will be continuous.
+  /// The number of discrete divisions. When null, continuous.
   final int? divisions;
 
-  /// Step size for keyboard navigation.
-  ///
-  /// This value is used when arrow keys are pressed to increment or decrement
-  /// the slider value. Default is 0.01 (1% of the slider range).
+  /// The small keyboard step when [divisions] is null.
   final double keyboardStep;
 
-  /// Step size for large keyboard navigation.
-  ///
-  /// This value is used when arrow keys are pressed while holding Shift.
-  /// Default is 0.1 (10% of the slider range).
+  /// The large keyboard step when holding Shift.
   final double largeKeyboardStep;
+
+  /// The semantic label for assistive technologies.
+  final String? semanticLabel;
 
   @override
   State<NakedSlider> createState() => _NakedSliderState();
 }
 
-class _NakedSliderState extends State<NakedSlider> {
-  bool _isDragging = false;
+class _NakedSliderState extends State<NakedSlider>
+    with WidgetStatesMixin<NakedSlider>, FocusableMixin<NakedSlider> {
+  @override
+  FocusNode? get focusableExternalNode => widget.focusNode;
 
+  bool _isDragging = false;
+  // track latest normalized value we told the world about
+  double? _lastEmittedValue;
   Offset? _dragStartPosition;
   double? _dragStartValue;
 
+  // ---------------------------
+  // Helpers & lifecycle
+  // ---------------------------
+
+  bool get _isEnabled => widget.enabled && widget.onChanged != null;
+  bool get _isRTL => Directionality.of(context) == TextDirection.rtl;
+
+  MouseCursor get _cursor =>
+      _isEnabled ? widget.mouseCursor : SystemMouseCursors.basic;
+
+  // ---------------------------
+  // Value math & normalization
+  // ---------------------------
+
+  void _callOnChangeIfNeeded(double value) {
+    _lastEmittedValue = value;
+    if (value != widget.value) {
+      widget.onChanged?.call(value);
+    }
+  }
+
+  double _normalizeValue(double value) {
+    // Clamp to bounds
+    double v = value.clamp(widget.min, widget.max);
+
+    // Snap to divisions if provided
+    final divisions = widget.divisions;
+    if (divisions != null && divisions > 0) {
+      final step = (widget.max - widget.min) / divisions;
+      final steps = ((v - widget.min) / step).round();
+      v = widget.min + steps * step;
+      // Avoid tiny floating drift outside bounds
+      v = v.clamp(widget.min, widget.max);
+    }
+
+    return v;
+  }
+
+  double _calculateStep(bool isShiftPressed) {
+    final divisions = widget.divisions;
+    if (divisions != null && divisions > 0) {
+      return (widget.max - widget.min) / divisions;
+    }
+
+    return isShiftPressed ? widget.largeKeyboardStep : widget.keyboardStep;
+  }
+
+  String _percentString(double v) {
+    final total = widget.max - widget.min;
+    if (total == 0) return '0%';
+    final pct = (((v - widget.min) / total) * 100).round();
+
+    return '$pct%';
+  }
+
+  // (no absolute-position jump; drag uses relative deltas for expected behavior)
+
+  // ---------------------------
+  // Pointer handlers
+  // ---------------------------
+
+  void _handleDragStart(DragStartDetails details) {
+    if (!_isEnabled) return;
+
+    _isDragging = true;
+    _dragStartPosition = details.globalPosition;
+    _dragStartValue = widget.value;
+
+    updateState(WidgetState.pressed, true);
+    widget.onDragChange?.call(true);
+    widget.onDragStart?.call();
+
+    // Ensure subsequent keyboard nudges apply here.
+    if ((effectiveFocusNode?.canRequestFocus ?? false))
+      effectiveFocusNode!.requestFocus();
+  }
+
+  void _handleDragUpdate(DragUpdateDetails details) {
+    if (!_isDragging || !_isEnabled) return;
+
+    final RenderBox? box = context.findRenderObject() as RenderBox?;
+    if (box == null || _dragStartPosition == null || _dragStartValue == null)
+      return;
+
+    final Offset dragDelta = details.globalPosition - _dragStartPosition!;
+    final double dragExtent = widget.direction == Axis.horizontal
+        ? box.size.width
+        : box.size.height;
+    if (dragExtent <= 0) return;
+
+    final double dragDistance = widget.direction == Axis.horizontal
+        ? (_isRTL ? -dragDelta.dx : dragDelta.dx)
+        : -dragDelta.dy; // up increases for vertical
+
+    final double valueDelta =
+        (dragDistance / dragExtent) * (widget.max - widget.min);
+    final double newValue = _normalizeValue(_dragStartValue! + valueDelta);
+
+    if (newValue != widget.value) {
+      _callOnChangeIfNeeded(newValue);
+    }
+  }
+
+  void _handleDragEnd(DragEndDetails details) {
+    if (!_isDragging) return;
+
+    _isDragging = false;
+    _dragStartPosition = null;
+    _dragStartValue = null;
+
+    updateState(WidgetState.pressed, false);
+    widget.onDragChange?.call(false);
+
+    final v = _lastEmittedValue ?? widget.value;
+    widget.onDragEnd?.call(v);
+  }
+
+  void _handleDragCancel() {
+    if (!_isDragging) return;
+    _isDragging = false;
+    _dragStartPosition = null;
+    _dragStartValue = null;
+    updateState(WidgetState.pressed, false);
+    widget.onDragChange?.call(false);
+
+    final v = _lastEmittedValue ?? widget.value;
+    widget.onDragEnd?.call(v);
+  }
+
+  @override
+  void initializeWidgetStates() {
+    updateDisabledState(!_isEnabled);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Keep focus traversal flags aligned with enablement.
+    final node = effectiveFocusNode;
+    if (node != null) {
+      node
+        ..canRequestFocus = _isEnabled
+        ..skipTraversal = !_isEnabled;
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant NakedSlider oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    // Keep state flags in sync (handles enabled and onChanged changes).
+    syncWidgetStates();
+
+    // Clear transient states when disabled.
+    if (!_isEnabled) {
+      updateState(WidgetState.hovered, false);
+      updateState(WidgetState.pressed, false);
+    }
+
+    // Maintain traversal flags under prop changes.
+    final node2 = effectiveFocusNode;
+    if (node2 != null) {
+      node2
+        ..canRequestFocus = _isEnabled
+        ..skipTraversal = !_isEnabled;
+    }
+
+    // Keep last value in step with controller updates.
+    _lastEmittedValue = widget.value;
+  }
+
+  // ---------------------------
+  // Keyboard actions/shortcuts
+  // ---------------------------
+
   Map<ShortcutActivator, Intent> get _shortcuts {
-    final bool isRTL = Directionality.of(context) == TextDirection.rtl;
-    const arrowLeft = LogicalKeyboardKey.arrowLeft;
-    const arrowRight = LogicalKeyboardKey.arrowRight;
-    const arrowUp = LogicalKeyboardKey.arrowUp;
-    const arrowDown = LogicalKeyboardKey.arrowDown;
-    const home = LogicalKeyboardKey.home;
-    const end = LogicalKeyboardKey.end;
+    final rtl = _isRTL;
 
-    final decrementIntent = SingleActivator(isRTL ? arrowRight : arrowLeft);
-    final incrementIntent = SingleActivator(isRTL ? arrowLeft : arrowRight);
-
-    final shiftDecrementIntent = SingleActivator(
-      isRTL ? arrowRight : arrowLeft,
-      shift: true,
-    );
-    final shiftIncrementIntent = SingleActivator(
-      isRTL ? arrowLeft : arrowRight,
-      shift: true,
-    );
-
-    return {
-      // Horizontal
-      incrementIntent: const _SliderIncrementIntent(),
-      decrementIntent: const _SliderDecrementIntent(),
-      shiftDecrementIntent: const _SliderShiftDecrementIntent(),
-      shiftIncrementIntent: const _SliderShiftIncrementIntent(),
-
-      // Vertical
-      const SingleActivator(arrowUp): const _SliderIncrementIntent(),
-      const SingleActivator(arrowUp, shift: true):
-          const _SliderShiftIncrementIntent(),
-
-      const SingleActivator(arrowDown): const _SliderDecrementIntent(),
-      const SingleActivator(arrowDown, shift: true):
-          const _SliderShiftDecrementIntent(),
-
-      // Home/End
-      const SingleActivator(home): const _SliderSetToMinIntent(),
-      const SingleActivator(end): const _SliderSetToMaxIntent(),
-    };
+    return rtl ? _kSliderShortcutsRtl : _kSliderShortcutsLtr;
   }
 
   Map<Type, Action<Intent>> get _actions {
@@ -267,228 +366,175 @@ class _NakedSliderState extends State<NakedSlider> {
     };
   }
 
-  void _callOnChangeIfNeeded(double value) {
-    if (value != widget.value) {
-      widget.onChanged?.call(value);
-    }
-  }
-
-  double _normalizeValue(double value) {
-    // Ensure value is within bounds
-    double normalizedValue = value.clamp(widget.min, widget.max);
-
-    // Apply divisions if specified
-    if (widget.divisions != null) {
-      double step = (widget.max - widget.min) / widget.divisions!;
-      int steps = ((normalizedValue - widget.min) / step).round();
-      normalizedValue = widget.min + steps * step;
-    }
-
-    return normalizedValue;
-  }
-
-  void _handleDragStart(DragStartDetails details) {
-    if (!widget.enabled || widget.onChanged == null) return;
-
-    setState(() {
-      _isDragging = true;
-      _dragStartPosition = details.globalPosition;
-      _dragStartValue = widget.value;
-    });
-
-    widget.onDraggingState?.call(true);
-    widget.onDragStart?.call();
-  }
-
-  void _handleDragUpdate(DragUpdateDetails details) {
-    if (!_isDragging || !widget.enabled || widget.onChanged == null) return;
-
-    // Calculate the drag delta in the proper direction
-    final Offset currentPosition = details.globalPosition;
-    final Offset dragDelta = currentPosition - _dragStartPosition!;
-
-    // Get the RenderBox of the slider
-    final RenderBox? box = context.findRenderObject() as RenderBox?;
-    if (box == null) return;
-
-    // Convert the drag delta to a value change
-    double dragExtent = widget.direction == Axis.horizontal
-        ? box.size.width
-        : box.size.height;
-
-    double dragDistance = widget.direction == Axis.horizontal
-        ? dragDelta.dx
-        : -dragDelta.dy; // Invert for vertical slider (up is positive)
-
-    double valueDelta = dragDistance / dragExtent * (widget.max - widget.min);
-    double newValue = _normalizeValue(_dragStartValue! + valueDelta);
-
-    if (newValue != widget.value) {
-      widget.onChanged?.call(newValue);
-    }
-  }
-
-  void _handleDragEnd(DragEndDetails details) {
-    if (!_isDragging) return;
-
-    setState(() {
-      _isDragging = false;
-      _dragStartPosition = null;
-      _dragStartValue = null;
-    });
-
-    widget.onDraggingState?.call(false);
-    widget.onDragEnd?.call(widget.value);
-  }
-
-  double _calculateStep(bool isShiftPressed) {
-    final divisions = widget.divisions;
-    if (divisions != null) return (widget.max - widget.min) / divisions;
-
-    return isShiftPressed ? widget.largeKeyboardStep : widget.keyboardStep;
-  }
+  // ---------------------------
+  // Build
+  // ---------------------------
 
   @override
   Widget build(BuildContext context) {
-    final isInteractive = widget.enabled && widget.onChanged != null;
+    final childGesture = GestureDetector(
+      onVerticalDragStart: widget.direction == Axis.vertical && _isEnabled
+          ? _handleDragStart
+          : null,
+      onVerticalDragUpdate: widget.direction == Axis.vertical && _isEnabled
+          ? _handleDragUpdate
+          : null,
+      onVerticalDragEnd: widget.direction == Axis.vertical && _isEnabled
+          ? _handleDragEnd
+          : null,
+      onVerticalDragCancel: widget.direction == Axis.vertical && _isEnabled
+          ? _handleDragCancel
+          : null,
+      // Only one axis active to avoid competing recognizers.
+      onHorizontalDragStart: widget.direction == Axis.horizontal && _isEnabled
+          ? _handleDragStart
+          : null,
+      onHorizontalDragUpdate: widget.direction == Axis.horizontal && _isEnabled
+          ? _handleDragUpdate
+          : null,
+      onHorizontalDragEnd: widget.direction == Axis.horizontal && _isEnabled
+          ? _handleDragEnd
+          : null,
+      onHorizontalDragCancel: widget.direction == Axis.horizontal && _isEnabled
+          ? _handleDragCancel
+          : null,
+      behavior: HitTestBehavior.opaque,
+      excludeFromSemantics: true, // semantics provided by the wrapper below
+      child: widget.child,
+    );
 
-    // Calculate percentage for accessibility
-    final double percentage = widget.max > widget.min
-        ? ((widget.value - widget.min) / (widget.max - widget.min)) * 100
-        : 0.0;
-
-    // Calculate value change for accessibility notifications
-    final double step = widget.keyboardStep;
-    final double increasedValue = _normalizeValue(widget.value + step);
-    final double decreasedValue = _normalizeValue(widget.value - step);
-
-    return Semantics(
-      excludeSemantics: true,
-      enabled: isInteractive,
-      slider: true,
-      label: widget.semanticLabel,
-      value: '${percentage.round()}%',
-      increasedValue:
-          '${((increasedValue - widget.min) / (widget.max - widget.min) * 100).round()}%',
-      decreasedValue:
-          '${((decreasedValue - widget.min) / (widget.max - widget.min) * 100).round()}%',
-      child: FocusableActionDetector(
-        enabled: isInteractive,
-        focusNode: widget.focusNode,
-        descendantsAreTraversable: false,
-        shortcuts: _shortcuts,
-        actions: _actions,
-        onShowHoverHighlight: widget.onHoverState,
-        onFocusChange: widget.onFocusState,
-        mouseCursor: isInteractive
-            ? widget.cursor
-            : SystemMouseCursors.forbidden,
-        child: GestureDetector(
-          onVerticalDragStart:
-              widget.direction == Axis.vertical && isInteractive
-              ? _handleDragStart
-              : null,
-          onVerticalDragUpdate:
-              widget.direction == Axis.vertical && isInteractive
-              ? _handleDragUpdate
-              : null,
-          onVerticalDragEnd: widget.direction == Axis.vertical && isInteractive
-              ? _handleDragEnd
-              : null,
-          onHorizontalDragStart:
-              widget.direction == Axis.horizontal && isInteractive
-              ? _handleDragStart
-              : null,
-          onHorizontalDragUpdate:
-              widget.direction == Axis.horizontal && isInteractive
-              ? _handleDragUpdate
-              : null,
-          onHorizontalDragEnd:
-              widget.direction == Axis.horizontal && isInteractive
-              ? _handleDragEnd
-              : null,
-          behavior: HitTestBehavior.opaque,
-          child: widget.child,
+    return FocusableActionDetector(
+      enabled: _isEnabled,
+      focusNode: effectiveFocusNode,
+      autofocus: widget.autofocus,
+      descendantsAreTraversable: false, // no focus into the visual child
+      shortcuts: _shortcuts,
+      actions: _actions,
+      onShowHoverHighlight: (hover) =>
+          updateHoverState(hover, widget.onHoverChange),
+      onFocusChange: (focused) =>
+          updateFocusState(focused, widget.onFocusChange),
+      mouseCursor: _cursor,
+      child: Semantics(
+        container: true,
+        enabled: _isEnabled,
+        slider: true,
+        focusable: _isEnabled,
+        focused: isFocused,
+        label: widget.semanticLabel,
+        value: _percentString(widget.value),
+        increasedValue: _percentString(
+          _normalizeValue(widget.value + _calculateStep(false)),
         ),
+        decreasedValue: _percentString(
+          _normalizeValue(widget.value - _calculateStep(false)),
+        ),
+        onIncrease: _isEnabled
+            ? () {
+                final step = _calculateStep(false);
+                _callOnChangeIfNeeded(_normalizeValue(widget.value + step));
+              }
+            : null,
+        onDecrease: _isEnabled
+            ? () {
+                final step = _calculateStep(false);
+                _callOnChangeIfNeeded(_normalizeValue(widget.value - step));
+              }
+            : null,
+        child: childGesture,
       ),
     );
   }
 }
 
+// ---- Intents ----
+
+/// Intent: increment slider value by a large step (Shift + Arrow).
 class _SliderShiftIncrementIntent extends _SliderIncrementIntent {
   const _SliderShiftIncrementIntent();
 }
 
+/// Intent: decrement slider value by a large step (Shift + Arrow).
 class _SliderShiftDecrementIntent extends _SliderDecrementIntent {
   const _SliderShiftDecrementIntent();
 }
 
+/// Intent: increment slider value by one step.
 class _SliderIncrementIntent extends Intent {
   const _SliderIncrementIntent();
 }
 
+/// Intent: decrement slider value by one step.
 class _SliderDecrementIntent extends Intent {
   const _SliderDecrementIntent();
 }
 
+/// Intent: set slider value to minimum.
 class _SliderSetToMinIntent extends Intent {
   const _SliderSetToMinIntent();
 }
 
+/// Intent: set slider value to maximum.
 class _SliderSetToMaxIntent extends Intent {
   const _SliderSetToMaxIntent();
 }
 
-// Create actions that respond to these intents
+// ---- Actions ----
 
+/// Action: handles keyboard increment intent.
 class _SliderIncrementAction extends Action<_SliderIncrementIntent> {
   final _NakedSliderState state;
-
   final bool isShiftPressed;
   _SliderIncrementAction(this.state, {this.isShiftPressed = false});
-
   @override
   void invoke(_SliderIncrementIntent intent) {
     final step = state._calculateStep(isShiftPressed);
-
     final newValue = state._normalizeValue(state.widget.value + step);
+    if (state.widget.enableFeedback && newValue != state.widget.value) {
+      HapticFeedback.selectionClick();
+    }
     state._callOnChangeIfNeeded(newValue);
   }
 }
 
+/// Action: handles keyboard decrement intent.
 class _SliderDecrementAction extends Action<_SliderDecrementIntent> {
   final _NakedSliderState state;
-
   final bool isShiftPressed;
   _SliderDecrementAction(this.state, {this.isShiftPressed = false});
-
   @override
   void invoke(_SliderDecrementIntent intent) {
     final step = state._calculateStep(isShiftPressed);
-
     final newValue = state._normalizeValue(state.widget.value - step);
+    if (state.widget.enableFeedback && newValue != state.widget.value) {
+      HapticFeedback.selectionClick();
+    }
     state._callOnChangeIfNeeded(newValue);
   }
 }
 
+/// Action: handles keyboard set-to-min intent.
 class _SliderSetToMinAction extends Action<_SliderSetToMinIntent> {
   final _NakedSliderState state;
-
   _SliderSetToMinAction(this.state);
-
   @override
   void invoke(_SliderSetToMinIntent intent) {
+    if (state.widget.enableFeedback && state.widget.value != state.widget.min) {
+      HapticFeedback.selectionClick();
+    }
     state._callOnChangeIfNeeded(state.widget.min);
   }
 }
 
+/// Action: handles keyboard set-to-max intent.
 class _SliderSetToMaxAction extends Action<_SliderSetToMaxIntent> {
   final _NakedSliderState state;
-
   _SliderSetToMaxAction(this.state);
-
   @override
   void invoke(_SliderSetToMaxIntent intent) {
+    if (state.widget.enableFeedback && state.widget.value != state.widget.max) {
+      HapticFeedback.selectionClick();
+    }
     state._callOnChangeIfNeeded(state.widget.max);
   }
 }

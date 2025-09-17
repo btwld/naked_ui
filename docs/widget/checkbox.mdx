@@ -6,7 +6,7 @@ NakedCheckbox provides core interaction behavior and accessibility without impos
 This component uses direct callbacks for state changes instead of managing its own state, giving consumers control over their state management approach.
 
 <Info>
-  You can find this example in our [GitHub repository](https://github.com/btwld/mix/blob/main/packages/naked/example/lib/api/naked_checkbox.0.dart).
+  You can find this example in our [GitHub repository](https://github.com/btwld/naked_ui/blob/main/example/lib/api/naked_checkbox.0.dart).
 </Info>
 <CodeGroup title="Usage Example" defaultLanguage="dart">
 ```dart
@@ -47,9 +47,9 @@ class _CheckboxExampleState extends State<CheckboxExample> {
           _isChecked = value!;
         });
       },
-      onHoverState: (isHovered) => setState(() => _isHovered = isHovered),
-      onPressedState: (isPressed) => setState(() => _isPressed = isPressed),
-      onFocusState: (isFocused) => setState(() => _isFocused = isFocused),
+      onHoverChange: (isHovered) => setState(() => _isHovered = isHovered),
+      onPressChange: (isPressed) => setState(() => _isPressed = isPressed),
+      onFocusChange: (isFocused) => setState(() => _isFocused = isFocused),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         spacing: 8,
@@ -90,9 +90,200 @@ class _CheckboxExampleState extends State<CheckboxExample> {
 ```
 </CodeGroup>
 
+<CodeGroup title="Todo List" defaultLanguage="dart">
+```dart
+class TodoListExample extends StatefulWidget {
+  const TodoListExample({super.key});
+
+  @override
+  State<TodoListExample> createState() => _TodoListExampleState();
+}
+
+class _TodoListExampleState extends State<TodoListExample> {
+  final List<TodoItem> _todos = [
+    TodoItem(id: 1, text: 'Buy groceries', completed: false),
+    TodoItem(id: 2, text: 'Walk the dog', completed: true),
+    TodoItem(id: 3, text: 'Finish project', completed: false),
+  ];
+
+  void _toggleTodo(int id) {
+    setState(() {
+      final index = _todos.indexWhere((todo) => todo.id == id);
+      if (index != -1) {
+        _todos[index] = _todos[index].copyWith(
+          completed: !_todos[index].completed,
+        );
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: _todos.map((todo) {
+        return Padding(
+          padding: const EdgeInsets.symmetric(vertical: 4),
+          child: NakedCheckbox(
+            value: todo.completed,
+            onChanged: (_) => _toggleTodo(todo.id),
+            child: Row(
+              children: [
+                Container(
+                  width: 20,
+                  height: 20,
+                  decoration: BoxDecoration(
+                    color: todo.completed ? Colors.green : Colors.transparent,
+                    border: Border.all(
+                      color: todo.completed ? Colors.green : Colors.grey,
+                      width: 2,
+                    ),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: todo.completed
+                    ? const Icon(Icons.check, size: 16, color: Colors.white)
+                    : null,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    todo.text,
+                    style: TextStyle(
+                      fontSize: 16,
+                      decoration: todo.completed
+                        ? TextDecoration.lineThrough
+                        : null,
+                      color: todo.completed
+                        ? Colors.grey.shade600
+                        : Colors.black,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      }).toList(),
+    );
+  }
+}
+
+class TodoItem {
+  final int id;
+  final String text;
+  final bool completed;
+
+  TodoItem({required this.id, required this.text, required this.completed});
+
+  TodoItem copyWith({bool? completed}) {
+    return TodoItem(
+      id: id,
+      text: text,
+      completed: completed ?? this.completed,
+    );
+  }
+}
+```
+</CodeGroup>
+
+<CodeGroup title="Terms & Conditions" defaultLanguage="dart">
+```dart
+class TermsAcceptanceExample extends StatefulWidget {
+  const TermsAcceptanceExample({super.key});
+
+  @override
+  State<TermsAcceptanceExample> createState() => _TermsAcceptanceExampleState();
+}
+
+class _TermsAcceptanceExampleState extends State<TermsAcceptanceExample> {
+  bool _acceptedTerms = false;
+  bool _acceptedPrivacy = false;
+
+  bool get canProceed => _acceptedTerms && _acceptedPrivacy;
+
+  Widget _buildCheckbox({
+    required bool value,
+    required ValueChanged<bool> onChanged,
+    required String text,
+  }) {
+    return NakedCheckbox(
+      value: value,
+      onChanged: (val) => onChanged(val ?? false),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 20,
+            height: 20,
+            margin: const EdgeInsets.only(top: 2),
+            decoration: BoxDecoration(
+              color: value ? Colors.blue : Colors.transparent,
+              border: Border.all(color: Colors.blue, width: 2),
+              borderRadius: BorderRadius.circular(4),
+            ),
+            child: value
+              ? const Icon(Icons.check, size: 16, color: Colors.white)
+              : null,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              text,
+              style: const TextStyle(fontSize: 14),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Before continuing, please accept:',
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 16),
+        _buildCheckbox(
+          value: _acceptedTerms,
+          onChanged: (value) => setState(() => _acceptedTerms = value),
+          text: 'I agree to the Terms and Conditions',
+        ),
+        const SizedBox(height: 12),
+        _buildCheckbox(
+          value: _acceptedPrivacy,
+          onChanged: (value) => setState(() => _acceptedPrivacy = value),
+          text: 'I agree to the Privacy Policy',
+        ),
+        const SizedBox(height: 24),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: canProceed ? Colors.blue : Colors.grey.shade300,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Text(
+            'Continue',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: canProceed ? Colors.white : Colors.grey.shade600,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+```
+</CodeGroup>
+
 ### See also:
 
-  * [`NakedButton`](https://docs.page/btwld/mix/button), a component that allows users to trigger actions.
+  * [`NakedButton`](https://docs.page/btwld/naked_ui/widget/button), a component that allows users to trigger actions.
   * The Flutter `Checkbox` widget, which provides a similar functionality with
     Material Design styling.
 
@@ -101,26 +292,28 @@ class _CheckboxExampleState extends State<CheckboxExample> {
 ```dart
 const NakedCheckbox({
   Key? key,
-  required this.child,
+  this.child,
   this.value = false,
   this.tristate = false,
   this.onChanged,
-  this.onHoverState,
-  this.onPressedState,
-  this.onFocusState,
   this.enabled = true,
-  this.semanticLabel,
-  this.cursor = SystemMouseCursors.click,
-  this.enableHapticFeedback = true,
+  
+  this.mouseCursor,
+  this.enableFeedback = true,
   this.focusNode,
   this.autofocus = false,
+  this.onFocusChange,
+  this.onHoverChange,
+  this.onPressChange,
+  this.builder,
+  this.semanticLabel,
 })
 ```
 
 ## Properties
 
-#### child → `Widget`
-The child widget to display. This widget should represent the visual appearance of the checkbox.
+#### child → `Widget?`
+The child widget to display. Provide either `child` or `builder`.
 
 #### value → `bool?`
 Whether this checkbox is checked. When `tristate` is true, a value of null corresponds to the mixed state. When `tristate` is false, this value must not be null.
@@ -131,29 +324,33 @@ If true the checkbox's `value` can be true, false, or null. When a tri-state che
 #### onChanged → `ValueChanged<bool?>?`
 Called when the checkbox is toggled. The callback provides the new state of the checkbox. If null, the checkbox will be considered disabled.
 
-#### onHoverState → `ValueChanged<bool>?`
+#### onHoverChange → `ValueChanged<bool>?`
 Called when hover state changes. Provides the current hover state (true when hovered, false otherwise).
 
-#### onPressedState → `ValueChanged<bool>?`
+#### onPressChange → `ValueChanged<bool>?`
 Called when pressed state changes. Provides the current pressed state (true when pressed, false otherwise).
 
-#### onFocusState → `ValueChanged<bool>?`
+#### onFocusChange → `ValueChanged<bool>?`
 Called when focus state changes. Provides the current focus state (true when focused, false otherwise).
 
 #### enabled → `bool`
 Whether the checkbox is enabled. Defaults to true.
 
-#### semanticLabel → `String?`
-The semantic label for the checkbox used by assistive technologies.
 
-#### cursor → `MouseCursor`
+
+#### mouseCursor → `MouseCursor?`
 The cursor to show when hovering over the checkbox. Defaults to SystemMouseCursors.click.
 
-#### enableHapticFeedback → `bool`
-Whether to provide haptic feedback on tap. Defaults to true.
+#### enableFeedback → `bool`
+Whether to provide haptic/feedback on toggle. Defaults to true.
 
 #### focusNode → `FocusNode?`
 Optional focus node to control focus behavior.
 
-#### autofocus → `bool`
-Whether the checkbox should be focused when first built. Defaults to false.
+
+
+#### builder → `ValueWidgetBuilder<Set<WidgetState>>?`
+Optional builder that receives the current states to drive visuals.
+
+#### semanticLabel → `String?`
+Semantic label for screen readers.

@@ -1,222 +1,268 @@
-import 'package:flutter/material.dart';
+import 'dart:async';
+
+import 'package:flutter/widgets.dart';
 import 'package:flutter/services.dart';
 
-import 'utilities/pressed_state_region.dart';
+import 'mixins/naked_mixins.dart'; // WidgetStatesMixin, FocusableMixin
 
-/// A fully customizable button with no default styling.
+/// A headless button without visuals.
 ///
-/// NakedButton provides interaction behavior and accessibility features
-/// without imposing any visual styling, giving consumers complete design freedom.
-/// It integrates with [FocusableActionDetector] to provide enhanced keyboard accessibility,
-/// hover detection, and focus management.
+/// Exposes interaction states and supports keyboard activation.
+/// Requires [child] or [builder] for custom rendering.
 ///
-/// This component handles various interaction states (hover, pressed, focused, disabled, loading)
-/// and provides direct callbacks to allow consumers to manage their own visual state.
-///
-/// Example:
 /// ```dart
-/// class MyButton extends StatefulWidget {
-///   @override
-///   _MyButtonState createState() => _MyButtonState();
-/// }
-///
-/// class _MyButtonState extends State<MyButton> {
-///   bool _isHovered = false;
-///   bool _isPressed = false;
-///   bool _isFocused = false;
-///
-///   @override
-///   Widget build(BuildContext context) {
-///     return NakedButton(
-///       onPressed: () {
-///         print('Button pressed!');
-///       },
-///       onHoverState: (isHovered) => setState(() => _isHovered = isHovered),
-///       onPressedState: (isPressed) => setState(() => _isPressed = isPressed),
-///       onFocusState: (isFocused) => setState(() => _isFocused = isFocused),
-///       child: Container(
-///         padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-///         decoration: BoxDecoration(
-///           color: _isPressed
-///               ? Colors.blue.shade700
-///               : _isHovered
-///                   ? Colors.blue.shade600
-///                   : Colors.blue.shade500,
-///           borderRadius: BorderRadius.circular(4),
-///           border: Border.all(
-///             color: _isFocused ? Colors.white : Colors.transparent,
-///             width: 2,
-///           ),
-///         ),
-///         child: Text(
-///           'Click Me',
-///           style: TextStyle(color: Colors.white),
-///         ),
-///       ),
-///     );
-///   }
-/// }
+/// NakedButton(
+///   onPressed: () => print('Pressed'),
+///   child: Text('Click me'),
+/// )
 /// ```
+///
+/// See also:
+/// - [ElevatedButton], the Material-styled button for typical apps.
 class NakedButton extends StatefulWidget {
-  /// Creates a naked button.
-  ///
-  /// The [child] parameter is required and represents the visual appearance
-  /// of the button in all states.
   const NakedButton({
     super.key,
-    required this.child,
+    this.child,
     this.onPressed,
-    this.onHoverState,
-    this.onPressedState,
-    this.onFocusState,
-    this.onDisabledState,
+    this.onLongPress,
+    this.onDoubleTap,
     this.enabled = true,
-    this.isSemanticButton = true,
-    this.semanticLabel,
-    this.cursor = SystemMouseCursors.click,
-    this.enableHapticFeedback = true,
+    this.mouseCursor = SystemMouseCursors.click,
+    this.enableFeedback = true,
     this.focusNode,
     this.autofocus = false,
-  });
+    this.onFocusChange,
+    this.onHoverChange,
+    this.onPressChange,
+    this.builder,
+    this.focusOnPress = false,
+    this.tooltip,
+    this.semanticLabel,
+  }) : assert(
+         child != null || builder != null,
+         'Either child or builder must be provided',
+       );
 
-  /// The child widget to display.
-  ///
-  /// This widget should represent the visual appearance of the button.
-  /// You're responsible for styling this widget based on the button's state
-  /// using the provided callback properties.
-  final Widget child;
+  /// The visual contents of the button when not using [builder].
+  final Widget? child;
 
-  /// Called when the button is tapped or activated via keyboard.
-  ///
-  /// If null, the button will be considered disabled and will not respond
-  /// to user interaction.
+  /// Called when the button is activated (tap, Enter/Space).
   final VoidCallback? onPressed;
 
-  /// Called when hover state changes.
-  ///
-  /// Provides the current hover state (true when hovered, false otherwise).
-  /// Use this to update the visual appearance when the user hovers over the button.
-  final ValueChanged<bool>? onHoverState;
+  /// Called when the button is long-pressed.
+  final VoidCallback? onLongPress;
+
+  /// Called when the button is double-tapped.
+  final VoidCallback? onDoubleTap;
+
+  /// Called when focus changes.
+  final ValueChanged<bool>? onFocusChange;
+
+  /// Called when hover changes.
+  final ValueChanged<bool>? onHoverChange;
 
   /// Called when pressed state changes.
-  ///
-  /// Provides the current pressed state (true when pressed, false otherwise).
-  /// Use this to update the visual appearance when the user presses the button.
-  final ValueChanged<bool>? onPressedState;
+  final ValueChanged<bool>? onPressChange;
 
-  /// Called when focus state changes.
-  ///
-  /// Provides the current focus state (true when focused, false otherwise).
-  /// Use this to update the visual appearance when the button receives or loses focus.
-  final ValueChanged<bool>? onFocusState;
+  /// The builder that receives current WidgetStates.
+  final ValueWidgetBuilder<Set<WidgetState>>? builder;
 
-  /// Called when disabled state changes.
-  ///
-  /// Provides the current disabled state (true when disabled, false otherwise).
-  /// Use this to update the visual appearance when the button is disabled.
-  final ValueChanged<bool>? onDisabledState;
-
-  /// Whether the button is disabled.
-  ///
-  /// When true, the button will not respond to user interaction regardless of
-  /// whether [onPressed] is provided.
+  /// The enabled state of the button.
   final bool enabled;
 
-  /// Whether the button should be treated as a semantic button.
-  ///
-  /// When true, the button will be treated as a semantic button and will
-  /// have a semantic label and hint.
-  final bool isSemanticButton;
+  /// The mouse cursor when enabled.
+  final MouseCursor mouseCursor;
 
-  /// The semantic label for the button.
-  ///
-  /// This label will be used to describe the button to users of assistive technologies.
-  final String? semanticLabel;
+  /// The platform feedback enablement flag.
+  final bool enableFeedback;
 
-  /// The cursor to show when hovering over the button.
-  ///
-  /// Defaults to [SystemMouseCursors.click] when enabled,
-  /// or [SystemMouseCursors.forbidden] when disabled.
-  final MouseCursor cursor;
-
-  /// Whether to provide haptic feedback on press.
-  ///
-  /// When true (the default), the device will produce a haptic feedback
-  /// effect when the button is pressed.
-  final bool enableHapticFeedback;
-
-  /// Optional focus node to control focus behavior.
-  ///
-  /// If not provided, the button will create its own focus node.
+  /// The external [FocusNode] to control focus ownership.
   final FocusNode? focusNode;
 
-  /// Whether the button should be focused when first built.
-  ///
-  /// When true, the button will receive focus when it is first built.
-  /// This is useful for making the button the initial focus target in a form or dialog.
+  /// The autofocus flag.
   final bool autofocus;
 
-  bool get _isEnabled => enabled && onPressed != null;
+  /// The focus request flag for press actions.
+  final bool focusOnPress;
+
+  /// The tooltip exposed to assistive technologies.
+  ///
+  /// Consider providing concise text; long labels are read verbosely.
+  final String? tooltip;
+
+  /// The semantic label announced by screen readers.
+  final String? semanticLabel;
+
+  // Consider button interactive if any handler is provided.
+  bool get _hasAnyHandler =>
+      onPressed != null || onLongPress != null || onDoubleTap != null;
+
+  // Effective enabled combines `enabled` with having at least one handler.
+  bool get _effectiveEnabled => enabled && _hasAnyHandler;
 
   @override
   State<NakedButton> createState() => _NakedButtonState();
 }
 
-class _NakedButtonState extends State<NakedButton> {
-  late final Map<Type, Action<Intent>> _actionMap = <Type, Action<Intent>>{
-    ActivateIntent: CallbackAction<ActivateIntent>(onInvoke: handleTap),
-    ButtonActivateIntent: CallbackAction<ButtonActivateIntent>(
-      onInvoke: handleTap,
-    ),
-  };
+class _NakedButtonState extends State<NakedButton>
+    with WidgetStatesMixin<NakedButton>, FocusableMixin<NakedButton> {
+  static const Duration _activationDuration = Duration(milliseconds: 100);
+  Timer? _activationTimer;
 
-  void handleTap([Intent? intent]) {
-    if (!widget._isEnabled) return;
-    if (widget.enableHapticFeedback) {
-      HapticFeedback.lightImpact();
+  // --- FocusableMixin contract ----------------------------------------------
+
+  @override
+  FocusNode? get focusableExternalNode => widget.focusNode;
+
+  // --- Activation & gestures -------------------------------------------------
+
+  void _handleKeyboardActivation([Intent? _]) {
+    if (!widget._effectiveEnabled || widget.onPressed == null) return;
+
+    if (widget.enableFeedback) {
+      Feedback.forTap(context);
+    }
+
+    updatePressState(true, widget.onPressChange);
+    widget.onPressed!();
+
+    _activationTimer?.cancel();
+    _activationTimer = Timer(_activationDuration, () {
+      if (mounted) {
+        updatePressState(false, widget.onPressChange);
+      }
+    });
+  }
+
+  void _handleTap() {
+    if (!widget._effectiveEnabled) return;
+    if (widget.enableFeedback) {
+      Feedback.forTap(context);
     }
     widget.onPressed?.call();
   }
 
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      widget.onDisabledState?.call(!widget._isEnabled);
-    });
+  void _handleLongPress() {
+    if (!widget._effectiveEnabled) return;
+    if (widget.enableFeedback) {
+      Feedback.forLongPress(context);
+    }
+    widget.onLongPress?.call();
+    // Pressed visual is kept during hold; cleared by onLongPressEnd.
   }
 
+  void _handleTapDown(TapDownDetails _) {
+    if (widget.focusOnPress) {
+      // Delegates to mixin; works with internal or external node.
+      requestEffectiveFocus();
+    }
+    updatePressState(true, widget.onPressChange);
+  }
+
+  // --- WidgetStates initialization ------------------------------------------
+
   @override
-  void didUpdateWidget(NakedButton oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget._isEnabled != widget._isEnabled) {
-      widget.onDisabledState?.call(!widget._isEnabled);
+  void initializeWidgetStates() {
+    updateDisabledState(!widget._effectiveEnabled);
+  }
+
+  // --- Lifecycle -------------------------------------------------------------
+
+  @override
+  void didUpdateWidget(covariant NakedButton oldWidget) {
+    super.didUpdateWidget(
+      oldWidget,
+    ); // lets FocusableMixin/other mixins run first
+
+    // Track *effective* enabled, not just `enabled`.
+    if (oldWidget._effectiveEnabled != widget._effectiveEnabled) {
+      updateDisabledState(!widget._effectiveEnabled);
+
+      // If disabled mid-press, clear press & timer defensively.
+      if (!widget._effectiveEnabled) {
+        _activationTimer?.cancel();
+        updatePressState(false, widget.onPressChange);
+      }
     }
   }
 
   @override
+  void dispose() {
+    _activationTimer?.cancel();
+    super.dispose(); // FocusableMixin disposes internal focus node
+  }
+
+  // --- Semantics -------------------------------------------------------------
+
+  VoidCallback? get _semanticsTapHandler =>
+      (widget.enabled && widget.onPressed != null) ? _handleTap : null;
+
+  // --- Build ----------------------------------------------------------------
+
+  @override
   Widget build(BuildContext context) {
-    return Semantics(
-      container: true,
-      excludeSemantics: true,
-      enabled: widget._isEnabled,
-      button: widget.isSemanticButton,
-      label: widget.semanticLabel,
-      child: FocusableActionDetector(
-        enabled: widget._isEnabled,
-        focusNode: widget.focusNode,
-        autofocus: widget.autofocus,
-        actions: _actionMap,
-        onShowHoverHighlight: widget.onHoverState,
-        onFocusChange: widget.onFocusState,
-        mouseCursor: widget._isEnabled
-            ? widget.cursor
-            : SystemMouseCursors.forbidden,
-        child: PressedStateRegion(
-          onPressedState: widget.onPressedState,
-          onTap: handleTap,
-          enabled: widget._isEnabled,
-          child: widget.child,
+    final content = widget.builder != null
+        ? widget.builder!(context, widgetStates, widget.child)
+        : widget.child!;
+
+    return FocusableActionDetector(
+      enabled: widget._effectiveEnabled,
+      focusNode: effectiveFocusNode, // <-- from mixin
+      autofocus: widget.autofocus,
+      shortcuts: const {
+        SingleActivator(LogicalKeyboardKey.enter): ActivateIntent(),
+        SingleActivator(LogicalKeyboardKey.space): ActivateIntent(),
+      },
+      actions: {
+        ActivateIntent: CallbackAction<ActivateIntent>(
+          onInvoke: _handleKeyboardActivation,
+        ),
+      },
+      onShowHoverHighlight: (hovered) {
+        updateHoverState(hovered, widget.onHoverChange);
+      },
+      onFocusChange: (focused) {
+        updateFocusState(focused, widget.onFocusChange);
+      },
+      mouseCursor: widget._effectiveEnabled
+          ? widget.mouseCursor
+          : SystemMouseCursors.basic,
+      child: Semantics(
+        enabled: widget._effectiveEnabled,
+        button: true,
+        label: widget.semanticLabel,
+        tooltip: widget.tooltip,
+        onTap: _semanticsTapHandler,
+        onLongPress: (widget.enabled && widget.onLongPress != null)
+            ? _handleLongPress
+            : null,
+        child: GestureDetector(
+          onTapDown: widget._effectiveEnabled ? _handleTapDown : null,
+          onTapUp: widget._effectiveEnabled
+              ? (_) => updatePressState(false, widget.onPressChange)
+              : null,
+          onTap: (widget.enabled && widget.onPressed != null)
+              ? _handleTap
+              : null,
+          onTapCancel: widget._effectiveEnabled
+              ? () => updatePressState(false, widget.onPressChange)
+              : null,
+          onDoubleTap: (widget.enabled && widget.onDoubleTap != null)
+              ? widget.onDoubleTap
+              : null,
+          onLongPress: (widget.enabled && widget.onLongPress != null)
+              ? _handleLongPress
+              : null,
+          // Long-press symmetry: pressed while holding, clear on end.
+          onLongPressStart: (widget.enabled && widget.onLongPress != null)
+              ? (_) => updatePressState(true, widget.onPressChange)
+              : null,
+          onLongPressEnd: (widget.enabled && widget.onLongPress != null)
+              ? (_) => updatePressState(false, widget.onPressChange)
+              : null,
+          behavior: HitTestBehavior.opaque,
+          excludeFromSemantics: true,
+          child: content,
         ),
       ),
     );
