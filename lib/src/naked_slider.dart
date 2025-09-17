@@ -51,9 +51,9 @@ const Map<ShortcutActivator, Intent> _kSliderShortcutsRtl =
       SingleActivator(LogicalKeyboardKey.end): _SliderSetToMaxIntent(),
     };
 
-/// Headless, focusable slider without default visuals.
+/// A headless slider without visuals.
 ///
-/// Controlled by [value] in range \[[min], [max]\]. Supports discrete
+/// Controlled by [value] in range [[min], [max]]. Supports discrete
 /// [divisions] or continuous values. Handles keyboard navigation and
 /// drag gestures.
 ///
@@ -115,19 +115,19 @@ class NakedSlider extends StatefulWidget {
   /// Called when focus changes.
   final ValueChanged<bool>? onFocusChange;
 
-  /// Whether the slider is enabled.
+  /// The enabled state of the slider.
   final bool enabled;
 
   /// The mouse cursor when enabled.
   final MouseCursor mouseCursor;
 
-  /// Whether to provide haptic feedback on keyboard steps.
+  /// The haptic feedback enablement flag.
   final bool enableFeedback;
 
   /// The focus node for the slider.
   final FocusNode? focusNode;
 
-  /// Whether to autofocus when built.
+  /// The autofocus flag.
   final bool autofocus;
 
   /// The slider orientation.

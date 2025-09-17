@@ -4,27 +4,13 @@ import 'package:flutter/services.dart';
 import 'naked_button.dart';
 import 'utilities/utilities.dart';
 
-/// Headless dropdown menu without default styling.
+/// A headless dropdown menu without visuals.
 ///
 /// Renders menu content in overlay with proper z-index and focus management.
 /// Positions relative to target with fallback support.
 ///
-/// ```dart
-/// final controller = MenuController();
-///
-/// NakedMenu(
-///   controller: controller,
-///   builder: (_) => NakedButton(
-///     onPressed: controller.open,
-///     child: Text('Open Menu'),
-///   ),
-///   overlayBuilder: (_) => YourMenuContent(),
-/// )
-/// ```
-///
 /// See also:
-/// - [NakedMenuAnchor], which handles overlay placement, focus, and keyboard
-///   traversal for this menu.
+/// - [NakedMenuAnchor], which handles overlay placement and focus management.
 /// - [NakedButton], often used to build the trigger and items.
 class NakedMenu extends StatelessWidget {
   /// Creates a headless menu.
@@ -55,7 +41,7 @@ class NakedMenu extends StatelessWidget {
   /// Called when the menu closes.
   final VoidCallback? onClose;
 
-  /// Whether to automatically focus the menu when opened.
+  /// The autofocus flag for menu opening.
   final bool autofocus;
 
   /// The menu position relative to its target.
@@ -67,10 +53,10 @@ class NakedMenu extends StatelessWidget {
   /// The controller that manages menu visibility.
   final MenuController controller;
 
-  /// Whether to consume outside taps.
+  /// The outside tap consumption flag.
   final bool consumeOutsideTaps;
 
-  /// Whether to use the root overlay.
+  /// The root overlay usage flag.
   final bool useRootOverlay;
 
   @override
@@ -88,10 +74,12 @@ class NakedMenu extends StatelessWidget {
   }
 }
 
-/// Selectable menu item with interaction states and accessibility.
+/// A headless menu item without visuals.
+///
+/// Provides interaction states and accessibility for custom styling.
 ///
 /// See also:
-/// - [NakedMenu], the container that provides the overlay and positioning.
+/// - [NakedMenu], the container that provides overlay and positioning.
 /// - [NakedButton], the headless activator used to implement this item.
 class NakedMenuItem extends StatelessWidget {
   /// Creates a menu item.
@@ -121,7 +109,7 @@ class NakedMenuItem extends StatelessWidget {
   /// Called when the item is selected.
   final VoidCallback? onPressed;
 
-  /// Whether to close the menu when selected.
+  /// The menu close flag when selected.
   final bool closeOnSelect;
 
   /// Called when focus changes.
@@ -136,22 +124,22 @@ class NakedMenuItem extends StatelessWidget {
   /// Builder that receives current interaction states.
   final ValueWidgetBuilder<Set<WidgetState>>? builder;
 
-  /// Whether the item is enabled.
+  /// The enabled state of the item.
   final bool enabled;
 
   /// Whether this menu item is effectively enabled.
   bool get _effectiveEnabled => enabled && onPressed != null;
 
-  /// The cursor when hovering over the item.
+  /// The mouse cursor for the item.
   final MouseCursor mouseCursor;
 
-  /// Whether to provide haptic feedback on selection.
+  /// The haptic feedback enablement flag.
   final bool enableFeedback;
 
   /// The focus node for the item.
   final FocusNode? focusNode;
 
-  /// Whether to autofocus when created.
+  /// The autofocus flag.
   final bool autofocus;
 
   /// The semantic label for accessibility.

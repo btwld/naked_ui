@@ -7,8 +7,8 @@ import 'utilities/utilities.dart';
 
 /// Provides tooltip behavior without visual styling.
 ///
-/// Handles showing, hiding, and positioning tooltips relative to target widgets.
-/// Automatically dismisses after specified duration.
+/// Handles showing, hiding, and positioning tooltips with automatic
+/// dismissal after specified duration.
 ///
 /// Example:
 /// ```dart
@@ -89,7 +89,7 @@ import 'utilities/utilities.dart';
 /// }
 /// ```
 class NakedTooltip extends StatefulWidget implements OverlayChildLifecycle {
-  /// Creates a naked tooltip.
+  /// Creates a headless tooltip.
   const NakedTooltip({
     super.key,
     required this.child,
@@ -110,33 +110,32 @@ class NakedTooltip extends StatefulWidget implements OverlayChildLifecycle {
   /// - [NakedMenuAnchor], which is used to position the tooltip overlay
   ///   relative to its trigger.
 
-  /// Widget that triggers the tooltip.
+  /// The widget that triggers the tooltip.
   final Widget child;
 
-  /// Widget to display in the tooltip.
+  /// The tooltip content builder.
   final WidgetBuilder tooltipBuilder;
 
-  /// Optional semantics tooltip label applied to the trigger.
-  /// Screen readers announce this on focus/hover.
+  /// The semantic label for screen readers.
   final String? semanticsLabel;
 
-  /// Tooltip position relative to the target.
+  /// The tooltip position relative to the target.
   final NakedMenuPosition position;
 
-  /// Fallback alignments for the tooltip.
+  /// The fallback positions for the tooltip.
   final List<NakedMenuPosition> fallbackPositions;
 
-  /// Duration tooltip remains visible.
+  /// The duration tooltip remains visible.
   final Duration showDuration;
 
-  /// Duration to wait before showing tooltip after hover.
+  /// The duration to wait before showing tooltip.
   final Duration waitDuration;
 
-  /// Duration before removing widget from overlay after tooltip is hidden.
+  /// The duration before removing from overlay after hiding.
   @override
   final Duration removalDelay;
 
-  /// Event handler for the tooltip.
+  /// Called when tooltip lifecycle state changes.
   @override
   final void Function(OverlayChildLifecycleState state)? onStateChange;
 

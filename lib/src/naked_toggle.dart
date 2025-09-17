@@ -29,7 +29,7 @@ class NakedToggle extends StatefulWidget {
          'Either child or builder must be provided',
        );
 
-  /// Whether the toggle is selected.
+  /// The current selection state.
   final bool value;
 
   /// Called when selection changes.
@@ -38,19 +38,19 @@ class NakedToggle extends StatefulWidget {
   /// The child widget; ignored if [builder] is provided.
   final Widget? child;
 
-  /// Whether the control is interactive.
+  /// The interactive state of the control.
   final bool enabled;
 
   /// The mouse cursor when interactive.
   final MouseCursor? mouseCursor;
 
-  /// Whether to provide platform feedback on activation.
+  /// The platform feedback enablement flag.
   final bool enableFeedback;
 
   /// The focus node.
   final FocusNode? focusNode;
 
-  /// Whether to autofocus on build.
+  /// The autofocus flag.
   final bool autofocus;
 
   /// Called when focus changes.
@@ -60,13 +60,13 @@ class NakedToggle extends StatefulWidget {
   /// Called when press changes.
   final ValueChanged<bool>? onPressChange;
 
-  /// Builder that receives current WidgetStates.
+  /// The builder that receives current WidgetStates.
   final ValueWidgetBuilder<Set<WidgetState>>? builder;
 
   /// The semantic label for screen readers.
   final String? semanticLabel;
 
-  /// Whether to use switch semantics instead of button semantics.
+  /// The switch semantics flag instead of button semantics.
   final bool asSwitch;
 
   bool get _effectiveEnabled => enabled && onChanged != null;
@@ -198,7 +198,7 @@ class NakedToggleGroup<T> extends StatelessWidget {
   /// Called when selection changes.
   final ValueChanged<T?>? onChanged;
 
-  /// Whether the group is enabled.
+  /// The enabled state of the group.
   final bool enabled;
 
   bool get _effectiveEnabled => enabled && onChanged != null;

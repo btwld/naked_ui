@@ -29,14 +29,11 @@ import 'package:flutter/widgets.dart';
 typedef NakedTextFieldBuilder =
     Widget Function(BuildContext context, Widget editableText);
 
-/// A headless, builder-first text input built on [EditableText].
+/// Headless, builder-first text input built on [EditableText].
 ///
-/// - Exposes native-feeling defaults (cursor, selection handles, magnifier)
-///   while remaining design-system agnostic.
-/// - Renders no visuals by itself; wrap the provided `editableText` via
-///   [builder] to style or decorate.
-/// - Maintains tight lifecycle around controller/focus/restoration to mirror
-///   [EditableText] behavior while staying ergonomic.
+/// Exposes native-feeling defaults while remaining design-system agnostic.
+/// Renders no visuals—wrap the provided `editableText` via [builder]
+/// to style or decorate.
 ///
 /// See also:
 /// - [EditableText], the underlying primitive text input.
@@ -135,62 +132,73 @@ class NakedTextField extends StatefulWidget {
 
   // ==== Public API ====
 
-  /// Adaptive magnifier configuration (defaults to platform-appropriate).
+  /// The magnifier configuration (defaults to platform-appropriate).
   final TextMagnifierConfiguration? magnifierConfiguration;
 
-  /// Controls the text being edited.
+  /// The controller for the text being edited.
   final TextEditingController? controller;
 
-  /// Defines the keyboard focus for this widget.
+  /// The focus node for this widget.
   final FocusNode? focusNode;
 
-  /// Undo/redo controller.
+  /// The undo/redo controller.
   final UndoHistoryController? undoController;
 
-  /// Keyboard type and action.
+  /// The keyboard type and action.
   final TextInputType? keyboardType;
   final TextInputAction? textInputAction;
 
-  /// Keyboard text behavior & alignment.
+  /// The text capitalization and alignment.
   final TextCapitalization textCapitalization;
   final TextAlign textAlign;
   final TextDirection? textDirection;
 
-  /// Read-only & cursor visibility.
+  /// Whether the field is read-only.
   final bool readOnly;
+  /// Whether to show the cursor.
   final bool? showCursor;
 
   final bool autofocus;
 
-  /// Obscuring configuration.
+  /// The character used for obscuring text.
   final String obscuringCharacter;
+  /// Whether to obscure text (e.g., passwords).
   final bool obscureText;
 
-  /// Text intelligence.
+  /// Whether to enable autocorrect.
   final bool autocorrect;
+  /// The smart dashes type.
   final SmartDashesType smartDashesType;
+  /// The smart quotes type.
   final SmartQuotesType smartQuotesType;
+  /// Whether to enable suggestions.
   final bool enableSuggestions;
 
-  /// Lines & expansion
+  /// The maximum number of lines.
   final int? maxLines;
+  /// The minimum number of lines.
   final int? minLines;
+  /// Whether the field expands vertically.
   final bool expands;
 
-  /// Length limiting.
+  /// The maximum character length.
   final int? maxLength;
+  /// How to enforce the maximum length.
   final MaxLengthEnforcement? maxLengthEnforcement;
 
-  /// Callbacks
+  /// Called when the text changes.
   final ValueChanged<String>? onChanged;
+  /// Called when editing is complete.
   final VoidCallback? onEditingComplete;
+  /// Called when the form is submitted.
   final ValueChanged<String>? onSubmitted;
+  /// Called for app private commands.
   final AppPrivateCommandCallback? onAppPrivateCommand;
 
-  /// Input formatters
+  /// The input formatters to apply.
   final List<TextInputFormatter>? inputFormatters;
 
-  /// Enabled state
+  /// Whether the field is enabled.
   final bool enabled;
 
   /// Cursor visuals
@@ -237,7 +245,7 @@ class NakedTextField extends StatefulWidget {
   /// Focus management
   final bool canRequestFocus;
 
-  /// Notifies when focus changes (true when focused).
+  /// Called when focus changes.
   final ValueChanged<bool>? onFocusChange;
 
   /// Restoration
@@ -259,7 +267,7 @@ class NakedTextField extends StatefulWidget {
   /// Ignore pointers
   final bool? ignorePointers;
 
-  /// Builder to wrap the underlying EditableText with any visuals.
+  /// Builder to wrap the underlying EditableText with visuals.
   final NakedTextFieldBuilder builder;
 
   /// Semantics

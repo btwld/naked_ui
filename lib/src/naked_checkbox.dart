@@ -3,7 +3,9 @@ import 'package:flutter/services.dart';
 
 import 'mixins/naked_mixins.dart';
 
-/// Headless checkbox that exposes states and semantics without visuals.
+/// A headless checkbox without visuals.
+///
+/// Exposes interaction states and semantics for custom styling.
 ///
 /// See also:
 /// - [Checkbox], the Material-styled checkbox for typical apps.
@@ -36,12 +38,12 @@ class NakedCheckbox extends StatefulWidget {
   /// The visual representation of the checkbox.
   final Widget? child;
 
-  /// Whether the checkbox is checked.
+  /// The current checked state.
   ///
   /// When [tristate] is true, null represents mixed state.
   final bool? value;
 
-  /// Whether the checkbox supports a mixed state.
+  /// The tristate support flag.
   ///
   /// When true, tapping cycles through false → true → null → false.
   /// When false, [value] must not be null.
@@ -59,22 +61,22 @@ class NakedCheckbox extends StatefulWidget {
   /// Called when press state changes.
   final ValueChanged<bool>? onPressChange;
 
-  /// Whether the checkbox is enabled.
+  /// The enabled state of the checkbox.
   final bool enabled;
 
-  /// The cursor when hovering over the checkbox.
+  /// The mouse cursor for the checkbox.
   final MouseCursor? mouseCursor;
 
-  /// Whether to provide haptic feedback on tap.
+  /// The haptic feedback enablement flag.
   final bool enableFeedback;
 
   /// The focus node for the checkbox.
   final FocusNode? focusNode;
 
-  /// Whether to autofocus when created.
+  /// The autofocus flag.
   final bool autofocus;
 
-  /// Builder that receives current interaction states.
+  /// The builder that receives current interaction states.
   ///
   /// States include: disabled, focused, hovered, pressed, selected.
   /// The selected state reflects `value == true`.

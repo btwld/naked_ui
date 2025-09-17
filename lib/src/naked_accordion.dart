@@ -4,18 +4,21 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
-/// Manages accordion state with optional min/max expansion constraints.
+/// A headless accordion controller without visuals.
 ///
-/// Prevents closing below [min] and caps items at [max] (closes oldest when exceeded).
-/// All operations are idempotent.
+/// Manages accordion state with optional min/max expansion constraints.
+/// Prevents closing below [min] and caps items at [max].
+///
+/// See also:
+/// - [NakedAccordion], the container that uses this controller.
 class NakedAccordionController<T> with ChangeNotifier {
-  /// Minimum expanded items allowed when closing.
+  /// The minimum expanded items allowed when closing.
   final int min;
 
-  /// Maximum expanded items allowed. If null, unlimited.
+  /// The maximum expanded items allowed. If null, unlimited.
   final int? max;
 
-  /// Expanded values in insertion order (oldest → newest).
+  /// The expanded values in insertion order (oldest → newest).
   final LinkedHashSet<T> values = LinkedHashSet<T>();
 
   NakedAccordionController({this.min = 0, this.max})
@@ -145,10 +148,13 @@ class NakedAccordionScope<T> extends InheritedWidget {
   }
 }
 
-/// Headless expandable/collapsible sections container.
+/// A headless accordion without visuals.
 ///
-/// Children should be [NakedAccordionItem] widgets. State managed by
+/// Contains expandable/collapsible sections managed by
 /// [NakedAccordionController].
+///
+/// See also:
+/// - [ExpansionPanelList], the Material-styled accordion for typical apps.
 class NakedAccordion<T> extends StatefulWidget {
   const NakedAccordion({
     super.key,
@@ -163,7 +169,7 @@ class NakedAccordion<T> extends StatefulWidget {
   /// The controller managing expanded values.
   final NakedAccordionController<T> controller;
 
-  /// Values expanded on first build if controller is empty.
+  /// The values expanded on first build if controller is empty.
   final List<T> initialExpandedValues;
 
   @override
@@ -212,10 +218,13 @@ typedef NakedAccordionTriggerBuilder =
     /// The trigger should visually reflect [isExpanded]; activation toggles it.
     Widget Function(BuildContext context, bool isExpanded);
 
-/// Individual accordion item with custom trigger and panel content.
+/// A headless accordion item without visuals.
 ///
-/// Headless design requiring custom visuals. Supports keyboard toggle
-/// (Enter/Space) and button semantics with expanded state.
+/// Individual expandable item with custom trigger and panel content.
+/// Supports keyboard toggle and button semantics.
+///
+/// See also:
+/// - [NakedAccordion], the container that manages accordion items.
 class NakedAccordionItem<T> extends StatelessWidget {
   const NakedAccordionItem({
     super.key,
@@ -234,16 +243,16 @@ class NakedAccordionItem<T> extends StatelessWidget {
     this.semanticLabel,
   });
 
-  /// Builder for the header/trigger.
+  /// The builder for the header/trigger.
   final NakedAccordionTriggerBuilder trigger;
 
-  /// Optional transition wrapper around the expanding panel.
+  /// The optional transition wrapper around the expanding panel.
   final Widget Function(Widget panel)? transitionBuilder;
 
-  /// Content shown when expanded.
+  /// The content shown when expanded.
   final Widget child;
 
-  /// Unique identifier tracked by controller.
+  /// The unique identifier tracked by controller.
   final T value;
 
   /// Called when header focus changes.
@@ -258,14 +267,14 @@ class NakedAccordionItem<T> extends StatelessWidget {
   /// The semantic label for the header.
   final String? semanticLabel;
 
-  /// Whether the header is interactive.
+  /// The interactive state of the header.
   final bool enabled;
   /// The mouse cursor when interactive.
   final MouseCursor mouseCursor;
-  /// Whether to provide platform feedback.
+  /// The platform feedback enablement flag.
   final bool enableFeedback;
 
-  /// Whether to autofocus the header on build.
+  /// The autofocus flag for the header.
   final bool autofocus;
 
   /// The focus node for the header.

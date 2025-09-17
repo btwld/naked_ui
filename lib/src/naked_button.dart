@@ -5,11 +5,13 @@ import 'package:flutter/services.dart';
 
 import 'mixins/naked_mixins.dart'; // WidgetStatesMixin, FocusableMixin
 
-/// A headless, focusable button that exposes interaction states.
+/// A headless button without visuals.
 ///
-/// Requires [child] or [builder] for custom rendering. Supports keyboard
-/// activation (Enter/Space), button semantics, and WidgetState updates
-/// for hovered/pressed/focused/disabled states.
+/// Exposes interaction states and supports keyboard activation.
+/// Requires [child] or [builder] for custom rendering.
+///
+/// See also:
+/// - [ElevatedButton], the Material-styled button for typical apps.
 class NakedButton extends StatefulWidget {
   const NakedButton({
     super.key,
@@ -34,7 +36,7 @@ class NakedButton extends StatefulWidget {
          'Either child or builder must be provided',
        );
 
-  /// Visual contents of the button when not using [builder].
+  /// The visual contents of the button when not using [builder].
   final Widget? child;
 
   /// Called when the button is activated (tap, Enter/Space).
@@ -55,33 +57,33 @@ class NakedButton extends StatefulWidget {
   /// Called when pressed state changes.
   final ValueChanged<bool>? onPressChange;
 
-  /// Builder that receives current WidgetStates.
+  /// The builder that receives current WidgetStates.
   final ValueWidgetBuilder<Set<WidgetState>>? builder;
 
-  /// Whether the button is enabled.
+  /// The enabled state of the button.
   final bool enabled;
 
   /// The mouse cursor when enabled.
   final MouseCursor mouseCursor;
 
-  /// Whether to provide platform feedback on activation.
+  /// The platform feedback enablement flag.
   final bool enableFeedback;
 
-  /// Optional external [FocusNode] to control focus ownership.
+  /// The external [FocusNode] to control focus ownership.
   final FocusNode? focusNode;
 
-  /// Whether to autofocus this button on build.
+  /// The autofocus flag.
   final bool autofocus;
 
-  /// Whether pressing requests focus in addition to activating.
+  /// The focus request flag for press actions.
   final bool focusOnPress;
 
-  /// Optional tooltip exposed to assistive technologies.
+  /// The tooltip exposed to assistive technologies.
   ///
   /// Consider providing concise text; long labels are read verbosely.
   final String? tooltip;
 
-  /// Optional semantic label announced by screen readers.
+  /// The semantic label announced by screen readers.
   final String? semanticLabel;
 
   // Consider button interactive if any handler is provided.

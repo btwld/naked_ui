@@ -4,7 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'mixins/naked_mixins.dart';
 
-/// Headless tabs with focusable triggers and panels.
+/// A headless tab group without visuals.
 ///
 /// Selection follows focus. Use [NakedTabList], [NakedTab], and
 /// [NakedTabPanel] for custom visuals.
@@ -31,7 +31,7 @@ class NakedTabGroup extends StatelessWidget {
   /// Called when the selected tab changes.
   final ValueChanged<String>? onChanged;
 
-  /// Whether the tabs are enabled.
+  /// The enabled state of the tabs.
   final bool enabled;
 
   /// The tab list orientation.
@@ -118,7 +118,12 @@ class NakedTabsScope extends InheritedWidget {
   }
 }
 
-/// Container for tab triggers with focus traversal.
+/// A container for tab triggers without visuals.
+///
+/// Provides focus traversal for tab navigation.
+///
+/// See also:
+/// - [NakedTab], the individual tab trigger components.
 class NakedTabList extends StatelessWidget {
   const NakedTabList({super.key, required this.child});
   final Widget child;
@@ -133,7 +138,13 @@ class NakedTabList extends StatelessWidget {
   }
 }
 
-/// Individual tab trigger where selection follows focus.
+/// A headless tab trigger without visuals.
+///
+/// Selection follows focus for keyboard navigation.
+/// Exposes interaction states for custom styling.
+///
+/// See also:
+/// - [NakedTabGroup], the container that manages tab state.
 class NakedTab extends StatefulWidget {
   const NakedTab({
     super.key,
@@ -169,25 +180,25 @@ class NakedTab extends StatefulWidget {
   /// Called when press state changes.
   final ValueChanged<bool>? onPressChange;
 
-  /// Builder that receives interaction states.
+  /// The builder that receives interaction states.
   final ValueWidgetBuilder<Set<WidgetState>>? builder;
 
   /// The semantic label for the trigger.
   final String? semanticLabel;
 
-  /// Whether the tab is enabled.
+  /// The enabled state of the tab.
   final bool enabled;
 
   /// The mouse cursor when enabled.
   final MouseCursor mouseCursor;
 
-  /// Whether to provide haptic feedback on activation.
+  /// The haptic feedback enablement flag.
   final bool enableFeedback;
 
   /// The focus node for the tab.
   final FocusNode? focusNode;
 
-  /// Whether to autofocus when built.
+  /// The autofocus flag.
   final bool autofocus;
 
   @override
@@ -305,7 +316,13 @@ class _NakedTabState extends State<NakedTab>
   }
 }
 
-/// Panel that displays content for a specific tab.
+/// A headless tab panel without visuals.
+///
+/// Displays content for a specific tab when selected.
+/// Supports state maintenance when hidden.
+///
+/// See also:
+/// - [NakedTabGroup], the container that manages tab selection.
 class NakedTabPanel extends StatelessWidget {
   const NakedTabPanel({
     super.key,
@@ -320,7 +337,7 @@ class NakedTabPanel extends StatelessWidget {
   /// The identifier of the tab this panel corresponds to.
   final String tabId;
 
-  /// Whether to keep the subtree alive when hidden.
+  /// The state maintenance flag when hidden.
   final bool maintainState;
 
   @override

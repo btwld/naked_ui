@@ -2,27 +2,14 @@ import 'package:flutter/material.dart';
 
 import 'mixins/naked_mixins.dart';
 
-/// Headless radio that participates in a [RadioGroup] without visuals.
+/// A headless radio without visuals.
 ///
-/// Must be placed under a [RadioGroup]. States exposed to [builder]
-/// include hovered, pressed, focused, selected, and disabled.
-///
-/// ```dart
-/// RadioGroup<int>(
-///   value: selected,
-///   onChanged: (v) => setState(() => selected = v),
-///   child: Row(children: [
-///     NakedRadio<int>(value: 1, child: Text('One')),
-///     NakedRadio<int>(value: 2, child: Text('Two')),
-///   ]),
-/// )
-/// ```
+/// Must be placed under a [RadioGroup]. Exposes interaction states
+/// including hovered, pressed, focused, selected, and disabled.
 ///
 /// See also:
-/// - [RawRadio], the underlying primitive widget used to implement radio
-///   interaction and semantics.
-/// - [RadioGroup], which manages the selected value and provides the grouping
-///   context for radios.
+/// - [Radio], the Material-styled radio for typical apps.
+/// - [RadioGroup], which manages the selected value and provides grouping.
 class NakedRadio<T> extends StatefulWidget {
   const NakedRadio({
     super.key,
@@ -49,7 +36,7 @@ class NakedRadio<T> extends StatefulWidget {
   /// The visual content when not using [builder].
   final Widget? child;
 
-  /// Whether the radio is enabled.
+  /// The enabled state of the radio.
   final bool enabled;
 
   /// The mouse cursor when hovering.
@@ -58,10 +45,10 @@ class NakedRadio<T> extends StatefulWidget {
   /// The focus node for the radio.
   final FocusNode? focusNode;
 
-  /// Whether to autofocus when built.
+  /// The autofocus flag.
   final bool autofocus;
 
-  /// Whether tapping the selected radio clears the selection.
+  /// The toggleable flag for clearing selection.
   final bool toggleable;
 
   /// Called when focus changes.
@@ -73,7 +60,7 @@ class NakedRadio<T> extends StatefulWidget {
   /// Called when press state changes.
   final ValueChanged<bool>? onPressChange;
 
-  /// Builder that receives current interaction states.
+  /// The builder that receives current interaction states.
   ///
   /// Includes the selected state when [value] matches the group's
   /// selected value.
