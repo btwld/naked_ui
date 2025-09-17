@@ -1,5 +1,5 @@
-import 'package:flutter/widgets.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/widgets.dart';
 
 import 'naked_button.dart';
 import 'utilities/utilities.dart';
@@ -12,6 +12,8 @@ import 'utilities/utilities.dart';
 /// See also:
 /// - [NakedMenuAnchor], which handles overlay placement and focus management.
 /// - [NakedButton], often used to build the trigger and items.
+/// - [NakedSelect], for select-style list with type-ahead and multi-select.
+/// - [NakedPopover], for non-menu anchored overlays.
 class NakedMenu extends StatelessWidget {
   /// Creates a headless menu.
   const NakedMenu({
@@ -77,6 +79,18 @@ class NakedMenu extends StatelessWidget {
 /// A headless menu item without visuals.
 ///
 /// Provides interaction states and accessibility for custom styling.
+///
+/// Example:
+/// ```dart
+/// NakedMenu(
+///   builder: (context) => Column(
+///     mainAxisSize: MainAxisSize.min,
+///     children: [
+///       NakedMenuItem(child: Text('Item 1'), onPressed: () {}),
+///     ],
+///   ),
+/// )
+/// ```
 ///
 /// See also:
 /// - [NakedMenu], the container that provides overlay and positioning.

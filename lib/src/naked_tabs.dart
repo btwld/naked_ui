@@ -2,6 +2,7 @@
 
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
+
 import 'mixins/naked_mixins.dart';
 
 /// A headless tab group without visuals.
@@ -26,6 +27,8 @@ import 'mixins/naked_mixins.dart';
 ///
 /// See also:
 /// - [TabBar], the Material-styled tabs widget for typical apps.
+/// - [FocusTraversalGroup], for customizing keyboard focus traversal.
+
 class NakedTabGroup extends StatelessWidget {
   const NakedTabGroup({
     super.key,

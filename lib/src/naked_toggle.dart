@@ -15,6 +15,11 @@ import 'mixins/naked_mixins.dart';
 ///   child: MyCustomToggleUI(),
 /// )
 /// ```
+///
+/// See also:
+/// - [NakedCheckbox], for a boolean form control alternative.
+/// - [NakedRadio], for exclusive selection among options.
+
 class NakedToggle extends StatefulWidget {
   const NakedToggle({
     super.key,
@@ -63,8 +68,10 @@ class NakedToggle extends StatefulWidget {
 
   /// Called when focus changes.
   final ValueChanged<bool>? onFocusChange;
+
   /// Called when hover changes.
   final ValueChanged<bool>? onHoverChange;
+
   /// Called when press changes.
   final ValueChanged<bool>? onPressChange;
 

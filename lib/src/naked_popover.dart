@@ -20,6 +20,7 @@ import 'utilities/naked_menu_anchor.dart';
 ///
 /// See also:
 /// - [NakedMenu], for dropdown menu functionality.
+/// - [NakedTooltip], for hover-triggered lightweight hints.
 /// - [NakedDialog], for modal dialog functionality.
 class NakedPopover extends StatefulWidget implements OverlayChildLifecycle {
   const NakedPopover({
@@ -37,18 +38,22 @@ class NakedPopover extends StatefulWidget implements OverlayChildLifecycle {
 
   /// The trigger widget that opens the popover.
   final Widget child;
+
   /// The builder for popover content.
   final WidgetBuilder popoverBuilder;
 
   /// The popover position relative to its trigger.
   final NakedMenuPosition position;
+
   /// The fallback positions if preferred doesn't fit.
   final List<NakedMenuPosition> fallbackPositions;
 
   /// The outside tap consumption flag.
   final bool consumeOutsideTaps;
+
   /// The root overlay usage flag.
   final bool useRootOverlay;
+
   /// The tap-to-open enablement flag.
   final bool openOnTap;
 

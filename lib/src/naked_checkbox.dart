@@ -1,5 +1,5 @@
-import 'package:flutter/widgets.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/widgets.dart';
 
 import 'mixins/naked_mixins.dart';
 
@@ -17,6 +17,8 @@ import 'mixins/naked_mixins.dart';
 ///
 /// See also:
 /// - [Checkbox], the Material-styled checkbox for typical apps.
+/// - [NakedToggle], for a headless binary toggle alternative.
+
 class NakedCheckbox extends StatefulWidget {
   const NakedCheckbox({
     super.key,

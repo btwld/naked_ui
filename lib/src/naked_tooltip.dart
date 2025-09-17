@@ -109,6 +109,7 @@ class NakedTooltip extends StatefulWidget implements OverlayChildLifecycle {
   /// See also:
   /// - [NakedMenuAnchor], which is used to position the tooltip overlay
   ///   relative to its trigger.
+  /// - [NakedPopover], for anchored, click-triggered overlays.
 
   /// The widget that triggers the tooltip.
   final Widget child;

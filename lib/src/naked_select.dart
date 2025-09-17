@@ -1,4 +1,3 @@
-// naked_select.dart
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
@@ -34,6 +33,7 @@ import 'utilities/naked_menu_anchor.dart';
 /// - [NakedMenuAnchor], which provides the underlying overlay positioning.
 /// - [NakedMenu], a simpler headless dropdown built on top of the same anchor.
 /// - [NakedButton], which is commonly used by select triggers and items.
+/// - [NakedPopover], for general anchored overlays beyond menus.
 
 class NakedSelect<T> extends StatefulWidget {
   const NakedSelect({

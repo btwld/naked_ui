@@ -1,7 +1,7 @@
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
-import 'mixins/naked_mixins.dart'; // uses WidgetStatesMixin
+import 'mixins/naked_mixins.dart';
 
 // Slider keyboard shortcuts (left-to-right layout)
 const Map<ShortcutActivator, Intent> _kSliderShortcutsLtr =
@@ -449,32 +449,39 @@ class _NakedSliderState extends State<NakedSlider>
 
 // ---- Intents ----
 
+/// Intent: increment slider value by a large step (Shift + Arrow).
 class _SliderShiftIncrementIntent extends _SliderIncrementIntent {
   const _SliderShiftIncrementIntent();
 }
 
+/// Intent: decrement slider value by a large step (Shift + Arrow).
 class _SliderShiftDecrementIntent extends _SliderDecrementIntent {
   const _SliderShiftDecrementIntent();
 }
 
+/// Intent: increment slider value by one step.
 class _SliderIncrementIntent extends Intent {
   const _SliderIncrementIntent();
 }
 
+/// Intent: decrement slider value by one step.
 class _SliderDecrementIntent extends Intent {
   const _SliderDecrementIntent();
 }
 
+/// Intent: set slider value to minimum.
 class _SliderSetToMinIntent extends Intent {
   const _SliderSetToMinIntent();
 }
 
+/// Intent: set slider value to maximum.
 class _SliderSetToMaxIntent extends Intent {
   const _SliderSetToMaxIntent();
 }
 
 // ---- Actions ----
 
+/// Action: handles keyboard increment intent.
 class _SliderIncrementAction extends Action<_SliderIncrementIntent> {
   final _NakedSliderState state;
   final bool isShiftPressed;
@@ -490,6 +497,7 @@ class _SliderIncrementAction extends Action<_SliderIncrementIntent> {
   }
 }
 
+/// Action: handles keyboard decrement intent.
 class _SliderDecrementAction extends Action<_SliderDecrementIntent> {
   final _NakedSliderState state;
   final bool isShiftPressed;
@@ -505,6 +513,7 @@ class _SliderDecrementAction extends Action<_SliderDecrementIntent> {
   }
 }
 
+/// Action: handles keyboard set-to-min intent.
 class _SliderSetToMinAction extends Action<_SliderSetToMinIntent> {
   final _NakedSliderState state;
   _SliderSetToMinAction(this.state);
@@ -517,6 +526,7 @@ class _SliderSetToMinAction extends Action<_SliderSetToMinIntent> {
   }
 }
 
+/// Action: handles keyboard set-to-max intent.
 class _SliderSetToMaxAction extends Action<_SliderSetToMaxIntent> {
   final _NakedSliderState state;
   _SliderSetToMaxAction(this.state);

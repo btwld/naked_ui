@@ -30,9 +30,20 @@ class NakedMenuPosition {
 /// - Supports delayed hide via `removalDelay` using onCloseRequested
 /// - Respects `RawMenuOverlayInfo.position` when provided (context menus)
 ///
+/// Example:
+/// ```dart
+/// NakedMenuAnchor(
+///   controller: MenuController(),
+///   overlayBuilder: (context) => Text('Overlay'),
+///   child: Text('Trigger'),
+/// )
+/// ```
+
 /// See also:
 /// - [NakedMenu], a headless dropdown menu built on this anchor.
 /// - [NakedTooltip], which uses this anchor to position tooltips.
+/// - [NakedPopover], which also uses this anchor for positioning.
+
 class NakedMenuAnchor extends StatefulWidget {
   const NakedMenuAnchor({
     super.key,

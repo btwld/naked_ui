@@ -1,13 +1,3 @@
-// lib/naked_text_field.dart
-//
-// NakedTextField: a builder-first text input that *still* feels native by default.
-// - Adaptive OS styling (selection handles, magnifier, cursor/selection color)
-// - Fully headless visuals via `builder`
-// - Tight lifecycle: restoration, controller/focus ownership, selection plumbing
-//
-// You can still override any of the adaptive choices, but the widget works out
-// of the box with platform-appropriate behavior.
-
 import 'dart:ui' as ui show BoxHeightStyle, BoxWidthStyle;
 
 import 'package:flutter/cupertino.dart'
@@ -166,6 +156,7 @@ class NakedTextField extends StatefulWidget {
 
   /// Whether the field is read-only.
   final bool readOnly;
+
   /// Whether to show the cursor.
   final bool? showCursor;
 
@@ -173,36 +164,46 @@ class NakedTextField extends StatefulWidget {
 
   /// The character used for obscuring text.
   final String obscuringCharacter;
+
   /// Whether to obscure text (e.g., passwords).
   final bool obscureText;
 
   /// Whether to enable autocorrect.
   final bool autocorrect;
+
   /// The smart dashes type.
   final SmartDashesType smartDashesType;
+
   /// The smart quotes type.
   final SmartQuotesType smartQuotesType;
+
   /// Whether to enable suggestions.
   final bool enableSuggestions;
 
   /// The maximum number of lines.
   final int? maxLines;
+
   /// The minimum number of lines.
   final int? minLines;
+
   /// Whether the field expands vertically.
   final bool expands;
 
   /// The maximum character length.
   final int? maxLength;
+
   /// How to enforce the maximum length.
   final MaxLengthEnforcement? maxLengthEnforcement;
 
   /// Called when the text changes.
   final ValueChanged<String>? onChanged;
+
   /// Called when editing is complete.
   final VoidCallback? onEditingComplete;
+
   /// Called when the form is submitted.
   final ValueChanged<String>? onSubmitted;
+
   /// Called for app private commands.
   final AppPrivateCommandCallback? onAppPrivateCommand;
 
