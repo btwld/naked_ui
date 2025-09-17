@@ -94,6 +94,46 @@ void main() {
         expect(triggerFocusNode.hasFocus, isTrue);
       },
     );
+    testWidgets('opens via Space key on trigger (internal focus)', (
+      tester,
+    ) async {
+      await tester.pumpMaterialWidget(
+        Center(
+          child: NakedPopover(
+            popoverBuilder: (_) => const Text('Popover Content'),
+            child: const Text('Trigger'),
+          ),
+        ),
+      );
+
+      // Focus the trigger via TAB (FocusTraversal) then activate with Space
+      await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+      await tester.pump();
+      await tester.sendKeyEvent(LogicalKeyboardKey.space);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Popover Content'), findsOneWidget);
+    });
+
+    testWidgets('opens via Enter key on trigger (internal focus)', (
+      tester,
+    ) async {
+      await tester.pumpMaterialWidget(
+        Center(
+          child: NakedPopover(
+            popoverBuilder: (_) => const Text('Popover Content'),
+            child: const Text('Trigger'),
+          ),
+        ),
+      );
+
+      await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+      await tester.pump();
+      await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Popover Content'), findsOneWidget);
+    });
 
     testWidgets('positions popover based on anchors', (tester) async {
       const triggerKey = Key('trigger');

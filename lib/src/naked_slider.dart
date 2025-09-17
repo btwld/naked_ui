@@ -158,11 +158,9 @@ class NakedSlider extends StatefulWidget {
 }
 
 class _NakedSliderState extends State<NakedSlider>
-    with WidgetStatesMixin<NakedSlider> {
-  FocusNode? _internalFocusNode;
-  FocusNode get _focusNode =>
-      widget.focusNode ??
-      (_internalFocusNode ??= FocusNode(debugLabel: 'NakedSlider'));
+    with WidgetStatesMixin<NakedSlider>, FocusableMixin<NakedSlider> {
+  @override
+  FocusNode? get focusableExternalNode => widget.focusNode;
 
   bool _isDragging = false;
   // track latest normalized value we told the world about
@@ -243,7 +241,8 @@ class _NakedSliderState extends State<NakedSlider>
     widget.onDragStart?.call();
 
     // Ensure subsequent keyboard nudges apply here.
-    if (_focusNode.canRequestFocus) _focusNode.requestFocus();
+    if ((effectiveFocusNode?.canRequestFocus ?? false))
+      effectiveFocusNode!.requestFocus();
   }
 
   void _handleDragUpdate(DragUpdateDetails details) {
@@ -307,9 +306,12 @@ class _NakedSliderState extends State<NakedSlider>
   void didChangeDependencies() {
     super.didChangeDependencies();
     // Keep focus traversal flags aligned with enablement.
-    _focusNode
-      ..canRequestFocus = _isEnabled
-      ..skipTraversal = !_isEnabled;
+    final node = effectiveFocusNode;
+    if (node != null) {
+      node
+        ..canRequestFocus = _isEnabled
+        ..skipTraversal = !_isEnabled;
+    }
   }
 
   @override
@@ -325,40 +327,16 @@ class _NakedSliderState extends State<NakedSlider>
       updateState(WidgetState.pressed, false);
     }
 
-    // If the focusNode source changed, swap internal/external cleanly and preserve focus.
-    if (oldWidget.focusNode != widget.focusNode) {
-      final oldEffective = oldWidget.focusNode ?? _internalFocusNode;
-      final hadFocus = oldEffective?.hasFocus ?? false;
-
-      if (oldWidget.focusNode == null && widget.focusNode != null) {
-        // internal -> external
-        _internalFocusNode?.dispose();
-        _internalFocusNode = null;
-      } else if (oldWidget.focusNode != null && widget.focusNode == null) {
-        // external -> internal
-        _internalFocusNode = FocusNode(debugLabel: 'NakedSlider');
-      }
-
-      if (hadFocus) {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (mounted) _focusNode.requestFocus();
-        });
-      }
-    }
-
     // Maintain traversal flags under prop changes.
-    _focusNode
-      ..canRequestFocus = _isEnabled
-      ..skipTraversal = !_isEnabled;
+    final node2 = effectiveFocusNode;
+    if (node2 != null) {
+      node2
+        ..canRequestFocus = _isEnabled
+        ..skipTraversal = !_isEnabled;
+    }
 
     // Keep last value in step with controller updates.
     _lastEmittedValue = widget.value;
-  }
-
-  @override
-  void dispose() {
-    _internalFocusNode?.dispose();
-    super.dispose();
   }
 
   // ---------------------------
@@ -427,7 +405,7 @@ class _NakedSliderState extends State<NakedSlider>
 
     return FocusableActionDetector(
       enabled: _isEnabled,
-      focusNode: _focusNode,
+      focusNode: effectiveFocusNode,
       autofocus: widget.autofocus,
       descendantsAreTraversable: false, // no focus into the visual child
       shortcuts: _shortcuts,

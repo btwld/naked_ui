@@ -131,6 +131,103 @@ void main() {
       expect(selected, 'a');
     });
 
+    testWidgets('tapping already selected option is a no-op', (tester) async {
+      String? selected = 'a';
+      var calls = 0;
+
+      await tester.pumpMaterialWidget(
+        StatefulBuilder(
+          builder: (context, setState) {
+            return NakedToggleGroup<String>(
+              selectedValue: selected,
+              onChanged: (v) {
+                calls++;
+                setState(() => selected = v);
+              },
+              child: Row(
+                children: const [
+                  NakedToggleOption<String>(value: 'a', child: Text('A')),
+                  NakedToggleOption<String>(value: 'b', child: Text('B')),
+                ],
+              ),
+            );
+          },
+        ),
+      );
+
+      expect(selected, 'a');
+      await tester.tap(find.text('A'));
+      await tester.pump();
+      expect(
+        calls,
+        0,
+        reason: 'onChanged should not fire when selecting the same value',
+      );
+      expect(selected, 'a');
+    });
+
+    testWidgets('disabled option cannot be selected (group enabled)', (
+      tester,
+    ) async {
+      String? selected = 'a';
+
+      await tester.pumpMaterialWidget(
+        StatefulBuilder(
+          builder: (context, setState) {
+            return NakedToggleGroup<String>(
+              selectedValue: selected,
+              onChanged: (v) => setState(() => selected = v),
+              child: Row(
+                children: const [
+                  NakedToggleOption<String>(value: 'a', child: Text('A')),
+                  NakedToggleOption<String>(
+                    value: 'b',
+                    child: Text('B'),
+                    enabled: false,
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
+      );
+
+      await tester.tap(find.text('B'));
+      await tester.pump();
+      expect(selected, 'a');
+    });
+
+    testWidgets('keyboard activation selects focused option', (tester) async {
+      String? selected = 'a';
+      final bFocus = FocusNode();
+
+      await tester.pumpMaterialWidget(
+        StatefulBuilder(
+          builder: (context, setState) {
+            return NakedToggleGroup<String>(
+              selectedValue: selected,
+              onChanged: (v) => setState(() => selected = v),
+              child: Row(
+                children: [
+                  const NakedToggleOption<String>(value: 'a', child: Text('A')),
+                  NakedToggleOption<String>(
+                    value: 'b',
+                    focusNode: bFocus,
+                    child: const Text('B'),
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
+      );
+
+      bFocus.requestFocus();
+      await tester.pump();
+      await tester.sendKeyEvent(LogicalKeyboardKey.space);
+      await tester.pump();
+      expect(selected, 'b');
+    });
     group('asSwitch parameter', () {
       testWidgets('behaves as toggle button by default', (tester) async {
         bool value = false;
