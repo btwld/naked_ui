@@ -90,7 +90,6 @@ mixin WidgetStatesMixin<T extends StatefulWidget> on State<T> {
 
   /// Change-detecting state update. Returns true if the value actually changed.
   @protected
-  // ignore: prefer-named-boolean-parameters
   bool updateState(WidgetState state, bool value) {
     final before = _widgetStates.contains(state);
     if (before == value) return false;
@@ -111,7 +110,6 @@ mixin WidgetStatesMixin<T extends StatefulWidget> on State<T> {
 
   /// Update hover state and fire callback only if the state actually changed.
   @protected
-  // ignore: prefer-named-boolean-parameters
   bool updateHoverState(bool value, ValueChanged<bool>? onHoverChange) {
     if (updateState(WidgetState.hovered, value)) {
       onHoverChange?.call(value);
@@ -124,7 +122,6 @@ mixin WidgetStatesMixin<T extends StatefulWidget> on State<T> {
 
   /// Update focus state and fire callback only if the state actually changed.
   @protected
-  // ignore: prefer-named-boolean-parameters
   bool updateFocusState(bool value, ValueChanged<bool>? onFocusChange) {
     if (updateState(WidgetState.focused, value)) {
       onFocusChange?.call(value);
@@ -137,7 +134,6 @@ mixin WidgetStatesMixin<T extends StatefulWidget> on State<T> {
 
   /// Update press state and fire callback only if the state actually changed.
   @protected
-  // ignore: prefer-named-boolean-parameters
   bool updatePressState(bool value, ValueChanged<bool>? onPressChange) {
     if (updateState(WidgetState.pressed, value)) {
       onPressChange?.call(value);
@@ -156,7 +152,6 @@ mixin WidgetStatesMixin<T extends StatefulWidget> on State<T> {
 
   /// Update selected state and fire callback only if the state actually changed.
   @protected
-  // ignore: prefer-named-boolean-parameters
   bool updateSelectedState(bool value, ValueChanged<bool>? onSelectedChange) {
     if (updateState(WidgetState.selected, value)) {
       onSelectedChange?.call(value);
