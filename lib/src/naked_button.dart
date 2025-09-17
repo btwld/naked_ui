@@ -7,17 +7,9 @@ import 'mixins/naked_mixins.dart'; // WidgetStatesMixin, FocusableMixin
 
 /// A headless, focusable button that exposes interaction states.
 ///
-/// - No visuals are provided; pass a [child] or a [builder] to render UI.
-/// - Keyboard: Enter/Space activate the button. Optional [focusOnPress].
-/// - Semantics: exposes a "button" role and supports [tooltip]/[semanticLabel].
-/// - States: when using [builder], you receive a `Set<WidgetState>` that
-///   reflects the current hovered/pressed/focused/disabled states.
-///
-/// See also:
-/// - [NakedMenuItem], which composes a menu item from [NakedButton].
-/// - [FocusableActionDetector], the underlying keyboard/hover integration.
-/// - [TextButton], [ElevatedButton], and [FilledButton] for Material-styled
-///   buttons when you don’t need a headless control.
+/// Requires [child] or [builder] for custom rendering. Supports keyboard
+/// activation (Enter/Space), button semantics, and WidgetState updates
+/// for hovered/pressed/focused/disabled states.
 class NakedButton extends StatefulWidget {
   const NakedButton({
     super.key,
@@ -54,31 +46,25 @@ class NakedButton extends StatefulWidget {
   /// Called when the button is double-tapped.
   final VoidCallback? onDoubleTap;
 
-  /// Notifies when focus changes. Receives `true` when focused.
+  /// Called when focus changes.
   final ValueChanged<bool>? onFocusChange;
 
-  /// Notifies when hover changes. Receives `true` when hovered.
+  /// Called when hover changes.
   final ValueChanged<bool>? onHoverChange;
 
-  /// Notifies when pressed (highlight) changes. Receives `true` when down.
+  /// Called when pressed state changes.
   final ValueChanged<bool>? onPressChange;
 
-  /// Builder that receives the current interaction [WidgetState]s.
-  ///
-  /// The signature is `(BuildContext, Set<WidgetState>, Widget? child)`.
-  /// Use this to render custom visuals based on button state.
+  /// Builder that receives current WidgetStates.
   final ValueWidgetBuilder<Set<WidgetState>>? builder;
 
   /// Whether the button is enabled.
-  ///
-  /// The button is effectively enabled only if [enabled] is true and at least
-  /// one handler among [onPressed], [onLongPress], or [onDoubleTap] is set.
   final bool enabled;
 
-  /// Mouse cursor when the button is enabled.
+  /// The mouse cursor when enabled.
   final MouseCursor mouseCursor;
 
-  /// Whether to provide platform haptic/aural feedback on activation.
+  /// Whether to provide platform feedback on activation.
   final bool enableFeedback;
 
   /// Optional external [FocusNode] to control focus ownership.

@@ -4,11 +4,10 @@ import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'mixins/naked_mixins.dart';
 
-/// Headless tabs: focusable triggers + panels, no default visuals.
+/// Headless tabs with focusable triggers and panels.
 ///
-/// - Selection follows focus; Enter/Space also activate the focused tab.
-/// - No visuals are provided; use [NakedTabList], [NakedTab], and [NakedTabPanel].
-/// - Semantics: triggers expose a button role with `selected` state.
+/// Selection follows focus. Use [NakedTabList], [NakedTab], and
+/// [NakedTabPanel] for custom visuals.
 ///
 /// See also:
 /// - [TabBar], the Material-styled tabs widget for typical apps.
@@ -23,21 +22,22 @@ class NakedTabGroup extends StatelessWidget {
     this.onEscapePressed,
   });
 
+  /// The tabs content.
   final Widget child;
 
   /// The ID of the currently selected tab.
   final String selectedTabId;
 
-  /// Called when the selected tab ID changes.
+  /// Called when the selected tab changes.
   final ValueChanged<String>? onChanged;
 
-  /// Whether the tabs component is enabled.
+  /// Whether the tabs are enabled.
   final bool enabled;
 
-  /// Orientation of the tab list (affects traversal expectations).
+  /// The tab list orientation.
   final Axis orientation;
 
-  /// Invoked when Escape is pressed while a tab has focus.
+  /// Called when Escape is pressed while a tab has focus.
   final VoidCallback? onEscapePressed;
 
   bool get _effectiveEnabled => enabled && onChanged != null;
@@ -71,7 +71,7 @@ class NakedTabGroup extends StatelessWidget {
   }
 }
 
-/// Inherited scope for tab state and basic API.
+/// Provides tab state to descendant widgets.
 class NakedTabsScope extends InheritedWidget {
   const NakedTabsScope({
     super.key,
@@ -118,8 +118,7 @@ class NakedTabsScope extends InheritedWidget {
   }
 }
 
-/// Container for tab triggers (headless).
-/// Simplified: rely on default focus traversal; no custom shortcuts needed.
+/// Container for tab triggers with focus traversal.
 class NakedTabList extends StatelessWidget {
   const NakedTabList({super.key, required this.child});
   final Widget child;
@@ -134,7 +133,7 @@ class NakedTabList extends StatelessWidget {
   }
 }
 
-/// An individual tab trigger. Headless; selection follows focus.
+/// Individual tab trigger where selection follows focus.
 class NakedTab extends StatefulWidget {
   const NakedTab({
     super.key,
@@ -155,37 +154,37 @@ class NakedTab extends StatefulWidget {
          'Either child or builder must be provided',
        );
 
-  /// Visual contents of the tab trigger when not using [builder].
+  /// The tab trigger content when not using [builder].
   final Widget? child;
 
-  /// Identifier for this tab. Must be unique within the [NakedTabGroup].
+  /// The unique identifier for this tab.
   final String tabId;
 
-  /// Notifies when focus changes.
+  /// Called when focus changes.
   final ValueChanged<bool>? onFocusChange;
 
-  /// Notifies when hover changes.
+  /// Called when hover changes.
   final ValueChanged<bool>? onHoverChange;
 
-  /// Notifies when pressed (highlight) changes.
+  /// Called when press state changes.
   final ValueChanged<bool>? onPressChange;
 
-  /// Builder that receives `{disabled, selected, focused, hovered, pressed}`.
+  /// Builder that receives interaction states.
   final ValueWidgetBuilder<Set<WidgetState>>? builder;
 
-  /// Optional semantic label for the trigger.
+  /// The semantic label for the trigger.
   final String? semanticLabel;
 
-  /// Whether this tab is enabled.
+  /// Whether the tab is enabled.
   final bool enabled;
 
-  /// Mouse cursor when the tab is enabled.
+  /// The mouse cursor when enabled.
   final MouseCursor mouseCursor;
 
-  /// Whether to provide haptic/aural feedback on activation.
+  /// Whether to provide haptic feedback on activation.
   final bool enableFeedback;
 
-  /// External [FocusNode] to control focus ownership.
+  /// The focus node for the tab.
   final FocusNode? focusNode;
 
   /// Whether to autofocus when built.
@@ -306,7 +305,7 @@ class _NakedTabState extends State<NakedTab>
   }
 }
 
-/// A panel that displays content for a specific tab.
+/// Panel that displays content for a specific tab.
 class NakedTabPanel extends StatelessWidget {
   const NakedTabPanel({
     super.key,
@@ -315,10 +314,10 @@ class NakedTabPanel extends StatelessWidget {
     this.maintainState = true,
   });
 
-  /// Panel contents for the associated [tabId].
+  /// The panel content for the associated [tabId].
   final Widget child;
 
-  /// Identifier of the tab this panel corresponds to.
+  /// The identifier of the tab this panel corresponds to.
   final String tabId;
 
   /// Whether to keep the subtree alive when hidden.

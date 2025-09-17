@@ -3,6 +3,18 @@ import 'package:flutter/widgets.dart';
 
 import 'utilities/naked_menu_anchor.dart';
 
+/// A headless popover with toggleable overlay functionality.
+///
+/// Provides a [child] trigger and [popoverBuilder] for custom content rendering.
+/// Handles tap interactions, positioning, focus management, and outside dismissal.
+/// Implements [OverlayChildLifecycle] for state change notifications.
+///
+/// ```dart
+/// NakedPopover(
+///   popoverBuilder: (context) => MyCustomPopover(),
+///   child: Text('Tap me'),
+/// )
+/// ```
 class NakedPopover extends StatefulWidget implements OverlayChildLifecycle {
   const NakedPopover({
     super.key,

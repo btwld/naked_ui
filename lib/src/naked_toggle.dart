@@ -3,12 +3,10 @@ import 'package:flutter/widgets.dart';
 
 import 'mixins/naked_mixins.dart';
 
-/// A headless toggle control: binary pressed/selected control without visuals.
+/// A headless binary toggle control without visuals.
 ///
-/// Can represent either a toggle button or a switch based on the [asSwitch] parameter.
-/// - When [asSwitch] is false: behaves as a toggle button with button semantics
-/// - When [asSwitch] is true: behaves as a switch with switch semantics
-/// - Builder receives WidgetStates including disabled/focused/hovered/pressed/selected.
+/// Behaves as toggle button or switch based on [asSwitch]. Builder receives
+/// WidgetStates including disabled/focused/hovered/pressed/selected.
 class NakedToggle extends StatefulWidget {
   const NakedToggle({
     super.key,
@@ -31,43 +29,44 @@ class NakedToggle extends StatefulWidget {
          'Either child or builder must be provided',
        );
 
-  /// Whether this toggle is selected (pressed/on).
+  /// Whether the toggle is selected.
   final bool value;
 
-  /// Called when the toggle changes state.
+  /// Called when selection changes.
   final ValueChanged<bool>? onChanged;
 
-  /// Optional content; ignored if [builder] is provided.
+  /// The child widget; ignored if [builder] is provided.
   final Widget? child;
 
   /// Whether the control is interactive.
   final bool enabled;
 
-  /// Mouse cursor when interactive.
+  /// The mouse cursor when interactive.
   final MouseCursor? mouseCursor;
 
-  /// Platform feedback on activation.
+  /// Whether to provide platform feedback on activation.
   final bool enableFeedback;
 
-  /// Optional focus node.
+  /// The focus node.
   final FocusNode? focusNode;
 
-  /// Autofocus on build.
+  /// Whether to autofocus on build.
   final bool autofocus;
 
-  /// State change callbacks.
+  /// Called when focus changes.
   final ValueChanged<bool>? onFocusChange;
+  /// Called when hover changes.
   final ValueChanged<bool>? onHoverChange;
+  /// Called when press changes.
   final ValueChanged<bool>? onPressChange;
 
-  /// Builder that receives current states.
+  /// Builder that receives current WidgetStates.
   final ValueWidgetBuilder<Set<WidgetState>>? builder;
 
-  /// Semantic label read by screen readers.
+  /// The semantic label for screen readers.
   final String? semanticLabel;
 
   /// Whether to use switch semantics instead of button semantics.
-  /// When true, uses switch-style haptic feedback and omits button semantics.
   final bool asSwitch;
 
   bool get _effectiveEnabled => enabled && onChanged != null;
@@ -190,9 +189,16 @@ class NakedToggleGroup<T> extends StatelessWidget {
     this.enabled = true,
   });
 
+  /// The widget containing toggle options.
   final Widget child;
+
+  /// The currently selected value.
   final T? selectedValue;
+
+  /// Called when selection changes.
   final ValueChanged<T?>? onChanged;
+
+  /// Whether the group is enabled.
   final bool enabled;
 
   bool get _effectiveEnabled => enabled && onChanged != null;

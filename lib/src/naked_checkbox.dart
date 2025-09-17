@@ -3,7 +3,7 @@ import 'package:flutter/services.dart';
 
 import 'mixins/naked_mixins.dart';
 
-/// A headless checkbox: no visuals, exposes states and proper semantics.
+/// Headless checkbox that exposes states and semantics without visuals.
 ///
 /// See also:
 /// - [Checkbox], the Material-styled checkbox for typical apps.
@@ -33,61 +33,54 @@ class NakedCheckbox extends StatefulWidget {
          'Either child or builder must be provided',
        );
 
-  /// Visual representation of the checkbox.
-  ///
-  /// Renders different states based on callback properties.
+  /// The visual representation of the checkbox.
   final Widget? child;
 
-  /// Whether this checkbox is checked.
+  /// Whether the checkbox is checked.
   ///
-  /// When [tristate] is true, null corresponds to mixed state.
+  /// When [tristate] is true, null represents mixed state.
   final bool? value;
 
-  /// Whether the checkbox can be true, false, or null.
+  /// Whether the checkbox supports a mixed state.
   ///
-  /// When true, tapping cycles through false => true => null => false.
+  /// When true, tapping cycles through false → true → null → false.
   /// When false, [value] must not be null.
   final bool tristate;
 
-  /// Called when the checkbox is toggled.
-  ///
-  /// If null, the checkbox is disabled and unresponsive.
+  /// Called when the checkbox value changes.
   final ValueChanged<bool?>? onChanged;
 
-  /// Called when focus state changes.
+  /// Called when focus changes.
   final ValueChanged<bool>? onFocusChange;
 
-  /// Called when hover state changes.
+  /// Called when hover changes.
   final ValueChanged<bool>? onHoverChange;
 
-  /// Called when highlight (pressed) state changes.
+  /// Called when press state changes.
   final ValueChanged<bool>? onPressChange;
 
   /// Whether the checkbox is enabled.
   final bool enabled;
 
-  /// Cursor when hovering over the checkbox.
+  /// The cursor when hovering over the checkbox.
   final MouseCursor? mouseCursor;
 
   /// Whether to provide haptic feedback on tap.
-  ///
-  /// Note: Checkboxes use selectionClick haptic feedback for state changes,
-  /// which is consistent across platforms for selection controls.
   final bool enableFeedback;
 
-  /// Optional focus node to control focus behavior.
+  /// The focus node for the checkbox.
   final FocusNode? focusNode;
 
   /// Whether to autofocus when created.
   final bool autofocus;
 
-  /// Builder that receives the current interaction [WidgetState]s.
+  /// Builder that receives current interaction states.
   ///
-  /// States include at least: disabled, focused, hovered, pressed, selected.
-  /// The `selected` state reflects `value == true`.
+  /// States include: disabled, focused, hovered, pressed, selected.
+  /// The selected state reflects `value == true`.
   final ValueWidgetBuilder<Set<WidgetState>>? builder;
 
-  /// Semantic label for accessibility.
+  /// The semantic label for accessibility.
   final String? semanticLabel;
 
   bool get _effectiveEnabled => enabled && onChanged != null;

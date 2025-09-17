@@ -6,18 +6,13 @@ import 'package:flutter/widgets.dart';
 
 /// Manages accordion state with optional min/max expansion constraints.
 ///
-/// - `min` prevents closing below a floor when toggling/closing individual items.
-/// - `max` caps the number of expanded items; when exceeded, the *oldest* is closed.
-/// - All operations are idempotent (no redundant notifications).
-///
-/// See also:
-/// - [NakedAccordion], the headless accordion that uses this controller.
-/// - [NakedAccordionItem], the item widget that toggles values via this controller.
+/// Prevents closing below [min] and caps items at [max] (closes oldest when exceeded).
+/// All operations are idempotent.
 class NakedAccordionController<T> with ChangeNotifier {
-  /// Minimum number of expanded items allowed when *closing* via user actions.
+  /// Minimum expanded items allowed when closing.
   final int min;
 
-  /// Maximum number of expanded items allowed. If null, unlimited.
+  /// Maximum expanded items allowed. If null, unlimited.
   final int? max;
 
   /// Expanded values in insertion order (oldest → newest).
@@ -120,8 +115,7 @@ class NakedAccordionController<T> with ChangeNotifier {
   }
 }
 
-/// Scope used by accordion items to access controller/state without
-/// reaching into the private state class.
+/// Provides accordion controller to descendant items.
 class NakedAccordionScope<T> extends InheritedWidget {
   const NakedAccordionScope({
     super.key,
@@ -151,15 +145,10 @@ class NakedAccordionScope<T> extends InheritedWidget {
   }
 }
 
-/// Provides expandable/collapsible sections without visual styling.
+/// Headless expandable/collapsible sections container.
 ///
-/// The [children] should be [NakedAccordionItem<T>] widgets.
-/// State is managed by [NakedAccordionController<T>].
-///
-/// See also:
-/// - [NakedAccordionController], which stores expanded values and enforces
-///   min/max constraints.
-/// - [NakedAccordionItem], which renders the trigger and panel.
+/// Children should be [NakedAccordionItem] widgets. State managed by
+/// [NakedAccordionController].
 class NakedAccordion<T> extends StatefulWidget {
   const NakedAccordion({
     super.key,
@@ -168,13 +157,13 @@ class NakedAccordion<T> extends StatefulWidget {
     this.initialExpandedValues = const [],
   });
 
-  /// Accordion items (usually [NakedAccordionItem<T>]).
+  /// The accordion items.
   final List<Widget> children;
 
-  /// Controller that manages expanded/collapsed values.
+  /// The controller managing expanded values.
   final NakedAccordionController<T> controller;
 
-  /// Values that should be expanded on first build if controller is empty.
+  /// Values expanded on first build if controller is empty.
   final List<T> initialExpandedValues;
 
   @override
@@ -223,15 +212,10 @@ typedef NakedAccordionTriggerBuilder =
     /// The trigger should visually reflect [isExpanded]; activation toggles it.
     Widget Function(BuildContext context, bool isExpanded);
 
-/// Individual item in a [NakedAccordion].
+/// Individual accordion item with custom trigger and panel content.
 ///
-/// Headless: you provide the trigger visuals and the panel content.
-/// Keyboard: Enter/Space toggle the header (via ActivateIntent).
-/// Semantics: the header is exposed as a "button" with `expanded` state.
-///
-/// See also:
-/// - [NakedAccordion], the container that hosts items and provides traversal.
-/// - [NakedAccordionController], which stores and updates expanded values.
+/// Headless design requiring custom visuals. Supports keyboard toggle
+/// (Enter/Space) and button semantics with expanded state.
 class NakedAccordionItem<T> extends StatelessWidget {
   const NakedAccordionItem({
     super.key,
@@ -254,39 +238,37 @@ class NakedAccordionItem<T> extends StatelessWidget {
   final NakedAccordionTriggerBuilder trigger;
 
   /// Optional transition wrapper around the expanding panel.
-  /// Example: `(panel) => AnimatedSize(duration: k200ms, child: panel)`
   final Widget Function(Widget panel)? transitionBuilder;
 
   /// Content shown when expanded.
   final Widget child;
 
-  /// Unique identifier tracked by [NakedAccordionController].
+  /// Unique identifier tracked by controller.
   final T value;
 
-  // Interaction hooks (headless state reporting).
-  /// Notifies when header focus changes.
+  /// Called when header focus changes.
   final ValueChanged<bool>? onFocusChange;
 
-  /// Notifies when header hover changes.
+  /// Called when header hover changes.
   final ValueChanged<bool>? onHoverChange;
 
-  /// Notifies when header pressed (highlight) changes.
+  /// Called when header press changes.
   final ValueChanged<bool>? onPressChange;
 
-  /// Accessibility label for the header.
+  /// The semantic label for the header.
   final String? semanticLabel;
 
-  /// Interactivity flags.
+  /// Whether the header is interactive.
   final bool enabled;
+  /// The mouse cursor when interactive.
   final MouseCursor mouseCursor;
+  /// Whether to provide platform feedback.
   final bool enableFeedback;
 
-  /// Focus configuration for the header.
-  ///
-  /// When [autofocus] is true, the header will request focus on build.
+  /// Whether to autofocus the header on build.
   final bool autofocus;
 
-  /// External [FocusNode] to control header focus.
+  /// The focus node for the header.
   final FocusNode? focusNode;
 
   void _toggle(NakedAccordionController<T> controller) =>

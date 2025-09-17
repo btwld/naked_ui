@@ -1,26 +1,22 @@
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
-/// Provides dialog functionality without default styling.
+/// Displays a headless dialog without default styling.
 ///
-/// Unlike [showDialog], this is headless: it does not impose any visuals.
-/// You control all appearance via [builder] (no default background, radius, or padding).
+/// Unlike [showDialog], imposes no visuals—you control all appearance
+/// via [builder]. The [barrierColor] is required and controls both
+/// visual scrim and barrier hit testing.
 ///
-/// Returns a [Future] that resolves with the value passed to [Navigator.pop],
-/// or null if dismissed. The [barrierColor] is required and controls both the
-/// visual scrim and (together with [barrierDismissible]) barrier hit testing.
-///
-/// Tip: If you depend on Material, pass a localized barrier label:
-/// `barrierLabel: MaterialLocalizations.of(context).modalBarrierDismissLabel`.
+/// Returns a [Future] with the value passed to [Navigator.pop], or null
+/// if dismissed.
 ///
 /// Example:
 /// ```dart
 /// final result = await showNakedDialog<String>(
 ///   context: context,
 ///   barrierColor: Colors.black54,
-///   barrierLabel: 'Dismiss', // or MaterialLocalizations...
+///   barrierLabel: MaterialLocalizations.of(context).modalBarrierDismissLabel,
 ///   builder: (context) => NakedDialog(
-///     modal: true,
 ///     semanticLabel: 'Confirmation Dialog',
 ///     child: YourCustomContent(),
 ///   ),
@@ -95,11 +91,10 @@ Future<T?> showNakedDialog<T>({
   );
 }
 
-/// Provides dialog semantics for modal dialog content.
+/// Provides modal dialog semantics and accessibility.
 ///
-/// - When [modal] is true (default), wraps content with [BlockSemantics] to
-///   prevent reading/interaction with background content.
-/// - Uses [scopesRoute]/[namesRoute] so screen readers treat this as a route.
+/// When [modal] is true, blocks background content interaction and
+/// configures screen reader route semantics.
 class NakedDialog extends StatelessWidget {
   const NakedDialog({
     super.key,
@@ -108,8 +103,13 @@ class NakedDialog extends StatelessWidget {
     this.semanticLabel,
   });
 
+  /// The dialog content.
   final Widget child;
+
+  /// Whether to block background content interaction.
   final bool modal;
+
+  /// The semantic label for accessibility.
   final String? semanticLabel;
 
   @override

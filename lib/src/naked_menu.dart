@@ -4,62 +4,30 @@ import 'package:flutter/services.dart';
 import 'naked_button.dart';
 import 'utilities/utilities.dart';
 
-/// A headless dropdown menu without default styling.
+/// Headless dropdown menu without default styling.
 ///
-/// Uses Flutter's RawMenuAnchor to render menu content in the app overlay,
-/// ensuring proper z-index and context inheritance.
+/// Renders menu content in overlay with proper z-index and focus management.
+/// Positions relative to target with fallback support.
 ///
-/// Example:
 /// ```dart
 /// final controller = MenuController();
 ///
 /// NakedMenu(
 ///   controller: controller,
 ///   builder: (_) => NakedButton(
-///     onPressed: () => controller.open(),
-///     child: const Text('Open Menu'),
+///     onPressed: controller.open,
+///     child: Text('Open Menu'),
 ///   ),
-///   overlayBuilder: (_) => Container(
-///     decoration: BoxDecoration(
-///       color: Colors.white,
-///       borderRadius: BorderRadius.circular(8),
-///       border: Border.all(color: Colors.grey),
-///     ),
-///     constraints: const BoxConstraints(
-///       minWidth: 100,
-///     ),
-///     child: Column(
-///       mainAxisSize: MainAxisSize.min,
-///       children: [
-///         NakedMenuItem(
-///           onPressed: () => print('Item 1'),
-///           child: const Text('Item 1'),
-///         ),
-///         NakedMenuItem(
-///           onPressed: () => print('Item 2'),
-///           child: const Text('Item 2'),
-///         ),
-///       ],
-///     ),
-///   ),
+///   overlayBuilder: (_) => YourMenuContent(),
 /// )
 /// ```
-///
-/// Controlled through [controller]. Positions relative to target,
-/// trying fallback positions if needed. Handles focus management and keyboard navigation
-/// automatically. Supports screen readers and accessibility.
-///
-/// Menu items use [NakedMenuItem] and automatically close the menu when selected
-/// unless [NakedMenuItem.closeOnSelect] is set to false.
 ///
 /// See also:
 /// - [NakedMenuAnchor], which handles overlay placement, focus, and keyboard
 ///   traversal for this menu.
 /// - [NakedButton], often used to build the trigger and items.
 class NakedMenu extends StatelessWidget {
-  /// Creates a naked menu.
-  ///
-  /// The [builder] triggers the menu, [overlayBuilder] provides the menu content.
+  /// Creates a headless menu.
   const NakedMenu({
     super.key,
     required this.builder,
@@ -78,25 +46,25 @@ class NakedMenu extends StatelessWidget {
     ],
   });
 
-  /// Target widget that triggers the menu.
+  /// The target widget that triggers the menu.
   final WidgetBuilder builder;
 
-  /// Menu widget to display when open.
+  /// The menu content to display when open.
   final WidgetBuilder overlayBuilder;
 
-  /// Called when the menu should close.
+  /// Called when the menu closes.
   final VoidCallback? onClose;
 
   /// Whether to automatically focus the menu when opened.
   final bool autofocus;
 
-  /// Alignment of the menu relative to its target.
+  /// The menu position relative to its target.
   final NakedMenuPosition menuPosition;
 
-  /// Fallback alignments if the preferred position doesn't fit.
+  /// The fallback positions if preferred doesn't fit.
   final List<NakedMenuPosition> fallbackPositions;
 
-  /// Controller that manages menu visibility.
+  /// The controller that manages menu visibility.
   final MenuController controller;
 
   /// Whether to consume outside taps.
@@ -120,18 +88,13 @@ class NakedMenu extends StatelessWidget {
   }
 }
 
-/// Individual menu item that can be selected.
-///
-/// Provides interaction states and accessibility features.
-/// Handles keyboard navigation and screen reader support.
+/// Selectable menu item with interaction states and accessibility.
 ///
 /// See also:
 /// - [NakedMenu], the container that provides the overlay and positioning.
 /// - [NakedButton], the headless activator used to implement this item.
 class NakedMenuItem extends StatelessWidget {
-  /// Creates a naked menu item.
-  ///
-  /// Use [onPressed] for selection and state callbacks for appearance customization.
+  /// Creates a menu item.
   const NakedMenuItem({
     super.key,
     this.child,
@@ -152,47 +115,46 @@ class NakedMenuItem extends StatelessWidget {
          'Either child or builder must be provided',
        );
 
-  /// Content to display in the menu item.
+  /// The item content.
   final Widget? child;
 
   /// Called when the item is selected.
   final VoidCallback? onPressed;
 
-  /// Whether to automatically close the menu when this item is selected.
-  /// Defaults to true for typical menu behavior.
+  /// Whether to close the menu when selected.
   final bool closeOnSelect;
 
-  /// Called when focus state changes.
+  /// Called when focus changes.
   final ValueChanged<bool>? onFocusChange;
 
-  /// Called when hover state changes.
+  /// Called when hover changes.
   final ValueChanged<bool>? onHoverChange;
 
-  /// Called when highlight (pressed) state changes.
+  /// Called when press state changes.
   final ValueChanged<bool>? onPressChange;
 
-  /// Optional builder that receives the current states for visuals.
+  /// Builder that receives current interaction states.
   final ValueWidgetBuilder<Set<WidgetState>>? builder;
 
-  /// Whether the item can be selected.
+  /// Whether the item is enabled.
   final bool enabled;
 
-  /// Whether this menu item is effectively enabled (has enabled=true AND has onPressed callback).
+  /// Whether this menu item is effectively enabled.
   bool get _effectiveEnabled => enabled && onPressed != null;
 
-  /// Cursor when hovering over the item.
+  /// The cursor when hovering over the item.
   final MouseCursor mouseCursor;
 
   /// Whether to provide haptic feedback on selection.
   final bool enableFeedback;
 
-  /// Optional focus node to control focus behavior.
+  /// The focus node for the item.
   final FocusNode? focusNode;
 
-  /// Whether to automatically focus when created.
+  /// Whether to autofocus when created.
   final bool autofocus;
 
-  /// Semantic label for accessibility (forwarded as a tooltip on the trigger).
+  /// The semantic label for accessibility.
   final String? semanticLabel;
 
   void _handlePress(MenuController? controller) {
