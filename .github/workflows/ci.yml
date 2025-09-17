@@ -96,4 +96,5 @@ jobs:
         working-directory: example
 
       - name: Run all integration tests
-        run: flutter test -r compact example/integration_test/all_tests.dart -d macos
+        working-directory: example
+        run: flutter test -r compact integration_test/all_tests.dart -d macos
