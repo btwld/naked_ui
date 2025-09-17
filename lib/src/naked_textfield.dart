@@ -35,6 +35,17 @@ typedef NakedTextFieldBuilder =
 /// Renders no visuals—wrap the provided `editableText` via [builder]
 /// to style or decorate.
 ///
+/// ```dart
+/// NakedTextField(
+///   controller: textController,
+///   onChanged: (text) => print('Changed: $text'),
+///   builder: (context, editableText) => Container(
+///     decoration: BoxDecoration(border: Border.all()),
+///     child: editableText,
+///   ),
+/// )
+/// ```
+///
 /// See also:
 /// - [EditableText], the underlying primitive text input.
 /// - [TextField], the Material-styled text input for typical apps.

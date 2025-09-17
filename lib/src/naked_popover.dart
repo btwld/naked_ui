@@ -3,18 +3,24 @@ import 'package:flutter/widgets.dart';
 
 import 'utilities/naked_menu_anchor.dart';
 
-/// A headless popover with toggleable overlay functionality.
+/// A headless popover without visuals.
 ///
-/// Provides a [child] trigger and [popoverBuilder] for custom content rendering.
-/// Handles tap interactions, positioning, focus management, and outside dismissal.
-/// Implements [OverlayChildLifecycle] for state change notifications.
+/// Provides toggleable overlay functionality with custom content rendering.
+/// Handles tap interactions, positioning, and focus management.
 ///
 /// ```dart
 /// NakedPopover(
-///   popoverBuilder: (context) => MyCustomPopover(),
-///   child: Text('Tap me'),
+///   popoverBuilder: (context) => Container(
+///     padding: EdgeInsets.all(16),
+///     child: Text('Popover content'),
+///   ),
+///   child: Text('Click me'),
 /// )
 /// ```
+///
+/// See also:
+/// - [NakedMenu], for dropdown menu functionality.
+/// - [NakedDialog], for modal dialog functionality.
 class NakedPopover extends StatefulWidget implements OverlayChildLifecycle {
   const NakedPopover({
     super.key,
@@ -29,14 +35,21 @@ class NakedPopover extends StatefulWidget implements OverlayChildLifecycle {
     this.onStateChange,
   });
 
+  /// The trigger widget that opens the popover.
   final Widget child;
+  /// The builder for popover content.
   final WidgetBuilder popoverBuilder;
 
+  /// The popover position relative to its trigger.
   final NakedMenuPosition position;
+  /// The fallback positions if preferred doesn't fit.
   final List<NakedMenuPosition> fallbackPositions;
 
+  /// The outside tap consumption flag.
   final bool consumeOutsideTaps;
+  /// The root overlay usage flag.
   final bool useRootOverlay;
+  /// The tap-to-open enablement flag.
   final bool openOnTap;
 
   @override

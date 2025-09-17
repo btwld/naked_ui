@@ -7,6 +7,17 @@ import 'mixins/naked_mixins.dart';
 /// Must be placed under a [RadioGroup]. Exposes interaction states
 /// including hovered, pressed, focused, selected, and disabled.
 ///
+/// ```dart
+/// RadioGroup<String>(
+///   value: selectedValue,
+///   onChanged: (value) => setState(() => selectedValue = value),
+///   child: Column(children: [
+///     NakedRadio(value: 'option1', child: Text('Option 1')),
+///     NakedRadio(value: 'option2', child: Text('Option 2')),
+///   ]),
+/// )
+/// ```
+///
 /// See also:
 /// - [Radio], the Material-styled radio for typical apps.
 /// - [RadioGroup], which manages the selected value and provides grouping.

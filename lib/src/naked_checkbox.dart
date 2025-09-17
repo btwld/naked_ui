@@ -7,6 +7,14 @@ import 'mixins/naked_mixins.dart';
 ///
 /// Exposes interaction states and semantics for custom styling.
 ///
+/// ```dart
+/// NakedCheckbox(
+///   value: isChecked,
+///   onChanged: (value) => setState(() => isChecked = value),
+///   child: MyCustomCheckboxUI(),
+/// )
+/// ```
+///
 /// See also:
 /// - [Checkbox], the Material-styled checkbox for typical apps.
 class NakedCheckbox extends StatefulWidget {

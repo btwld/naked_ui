@@ -7,6 +7,14 @@ import 'mixins/naked_mixins.dart';
 ///
 /// Behaves as toggle button or switch based on [asSwitch]. Builder receives
 /// WidgetStates including disabled/focused/hovered/pressed/selected.
+///
+/// ```dart
+/// NakedToggle(
+///   value: isToggled,
+///   onChanged: (value) => setState(() => isToggled = value),
+///   child: MyCustomToggleUI(),
+/// )
+/// ```
 class NakedToggle extends StatefulWidget {
   const NakedToggle({
     super.key,

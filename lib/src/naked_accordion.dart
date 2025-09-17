@@ -153,6 +153,20 @@ class NakedAccordionScope<T> extends InheritedWidget {
 /// Contains expandable/collapsible sections managed by
 /// [NakedAccordionController].
 ///
+/// ```dart
+/// final controller = NakedAccordionController<String>();
+/// NakedAccordion<String>(
+///   controller: controller,
+///   children: [
+///     NakedAccordionItem(
+///       value: 'section1',
+///       trigger: (context, isExpanded) => Text('Section 1'),
+///       child: Text('Content 1'),
+///     ),
+///   ],
+/// )
+/// ```
+///
 /// See also:
 /// - [ExpansionPanelList], the Material-styled accordion for typical apps.
 class NakedAccordion<T> extends StatefulWidget {

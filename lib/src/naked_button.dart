@@ -10,6 +10,13 @@ import 'mixins/naked_mixins.dart'; // WidgetStatesMixin, FocusableMixin
 /// Exposes interaction states and supports keyboard activation.
 /// Requires [child] or [builder] for custom rendering.
 ///
+/// ```dart
+/// NakedButton(
+///   onPressed: () => print('Pressed'),
+///   child: Text('Click me'),
+/// )
+/// ```
+///
 /// See also:
 /// - [ElevatedButton], the Material-styled button for typical apps.
 class NakedButton extends StatefulWidget {

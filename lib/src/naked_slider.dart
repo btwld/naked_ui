@@ -57,6 +57,14 @@ const Map<ShortcutActivator, Intent> _kSliderShortcutsRtl =
 /// [divisions] or continuous values. Handles keyboard navigation and
 /// drag gestures.
 ///
+/// ```dart
+/// NakedSlider(
+///   value: sliderValue,
+///   onChanged: (value) => setState(() => sliderValue = value),
+///   child: MyCustomSliderTrack(),
+/// )
+/// ```
+///
 /// See also:
 /// - [Slider], the Material-styled slider for typical apps.
 /// - [FocusableActionDetector], used to integrate keyboard and focus handling.

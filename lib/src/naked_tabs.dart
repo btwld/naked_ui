@@ -9,6 +9,21 @@ import 'mixins/naked_mixins.dart';
 /// Selection follows focus. Use [NakedTabList], [NakedTab], and
 /// [NakedTabPanel] for custom visuals.
 ///
+/// ```dart
+/// NakedTabGroup(
+///   selectedTabId: 'tab1',
+///   onChanged: (id) => setState(() => selectedTabId = id),
+///   child: Column(children: [
+///     NakedTabList(child: Row(children: [
+///       NakedTab(tabId: 'tab1', child: Text('Tab 1')),
+///       NakedTab(tabId: 'tab2', child: Text('Tab 2')),
+///     ])),
+///     NakedTabPanel(tabId: 'tab1', child: Text('Panel 1')),
+///     NakedTabPanel(tabId: 'tab2', child: Text('Panel 2')),
+///   ]),
+/// )
+/// ```
+///
 /// See also:
 /// - [TabBar], the Material-styled tabs widget for typical apps.
 class NakedTabGroup extends StatelessWidget {
