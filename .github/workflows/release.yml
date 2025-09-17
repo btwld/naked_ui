@@ -1,8 +1,6 @@
 name: Publish to pub.dev
 
 on:
-  workflow_dispatch:
-
   push:
     tags:
       - 'v[0-9]+.[0-9]+.[0-9]+*'
@@ -13,12 +11,19 @@ concurrency:
 jobs:
   publish:
     name: Publish to pub.dev
-    environment: Production    
+    environment: Production
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Set up Dart (provision OIDC)
+        uses: dart-lang/setup-dart@v1
+
 
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
@@ -35,8 +40,8 @@ jobs:
       - name: Run tests
         run: flutter test
 
-      - name: 'Dart package'
-        uses: k-paxian/dart-package-publisher@master
-        with:
-          accessToken: ${{ secrets.OAUTH_ACCESS_TOKEN }}
-          refreshToken: ${{ secrets.OAUTH_REFRESH_TOKEN }}
+      - name: Publish - dry run
+        run: dart pub publish --dry-run
+
+      - name: Publish to pub.dev (OIDC)
+        run: dart pub publish --force
