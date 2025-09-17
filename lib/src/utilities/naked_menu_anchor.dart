@@ -157,62 +157,86 @@ class _NakedMenuAnchorState extends State<NakedMenuAnchor> {
       overlayBuilder: (context, info) {
         return Positioned.fill(
           bottom: MediaQuery.viewInsetsOf(context).bottom,
-          child: TapRegion(
-            onTapOutside: widget.closeOnOutsideTap
-                ? (PointerDownEvent _) => widget.controller.close()
-                : null,
-            groupId: info.tapRegionGroupId,
-            child: Shortcuts(
-              shortcuts: const {
-                // Escape/Gamepad-B dismiss via default shortcut mapping.
-                SingleActivator(LogicalKeyboardKey.escape): DismissIntent(),
-                // Focus traversal inside the menu.
-                SingleActivator(LogicalKeyboardKey.arrowDown):
-                    NextFocusIntent(),
-                SingleActivator(LogicalKeyboardKey.arrowUp):
-                    PreviousFocusIntent(),
-              },
-              child: Actions(
-                actions: {
-                  // Built-in action that closes menus controlled by this controller.
-                  DismissIntent: DismissMenuAction(
-                    controller: widget.controller,
-                  ),
-                  NextFocusIntent: CallbackAction<NextFocusIntent>(
-                    onInvoke: (_) => FocusScope.of(context).nextFocus(),
-                  ),
-                  PreviousFocusIntent: CallbackAction<PreviousFocusIntent>(
-                    onInvoke: (_) => FocusScope.of(context).previousFocus(),
-                  ),
-                },
-                child: FocusTraversalGroup(
-                  child: CustomSingleChildLayout(
-                    delegate: _NakedPositionDelegate(
-                      anchorRect: info.anchorRect,
-                      overlaySize: info.overlaySize,
-                      anchorAlignment: widget.position,
-                      fallbackAlignments: widget.fallbackPositions,
-                      pointerPosition: info
-                          .position, // honors MenuController.open(position: …)
-                    ),
-                    child: Focus(
-                      focusNode: _overlayFocusNode,
-                      autofocus: wantsOverlayFocus,
-                      onKeyEvent: (node, event) {
-                        final res = widget.onKeyEvent?.call(event);
-
-                        return res ?? KeyEventResult.ignored;
-                      },
-                      child: widget.overlayBuilder(context),
-                    ),
-                  ),
-                ),
+          child: FocusTraversalGroup(
+            child: CustomSingleChildLayout(
+              delegate: _NakedPositionDelegate(
+                anchorRect: info.anchorRect,
+                overlaySize: info.overlaySize,
+                anchorAlignment: widget.position,
+                fallbackAlignments: widget.fallbackPositions,
+                pointerPosition:
+                    info.position, // honors MenuController.open(position: …)
+              ),
+              child: _OverlayInteractionShell(
+                groupId: info.tapRegionGroupId,
+                closeOnOutsideTap: widget.closeOnOutsideTap,
+                controller: widget.controller,
+                focusNode: _overlayFocusNode,
+                autofocus: wantsOverlayFocus,
+                onKeyEvent: widget.onKeyEvent,
+                child: widget.overlayBuilder(context),
               ),
             ),
           ),
         );
       },
       child: widget.child,
+    );
+  }
+}
+
+/// Internal shell that wires outside-tap, ESC dismissal, and focus handling.
+class _OverlayInteractionShell extends StatelessWidget {
+  const _OverlayInteractionShell({
+    required this.groupId,
+    required this.closeOnOutsideTap,
+    required this.controller,
+    required this.focusNode,
+    required this.autofocus,
+    required this.child,
+    this.onKeyEvent,
+  });
+
+  final Object? groupId;
+  final bool closeOnOutsideTap;
+  final MenuController controller;
+  final FocusNode focusNode;
+  final bool autofocus;
+  final KeyEventResult Function(KeyEvent event)? onKeyEvent;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return TapRegion(
+      onTapOutside: closeOnOutsideTap
+          ? (PointerDownEvent _) => controller.close()
+          : null,
+      groupId: groupId,
+      child: Shortcuts(
+        shortcuts: const {
+          SingleActivator(LogicalKeyboardKey.escape): DismissIntent(),
+          SingleActivator(LogicalKeyboardKey.arrowDown): NextFocusIntent(),
+          SingleActivator(LogicalKeyboardKey.arrowUp): PreviousFocusIntent(),
+        },
+        child: Actions(
+          actions: {
+            DismissIntent: DismissMenuAction(controller: controller),
+            NextFocusIntent: CallbackAction<NextFocusIntent>(
+              onInvoke: (_) => FocusScope.of(context).nextFocus(),
+            ),
+            PreviousFocusIntent: CallbackAction<PreviousFocusIntent>(
+              onInvoke: (_) => FocusScope.of(context).previousFocus(),
+            ),
+          },
+          child: Focus(
+            focusNode: focusNode,
+            autofocus: autofocus,
+            onKeyEvent: (node, event) =>
+                onKeyEvent?.call(event) ?? KeyEventResult.ignored,
+            child: child,
+          ),
+        ),
+      ),
     );
   }
 }
