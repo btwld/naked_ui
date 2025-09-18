@@ -15,7 +15,7 @@ void main() {
             body: NakedSelect<String>(
               enabled: true,
               // No callbacks provided - should be effectively disabled
-              menu: const Column(
+              overlay: const Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   NakedSelectItem(value: 'item1', child: Text('Item 1')),
@@ -50,7 +50,7 @@ void main() {
               enabled: true,
               onSelectedValueChanged:
                   (value) {}, // Just need callback for effective enabled
-              menu: const Column(
+              overlay: const Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   NakedSelectItem(value: 'item1', child: Text('Item 1')),

@@ -142,9 +142,8 @@ void main() {
       await tester.pumpMaterialWidget(
         Center(
           child: NakedPopover(
-            position: NakedMenuPosition(
-              target: Alignment.bottomCenter,
-              follower: Alignment.topCenter,
+            positioning: const OverlayPositionConfig(
+              alignment: Alignment.bottomCenter,
             ),
             popoverBuilder: (_) => const SizedBox(
               key: popoverKey,

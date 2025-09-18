@@ -89,9 +89,9 @@ void main() {
           Center(
             child: NakedMenu(
               controller: controller,
-              menuPosition: const NakedMenuPosition(
-                target: Alignment.bottomCenter,
-                follower: Alignment.topCenter,
+              positioning: const OverlayPositionConfig(
+                alignment: Alignment.bottomCenter,
+                fallbackAlignment: Alignment.topCenter,
               ),
               overlayBuilder: (_) => const SizedBox(
                 key: menu,

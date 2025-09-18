@@ -40,7 +40,6 @@ class _MenuExampleState extends State<MenuExample> {
   @override
   Widget build(BuildContext context) {
     return NakedMenu(
-      autofocus: true,
       builder: (context) => NakedButton(
         onPressed: () => _controller.open(),
         focusOnPress: true,
@@ -50,7 +49,7 @@ class _MenuExampleState extends State<MenuExample> {
           final border =
               hovered || focused ? Colors.grey.shade300 : Colors.grey.shade300;
           final ring =
-              focused ? Colors.blue.withOpacity(0.30) : Colors.transparent;
+              focused ? Colors.blue.withValues(alpha: 0.30) : Colors.transparent;
           return Container(
             decoration: BoxDecoration(
               color: Colors.white,
@@ -80,7 +79,7 @@ class _MenuExampleState extends State<MenuExample> {
           borderRadius: BorderRadius.circular(12),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.06),
+              color: Colors.black.withValues(alpha: 0.06),
               blurRadius: 12,
               offset: const Offset(0, 8),
             ),

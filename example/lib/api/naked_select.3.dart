@@ -292,7 +292,7 @@ class _SearchableSelectState extends State<_SearchableSelect> {
       selectedValue: widget.value,
       onSelectedValueChanged: widget.onChanged,
       closeOnSelect: true,
-      menu: _isOpen ? _buildMenu() : const SizedBox.shrink(),
+      overlay: _isOpen ? _buildMenu() : const SizedBox.shrink(),
       child: NakedSelectTrigger(
         onFocusChange: (focused) => setState(() => _isFocused = focused),
         child: _buildTrigger(),
@@ -303,18 +303,38 @@ class _SearchableSelectState extends State<_SearchableSelect> {
   Widget _buildTrigger() {
     return GestureDetector(
       onTap: _toggleOpen,
-      child: Container(
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeInOut,
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
+          color: _isOpen
+              ? Colors.blue.shade50
+              : _isFocused
+                  ? Colors.grey.shade50
+                  : Colors.white,
           border: Border.all(
             color: _isOpen
-                ? Colors.blue
+                ? Colors.blue.shade600
                 : _isFocused
-                    ? Colors.blue.shade300
+                    ? Colors.grey.shade400
                     : Colors.grey.shade300,
-            width: _isOpen || _isFocused ? 2 : 1,
+            width: 1,
           ),
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            if (_isOpen)
+              BoxShadow(
+                color: Colors.blue.shade200.withValues(alpha: 0.3),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.05),
+              blurRadius: 4,
+              offset: const Offset(0, 1),
+            ),
+          ],
         ),
         child: Row(
           children: [
@@ -488,13 +508,17 @@ class _OptionItemState extends State<_OptionItem> {
       onExit: (_) => setState(() => _isHovered = false),
       child: GestureDetector(
         onTap: widget.onTap,
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          color: widget.isSelected
-              ? Colors.blue.shade50
-              : _isHovered
-                  ? Colors.grey.shade50
-                  : Colors.transparent,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 150),
+          curve: Curves.easeInOut,
+          margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          decoration: BoxDecoration(
+            color: widget.isSelected
+                ? (_isHovered ? Colors.blue.shade100 : Colors.blue.shade50)
+                : (_isHovered ? Colors.grey.shade100 : Colors.transparent),
+            borderRadius: BorderRadius.circular(8),
+          ),
           child: Row(
             children: [
               Text(

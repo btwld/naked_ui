@@ -14,6 +14,9 @@ import 'api/naked_radio.0.dart' as radio_basic_example;
 
 // Select
 import 'api/naked_select.0.dart' as select_example;
+import 'api/naked_select.1.dart' as select_animated_example;
+import 'api/naked_select.2.dart' as select_multi_example;
+import 'api/naked_select.3.dart' as select_searchable_example;
 
 // Tabs
 import 'api/naked_tabs.0.dart' as tabs_example;
@@ -118,6 +121,33 @@ class DemoRegistry {
       sourceUrl:
           'https://github.com/btwld/naked_ui/blob/main/example/lib/api/naked_select.0.dart',
       tags: ['select'],
+    ),
+    Demo(
+      id: 'select-animated',
+      title: 'Select – Animated',
+      category: 'Select',
+      builder: (_) => const select_animated_example.AnimatedSelectExample(),
+      sourceUrl:
+          'https://github.com/btwld/naked_ui/blob/main/example/lib/api/naked_select.1.dart',
+      tags: ['select', 'animation'],
+    ),
+    Demo(
+      id: 'select-multi',
+      title: 'Select – Multi-Select',
+      category: 'Select',
+      builder: (_) => const select_multi_example.AnimatedMultiSelectExample(),
+      sourceUrl:
+          'https://github.com/btwld/naked_ui/blob/main/example/lib/api/naked_select.2.dart',
+      tags: ['select', 'multiple', 'checkbox'],
+    ),
+    Demo(
+      id: 'select-searchable',
+      title: 'Select – Searchable',
+      category: 'Select',
+      builder: (_) => const select_searchable_example.SearchableSelectExample(),
+      sourceUrl:
+          'https://github.com/btwld/naked_ui/blob/main/example/lib/api/naked_select.3.dart',
+      tags: ['select', 'search', 'filter'],
     ),
     Demo(
       id: 'tabs-basic',

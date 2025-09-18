@@ -41,7 +41,7 @@ void main() {
                   selectedValue: selectedValue,
                   onSelectedValueChanged: (value) =>
                       setState(() => selectedValue = value),
-                  menu: Container(
+                  overlay: Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
                       color: Colors.white,
@@ -111,7 +111,7 @@ void main() {
                   onSelectedValuesChanged: (values) =>
                       setState(() => selectedValues = values),
                   closeOnSelect: false,
-                  menu: Container(
+                  overlay: Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
                       color: Colors.white,
@@ -197,7 +197,7 @@ void main() {
                 lastSelectedValue = value;
                 callbackCount++;
               },
-              menu: Container(
+              overlay: Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
                   color: Colors.white,
@@ -239,7 +239,7 @@ void main() {
               selectedValue: null,
               closeOnSelect: true,
               onSelectedValueChanged: (value) {},
-              menu: Container(
+              overlay: Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
                   color: Colors.white,
@@ -290,7 +290,7 @@ void main() {
               selectedValue: null,
               enabled: false,
               onSelectedValueChanged: (value) => wasCallbackCalled = true,
-              menu: Container(
+              overlay: Container(
                 padding: const EdgeInsets.all(8),
                 child: const Text('Menu Content'),
               ),

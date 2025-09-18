@@ -20,9 +20,9 @@ class BasicPopoverExample extends StatelessWidget {
             ),
             const SizedBox(height: 24),
             NakedPopover(
-              position: const NakedMenuPosition(
-                target: Alignment.bottomCenter,
-                follower: Alignment.topCenter,
+              positioning: const OverlayPositionConfig(
+                alignment: Alignment.bottomCenter,
+                fallbackAlignment: Alignment.topCenter,
               ),
               popoverBuilder: (context) => Container(
                 constraints: const BoxConstraints(maxWidth: 280),

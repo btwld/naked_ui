@@ -18,7 +18,6 @@ void main() {
     bool enabled = true,
     VoidCallback? onMenuClose,
     bool closeOnSelect = true,
-    bool autofocus = true,
     bool enableTypeAhead = true,
   }) {
     final menu = Container(
@@ -40,9 +39,8 @@ void main() {
               onSelectedValuesChanged: onSelectedValuesChanged,
               enabled: enabled,
               closeOnSelect: closeOnSelect,
-              autofocus: autofocus,
               enableTypeAhead: enableTypeAhead,
-              menu: menu,
+              overlay: menu,
               child: child,
             )
           : NakedSelect(
@@ -50,9 +48,8 @@ void main() {
               onSelectedValueChanged: onSelectedValueChanged,
               enabled: enabled,
               closeOnSelect: closeOnSelect,
-              autofocus: autofocus,
               enableTypeAhead: enableTypeAhead,
-              menu: menu,
+              overlay: menu,
               child: child,
             ),
     );
@@ -197,7 +194,7 @@ void main() {
         await tester.pumpMaterialWidget(
           Center(
             child: NakedSelect<String>(
-              menu: Column(
+              overlay: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: const [
                   NakedSelectItem<String>(value: 'apple', child: Text('Apple')),
@@ -328,7 +325,7 @@ void main() {
           Padding(
             padding: const EdgeInsets.all(1),
             child: NakedSelect<String>(
-              menu: const SizedBox(),
+              overlay: const SizedBox(),
               child: NakedSelectTrigger(
                 key: key,
                 onHoverChange: (hovered) => isHovered = hovered,
@@ -357,7 +354,7 @@ void main() {
 
         await tester.pumpMaterialWidget(
           NakedSelect<String>(
-            menu: const SizedBox(),
+            overlay: const SizedBox(),
             child: NakedSelectTrigger(
               onPressChange: (pressed) => isPressed = pressed,
               child: const Text('Select option'),
@@ -387,7 +384,7 @@ void main() {
           NakedSelect<String>(
             onClose: () => overlayPortalController.hide(),
             onOpen: () => overlayPortalController.show(),
-            menu: const SizedBox(),
+            overlay: const SizedBox(),
             child: NakedSelectTrigger(
               focusNode: focusNode,
               onFocusChange: (focused) => isFocused = focused,
@@ -420,7 +417,7 @@ void main() {
           child: NakedSelect<String>(
             selectedValue: selectedValue,
             onSelectedValueChanged: (value) => selectedValue = value,
-            menu: Container(
+            overlay: Container(
               key: kMenuKey,
               child: NakedSelectItem<String>(
                 key: key,
@@ -491,17 +488,11 @@ void main() {
             child: Padding(
               padding: const EdgeInsets.only(bottom: 4),
               child: NakedSelect<String>(
-                menuPosition: const NakedMenuPosition(
-                  target: Alignment.bottomLeft,
-                  follower: Alignment.topLeft,
+                positioning: const OverlayPositionConfig(
+                  alignment: Alignment.bottomLeft,
+                  fallbackAlignment: Alignment.topLeft,
                 ),
-                fallbackPositions: const [
-                  NakedMenuPosition(
-                    target: Alignment.topLeft,
-                    follower: Alignment.bottomLeft,
-                  ),
-                ],
-                menu: Container(
+                overlay: Container(
                   key: kMenuKey,
                   width: 120,
                   height: 160, // big enough to overflow downward
@@ -591,8 +582,11 @@ void main() {
     ) async {
       await tester.pumpMaterialWidget(
         NakedSelect<String>(
-          removalDelay: const Duration(milliseconds: 200),
-          menu: const Column(
+          onCloseRequested: (hideOverlay) {
+            // Simulate removalDelay by delaying the actual close
+            Future.delayed(const Duration(milliseconds: 200), hideOverlay);
+          },
+          overlay: const Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               NakedSelectItem<String>(value: 'apple', child: Text('Apple')),
@@ -635,7 +629,7 @@ void main() {
           onSelectedValueChanged: (v) => selectedValue = v,
           enableTypeAhead: true,
           typeAheadDebounceTime: const Duration(milliseconds: 100),
-          menu: const Column(
+          overlay: const Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               NakedSelectItem<String>(value: 'apple', child: Text('Apple')),
@@ -677,7 +671,7 @@ void main() {
         const Column(
           children: [
             NakedSelect<String>(
-              menu: SizedBox(),
+              overlay: SizedBox(),
               child: NakedSelectTrigger(
                 key: keyEnabledTrigger,
                 child: Text('Enabled Trigger'),
@@ -685,7 +679,7 @@ void main() {
             ),
             NakedSelect<String>(
               enabled: false,
-              menu: SizedBox(),
+              overlay: SizedBox(),
               child: NakedSelectTrigger(
                 key: keyDisabledTrigger,
                 child: Text('Disabled Trigger'),

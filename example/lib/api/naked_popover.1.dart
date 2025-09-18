@@ -62,24 +62,10 @@ class _AnimatedPopoverExampleState extends State<AnimatedPopoverExample>
                 child: _buildPopover(
                   'Center Popover',
                   'This popover has fallback positions',
-                  position: const NakedMenuPosition(
-                    target: Alignment.topCenter,
-                    follower: Alignment.bottomCenter,
+                  positioning: const OverlayPositionConfig(
+                    alignment: Alignment.topCenter,
+                    fallbackAlignment: Alignment.bottomCenter,
                   ),
-                  fallbacks: const [
-                    NakedMenuPosition(
-                      target: Alignment.bottomCenter,
-                      follower: Alignment.topCenter,
-                    ),
-                    NakedMenuPosition(
-                      target: Alignment.centerRight,
-                      follower: Alignment.centerLeft,
-                    ),
-                    NakedMenuPosition(
-                      target: Alignment.centerLeft,
-                      follower: Alignment.centerRight,
-                    ),
-                  ],
                 ),
               ),
               const SizedBox(height: 40),
@@ -90,38 +76,18 @@ class _AnimatedPopoverExampleState extends State<AnimatedPopoverExample>
                   _buildPopover(
                     'Left Edge',
                     'This popover is near the left edge',
-                    position: const NakedMenuPosition(
-                      target: Alignment.centerLeft,
-                      follower: Alignment.centerRight,
+                    positioning: const OverlayPositionConfig(
+                      alignment: Alignment.centerLeft,
+                      fallbackAlignment: Alignment.centerRight,
                     ),
-                    fallbacks: const [
-                      NakedMenuPosition(
-                        target: Alignment.centerRight,
-                        follower: Alignment.centerLeft,
-                      ),
-                      NakedMenuPosition(
-                        target: Alignment.topCenter,
-                        follower: Alignment.bottomCenter,
-                      ),
-                    ],
                   ),
                   _buildPopover(
                     'Right Edge',
                     'This popover is near the right edge',
-                    position: const NakedMenuPosition(
-                      target: Alignment.centerRight,
-                      follower: Alignment.centerLeft,
+                    positioning: const OverlayPositionConfig(
+                      alignment: Alignment.centerRight,
+                      fallbackAlignment: Alignment.centerLeft,
                     ),
-                    fallbacks: const [
-                      NakedMenuPosition(
-                        target: Alignment.centerLeft,
-                        follower: Alignment.centerRight,
-                      ),
-                      NakedMenuPosition(
-                        target: Alignment.topCenter,
-                        follower: Alignment.bottomCenter,
-                      ),
-                    ],
                   ),
                 ],
               ),
@@ -170,25 +136,12 @@ class _AnimatedPopoverExampleState extends State<AnimatedPopoverExample>
   Widget _buildPopover(
     String buttonText,
     String popoverContent, {
-    required NakedMenuPosition position,
-    List<NakedMenuPosition> fallbacks = const [],
+    OverlayPositionConfig? positioning,
   }) {
     return NakedPopover(
-      position: position,
-      fallbackPositions: fallbacks,
-      removalDelay: const Duration(milliseconds: 250),
-      onStateChange: (state) {
-        switch (state) {
-          case OverlayChildLifecycleState.present:
-            _animationController.forward();
-            break;
-          case OverlayChildLifecycleState.pendingRemoval:
-            _animationController.reverse();
-            break;
-          default:
-            break;
-        }
-      },
+      positioning: positioning ?? const OverlayPositionConfig(),
+      onOpen: () => _animationController.forward(),
+      onClose: () => _animationController.reverse(),
       popoverBuilder: (context) => AnimatedBuilder(
         animation: _animationController,
         builder: (context, child) => FadeTransition(

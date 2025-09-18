@@ -6,7 +6,8 @@ import 'package:flutter/widgets.dart';
 
 import 'mixins/naked_mixins.dart';
 import 'naked_button.dart';
-import 'utilities/naked_menu_anchor.dart';
+import 'utilities/anchored_overlay_shell.dart';
+import 'utilities/positioning.dart';
 
 /// Headless select/dropdown that renders menu in an overlay.
 ///
@@ -30,7 +31,6 @@ import 'utilities/naked_menu_anchor.dart';
 /// ```
 ///
 /// See also:
-/// - [NakedMenuAnchor], which provides the underlying overlay positioning.
 /// - [NakedMenu], a simpler headless dropdown built on top of the same anchor.
 /// - [NakedButton], which is commonly used by select triggers and items.
 /// - [NakedPopover], for general anchored overlays beyond menus.
@@ -39,29 +39,21 @@ class NakedSelect<T> extends StatefulWidget {
   const NakedSelect({
     super.key,
     required this.child,
-    required this.menu,
+    required this.overlay,
     this.onClose,
     this.onOpen,
-    this.onStateChange,
+    this.onOpenRequested,
+    this.onCloseRequested,
     this.selectedValue,
     this.onSelectedValueChanged,
-    this.removalDelay = Duration.zero,
     this.enabled = true,
     this.closeOnSelect = true,
-    this.autofocus = false,
-    this.enableTypeAhead = true,
-    this.typeAheadDebounceTime = const Duration(milliseconds: 500),
-    this.menuPosition = const NakedMenuPosition(
-      target: Alignment.bottomLeft,
-      follower: Alignment.topLeft,
+    this.positioning = const OverlayPositionConfig(
+      alignment: Alignment.bottomLeft,
+      fallbackAlignment: Alignment.topLeft,
     ),
-    this.fallbackPositions = const [
-      NakedMenuPosition(
-        target: Alignment.topLeft,
-        follower: Alignment.bottomLeft,
-      ),
-    ],
     this.closeOnClickOutside = true,
+    this.triggerFocusNode,
     this.semanticLabel,
   }) : allowMultiple = false,
        selectedValues = null,
@@ -70,39 +62,53 @@ class NakedSelect<T> extends StatefulWidget {
   const NakedSelect.multiple({
     super.key,
     required this.child,
-    required this.menu,
+    required this.overlay,
     this.onClose,
     this.onOpen,
-    this.onStateChange,
-    this.removalDelay = Duration.zero,
+    this.onOpenRequested,
+    this.onCloseRequested,
     this.selectedValues,
     this.onSelectedValuesChanged,
     this.enabled = true,
     this.closeOnSelect = true,
-    this.autofocus = false,
-    this.enableTypeAhead = true,
-    this.typeAheadDebounceTime = const Duration(milliseconds: 500),
-    this.menuPosition = const NakedMenuPosition(
-      target: Alignment.bottomLeft,
-      follower: Alignment.topLeft,
+    this.positioning = const OverlayPositionConfig(
+      alignment: Alignment.bottomLeft,
+      fallbackAlignment: Alignment.topLeft,
     ),
-    this.fallbackPositions = const [
-      NakedMenuPosition(
-        target: Alignment.topLeft,
-        follower: Alignment.bottomLeft,
-      ),
-    ],
     this.closeOnClickOutside = true,
+    this.triggerFocusNode,
     this.semanticLabel,
   }) : allowMultiple = true,
        selectedValue = null,
        onSelectedValueChanged = null;
 
+  static void _defaultOnOpenRequested(
+    Offset? position,
+    VoidCallback showOverlay,
+  ) {
+    showOverlay();
+  }
+
+  static void _defaultOnCloseRequested(VoidCallback hideOverlay) {
+    hideOverlay();
+  }
+
+  static void _defaultOnOpenRequested(
+    Offset? position,
+    VoidCallback showOverlay,
+  ) {
+    showOverlay();
+  }
+
+  static void _defaultOnCloseRequested(VoidCallback hideOverlay) {
+    hideOverlay();
+  }
+
   /// The trigger widget (inline content).
   final Widget child;
 
   /// The overlay menu content.
-  final Widget menu;
+  final Widget overlay;
 
   /// Called when the overlay closes.
   final VoidCallback? onClose;
@@ -110,8 +116,17 @@ class NakedSelect<T> extends StatefulWidget {
   /// Called when the overlay opens.
   final VoidCallback? onOpen;
 
-  /// Called when overlay lifecycle changes occur.
-  final OverlayChildLifecycleCallback? onStateChange;
+  /// Called when a request is made to open the select.
+  ///
+  /// This callback allows you to customize the opening behavior, such as
+  /// adding animations or delays. Call `showOverlay` to actually show the menu.
+  final RawMenuAnchorOpenRequestedCallback? onOpenRequested;
+
+  /// Called when a request is made to close the select.
+  ///
+  /// This callback allows you to customize the closing behavior, such as
+  /// adding animations or delays. Call `hideOverlay` to actually hide the menu.
+  final RawMenuAnchorCloseRequestedCallback? onCloseRequested;
 
   /// The selected value in single-select mode.
   final T? selectedValue;
@@ -130,34 +145,23 @@ class NakedSelect<T> extends StatefulWidget {
 
   /// Whether the select is enabled.
   final bool enabled;
-  bool get _effectiveEnabled => enabled;
 
   /// Whether selecting an item closes the menu.
   final bool closeOnSelect;
 
-  /// Whether to autofocus the overlay when opened.
-  final bool autofocus;
-
-  /// Whether to enable type-ahead navigation.
-  final bool enableTypeAhead;
-
-  /// The debounce duration for type-ahead buffering.
-  final Duration typeAheadDebounceTime;
-
-  /// The preferred overlay position relative to trigger.
-  final NakedMenuPosition menuPosition;
-
-  /// The fallback positions when preferred doesn't fit.
-  final List<NakedMenuPosition> fallbackPositions;
+  /// Positioning configuration for the overlay.
+  final OverlayPositionConfig positioning;
 
   /// Whether clicking outside closes the menu.
   final bool closeOnClickOutside;
 
+  /// Focus node for the trigger widget.
+  final FocusNode? triggerFocusNode;
+
   /// The semantic label for the trigger.
   final String? semanticLabel;
 
-  /// The delay before removing overlay after closing.
-  final Duration removalDelay;
+  bool get _effectiveEnabled => enabled;
 
   @override
   State<NakedSelect<T>> createState() => _NakedSelectState<T>();
@@ -166,13 +170,6 @@ class NakedSelect<T> extends StatefulWidget {
 class _NakedSelectState<T> extends State<NakedSelect<T>> {
   // ignore: dispose-fields
   final _menuController = MenuController();
-  final ValueNotifier<bool> _overlayOpen = ValueNotifier(false);
-  Timer? _removedTick;
-
-  // Type-ahead
-  final List<_SelectItemInfo<T>> _items = <_SelectItemInfo<T>>[];
-  String _typeAhead = '';
-  Timer? _typeAheadTimer;
 
   bool get _isOpen => _menuController.isOpen;
 
@@ -184,86 +181,17 @@ class _NakedSelectState<T> extends State<NakedSelect<T>> {
       _isOpen ? _menuController.close() : _menuController.open();
 
   void _handleAnchorOpen() {
-    _overlayOpen.value = true;
     widget.onOpen?.call();
-    widget.onStateChange?.call(OverlayChildLifecycleState.present);
   }
 
   void _handleAnchorClose() {
-    _overlayOpen.value = false;
     widget.onClose?.call();
-    widget.onStateChange?.call(OverlayChildLifecycleState.pendingRemoval);
-    _removedTick?.cancel();
-    if (widget.removalDelay == Duration.zero) {
-      widget.onStateChange?.call(OverlayChildLifecycleState.removed);
-    } else {
-      _removedTick = Timer(widget.removalDelay, () {
-        widget.onStateChange?.call(OverlayChildLifecycleState.removed);
-      });
-    }
-    _items.clear();
-    _resetTypeAhead();
 
     // Hand focus back to the trigger (Raw will also use childFocusNode).
     final child = widget.child;
     if (child is NakedSelectTrigger) {
       child.focusNode?.requestFocus();
     }
-  }
-
-  // ——— type-ahead ———
-  void _cancelTypeAheadTimer() {
-    _typeAheadTimer?.cancel();
-    _typeAheadTimer = null;
-  }
-
-  void _resetTypeAhead() {
-    _cancelTypeAheadTimer();
-    _typeAhead = '';
-  }
-
-  bool _handleTypeAheadChar(String ch) {
-    if (!widget.enableTypeAhead || ch.isEmpty) return false;
-
-    _cancelTypeAheadTimer();
-    _typeAhead += ch.toLowerCase();
-
-    // Find first item whose value string starts with the buffer.
-    for (final item in _items) {
-      final s = item.value.toString().toLowerCase();
-      if (s.startsWith(_typeAhead)) {
-        if (item.focusNode.canRequestFocus) {
-          item.focusNode.requestFocus();
-          _typeAheadTimer = Timer(
-            widget.typeAheadDebounceTime,
-            _resetTypeAhead,
-          );
-
-          return true; // consumed
-        }
-        break;
-      }
-    }
-    _typeAheadTimer = Timer(widget.typeAheadDebounceTime, _resetTypeAhead);
-
-    return false;
-  }
-
-  // ——— item registration ———
-  void _registerItem(T value, FocusNode node) {
-    final i = _items.indexWhere((it) => it.value == value);
-    if (i == -1) {
-      _items.add(_SelectItemInfo(value: value, focusNode: node));
-    } else if (!identical(_items[i].focusNode, node)) {
-      _items[i] = _SelectItemInfo(value: value, focusNode: node);
-    }
-  }
-
-  void _unregisterItem(T value, FocusNode? node) {
-    _items.removeWhere(
-      (it) =>
-          it.value == value || (node != null && identical(it.focusNode, node)),
-    );
   }
 
   // ——— selection ———
@@ -281,14 +209,6 @@ class _NakedSelectState<T> extends State<NakedSelect<T>> {
   }
 
   @override
-  void dispose() {
-    _cancelTypeAheadTimer();
-    _removedTick?.cancel();
-    _overlayOpen.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
     final selectedValueString =
         widget.selectedValue?.toString() ??
@@ -301,64 +221,39 @@ class _NakedSelectState<T> extends State<NakedSelect<T>> {
       selectedValues: widget.selectedValues,
       allowMultiple: widget.allowMultiple,
       enabled: widget._effectiveEnabled,
-      child: NakedMenuAnchor(
+      child: AnchoredOverlayShell(
         controller: _menuController,
-        overlayBuilder: (_) => widget.menu,
-        // Hand Raw a "return-to" node for focus when the menu closes.
-        childFocusNode: widget.child is NakedSelectTrigger
-            ? (widget.child as NakedSelectTrigger).focusNode
-            : null,
-        consumeOutsideTaps: true,
-        closeOnOutsideTap: widget.closeOnClickOutside,
-        removalDelay: widget.removalDelay,
-        position: widget.menuPosition,
-        fallbackPositions: widget.fallbackPositions,
-        onClose: _handleAnchorClose,
+        overlayBuilder: (context) => widget.overlay,
         onOpen: _handleAnchorOpen,
-        // Let the overlay handle traversal (Shortcuts/Actions).
-        // We only bootstrap first focus & type-ahead here.
-        onKeyEvent: (event) {
-          if (event is KeyDownEvent) {
-            if (event.logicalKey == LogicalKeyboardKey.arrowDown) {
-              final first = _items.isNotEmpty ? _items.first : null;
-              final anyFocused = _items.any((it) => it.focusNode.hasFocus);
-              if (!anyFocused &&
-                  first != null &&
-                  first.focusNode.canRequestFocus) {
-                first.focusNode.requestFocus();
-
-                return KeyEventResult.handled;
-              }
-            }
-            final ch = event.character;
-            if (ch != null && ch.isNotEmpty) {
-              final consumed = _handleTypeAheadChar(ch);
-              if (consumed) return KeyEventResult.handled;
-            }
-          }
-
-          return KeyEventResult.ignored;
-        },
+        onClose: _handleAnchorClose,
+        onOpenRequested:
+            widget.onOpenRequested ?? NakedSelect._defaultOnOpenRequested,
+        onCloseRequested:
+            widget.onCloseRequested ?? NakedSelect._defaultOnCloseRequested,
+        consumeOutsideTaps: true,
+        closeOnClickOutside: widget.closeOnClickOutside,
+        // Use the trigger focus node if provided, otherwise pull from
+        // NakedSelectTrigger when used as child.
+        triggerFocusNode:
+            widget.triggerFocusNode ??
+            (widget.child is NakedSelectTrigger
+                ? (widget.child as NakedSelectTrigger).focusNode
+                : null),
+        offset: widget.positioning.offset,
         child: widget.child,
       ),
     );
 
     // Root semantics: announce "button", expanded/collapsed, label/value.
-    return ValueListenableBuilder<bool>(
-      valueListenable: _overlayOpen,
+    return Semantics(
+      container: true,
+      enabled: widget._effectiveEnabled,
+      button: true,
+      expanded: _isOpen,
+      label: widget.semanticLabel,
+      value: selectedValueString,
+      onTap: widget._effectiveEnabled ? _toggleMenu : null,
       child: selectBody,
-      builder: (context, expanded, child) {
-        return Semantics(
-          container: true,
-          enabled: widget._effectiveEnabled,
-          button: true,
-          expanded: expanded,
-          label: widget.semanticLabel,
-          value: selectedValueString,
-          onTap: widget._effectiveEnabled ? _toggleMenu : null,
-          child: child!,
-        );
-      },
     );
   }
 }
@@ -590,41 +485,10 @@ class NakedSelectItem<T> extends StatefulWidget {
 
 class _NakedSelectItemState<T> extends State<NakedSelectItem<T>>
     with FocusableMixin<NakedSelectItem<T>> {
-  bool _registered = false;
   bool? _lastReportedSelection;
-  // cached; avoid ancestor lookup in dispose
-  _NakedSelectState<T>? _selectState;
 
   @override
   FocusNode? get focusableExternalNode => widget.focusNode;
-
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _registerWithParent());
-  }
-
-  void _registerWithParent() {
-    if (_registered) return;
-    final state = context.findAncestorStateOfType<_NakedSelectState<T>>();
-    final node = effectiveFocusNode;
-    if (state != null && node != null) {
-      state._registerItem(widget.value, node);
-      _selectState = state;
-      _registered = true;
-    }
-  }
-
-  @override
-  void didUpdateWidget(NakedSelectItem<T> old) {
-    super.didUpdateWidget(old);
-    if (widget.value != old.value || widget.focusNode != old.focusNode) {
-      _registered = false;
-      WidgetsBinding.instance.addPostFrameCallback(
-        (_) => _registerWithParent(),
-      );
-    }
-  }
 
   @override
   void didChangeDependencies() {
@@ -637,12 +501,6 @@ class _NakedSelectItemState<T> extends State<NakedSelectItem<T>>
         widget.onSelectChange?.call(isSelected);
       }
     }
-  }
-
-  @override
-  void dispose() {
-    _selectState?._unregisterItem(widget.value, effectiveFocusNode);
-    super.dispose();
   }
 
   @override

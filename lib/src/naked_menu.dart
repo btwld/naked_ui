@@ -2,7 +2,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
 import 'naked_button.dart';
-import 'utilities/utilities.dart';
+import 'utilities/anchored_overlay_shell.dart';
+import 'utilities/positioning.dart';
 
 /// A headless dropdown menu without visuals.
 ///
@@ -10,7 +11,6 @@ import 'utilities/utilities.dart';
 /// Positions relative to target with fallback support.
 ///
 /// See also:
-/// - [NakedMenuAnchor], which handles overlay placement and focus management.
 /// - [NakedButton], often used to build the trigger and items.
 /// - [NakedSelect], for select-style list with type-ahead and multi-select.
 /// - [NakedPopover], for non-menu anchored overlays.
@@ -21,18 +21,27 @@ class NakedMenu extends StatelessWidget {
     required this.builder,
     required this.overlayBuilder,
     required this.controller,
+    this.onOpen,
     this.onClose,
+    this.onOpenRequested,
+    this.onCloseRequested,
     this.consumeOutsideTaps = true,
     this.useRootOverlay = false,
-    this.autofocus = false,
-    this.menuPosition = const NakedMenuPosition(),
-    this.fallbackPositions = const [
-      NakedMenuPosition(
-        target: Alignment.topLeft,
-        follower: Alignment.bottomLeft,
-      ),
-    ],
+    this.closeOnClickOutside = true,
+    this.triggerFocusNode,
+    this.positioning = const OverlayPositionConfig(),
   });
+
+  static void _defaultOnOpenRequested(
+    Offset? position,
+    VoidCallback showOverlay,
+  ) {
+    showOverlay();
+  }
+
+  static void _defaultOnCloseRequested(VoidCallback hideOverlay) {
+    hideOverlay();
+  }
 
   /// The target widget that triggers the menu.
   final WidgetBuilder builder;
@@ -40,20 +49,32 @@ class NakedMenu extends StatelessWidget {
   /// The menu content to display when open.
   final WidgetBuilder overlayBuilder;
 
+  /// Called when the menu opens.
+  final VoidCallback? onOpen;
+
   /// Called when the menu closes.
   final VoidCallback? onClose;
 
-  /// If true, focuses the overlay on open.
+  /// Called when a request is made to open the menu.
   ///
-  /// This enables keyboard navigation within the menu. The overlay will
-  /// request focus when opened, allowing users to navigate with arrow keys.
-  final bool autofocus;
+  /// This callback allows you to customize the opening behavior, such as
+  /// adding animations or delays. Call `showOverlay` to actually show the menu.
+  final RawMenuAnchorOpenRequestedCallback? onOpenRequested;
 
-  /// The menu position relative to its target.
-  final NakedMenuPosition menuPosition;
+  /// Called when a request is made to close the menu.
+  ///
+  /// This callback allows you to customize the closing behavior, such as
+  /// adding animations or delays. Call `hideOverlay` to actually hide the menu.
+  final RawMenuAnchorCloseRequestedCallback? onCloseRequested;
 
-  /// The fallback positions if preferred doesn't fit.
-  final List<NakedMenuPosition> fallbackPositions;
+  /// Whether clicking outside closes the menu.
+  final bool closeOnClickOutside;
+
+  /// Focus node for the trigger widget.
+  final FocusNode? triggerFocusNode;
+
+  /// Positioning configuration for the overlay.
+  final OverlayPositionConfig positioning;
 
   /// The controller that manages menu visibility.
   final MenuController controller;
@@ -66,15 +87,20 @@ class NakedMenu extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return NakedMenuAnchor(
+    return AnchoredOverlayShell(
       controller: controller,
       overlayBuilder: overlayBuilder,
-      useRootOverlay: useRootOverlay,
-      consumeOutsideTaps: consumeOutsideTaps,
-      position: menuPosition,
-      fallbackPositions: fallbackPositions,
+      onOpen: onOpen,
       onClose: onClose,
-      autofocus: autofocus,
+      onOpenRequested: onOpenRequested ?? _defaultOnOpenRequested,
+      onCloseRequested: onCloseRequested ?? _defaultOnCloseRequested,
+      consumeOutsideTaps: consumeOutsideTaps,
+      useRootOverlay: useRootOverlay,
+      closeOnClickOutside: closeOnClickOutside,
+      triggerFocusNode: triggerFocusNode,
+      // Use only the offset for simple positioning; other fields are ignored
+      // by the shell to keep behavior simple and robust.
+      offset: positioning.offset,
       child: builder(context),
     );
   }

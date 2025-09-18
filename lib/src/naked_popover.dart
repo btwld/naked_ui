@@ -1,7 +1,7 @@
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
-import 'utilities/naked_menu_anchor.dart';
+import 'utilities/positioning.dart';
 
 /// A headless popover without visuals.
 ///
@@ -22,18 +22,20 @@ import 'utilities/naked_menu_anchor.dart';
 /// - [NakedMenu], for dropdown menu functionality.
 /// - [NakedTooltip], for hover-triggered lightweight hints.
 /// - [NakedDialog], for modal dialog functionality.
-class NakedPopover extends StatefulWidget implements OverlayChildLifecycle {
+class NakedPopover extends StatefulWidget {
   const NakedPopover({
     super.key,
     required this.child,
     required this.popoverBuilder,
-    this.position = const NakedMenuPosition(),
-    this.fallbackPositions = const [],
+    this.positioning = const OverlayPositionConfig(),
     this.consumeOutsideTaps = true,
     this.useRootOverlay = false,
     this.openOnTap = true,
-    this.removalDelay = Duration.zero,
-    this.onStateChange,
+    this.triggerFocusNode,
+    this.onOpen,
+    this.onClose,
+    this.onOpenRequested,
+    this.onCloseRequested,
   });
 
   /// The trigger widget that opens the popover.
@@ -42,11 +44,8 @@ class NakedPopover extends StatefulWidget implements OverlayChildLifecycle {
   /// The builder for popover content.
   final WidgetBuilder popoverBuilder;
 
-  /// The popover position relative to its trigger.
-  final NakedMenuPosition position;
-
-  /// The fallback positions if preferred doesn't fit.
-  final List<NakedMenuPosition> fallbackPositions;
+  /// Positioning configuration for the overlay.
+  final OverlayPositionConfig positioning;
 
   /// The outside tap consumption flag.
   final bool consumeOutsideTaps;
@@ -57,24 +56,63 @@ class NakedPopover extends StatefulWidget implements OverlayChildLifecycle {
   /// The tap-to-open enablement flag.
   final bool openOnTap;
 
-  @override
-  final Duration removalDelay;
+  /// Focus node for the trigger widget.
+  final FocusNode? triggerFocusNode;
 
-  @override
-  final OverlayChildLifecycleCallback? onStateChange;
+  /// Called when the popover opens.
+  final VoidCallback? onOpen;
+
+  /// Called when the popover closes.
+  final VoidCallback? onClose;
+
+  /// Called when a request is made to open the popover.
+  ///
+  /// This callback allows you to customize the opening behavior, such as
+  /// adding animations or delays. Call `showOverlay` to actually show the popover.
+  final RawMenuAnchorOpenRequestedCallback? onOpenRequested;
+
+  /// Called when a request is made to close the popover.
+  ///
+  /// This callback allows you to customize the closing behavior, such as
+  /// adding animations or delays. Call `hideOverlay` to actually hide the popover.
+  final RawMenuAnchorCloseRequestedCallback? onCloseRequested;
+
+  static void _defaultOnOpenRequested(Offset? position, VoidCallback showOverlay) {
+    showOverlay();
+  }
+
+  static void _defaultOnCloseRequested(VoidCallback hideOverlay) {
+    hideOverlay();
+  }
 
   @override
   State<NakedPopover> createState() => _NakedPopoverState();
 }
 
-class _NakedPopoverState extends State<NakedPopover>
-    with MenuAnchorChildLifecycleMixin {
+class _NakedPopoverState extends State<NakedPopover> {
+  // ignore: dispose-fields
+  final _menuController = MenuController();
+
   // Internal node used when the child doesn't already provide a Focus.
   final _internalTriggerNode = FocusNode(
     debugLabel: 'NakedPopover trigger (internal)',
   );
 
-  void _toggle() => showNotifier.value = !showNotifier.value;
+  void _toggle() {
+    if (_menuController.isOpen) {
+      _menuController.close();
+    } else {
+      _menuController.open();
+    }
+  }
+
+  void _handleOpen() {
+    widget.onOpen?.call();
+  }
+
+  void _handleClose() {
+    widget.onClose?.call();
+  }
 
   /// If the child is a Focus widget, extract its node so we can return focus to it.
   FocusNode? _extractChildFocusNode() {
@@ -127,21 +165,50 @@ class _NakedPopoverState extends State<NakedPopover>
 
   @override
   Widget build(BuildContext context) {
-    final returnNode = _extractChildFocusNode() ?? _internalTriggerNode;
+    final returnNode = widget.triggerFocusNode ??
+        _extractChildFocusNode() ??
+        _internalTriggerNode;
 
-    return NakedMenuAnchor(
-      controller: controller,
-      overlayBuilder: (ctx) => widget.popoverBuilder(ctx),
-      childFocusNode: returnNode, // focus returns here on close
-      useRootOverlay: widget.useRootOverlay,
+    return RawMenuAnchor(
+      controller: _menuController,
+      childFocusNode: returnNode,
       consumeOutsideTaps: widget.consumeOutsideTaps,
-      closeOnOutsideTap: true,
-      removalDelay: widget.removalDelay,
-      position: widget.position,
-      fallbackPositions: widget.fallbackPositions,
-      onClose: () {
-        // Keep internal state in sync if closed by ESC/outside tap.
-        if (showNotifier.value) showNotifier.value = false;
+      useRootOverlay: widget.useRootOverlay,
+      onOpen: _handleOpen,
+      onClose: _handleClose,
+      onOpenRequested: widget.onOpenRequested ?? NakedPopover._defaultOnOpenRequested,
+      onCloseRequested: widget.onCloseRequested ?? NakedPopover._defaultOnCloseRequested,
+      overlayBuilder: (context, info) {
+        final overlayRect = calculateOverlayPosition(
+          anchorRect: info.anchorRect,
+          overlaySize: info.overlaySize,
+          childSize: info.overlaySize, // Will be constrained by content
+          config: widget.positioning,
+          pointerPosition: info.position,
+        );
+
+        return Positioned.fromRect(
+          rect: overlayRect,
+          child: TapRegion(
+            groupId: info.tapRegionGroupId,
+            onTapOutside: (event) => _menuController.close(),
+            child: FocusTraversalGroup(
+              child: Shortcuts(
+                shortcuts: const {
+                  SingleActivator(LogicalKeyboardKey.escape): DismissIntent(),
+                },
+                child: Actions(
+                  actions: {
+                    DismissIntent: CallbackAction<DismissIntent>(
+                      onInvoke: (_) => _menuController.close(),
+                    ),
+                  },
+                  child: widget.popoverBuilder(context),
+                ),
+              ),
+            ),
+          ),
+        );
       },
       child: _buildTrigger(returnNode),
     );

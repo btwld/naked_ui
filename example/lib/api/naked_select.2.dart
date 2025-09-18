@@ -102,13 +102,9 @@ class _AnimatedMultiSelectExampleState extends State<AnimatedMultiSelectExample>
           setState(() => _selectedValues.clear());
           setState(() => _selectedValues.addAll(values));
         },
-        removalDelay: const Duration(milliseconds: 200),
-        onStateChange: (state) {
-          state == OverlayChildLifecycleState.present
-              ? _animationController.forward()
-              : _animationController.reverse();
-        },
-        menu: ScaleTransition(
+        onOpen: () => _animationController.forward(),
+        onClose: () => _animationController.reverse(),
+        overlay: ScaleTransition(
           scale: _animationController.drive(Tween<double>(
             begin: 0.98,
             end: 1,
@@ -276,36 +272,50 @@ class SelectItem extends StatefulWidget {
 
 class _SelectItemState extends State<SelectItem> {
   bool _isHovered = false;
-  bool _isFocused = false;
   bool _isSelected = false;
 
   Color get backgroundColor {
-    if (_isHovered || _isSelected) return Colors.grey.shade100;
-    if (_isFocused) return Colors.grey.shade200;
-    return Colors.white;
+    if (_isSelected) {
+      return _isHovered
+          ? Colors.blue.shade100
+          : Colors.blue.shade50;
+    }
+    return _isHovered
+        ? Colors.grey.shade100
+        : Colors.transparent;
   }
 
   @override
   Widget build(BuildContext context) {
     return NakedSelectItem<String>(
       value: widget.value,
-      onFocusChange: (focused) => setState(() => _isFocused = focused),
       onHoverChange: (hovered) => setState(() => _isHovered = hovered),
       onSelectChange: (selected) => setState(() => _isSelected = selected),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        curve: Curves.easeInOut,
+        margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         decoration: BoxDecoration(
           color: backgroundColor,
           borderRadius: BorderRadius.circular(8),
         ),
         child: Row(
           children: [
-            Expanded(child: Text(widget.label)),
+            Expanded(
+              child: Text(
+                widget.label,
+                style: TextStyle(
+                  color: _isSelected ? Colors.blue.shade700 : Colors.grey.shade800,
+                  fontWeight: _isSelected ? FontWeight.w600 : FontWeight.w500,
+                ),
+              ),
+            ),
             if (_isSelected)
-              const Icon(
+              Icon(
                 Icons.check_rounded,
-                size: 16,
-                color: Colors.grey,
+                size: 18,
+                color: Colors.blue.shade600,
               ),
           ],
         ),

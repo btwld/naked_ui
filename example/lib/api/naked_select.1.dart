@@ -96,13 +96,9 @@ class _AnimatedSelectExampleState extends State<AnimatedSelectExample>
         onSelectedValueChanged: (value) {
           setState(() => _selectedValue = value);
         },
-        removalDelay: const Duration(milliseconds: 200),
-        onStateChange: (state) {
-          state == OverlayChildLifecycleState.present
-              ? _animationController.forward()
-              : _animationController.reverse();
-        },
-        menu: SlideTransition(
+        onOpen: () => _animationController.forward(),
+        onClose: () => _animationController.reverse(),
+        overlay: SlideTransition(
           position: _animationController.drive(Tween<Offset>(
             begin: const Offset(0, -0.05),
             end: Offset.zero,
@@ -205,8 +201,8 @@ class _SelectItemState extends State<SelectItem> {
 
   Color get backgroundColor {
     if (_isHovered) return Colors.grey.shade100;
-    if (_isFocused) return Colors.grey.shade200;
-    return Colors.white;
+    if (_isFocused) return Colors.grey.shade50;
+    return Colors.transparent;
   }
 
   @override
@@ -215,13 +211,22 @@ class _SelectItemState extends State<SelectItem> {
       value: widget.value,
       onFocusChange: (focused) => setState(() => _isFocused = focused),
       onHoverChange: (hovered) => setState(() => _isHovered = hovered),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        curve: Curves.easeInOut,
+        margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         decoration: BoxDecoration(
           color: backgroundColor,
           borderRadius: BorderRadius.circular(8),
         ),
-        child: Text(widget.label),
+        child: Text(
+          widget.label,
+          style: TextStyle(
+            color: Colors.grey.shade800,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
       ),
     );
   }

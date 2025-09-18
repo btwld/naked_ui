@@ -13,16 +13,13 @@ void main() {
     );
   }
 
-
   Widget _buildNakedSelect({String? selectedValue, bool enabled = true}) {
     return NakedSelect<String>(
       selectedValue: selectedValue ?? 'option1',
       onSelectedValueChanged: enabled ? (value) {} : null,
       enabled: enabled,
-      child: const NakedSelectTrigger(
-        child: Text('Select Option'),
-      ),
-      menu: Container(
+      child: const NakedSelectTrigger(child: Text('Select Option')),
+      overlay: Container(
         width: 200,
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
@@ -40,18 +37,9 @@ void main() {
         child: const Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            NakedSelectItem(
-              value: 'option1',
-              child: Text('Option 1'),
-            ),
-            NakedSelectItem(
-              value: 'option2',
-              child: Text('Option 2'),
-            ),
-            NakedSelectItem(
-              value: 'option3',
-              child: Text('Option 3'),
-            ),
+            NakedSelectItem(value: 'option1', child: Text('Option 1')),
+            NakedSelectItem(value: 'option2', child: Text('Option 2')),
+            NakedSelectItem(value: 'option3', child: Text('Option 3')),
           ],
         ),
       ),
@@ -62,10 +50,8 @@ void main() {
     return NakedSelect<String>.multiple(
       selectedValues: const {'option1'},
       onSelectedValuesChanged: (values) {},
-      child: const NakedSelectTrigger(
-        child: Text('Multi Select'),
-      ),
-      menu: Container(
+      child: const NakedSelectTrigger(child: Text('Multi Select')),
+      overlay: Container(
         width: 200,
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
@@ -76,18 +62,9 @@ void main() {
         child: const Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            NakedSelectItem(
-              value: 'option1',
-              child: Text('Option 1'),
-            ),
-            NakedSelectItem(
-              value: 'option2',
-              child: Text('Option 2'),
-            ),
-            NakedSelectItem(
-              value: 'option3',
-              child: Text('Option 3'),
-            ),
+            NakedSelectItem(value: 'option1', child: Text('Option 1')),
+            NakedSelectItem(value: 'option2', child: Text('Option 2')),
+            NakedSelectItem(value: 'option3', child: Text('Option 3')),
           ],
         ),
       ),
@@ -101,7 +78,10 @@ void main() {
       await tester.pumpWidget(_buildTestApp(_buildNakedSelect()));
 
       // Verify trigger has button semantics
-      final summary = summarizeMergedFromRoot(tester, control: ControlType.button);
+      final summary = summarizeMergedFromRoot(
+        tester,
+        control: ControlType.button,
+      );
       expect(summary.flags.contains('isButton'), isTrue);
       expect(summary.flags.contains('isFocusable'), isTrue);
       expect(summary.actions.contains('tap'), isTrue);
@@ -227,7 +207,7 @@ void main() {
               focusNode: focusNode,
               child: const Text('Focusable Select'),
             ),
-            menu: Container(
+            overlay: Container(
               width: 200,
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
@@ -238,10 +218,7 @@ void main() {
               child: const Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  NakedSelectItem(
-                    value: 'option1',
-                    child: Text('Option 1'),
-                  ),
+                  NakedSelectItem(value: 'option1', child: Text('Option 1')),
                 ],
               ),
             ),
@@ -288,10 +265,8 @@ void main() {
             selectedValue: 'option1',
             onSelectedValueChanged: (value) {},
             semanticLabel: 'Choose an option',
-            child: const NakedSelectTrigger(
-              child: Text('Labeled Select'),
-            ),
-            menu: Container(
+            child: const NakedSelectTrigger(child: Text('Labeled Select')),
+            overlay: Container(
               width: 200,
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
@@ -302,10 +277,7 @@ void main() {
               child: const Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  NakedSelectItem(
-                    value: 'option1',
-                    child: Text('Option 1'),
-                  ),
+                  NakedSelectItem(value: 'option1', child: Text('Option 1')),
                 ],
               ),
             ),
