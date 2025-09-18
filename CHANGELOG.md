@@ -1,54 +1,30 @@
-## [0.1.0] - 2025-08-27
 
-### ⚠️ BREAKING CHANGES
 
-- **API Change**: Standardized state callback naming convention across all components:
-  - `onStateHover` → `onHoverChange`
-  - `onStatePressed` → `onPressChange`
-  - `onStateFocus` → `onFocusChange`
-  - `onStateDragging` → `onDragChange` (NakedSlider)
-  - `onStateSelected` → `onSelectChange` (NakedRadio, NakedSelectItem)
-- **Removed Callbacks**:
-  - `onDisabledState` removed from NakedButton and NakedMenu (use `enabled` property instead)
-- **Migration Required**: Existing code using the old callback names will need updates
-- See [MIGRATION.md](./MIGRATION.md) for detailed migration instructions
+## 0.2.0-beta.1
 
-### Added
-- Comprehensive migration guide (MIGRATION.md) for upgrading from pre-v0.1.0 versions
-
-### Fixed
-- Inconsistent callback naming patterns across components
-- Updated outdated documentation to reflect current API conventions
-
-### Documentation  
-- Updated all widget documentation to match implemented API
-- Fixed outdated examples in documentation files
-- Ensured consistency between code and documentation
+- Added: Popover; Toggle
+- API: Standardized state callbacks (onHoverChange/onPressChange/onFocusChange); removed onDisabledState (use enabled); added onSelectChange/onDragChange where applicable
+- Behavior: Menu uses RawMenuAnchor; Select adds type-ahead and focus return; Tabs select on focus; Slider keyboard/drag refinements
+- Accessibility: Improved semantics across button, checkbox, radio, slider, select, tabs, dialog, tooltip
+- Focus/State: Unified focus handling (FocusableMixin) and consistent hover/press/selected for builders
 
 ---
 
-## 0.0.1-dev.1
+## 0.2.0
 
- - **REFACTOR**: Select (#596).
- - **REFACTOR**: Tabs and Tooltip (#595).
- - **REFACTOR**: Naked Slider (#594).
- - **REFACTOR**: radio group (#593).
- - **REFACTOR**: naked menu (#592).
- - **REFACTOR**: accordion (#591).
- - **REFACTOR**: Refactor Checkbox (#590).
- - **REFACTOR**: update outdated API (#583).
- - **FIX**: Change default autofocus to false in Menu and Select (#609).
- - **FEAT**: Add textStyle prop in NakedTextField  (#608).
- - **FEAT**: Implement Tooltip Lifecycle (#603).
- - **FEAT**: Add test for Hover to RadioButton (#601).
- - **FEAT**: Recreate Button using Naked (#587).
- - **FEAT**: "Naked" - A Behavior-First UI Component Library for Flutter (#579).
- - **DOCS**: organize folders and files.
- - **DOCS**: Improve accordion example.
- - **DOCS**: Remove old example app (#607).
- - **DOCS**: Document naked button (#599).
+- Added: Popover; Toggle
+- Removed: none
+- API: Standardized callbacks across components
+  - onStateHover → onHoverChange
+  - onStatePressed → onPressChange
+  - onStateFocus → onFocusChange
+  - onStateDragging → onDragChange
+  - onStateSelected → onSelectChange
+  - Removed: onDisabledState (use enabled)
+- Behavior: Menu uses RawMenuAnchor
+- Accessibility/State: Improved interactive state handling
 
-# Changelog
+---
 
 ## 0.0.1-dev.2 (2025-07-03)
 
