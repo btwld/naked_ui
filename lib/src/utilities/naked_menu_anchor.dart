@@ -63,6 +63,7 @@ class NakedMenuAnchor extends StatefulWidget {
     this.onClose,
     this.onOpen,
     this.onKeyEvent,
+    this.autofocus = false,
   });
 
   final MenuController controller;
@@ -94,6 +95,13 @@ class NakedMenuAnchor extends StatefulWidget {
   final VoidCallback? onClose;
   final VoidCallback? onOpen;
 
+  /// Whether to automatically focus the overlay when opened.
+  ///
+  /// When true, the overlay will request focus immediately when opened,
+  /// enabling keyboard navigation. When false, uses the default heuristic
+  /// based on [onKeyEvent] and [closeOnOutsideTap].
+  final bool autofocus;
+
   /// Optional raw key listener (e.g., type-ahead). Return handled/ignored.
   /// If null, we still handle ESC/Up/Down via Shortcuts, but only request
   /// overlay focus when appropriate (see heuristic below).
@@ -124,8 +132,9 @@ class _NakedMenuAnchorState extends State<NakedMenuAnchor> {
     // - Menus (default closeOnOutsideTap == true) should get overlay focus.
     // - Tooltips (closeOnOutsideTap == false) should not steal focus,
     //   unless the caller explicitly supplies onKeyEvent.
-    final bool wantsOverlayFocus =
-        widget.onKeyEvent != null || widget.closeOnOutsideTap;
+    // - If autofocus is explicitly set, honor that preference.
+    final bool wantsOverlayFocus = widget.autofocus ||
+        (widget.onKeyEvent != null || widget.closeOnOutsideTap);
 
     return RawMenuAnchor(
       childFocusNode: widget.childFocusNode,

@@ -43,7 +43,10 @@ class NakedMenu extends StatelessWidget {
   /// Called when the menu closes.
   final VoidCallback? onClose;
 
-  /// The autofocus flag for menu opening.
+  /// If true, focuses the overlay on open.
+  ///
+  /// This enables keyboard navigation within the menu. The overlay will
+  /// request focus when opened, allowing users to navigate with arrow keys.
   final bool autofocus;
 
   /// The menu position relative to its target.
@@ -71,6 +74,7 @@ class NakedMenu extends StatelessWidget {
       position: menuPosition,
       fallbackPositions: fallbackPositions,
       onClose: onClose,
+      autofocus: autofocus,
       child: builder(context),
     );
   }
@@ -186,11 +190,9 @@ class NakedMenuItem extends StatelessWidget {
       onFocusChange: onFocusChange,
       onHoverChange: onHoverChange,
       onPressChange: onPressChange,
-      tooltip: semanticLabel,
+      semanticLabel: semanticLabel,
       child: child,
-      builder: builder != null
-          ? (context, states, child) => builder!(context, states, child)
-          : null,
+      builder: builder,
     );
   }
 }

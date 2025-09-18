@@ -40,102 +40,168 @@ class _MenuExampleState extends State<MenuExample> {
   @override
   Widget build(BuildContext context) {
     return NakedMenu(
+      autofocus: true,
       builder: (context) => NakedButton(
         onPressed: () => _controller.open(),
-        child: Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: Colors.grey.shade300),
-          ),
-          child: const Icon(Icons.settings, size: 18),
-        ),
+        focusOnPress: true,
+        builder: (context, states, _) {
+          final hovered = states.contains(WidgetState.hovered);
+          final focused = states.contains(WidgetState.focused);
+          final border =
+              hovered || focused ? Colors.grey.shade300 : Colors.grey.shade300;
+          final ring =
+              focused ? Colors.blue.withOpacity(0.30) : Colors.transparent;
+          return Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: border),
+              boxShadow: focused
+                  ? [
+                      BoxShadow(
+                        color: ring,
+                        blurRadius: 0,
+                        spreadRadius: 2,
+                      )
+                    ]
+                  : const [],
+            ),
+            padding: const EdgeInsets.all(8),
+            child: const Icon(Icons.more_vert, size: 18),
+          );
+        },
       ),
       overlayBuilder: (context) => Container(
-        padding: const EdgeInsets.all(8),
+        margin: const EdgeInsets.only(top: 4),
+        padding: const EdgeInsets.symmetric(vertical: 6),
         decoration: BoxDecoration(
           color: Colors.white,
           border: Border.all(color: Colors.grey.shade200),
           borderRadius: BorderRadius.circular(12),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.05),
-              blurRadius: 8,
-              offset: const Offset(0, 4),
+              color: Colors.black.withOpacity(0.06),
+              blurRadius: 12,
+              offset: const Offset(0, 8),
             ),
           ],
         ),
         constraints: const BoxConstraints(
-          maxWidth: 200,
+          minWidth: 200,
+          maxWidth: 280,
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            ItemContent(
-              title: 'Menu Item 1',
-              onPressed: () => _onItemPressed('1'),
+            MenuItemTile(
+              icon: Icons.person,
+              title: 'Profile',
+              shortcut: 'P',
+              onPressed: () => _onItemPressed('Profile'),
             ),
-            ItemContent(
-              title: 'Menu Item 2',
-              onPressed: () => _onItemPressed('2'),
+            MenuItemTile(
+              icon: Icons.link,
+              title: 'Copy link',
+              shortcut: '⌘C',
+              onPressed: () => _onItemPressed('Copy link'),
             ),
-            ItemContent(
-              title: 'Menu Item 3',
-              onPressed: () => _onItemPressed('3'),
+            const _Hairline(),
+            MenuItemTile(
+              icon: Icons.delete_outline,
+              title: 'Delete',
+              destructive: true,
+              shortcut: '⌘⌫',
+              onPressed: () => _onItemPressed('Delete'),
+            ),
+            const MenuItemTile(
+              icon: Icons.history,
+              title: 'Revert',
+              onPressed: null, // disabled example
             ),
           ],
         ),
       ),
       controller: _controller,
-      onClose: () => _controller.close(),
     );
   }
 }
 
-class ItemContent extends StatefulWidget {
-  const ItemContent({
+class MenuItemTile extends StatelessWidget {
+  const MenuItemTile({
     super.key,
+    required this.icon,
     required this.title,
-    required this.onPressed,
+    this.shortcut,
+    this.destructive = false,
+    this.onPressed,
   });
 
+  final IconData icon;
   final String title;
-  final VoidCallback onPressed;
-
-  @override
-  State<ItemContent> createState() => _ItemContentState();
-}
-
-class _ItemContentState extends State<ItemContent> {
-  bool _isHovered = false;
+  final String? shortcut;
+  final bool destructive;
+  final VoidCallback? onPressed;
 
   @override
   Widget build(BuildContext context) {
     return NakedMenuItem(
-      onPressed: widget.onPressed,
-      onHoverChange: (hovered) => setState(() => _isHovered = hovered),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.all(8.0),
-        decoration: BoxDecoration(
-          color: _isHovered ? Colors.grey.shade100 : Colors.white,
-          borderRadius: BorderRadius.circular(4),
-        ),
-        child:
-            Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-          Text(widget.title),
-          AnimatedOpacity(
-            opacity: _isHovered ? 1.0 : 0.0,
-            duration: const Duration(milliseconds: 200),
-            child: const Icon(
-              Icons.arrow_forward_ios,
-              size: 12,
-              color: Colors.grey,
-            ),
+      onPressed: onPressed,
+      semanticLabel: title,
+      builder: (context, states, _) {
+        final hovered = states.contains(WidgetState.hovered);
+        final focused = states.contains(WidgetState.focused);
+        final disabled = states.contains(WidgetState.disabled);
+
+        final bg = hovered || focused ? Colors.grey.shade100 : Colors.white;
+        final textColor = disabled
+            ? Colors.grey.shade400
+            : (destructive ? Colors.red.shade700 : Colors.black87);
+        final iconColor = disabled
+            ? Colors.grey.shade400
+            : (destructive ? Colors.red.shade700 : Colors.grey.shade700);
+
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+          decoration: BoxDecoration(
+            color: bg,
+            borderRadius: BorderRadius.circular(6),
           ),
-        ]),
-      ),
+          child: Row(
+            children: [
+              Icon(icon, size: 18, color: iconColor),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  title,
+                  style: TextStyle(color: textColor),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              if (shortcut != null)
+                Text(
+                  shortcut!,
+                  style: TextStyle(
+                    color: Colors.grey.shade500,
+                    fontSize: 12,
+                  ),
+                ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _Hairline extends StatelessWidget {
+  const _Hairline();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 1,
+      margin: const EdgeInsets.symmetric(vertical: 6),
+      color: Colors.grey.shade200,
     );
   }
 }
