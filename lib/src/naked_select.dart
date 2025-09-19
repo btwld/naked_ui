@@ -87,9 +87,6 @@ class NakedSelectOption<T> extends OverlayItem<T> {
 
 /// Headless select/dropdown that renders items in an overlay anchored to a trigger.
 class NakedSelect<T> extends StatefulWidget {
-  /// Type alias for NakedSelectOption for cleaner API access
-  static final Option = NakedSelectOption.new;
-
   const NakedSelect({
     super.key,
     required this.triggerBuilder,
@@ -113,6 +110,9 @@ class NakedSelect<T> extends StatefulWidget {
     this.consumeOutsideTaps = true,
     this.useRootOverlay = false,
   });
+
+  /// Type alias for NakedSelectOption for cleaner API access
+  static final Option = NakedSelectOption.new;
 
   /// Builds the trigger surface.
   final Widget Function(BuildContext context, Set<WidgetState> states)
@@ -190,7 +190,6 @@ class _NakedSelectState<T> extends State<NakedSelect<T>>
     markSelectionMade();
     widget.onChanged?.call(value);
   }
-
 
   @override
   Widget build(BuildContext context) {

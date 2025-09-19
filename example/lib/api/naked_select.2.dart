@@ -97,9 +97,7 @@ class _CyberpunkSelectExampleState extends State<CyberpunkSelectExample> {
         );
 
         return Transform(
-          transform: Matrix4.identity()
-            ..setEntry(3, 2, 0.001)
-            ..rotateY(-0.05),
+          transform: Matrix4.identity(),
           alignment: Alignment.centerLeft,
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -128,18 +126,24 @@ class _CyberpunkSelectExampleState extends State<CyberpunkSelectExample> {
             child: Row(
               spacing: 8,
               children: [
-                Text(
-                  fruit.emoji,
-                  style: TextStyle(
-                    fontSize: 16,
-                    shadows: selected || hovered
-                        ? [
-                            const Shadow(
-                              color: Color(0xFF00FF41),
-                              blurRadius: 4,
-                            ),
-                          ]
-                        : null,
+                ColorFiltered(
+                  colorFilter: const ColorFilter.mode(
+                    Color(0xFF00FF41),
+                    BlendMode.modulate,
+                  ),
+                  child: Text(
+                    fruit.emoji,
+                    style: TextStyle(
+                      fontSize: 16,
+                      shadows: selected || hovered
+                          ? [
+                              const Shadow(
+                                color: Color(0xFF00FF41),
+                                blurRadius: 4,
+                              ),
+                            ]
+                          : null,
+                    ),
                   ),
                 ),
                 Expanded(
@@ -182,8 +186,14 @@ class _CyberpunkSelectExampleState extends State<CyberpunkSelectExample> {
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
               decoration: BoxDecoration(
                 color: const Color(0xFF001100),
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(8),
+                  topRight: Radius.circular(0),
+                  bottomLeft: Radius.circular(0),
+                  bottomRight: Radius.circular(8),
+                ),
                 border: Border.all(
-                  color: focused
+                  color: focused || hovered
                       ? const Color(0xFF00FF41)
                       : const Color(0xFF003300),
                   width: 2,
@@ -206,16 +216,24 @@ class _CyberpunkSelectExampleState extends State<CyberpunkSelectExample> {
               child: Row(
                 children: [
                   if (_selectedValue != null) ...[
-                    Text(
-                      fruits.firstWhere((f) => f.value == _selectedValue).emoji,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        shadows: [
-                          Shadow(
-                            color: Color(0xFF00FF41),
-                            blurRadius: 4,
-                          ),
-                        ],
+                    ColorFiltered(
+                      colorFilter: const ColorFilter.mode(
+                        Color(0xFF00FF41),
+                        BlendMode.modulate,
+                      ),
+                      child: Text(
+                        fruits
+                            .firstWhere((f) => f.value == _selectedValue)
+                            .emoji,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          shadows: [
+                            Shadow(
+                              color: Color(0xFF00FF41),
+                              blurRadius: 4,
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                     const SizedBox(width: 8),
@@ -258,6 +276,12 @@ class _CyberpunkSelectExampleState extends State<CyberpunkSelectExample> {
                 padding: const EdgeInsets.symmetric(vertical: 6),
                 decoration: BoxDecoration(
                   color: const Color(0xFF000A00),
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(8),
+                    topRight: Radius.circular(0),
+                    bottomLeft: Radius.circular(0),
+                    bottomRight: Radius.circular(8),
+                  ),
                   border: Border.all(
                     color: const Color(0xFF00FF41),
                     width: 2,

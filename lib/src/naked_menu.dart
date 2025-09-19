@@ -77,9 +77,6 @@ class NakedMenuItem<T> extends OverlayItem<T> {
 
 /// A headless menu that renders items in an overlay anchored to its trigger.
 class NakedMenu<T> extends StatefulWidget {
-  /// Type alias for NakedMenuItem for cleaner API access
-  static final Item = NakedMenuItem.new;
-
   const NakedMenu({
     super.key,
     required this.triggerBuilder,
@@ -98,6 +95,9 @@ class NakedMenu<T> extends StatefulWidget {
     this.triggerFocusNode,
     this.positioning = const OverlayPositionConfig(),
   });
+
+  /// Type alias for NakedMenuItem for cleaner API access
+  static final Item = NakedMenuItem.new;
 
   /// Builds the trigger surface.
   final Widget Function(BuildContext context, Set<WidgetState> states)
