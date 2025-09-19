@@ -77,14 +77,6 @@ class NakedPopover extends StatefulWidget {
   /// adding animations or delays. Call `hideOverlay` to actually hide the popover.
   final RawMenuAnchorCloseRequestedCallback? onCloseRequested;
 
-  static void _defaultOnOpenRequested(Offset? position, VoidCallback showOverlay) {
-    showOverlay();
-  }
-
-  static void _defaultOnCloseRequested(VoidCallback hideOverlay) {
-    hideOverlay();
-  }
-
   @override
   State<NakedPopover> createState() => _NakedPopoverState();
 }
@@ -165,51 +157,62 @@ class _NakedPopoverState extends State<NakedPopover> {
 
   @override
   Widget build(BuildContext context) {
-    final returnNode = widget.triggerFocusNode ??
+    final returnNode =
+        widget.triggerFocusNode ??
         _extractChildFocusNode() ??
         _internalTriggerNode;
 
     return RawMenuAnchor(
-      controller: _menuController,
       childFocusNode: returnNode,
       consumeOutsideTaps: widget.consumeOutsideTaps,
-      useRootOverlay: widget.useRootOverlay,
       onOpen: _handleOpen,
       onClose: _handleClose,
-      onOpenRequested: widget.onOpenRequested ?? NakedPopover._defaultOnOpenRequested,
-      onCloseRequested: widget.onCloseRequested ?? NakedPopover._defaultOnCloseRequested,
+      onOpenRequested: widget.onOpenRequested ?? (_, show) => show(),
+      onCloseRequested: widget.onCloseRequested ?? (hide) => hide(),
+      useRootOverlay: widget.useRootOverlay,
+      controller: _menuController,
       overlayBuilder: (context, info) {
-        final overlayRect = calculateOverlayPosition(
-          anchorRect: info.anchorRect,
-          overlaySize: info.overlaySize,
-          childSize: info.overlaySize, // Will be constrained by content
-          config: widget.positioning,
-          pointerPosition: info.position,
-        );
+        // Center horizontally on the trigger; place the popover's top at the
+        // trigger's bottom. This avoids needing the child's size by using a
+        // FractionalTranslation of -0.5 on X to center the child around the
+        // computed anchor X coordinate.
+        final anchor = info.anchorRect;
+        final left = anchor.center.dx + widget.positioning.offset.dx;
+        final top = anchor.bottom + widget.positioning.offset.dy;
 
-        return Positioned.fromRect(
-          rect: overlayRect,
-          child: TapRegion(
-            groupId: info.tapRegionGroupId,
-            onTapOutside: (event) => _menuController.close(),
-            child: FocusTraversalGroup(
-              child: Shortcuts(
-                shortcuts: const {
-                  SingleActivator(LogicalKeyboardKey.escape): DismissIntent(),
-                },
-                child: Actions(
-                  actions: {
-                    DismissIntent: CallbackAction<DismissIntent>(
-                      onInvoke: (_) => _menuController.close(),
+        return Stack(
+          children: [
+            Positioned(
+              left: left,
+              top: top,
+              child: TapRegion(
+                onTapOutside: (event) => _menuController.close(),
+                groupId: info.tapRegionGroupId,
+                child: FocusTraversalGroup(
+                  child: Shortcuts(
+                    shortcuts: const {
+                      SingleActivator(LogicalKeyboardKey.escape):
+                          DismissIntent(),
+                    },
+                    child: Actions(
+                      actions: {
+                        DismissIntent: CallbackAction<DismissIntent>(
+                          onInvoke: (_) => _menuController.close(),
+                        ),
+                      },
+                      child: FractionalTranslation(
+                        translation: const Offset(-0.5, 0.0),
+                        child: Builder(builder: widget.popoverBuilder),
+                      ),
                     ),
-                  },
-                  child: widget.popoverBuilder(context),
+                  ),
                 ),
               ),
             ),
-          ),
+          ],
         );
       },
+
       child: _buildTrigger(returnNode),
     );
   }

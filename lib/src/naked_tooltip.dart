@@ -88,6 +88,7 @@ class NakedTooltip extends StatefulWidget {
     this.semanticsLabel,
   });
 
+
   /// See also:
   /// - [NakedPopover], for anchored, click-triggered overlays.
 
@@ -126,14 +127,6 @@ class NakedTooltip extends StatefulWidget {
   /// This callback allows you to customize the closing behavior, such as
   /// adding animations or delays. Call `hideOverlay` to actually hide the tooltip.
   final RawMenuAnchorCloseRequestedCallback? onCloseRequested;
-
-  static void _defaultOnOpenRequested(Offset? position, VoidCallback showOverlay) {
-    showOverlay();
-  }
-
-  static void _defaultOnCloseRequested(VoidCallback hideOverlay) {
-    hideOverlay();
-  }
 
   @override
   State<NakedTooltip> createState() => _NakedTooltipState();
@@ -179,12 +172,12 @@ class _NakedTooltipState extends State<NakedTooltip> {
   @override
   Widget build(BuildContext context) {
     return RawMenuAnchor(
-      controller: _menuController,
       consumeOutsideTaps: false, // Don't consume taps for tooltips
       onOpen: _handleOpen,
       onClose: _handleClose,
-      onOpenRequested: widget.onOpenRequested ?? NakedTooltip._defaultOnOpenRequested,
-      onCloseRequested: widget.onCloseRequested ?? NakedTooltip._defaultOnCloseRequested,
+      onOpenRequested: widget.onOpenRequested ?? (_, show) => show(),
+      onCloseRequested: widget.onCloseRequested ?? (hide) => hide(),
+      controller: _menuController,
       overlayBuilder: (context, info) {
         final overlayRect = calculateOverlayPosition(
           anchorRect: info.anchorRect,

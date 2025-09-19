@@ -31,8 +31,6 @@ class AnimatedSelectExample extends StatefulWidget {
 class _AnimatedSelectExampleState extends State<AnimatedSelectExample>
     with TickerProviderStateMixin {
   String? _selectedValue;
-  bool _isHovered = false;
-  bool _isFocused = false;
 
   late final _animationController = AnimationController(
     duration: const Duration(milliseconds: 200),
@@ -43,43 +41,6 @@ class _AnimatedSelectExampleState extends State<AnimatedSelectExample>
     parent: _animationController,
     curve: Curves.easeOut,
   );
-
-  Color get borderColor {
-    if (_isFocused) return Colors.grey.shade800;
-    if (_isHovered) return Colors.grey.shade100;
-    return Colors.grey.shade300;
-  }
-
-  Color get backgroundColor {
-    if (_isHovered) return Colors.grey.shade100;
-    return Colors.white;
-  }
-
-  List<BoxShadow> get boxShadow {
-    if (_isFocused) {
-      return [
-        BoxShadow(
-          color: Colors.grey.shade300,
-          blurRadius: 0,
-          spreadRadius: 4,
-          offset: Offset.zero,
-        ),
-        const BoxShadow(
-          color: Colors.white,
-          blurRadius: 0,
-          spreadRadius: 2,
-          offset: Offset.zero,
-        ),
-      ];
-    }
-    return [
-      BoxShadow(
-        color: Colors.black.withValues(alpha: 0.02),
-        blurRadius: 8,
-        offset: const Offset(0, 2),
-      ),
-    ];
-  }
 
   @override
   void dispose() {
@@ -92,65 +53,182 @@ class _AnimatedSelectExampleState extends State<AnimatedSelectExample>
     return SizedBox(
       width: 250,
       child: NakedSelect<String>(
-        selectedValue: _selectedValue,
-        onSelectedValueChanged: (value) {
+        value: _selectedValue,
+        onChanged: (value) {
           setState(() => _selectedValue = value);
         },
         onOpen: () => _animationController.forward(),
         onClose: () => _animationController.reverse(),
-        overlay: SlideTransition(
-          position: _animationController.drive(Tween<Offset>(
-            begin: const Offset(0, -0.05),
-            end: Offset.zero,
-          )),
-          child: FadeTransition(
-            opacity: _animation,
-            child: SizedBox(
-              width: 250,
-              child: Container(
-                margin: const EdgeInsets.only(top: 4),
-                padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 6),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  border: Border.all(
-                    color: Colors.grey.shade300,
-                    width: 1,
+        overlayBuilder: (context, info) {
+          return SlideTransition(
+            position: _animationController.drive(Tween<Offset>(
+              begin: const Offset(0, -0.05),
+              end: Offset.zero,
+            )),
+            child: FadeTransition(
+              opacity: _animation,
+              child: SizedBox(
+                width: 250,
+                child: Container(
+                  margin: const EdgeInsets.only(top: 4),
+                  padding:
+                      const EdgeInsets.symmetric(vertical: 6, horizontal: 6),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    border: Border.all(
+                      color: Colors.grey.shade300,
+                      width: 1,
+                    ),
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.1),
+                        blurRadius: 8,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
                   ),
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.1),
-                      blurRadius: 8,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: const Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    SelectItem(
-                      value: 'Option 1',
-                      label: 'Option 1',
-                    ),
-                    SelectItem(
-                      value: 'Option 2',
-                      label: 'Option 2',
-                    ),
-                    SelectItem(
-                      value: 'Option 3',
-                      label: 'Option 3',
-                    ),
-                  ],
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      NakedSelectOption<String>(
+                        value: 'Option 1',
+                        builder: (context, states, child) {
+                          final isHovered = states.contains(WidgetState.hovered);
+                          final isFocused = states.contains(WidgetState.focused);
+
+                          final Color backgroundColor = isHovered
+                              ? Colors.grey.shade100
+                              : isFocused
+                                  ? Colors.grey.shade50
+                                  : Colors.transparent;
+
+                          return AnimatedContainer(
+                            duration: const Duration(milliseconds: 150),
+                            curve: Curves.easeInOut,
+                            margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                            decoration: BoxDecoration(
+                              color: backgroundColor,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              'Option 1',
+                              style: TextStyle(
+                                color: Colors.grey.shade800,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                      NakedSelectOption<String>(
+                        value: 'Option 2',
+                        builder: (context, states, child) {
+                          final isHovered = states.contains(WidgetState.hovered);
+                          final isFocused = states.contains(WidgetState.focused);
+
+                          final Color backgroundColor = isHovered
+                              ? Colors.grey.shade100
+                              : isFocused
+                                  ? Colors.grey.shade50
+                                  : Colors.transparent;
+
+                          return AnimatedContainer(
+                            duration: const Duration(milliseconds: 150),
+                            curve: Curves.easeInOut,
+                            margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                            decoration: BoxDecoration(
+                              color: backgroundColor,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              'Option 2',
+                              style: TextStyle(
+                                color: Colors.grey.shade800,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                      NakedSelectOption<String>(
+                        value: 'Option 3',
+                        builder: (context, states, child) {
+                          final isHovered = states.contains(WidgetState.hovered);
+                          final isFocused = states.contains(WidgetState.focused);
+
+                          final Color backgroundColor = isHovered
+                              ? Colors.grey.shade100
+                              : isFocused
+                                  ? Colors.grey.shade50
+                                  : Colors.transparent;
+
+                          return AnimatedContainer(
+                            duration: const Duration(milliseconds: 150),
+                            curve: Curves.easeInOut,
+                            margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                            decoration: BoxDecoration(
+                              color: backgroundColor,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              'Option 3',
+                              style: TextStyle(
+                                color: Colors.grey.shade800,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
-          ),
-        ),
-        child: NakedSelectTrigger(
-          onFocusChange: (focused) => setState(() => _isFocused = focused),
-          onHoverChange: (hovered) => setState(() => _isHovered = hovered),
-          child: AnimatedContainer(
+          );
+        },
+        triggerBuilder: (context, states) {
+          final isFocused = states.contains(WidgetState.focused);
+          final isHovered = states.contains(WidgetState.hovered);
+
+          final Color borderColor = isFocused
+              ? Colors.grey.shade800
+              : isHovered
+                  ? Colors.grey.shade100
+                  : Colors.grey.shade300;
+
+          final Color backgroundColor =
+              isHovered ? Colors.grey.shade100 : Colors.white;
+
+          final List<BoxShadow> boxShadow = isFocused
+              ? [
+                  BoxShadow(
+                    color: Colors.grey.shade300,
+                    blurRadius: 0,
+                    spreadRadius: 4,
+                    offset: Offset.zero,
+                  ),
+                  const BoxShadow(
+                    color: Colors.white,
+                    blurRadius: 0,
+                    spreadRadius: 2,
+                    offset: Offset.zero,
+                  ),
+                ]
+              : [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.02),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ];
+
+          return AnimatedContainer(
             duration: const Duration(milliseconds: 200),
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             decoration: BoxDecoration(
@@ -174,60 +252,10 @@ class _AnimatedSelectExampleState extends State<AnimatedSelectExample>
                 ),
               ],
             ),
-          ),
-        ),
+          );
+        },
       ),
     );
   }
 }
 
-class SelectItem extends StatefulWidget {
-  const SelectItem({
-    super.key,
-    required this.value,
-    required this.label,
-  });
-
-  final String value;
-  final String label;
-
-  @override
-  State<SelectItem> createState() => _SelectItemState();
-}
-
-class _SelectItemState extends State<SelectItem> {
-  bool _isHovered = false;
-  bool _isFocused = false;
-
-  Color get backgroundColor {
-    if (_isHovered) return Colors.grey.shade100;
-    if (_isFocused) return Colors.grey.shade50;
-    return Colors.transparent;
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return NakedSelectItem<String>(
-      value: widget.value,
-      onFocusChange: (focused) => setState(() => _isFocused = focused),
-      onHoverChange: (hovered) => setState(() => _isHovered = hovered),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 150),
-        curve: Curves.easeInOut,
-        margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        decoration: BoxDecoration(
-          color: backgroundColor,
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Text(
-          widget.label,
-          style: TextStyle(
-            color: Colors.grey.shade800,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-      ),
-    );
-  }
-}

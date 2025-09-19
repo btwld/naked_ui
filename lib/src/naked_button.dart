@@ -1,7 +1,7 @@
 import 'dart:async';
 
-import 'package:flutter/widgets.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/widgets.dart';
 
 import 'mixins/naked_mixins.dart'; // WidgetStatesMixin, FocusableMixin
 
@@ -229,6 +229,7 @@ class _NakedButtonState extends State<NakedButton>
           : SystemMouseCursors.basic,
       child: Semantics(
         enabled: widget._effectiveEnabled,
+
         button: true,
         label: widget.semanticLabel,
         tooltip: widget.tooltip,

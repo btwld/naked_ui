@@ -234,8 +234,6 @@ class _SearchableSelect extends StatefulWidget {
 }
 
 class _SearchableSelectState extends State<_SearchableSelect> {
-  bool _isOpen = false;
-  bool _isFocused = false;
   String _searchQuery = '';
   final TextEditingController _searchController = TextEditingController();
 
@@ -255,31 +253,6 @@ class _SearchableSelectState extends State<_SearchableSelect> {
     );
   }
 
-  void _toggleOpen() {
-    setState(() {
-      _isOpen = !_isOpen;
-      if (_isOpen) {
-        _searchQuery = '';
-        _searchController.clear();
-      }
-    });
-  }
-
-  void _selectOption(_SelectOption option) {
-    widget.onChanged(option.value);
-    setState(() {
-      _isOpen = false;
-      _searchQuery = '';
-      _searchController.clear();
-    });
-  }
-
-  void _onSearchChanged(String query) {
-    setState(() {
-      _searchQuery = query;
-    });
-  }
-
   @override
   void dispose() {
     _searchController.dispose();
@@ -289,322 +262,212 @@ class _SearchableSelectState extends State<_SearchableSelect> {
   @override
   Widget build(BuildContext context) {
     return NakedSelect<String>(
-      selectedValue: widget.value,
-      onSelectedValueChanged: widget.onChanged,
+      value: widget.value,
+      onChanged: widget.onChanged,
       closeOnSelect: true,
-      overlay: _isOpen ? _buildMenu() : const SizedBox.shrink(),
-      child: NakedSelectTrigger(
-        onFocusChange: (focused) => setState(() => _isFocused = focused),
-        child: _buildTrigger(),
-      ),
-    );
-  }
-
-  Widget _buildTrigger() {
-    return GestureDetector(
-      onTap: _toggleOpen,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        curve: Curves.easeInOut,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        decoration: BoxDecoration(
-          color: _isOpen
-              ? Colors.blue.shade50
-              : _isFocused
-                  ? Colors.grey.shade50
-                  : Colors.white,
-          border: Border.all(
-            color: _isOpen
-                ? Colors.blue.shade600
-                : _isFocused
-                    ? Colors.grey.shade400
-                    : Colors.grey.shade300,
-            width: 1,
-          ),
-          borderRadius: BorderRadius.circular(12),
-          boxShadow: [
-            if (_isOpen)
-              BoxShadow(
-                color: Colors.blue.shade200.withValues(alpha: 0.3),
-                blurRadius: 8,
-                offset: const Offset(0, 2),
-              ),
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.05),
-              blurRadius: 4,
-              offset: const Offset(0, 1),
-            ),
-          ],
-        ),
-        child: Row(
-          children: [
-            if (_selectedOption != null) ...[
-              Text(
-                _selectedOption!.icon,
-                style: const TextStyle(fontSize: 16),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  _selectedOption!.label,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    color: Color(0xFF1A1A1A),
-                  ),
-                ),
-              ),
-            ] else
-              Expanded(
-                child: Text(
-                  widget.placeholder,
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey.shade600,
-                  ),
-                ),
-              ),
-            const SizedBox(width: 8),
-            AnimatedRotation(
-              duration: const Duration(milliseconds: 200),
-              turns: _isOpen ? 0.5 : 0,
-              child: const Icon(
-                Icons.expand_more,
-                color: Colors.grey,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildMenu() {
-    return Container(
-      margin: const EdgeInsets.only(top: 4),
-      constraints: const BoxConstraints(maxHeight: 300),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          _buildSearchField(),
-          const Divider(height: 1),
-          _buildOptionsList(),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSearchField() {
-    return Padding(
-      padding: const EdgeInsets.all(12),
-      child: TextField(
-        controller: _searchController,
-        onChanged: _onSearchChanged,
-        decoration: InputDecoration(
-          hintText: widget.searchHint,
-          prefixIcon: const Icon(Icons.search, size: 18),
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(6),
-            borderSide: BorderSide(color: Colors.grey.shade300),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(6),
-            borderSide: const BorderSide(color: Colors.blue),
-          ),
-          isDense: true,
-        ),
-        autofocus: true,
-      ),
-    );
-  }
-
-  Widget _buildOptionsList() {
-    final filtered = _filteredOptions;
-
-    if (filtered.isEmpty) {
-      return Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          children: [
-            Icon(
-              Icons.search_off,
-              size: 32,
-              color: Colors.grey.shade400,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'No results found',
-              style: TextStyle(
-                color: Colors.grey.shade600,
-                fontSize: 14,
-              ),
-            ),
-            Text(
-              'Try a different search term',
-              style: TextStyle(
-                color: Colors.grey.shade500,
-                fontSize: 12,
-              ),
-            ),
-          ],
-        ),
-      );
-    }
-
-    return Flexible(
-      child: ListView.builder(
-        shrinkWrap: true,
-        itemCount: filtered.length,
-        itemBuilder: (context, index) {
-          final option = filtered[index];
-          return _OptionItem(
-            option: option,
-            isSelected: option.value == widget.value,
-            searchQuery: _searchQuery,
-            onTap: () => _selectOption(option),
-          );
-        },
-      ),
-    );
-  }
-}
-
-class _OptionItem extends StatefulWidget {
-  const _OptionItem({
-    required this.option,
-    required this.isSelected,
-    required this.searchQuery,
-    required this.onTap,
-  });
-
-  final _SelectOption option;
-  final bool isSelected;
-  final String searchQuery;
-  final VoidCallback onTap;
-
-  @override
-  State<_OptionItem> createState() => _OptionItemState();
-}
-
-class _OptionItemState extends State<_OptionItem> {
-  bool _isHovered = false;
-
-  @override
-  Widget build(BuildContext context) {
-    return MouseRegion(
-      onEnter: (_) => setState(() => _isHovered = true),
-      onExit: (_) => setState(() => _isHovered = false),
-      child: GestureDetector(
-        onTap: widget.onTap,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 150),
-          curve: Curves.easeInOut,
-          margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      onOpen: () {
+        setState(() {
+          _searchQuery = '';
+          _searchController.clear();
+        });
+      },
+      overlayBuilder: (context, info) {
+        return Container(
+          margin: const EdgeInsets.only(top: 4),
+          constraints: const BoxConstraints(maxHeight: 300),
           decoration: BoxDecoration(
-            color: widget.isSelected
-                ? (_isHovered ? Colors.blue.shade100 : Colors.blue.shade50)
-                : (_isHovered ? Colors.grey.shade100 : Colors.transparent),
+            color: Colors.white,
             borderRadius: BorderRadius.circular(8),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.1),
+                blurRadius: 12,
+                offset: const Offset(0, 4),
+              ),
+            ],
           ),
-          child: Row(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
             children: [
-              Text(
-                widget.option.icon,
-                style: const TextStyle(fontSize: 16),
+              Padding(
+                padding: const EdgeInsets.all(12),
+                child: TextField(
+                  controller: _searchController,
+                  onChanged: (q) => setState(() => _searchQuery = q),
+                  decoration: InputDecoration(
+                    hintText: widget.searchHint,
+                    prefixIcon: const Icon(Icons.search, size: 18),
+                    contentPadding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(6),
+                      borderSide: BorderSide(color: Colors.grey.shade300),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(6),
+                      borderSide: const BorderSide(color: Colors.blue),
+                    ),
+                    isDense: true,
+                  ),
+                  autofocus: true,
+                ),
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _buildHighlightedText(),
-              ),
-              if (widget.isSelected)
-                Icon(
-                  Icons.check,
-                  size: 16,
-                  color: Colors.blue.shade600,
+              const Divider(height: 1),
+              if (_filteredOptions.isEmpty)
+                Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    children: [
+                      Icon(
+                        Icons.search_off,
+                        size: 32,
+                        color: Colors.grey.shade400,
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'No results found',
+                        style: TextStyle(
+                          color: Colors.grey.shade600,
+                          fontSize: 14,
+                        ),
+                      ),
+                      Text(
+                        'Try a different search term',
+                        style: TextStyle(
+                          color: Colors.grey.shade500,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                )
+              else
+                Flexible(
+                  child: ListView(
+                    shrinkWrap: true,
+                    children: _filteredOptions.map((opt) {
+                      return NakedSelectOption<String>(
+                        value: opt.value,
+                        builder: (context, states, child) {
+                          final isHovered = states.contains(WidgetState.hovered);
+                          final isSelected = states.contains(WidgetState.selected);
+                          return AnimatedContainer(
+                            duration: const Duration(milliseconds: 150),
+                            curve: Curves.easeInOut,
+                            margin:
+                                const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                            padding:
+                                const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                            decoration: BoxDecoration(
+                              color: isSelected
+                                  ? (isHovered
+                                      ? Colors.blue.shade100
+                                      : Colors.blue.shade50)
+                                  : (isHovered
+                                      ? Colors.grey.shade100
+                                      : Colors.transparent),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Row(
+                              children: [
+                                Text(opt.icon, style: const TextStyle(fontSize: 16)),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Text(
+                                    opt.label,
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      color: isSelected
+                                          ? Colors.blue.shade700
+                                          : const Color(0xFF1A1A1A),
+                                    ),
+                                  ),
+                                ),
+                                if (isSelected)
+                                  Icon(
+                                    Icons.check,
+                                    size: 16,
+                                    color: Colors.blue.shade600,
+                                  ),
+                              ],
+                            ),
+                          );
+                        },
+                      );
+                    }).toList(),
+                  ),
                 ),
             ],
           ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildHighlightedText() {
-    if (widget.searchQuery.isEmpty) {
-      return Text(
-        widget.option.label,
-        style: TextStyle(
-          fontSize: 14,
-          color: widget.isSelected
-              ? Colors.blue.shade700
-              : const Color(0xFF1A1A1A),
-        ),
-      );
-    }
-
-    final text = widget.option.label;
-    final query = widget.searchQuery.toLowerCase();
-    final index = text.toLowerCase().indexOf(query);
-
-    if (index == -1) {
-      return Text(
-        text,
-        style: TextStyle(
-          fontSize: 14,
-          color: widget.isSelected
-              ? Colors.blue.shade700
-              : const Color(0xFF1A1A1A),
-        ),
-      );
-    }
-
-    return RichText(
-      text: TextSpan(
-        children: [
-          TextSpan(
-            text: text.substring(0, index),
-            style: TextStyle(
-              fontSize: 14,
-              color: widget.isSelected
-                  ? Colors.blue.shade700
-                  : const Color(0xFF1A1A1A),
-            ),
+        );
+      },
+      triggerBuilder: (context, states) {
+        final isFocused = states.contains(WidgetState.focused);
+        final borderColor =
+            isFocused ? Colors.blue.shade600 : Colors.grey.shade300;
+        final backgroundColor = isFocused ? Colors.grey.shade50 : Colors.white;
+        return AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.easeInOut,
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(
+            color: backgroundColor,
+            border: Border.all(color: borderColor, width: 1),
+            borderRadius: BorderRadius.circular(12),
+            boxShadow: [
+              if (isFocused)
+                BoxShadow(
+                  color: Colors.blue.shade200.withValues(alpha: 0.3),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.05),
+                blurRadius: 4,
+                offset: const Offset(0, 1),
+              ),
+            ],
           ),
-          TextSpan(
-            text: text.substring(index, index + widget.searchQuery.length),
-            style: TextStyle(
-              fontSize: 14,
-              color: widget.isSelected
-                  ? Colors.blue.shade700
-                  : const Color(0xFF1A1A1A),
-              backgroundColor: Colors.yellow.shade200,
-              fontWeight: FontWeight.bold,
-            ),
+          child: Row(
+            children: [
+              if (_selectedOption != null) ...[
+                Text(
+                  _selectedOption!.icon,
+                  style: const TextStyle(fontSize: 16),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    _selectedOption!.label,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      color: Color(0xFF1A1A1A),
+                    ),
+                  ),
+                ),
+              ] else
+                Expanded(
+                  child: Text(
+                    widget.placeholder,
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey.shade600,
+                    ),
+                  ),
+                ),
+              const SizedBox(width: 8),
+              AnimatedRotation(
+                duration: const Duration(milliseconds: 200),
+                turns: isFocused ? 0.5 : 0,
+                child: const Icon(
+                  Icons.expand_more,
+                  color: Colors.grey,
+                ),
+              ),
+            ],
           ),
-          TextSpan(
-            text: text.substring(index + widget.searchQuery.length),
-            style: TextStyle(
-              fontSize: 14,
-              color: widget.isSelected
-                  ? Colors.blue.shade700
-                  : const Color(0xFF1A1A1A),
-            ),
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 }

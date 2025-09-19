@@ -64,27 +64,36 @@ class _AnimatedMenuExampleState extends State<AnimatedMenuExample>
 
   @override
   Widget build(BuildContext context) {
-    return NakedMenu(
-      builder: (context) => NakedButton(
-        onPressed: () {
-          if (_menuController.isOpen) {
-            _menuController.close();
-          } else {
-            _menuController.open();
-            _onMenuOpen();
-          }
-        },
-        child: Container(
+    return NakedMenu<String>(
+      controller: _menuController,
+      triggerBuilder: (context, states) {
+        final hovered = states.contains(WidgetState.hovered);
+        final focused = states.contains(WidgetState.focused);
+        final border =
+            hovered || focused ? Colors.grey.shade300 : Colors.grey.shade300;
+        final ring =
+            focused ? Colors.blue.withValues(alpha: 0.30) : Colors.transparent;
+
+        return Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: Colors.grey.shade300),
+            border: Border.all(color: border),
+            boxShadow: focused
+                ? [
+                    BoxShadow(
+                      color: ring,
+                      blurRadius: 0,
+                      spreadRadius: 2,
+                    ),
+                  ]
+                : const [],
           ),
           child: const Icon(Icons.settings, size: 18),
-        ),
-      ),
-      overlayBuilder: (context) => ScaleTransition(
+        );
+      },
+      overlayBuilder: (context, info) => ScaleTransition(
         alignment: Alignment.topLeft,
         scale: _animationController.drive(Tween<double>(begin: 0.95, end: 1.0)),
         child: FadeTransition(
@@ -103,69 +112,69 @@ class _AnimatedMenuExampleState extends State<AnimatedMenuExample>
                 ),
               ],
             ),
-            constraints: const BoxConstraints(
-              maxWidth: 200,
-            ),
+            constraints: const BoxConstraints(maxWidth: 200),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                ItemContent(
-                  title: 'Menu Item 1',
-                  onPressed: () => _onItemPressed('1'),
+                NakedMenuItem<String>(
+                  value: '1',
+                  builder: (context, states, _) => ItemContent(
+                    title: 'Menu Item 1',
+                    states: states,
+                  ),
                 ),
-                ItemContent(
-                  title: 'Menu Item 2',
-                  onPressed: () => _onItemPressed('2'),
+                NakedMenuItem<String>(
+                  value: '2',
+                  builder: (context, states, _) => ItemContent(
+                    title: 'Menu Item 2',
+                    states: states,
+                  ),
                 ),
-                ItemContent(
-                  title: 'Menu Item 3',
-                  onPressed: () => _onItemPressed('3'),
+                NakedMenuItem<String>(
+                  value: '3',
+                  builder: (context, states, _) => ItemContent(
+                    title: 'Menu Item 3',
+                    states: states,
+                  ),
                 ),
               ],
             ),
           ),
         ),
       ),
-      controller: _menuController,
+      onSelected: _onItemPressed,
+      onOpen: _onMenuOpen,
       onClose: _onMenuClose,
     );
   }
 }
 
-class ItemContent extends StatefulWidget {
+class ItemContent extends StatelessWidget {
   const ItemContent({
     super.key,
     required this.title,
-    required this.onPressed,
+    required this.states,
   });
 
   final String title;
-  final VoidCallback onPressed;
-
-  @override
-  State<ItemContent> createState() => _ItemContentState();
-}
-
-class _ItemContentState extends State<ItemContent> {
-  bool _isHovered = false;
+  final Set<WidgetState> states;
 
   @override
   Widget build(BuildContext context) {
-    return NakedMenuItem(
-      onPressed: widget.onPressed,
-      onHoverChange: (hovered) => setState(() => _isHovered = hovered),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.all(8.0),
-        decoration: BoxDecoration(
-          color: _isHovered ? Colors.grey.shade100 : Colors.white,
-          borderRadius: BorderRadius.circular(4),
-        ),
-        child:
-            Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-          Text(widget.title),
+    final hovered = states.contains(WidgetState.hovered);
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 200),
+      padding: const EdgeInsets.all(8.0),
+      decoration: BoxDecoration(
+        color: hovered ? Colors.grey.shade100 : Colors.white,
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(title),
           AnimatedOpacity(
-            opacity: _isHovered ? 1.0 : 0.0,
+            opacity: hovered ? 1.0 : 0.0,
             duration: const Duration(milliseconds: 200),
             child: const Icon(
               Icons.arrow_forward_ios,
@@ -173,7 +182,7 @@ class _ItemContentState extends State<ItemContent> {
               color: Colors.grey,
             ),
           ),
-        ]),
+        ],
       ),
     );
   }

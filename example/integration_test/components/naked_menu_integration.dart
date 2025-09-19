@@ -1,8 +1,8 @@
+import 'package:example/api/naked_menu.0.dart' as menu_example;
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:naked_ui/naked_ui.dart';
-import 'package:example/api/naked_menu.0.dart' as menu_example;
 
 import '../helpers/test_helpers.dart';
 
@@ -42,39 +42,29 @@ void main() {
       await tester.pumpWidget(MaterialApp(
         home: Scaffold(
           body: Center(
-            child: NakedMenu(
+            child: NakedMenu<String>(
               controller: menuController,
-              builder: (context) => NakedButton(
-                onPressed: () => menuController.open(),
-                child: const Text('Open Menu'),
-              ),
-              overlayBuilder: (context) => Container(
+              triggerBuilder: (context, states) => const Text('Open Menu'),
+              overlayBuilder: (context, info) => Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   border: Border.all(color: Colors.grey),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: Column(
+                child: const Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    NakedButton(
-                      onPressed: () {
-                        selectedItem = 'Item 1';
-                        menuController.close();
-                      },
-                      child: const Text('Item 1'),
-                    ),
-                    NakedButton(
-                      onPressed: () {
-                        selectedItem = 'Item 2';
-                        menuController.close();
-                      },
-                      child: const Text('Item 2'),
-                    ),
+                    NakedMenuItem<String>(
+                        value: 'Item 1', child: Text('Item 1')),
+                    NakedMenuItem<String>(
+                        value: 'Item 2', child: Text('Item 2')),
                   ],
                 ),
               ),
+              onSelected: (value) {
+                selectedItem = value;
+              },
             ),
           ),
         ),
@@ -103,20 +93,25 @@ void main() {
       await tester.pumpWidget(MaterialApp(
         home: Scaffold(
           body: Center(
-            child: NakedMenu(
+            child: NakedMenu<String>(
               controller: menuController,
               onClose: () => menuClosed = true,
-              builder: (context) => NakedButton(
-                onPressed: () => menuController.open(),
-                child: const Text('Open Menu'),
-              ),
-              overlayBuilder: (context) => Container(
+              triggerBuilder: (context, states) => const Text('Open Menu'),
+              overlayBuilder: (context, info) => Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   border: Border.all(color: Colors.grey),
                 ),
-                child: const Text('Menu Content'),
+                child: const Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    NakedMenuItem<String>(
+                      value: 'content',
+                      child: Text('Menu Content'),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
@@ -145,20 +140,25 @@ void main() {
       await tester.pumpWidget(MaterialApp(
         home: Scaffold(
           body: Center(
-            child: NakedMenu(
+            child: NakedMenu<String>(
               key: menuKey,
               controller: menuController,
-              builder: (context) => NakedButton(
-                onPressed: () => menuController.open(),
-                child: const Text('Open Menu'),
-              ),
-              overlayBuilder: (context) => Container(
+              triggerBuilder: (context, states) => const Text('Open Menu'),
+              overlayBuilder: (context, info) => Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   border: Border.all(color: Colors.grey),
                 ),
-                child: const Text('Menu Content'),
+                child: const Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    NakedMenuItem<String>(
+                      value: 'content',
+                      child: Text('Menu Content'),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
@@ -187,20 +187,25 @@ void main() {
           body: Center(
             child: Column(
               children: [
-                NakedMenu(
+                NakedMenu<String>(
                   controller: menuController,
                   consumeOutsideTaps: true,
-                  builder: (context) => NakedButton(
-                    onPressed: () => menuController.open(),
-                    child: const Text('Open Menu'),
-                  ),
-                  overlayBuilder: (context) => Container(
+                  triggerBuilder: (context, states) => const Text('Open Menu'),
+                  overlayBuilder: (context, info) => Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
                       color: Colors.white,
                       border: Border.all(color: Colors.grey),
                     ),
-                    child: const Text('Menu Content'),
+                    child: const Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        NakedMenuItem<String>(
+                          value: 'content',
+                          child: Text('Menu Content'),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
                 const SizedBox(height: 100),

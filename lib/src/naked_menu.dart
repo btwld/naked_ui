@@ -1,28 +1,95 @@
-import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
+import 'base/overlay_base.dart';
 import 'naked_button.dart';
 import 'utilities/anchored_overlay_shell.dart';
 import 'utilities/positioning.dart';
 
-/// A headless dropdown menu without visuals.
+/// Internal scope provided by [NakedMenu] to its overlay subtree.
+class _NakedMenuScope<T> extends OverlayScope<T> {
+  const _NakedMenuScope({
+    required this.onSelected,
+    required this.controller,
+    required super.child,
+    this.selectedValue,
+    super.key,
+  });
+
+  /// Returns the [_NakedMenuScope] that most tightly encloses the given [context].
+  ///
+  /// If no [NakedMenu] ancestor is found, this method throws a [FlutterError].
+  static _NakedMenuScope<T> of<T>(BuildContext context) {
+    return OverlayScope.of(
+      context,
+      scopeConsumer: NakedMenuItem,
+      scopeOwner: NakedMenu,
+    );
+  }
+
+  final ValueChanged<T>? onSelected;
+  final MenuController controller;
+  final T? selectedValue; // reserved for optional "checked" semantics
+
+  @override
+  bool updateShouldNotify(covariant _NakedMenuScope<T> oldWidget) {
+    return onSelected != oldWidget.onSelected ||
+        controller != oldWidget.controller ||
+        selectedValue != oldWidget.selectedValue;
+  }
+}
+
+/// Widget-based menu action that binds to the nearest [NakedMenu] scope.
 ///
-/// Renders menu content in overlay with proper z-index and focus management.
-/// Positions relative to target with fallback support.
-///
-/// See also:
-/// - [NakedButton], often used to build the trigger and items.
-/// - [NakedSelect], for select-style list with type-ahead and multi-select.
-/// - [NakedPopover], for non-menu anchored overlays.
-class NakedMenu extends StatelessWidget {
-  /// Creates a headless menu.
+/// This enables fully declarative composition inside [NakedMenu.overlayBuilder]
+/// without relying on the data-driven [NakedMenuItem] list.
+class NakedMenuItem<T> extends OverlayItem<T> {
+  const NakedMenuItem({
+    super.key,
+    required super.value,
+    super.enabled = true,
+    super.semanticLabel,
+    super.child,
+    super.builder,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final menu = _NakedMenuScope.of<T>(context);
+
+    Set<WidgetState>? additionalStates;
+    // Reserve optional support for "checked"/selected semantics when provided by scope.
+    if (menu.selectedValue != null && menu.selectedValue == value) {
+      additionalStates = {WidgetState.selected};
+    }
+
+    return buildButton(
+      onPressed: enabled
+          ? () {
+              menu.onSelected?.call(value);
+              menu.controller.close();
+            }
+          : null,
+      effectiveEnabled: enabled,
+      additionalStates: additionalStates,
+    );
+  }
+}
+
+/// A headless menu that renders items in an overlay anchored to its trigger.
+class NakedMenu<T> extends StatefulWidget {
+  /// Type alias for NakedMenuItem for cleaner API access
+  static final Item = NakedMenuItem.new;
+
   const NakedMenu({
     super.key,
-    required this.builder,
+    required this.triggerBuilder,
     required this.overlayBuilder,
     required this.controller,
+    this.onSelected,
+    this.selectedValue,
     this.onOpen,
     this.onClose,
+    this.onCanceled,
     this.onOpenRequested,
     this.onCloseRequested,
     this.consumeOutsideTaps = true,
@@ -32,193 +99,110 @@ class NakedMenu extends StatelessWidget {
     this.positioning = const OverlayPositionConfig(),
   });
 
-  static void _defaultOnOpenRequested(
-    Offset? position,
-    VoidCallback showOverlay,
-  ) {
-    showOverlay();
-  }
+  /// Builds the trigger surface.
+  final Widget Function(BuildContext context, Set<WidgetState> states)
+  triggerBuilder;
 
-  static void _defaultOnCloseRequested(VoidCallback hideOverlay) {
-    hideOverlay();
-  }
+  /// Builds the overlay panel.
+  final RawMenuAnchorOverlayBuilder overlayBuilder;
 
-  /// The target widget that triggers the menu.
-  final WidgetBuilder builder;
-
-  /// The menu content to display when open.
-  final WidgetBuilder overlayBuilder;
-
-  /// Called when the menu opens.
-  final VoidCallback? onOpen;
-
-  /// Called when the menu closes.
-  final VoidCallback? onClose;
-
-  /// Called when a request is made to open the menu.
-  ///
-  /// This callback allows you to customize the opening behavior, such as
-  /// adding animations or delays. Call `showOverlay` to actually show the menu.
-  final RawMenuAnchorOpenRequestedCallback? onOpenRequested;
-
-  /// Called when a request is made to close the menu.
-  ///
-  /// This callback allows you to customize the closing behavior, such as
-  /// adding animations or delays. Call `hideOverlay` to actually hide the menu.
-  final RawMenuAnchorCloseRequestedCallback? onCloseRequested;
-
-  /// Whether clicking outside closes the menu.
-  final bool closeOnClickOutside;
-
-  /// Focus node for the trigger widget.
-  final FocusNode? triggerFocusNode;
-
-  /// Positioning configuration for the overlay.
-  final OverlayPositionConfig positioning;
-
-  /// The controller that manages menu visibility.
+  /// Controller that manages show/hide of the underlying [RawMenuAnchor].
   final MenuController controller;
 
-  /// The outside tap consumption flag.
+  /// Called when an item is selected.
+  final ValueChanged<T>? onSelected;
+
+  /// Optional selected value to mark items with [WidgetState.selected].
+  final T? selectedValue;
+
+  /// Lifecycle callbacks.
+  final VoidCallback? onOpen;
+  final VoidCallback? onClose;
+
+  /// Called when the menu closes without selection.
+  final VoidCallback? onCanceled;
+
+  /// Open/close interceptors (e.g. for animations).
+  final RawMenuAnchorOpenRequestedCallback? onOpenRequested;
+
+  final RawMenuAnchorCloseRequestedCallback? onCloseRequested;
+
+  /// Whether taps outside the overlay should close the menu.
+  final bool closeOnClickOutside;
+
+  /// Whether outside taps on the trigger are consumed.
   final bool consumeOutsideTaps;
 
-  /// The root overlay usage flag.
+  /// Whether to target the root overlay instead of the nearest ancestor.
   final bool useRootOverlay;
+
+  /// Optional focus node for the trigger.
+  final FocusNode? triggerFocusNode;
+
+  /// Overlay positioning configuration.
+  final OverlayPositionConfig positioning;
+
+  @override
+  State<NakedMenu<T>> createState() => _NakedMenuState<T>();
+}
+
+class _NakedMenuState<T> extends State<NakedMenu<T>>
+    with OverlayStateMixin<NakedMenu<T>> {
+  bool get _isOpen => widget.controller.isOpen;
+
+  void _toggle() =>
+      _isOpen ? widget.controller.close() : widget.controller.open();
+
+  void _handleOpen() {
+    handleOpen(widget.onOpen);
+  }
+
+  void _handleClose() {
+    handleClose(
+      onClose: widget.onClose,
+      onCanceled: widget.onCanceled,
+      triggerFocusNode: widget.triggerFocusNode,
+    );
+  }
+
+  void _handleSelection(T value) {
+    markSelectionMade();
+    widget.onSelected?.call(value);
+  }
 
   @override
   Widget build(BuildContext context) {
     return AnchoredOverlayShell(
-      controller: controller,
-      overlayBuilder: overlayBuilder,
-      onOpen: onOpen,
-      onClose: onClose,
-      onOpenRequested: onOpenRequested ?? _defaultOnOpenRequested,
-      onCloseRequested: onCloseRequested ?? _defaultOnCloseRequested,
-      consumeOutsideTaps: consumeOutsideTaps,
-      useRootOverlay: useRootOverlay,
-      closeOnClickOutside: closeOnClickOutside,
-      triggerFocusNode: triggerFocusNode,
-      // Use only the offset for simple positioning; other fields are ignored
-      // by the shell to keep behavior simple and robust.
-      offset: positioning.offset,
-      child: builder(context),
-    );
-  }
-}
-
-/// A headless menu item without visuals.
-///
-/// Provides interaction states and accessibility for custom styling.
-///
-/// Example:
-/// ```dart
-/// NakedMenu(
-///   builder: (context) => Column(
-///     mainAxisSize: MainAxisSize.min,
-///     children: [
-///       NakedMenuItem(child: Text('Item 1'), onPressed: () {}),
-///     ],
-///   ),
-/// )
-/// ```
-///
-/// See also:
-/// - [NakedMenu], the container that provides overlay and positioning.
-/// - [NakedButton], the headless activator used to implement this item.
-class NakedMenuItem extends StatelessWidget {
-  /// Creates a menu item.
-  const NakedMenuItem({
-    super.key,
-    this.child,
-    this.onPressed,
-    this.enabled = true,
-    this.closeOnSelect = true,
-    this.mouseCursor = SystemMouseCursors.click,
-    this.enableFeedback = true,
-    this.focusNode,
-    this.autofocus = false,
-    this.onFocusChange,
-    this.onHoverChange,
-    this.onPressChange,
-    this.builder,
-    this.semanticLabel,
-  }) : assert(
-         child != null || builder != null,
-         'Either child or builder must be provided',
-       );
-
-  /// The item content.
-  final Widget? child;
-
-  /// Called when the item is selected.
-  final VoidCallback? onPressed;
-
-  /// The menu close flag when selected.
-  final bool closeOnSelect;
-
-  /// Called when focus changes.
-  final ValueChanged<bool>? onFocusChange;
-
-  /// Called when hover changes.
-  final ValueChanged<bool>? onHoverChange;
-
-  /// Called when press state changes.
-  final ValueChanged<bool>? onPressChange;
-
-  /// Builder that receives current interaction states.
-  final ValueWidgetBuilder<Set<WidgetState>>? builder;
-
-  /// The enabled state of the item.
-  final bool enabled;
-
-  /// Whether this menu item is effectively enabled.
-  bool get _effectiveEnabled => enabled && onPressed != null;
-
-  /// The mouse cursor for the item.
-  final MouseCursor mouseCursor;
-
-  /// The haptic feedback enablement flag.
-  final bool enableFeedback;
-
-  /// The focus node for the item.
-  final FocusNode? focusNode;
-
-  /// The autofocus flag.
-  final bool autofocus;
-
-  /// The semantic label for accessibility.
-  final String? semanticLabel;
-
-  void _handlePress(MenuController? controller) {
-    if (!_effectiveEnabled) return;
-    if (enableFeedback) {
-      HapticFeedback.lightImpact();
-    }
-    onPressed?.call();
-    if (closeOnSelect) {
-      controller?.close();
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final controller = MenuController.maybeOf(context);
-
-    void onPress() => _handlePress(controller);
-
-    return NakedButton(
-      onPressed: _effectiveEnabled ? onPress : null,
-      enabled: _effectiveEnabled,
-      mouseCursor: mouseCursor,
-      enableFeedback: enableFeedback,
-      focusNode: focusNode,
-      autofocus: autofocus,
-      onFocusChange: onFocusChange,
-      onHoverChange: onHoverChange,
-      onPressChange: onPressChange,
-      semanticLabel: semanticLabel,
-      child: child,
-      builder: builder,
+      controller: widget.controller,
+      overlayBuilder: (context, info) {
+        return _NakedMenuScope<T>(
+          onSelected: _handleSelection,
+          controller: widget.controller,
+          selectedValue: widget.selectedValue,
+          child: Builder(
+            builder: (context) => widget.overlayBuilder(context, info),
+          ),
+        );
+      },
+      onOpen: _handleOpen,
+      onClose: _handleClose,
+      onOpenRequested: widget.onOpenRequested,
+      onCloseRequested: widget.onCloseRequested,
+      consumeOutsideTaps: widget.consumeOutsideTaps,
+      useRootOverlay: widget.useRootOverlay,
+      closeOnClickOutside: widget.closeOnClickOutside,
+      triggerFocusNode: widget.triggerFocusNode,
+      offset: widget.positioning.offset,
+      child: Semantics(
+        toggled: _isOpen,
+        child: NakedButton(
+          onPressed: _toggle,
+          focusNode: widget.triggerFocusNode,
+          builder: (context, states, _) {
+            return widget.triggerBuilder(context, states);
+          },
+        ),
+      ),
     );
   }
 }

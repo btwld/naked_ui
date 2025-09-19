@@ -31,73 +31,155 @@ class SelectExample extends StatefulWidget {
 class _SelectExampleState extends State<SelectExample>
     with TickerProviderStateMixin {
   String? _selectedValue;
-  bool _isHovered = false;
-  bool _isFocused = false;
-
-  Color get borderColor {
-    if (_isFocused) return Colors.blue.shade600;
-    if (_isHovered) return Colors.grey.shade400;
-    return Colors.grey.shade300;
-  }
-
-  Color get backgroundColor {
-    if (_isFocused) return Colors.blue.shade50;
-    if (_isHovered) return Colors.grey.shade50;
-    return Colors.white;
-  }
 
   @override
   Widget build(BuildContext context) {
     return SizedBox(
       width: 200,
       child: NakedSelect<String>(
-        selectedValue: _selectedValue,
+        value: _selectedValue,
         closeOnSelect: true,
-        onSelectedValueChanged: (value) {
+        onChanged: (value) {
           setState(() => _selectedValue = value);
         },
-        overlay: Container(
-          margin: const EdgeInsets.only(top: 4),
-          padding: const EdgeInsets.symmetric(vertical: 8),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: Colors.grey.shade200,
-              width: 1,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.08),
-                blurRadius: 16,
-                offset: const Offset(0, 4),
-                spreadRadius: 0,
+        overlayBuilder: (context, info) {
+          return Container(
+            margin: const EdgeInsets.only(top: 4),
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: Colors.grey.shade200,
+                width: 1,
               ),
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.04),
-                blurRadius: 4,
-                offset: const Offset(0, 2),
-                spreadRadius: 0,
-              ),
-            ],
-          ),
-          child: SizedBox(
-            width: 200,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                _buildSelectOption('Option 1'),
-                _buildSelectOption('Option 2'),
-                _buildSelectOption('Option 3'),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.08),
+                  blurRadius: 16,
+                  offset: const Offset(0, 4),
+                  spreadRadius: 0,
+                ),
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.04),
+                  blurRadius: 4,
+                  offset: const Offset(0, 2),
+                  spreadRadius: 0,
+                ),
               ],
             ),
-          ),
-        ),
-        child: NakedSelectTrigger(
-          onFocusChange: (focused) => setState(() => _isFocused = focused),
-          onHoverChange: (hovered) => setState(() => _isHovered = hovered),
-          child: AnimatedContainer(
+            child: SizedBox(
+              width: 200,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  NakedSelectOption<String>(
+                    value: 'Option 1',
+                    builder: (context, states, child) {
+                      final isHovered = states.contains(WidgetState.hovered);
+                      final isSelected = states.contains(WidgetState.selected);
+
+                      return Container(
+                        margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                        decoration: BoxDecoration(
+                          color: isSelected
+                              ? Colors.blue.shade50
+                              : isHovered
+                                  ? Colors.grey.shade100
+                                  : Colors.transparent,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          'Option 1',
+                          style: TextStyle(
+                            color: isSelected ? Colors.blue.shade700 : Colors.grey.shade800,
+                            fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                  NakedSelectOption<String>(
+                    value: 'Option 2',
+                    builder: (context, states, child) {
+                      final isHovered = states.contains(WidgetState.hovered);
+                      final isSelected = states.contains(WidgetState.selected);
+
+                      return Container(
+                        margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                        decoration: BoxDecoration(
+                          color: isSelected
+                              ? Colors.blue.shade50
+                              : isHovered
+                                  ? Colors.grey.shade100
+                                  : Colors.transparent,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          'Option 2',
+                          style: TextStyle(
+                            color: isSelected ? Colors.blue.shade700 : Colors.grey.shade800,
+                            fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                  NakedSelectOption<String>(
+                    value: 'Option 3',
+                    builder: (context, states, child) {
+                      final isHovered = states.contains(WidgetState.hovered);
+                      final isSelected = states.contains(WidgetState.selected);
+
+                      return Container(
+                        margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                        decoration: BoxDecoration(
+                          color: isSelected
+                              ? Colors.blue.shade50
+                              : isHovered
+                                  ? Colors.grey.shade100
+                                  : Colors.transparent,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          'Option 3',
+                          style: TextStyle(
+                            color: isSelected ? Colors.blue.shade700 : Colors.grey.shade800,
+                            fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+        triggerBuilder: (context, states) {
+          final isFocused = states.contains(WidgetState.focused);
+          final isHovered = states.contains(WidgetState.hovered);
+
+          Color borderColor;
+          if (isFocused) {
+            borderColor = Colors.blue.shade600;
+          } else if (isHovered) {
+            borderColor = Colors.grey.shade400;
+          } else {
+            borderColor = Colors.grey.shade300;
+          }
+
+          final Color backgroundColor = isFocused
+              ? Colors.blue.shade50
+              : isHovered
+                  ? Colors.grey.shade50
+                  : Colors.white;
+
+          return AnimatedContainer(
             duration: const Duration(milliseconds: 200),
             curve: Curves.easeInOut,
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -109,7 +191,7 @@ class _SelectExampleState extends State<SelectExample>
               ),
               borderRadius: BorderRadius.circular(12),
               boxShadow: [
-                if (_isFocused)
+                if (isFocused)
                   BoxShadow(
                     color: Colors.blue.shade200.withValues(alpha: 0.3),
                     blurRadius: 8,
@@ -137,7 +219,7 @@ class _SelectExampleState extends State<SelectExample>
                 ),
                 AnimatedRotation(
                   duration: const Duration(milliseconds: 200),
-                  turns: _isFocused ? 0.5 : 0,
+                  turns: isFocused ? 0.5 : 0,
                   child: Icon(
                     Icons.expand_more,
                     size: 20,
@@ -146,43 +228,10 @@ class _SelectExampleState extends State<SelectExample>
                 ),
               ],
             ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSelectOption(String value) {
-    final isSelected = _selectedValue == value;
-
-    return NakedSelectItem<String>(
-      value: value,
-      child: NakedButton(
-        onPressed: () {}, // NakedSelectItem handles the selection
-        builder: (context, states, child) {
-          final isHovered = states.contains(WidgetState.hovered);
-
-          return Container(
-            margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-            decoration: BoxDecoration(
-              color: isSelected
-                  ? Colors.blue.shade50
-                  : isHovered
-                      ? Colors.grey.shade100
-                      : Colors.transparent,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Text(
-              value,
-              style: TextStyle(
-                color: isSelected ? Colors.blue.shade700 : Colors.grey.shade800,
-                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-              ),
-            ),
           );
         },
       ),
     );
   }
+
 }

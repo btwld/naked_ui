@@ -1,43 +1,33 @@
 import 'package:flutter/widgets.dart';
 
+// Accordion
+import 'api/naked_accordion.0.dart' as accordion_example;
+import 'api/naked_button.0.dart' as button_basic_example;
 // Button
 import 'api/naked_button.1.dart' as button_advanced_example;
-import 'api/naked_button.0.dart' as button_basic_example;
-
 // Checkbox
 import 'api/naked_checkbox.0.dart' as checkbox_basic_example;
 import 'api/naked_checkbox.2.dart' as checkbox_builder_example;
-
+// Dialog
+import 'api/naked_dialog.0.dart' as dialog_basic_example;
+// Menu
+import 'api/naked_menu.0.dart' as menu_example;
+import 'api/naked_radio.0.dart' as radio_basic_example;
 // Radio
 import 'api/naked_radio.1.dart' as radio_group_example;
-import 'api/naked_radio.0.dart' as radio_basic_example;
-
 // Select
 import 'api/naked_select.0.dart' as select_example;
 import 'api/naked_select.1.dart' as select_animated_example;
-import 'api/naked_select.2.dart' as select_multi_example;
+import 'api/naked_select.2.dart' as select_builder_example;
 import 'api/naked_select.3.dart' as select_searchable_example;
-
-// Tabs
-import 'api/naked_tabs.0.dart' as tabs_example;
-
 // Slider
 import 'api/naked_slider.0.dart' as slider_example;
-
+// Tabs
+import 'api/naked_tabs.0.dart' as tabs_example;
 // TextField
 import 'api/naked_textfield.0.dart' as textfield_example;
-
-// Menu
-import 'api/naked_menu.0.dart' as menu_example;
-
-// Accordion
-import 'api/naked_accordion.0.dart' as accordion_example;
-
 // Tooltip
 import 'api/naked_tooltip.0.dart' as tooltip_example;
-
-// Dialog
-import 'api/naked_dialog.0.dart' as dialog_basic_example;
 
 class Demo {
   final String id; // slug used in routes
@@ -132,13 +122,14 @@ class DemoRegistry {
       tags: ['select', 'animation'],
     ),
     Demo(
-      id: 'select-multi',
-      title: 'Select – Multi-Select',
+      id: 'select-animated-builder',
+      title: 'Select – Animated Builder',
       category: 'Select',
-      builder: (_) => const select_multi_example.AnimatedMultiSelectExample(),
+      builder: (_) =>
+          const select_builder_example.AnimatedBuilderSelectExample(),
       sourceUrl:
           'https://github.com/btwld/naked_ui/blob/main/example/lib/api/naked_select.2.dart',
-      tags: ['select', 'multiple', 'checkbox'],
+      tags: ['select', 'builder', 'animation'],
     ),
     Demo(
       id: 'select-searchable',

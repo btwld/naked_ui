@@ -14,77 +14,38 @@ class MyApp extends StatelessWidget {
       home: Scaffold(
         backgroundColor: Colors.white,
         body: Center(
-          child: AnimatedMultiSelectExample(),
+          child: AnimatedBuilderSelectExample(),
         ),
       ),
     );
   }
 }
 
-class AnimatedMultiSelectExample extends StatefulWidget {
-  const AnimatedMultiSelectExample({super.key});
+class AnimatedBuilderSelectExample extends StatefulWidget {
+  const AnimatedBuilderSelectExample({super.key});
 
   @override
-  State<AnimatedMultiSelectExample> createState() =>
-      _AnimatedMultiSelectExampleState();
+  State<AnimatedBuilderSelectExample> createState() =>
+      _AnimatedBuilderSelectExampleState();
 }
 
-class _AnimatedMultiSelectExampleState extends State<AnimatedMultiSelectExample>
-    with TickerProviderStateMixin {
-  final Set<String> _selectedValues = {};
-  bool _isHovered = false;
-  bool _isFocused = false;
+class _AnimatedBuilderSelectExampleState
+    extends State<AnimatedBuilderSelectExample> with TickerProviderStateMixin {
+  String? _selectedValue;
 
-  late final _animationController = AnimationController(
+  late final AnimationController _controller = AnimationController(
     duration: const Duration(milliseconds: 200),
     vsync: this,
   );
 
-  late final _animation = CurvedAnimation(
-    parent: _animationController,
+  late final CurvedAnimation _fade = CurvedAnimation(
+    parent: _controller,
     curve: Curves.easeOut,
   );
 
-  Color get borderColor {
-    if (_isFocused) return Colors.grey.shade800;
-    if (_isHovered) return Colors.grey.shade100;
-    return Colors.grey.shade300;
-  }
-
-  Color get backgroundColor {
-    if (_isHovered) return Colors.grey.shade100;
-    return Colors.white;
-  }
-
-  List<BoxShadow> get boxShadow {
-    if (_isFocused) {
-      return [
-        BoxShadow(
-          color: Colors.grey.shade300,
-          blurRadius: 0,
-          spreadRadius: 4,
-          offset: Offset.zero,
-        ),
-        const BoxShadow(
-          color: Colors.white,
-          blurRadius: 0,
-          spreadRadius: 2,
-          offset: Offset.zero,
-        ),
-      ];
-    }
-    return [
-      BoxShadow(
-        color: Colors.black.withValues(alpha: 0.02),
-        blurRadius: 8,
-        offset: const Offset(0, 2),
-      ),
-    ];
-  }
-
   @override
   void dispose() {
-    _animationController.dispose();
+    _controller.dispose();
     super.dispose();
   }
 
@@ -92,32 +53,24 @@ class _AnimatedMultiSelectExampleState extends State<AnimatedMultiSelectExample>
   Widget build(BuildContext context) {
     return SizedBox(
       width: 300,
-      child: NakedSelect<String>.multiple(
-        selectedValues: _selectedValues,
-        closeOnSelect: false,
-        onSelectedValuesChanged: (values) {
-          if (values.length >= 3) {
-            return;
-          }
-          setState(() => _selectedValues.clear());
-          setState(() => _selectedValues.addAll(values));
-        },
-        onOpen: () => _animationController.forward(),
-        onClose: () => _animationController.reverse(),
-        overlay: ScaleTransition(
-          scale: _animationController.drive(Tween<double>(
-            begin: 0.98,
-            end: 1,
-          )),
-          child: SlideTransition(
-            position: _animationController.drive(Tween<Offset>(
-              begin: const Offset(0, -0.05),
-              end: Offset.zero,
+      child: NakedSelect<String>(
+        value: _selectedValue,
+        onChanged: (value) => setState(() => _selectedValue = value),
+        onOpen: _controller.forward,
+        onClose: _controller.reverse,
+        overlayBuilder: (context, info) {
+          return ScaleTransition(
+            scale: _controller.drive(Tween<double>(
+              begin: 0.98,
+              end: 1,
             )),
-            child: FadeTransition(
-              opacity: _animation,
-              child: SizedBox(
-                width: 300,
+            child: SlideTransition(
+              position: _controller.drive(Tween<Offset>(
+                begin: const Offset(0, -0.05),
+                end: Offset.zero,
+              )),
+              child: FadeTransition(
+                opacity: _fade,
                 child: Container(
                   margin: const EdgeInsets.only(top: 4),
                   padding:
@@ -137,37 +90,222 @@ class _AnimatedMultiSelectExampleState extends State<AnimatedMultiSelectExample>
                       ),
                     ],
                   ),
-                  child: const Column(
+                  child: Column(
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      SelectItem(
+                      NakedSelectOption<String>(
                         value: 'Apple',
-                        label: 'Apple',
+                        builder: (context, states, child) {
+                          final bool isHovered = states.contains(WidgetState.hovered);
+                          final bool isSelected = states.contains(WidgetState.selected);
+
+                          final Color backgroundColor = isSelected
+                              ? (isHovered ? Colors.blue.shade100 : Colors.blue.shade50)
+                              : (isHovered ? Colors.grey.shade100 : Colors.transparent);
+
+                          return AnimatedContainer(
+                            duration: const Duration(milliseconds: 150),
+                            curve: Curves.easeInOut,
+                            margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                            decoration: BoxDecoration(
+                              color: backgroundColor,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    'Apple',
+                                    style: TextStyle(
+                                      color:
+                                          isSelected ? Colors.blue.shade700 : Colors.grey.shade800,
+                                      fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                                    ),
+                                  ),
+                                ),
+                                if (isSelected)
+                                  Icon(
+                                    Icons.check_rounded,
+                                    size: 18,
+                                    color: Colors.blue.shade600,
+                                  ),
+                              ],
+                            ),
+                          );
+                        },
                       ),
-                      SelectItem(
+                      NakedSelectOption<String>(
                         value: 'Banana',
-                        label: 'Banana',
+                        builder: (context, states, child) {
+                          final bool isHovered = states.contains(WidgetState.hovered);
+                          final bool isSelected = states.contains(WidgetState.selected);
+
+                          final Color backgroundColor = isSelected
+                              ? (isHovered ? Colors.blue.shade100 : Colors.blue.shade50)
+                              : (isHovered ? Colors.grey.shade100 : Colors.transparent);
+
+                          return AnimatedContainer(
+                            duration: const Duration(milliseconds: 150),
+                            curve: Curves.easeInOut,
+                            margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                            decoration: BoxDecoration(
+                              color: backgroundColor,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    'Banana',
+                                    style: TextStyle(
+                                      color:
+                                          isSelected ? Colors.blue.shade700 : Colors.grey.shade800,
+                                      fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                                    ),
+                                  ),
+                                ),
+                                if (isSelected)
+                                  Icon(
+                                    Icons.check_rounded,
+                                    size: 18,
+                                    color: Colors.blue.shade600,
+                                  ),
+                              ],
+                            ),
+                          );
+                        },
                       ),
-                      SelectItem(
+                      NakedSelectOption<String>(
                         value: 'Orange',
-                        label: 'Orange',
+                        builder: (context, states, child) {
+                          final bool isHovered = states.contains(WidgetState.hovered);
+                          final bool isSelected = states.contains(WidgetState.selected);
+
+                          final Color backgroundColor = isSelected
+                              ? (isHovered ? Colors.blue.shade100 : Colors.blue.shade50)
+                              : (isHovered ? Colors.grey.shade100 : Colors.transparent);
+
+                          return AnimatedContainer(
+                            duration: const Duration(milliseconds: 150),
+                            curve: Curves.easeInOut,
+                            margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                            decoration: BoxDecoration(
+                              color: backgroundColor,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    'Orange',
+                                    style: TextStyle(
+                                      color:
+                                          isSelected ? Colors.blue.shade700 : Colors.grey.shade800,
+                                      fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                                    ),
+                                  ),
+                                ),
+                                if (isSelected)
+                                  Icon(
+                                    Icons.check_rounded,
+                                    size: 18,
+                                    color: Colors.blue.shade600,
+                                  ),
+                              ],
+                            ),
+                          );
+                        },
                       ),
-                      SelectItem(
+                      NakedSelectOption<String>(
                         value: 'Mango',
-                        label: 'Mango',
+                        builder: (context, states, child) {
+                          final bool isHovered = states.contains(WidgetState.hovered);
+                          final bool isSelected = states.contains(WidgetState.selected);
+
+                          final Color backgroundColor = isSelected
+                              ? (isHovered ? Colors.blue.shade100 : Colors.blue.shade50)
+                              : (isHovered ? Colors.grey.shade100 : Colors.transparent);
+
+                          return AnimatedContainer(
+                            duration: const Duration(milliseconds: 150),
+                            curve: Curves.easeInOut,
+                            margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                            decoration: BoxDecoration(
+                              color: backgroundColor,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    'Mango',
+                                    style: TextStyle(
+                                      color:
+                                          isSelected ? Colors.blue.shade700 : Colors.grey.shade800,
+                                      fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                                    ),
+                                  ),
+                                ),
+                                if (isSelected)
+                                  Icon(
+                                    Icons.check_rounded,
+                                    size: 18,
+                                    color: Colors.blue.shade600,
+                                  ),
+                              ],
+                            ),
+                          );
+                        },
                       ),
                     ],
                   ),
                 ),
               ),
             ),
-          ),
-        ),
-        child: NakedSelectTrigger(
-          onFocusChange: (focused) => setState(() => _isFocused = focused),
-          onHoverChange: (hovered) => setState(() => _isHovered = hovered),
-          child: AnimatedContainer(
+          );
+        },
+        triggerBuilder: (context, states) {
+          final bool isFocused = states.contains(WidgetState.focused);
+          final bool isHovered = states.contains(WidgetState.hovered);
+
+          final Color borderColor = isFocused
+              ? Colors.grey.shade800
+              : isHovered
+                  ? Colors.grey.shade100
+                  : Colors.grey.shade300;
+
+          final Color backgroundColor =
+              isHovered ? Colors.grey.shade100 : Colors.white;
+
+          final List<BoxShadow> boxShadow = isFocused
+              ? [
+                  BoxShadow(
+                    color: Colors.grey.shade300,
+                    blurRadius: 0,
+                    spreadRadius: 4,
+                    offset: Offset.zero,
+                  ),
+                  const BoxShadow(
+                    color: Colors.white,
+                    blurRadius: 0,
+                    spreadRadius: 2,
+                    offset: Offset.zero,
+                  ),
+                ]
+              : [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.02),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ];
+
+          return AnimatedContainer(
             duration: const Duration(milliseconds: 200),
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             decoration: BoxDecoration(
@@ -181,19 +319,12 @@ class _AnimatedMultiSelectExampleState extends State<AnimatedMultiSelectExample>
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Expanded(
-                  child: _selectedValues.isEmpty
-                      ? const Text('Select 2 of your favorites fruits')
-                      : Row(
-                          spacing: 6,
-                          children: _selectedValues
-                              .map(
-                                (e) => SelectedItem(value: e, label: e),
-                              )
-                              .toList(),
-                        ),
+                  child: Text(
+                    _selectedValue ?? 'Select your favorite fruit',
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
                 const Icon(
                   Icons.keyboard_arrow_down_rounded,
@@ -202,124 +333,10 @@ class _AnimatedMultiSelectExampleState extends State<AnimatedMultiSelectExample>
                 ),
               ],
             ),
-          ),
-        ),
+          );
+        },
       ),
     );
   }
-}
 
-class SelectedItem extends StatefulWidget {
-  const SelectedItem({
-    super.key,
-    required this.value,
-    required this.label,
-  });
-
-  final String value;
-  final String label;
-
-  @override
-  State<SelectedItem> createState() => _SelectedItemState();
-}
-
-class _SelectedItemState extends State<SelectedItem> {
-  @override
-  Widget build(BuildContext context) {
-    return NakedSelectItem<String>(
-      value: widget.value,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
-        decoration: BoxDecoration(
-          color: Colors.grey.shade100,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(
-            color: Colors.grey.shade300,
-            width: 1,
-          ),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          spacing: 4,
-          children: [
-            Text(widget.label,
-                style: TextStyle(fontSize: 12, color: Colors.grey.shade700)),
-            const Icon(
-              Icons.close_rounded,
-              size: 16,
-              color: Colors.grey,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class SelectItem extends StatefulWidget {
-  const SelectItem({
-    super.key,
-    required this.value,
-    required this.label,
-  });
-
-  final String value;
-  final String label;
-
-  @override
-  State<SelectItem> createState() => _SelectItemState();
-}
-
-class _SelectItemState extends State<SelectItem> {
-  bool _isHovered = false;
-  bool _isSelected = false;
-
-  Color get backgroundColor {
-    if (_isSelected) {
-      return _isHovered
-          ? Colors.blue.shade100
-          : Colors.blue.shade50;
-    }
-    return _isHovered
-        ? Colors.grey.shade100
-        : Colors.transparent;
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return NakedSelectItem<String>(
-      value: widget.value,
-      onHoverChange: (hovered) => setState(() => _isHovered = hovered),
-      onSelectChange: (selected) => setState(() => _isSelected = selected),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 150),
-        curve: Curves.easeInOut,
-        margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        decoration: BoxDecoration(
-          color: backgroundColor,
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Row(
-          children: [
-            Expanded(
-              child: Text(
-                widget.label,
-                style: TextStyle(
-                  color: _isSelected ? Colors.blue.shade700 : Colors.grey.shade800,
-                  fontWeight: _isSelected ? FontWeight.w600 : FontWeight.w500,
-                ),
-              ),
-            ),
-            if (_isSelected)
-              Icon(
-                Icons.check_rounded,
-                size: 18,
-                color: Colors.blue.shade600,
-              ),
-          ],
-        ),
-      ),
-    );
-  }
 }
