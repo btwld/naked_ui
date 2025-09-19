@@ -86,13 +86,28 @@ class _CyberpunkSelectExampleState extends State<CyberpunkSelectExample> {
   Widget _buildOption(Fruit fruit) {
     return NakedSelect.Option(
       value: fruit.value,
-      builder: (context, states, _) {
-        final selected = states.contains(WidgetState.selected);
-        final hovered = states.contains(WidgetState.hovered);
+      builder: (context, state, _) {
+        final backdropColor = state.when<Color>(
+          selected: const Color(0xFF001100),
+          hovered: const Color(0xFF001A00),
+          orElse: Colors.transparent,
+        );
+        final borderColor = state.when<Color>(
+          selected: const Color(0xFF00FF41),
+          hovered: const Color(0xFF00FF41),
+          orElse: Colors.transparent,
+        );
+        final textColor = state.when<Color>(
+          selected: const Color(0xFF00FF41),
+          hovered: const Color(0xFF00AA33),
+          orElse: const Color(0xFF00AA33),
+        );
+        final isSelected = state.isSelected;
+        final isHovered = state.isHovered;
 
         final textStyle = TextStyle(
-          color: selected ? const Color(0xFF00FF41) : const Color(0xFF00AA33),
-          fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
+          color: textColor,
+          fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
           fontFamily: 'monospace',
         );
 
@@ -102,18 +117,11 @@ class _CyberpunkSelectExampleState extends State<CyberpunkSelectExample> {
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             decoration: BoxDecoration(
-              color: selected
-                  ? const Color(0xFF001100)
-                  : hovered
-                      ? const Color(0xFF001A00)
-                      : Colors.transparent,
-              border: Border.all(
-                color: selected || hovered
-                    ? const Color(0xFF00FF41)
-                    : Colors.transparent,
-                width: 1,
-              ),
-              boxShadow: selected || hovered
+              color: backdropColor,
+              border: Border.all(color: borderColor, width: 1),
+              boxShadow: state.matchesAny(
+                const [WidgetState.selected, WidgetState.hovered],
+              )
                   ? [
                       BoxShadow(
                         color: const Color(0xFF00FF41).withValues(alpha: 0.3),
@@ -135,7 +143,7 @@ class _CyberpunkSelectExampleState extends State<CyberpunkSelectExample> {
                     fruit.emoji,
                     style: TextStyle(
                       fontSize: 16,
-                      shadows: selected || hovered
+                      shadows: isSelected || isHovered
                           ? [
                               const Shadow(
                                 color: Color(0xFF00FF41),
@@ -152,7 +160,7 @@ class _CyberpunkSelectExampleState extends State<CyberpunkSelectExample> {
                     style: textStyle,
                   ),
                 ),
-                if (selected)
+                if (state.isSelected)
                   const Icon(
                     Icons.keyboard_arrow_right,
                     size: 16,
@@ -173,9 +181,9 @@ class _CyberpunkSelectExampleState extends State<CyberpunkSelectExample> {
       child: NakedSelect<String>(
         value: _selectedValue,
         onChanged: (value) => setState(() => _selectedValue = value),
-        triggerBuilder: (context, states) {
-          final focused = states.contains(WidgetState.focused);
-          final hovered = states.contains(WidgetState.hovered);
+        triggerBuilder: (context, state) {
+          final focused = state.isFocused;
+          final hovered = state.isHovered;
 
           return Transform(
             transform: Matrix4.identity()

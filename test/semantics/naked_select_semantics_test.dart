@@ -1,5 +1,7 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/semantics.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:naked_ui/naked_ui.dart';
 
@@ -17,7 +19,7 @@ void main() {
       value: selectedValue,
       onChanged: enabled ? (value) {} : null,
       enabled: enabled,
-      triggerBuilder: (context, states) => const Text('Select Option'),
+      triggerBuilder: (context, state) => const Text('Select Option'),
       overlayBuilder: (context, info) => Container(
         width: 200,
         padding: const EdgeInsets.all(8),
@@ -129,7 +131,58 @@ void main() {
       handle.dispose();
     });
 
-    testWidgets('keyboard navigation semantics', (tester) async {}, skip: true);
+    testWidgets('keyboard navigation semantics', (tester) async {
+      final handle = tester.ensureSemantics();
+      final focusNode = FocusNode();
+
+      await tester.pumpWidget(
+        _buildTestApp(
+          NakedSelect<String>(
+            triggerFocusNode: focusNode,
+            triggerBuilder: (context, state) => const Text('Select option'),
+            overlayBuilder: (context, info) => const Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                NakedSelectOption<String>(value: 'apple', child: Text('Apple')),
+                NakedSelectOption<String>(
+                  value: 'banana',
+                  child: Text('Banana'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+
+      // Focus the trigger
+      focusNode.requestFocus();
+      await tester.pump();
+
+      // Verify trigger has keyboard semantics
+      final triggerSemantics = tester.getSemantics(find.text('Select option'));
+      expect(
+        triggerSemantics.getSemanticsData().hasAction(SemanticsAction.tap),
+        isTrue,
+      );
+      expect(
+        triggerSemantics.getSemanticsData().flagsCollection.isFocused,
+        isTrue,
+      );
+
+      // Open with keyboard
+      await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+      await tester.pumpAndSettle();
+
+      // Verify overlay items have proper keyboard semantics
+      final appleSemantics = tester.getSemantics(find.text('Apple'));
+      expect(
+        appleSemantics.getSemanticsData().hasAction(SemanticsAction.tap),
+        isTrue,
+      );
+
+      handle.dispose();
+      focusNode.dispose();
+    });
 
     testWidgets('focus management semantics', (tester) async {
       final handle = tester.ensureSemantics();
@@ -141,7 +194,7 @@ void main() {
             value: 'option1',
             onChanged: (value) {},
             triggerFocusNode: focusNode,
-            triggerBuilder: (context, states) => const Text('Focusable Select'),
+            triggerBuilder: (context, state) => const Text('Focusable Select'),
             overlayBuilder: (context, info) => Container(
               width: 200,
               padding: const EdgeInsets.all(8),
@@ -200,7 +253,7 @@ void main() {
             value: 'option1',
             onChanged: (value) {},
             semanticLabel: 'Choose an option',
-            triggerBuilder: (context, states) => const Text('Labeled Select'),
+            triggerBuilder: (context, state) => const Text('Labeled Select'),
             overlayBuilder: (context, info) => Container(
               width: 200,
               padding: const EdgeInsets.all(8),

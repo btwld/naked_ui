@@ -84,9 +84,17 @@ class _CheckmarkSelectExampleState extends State<CheckmarkSelectExample> {
   Widget _buildOptionWithCheckmark(Fruit fruit) {
     return NakedSelect.Option(
       value: fruit.value,
-      builder: (context, states, _) {
-        final hovered = states.contains(WidgetState.hovered);
-        final selected = states.contains(WidgetState.selected);
+      builder: (context, state, _) {
+        final backgroundColor = state.when<Color?>(
+          selected: Colors.blue.shade50,
+          hovered: Colors.grey.shade100,
+          orElse: Colors.transparent,
+        );
+
+        final textColor = state.when<Color>(
+          selected: Colors.blue,
+          orElse: Colors.black,
+        );
 
         return AnimatedContainer(
           duration: const Duration(milliseconds: 200),
@@ -94,11 +102,7 @@ class _CheckmarkSelectExampleState extends State<CheckmarkSelectExample> {
           margin: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
           decoration: BoxDecoration(
-            color: selected
-                ? Colors.blue.shade50
-                : hovered
-                    ? Colors.grey.shade100
-                    : Colors.transparent,
+            color: backgroundColor,
             borderRadius: BorderRadius.circular(8),
           ),
           child: Row(
@@ -112,14 +116,15 @@ class _CheckmarkSelectExampleState extends State<CheckmarkSelectExample> {
                 child: Text(
                   fruit.label,
                   style: TextStyle(
-                    color: selected ? Colors.blue : Colors.black,
-                    fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
+                    color: textColor,
+                    fontWeight:
+                        state.isSelected ? FontWeight.w600 : FontWeight.w500,
                     fontSize: 14,
                   ),
                 ),
               ),
               AnimatedScale(
-                scale: selected ? 1.0 : 0.0,
+                scale: state.isSelected ? 1.0 : 0.0,
                 duration: const Duration(milliseconds: 200),
                 curve: Curves.easeOutBack,
                 child: Container(
@@ -149,9 +154,9 @@ class _CheckmarkSelectExampleState extends State<CheckmarkSelectExample> {
       child: NakedSelect<String>(
         value: _selectedValue,
         onChanged: (value) => setState(() => _selectedValue = value),
-        triggerBuilder: (context, states) {
-          final focused = states.contains(WidgetState.focused);
-          final hovered = states.contains(WidgetState.hovered);
+        triggerBuilder: (context, state) {
+          final focused = state.isFocused;
+          final hovered = state.isHovered;
 
           return AnimatedContainer(
             duration: const Duration(milliseconds: 200),
@@ -185,9 +190,8 @@ class _CheckmarkSelectExampleState extends State<CheckmarkSelectExample> {
                   child: Text(
                     _selectedFruit?.label ?? 'Choose your favorite fruit...',
                     style: TextStyle(
-                      color: _selectedFruit != null
-                          ? Colors.black
-                          : Colors.grey,
+                      color:
+                          _selectedFruit != null ? Colors.black : Colors.grey,
                       fontSize: 14,
                       fontWeight: FontWeight.w500,
                     ),

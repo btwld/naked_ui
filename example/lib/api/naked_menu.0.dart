@@ -59,8 +59,8 @@ class _SimpleMenuExampleState extends State<SimpleMenuExample> {
           SnackBar(content: Text('Selected: $item')),
         );
       },
-      triggerBuilder: (context, states) {
-        final isPressed = states.contains(WidgetState.pressed);
+      triggerBuilder: (context, state) {
+        final isPressed = state.isPressed;
         return Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
@@ -104,8 +104,8 @@ class _SimpleMenuExampleState extends State<SimpleMenuExample> {
             children: [
               NakedMenuItem<String>(
                 value: 'edit',
-                builder: (context, states, _) {
-                  final hovered = states.contains(WidgetState.hovered);
+                builder: (context, state, _) {
+                  final hovered = state.isHovered;
                   return Container(
                     padding:
                         const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -122,8 +122,8 @@ class _SimpleMenuExampleState extends State<SimpleMenuExample> {
               ),
               NakedMenuItem<String>(
                 value: 'copy',
-                builder: (context, states, _) {
-                  final hovered = states.contains(WidgetState.hovered);
+                builder: (context, state, _) {
+                  final hovered = state.isHovered;
                   return Container(
                     padding:
                         const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -144,8 +144,8 @@ class _SimpleMenuExampleState extends State<SimpleMenuExample> {
               Container(height: 1, color: Colors.grey.shade200),
               NakedMenuItem<String>(
                 value: 'delete',
-                builder: (context, states, _) {
-                  final hovered = states.contains(WidgetState.hovered);
+                builder: (context, state, _) {
+                  final hovered = state.isHovered;
                   return Container(
                     padding:
                         const EdgeInsets.symmetric(horizontal: 12, vertical: 8),

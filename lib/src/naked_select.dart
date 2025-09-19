@@ -4,6 +4,44 @@ import 'base/overlay_base.dart';
 import 'naked_button.dart';
 import 'utilities/anchored_overlay_shell.dart';
 import 'utilities/positioning.dart';
+import 'utilities/widget_state_snapshot.dart';
+
+/// State snapshot provided to [NakedSelect.triggerBuilder].
+class NakedSelectState<T> extends NakedWidgetStateSnapshot {
+  /// Whether the overlay is currently open.
+  final bool isOpen;
+
+  /// Currently selected value, if any.
+  final T? value;
+
+  NakedSelectState({
+    required super.states,
+    required this.isOpen,
+    required this.value,
+  });
+
+  /// Convenience flag to check if a selection exists.
+  bool get hasValue => value != null;
+}
+
+/// State snapshot provided to [NakedSelectOption] builders.
+class NakedSelectItemState<T> extends NakedWidgetStateSnapshot {
+  /// The option's value.
+  final T value;
+
+  /// The currently selected value from the surrounding select.
+  final T? selectedValue;
+
+  NakedSelectItemState({
+    required super.states,
+    required this.value,
+    required this.selectedValue,
+  });
+
+  /// Whether this option matches the current selection.
+  bool get isCurrentSelection =>
+      selectedValue != null && value == selectedValue;
+}
 
 /// Internal scope provided by [NakedSelect] to its overlay subtree.
 class _NakedSelectScope<T> extends OverlayScope<T> {
@@ -49,7 +87,7 @@ class _NakedSelectScope<T> extends OverlayScope<T> {
 ///
 /// This enables fully declarative composition inside [NakedSelect.overlayBuilder]
 /// without relying on the data-driven approach.
-class NakedSelectOption<T> extends OverlayItem<T> {
+class NakedSelectOption<T> extends OverlayItem<T, NakedSelectItemState<T>> {
   const NakedSelectOption({
     super.key,
     required super.value,
@@ -81,6 +119,11 @@ class NakedSelectOption<T> extends OverlayItem<T> {
       onPressed: onPressed,
       effectiveEnabled: effectiveEnabled,
       additionalStates: additionalStates,
+      mapStates: (states) => NakedSelectItemState<T>(
+        states: states,
+        value: value,
+        selectedValue: scope.value,
+      ),
     );
   }
 }
@@ -115,7 +158,7 @@ class NakedSelect<T> extends StatefulWidget {
   static final Option = NakedSelectOption.new;
 
   /// Builds the trigger surface.
-  final Widget Function(BuildContext context, Set<WidgetState> states)
+  final Widget Function(BuildContext context, NakedSelectState<T> state)
   triggerBuilder;
 
   /// Builds the overlay panel.
@@ -232,7 +275,14 @@ class _NakedSelectState<T> extends State<NakedSelect<T>>
           enabled: widget.enabled,
           focusNode: widget.triggerFocusNode,
           builder: (context, states, _) {
-            return widget.triggerBuilder(context, states);
+            return widget.triggerBuilder(
+              context,
+              NakedSelectState<T>(
+                states: states,
+                isOpen: _isOpen,
+                value: widget.value,
+              ),
+            );
           },
         ),
       ),

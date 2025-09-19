@@ -87,9 +87,9 @@ class _AnimatedSelectExampleState extends State<AnimatedSelectExample>
             ),
           );
         },
-        triggerBuilder: (context, states) {
-          final bool isHovered = states.contains(WidgetState.hovered);
-          final bool isFocused = states.contains(WidgetState.focused);
+        triggerBuilder: (context, state) {
+          final bool isHovered = state.isHovered;
+          final bool isFocused = state.isFocused;
 
           final Color borderColor = isFocused
               ? Colors.grey.shade800
@@ -150,7 +150,7 @@ class _AnimatedSelectExampleState extends State<AnimatedSelectExample>
 ```dart
 const NakedSelect({
   Key? key,
-  required Widget Function(BuildContext, Set<WidgetState>) triggerBuilder,
+  required Widget Function(BuildContext, NakedSelectState<T>) triggerBuilder,
   required Widget Function(
     BuildContext,
     RawMenuOverlayInfo,
@@ -177,8 +177,8 @@ const NakedSelect({
 
 ### Properties
 
-#### triggerBuilder → `Widget Function(BuildContext, Set<WidgetState>)`
-Builds the interactive surface that opens the menu. Receive the current widget states so you can style hover, focus, pressed, or selected visuals.
+#### triggerBuilder → `Widget Function(BuildContext, NakedSelectState<T>)`
+Builds the interactive surface that opens the menu. Receives a typed [`NakedSelectState<T>`](#nakedselectstate) with convenience helpers like `isHovered`, `isFocused`, and `isOpen` plus access to the currently selected value.
 
 #### overlayBuilder → `Widget Function(BuildContext, RawMenuOverlayInfo, List<Widget>)`
 Builds the overlay content. The `itemWidgets` list already wraps each [NakedSelectItem] with selection + enabled logic. Use the provided `info` if you need anchor bounds or controller access.
@@ -229,7 +229,7 @@ const NakedSelectItem({
   required T value,
   Key? key,
   Widget? child,
-  ValueWidgetBuilder<Set<WidgetState>>? builder,
+  NakedStateBuilder<NakedSelectItemState<T>>? builder,
   bool enabled = true,
   String? semanticLabel,
 })
@@ -246,8 +246,8 @@ Forwarded to the underlying `NakedButton` for keyed animations or tests.
 #### child → `Widget?`
 Static child widget rendered for the option.
 
-#### builder → `ValueWidgetBuilder<Set<WidgetState>>?`
-Use when you need animated styling. Receives the current widget states with `WidgetState.selected` automatically injected for the active value.
+#### builder → `NakedStateBuilder<NakedSelectItemState<T>>?`
+Use when you need animated styling. Receives a [`NakedSelectItemState<T>`](#nakedselectitemstate) with convenience getters (e.g. `isSelected`, `isHovered`) and access to the option/value metadata.
 
 #### enabled → `bool`
 Disable selection for this specific item.
@@ -265,8 +265,27 @@ const NakedSelectOption({
   bool enabled = true,
   String? semanticLabel,
   Widget? child,
-  ValueWidgetBuilder<Set<WidgetState>>? builder,
+  NakedStateBuilder<NakedSelectItemState<T>>? builder,
 })
 ```
 
 Use it when you want to build the overlay entirely yourself instead of going through `items`. It reads the nearest `_NakedSelectScope`, updates selection, and applies the same widget state handling as `NakedSelectItem`.
+
+### NakedSelectState
+
+`NakedSelectState<T>` is the typed state snapshot delivered to `triggerBuilder`. In addition to raw `WidgetState` access through `state.widgetStates`, it exposes:
+
+- `isHovered`, `isFocused`, `isPressed`, `isOpen`
+- `value` (the current selection) and `hasValue`
+- `isEnabled` / `isDisabled`
+- `when<T>()` helper for prioritised branching and `matchesAll` / `matchesAny` for
+  combinational checks
+
+### NakedSelectItemState
+
+`NakedSelectItemState<T>` powers option builders. It provides the same widget-state helpers plus:
+
+- `value`: the option's value
+- `selectedValue`: the parent select's current selection
+- `isCurrentSelection`: whether the option matches `selectedValue`
+- Access to the base helpers like `when`, `matchesAll`, and `matchesAny`

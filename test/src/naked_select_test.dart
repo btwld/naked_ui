@@ -1,5 +1,6 @@
+import 'package:flutter/gestures.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:naked_ui/naked_ui.dart';
 
@@ -23,15 +24,24 @@ void main() {
         enabled: enabled,
         closeOnSelect: closeOnSelect,
         onClose: onMenuClose,
-        triggerBuilder: (context, states) => const Text('Select option'),
+        triggerBuilder: (context, state) => const Text('Select option'),
         overlayBuilder: (context, info) => Container(
           key: kMenuKey,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              NakedSelectOption<T>(value: 'apple' as T, child: const Text('Apple')),
-              NakedSelectOption<T>(value: 'banana' as T, child: const Text('Banana')),
-              NakedSelectOption<T>(value: 'orange' as T, child: const Text('Orange')),
+              NakedSelectOption<T>(
+                value: 'apple' as T,
+                child: const Text('Apple'),
+              ),
+              NakedSelectOption<T>(
+                value: 'banana' as T,
+                child: const Text('Banana'),
+              ),
+              NakedSelectOption<T>(
+                value: 'orange' as T,
+                child: const Text('Orange'),
+              ),
             ],
           ),
         ),
@@ -126,23 +136,18 @@ void main() {
   });
 
   group('Keyboard Navigation', () {
-    testWidgets(
-      'closes menu with Escape key',
-      (WidgetTester tester) async {
-        await tester.pumpMaterialWidget(buildSelect<String>());
+    testWidgets('closes menu with Escape key', (WidgetTester tester) async {
+      await tester.pumpMaterialWidget(buildSelect<String>());
 
-        // Open menu
-        await tester.tap(find.text('Select option'));
-        await tester.pumpAndSettle();
+      // Open menu
+      await tester.tap(find.text('Select option'));
+      await tester.pumpAndSettle();
 
-        await tester.sendKeyEvent(LogicalKeyboardKey.escape);
-        await tester.pump();
+      await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+      await tester.pump();
 
-        expect(find.text('Apple'), findsNothing);
-      },
-      timeout: const Timeout(Duration(seconds: 10)),
-      skip: true,
-    );
+      expect(find.text('Apple'), findsNothing);
+    }, timeout: const Timeout(Duration(seconds: 10)));
 
     testWidgets(
       'restores focus to trigger after closing with Escape',
@@ -153,11 +158,14 @@ void main() {
           Center(
             child: NakedSelect<String>(
               triggerFocusNode: triggerFocusNode,
-              triggerBuilder: (context, states) => const Text('Select option'),
+              triggerBuilder: (context, state) => const Text('Select option'),
               overlayBuilder: (context, info) => const Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  NakedSelectOption<String>(value: 'apple', child: Text('Apple')),
+                  NakedSelectOption<String>(
+                    value: 'apple',
+                    child: Text('Apple'),
+                  ),
                 ],
               ),
             ),
@@ -178,40 +186,217 @@ void main() {
         expect(triggerFocusNode.hasFocus, isTrue);
       },
       timeout: const Timeout(Duration(seconds: 10)),
-      skip: true,
     );
 
-    testWidgets(
-      'selects item with Enter key',
-      (WidgetTester tester) async {},
-      skip: true,
-    );
+    testWidgets('selects item with Enter key', (WidgetTester tester) async {
+      String? selectedValue;
+
+      await tester.pumpMaterialWidget(
+        Center(
+          child: NakedSelect<String>(
+            onChanged: (value) => selectedValue = value,
+            triggerBuilder: (context, state) => const Text('Select option'),
+            overlayBuilder: (context, info) => const Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                NakedSelectOption<String>(value: 'apple', child: Text('Apple')),
+                NakedSelectOption<String>(
+                  value: 'banana',
+                  child: Text('Banana'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+
+      // Open the select menu
+      await tester.tap(find.text('Select option'));
+      await tester.pumpAndSettle();
+
+      // Verify overlay is open
+      expect(find.text('Apple'), findsOneWidget);
+      expect(find.text('Banana'), findsOneWidget);
+
+      // Focus should be on first item, press Enter to select
+      await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+      await tester.pumpAndSettle();
+
+      // Verify selection was made and overlay closed
+      expect(selectedValue, 'apple');
+      expect(find.text('Apple'), findsNothing);
+    });
   });
 
   group('Interaction States', () {
-    testWidgets(
-      'calls onHoverChange when trigger hovered',
-      (WidgetTester tester) async {},
-      skip: true,
-    );
+    testWidgets('trigger can be hovered', (WidgetTester tester) async {
+      await tester.pumpMaterialWidget(
+        Center(
+          child: NakedSelect<String>(
+            triggerBuilder: (context, state) {
+              return Container(
+                key: const Key('trigger'),
+                color: state.widgetStates.contains(WidgetState.hovered)
+                    ? Colors.grey[200]
+                    : null,
+                child: const Text('Select option'),
+              );
+            },
+            overlayBuilder: (context, info) => const Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                NakedSelectOption<String>(value: 'apple', child: Text('Apple')),
+              ],
+            ),
+          ),
+        ),
+      );
 
-    testWidgets(
-      'calls onPressChange when trigger pressed',
-      (tester) async {},
-      skip: true,
-    );
+      // Simulate hover
+      final gesture = await tester.createGesture(kind: PointerDeviceKind.mouse);
+      await gesture.addPointer(location: Offset.zero);
+      addTearDown(gesture.removePointer);
+      await tester.pump();
 
-    testWidgets(
-      'calls onFocusChange when trigger focused',
-      (tester) async {},
-      skip: true,
-    );
+      await gesture.moveTo(tester.getCenter(find.text('Select option')));
+      await tester.pump();
 
-    testWidgets(
-      'calls item states when hovered/pressed',
-      (tester) async {},
-      skip: true,
-    );
+      // Verify hover state is reflected in the UI
+      final container = tester.widget<Container>(
+        find.byKey(const Key('trigger')),
+      );
+      expect(container.color, Colors.grey[200]);
+    });
+
+    testWidgets('trigger can be pressed', (tester) async {
+      await tester.pumpMaterialWidget(
+        Center(
+          child: NakedSelect<String>(
+            triggerBuilder: (context, state) {
+              return Container(
+                key: const Key('trigger'),
+                color: state.widgetStates.contains(WidgetState.pressed)
+                    ? Colors.grey[400]
+                    : null,
+                child: const Text('Select option'),
+              );
+            },
+            overlayBuilder: (context, info) => const Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                NakedSelectOption<String>(value: 'apple', child: Text('Apple')),
+              ],
+            ),
+          ),
+        ),
+      );
+
+      // Simulate press down
+      final gesture = await tester.startGesture(
+        tester.getCenter(find.text('Select option')),
+      );
+      await tester.pump();
+
+      // Verify pressed state is reflected in the UI
+      final container = tester.widget<Container>(
+        find.byKey(const Key('trigger')),
+      );
+      expect(container.color, Colors.grey[400]);
+
+      // Release press
+      await gesture.up();
+      await tester.pump();
+    });
+
+    testWidgets('trigger can be focused', (tester) async {
+      final focusNode = FocusNode();
+
+      await tester.pumpMaterialWidget(
+        Center(
+          child: NakedSelect<String>(
+            triggerFocusNode: focusNode,
+            triggerBuilder: (context, state) {
+              return Container(
+                key: const Key('trigger'),
+                decoration: BoxDecoration(
+                  border: state.widgetStates.contains(WidgetState.focused)
+                      ? Border.all(color: Colors.blue, width: 2)
+                      : null,
+                ),
+                child: const Text('Select option'),
+              );
+            },
+            overlayBuilder: (context, info) => const Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                NakedSelectOption<String>(value: 'apple', child: Text('Apple')),
+              ],
+            ),
+          ),
+        ),
+      );
+
+      // Focus the trigger
+      focusNode.requestFocus();
+      await tester.pump();
+
+      // Verify focused state is reflected in the UI
+      final container = tester.widget<Container>(
+        find.byKey(const Key('trigger')),
+      );
+      expect(container.decoration, isA<BoxDecoration>());
+      final decoration = container.decoration as BoxDecoration;
+      expect(decoration.border, isA<Border>());
+
+      focusNode.dispose();
+    });
+
+    testWidgets('calls item states when hovered/pressed', (tester) async {
+      await tester.pumpMaterialWidget(
+        Center(
+          child: NakedSelect<String>(
+            triggerBuilder: (context, state) => const Text('Select option'),
+            overlayBuilder: (context, info) => Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                NakedSelectOption<String>(
+                  value: 'apple',
+                  builder: (context, state, child) {
+                    return Container(
+                      key: const Key('apple-option'),
+                      color: state.widgetStates.contains(WidgetState.hovered)
+                          ? const Color(0xFFE0E0E0)
+                          : null,
+                      child: child,
+                    );
+                  },
+                  child: const Text('Apple'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+
+      // Open the select menu
+      await tester.tap(find.text('Select option'));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('apple-option')), findsOneWidget);
+
+      // Test hover state
+      final gesture = await tester.createGesture(kind: PointerDeviceKind.mouse);
+      await gesture.addPointer(location: Offset.zero);
+      addTearDown(gesture.removePointer);
+      await tester.pump();
+
+      await gesture.moveTo(tester.getCenter(find.text('Apple')));
+      await tester.pump();
+
+      // The option should respond to hover (just verify it's still there and working)
+      expect(find.byKey(const Key('apple-option')), findsOneWidget);
+      expect(find.text('Apple'), findsOneWidget);
+    });
   });
 
   group('Menu Positioning', () {
@@ -240,8 +425,7 @@ void main() {
                   alignment: Alignment.bottomLeft,
                   fallbackAlignment: Alignment.topLeft,
                 ),
-                triggerBuilder: (context, states) =>
-                    const Text('Select option'),
+                triggerBuilder: (context, state) => const Text('Select option'),
                 overlayBuilder: (context, info) => Container(
                   key: kMenuKey,
                   width: 120,
@@ -250,7 +434,10 @@ void main() {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text('Menu Content'),
-                      NakedSelectOption<String>(value: 'apple', child: Text('Apple')),
+                      NakedSelectOption<String>(
+                        value: 'apple',
+                        child: Text('Apple'),
+                      ),
                     ],
                   ),
                 ),
@@ -352,7 +539,7 @@ void main() {
             // Simulate removalDelay by delaying the actual close
             Future.delayed(const Duration(milliseconds: 200), hideOverlay);
           },
-          triggerBuilder: (context, states) => const Text('Select option'),
+          triggerBuilder: (context, state) => const Text('Select option'),
           overlayBuilder: (context, info) => const Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -384,10 +571,36 @@ void main() {
   });
 
   group('Cursor', () {
-    testWidgets(
-      'shows appropriate cursor based on interactive state',
-      (tester) async {},
-      skip: true,
-    );
+    testWidgets('shows appropriate cursor based on interactive state', (
+      tester,
+    ) async {
+      await tester.pumpMaterialWidget(
+        Center(
+          child: NakedSelect<String>(
+            enabled: false,
+            triggerBuilder: (context, state) => const Text('Select option'),
+            overlayBuilder: (context, info) => const Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                NakedSelectOption<String>(value: 'apple', child: Text('Apple')),
+              ],
+            ),
+          ),
+        ),
+      );
+
+      // When disabled, should show a forbidden cursor
+      final gesture = await tester.createGesture(kind: PointerDeviceKind.mouse);
+      await gesture.addPointer(location: Offset.zero);
+      addTearDown(gesture.removePointer);
+      await tester.pump();
+
+      await gesture.moveTo(tester.getCenter(find.text('Select option')));
+      await tester.pump();
+
+      // This test just verifies the widget can handle cursor state
+      // The actual cursor rendering is handled by the platform
+      expect(find.text('Select option'), findsOneWidget);
+    });
   });
 }

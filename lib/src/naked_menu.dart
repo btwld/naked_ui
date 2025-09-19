@@ -4,6 +4,42 @@ import 'base/overlay_base.dart';
 import 'naked_button.dart';
 import 'utilities/anchored_overlay_shell.dart';
 import 'utilities/positioning.dart';
+import 'utilities/widget_state_snapshot.dart';
+
+/// State snapshot provided to [NakedMenu.triggerBuilder].
+class NakedMenuState<T> extends NakedWidgetStateSnapshot {
+  NakedMenuState({
+    required super.states,
+    required this.isOpen,
+    required this.selectedValue,
+  });
+
+  /// Whether the overlay is currently open.
+  final bool isOpen;
+
+  /// The value currently marked as selected, if any.
+  final T? selectedValue;
+
+  bool get hasSelection => selectedValue != null;
+}
+
+/// State snapshot provided to [NakedMenuItem] builders.
+class NakedMenuItemState<T> extends NakedWidgetStateSnapshot {
+  NakedMenuItemState({
+    required super.states,
+    required this.value,
+    required this.selectedValue,
+  });
+
+  /// The menu item's value.
+  final T value;
+
+  /// The parent menu's selected value.
+  final T? selectedValue;
+
+  /// Whether this item matches the selected value.
+  bool get isCurrentSelection => selectedValue != null && value == selectedValue;
+}
 
 /// Internal scope provided by [NakedMenu] to its overlay subtree.
 class _NakedMenuScope<T> extends OverlayScope<T> {
@@ -42,7 +78,7 @@ class _NakedMenuScope<T> extends OverlayScope<T> {
 ///
 /// This enables fully declarative composition inside [NakedMenu.overlayBuilder]
 /// without relying on the data-driven [NakedMenuItem] list.
-class NakedMenuItem<T> extends OverlayItem<T> {
+class NakedMenuItem<T> extends OverlayItem<T, NakedMenuItemState<T>> {
   const NakedMenuItem({
     super.key,
     required super.value,
@@ -71,6 +107,11 @@ class NakedMenuItem<T> extends OverlayItem<T> {
           : null,
       effectiveEnabled: enabled,
       additionalStates: additionalStates,
+      mapStates: (states) => NakedMenuItemState<T>(
+        states: states,
+        value: value,
+        selectedValue: menu.selectedValue,
+      ),
     );
   }
 }
@@ -100,7 +141,7 @@ class NakedMenu<T> extends StatefulWidget {
   static final Item = NakedMenuItem.new;
 
   /// Builds the trigger surface.
-  final Widget Function(BuildContext context, Set<WidgetState> states)
+  final Widget Function(BuildContext context, NakedMenuState<T> state)
   triggerBuilder;
 
   /// Builds the overlay panel.
@@ -199,7 +240,14 @@ class _NakedMenuState<T> extends State<NakedMenu<T>>
           onPressed: _toggle,
           focusNode: widget.triggerFocusNode,
           builder: (context, states, _) {
-            return widget.triggerBuilder(context, states);
+            return widget.triggerBuilder(
+              context,
+              NakedMenuState<T>(
+                states: states,
+                isOpen: _isOpen,
+                selectedValue: widget.selectedValue,
+              ),
+            );
           },
         ),
       ),

@@ -1,5 +1,6 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/semantics.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:naked_ui/naked_ui.dart';
 
@@ -16,7 +17,7 @@ void main() {
     final controller = MenuController();
     return NakedMenu<String>(
       controller: controller,
-      triggerBuilder: (context, states) => const Text('Show Menu'),
+      triggerBuilder: (context, state) => const Text('Show Menu'),
       overlayBuilder: (context, info) => Container(
         width: 200,
         padding: const EdgeInsets.all(8),
@@ -119,7 +120,7 @@ void main() {
         _buildTestApp(
           NakedMenu<String>(
             controller: controller,
-            triggerBuilder: (context, states) => const Text('Open'),
+            triggerBuilder: (context, state) => const Text('Open'),
             overlayBuilder: (context, info) => const Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -161,7 +162,7 @@ void main() {
             onSelected: (v) {
               if (v == 'selectable') itemPressed = true;
             },
-            triggerBuilder: (context, states) => const Text('Open'),
+            triggerBuilder: (context, state) => const Text('Open'),
             overlayBuilder: (context, info) => const Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -198,7 +199,7 @@ void main() {
           NakedMenu<String>(
             controller: controller,
             triggerFocusNode: focusNode,
-            triggerBuilder: (context, states) => const Text('Focusable Menu'),
+            triggerBuilder: (context, state) => const Text('Focusable Menu'),
             overlayBuilder: (context, info) => const Column(
               mainAxisSize: MainAxisSize.min,
               children: [NakedMenuItem(value: 'v', child: Text('Item'))],
@@ -218,7 +219,52 @@ void main() {
       handle.dispose();
     });
 
-    testWidgets('keyboard navigation semantics', (tester) async {}, skip: true);
+    testWidgets('keyboard navigation semantics', (tester) async {
+      final handle = tester.ensureSemantics();
+      final controller = MenuController();
+
+      await tester.pumpWidget(
+        _buildTestApp(
+          NakedMenu<String>(
+            controller: controller,
+            triggerBuilder: (context, state) => const Text('Menu trigger'),
+            overlayBuilder: (context, info) => const Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                NakedMenuItem<String>(value: 'item1', child: Text('Item 1')),
+                NakedMenuItem<String>(value: 'item2', child: Text('Item 2')),
+              ],
+            ),
+          ),
+        ),
+      );
+
+      // Open the menu
+      controller.open();
+      await tester.pumpAndSettle();
+
+      // Verify menu items have keyboard semantics
+      final item1Semantics = tester.getSemantics(find.text('Item 1'));
+      expect(
+        item1Semantics.getSemanticsData().hasAction(SemanticsAction.tap),
+        isTrue,
+      );
+
+      final item2Semantics = tester.getSemantics(find.text('Item 2'));
+      expect(
+        item2Semantics.getSemanticsData().hasAction(SemanticsAction.tap),
+        isTrue,
+      );
+
+      // Verify trigger has keyboard semantics
+      final triggerSemantics = tester.getSemantics(find.text('Menu trigger'));
+      expect(
+        triggerSemantics.getSemanticsData().hasAction(SemanticsAction.tap),
+        isTrue,
+      );
+
+      handle.dispose();
+    });
 
     testWidgets('hover semantics', (tester) async {
       final handle = tester.ensureSemantics();
@@ -247,7 +293,7 @@ void main() {
         _buildTestApp(
           NakedMenu<String>(
             controller: controller,
-            triggerBuilder: (context, states) => const Text('Labeled Menu'),
+            triggerBuilder: (context, state) => const Text('Labeled Menu'),
             overlayBuilder: (context, info) => const Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -279,7 +325,7 @@ void main() {
         _buildTestApp(
           NakedMenu<String>(
             controller: controller,
-            triggerBuilder: (context, states) => const Text('File'),
+            triggerBuilder: (context, state) => const Text('File'),
             overlayBuilder: (context, info) => Container(
               width: 150,
               padding: const EdgeInsets.all(4),

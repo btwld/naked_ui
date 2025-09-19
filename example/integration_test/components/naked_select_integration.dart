@@ -63,7 +63,7 @@ void main() {
                       ),
                     );
                   },
-                  triggerBuilder: (context, states) {
+                  triggerBuilder: (context, state) {
                     return Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
@@ -130,7 +130,7 @@ void main() {
                   ),
                 );
               },
-              triggerBuilder: (context, states) => const Text('Select'),
+              triggerBuilder: (context, state) => const Text('Select'),
             ),
           ),
         ),
@@ -178,7 +178,7 @@ void main() {
                   ),
                 );
               },
-              triggerBuilder: (context, states) => const Text('Select'),
+              triggerBuilder: (context, state) => const Text('Select'),
             ),
           ),
         ),
@@ -223,7 +223,7 @@ void main() {
                   ),
                 );
               },
-              triggerBuilder: (context, states) =>
+              triggerBuilder: (context, state) =>
                   const Text('Disabled Select'),
             ),
           ),

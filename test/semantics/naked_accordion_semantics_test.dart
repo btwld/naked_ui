@@ -99,5 +99,5 @@ void main() {
       expect(tester.getSemantics(find.bySemanticsLabel('Header')), strict);
       handle.dispose();
     });
-  }, skip: true);
+  });
 }

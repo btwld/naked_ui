@@ -223,5 +223,6 @@ const NakedMenuItem({
 - enableFeedback: Whether to provide feedback on selection.
 - focusNode/autofocus: Focus handling.
 - onFocusChange/onHoverChange/onPressChange: State callbacks.
-- builder: Optional builder receiving `Set<WidgetState>`.
+- builder: Optional builder receiving `NakedMenuItemState<T>` (with helpers like
+  `when`, `matchesAll`, and `matchesAny`).
 - semanticLabel: Optional accessibility label for the item.

@@ -9,6 +9,7 @@ library;
 import 'package:flutter/widgets.dart';
 
 import '../naked_button.dart';
+import '../utilities/widget_state_snapshot.dart';
 
 // =============================================================================
 // OVERLAY SCOPE PATTERN
@@ -74,7 +75,8 @@ abstract class OverlayScope<T> extends InheritedWidget {
 ///
 /// This class provides the common pattern for widgets that represent
 /// selectable/actionable items within overlay panels.
-abstract class OverlayItem<T> extends StatelessWidget {
+abstract class OverlayItem<T, S extends NakedWidgetStateSnapshot>
+    extends StatelessWidget {
   const OverlayItem({
     super.key,
     required this.value,
@@ -100,7 +102,7 @@ abstract class OverlayItem<T> extends StatelessWidget {
   final Widget? child;
 
   /// Optional builder function for custom styling based on widget states.
-  final ValueWidgetBuilder<Set<WidgetState>>? builder;
+  final NakedStateBuilder<S>? builder;
 
   /// Helper method to build a [NakedButton] with consistent behavior.
   ///
@@ -111,6 +113,7 @@ abstract class OverlayItem<T> extends StatelessWidget {
     required VoidCallback? onPressed,
     required bool effectiveEnabled,
     Set<WidgetState>? additionalStates,
+    required S Function(Set<WidgetState> states) mapStates,
   }) {
     return NakedButton(
       onPressed: onPressed,
@@ -125,7 +128,11 @@ abstract class OverlayItem<T> extends StatelessWidget {
                 effectiveStates.addAll(additionalStates);
               }
 
-              return builder!(context, effectiveStates, child);
+              return builder!(
+                context,
+                mapStates(effectiveStates),
+                child,
+              );
             },
     );
   }

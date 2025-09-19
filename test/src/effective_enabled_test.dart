@@ -21,7 +21,7 @@ void main() {
                     ),
                   ],
                 ),
-                triggerBuilder: (context, states) => const Text('Select'),
+                triggerBuilder: (context, state) => const Text('Select'),
               ),
             ),
           ),
@@ -49,7 +49,7 @@ void main() {
                   NakedSelectOption<String>(value: 'item1', child: Text('Item 1')),
                 ],
               ),
-              triggerBuilder: (context, states) => const Text('Select'),
+              triggerBuilder: (context, state) => const Text('Select'),
             ),
           ),
         ),
@@ -73,7 +73,7 @@ void main() {
               children: [
                 NakedMenu<String>(
                   controller: MenuController(),
-                  triggerBuilder: (context, states) => const Text('Open Menu'),
+                  triggerBuilder: (context, state) => const Text('Open Menu'),
                   overlayBuilder: (context, info) => const Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [

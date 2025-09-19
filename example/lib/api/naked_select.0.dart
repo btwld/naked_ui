@@ -79,22 +79,21 @@ class _SimpleSelectExampleState extends State<SimpleSelectExample> {
   Widget _buildOption(Fruit fruit) {
     return NakedSelect.Option(
       value: fruit.value,
-      builder: (context, states, _) {
-        final selected = states.contains(WidgetState.selected);
-        final hovered = states.contains(WidgetState.hovered);
+      builder: (context, state, _) {
+        final backgroundColor = state.when<Color?>(
+          selected: Colors.blue.shade50,
+          hovered: Colors.grey.shade100,
+          orElse: null,
+        );
 
         final textStyle = TextStyle(
-          color: selected ? Colors.blue : Colors.black,
-          fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
+          color: state.isSelected ? Colors.blue : Colors.black,
+          fontWeight: state.isSelected ? FontWeight.w600 : FontWeight.normal,
         );
 
         return Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          color: selected
-              ? Colors.blue.shade50
-              : hovered
-                  ? Colors.grey.shade100
-                  : null,
+          color: backgroundColor,
           child: Row(
             spacing: 8,
             children: [
@@ -117,8 +116,8 @@ class _SimpleSelectExampleState extends State<SimpleSelectExample> {
       child: NakedSelect<String>(
         value: _selectedValue,
         onChanged: (value) => setState(() => _selectedValue = value),
-        triggerBuilder: (context, states) {
-          final focused = states.contains(WidgetState.focused);
+        triggerBuilder: (context, state) {
+          final focused = state.isFocused;
 
           return Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),

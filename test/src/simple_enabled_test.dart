@@ -14,7 +14,7 @@ void main() {
           home: Scaffold(
             body: NakedMenu<String>(
               controller: MenuController(),
-              triggerBuilder: (context, states) => const Text('Open'),
+              triggerBuilder: (context, state) => const Text('Open'),
               overlayBuilder: (context, info) => const Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -55,7 +55,7 @@ void main() {
           home: Scaffold(
             body: NakedMenu<String>(
               controller: MenuController(),
-              triggerBuilder: (context, states) => const Text('Open'),
+              triggerBuilder: (context, state) => const Text('Open'),
               overlayBuilder: (context, info) => const Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
