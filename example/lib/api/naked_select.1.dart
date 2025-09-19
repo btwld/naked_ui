@@ -10,11 +10,33 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
       home: Scaffold(
-        backgroundColor: Colors.white,
+        backgroundColor: Colors.grey.shade50,
         body: Center(
-          child: AnimatedSelectExample(),
+          child: Container(
+            padding: const EdgeInsets.all(24),
+            child: const Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'Animated Select',
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                SizedBox(height: 8),
+                Text(
+                  'Select with smooth animations',
+                  style: TextStyle(color: Colors.grey),
+                ),
+                SizedBox(height: 32),
+                AnimatedSelectExample(),
+              ],
+            ),
+          ),
         ),
       ),
     );
@@ -31,16 +53,17 @@ class AnimatedSelectExample extends StatefulWidget {
 class _AnimatedSelectExampleState extends State<AnimatedSelectExample>
     with TickerProviderStateMixin {
   String? _selectedValue;
-
   late final _animationController = AnimationController(
-    duration: const Duration(milliseconds: 200),
+    duration: const Duration(milliseconds: 250),
     vsync: this,
   );
 
-  late final _animation = CurvedAnimation(
-    parent: _animationController,
-    curve: Curves.easeOut,
-  );
+  final List<String> _colors = [
+    'Blue',
+    'Green',
+    'Purple',
+    'Orange',
+  ];
 
   @override
   void dispose() {
@@ -48,209 +71,178 @@ class _AnimatedSelectExampleState extends State<AnimatedSelectExample>
     super.dispose();
   }
 
+  Widget _buildAnimatedOption(String option) {
+    return NakedSelectOption<String>(
+      value: option,
+      builder: (context, states, _) {
+        final hovered = states.contains(WidgetState.hovered);
+        final selected = states.contains(WidgetState.selected);
+
+        return AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.easeOut,
+          margin: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          decoration: BoxDecoration(
+            color: selected
+                ? Colors.blue.shade50
+                : hovered
+                    ? Colors.grey.shade100
+                    : Colors.transparent,
+            borderRadius: BorderRadius.circular(6),
+          ),
+          child: Row(
+            children: [
+              Text(
+                _getColorEmoji(option),
+                style: const TextStyle(fontSize: 18),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  option,
+                  style: TextStyle(
+                    color: selected ? Colors.blue : Colors.black,
+                    fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
+                  ),
+                ),
+              ),
+              if (selected)
+                const Icon(
+                  Icons.check,
+                  size: 16,
+                  color: Colors.blue,
+                ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  String _getColorEmoji(String color) {
+    switch (color) {
+      case 'Blue':
+        return '🔵';
+      case 'Green':
+        return '🟢';
+      case 'Purple':
+        return '🟣';
+      case 'Orange':
+        return '🟠';
+      default:
+        return '🎨';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      width: 250,
+      width: 280,
       child: NakedSelect<String>(
         value: _selectedValue,
-        onChanged: (value) {
-          setState(() => _selectedValue = value);
-        },
+        onChanged: (value) => setState(() => _selectedValue = value),
         onOpen: () => _animationController.forward(),
         onClose: () => _animationController.reverse(),
-        overlayBuilder: (context, info) {
-          return SlideTransition(
-            position: _animationController.drive(Tween<Offset>(
-              begin: const Offset(0, -0.05),
-              end: Offset.zero,
-            )),
-            child: FadeTransition(
-              opacity: _animation,
-              child: SizedBox(
-                width: 250,
-                child: Container(
-                  margin: const EdgeInsets.only(top: 4),
-                  padding:
-                      const EdgeInsets.symmetric(vertical: 6, horizontal: 6),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    border: Border.all(
-                      color: Colors.grey.shade300,
-                      width: 1,
-                    ),
-                    borderRadius: BorderRadius.circular(12),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.1),
-                        blurRadius: 8,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      NakedSelectOption<String>(
-                        value: 'Option 1',
-                        builder: (context, states, child) {
-                          final isHovered = states.contains(WidgetState.hovered);
-                          final isFocused = states.contains(WidgetState.focused);
-
-                          final Color backgroundColor = isHovered
-                              ? Colors.grey.shade100
-                              : isFocused
-                                  ? Colors.grey.shade50
-                                  : Colors.transparent;
-
-                          return AnimatedContainer(
-                            duration: const Duration(milliseconds: 150),
-                            curve: Curves.easeInOut,
-                            margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                            decoration: BoxDecoration(
-                              color: backgroundColor,
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Text(
-                              'Option 1',
-                              style: TextStyle(
-                                color: Colors.grey.shade800,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                      NakedSelectOption<String>(
-                        value: 'Option 2',
-                        builder: (context, states, child) {
-                          final isHovered = states.contains(WidgetState.hovered);
-                          final isFocused = states.contains(WidgetState.focused);
-
-                          final Color backgroundColor = isHovered
-                              ? Colors.grey.shade100
-                              : isFocused
-                                  ? Colors.grey.shade50
-                                  : Colors.transparent;
-
-                          return AnimatedContainer(
-                            duration: const Duration(milliseconds: 150),
-                            curve: Curves.easeInOut,
-                            margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                            decoration: BoxDecoration(
-                              color: backgroundColor,
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Text(
-                              'Option 2',
-                              style: TextStyle(
-                                color: Colors.grey.shade800,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                      NakedSelectOption<String>(
-                        value: 'Option 3',
-                        builder: (context, states, child) {
-                          final isHovered = states.contains(WidgetState.hovered);
-                          final isFocused = states.contains(WidgetState.focused);
-
-                          final Color backgroundColor = isHovered
-                              ? Colors.grey.shade100
-                              : isFocused
-                                  ? Colors.grey.shade50
-                                  : Colors.transparent;
-
-                          return AnimatedContainer(
-                            duration: const Duration(milliseconds: 150),
-                            curve: Curves.easeInOut,
-                            margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                            decoration: BoxDecoration(
-                              color: backgroundColor,
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Text(
-                              'Option 3',
-                              style: TextStyle(
-                                color: Colors.grey.shade800,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          );
-        },
         triggerBuilder: (context, states) {
-          final isFocused = states.contains(WidgetState.focused);
-          final isHovered = states.contains(WidgetState.hovered);
-
-          final Color borderColor = isFocused
-              ? Colors.grey.shade800
-              : isHovered
-                  ? Colors.grey.shade100
-                  : Colors.grey.shade300;
-
-          final Color backgroundColor =
-              isHovered ? Colors.grey.shade100 : Colors.white;
-
-          final List<BoxShadow> boxShadow = isFocused
-              ? [
-                  BoxShadow(
-                    color: Colors.grey.shade300,
-                    blurRadius: 0,
-                    spreadRadius: 4,
-                    offset: Offset.zero,
-                  ),
-                  const BoxShadow(
-                    color: Colors.white,
-                    blurRadius: 0,
-                    spreadRadius: 2,
-                    offset: Offset.zero,
-                  ),
-                ]
-              : [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.02),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
-                  ),
-                ];
+          final focused = states.contains(WidgetState.focused);
+          final hovered = states.contains(WidgetState.hovered);
 
           return AnimatedContainer(
             duration: const Duration(milliseconds: 200),
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
-              color: backgroundColor,
-              boxShadow: boxShadow,
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(10),
               border: Border.all(
-                color: borderColor,
-                width: 1,
+                color: focused
+                    ? const Color(0xFF2563EB)
+                    : const Color(0xFFE2E8F0),
               ),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(_selectedValue ?? 'Select your favorite fruit'),
-                const Icon(
-                  Icons.keyboard_arrow_down_rounded,
-                  size: 24,
-                  color: Colors.grey,
+              boxShadow: [
+                if (focused)
+                  const BoxShadow(
+                    color: Color(0x1F2563EB),
+                    blurRadius: 0,
+                    spreadRadius: 3,
+                  ),
+                BoxShadow(
+                  color: hovered
+                      ? const Color(0x14000000)
+                      : const Color(0x0A000000),
+                  blurRadius: hovered ? 8 : 4,
+                  offset: Offset(0, hovered ? 2 : 1),
                 ),
               ],
+            ),
+            child: Row(
+              children: [
+                if (_selectedValue != null) ...[
+                  Text(
+                    _getColorEmoji(_selectedValue!),
+                    style: const TextStyle(fontSize: 18),
+                  ),
+                  const SizedBox(width: 8),
+                ],
+                Expanded(
+                  child: Text(
+                    _selectedValue ?? 'Choose a color...',
+                    style: TextStyle(
+                      color: _selectedValue != null
+                          ? const Color(0xFF1E293B)
+                          : const Color(0xFF94A3B8),
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+                AnimatedRotation(
+                  duration: const Duration(milliseconds: 200),
+                  turns: focused ? 0.5 : 0,
+                  child: Icon(
+                    Icons.expand_more,
+                    size: 20,
+                    color: focused
+                        ? const Color(0xFF475569)
+                        : const Color(0xFF94A3B8),
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
+        overlayBuilder: (context, info) {
+          return SlideTransition(
+            position: _animationController.drive(
+              Tween<Offset>(
+                begin: const Offset(0, -0.05),
+                end: Offset.zero,
+              ).chain(CurveTween(curve: Curves.easeOutCubic)),
+            ),
+            child: FadeTransition(
+              opacity: _animationController.drive(
+                CurveTween(curve: Curves.easeOut),
+              ),
+              child: Container(
+                margin: const EdgeInsets.only(top: 4),
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: const Color(0xFFE2E8F0)),
+                  boxShadow: const [
+                    BoxShadow(
+                      color: Color(0x14000000),
+                      blurRadius: 20,
+                      offset: Offset(0, 8),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: _colors.map(_buildAnimatedOption).toList(),
+                ),
+              ),
             ),
           );
         },

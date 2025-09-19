@@ -10,11 +10,33 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
       home: Scaffold(
-        backgroundColor: Colors.white,
+        backgroundColor: const Color(0xFFF8FAFC),
         body: Center(
-          child: AnimatedMenuExample(),
+          child: Container(
+            padding: const EdgeInsets.all(24),
+            child: const Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'Animated Menu',
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                SizedBox(height: 8),
+                Text(
+                  'Menu with smooth animations',
+                  style: TextStyle(color: Colors.grey),
+                ),
+                SizedBox(height: 32),
+                AnimatedMenuExample(),
+              ],
+            ),
+          ),
         ),
       ),
     );
@@ -30,25 +52,11 @@ class AnimatedMenuExample extends StatefulWidget {
 
 class _AnimatedMenuExampleState extends State<AnimatedMenuExample>
     with TickerProviderStateMixin {
-  final _menuController = MenuController();
-
+  final _controller = MenuController();
   late final _animationController = AnimationController(
     duration: const Duration(milliseconds: 200),
     vsync: this,
   );
-
-  @override
-  void initState() {
-    super.initState();
-  }
-
-  void _onMenuOpen() {
-    _animationController.forward();
-  }
-
-  void _onMenuClose() {
-    _animationController.reverse();
-  }
 
   @override
   void dispose() {
@@ -56,134 +64,120 @@ class _AnimatedMenuExampleState extends State<AnimatedMenuExample>
     super.dispose();
   }
 
-  void _onItemPressed(String item) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Item $item selected')),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return NakedMenu<String>(
-      controller: _menuController,
+      controller: _controller,
+      onSelected: (item) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Selected: $item')),
+        );
+      },
+      onOpen: () => _animationController.forward(),
+      onClose: () => _animationController.reverse(),
       triggerBuilder: (context, states) {
-        final hovered = states.contains(WidgetState.hovered);
-        final focused = states.contains(WidgetState.focused);
-        final border =
-            hovered || focused ? Colors.grey.shade300 : Colors.grey.shade300;
-        final ring =
-            focused ? Colors.blue.withValues(alpha: 0.30) : Colors.transparent;
-
-        return Container(
-          padding: const EdgeInsets.all(8),
+        final isPressed = states.contains(WidgetState.pressed);
+        return AnimatedContainer(
+          duration: const Duration(milliseconds: 150),
+          padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: border),
-            boxShadow: focused
-                ? [
-                    BoxShadow(
-                      color: ring,
-                      blurRadius: 0,
-                      spreadRadius: 2,
-                    ),
-                  ]
-                : const [],
+            border: Border.all(color: Colors.grey.shade300),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: isPressed ? 0.1 : 0.05),
+                blurRadius: 4,
+                offset: Offset(0, isPressed ? 1 : 2),
+              ),
+            ],
           ),
-          child: const Icon(Icons.settings, size: 18),
+          child: const Icon(Icons.menu, size: 20),
         );
       },
-      overlayBuilder: (context, info) => ScaleTransition(
-        alignment: Alignment.topLeft,
-        scale: _animationController.drive(Tween<double>(begin: 0.95, end: 1.0)),
-        child: FadeTransition(
-          opacity: _animationController,
-          child: Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              border: Border.all(color: Colors.grey.shade200),
-              borderRadius: BorderRadius.circular(8),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.05),
-                  blurRadius: 8,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            constraints: const BoxConstraints(maxWidth: 200),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                NakedMenuItem<String>(
-                  value: '1',
-                  builder: (context, states, _) => ItemContent(
-                    title: 'Menu Item 1',
-                    states: states,
+      overlayBuilder: (context, info) {
+        return ScaleTransition(
+          scale: _animationController.drive(Tween(begin: 0.95, end: 1.0)),
+          child: FadeTransition(
+            opacity: _animationController,
+            child: Container(
+              margin: const EdgeInsets.only(top: 4),
+              padding: const EdgeInsets.symmetric(vertical: 6),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.grey.shade200),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.1),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
                   ),
-                ),
-                NakedMenuItem<String>(
-                  value: '2',
-                  builder: (context, states, _) => ItemContent(
-                    title: 'Menu Item 2',
-                    states: states,
+                ],
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  NakedMenuItem<String>(
+                    value: 'new',
+                    builder: (context, states, _) {
+                      final hovered = states.contains(WidgetState.hovered);
+                      return AnimatedContainer(
+                        duration: const Duration(milliseconds: 150),
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        color: hovered ? Colors.grey.shade100 : null,
+                        child: const Row(
+                          children: [
+                            Icon(Icons.add, size: 16),
+                            SizedBox(width: 8),
+                            Text('New Document'),
+                          ],
+                        ),
+                      );
+                    },
                   ),
-                ),
-                NakedMenuItem<String>(
-                  value: '3',
-                  builder: (context, states, _) => ItemContent(
-                    title: 'Menu Item 3',
-                    states: states,
+                  NakedMenuItem<String>(
+                    value: 'open',
+                    builder: (context, states, _) {
+                      final hovered = states.contains(WidgetState.hovered);
+                      return AnimatedContainer(
+                        duration: const Duration(milliseconds: 150),
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        color: hovered ? Colors.grey.shade100 : null,
+                        child: const Row(
+                          children: [
+                            Icon(Icons.folder_open, size: 16),
+                            SizedBox(width: 8),
+                            Text('Open'),
+                          ],
+                        ),
+                      );
+                    },
                   ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-      onSelected: _onItemPressed,
-      onOpen: _onMenuOpen,
-      onClose: _onMenuClose,
-    );
-  }
-}
-
-class ItemContent extends StatelessWidget {
-  const ItemContent({
-    super.key,
-    required this.title,
-    required this.states,
-  });
-
-  final String title;
-  final Set<WidgetState> states;
-
-  @override
-  Widget build(BuildContext context) {
-    final hovered = states.contains(WidgetState.hovered);
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 200),
-      padding: const EdgeInsets.all(8.0),
-      decoration: BoxDecoration(
-        color: hovered ? Colors.grey.shade100 : Colors.white,
-        borderRadius: BorderRadius.circular(4),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(title),
-          AnimatedOpacity(
-            opacity: hovered ? 1.0 : 0.0,
-            duration: const Duration(milliseconds: 200),
-            child: const Icon(
-              Icons.arrow_forward_ios,
-              size: 12,
-              color: Colors.grey,
+                  NakedMenuItem<String>(
+                    value: 'save',
+                    builder: (context, states, _) {
+                      final hovered = states.contains(WidgetState.hovered);
+                      return AnimatedContainer(
+                        duration: const Duration(milliseconds: 150),
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        color: hovered ? Colors.grey.shade100 : null,
+                        child: const Row(
+                          children: [
+                            Icon(Icons.save, size: 16),
+                            SizedBox(width: 8),
+                            Text('Save'),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+                ],
+              ),
             ),
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 }

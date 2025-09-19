@@ -10,11 +10,33 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
       home: Scaffold(
-        backgroundColor: Colors.white,
+        backgroundColor: Colors.grey.shade50,
         body: Center(
-          child: SearchableSelectExample(),
+          child: Container(
+            padding: const EdgeInsets.all(24),
+            child: const Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'Searchable Select',
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                SizedBox(height: 8),
+                Text(
+                  'Type to filter options',
+                  style: TextStyle(color: Colors.grey),
+                ),
+                SizedBox(height: 32),
+                SearchableSelectExample(),
+              ],
+            ),
+          ),
         ),
       ),
     );
@@ -25,231 +47,43 @@ class SearchableSelectExample extends StatefulWidget {
   const SearchableSelectExample({super.key});
 
   @override
-  State<SearchableSelectExample> createState() =>
-      _SearchableSelectExampleState();
+  State<SearchableSelectExample> createState() => _SearchableSelectExampleState();
 }
 
 class _SearchableSelectExampleState extends State<SearchableSelectExample> {
   String? _selectedCountry;
-  String? _selectedLanguage;
-  final List<_SelectOption> _countries = [
-    _SelectOption('US', 'United States', '🇺🇸'),
-    _SelectOption('CA', 'Canada', '🇨🇦'),
-    _SelectOption('GB', 'United Kingdom', '🇬🇧'),
-    _SelectOption('DE', 'Germany', '🇩🇪'),
-    _SelectOption('FR', 'France', '🇫🇷'),
-    _SelectOption('IT', 'Italy', '🇮🇹'),
-    _SelectOption('ES', 'Spain', '🇪🇸'),
-    _SelectOption('JP', 'Japan', '🇯🇵'),
-    _SelectOption('CN', 'China', '🇨🇳'),
-    _SelectOption('AU', 'Australia', '🇦🇺'),
-    _SelectOption('BR', 'Brazil', '🇧🇷'),
-    _SelectOption('IN', 'India', '🇮🇳'),
-  ];
-
-  final List<_SelectOption> _languages = [
-    _SelectOption('en', 'English', '🔤'),
-    _SelectOption('es', 'Spanish', '🔡'),
-    _SelectOption('fr', 'French', '🔠'),
-    _SelectOption('de', 'German', '📝'),
-    _SelectOption('it', 'Italian', '📋'),
-    _SelectOption('pt', 'Portuguese', '📄'),
-    _SelectOption('ru', 'Russian', '📃'),
-    _SelectOption('ja', 'Japanese', '🈳'),
-    _SelectOption('ko', 'Korean', '🈴'),
-    _SelectOption('zh', 'Chinese', '🈂'),
-  ];
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 500,
-      padding: const EdgeInsets.all(32),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Text(
-            'Searchable Select Components',
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              color: Color(0xFF1A1A1A),
-            ),
-          ),
-          const SizedBox(height: 32),
-          _buildCountrySelect(),
-          const SizedBox(height: 24),
-          _buildLanguageSelect(),
-          const SizedBox(height: 32),
-          _buildSelectionSummary(),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildCountrySelect() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Country',
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-            color: Color(0xFF666666),
-          ),
-        ),
-        const SizedBox(height: 8),
-        _SearchableSelect(
-          value: _selectedCountry,
-          options: _countries,
-          onChanged: (value) => setState(() => _selectedCountry = value),
-          placeholder: 'Search and select country...',
-          searchHint: 'Type country name',
-        ),
-      ],
-    );
-  }
-
-  Widget _buildLanguageSelect() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Language',
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-            color: Color(0xFF666666),
-          ),
-        ),
-        const SizedBox(height: 8),
-        _SearchableSelect(
-          value: _selectedLanguage,
-          options: _languages,
-          onChanged: (value) => setState(() => _selectedLanguage = value),
-          placeholder: 'Search and select language...',
-          searchHint: 'Type language name',
-        ),
-      ],
-    );
-  }
-
-  Widget _buildSelectionSummary() {
-    if (_selectedCountry == null && _selectedLanguage == null) {
-      return Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Colors.grey.shade50,
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Text(
-          'Select country and language to see summary',
-          style: TextStyle(
-            color: Colors.grey.shade600,
-            fontSize: 14,
-          ),
-        ),
-      );
-    }
-
-    final selectedCountry = _countries.firstWhere(
-      (c) => c.value == _selectedCountry,
-      orElse: () => _SelectOption('', 'None selected', ''),
-    );
-    final selectedLanguage = _languages.firstWhere(
-      (l) => l.value == _selectedLanguage,
-      orElse: () => _SelectOption('', 'None selected', ''),
-    );
-
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Colors.blue.shade50, Colors.purple.shade50],
-        ),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.blue.shade200),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Selection Summary',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: Color(0xFF1A1A1A),
-            ),
-          ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              Text(
-                'Country: ${selectedCountry.icon} ${selectedCountry.label}',
-                style: const TextStyle(fontSize: 14),
-              ),
-            ],
-          ),
-          const SizedBox(height: 4),
-          Row(
-            children: [
-              Text(
-                'Language: ${selectedLanguage.icon} ${selectedLanguage.label}',
-                style: const TextStyle(fontSize: 14),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _SelectOption {
-  final String value;
-  final String label;
-  final String icon;
-
-  _SelectOption(this.value, this.label, this.icon);
-}
-
-class _SearchableSelect extends StatefulWidget {
-  const _SearchableSelect({
-    required this.value,
-    required this.options,
-    required this.onChanged,
-    required this.placeholder,
-    required this.searchHint,
-  });
-
-  final String? value;
-  final List<_SelectOption> options;
-  final ValueChanged<String?> onChanged;
-  final String placeholder;
-  final String searchHint;
-
-  @override
-  State<_SearchableSelect> createState() => _SearchableSelectState();
-}
-
-class _SearchableSelectState extends State<_SearchableSelect> {
   String _searchQuery = '';
-  final TextEditingController _searchController = TextEditingController();
+  final _searchController = TextEditingController();
 
-  List<_SelectOption> get _filteredOptions {
-    if (_searchQuery.isEmpty) return widget.options;
-    return widget.options.where((option) {
-      return option.label.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-          option.value.toLowerCase().contains(_searchQuery.toLowerCase());
+  final List<Map<String, String>> _countries = [
+    {'code': 'US', 'name': 'United States', 'flag': '🇺🇸'},
+    {'code': 'CA', 'name': 'Canada', 'flag': '🇨🇦'},
+    {'code': 'GB', 'name': 'United Kingdom', 'flag': '🇬🇧'},
+    {'code': 'DE', 'name': 'Germany', 'flag': '🇩🇪'},
+    {'code': 'FR', 'name': 'France', 'flag': '🇫🇷'},
+    {'code': 'IT', 'name': 'Italy', 'flag': '🇮🇹'},
+    {'code': 'ES', 'name': 'Spain', 'flag': '🇪🇸'},
+    {'code': 'JP', 'name': 'Japan', 'flag': '🇯🇵'},
+    {'code': 'AU', 'name': 'Australia', 'flag': '🇦🇺'},
+    {'code': 'BR', 'name': 'Brazil', 'flag': '🇧🇷'},
+    {'code': 'IN', 'name': 'India', 'flag': '🇮🇳'},
+    {'code': 'MX', 'name': 'Mexico', 'flag': '🇲🇽'},
+  ];
+
+  List<Map<String, String>> get filteredCountries {
+    if (_searchQuery.isEmpty) return _countries;
+    return _countries.where((country) {
+      final query = _searchQuery.toLowerCase();
+      return country['name']!.toLowerCase().contains(query) ||
+          country['code']!.toLowerCase().contains(query);
     }).toList();
   }
 
-  _SelectOption? get _selectedOption {
-    if (widget.value == null) return null;
-    return widget.options.firstWhere(
-      (option) => option.value == widget.value,
-      orElse: () => _SelectOption('', 'Unknown', ''),
+  Map<String, String>? get selectedCountry {
+    if (_selectedCountry == null) return null;
+    return _countries.firstWhere(
+      (country) => country['code'] == _selectedCountry,
+      orElse: () => {'code': '', 'name': '', 'flag': ''},
     );
   }
 
@@ -259,215 +93,214 @@ class _SearchableSelectState extends State<_SearchableSelect> {
     super.dispose();
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return NakedSelect<String>(
-      value: widget.value,
-      onChanged: widget.onChanged,
-      closeOnSelect: true,
-      onOpen: () {
-        setState(() {
-          _searchQuery = '';
-          _searchController.clear();
-        });
-      },
-      overlayBuilder: (context, info) {
+  Widget _buildSearchableOption(Map<String, String> country) {
+    return NakedSelectOption<String>(
+      value: country['code']!,
+      builder: (context, states, _) {
+        final hovered = states.contains(WidgetState.hovered);
+        final selected = states.contains(WidgetState.selected);
+
         return Container(
-          margin: const EdgeInsets.only(top: 4),
-          constraints: const BoxConstraints(maxHeight: 300),
+          margin: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(8),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.1),
-                blurRadius: 12,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(12),
-                child: TextField(
-                  controller: _searchController,
-                  onChanged: (q) => setState(() => _searchQuery = q),
-                  decoration: InputDecoration(
-                    hintText: widget.searchHint,
-                    prefixIcon: const Icon(Icons.search, size: 18),
-                    contentPadding:
-                        const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(6),
-                      borderSide: BorderSide(color: Colors.grey.shade300),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(6),
-                      borderSide: const BorderSide(color: Colors.blue),
-                    ),
-                    isDense: true,
-                  ),
-                  autofocus: true,
-                ),
-              ),
-              const Divider(height: 1),
-              if (_filteredOptions.isEmpty)
-                Padding(
-                  padding: const EdgeInsets.all(20),
-                  child: Column(
-                    children: [
-                      Icon(
-                        Icons.search_off,
-                        size: 32,
-                        color: Colors.grey.shade400,
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'No results found',
-                        style: TextStyle(
-                          color: Colors.grey.shade600,
-                          fontSize: 14,
-                        ),
-                      ),
-                      Text(
-                        'Try a different search term',
-                        style: TextStyle(
-                          color: Colors.grey.shade500,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ],
-                  ),
-                )
-              else
-                Flexible(
-                  child: ListView(
-                    shrinkWrap: true,
-                    children: _filteredOptions.map((opt) {
-                      return NakedSelectOption<String>(
-                        value: opt.value,
-                        builder: (context, states, child) {
-                          final isHovered = states.contains(WidgetState.hovered);
-                          final isSelected = states.contains(WidgetState.selected);
-                          return AnimatedContainer(
-                            duration: const Duration(milliseconds: 150),
-                            curve: Curves.easeInOut,
-                            margin:
-                                const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                            padding:
-                                const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                            decoration: BoxDecoration(
-                              color: isSelected
-                                  ? (isHovered
-                                      ? Colors.blue.shade100
-                                      : Colors.blue.shade50)
-                                  : (isHovered
-                                      ? Colors.grey.shade100
-                                      : Colors.transparent),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Row(
-                              children: [
-                                Text(opt.icon, style: const TextStyle(fontSize: 16)),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: Text(
-                                    opt.label,
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      color: isSelected
-                                          ? Colors.blue.shade700
-                                          : const Color(0xFF1A1A1A),
-                                    ),
-                                  ),
-                                ),
-                                if (isSelected)
-                                  Icon(
-                                    Icons.check,
-                                    size: 16,
-                                    color: Colors.blue.shade600,
-                                  ),
-                              ],
-                            ),
-                          );
-                        },
-                      );
-                    }).toList(),
-                  ),
-                ),
-            ],
-          ),
-        );
-      },
-      triggerBuilder: (context, states) {
-        final isFocused = states.contains(WidgetState.focused);
-        final borderColor =
-            isFocused ? Colors.blue.shade600 : Colors.grey.shade300;
-        final backgroundColor = isFocused ? Colors.grey.shade50 : Colors.white;
-        return AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          curve: Curves.easeInOut,
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          decoration: BoxDecoration(
-            color: backgroundColor,
-            border: Border.all(color: borderColor, width: 1),
-            borderRadius: BorderRadius.circular(12),
-            boxShadow: [
-              if (isFocused)
-                BoxShadow(
-                  color: Colors.blue.shade200.withValues(alpha: 0.3),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                ),
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.05),
-                blurRadius: 4,
-                offset: const Offset(0, 1),
-              ),
-            ],
+            color: selected
+                ? Colors.blue.shade50
+                : hovered
+                    ? Colors.grey.shade100
+                    : Colors.transparent,
+            borderRadius: BorderRadius.circular(6),
           ),
           child: Row(
             children: [
-              if (_selectedOption != null) ...[
-                Text(
-                  _selectedOption!.icon,
-                  style: const TextStyle(fontSize: 16),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    _selectedOption!.label,
-                    style: const TextStyle(
-                      fontSize: 14,
-                      color: Color(0xFF1A1A1A),
-                    ),
+              Text(
+                country['flag']!,
+                style: const TextStyle(fontSize: 18),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  country['name']!,
+                  style: TextStyle(
+                    color: selected ? Colors.blue : Colors.black,
+                    fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
+                    fontSize: 14,
                   ),
-                ),
-              ] else
-                Expanded(
-                  child: Text(
-                    widget.placeholder,
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey.shade600,
-                    ),
-                  ),
-                ),
-              const SizedBox(width: 8),
-              AnimatedRotation(
-                duration: const Duration(milliseconds: 200),
-                turns: isFocused ? 0.5 : 0,
-                child: const Icon(
-                  Icons.expand_more,
-                  color: Colors.grey,
                 ),
               ),
+              if (selected)
+                const Icon(
+                  Icons.check,
+                  size: 16,
+                  color: Colors.blue,
+                ),
             ],
           ),
         );
       },
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 320,
+      child: NakedSelect<String>(
+        value: _selectedCountry,
+        onChanged: (value) => setState(() => _selectedCountry = value),
+        onOpen: () {
+          _searchQuery = '';
+          _searchController.clear();
+        },
+        triggerBuilder: (context, states) {
+          final focused = states.contains(WidgetState.focused);
+          final hovered = states.contains(WidgetState.hovered);
+
+          return Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(
+                color: focused ? Colors.blue : Colors.grey.shade300,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: hovered
+                      ? const Color(0x14000000)
+                      : const Color(0x0A000000),
+                  blurRadius: hovered ? 8 : 4,
+                  offset: Offset(0, hovered ? 2 : 1),
+                ),
+              ],
+            ),
+            child: Row(
+              children: [
+                if (selectedCountry != null) ...[
+                  Text(
+                    selectedCountry!['flag']!,
+                    style: const TextStyle(fontSize: 18),
+                  ),
+                  const SizedBox(width: 12),
+                ],
+                Expanded(
+                  child: Text(
+                    selectedCountry?['name'] ?? 'Search countries...',
+                    style: TextStyle(
+                      color: selectedCountry != null
+                          ? Colors.black
+                          : Colors.grey,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+                const Icon(
+                  Icons.search,
+                  size: 18,
+                  color: Colors.grey,
+                ),
+              ],
+            ),
+          );
+        },
+        overlayBuilder: (context, info) {
+          return Container(
+            margin: const EdgeInsets.only(top: 4),
+            constraints: const BoxConstraints(maxHeight: 300),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: Colors.grey.shade200),
+              boxShadow: const [
+                BoxShadow(
+                  color: Color(0x14000000),
+                  blurRadius: 20,
+                  offset: Offset(0, 8),
+                ),
+              ],
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: TextField(
+                    controller: _searchController,
+                    onChanged: (value) => setState(() => _searchQuery = value),
+                    autofocus: true,
+                    decoration: InputDecoration(
+                      hintText: 'Type to search countries...',
+                      hintStyle: const TextStyle(
+                        color: Colors.grey,
+                        fontSize: 14,
+                      ),
+                      prefixIcon: const Icon(
+                        Icons.search,
+                        size: 18,
+                        color: Colors.grey,
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(6),
+                        borderSide: BorderSide(color: Colors.grey.shade300),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(6),
+                        borderSide: const BorderSide(color: Colors.blue),
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
+                      isDense: true,
+                    ),
+                  ),
+                ),
+                Container(
+                  height: 1,
+                  color: Colors.grey.shade200,
+                ),
+                if (filteredCountries.isEmpty)
+                  Padding(
+                    padding: const EdgeInsets.all(24),
+                    child: Column(
+                      children: [
+                        Icon(
+                          Icons.search_off,
+                          size: 32,
+                          color: Colors.grey.shade400,
+                        ),
+                        const SizedBox(height: 8),
+                        const Text(
+                          'No countries found',
+                          style: TextStyle(
+                            color: Colors.grey,
+                            fontSize: 14,
+                          ),
+                        ),
+                        const Text(
+                          'Try a different search term',
+                          style: TextStyle(
+                            color: Colors.grey,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
+                else
+                  Flexible(
+                    child: ListView(
+                      shrinkWrap: true,
+                      padding: const EdgeInsets.symmetric(vertical: 6),
+                      children: filteredCountries.map(_buildSearchableOption).toList(),
+                    ),
+                  ),
+              ],
+            ),
+          );
+        },
+      ),
     );
   }
 }

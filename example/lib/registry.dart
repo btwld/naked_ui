@@ -107,7 +107,7 @@ class DemoRegistry {
       id: 'select-basic',
       title: 'Select – Basic',
       category: 'Select',
-      builder: (_) => const select_example.SelectExample(),
+      builder: (_) => const select_example.SimpleSelectExample(),
       sourceUrl:
           'https://github.com/btwld/naked_ui/blob/main/example/lib/api/naked_select.0.dart',
       tags: ['select'],
@@ -126,7 +126,7 @@ class DemoRegistry {
       title: 'Select – Animated Builder',
       category: 'Select',
       builder: (_) =>
-          const select_builder_example.AnimatedBuilderSelectExample(),
+          const select_builder_example.CheckmarkSelectExample(),
       sourceUrl:
           'https://github.com/btwld/naked_ui/blob/main/example/lib/api/naked_select.2.dart',
       tags: ['select', 'builder', 'animation'],
@@ -171,7 +171,7 @@ class DemoRegistry {
       id: 'menu-basic',
       title: 'Menu – Basic',
       category: 'Menu',
-      builder: (_) => const menu_example.MenuExample(),
+      builder: (_) => const menu_example.SimpleMenuExample(),
       sourceUrl:
           'https://github.com/btwld/naked_ui/blob/main/example/lib/api/naked_menu.0.dart',
       tags: ['menu'],
