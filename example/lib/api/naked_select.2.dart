@@ -1,6 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:naked_ui/naked_ui.dart';
 
+// Simple fruit data class for type safety
+class Fruit {
+  const Fruit({
+    required this.value,
+    required this.label,
+    required this.emoji,
+  });
+
+  final String value;
+  final String label;
+  final String emoji;
+}
+
 void main() {
   runApp(const MyApp());
 }
@@ -10,32 +23,35 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return const MaterialApp(
       debugShowCheckedModeBanner: false,
       home: Scaffold(
-        backgroundColor: Colors.grey.shade50,
+        backgroundColor: Color(0xFF0D0D0D),
         body: Center(
-          child: Container(
-            padding: const EdgeInsets.all(24),
-            child: const Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  'Select with Checkmarks',
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                  ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'CYBER SELECT',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF00FF41),
+                  fontFamily: 'monospace',
+                  letterSpacing: 2,
                 ),
-                SizedBox(height: 8),
-                Text(
-                  'Options show checkmarks when selected',
-                  style: TextStyle(color: Colors.grey),
+              ),
+              SizedBox(height: 8),
+              Text(
+                '> INITIALIZE DATA STREAM_',
+                style: TextStyle(
+                  color: Color(0xFF00AA33),
+                  fontFamily: 'monospace',
                 ),
-                SizedBox(height: 32),
-                CheckmarkSelectExample(),
-              ],
-            ),
+              ),
+              SizedBox(height: 24),
+              CyberpunkSelectExample(),
+            ],
           ),
         ),
       ),
@@ -43,90 +59,103 @@ class MyApp extends StatelessWidget {
   }
 }
 
-class CheckmarkSelectExample extends StatefulWidget {
-  const CheckmarkSelectExample({super.key});
+class CyberpunkSelectExample extends StatefulWidget {
+  const CyberpunkSelectExample({super.key});
 
   @override
-  State<CheckmarkSelectExample> createState() => _CheckmarkSelectExampleState();
+  State<CyberpunkSelectExample> createState() => _CyberpunkSelectExampleState();
 }
 
-class _CheckmarkSelectExampleState extends State<CheckmarkSelectExample>
-    with TickerProviderStateMixin {
+class _CyberpunkSelectExampleState extends State<CyberpunkSelectExample> {
   String? _selectedValue;
-  late final _controller = AnimationController(
-    duration: const Duration(milliseconds: 250),
-    vsync: this,
-  );
 
-  final List<Map<String, dynamic>> _fruits = [
-    {'value': 'apple', 'label': 'Apple', 'emoji': '🍎'},
-    {'value': 'banana', 'label': 'Banana', 'emoji': '🍌'},
-    {'value': 'orange', 'label': 'Orange', 'emoji': '🍊'},
-    {'value': 'grape', 'label': 'Grape', 'emoji': '🍇'},
-    {'value': 'strawberry', 'label': 'Strawberry', 'emoji': '🍓'},
+  // Available cyber fruits
+  static const fruits = [
+    Fruit(value: 'apple', label: 'APPLE.EXE', emoji: '🍎'),
+    Fruit(value: 'banana', label: 'BANANA.SYS', emoji: '🍌'),
+    Fruit(value: 'orange', label: 'ORANGE.BAT', emoji: '🍊'),
+    Fruit(value: 'grape', label: 'GRAPE.DLL', emoji: '🍇'),
   ];
 
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
+  // Get selected fruit label for display
+  String? get _selectedLabel {
+    if (_selectedValue == null) return null;
+    return fruits.firstWhere((f) => f.value == _selectedValue).label;
   }
 
-  Widget _buildOptionWithCheckmark(Map<String, dynamic> fruit) {
-    return NakedSelectOption<String>(
-      value: fruit['value'],
+  Widget _buildOption(Fruit fruit) {
+    return NakedSelect.Option(
+      value: fruit.value,
       builder: (context, states, _) {
-        final hovered = states.contains(WidgetState.hovered);
         final selected = states.contains(WidgetState.selected);
+        final hovered = states.contains(WidgetState.hovered);
 
-        return AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          curve: Curves.easeOut,
-          margin: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-          decoration: BoxDecoration(
-            color: selected
-                ? Colors.blue.shade50
-                : hovered
-                    ? Colors.grey.shade100
+        final textStyle = TextStyle(
+          color: selected ? const Color(0xFF00FF41) : const Color(0xFF00AA33),
+          fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
+          fontFamily: 'monospace',
+        );
+
+        return Transform(
+          transform: Matrix4.identity()
+            ..setEntry(3, 2, 0.001)
+            ..rotateY(-0.05),
+          alignment: Alignment.centerLeft,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              color: selected
+                  ? const Color(0xFF001100)
+                  : hovered
+                      ? const Color(0xFF001A00)
+                      : Colors.transparent,
+              border: Border.all(
+                color: selected || hovered
+                    ? const Color(0xFF00FF41)
                     : Colors.transparent,
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Row(
-            children: [
-              Text(
-                fruit['emoji'],
-                style: const TextStyle(fontSize: 20),
+                width: 1,
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  fruit['label'],
+              boxShadow: selected || hovered
+                  ? [
+                      BoxShadow(
+                        color: const Color(0xFF00FF41).withValues(alpha: 0.3),
+                        blurRadius: 8,
+                        spreadRadius: 1,
+                      ),
+                    ]
+                  : null,
+            ),
+            child: Row(
+              spacing: 8,
+              children: [
+                Text(
+                  fruit.emoji,
                   style: TextStyle(
-                    color: selected ? Colors.blue : Colors.black,
-                    fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
-                    fontSize: 14,
+                    fontSize: 16,
+                    shadows: selected || hovered
+                        ? [
+                            const Shadow(
+                              color: Color(0xFF00FF41),
+                              blurRadius: 4,
+                            ),
+                          ]
+                        : null,
                   ),
                 ),
-              ),
-              AnimatedScale(
-                scale: selected ? 1.0 : 0.0,
-                duration: const Duration(milliseconds: 200),
-                curve: Curves.easeOutBack,
-                child: Container(
-                  padding: const EdgeInsets.all(2),
-                  decoration: const BoxDecoration(
-                    color: Colors.blue,
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.check,
-                    size: 14,
-                    color: Colors.white,
+                Expanded(
+                  child: Text(
+                    fruit.label,
+                    style: textStyle,
                   ),
                 ),
-              ),
-            ],
+                if (selected)
+                  const Icon(
+                    Icons.keyboard_arrow_right,
+                    size: 16,
+                    color: Color(0xFF00FF41),
+                  ),
+              ],
+            ),
           ),
         );
       },
@@ -135,102 +164,120 @@ class _CheckmarkSelectExampleState extends State<CheckmarkSelectExample>
 
   @override
   Widget build(BuildContext context) {
-    final selectedFruit = _fruits.firstWhere(
-      (fruit) => fruit['value'] == _selectedValue,
-      orElse: () => {'emoji': '', 'label': ''},
-    );
-
     return SizedBox(
-      width: 280,
+      width: 250,
       child: NakedSelect<String>(
         value: _selectedValue,
         onChanged: (value) => setState(() => _selectedValue = value),
-        onOpen: () => _controller.forward(),
-        onClose: () => _controller.reverse(),
         triggerBuilder: (context, states) {
           final focused = states.contains(WidgetState.focused);
           final hovered = states.contains(WidgetState.hovered);
 
-          return AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(
-                color: focused ? Colors.blue : Colors.grey.shade300,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: hovered
-                      ? const Color(0x14000000)
-                      : const Color(0x0A000000),
-                  blurRadius: hovered ? 8 : 4,
-                  offset: Offset(0, hovered ? 2 : 1),
+          return Transform(
+            transform: Matrix4.identity()
+              ..setEntry(3, 2, 0.001)
+              ..rotateY(-0.1),
+            alignment: Alignment.centerLeft,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              decoration: BoxDecoration(
+                color: const Color(0xFF001100),
+                border: Border.all(
+                  color: focused
+                      ? const Color(0xFF00FF41)
+                      : const Color(0xFF003300),
+                  width: 2,
                 ),
-              ],
-            ),
-            child: Row(
-              children: [
-                if (_selectedValue != null) ...[
-                  Text(
-                    selectedFruit['emoji'],
-                    style: const TextStyle(fontSize: 18),
+                boxShadow: [
+                  if (focused || hovered)
+                    BoxShadow(
+                      color: const Color(0xFF00FF41)
+                          .withValues(alpha: focused ? 0.4 : 0.2),
+                      blurRadius: focused ? 12 : 8,
+                      spreadRadius: focused ? 2 : 1,
+                    ),
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.3),
+                    blurRadius: 4,
+                    offset: const Offset(0, 2),
                   ),
-                  const SizedBox(width: 12),
                 ],
-                Expanded(
-                  child: Text(
-                    _selectedValue != null
-                        ? selectedFruit['label']
-                        : 'Choose your favorite fruit...',
-                    style: TextStyle(
-                      color: _selectedValue != null
-                          ? Colors.black
-                          : Colors.grey,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
+              ),
+              child: Row(
+                children: [
+                  if (_selectedValue != null) ...[
+                    Text(
+                      fruits.firstWhere((f) => f.value == _selectedValue).emoji,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        shadows: [
+                          Shadow(
+                            color: Color(0xFF00FF41),
+                            blurRadius: 4,
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                  ],
+                  Expanded(
+                    child: Text(
+                      _selectedLabel ?? '> SELECT DATA_',
+                      style: TextStyle(
+                        color: _selectedValue != null
+                            ? const Color(0xFF00FF41)
+                            : const Color(0xFF00AA33),
+                        fontFamily: 'monospace',
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
                   ),
-                ),
-                const Icon(
-                  Icons.expand_more,
-                  size: 20,
-                  color: Colors.grey,
-                ),
-              ],
+                  Icon(
+                    Icons.keyboard_arrow_down,
+                    size: 20,
+                    color: focused
+                        ? const Color(0xFF00FF41)
+                        : const Color(0xFF00AA33),
+                  ),
+                ],
+              ),
             ),
           );
         },
         overlayBuilder: (context, info) {
-          return ScaleTransition(
-            scale: _controller.drive(
-              Tween<double>(begin: 0.95, end: 1.0).chain(
-                CurveTween(curve: Curves.easeOutCubic),
-              ),
-            ),
-            child: FadeTransition(
-              opacity: _controller.drive(
-                CurveTween(curve: Curves.easeOut),
-              ),
+          return SizedBox(
+            width: 250,
+            child: Transform(
+              transform: Matrix4.identity()
+                ..setEntry(3, 2, 0.001)
+                ..rotateY(-0.1),
+              alignment: Alignment.centerLeft,
               child: Container(
                 margin: const EdgeInsets.only(top: 4),
-                padding: const EdgeInsets.symmetric(vertical: 8),
+                padding: const EdgeInsets.symmetric(vertical: 6),
                 decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: const Color(0xFFE2E8F0)),
-                  boxShadow: const [
+                  color: const Color(0xFF000A00),
+                  border: Border.all(
+                    color: const Color(0xFF00FF41),
+                    width: 2,
+                  ),
+                  boxShadow: [
                     BoxShadow(
-                      color: Color(0x14000000),
-                      blurRadius: 20,
-                      offset: Offset(0, 8),
+                      color: const Color(0xFF00FF41).withValues(alpha: 0.3),
+                      blurRadius: 16,
+                      spreadRadius: 2,
+                    ),
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.5),
+                      blurRadius: 12,
+                      offset: const Offset(0, 4),
                     ),
                   ],
                 ),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
-                  children: _fruits.map(_buildOptionWithCheckmark).toList(),
+                  children: fruits.map(_buildOption).toList(),
                 ),
               ),
             ),

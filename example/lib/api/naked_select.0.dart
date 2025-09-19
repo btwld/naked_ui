@@ -1,6 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:naked_ui/naked_ui.dart';
 
+// Simple fruit data class for type safety
+class Fruit {
+  const Fruit({
+    required this.value,
+    required this.label,
+    required this.emoji,
+  });
+
+  final String value;
+  final String label;
+  final String emoji;
+}
+
 void main() {
   runApp(const MyApp());
 }
@@ -48,17 +61,65 @@ class SimpleSelectExample extends StatefulWidget {
 }
 
 class _SimpleSelectExampleState extends State<SimpleSelectExample> {
-  String? _selectedFruit;
+  String? _selectedValue;
+
+  // Available fruits
+  static const fruits = [
+    Fruit(value: 'apple', label: 'Apple', emoji: '🍎'),
+    Fruit(value: 'banana', label: 'Banana', emoji: '🍌'),
+    Fruit(value: 'orange', label: 'Orange', emoji: '🍊'),
+  ];
+
+  // Get selected fruit label for display
+  String? get _selectedLabel {
+    if (_selectedValue == null) return null;
+    return fruits.firstWhere((f) => f.value == _selectedValue).label;
+  }
+
+  Widget _buildOption(Fruit fruit) {
+    return NakedSelect.Option(
+      value: fruit.value,
+      builder: (context, states, _) {
+        final selected = states.contains(WidgetState.selected);
+        final hovered = states.contains(WidgetState.hovered);
+
+        final textStyle = TextStyle(
+          color: selected ? Colors.blue : Colors.black,
+          fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
+        );
+
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          color: selected
+              ? Colors.blue.shade50
+              : hovered
+                  ? Colors.grey.shade100
+                  : null,
+          child: Row(
+            spacing: 8,
+            children: [
+              Text(fruit.emoji),
+              Text(
+                fruit.label,
+                style: textStyle,
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     return SizedBox(
       width: 200,
       child: NakedSelect<String>(
-        value: _selectedFruit,
-        onChanged: (value) => setState(() => _selectedFruit = value),
+        value: _selectedValue,
+        onChanged: (value) => setState(() => _selectedValue = value),
         triggerBuilder: (context, states) {
           final focused = states.contains(WidgetState.focused);
+
           return Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
             decoration: BoxDecoration(
@@ -79,9 +140,10 @@ class _SimpleSelectExampleState extends State<SimpleSelectExample> {
               children: [
                 Expanded(
                   child: Text(
-                    _selectedFruit ?? 'Choose fruit...',
+                    _selectedLabel ?? 'Choose fruit...',
                     style: TextStyle(
-                      color: _selectedFruit != null ? Colors.black : Colors.grey,
+                      color:
+                          _selectedValue != null ? Colors.black : Colors.grey,
                     ),
                   ),
                 ),
@@ -97,108 +159,23 @@ class _SimpleSelectExampleState extends State<SimpleSelectExample> {
               margin: const EdgeInsets.only(top: 4),
               padding: const EdgeInsets.symmetric(vertical: 6),
               decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: Colors.grey.shade200),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.1),
-                  blurRadius: 12,
-                  offset: const Offset(0, 4),
-                ),
-              ],
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.grey.shade200),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.1),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: fruits.map(_buildOption).toList(),
+              ),
             ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                NakedSelectOption<String>(
-                  value: 'apple',
-                  builder: (context, states, _) {
-                    final hovered = states.contains(WidgetState.hovered);
-                    final selected = states.contains(WidgetState.selected);
-                    return Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                      color: selected
-                          ? Colors.blue.shade50
-                          : hovered
-                              ? Colors.grey.shade100
-                              : null,
-                      child: Row(
-                        children: [
-                          const Text('🍎'),
-                          const SizedBox(width: 8),
-                          Text(
-                            'Apple',
-                            style: TextStyle(
-                              color: selected ? Colors.blue : Colors.black,
-                              fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
-                  },
-                ),
-                NakedSelectOption<String>(
-                  value: 'banana',
-                  builder: (context, states, _) {
-                    final hovered = states.contains(WidgetState.hovered);
-                    final selected = states.contains(WidgetState.selected);
-                    return Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                      color: selected
-                          ? Colors.blue.shade50
-                          : hovered
-                              ? Colors.grey.shade100
-                              : null,
-                      child: Row(
-                        children: [
-                          const Text('🍌'),
-                          const SizedBox(width: 8),
-                          Text(
-                            'Banana',
-                            style: TextStyle(
-                              color: selected ? Colors.blue : Colors.black,
-                              fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
-                  },
-                ),
-                NakedSelectOption<String>(
-                  value: 'orange',
-                  builder: (context, states, _) {
-                    final hovered = states.contains(WidgetState.hovered);
-                    final selected = states.contains(WidgetState.selected);
-                    return Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                      color: selected
-                          ? Colors.blue.shade50
-                          : hovered
-                              ? Colors.grey.shade100
-                              : null,
-                      child: Row(
-                        children: [
-                          const Text('🍊'),
-                          const SizedBox(width: 8),
-                          Text(
-                            'Orange',
-                            style: TextStyle(
-                              color: selected ? Colors.blue : Colors.black,
-                              fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
-                  },
-                ),
-              ],
-            ),
-          ),
-        );
+          );
         },
       ),
     );

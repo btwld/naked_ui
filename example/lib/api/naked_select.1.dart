@@ -1,6 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:naked_ui/naked_ui.dart';
 
+// Simple fruit data class for type safety
+class Fruit {
+  const Fruit({
+    required this.value,
+    required this.label,
+    required this.emoji,
+  });
+
+  final String value;
+  final String label;
+  final String emoji;
+}
+
 void main() {
   runApp(const MyApp());
 }
@@ -21,7 +34,7 @@ class MyApp extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  'Animated Select',
+                  'Select with Checkmarks',
                   style: TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
@@ -29,11 +42,11 @@ class MyApp extends StatelessWidget {
                 ),
                 SizedBox(height: 8),
                 Text(
-                  'Select with smooth animations',
+                  'Options show checkmarks when selected',
                   style: TextStyle(color: Colors.grey),
                 ),
                 SizedBox(height: 32),
-                AnimatedSelectExample(),
+                CheckmarkSelectExample(),
               ],
             ),
           ),
@@ -43,37 +56,34 @@ class MyApp extends StatelessWidget {
   }
 }
 
-class AnimatedSelectExample extends StatefulWidget {
-  const AnimatedSelectExample({super.key});
+class CheckmarkSelectExample extends StatefulWidget {
+  const CheckmarkSelectExample({super.key});
 
   @override
-  State<AnimatedSelectExample> createState() => _AnimatedSelectExampleState();
+  State<CheckmarkSelectExample> createState() => _CheckmarkSelectExampleState();
 }
 
-class _AnimatedSelectExampleState extends State<AnimatedSelectExample>
-    with TickerProviderStateMixin {
+class _CheckmarkSelectExampleState extends State<CheckmarkSelectExample> {
   String? _selectedValue;
-  late final _animationController = AnimationController(
-    duration: const Duration(milliseconds: 250),
-    vsync: this,
-  );
 
-  final List<String> _colors = [
-    'Blue',
-    'Green',
-    'Purple',
-    'Orange',
+  // Available fruits
+  static const fruits = [
+    Fruit(value: 'apple', label: 'Apple', emoji: '🍎'),
+    Fruit(value: 'banana', label: 'Banana', emoji: '🍌'),
+    Fruit(value: 'orange', label: 'Orange', emoji: '🍊'),
+    Fruit(value: 'grape', label: 'Grape', emoji: '🍇'),
+    Fruit(value: 'strawberry', label: 'Strawberry', emoji: '🍓'),
   ];
 
-  @override
-  void dispose() {
-    _animationController.dispose();
-    super.dispose();
+  // Get selected fruit for display
+  Fruit? get _selectedFruit {
+    if (_selectedValue == null) return null;
+    return fruits.firstWhere((f) => f.value == _selectedValue);
   }
 
-  Widget _buildAnimatedOption(String option) {
-    return NakedSelectOption<String>(
-      value: option,
+  Widget _buildOptionWithCheckmark(Fruit fruit) {
+    return NakedSelect.Option(
+      value: fruit.value,
       builder: (context, states, _) {
         final hovered = states.contains(WidgetState.hovered);
         final selected = states.contains(WidgetState.selected);
@@ -82,57 +92,54 @@ class _AnimatedSelectExampleState extends State<AnimatedSelectExample>
           duration: const Duration(milliseconds: 200),
           curve: Curves.easeOut,
           margin: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
           decoration: BoxDecoration(
             color: selected
                 ? Colors.blue.shade50
                 : hovered
                     ? Colors.grey.shade100
                     : Colors.transparent,
-            borderRadius: BorderRadius.circular(6),
+            borderRadius: BorderRadius.circular(8),
           ),
           child: Row(
             children: [
               Text(
-                _getColorEmoji(option),
-                style: const TextStyle(fontSize: 18),
+                fruit.emoji,
+                style: const TextStyle(fontSize: 20),
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
-                  option,
+                  fruit.label,
                   style: TextStyle(
                     color: selected ? Colors.blue : Colors.black,
-                    fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
+                    fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
+                    fontSize: 14,
                   ),
                 ),
               ),
-              if (selected)
-                const Icon(
-                  Icons.check,
-                  size: 16,
-                  color: Colors.blue,
+              AnimatedScale(
+                scale: selected ? 1.0 : 0.0,
+                duration: const Duration(milliseconds: 200),
+                curve: Curves.easeOutBack,
+                child: Container(
+                  padding: const EdgeInsets.all(2),
+                  decoration: const BoxDecoration(
+                    color: Colors.blue,
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.check,
+                    size: 14,
+                    color: Colors.white,
+                  ),
                 ),
+              ),
             ],
           ),
         );
       },
     );
-  }
-
-  String _getColorEmoji(String color) {
-    switch (color) {
-      case 'Blue':
-        return '🔵';
-      case 'Green':
-        return '🟢';
-      case 'Purple':
-        return '🟣';
-      case 'Orange':
-        return '🟠';
-      default:
-        return '🎨';
-    }
   }
 
   @override
@@ -142,8 +149,6 @@ class _AnimatedSelectExampleState extends State<AnimatedSelectExample>
       child: NakedSelect<String>(
         value: _selectedValue,
         onChanged: (value) => setState(() => _selectedValue = value),
-        onOpen: () => _animationController.forward(),
-        onClose: () => _animationController.reverse(),
         triggerBuilder: (context, states) {
           final focused = states.contains(WidgetState.focused);
           final hovered = states.contains(WidgetState.hovered);
@@ -155,17 +160,9 @@ class _AnimatedSelectExampleState extends State<AnimatedSelectExample>
               color: Colors.white,
               borderRadius: BorderRadius.circular(10),
               border: Border.all(
-                color: focused
-                    ? const Color(0xFF2563EB)
-                    : const Color(0xFFE2E8F0),
+                color: focused ? Colors.blue : Colors.grey.shade300,
               ),
               boxShadow: [
-                if (focused)
-                  const BoxShadow(
-                    color: Color(0x1F2563EB),
-                    blurRadius: 0,
-                    spreadRadius: 3,
-                  ),
                 BoxShadow(
                   color: hovered
                       ? const Color(0x14000000)
@@ -177,72 +174,53 @@ class _AnimatedSelectExampleState extends State<AnimatedSelectExample>
             ),
             child: Row(
               children: [
-                if (_selectedValue != null) ...[
+                if (_selectedFruit != null) ...[
                   Text(
-                    _getColorEmoji(_selectedValue!),
+                    _selectedFruit!.emoji,
                     style: const TextStyle(fontSize: 18),
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: 12),
                 ],
                 Expanded(
                   child: Text(
-                    _selectedValue ?? 'Choose a color...',
+                    _selectedFruit?.label ?? 'Choose your favorite fruit...',
                     style: TextStyle(
-                      color: _selectedValue != null
-                          ? const Color(0xFF1E293B)
-                          : const Color(0xFF94A3B8),
+                      color: _selectedFruit != null
+                          ? Colors.black
+                          : Colors.grey,
                       fontSize: 14,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
                 ),
-                AnimatedRotation(
-                  duration: const Duration(milliseconds: 200),
-                  turns: focused ? 0.5 : 0,
-                  child: Icon(
-                    Icons.expand_more,
-                    size: 20,
-                    color: focused
-                        ? const Color(0xFF475569)
-                        : const Color(0xFF94A3B8),
-                  ),
+                const Icon(
+                  Icons.expand_more,
+                  size: 20,
+                  color: Colors.grey,
                 ),
               ],
             ),
           );
         },
         overlayBuilder: (context, info) {
-          return SlideTransition(
-            position: _animationController.drive(
-              Tween<Offset>(
-                begin: const Offset(0, -0.05),
-                end: Offset.zero,
-              ).chain(CurveTween(curve: Curves.easeOutCubic)),
+          return Container(
+            margin: const EdgeInsets.only(top: 4),
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: const Color(0xFFE2E8F0)),
+              boxShadow: const [
+                BoxShadow(
+                  color: Color(0x14000000),
+                  blurRadius: 20,
+                  offset: Offset(0, 8),
+                ),
+              ],
             ),
-            child: FadeTransition(
-              opacity: _animationController.drive(
-                CurveTween(curve: Curves.easeOut),
-              ),
-              child: Container(
-                margin: const EdgeInsets.only(top: 4),
-                padding: const EdgeInsets.symmetric(vertical: 8),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: const Color(0xFFE2E8F0)),
-                  boxShadow: const [
-                    BoxShadow(
-                      color: Color(0x14000000),
-                      blurRadius: 20,
-                      offset: Offset(0, 8),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: _colors.map(_buildAnimatedOption).toList(),
-                ),
-              ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: fruits.map(_buildOptionWithCheckmark).toList(),
             ),
           );
         },
@@ -250,4 +228,3 @@ class _AnimatedSelectExampleState extends State<AnimatedSelectExample>
     );
   }
 }
-
