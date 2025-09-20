@@ -26,10 +26,12 @@ import 'package:flutter/widgets.dart';
 ///   }
 ///
 ///   Widget build(BuildContext context) {
-///     return FocusableActionDetector(
+///     return NakedFocusableDetector(
 ///       enabled: widget.enabled,
-///       onHoverChange: (hovered) => updateHoverState(hovered, widget.onHoverChange),
-///       onFocusChange: (focused) => updateFocusState(focused, widget.onFocusChange),
+///       onHoverChange: (hovered) =>
+///           updateHoverState(hovered, widget.onHoverChange),
+///       onFocusChange: (focused) =>
+///           updateFocusState(focused, widget.onFocusChange),
 ///       child: MyChild(isPressed: isPressed),
 ///     );
 ///   }
@@ -172,43 +174,44 @@ mixin WidgetStatesMixin<T extends StatefulWidget> on State<T> {
 /// - Expose the single source of truth: [effectiveFocusNode]
 ///
 /// Host requirements:
-/// - The host State must implement [focusableExternalNode] to surface any
+/// - The host State must implement [widgetProvidedNode] to surface any
 ///   user-provided FocusNode (typically `widget.focusNode`).
 ///
 /// Mixin order:
 /// - Place this mixin to the RIGHT of other mixins so its overrides participate
 ///   correctly in `super.*` chaining, e.g.:
 ///   `class _State extends State<W>
-///       with SomeMixin<W>, FocusableMixin<W> { ... }`
-mixin FocusableMixin<T extends StatefulWidget> on State<T> {
+///       with SomeMixin<W>, FocusNodeMixin<W> { ... }`
+mixin FocusNodeMixin<T extends StatefulWidget> on State<T> {
   @protected
-  FocusNode? get focusableExternalNode;
+  FocusNode? get widgetProvidedNode;
 
-  // NEW: optional hook; host can override to receive focus changes.
+  /// Optional hook for subclasses to react to focus changes.
   @protected
-  ValueChanged<bool>? get focusableOnFocusChange => null;
+  ValueChanged<bool>? get onFocusChange => null;
+
+  /// Debug label used when creating an internal focus node.
+  @protected
+  String get focusNodeDebugLabel => '${widget.runtimeType} (internal)';
 
   FocusNode? _internalFocusNode;
   FocusNode? _lastExternalNode;
 
   @protected
-  FocusNode? get effectiveFocusNode =>
-      focusableExternalNode ?? _internalFocusNode;
+  FocusNode? get effectiveFocusNode => widgetProvidedNode ?? _internalFocusNode;
 
   void _notifyFocusChanged() {
     final focused = effectiveFocusNode?.hasFocus ?? false;
-    focusableOnFocusChange?.call(focused);
+    onFocusChange?.call(focused);
   }
 
   @override
   @mustCallSuper
   void initState() {
     super.initState();
-    _lastExternalNode = focusableExternalNode;
+    _lastExternalNode = widgetProvidedNode;
     if (_lastExternalNode == null) {
-      _internalFocusNode = FocusNode(
-        debugLabel: '${widget.runtimeType} (internal)',
-      );
+      _internalFocusNode = FocusNode(debugLabel: focusNodeDebugLabel);
     }
     effectiveFocusNode?.addListener(_notifyFocusChanged);
   }
@@ -224,7 +227,7 @@ mixin FocusableMixin<T extends StatefulWidget> on State<T> {
 
     // BEFORE: snapshot and (later) detach listener safely
     final FocusNode? oldEffective = effectiveFocusNode;
-    final FocusNode? newExternal = focusableExternalNode;
+    final FocusNode? newExternal = widgetProvidedNode;
 
     // Nothing changed wrt external node identity → no swap needed
     if (identical(newExternal, _lastExternalNode)) {
@@ -243,9 +246,7 @@ mixin FocusableMixin<T extends StatefulWidget> on State<T> {
       _internalFocusNode = null;
     } else if (_lastExternalNode != null && newExternal == null) {
       // external -> internal
-      _internalFocusNode = FocusNode(
-        debugLabel: '${widget.runtimeType} (internal)',
-      );
+      _internalFocusNode = FocusNode(debugLabel: focusNodeDebugLabel);
     }
     _lastExternalNode = newExternal;
 

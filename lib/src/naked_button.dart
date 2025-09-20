@@ -3,7 +3,8 @@ import 'dart:async';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
-import 'mixins/naked_mixins.dart'; // WidgetStatesMixin, FocusableMixin
+import 'mixins/naked_mixins.dart'; // WidgetStatesMixin, FocusNodeMixin
+import 'utilities/naked_focusable_detector.dart';
 
 /// A headless button without visuals.
 ///
@@ -51,7 +52,6 @@ class NakedButton extends StatefulWidget {
   /// Called when the button is long-pressed.
   final VoidCallback? onLongPress;
 
-
   /// Called when focus changes.
   final ValueChanged<bool>? onFocusChange;
 
@@ -91,8 +91,7 @@ class NakedButton extends StatefulWidget {
   final String? semanticLabel;
 
   // Consider button interactive if any handler is provided.
-  bool get _hasAnyHandler =>
-      onPressed != null || onLongPress != null;
+  bool get _hasAnyHandler => onPressed != null || onLongPress != null;
 
   // Effective enabled combines `enabled` with having at least one handler.
   bool get _effectiveEnabled => enabled && _hasAnyHandler;
@@ -102,14 +101,14 @@ class NakedButton extends StatefulWidget {
 }
 
 class _NakedButtonState extends State<NakedButton>
-    with WidgetStatesMixin<NakedButton>, FocusableMixin<NakedButton> {
+    with WidgetStatesMixin<NakedButton>, FocusNodeMixin<NakedButton> {
   static const Duration _activationDuration = Duration(milliseconds: 100);
   Timer? _activationTimer;
 
-  // --- FocusableMixin contract ----------------------------------------------
+  // --- FocusNodeMixin contract ----------------------------------------------
 
   @override
-  FocusNode? get focusableExternalNode => widget.focusNode;
+  FocusNode? get widgetProvidedNode => widget.focusNode;
 
   // --- Activation & gestures -------------------------------------------------
 
@@ -169,7 +168,7 @@ class _NakedButtonState extends State<NakedButton>
   void didUpdateWidget(covariant NakedButton oldWidget) {
     super.didUpdateWidget(
       oldWidget,
-    ); // lets FocusableMixin/other mixins run first
+    ); // lets FocusNodeMixin/other mixins run first
 
     // Track *effective* enabled, not just `enabled`.
     if (oldWidget._effectiveEnabled != widget._effectiveEnabled) {
@@ -186,7 +185,7 @@ class _NakedButtonState extends State<NakedButton>
   @override
   void dispose() {
     _activationTimer?.cancel();
-    super.dispose(); // FocusableMixin disposes internal focus node
+    super.dispose(); // FocusNodeMixin disposes internal focus node
   }
 
   // --- Semantics -------------------------------------------------------------
@@ -202,10 +201,20 @@ class _NakedButtonState extends State<NakedButton>
         ? widget.builder!(context, widgetStates, widget.child)
         : widget.child!;
 
-    return FocusableActionDetector(
+    return NakedFocusableDetector(
       enabled: widget._effectiveEnabled,
-      focusNode: effectiveFocusNode, // <-- from mixin
+      // <-- from mixin
       autofocus: widget.autofocus,
+      onFocusChange: (focused) {
+        updateFocusState(focused, widget.onFocusChange);
+      },
+      onHoverChange: (hovered) {
+        updateHoverState(hovered, widget.onHoverChange);
+      },
+      focusNode: effectiveFocusNode,
+      mouseCursor: widget._effectiveEnabled
+          ? widget.mouseCursor
+          : SystemMouseCursors.basic,
       shortcuts: const {
         SingleActivator(LogicalKeyboardKey.enter): ActivateIntent(),
         SingleActivator(LogicalKeyboardKey.space): ActivateIntent(),
@@ -215,15 +224,6 @@ class _NakedButtonState extends State<NakedButton>
           onInvoke: _handleKeyboardActivation,
         ),
       },
-      onShowHoverHighlight: (hovered) {
-        updateHoverState(hovered, widget.onHoverChange);
-      },
-      onFocusChange: (focused) {
-        updateFocusState(focused, widget.onFocusChange);
-      },
-      mouseCursor: widget._effectiveEnabled
-          ? widget.mouseCursor
-          : SystemMouseCursors.basic,
       child: Semantics(
         enabled: widget._effectiveEnabled,
 

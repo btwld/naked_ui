@@ -16,6 +16,8 @@ import 'package:flutter/material.dart'
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
+import 'utilities/naked_focusable_detector.dart';
+
 typedef NakedTextFieldBuilder =
     Widget Function(BuildContext context, Widget editableText);
 
@@ -705,9 +707,9 @@ class _NakedTextFieldState extends State<NakedTextField>
 
     final Widget composed = withSemantics(widget.builder(context, editable));
     // Ensure a focus action is exposed in semantics parity with Material.
-    final Widget composedWithFocusSemantics = FocusableActionDetector(
+    final Widget composedWithFocusSemantics = NakedFocusableDetector(
       enabled: widget.enabled,
-      includeFocusSemantics: true,
+      includeSemantics: true,
       child: composed,
     );
 

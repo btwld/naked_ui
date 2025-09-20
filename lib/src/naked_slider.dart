@@ -2,6 +2,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
 import 'mixins/naked_mixins.dart';
+import 'utilities/naked_focusable_detector.dart';
 
 // Slider keyboard shortcuts (left-to-right layout)
 const Map<ShortcutActivator, Intent> _kSliderShortcutsLtr =
@@ -67,7 +68,7 @@ const Map<ShortcutActivator, Intent> _kSliderShortcutsRtl =
 ///
 /// See also:
 /// - [Slider], the Material-styled slider for typical apps.
-/// - [FocusableActionDetector], used to integrate keyboard and focus handling.
+/// - [NakedFocusableDetector], used to integrate keyboard and focus handling.
 class NakedSlider extends StatefulWidget {
   const NakedSlider({
     super.key,
@@ -158,9 +159,9 @@ class NakedSlider extends StatefulWidget {
 }
 
 class _NakedSliderState extends State<NakedSlider>
-    with WidgetStatesMixin<NakedSlider>, FocusableMixin<NakedSlider> {
+    with WidgetStatesMixin<NakedSlider>, FocusNodeMixin<NakedSlider> {
   @override
-  FocusNode? get focusableExternalNode => widget.focusNode;
+  FocusNode? get widgetProvidedNode => widget.focusNode;
 
   bool _isDragging = false;
   // track latest normalized value we told the world about
@@ -403,18 +404,17 @@ class _NakedSliderState extends State<NakedSlider>
       child: widget.child,
     );
 
-    return FocusableActionDetector(
+    return NakedFocusableDetector(
       enabled: _isEnabled,
-      focusNode: effectiveFocusNode,
       autofocus: widget.autofocus,
       descendantsAreTraversable: false, // no focus into the visual child
-      shortcuts: _shortcuts,
-      actions: _actions,
-      onShowHoverHighlight: (hover) =>
-          updateHoverState(hover, widget.onHoverChange),
       onFocusChange: (focused) =>
           updateFocusState(focused, widget.onFocusChange),
+      onHoverChange: (hover) => updateHoverState(hover, widget.onHoverChange),
+      focusNode: effectiveFocusNode,
       mouseCursor: _cursor,
+      shortcuts: _shortcuts,
+      actions: _actions,
       child: Semantics(
         container: true,
         enabled: _isEnabled,

@@ -324,7 +324,7 @@ class _NakedSelectState<T> extends State<NakedSelect<T>>
           builder: (context, states, _) {
             return widget.triggerBuilder(
               context,
-              NakedSelectState<T>(
+              NakedSelectState(
                 states: states,
                 isOpen: _isOpen,
                 value: widget.value,

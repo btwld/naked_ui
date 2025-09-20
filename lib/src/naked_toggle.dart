@@ -2,6 +2,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
 import 'mixins/naked_mixins.dart';
+import 'utilities/naked_focusable_detector.dart';
 
 /// A headless binary toggle control without visuals.
 ///
@@ -149,10 +150,13 @@ class _NakedToggleState extends State<NakedToggle>
 
   @override
   Widget build(BuildContext context) {
-    return FocusableActionDetector(
+    return NakedFocusableDetector(
       enabled: widget._effectiveEnabled,
-      focusNode: widget.focusNode,
       autofocus: widget.autofocus,
+      onFocusChange: (f) => updateFocusState(f, widget.onFocusChange),
+      onHoverChange: (h) => updateHoverState(h, widget.onHoverChange),
+      focusNode: widget.focusNode,
+      mouseCursor: _effectiveCursor,
       shortcuts: const {
         SingleActivator(LogicalKeyboardKey.enter): ActivateIntent(),
         SingleActivator(LogicalKeyboardKey.space): ActivateIntent(),
@@ -162,9 +166,6 @@ class _NakedToggleState extends State<NakedToggle>
           onInvoke: (_) => widget._effectiveEnabled ? _activate() : null,
         ),
       },
-      onShowHoverHighlight: (h) => updateHoverState(h, widget.onHoverChange),
-      onFocusChange: (f) => updateFocusState(f, widget.onFocusChange),
-      mouseCursor: _effectiveCursor,
       child: Semantics(
         enabled: widget._effectiveEnabled,
         toggled: widget.value,
@@ -351,10 +352,13 @@ class _NakedToggleOptionState<T> extends State<NakedToggleOption<T>>
         ? (widget.mouseCursor ?? SystemMouseCursors.click)
         : SystemMouseCursors.basic;
 
-    return FocusableActionDetector(
+    return NakedFocusableDetector(
       enabled: isEnabled,
-      focusNode: widget.focusNode,
       autofocus: widget.autofocus,
+      onFocusChange: (f) => updateFocusState(f, widget.onFocusChange),
+      onHoverChange: (h) => updateHoverState(h, widget.onHoverChange),
+      focusNode: widget.focusNode,
+      mouseCursor: cursor,
       shortcuts: const {
         SingleActivator(LogicalKeyboardKey.enter): ActivateIntent(),
         SingleActivator(LogicalKeyboardKey.space): ActivateIntent(),
@@ -364,9 +368,6 @@ class _NakedToggleOptionState<T> extends State<NakedToggleOption<T>>
           onInvoke: (_) => _activate(scope),
         ),
       },
-      onShowHoverHighlight: (h) => updateHoverState(h, widget.onHoverChange),
-      onFocusChange: (f) => updateFocusState(f, widget.onFocusChange),
-      mouseCursor: cursor,
       child: Semantics(
         container: true,
         enabled: isEnabled,

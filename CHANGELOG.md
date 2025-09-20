@@ -6,7 +6,7 @@
 - API: Standardized state callbacks (onHoverChange/onPressChange/onFocusChange); removed onDisabledState (use enabled); added onSelectChange/onDragChange where applicable
 - Behavior: Menu uses RawMenuAnchor; Select adds type-ahead and focus return; Tabs select on focus; Slider keyboard/drag refinements
 - Accessibility: Improved semantics across button, checkbox, radio, slider, select, tabs, dialog, tooltip
-- Focus/State: Unified focus handling (FocusableMixin) and consistent hover/press/selected for builders
+- Focus/State: Unified focus handling (FocusNodeMixin) and consistent hover/press/selected for builders
 
 ---
 

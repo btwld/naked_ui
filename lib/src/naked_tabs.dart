@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
 import 'mixins/naked_mixins.dart';
+import 'utilities/naked_focusable_detector.dart';
 
 /// A headless tab group without visuals.
 ///
@@ -224,9 +225,9 @@ class NakedTab extends StatefulWidget {
 }
 
 class _NakedTabState extends State<NakedTab>
-    with WidgetStatesMixin<NakedTab>, FocusableMixin<NakedTab> {
+    with WidgetStatesMixin<NakedTab>, FocusNodeMixin<NakedTab> {
   @override
-  FocusNode? get focusableExternalNode => widget.focusNode;
+  FocusNode? get widgetProvidedNode => widget.focusNode;
 
   late bool _isEnabled;
   late NakedTabsScope _scope;
@@ -283,10 +284,19 @@ class _NakedTabState extends State<NakedTab>
         ? widget.builder!(context, widgetStates, widget.child)
         : widget.child!;
 
-    return FocusableActionDetector(
+    return NakedFocusableDetector(
       enabled: _isEnabled,
-      focusNode: effectiveFocusNode,
       autofocus: widget.autofocus,
+      onFocusChange: (f) {
+        updateFocusState(f, widget.onFocusChange);
+        if (f && _isEnabled) {
+          _scope.selectTab(widget.tabId); // selection follows focus
+        }
+        setState(() {}); // update focused state for builder
+      },
+      onHoverChange: (h) => updateHoverState(h, widget.onHoverChange),
+      focusNode: effectiveFocusNode,
+      mouseCursor: _isEnabled ? widget.mouseCursor : SystemMouseCursors.basic,
       // Enter/Space still activate; focus change selects too (below).
       shortcuts: const {
         SingleActivator(LogicalKeyboardKey.enter): ActivateIntent(),
@@ -297,15 +307,6 @@ class _NakedTabState extends State<NakedTab>
           onInvoke: (_) => _handleTap(),
         ),
       },
-      onShowHoverHighlight: (h) => updateHoverState(h, widget.onHoverChange),
-      onFocusChange: (f) {
-        updateFocusState(f, widget.onFocusChange);
-        if (f && _isEnabled) {
-          _scope.selectTab(widget.tabId); // selection follows focus
-        }
-        setState(() {}); // update focused state for builder
-      },
-      mouseCursor: _isEnabled ? widget.mouseCursor : SystemMouseCursors.basic,
       child: Semantics(
         container: true,
         enabled: _isEnabled,

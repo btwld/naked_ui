@@ -87,17 +87,17 @@ class NakedRadio<T> extends StatefulWidget {
 }
 
 class _NakedRadioState<T> extends State<NakedRadio<T>>
-    with FocusableMixin<NakedRadio<T>> {
+    with FocusNodeMixin<NakedRadio<T>> {
   bool? _lastReportedPressed;
   bool? _lastReportedHover;
 
   @protected
   @override
-  FocusNode? get focusableExternalNode => widget.focusNode;
+  FocusNode? get widgetProvidedNode => widget.focusNode;
 
   @protected
   @override
-  ValueChanged<bool>? get focusableOnFocusChange => widget.onFocusChange;
+  ValueChanged<bool>? get onFocusChange => widget.onFocusChange;
 
   @override
   Widget build(BuildContext context) {
@@ -116,7 +116,7 @@ class _NakedRadioState<T> extends State<NakedRadio<T>>
       value: widget.value,
       mouseCursor: WidgetStateMouseCursor.resolveWith((_) => effectiveCursor),
       toggleable: widget.toggleable,
-      focusNode: effectiveFocusNode!, // from FocusableMixin
+      focusNode: effectiveFocusNode!,
       autofocus: widget.autofocus && widget.enabled,
       groupRegistry: registry,
       enabled: widget.enabled,

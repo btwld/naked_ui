@@ -1,6 +1,7 @@
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
+import 'utilities/naked_focusable_detector.dart';
 import 'utilities/positioning.dart';
 
 /// A headless popover without visuals.
@@ -121,7 +122,7 @@ class _NakedPopoverState extends State<NakedPopover> {
         return Focus(focusNode: _internalTriggerNode, child: widget.child);
       }
 
-      return FocusableActionDetector(
+      return NakedFocusableDetector(
         focusNode: _internalTriggerNode,
         shortcuts: const {
           SingleActivator(LogicalKeyboardKey.enter): ActivateIntent(),

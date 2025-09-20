@@ -128,11 +128,7 @@ abstract class OverlayItem<T, S extends NakedWidgetStateSnapshot>
                 effectiveStates.addAll(additionalStates);
               }
 
-              return builder!(
-                context,
-                mapStates(effectiveStates),
-                child,
-              );
+              return builder!(context, mapStates(effectiveStates), child);
             },
     );
   }

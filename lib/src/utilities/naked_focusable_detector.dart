@@ -1,53 +1,6 @@
 import 'package:flutter/material.dart';
 
-/// Mixin that manages FocusNode lifecycle for widgets.
-/// Handles internal node creation/disposal and external node switching.
-mixin FocusNodeMixin<T extends StatefulWidget> on State<T> {
-  FocusNode? _internalFocusNode;
-
-  /// Get the external focus node from widget.
-  FocusNode? get widgetFocusNode;
-
-  /// Get the debug label for internal focus node.
-  String get focusNodeDebugLabel => widget.runtimeType.toString();
-
-  /// The effective focus node (external or internal).
-  FocusNode get effectiveFocusNode => widgetFocusNode ?? _internalFocusNode!;
-
-  /// Initialize focus node. Call in initState.
-  @protected
-  void initializeFocusNode() {
-    if (widgetFocusNode == null) {
-      _internalFocusNode = FocusNode(debugLabel: focusNodeDebugLabel);
-    }
-  }
-
-  /// Update focus node when widget changes. Call in didUpdateWidget.
-  @protected
-  void updateFocusNode(covariant T oldWidget);
-
-  /// Handle focus node switching between internal and external.
-  @protected
-  void handleFocusNodeChange(FocusNode? oldNode, FocusNode? newNode) {
-    if (oldNode != newNode) {
-      // Switching from internal to external - dispose internal
-      if (oldNode == null && newNode != null && _internalFocusNode != null) {
-        _internalFocusNode!.dispose();
-        _internalFocusNode = null;
-      }
-      // Switching from external to internal - create internal
-      else if (oldNode != null && newNode == null) {
-        _internalFocusNode = FocusNode(debugLabel: focusNodeDebugLabel);
-      }
-    }
-  }
-
-  /// Dispose focus node. Call in dispose.
-  @protected
-  void disposeFocusNode() {
-    _internalFocusNode?.dispose();
-  }
-}
+import '../mixins/naked_mixins.dart';
 
 /// Minimal widget that composes MouseRegion, Focus, Shortcuts, and Actions
 /// based on what's actually needed. Exposes all Focus parameters for full control.
@@ -134,7 +87,7 @@ class _NakedFocusableDetectorState extends State<NakedFocusableDetector>
   bool _wasEnabled = true;
 
   @override
-  FocusNode? get widgetFocusNode => widget.focusNode;
+  FocusNode? get widgetProvidedNode => widget.focusNode;
 
   @override
   String get focusNodeDebugLabel =>
@@ -143,7 +96,6 @@ class _NakedFocusableDetectorState extends State<NakedFocusableDetector>
   @override
   void initState() {
     super.initState();
-    initializeFocusNode();
     _wasEnabled = widget.enabled;
   }
 
@@ -155,25 +107,12 @@ class _NakedFocusableDetectorState extends State<NakedFocusableDetector>
   }
 
   @override
-  void updateFocusNode(NakedFocusableDetector oldWidget) {
-    handleFocusNodeChange(oldWidget.focusNode, widget.focusNode);
-  }
-
-  @override
   void didUpdateWidget(NakedFocusableDetector oldWidget) {
     super.didUpdateWidget(oldWidget);
-
-    updateFocusNode(oldWidget);
 
     if (widget.enabled != oldWidget.enabled) {
       _handleEnabledChange();
     }
-  }
-
-  @override
-  void dispose() {
-    disposeFocusNode();
-    super.dispose();
   }
 
   @override
@@ -204,11 +143,15 @@ class _NakedFocusableDetectorState extends State<NakedFocusableDetector>
     );
 
     // Wrap with MouseRegion if hover detection is needed
+    // Following Material Design behavior: disabled widgets don't respond to
+    // hover interactions but remain in the widget tree for stability
     if (widget.onHoverChange != null) {
       result = MouseRegion(
-        onEnter: (_) => widget.onHoverChange!(true),
-        onExit: (_) => widget.onHoverChange!(false),
-        cursor: widget.mouseCursor ?? MouseCursor.defer,
+        onEnter: widget.enabled ? (_) => widget.onHoverChange!(true) : null,
+        onExit: widget.enabled ? (_) => widget.onHoverChange!(false) : null,
+        cursor: widget.enabled
+            ? (widget.mouseCursor ?? MouseCursor.defer)
+            : SystemMouseCursors.basic,
         child: result,
       );
     }

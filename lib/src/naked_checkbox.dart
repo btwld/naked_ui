@@ -2,6 +2,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
 import 'mixins/naked_mixins.dart';
+import 'utilities/naked_focusable_detector.dart';
 
 /// A headless checkbox without visuals.
 ///
@@ -169,11 +170,18 @@ class _NakedCheckboxState extends State<NakedCheckbox>
   @override
   Widget build(BuildContext context) {
     return MergeSemantics(
-      child: FocusableActionDetector(
+      child: NakedFocusableDetector(
         // Keyboard and focus handling
         enabled: widget._effectiveEnabled,
-        focusNode: widget.focusNode,
         autofocus: widget.autofocus,
+        onFocusChange: (focused) {
+          updateFocusState(focused, widget.onFocusChange);
+        },
+        onHoverChange: (hovered) {
+          updateHoverState(hovered, widget.onHoverChange);
+        },
+        focusNode: widget.focusNode,
+        mouseCursor: _effectiveCursor,
         // Use default includeFocusSemantics: true to let it handle focus semantics automatically
         shortcuts: const {
           SingleActivator(LogicalKeyboardKey.enter): ActivateIntent(),
@@ -184,13 +192,6 @@ class _NakedCheckboxState extends State<NakedCheckbox>
             onInvoke: _handleKeyboardActivation,
           ),
         },
-        onShowHoverHighlight: (hovered) {
-          updateHoverState(hovered, widget.onHoverChange);
-        },
-        onFocusChange: (focused) {
-          updateFocusState(focused, widget.onFocusChange);
-        },
-        mouseCursor: _effectiveCursor,
         child: Semantics(
           container: true,
           enabled: widget._effectiveEnabled,

@@ -4,6 +4,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
+import 'utilities/naked_focusable_detector.dart';
+
 /// A headless accordion controller without visuals.
 ///
 /// Manages accordion state with optional min/max expansion constraints.
@@ -283,8 +285,10 @@ class NakedAccordionItem<T> extends StatelessWidget {
 
   /// The interactive state of the header.
   final bool enabled;
+
   /// The mouse cursor when interactive.
   final MouseCursor mouseCursor;
+
   /// The platform feedback enablement flag.
   final bool enableFeedback;
 
@@ -307,7 +311,7 @@ class NakedAccordionItem<T> extends StatelessWidget {
       builder: (context, _) {
         final isExpanded = controller.contains(value);
 
-        // Build the panel *only* when expanded (keeps semantics/reading order clean).
+        // Build the panel *only* when expanded.
         final Widget panel = isExpanded ? child : const SizedBox.shrink();
 
         void onTap() {
@@ -319,10 +323,13 @@ class NakedAccordionItem<T> extends StatelessWidget {
         return Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            FocusableActionDetector(
+            NakedFocusableDetector(
               enabled: enabled,
-              focusNode: focusNode,
               autofocus: autofocus,
+              onFocusChange: onFocusChange,
+              onHoverChange: onHoverChange,
+              focusNode: focusNode,
+              mouseCursor: enabled ? mouseCursor : SystemMouseCursors.basic,
               shortcuts: const {
                 SingleActivator(LogicalKeyboardKey.enter): ActivateIntent(),
                 SingleActivator(LogicalKeyboardKey.space): ActivateIntent(),
@@ -332,14 +339,8 @@ class NakedAccordionItem<T> extends StatelessWidget {
                   onInvoke: (_) => onTap(),
                 ),
               },
-              onShowHoverHighlight: onHoverChange,
-              onFocusChange: onFocusChange,
-              mouseCursor: enabled ? mouseCursor : SystemMouseCursors.basic,
               child: Semantics(
-                container: true,
                 enabled: enabled,
-                button: true,
-                expanded: isExpanded,
                 label: semanticLabel,
                 onTap: enabled ? onTap : null,
                 child: GestureDetector(
@@ -355,7 +356,7 @@ class NakedAccordionItem<T> extends StatelessWidget {
                       : null,
                   behavior: HitTestBehavior.opaque,
                   excludeFromSemantics: true,
-                  child: trigger(context, isExpanded),
+                  child: ExcludeSemantics(child: trigger(context, isExpanded)),
                 ),
               ),
             ),

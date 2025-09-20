@@ -81,7 +81,6 @@ typedef WidgetStatesBuilder =
 /// - Safely swaps between internal and external controllers.
 class _WidgetStatesHost extends StatefulWidget {
   const _WidgetStatesHost({
-    super.key,
     this.controller,
     this.onStateChange,
     this.callbacks,
