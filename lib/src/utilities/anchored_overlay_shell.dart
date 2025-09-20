@@ -89,7 +89,11 @@ class AnchoredOverlayShell extends StatelessWidget {
                               FocusScope.of(context).previousFocus(),
                         ),
                   },
-                  child: overlayChild,
+                  child: Focus(
+                    autofocus: true,
+                    canRequestFocus: true,
+                    child: overlayChild,
+                  ),
                 ),
               ),
             ),

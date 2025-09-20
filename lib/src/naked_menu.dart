@@ -8,37 +8,38 @@ import 'utilities/widget_state_snapshot.dart';
 
 /// State snapshot provided to [NakedMenu.triggerBuilder].
 class NakedMenuState<T> extends NakedWidgetStateSnapshot {
-  NakedMenuState({
-    required super.states,
-    required this.isOpen,
-    required this.selectedValue,
-  });
-
   /// Whether the overlay is currently open.
   final bool isOpen;
 
   /// The value currently marked as selected, if any.
   final T? selectedValue;
 
+  NakedMenuState({
+    required super.states,
+    required this.isOpen,
+    required this.selectedValue,
+  });
+
   bool get hasSelection => selectedValue != null;
 }
 
 /// State snapshot provided to [NakedMenuItem] builders.
 class NakedMenuItemState<T> extends NakedWidgetStateSnapshot {
-  NakedMenuItemState({
-    required super.states,
-    required this.value,
-    required this.selectedValue,
-  });
-
   /// The menu item's value.
   final T value;
 
   /// The parent menu's selected value.
   final T? selectedValue;
 
+  NakedMenuItemState({
+    required super.states,
+    required this.value,
+    required this.selectedValue,
+  });
+
   /// Whether this item matches the selected value.
-  bool get isCurrentSelection => selectedValue != null && value == selectedValue;
+  bool get isCurrentSelection =>
+      selectedValue != null && value == selectedValue;
 }
 
 /// Internal scope provided by [NakedMenu] to its overlay subtree.
@@ -50,6 +51,13 @@ class _NakedMenuScope<T> extends OverlayScope<T> {
     this.selectedValue,
     super.key,
   });
+
+  /// Returns the [_NakedMenuScope] that most tightly encloses the given [context].
+  ///
+  /// Returns null if no [NakedMenu] ancestor is found.
+  static _NakedMenuScope<T>? maybeOf<T>(BuildContext context) {
+    return OverlayScope.maybeOf(context);
+  }
 
   /// Returns the [_NakedMenuScope] that most tightly encloses the given [context].
   ///
@@ -86,37 +94,112 @@ class NakedMenuItem<T> extends OverlayItem<T, NakedMenuItemState<T>> {
     super.semanticLabel,
     super.child,
     super.builder,
+    this.closeOnActivate = true,
   });
+
+  /// Whether the menu will be closed when this item is activated.
+  ///
+  /// Defaults to true. Set to false to keep the menu open after this
+  /// item is selected, which is useful for toggle actions or when
+  /// the menu contains interactive content.
+  final bool closeOnActivate;
+
+  /// Handles the activation of this menu item.
+  ///
+  /// Gracefully handles missing scope using null-safe operators.
+  /// This allows NakedMenuItem to function as a basic button
+  /// even when not used within a NakedMenu context, following
+  /// Material's MenuItemButton pattern of graceful degradation.
+  void _handleActivation(_NakedMenuScope<T>? menu) {
+    menu?.onSelected?.call(value);
+    if (closeOnActivate) menu?.controller.close();
+  }
+
+  /// Computes additional widget states based on menu scope.
+  ///
+  /// Reserve optional support for "checked"/selected semantics when provided by scope.
+  /// Use null-safe access since scope may not be available in all contexts.
+  Set<WidgetState>? _computeAdditionalStates(_NakedMenuScope<T>? menu) {
+    if (menu?.selectedValue != null && menu!.selectedValue == value) {
+      return {WidgetState.selected};
+    }
+
+    return null;
+  }
 
   @override
   Widget build(BuildContext context) {
-    final menu = _NakedMenuScope.of<T>(context);
+    // Use maybeOf instead of of to handle InheritedWidget timing gracefully.
+    // This follows Material's MenuItemButton pattern where scope may not be
+    // available during the same build phase when it's being created.
+    // The scope is created in overlayBuilder and may not be fully established
+    // in the widget tree when NakedMenuItem builds in the same cycle.
+    final menu = _NakedMenuScope.maybeOf<T>(context);
 
-    Set<WidgetState>? additionalStates;
-    // Reserve optional support for "checked"/selected semantics when provided by scope.
-    if (menu.selectedValue != null && menu.selectedValue == value) {
-      additionalStates = {WidgetState.selected};
-    }
+    final VoidCallback? onPressed = enabled
+        ? () => _handleActivation(menu)
+        : null;
+    final additionalStates = _computeAdditionalStates(menu);
 
     return buildButton(
-      onPressed: enabled
-          ? () {
-              menu.onSelected?.call(value);
-              menu.controller.close();
-            }
-          : null,
+      onPressed: onPressed,
       effectiveEnabled: enabled,
       additionalStates: additionalStates,
       mapStates: (states) => NakedMenuItemState<T>(
         states: states,
         value: value,
-        selectedValue: menu.selectedValue,
+        // Use null-safe access for selectedValue since scope may be null
+        selectedValue: menu?.selectedValue,
       ),
     );
   }
 }
 
 /// A headless menu that renders items in an overlay anchored to its trigger.
+///
+/// ## Keyboard Navigation
+///
+/// The menu follows Flutter's standard keyboard navigation patterns:
+///
+/// ### Opening and Closing
+/// - **Space/Enter on trigger**: Opens the overlay
+/// - **Escape**: Closes the overlay and returns focus to trigger
+/// - **Click outside**: Closes the overlay (if [closeOnClickOutside] is true)
+///
+/// ### Navigating Items
+/// - **Arrow Up/Down**: Navigate between focusable items in the overlay
+/// - **Enter/Space on item**: Activates the focused item
+/// - **Tab**: Moves focus through items in traversal order
+///
+/// ### Focus Management
+/// When the overlay opens, focus transfers to the overlay container but does NOT
+/// automatically focus the first item. Users must use arrow keys to navigate to
+/// items before activating them. This follows Flutter Material patterns where
+/// explicit navigation is required.
+///
+/// The focus behavior ensures:
+/// - Keyboard-only users can access all functionality
+/// - Screen readers receive proper focus announcements
+/// - Navigation is predictable and explicit
+///
+/// ### Example Usage
+/// ```dart
+/// NakedMenu<String>(
+///   controller: MenuController(),
+///   triggerBuilder: (context, state) => Text('Menu'),
+///   overlayBuilder: (context, info) => Column(
+///     children: [
+///       NakedMenu.Item(value: 'copy', child: Text('Copy')),
+///       NakedMenu.Item(value: 'paste', child: Text('Paste')),
+///     ],
+///   ),
+///   onSelected: (value) => print('Action: $value'),
+/// )
+/// ```
+///
+/// See also:
+/// - [NakedMenuItem], for individual actionable items
+/// - [NakedSelect], for selection-based menus with similar keyboard behavior
 class NakedMenu<T> extends StatefulWidget {
   const NakedMenu({
     super.key,
@@ -242,7 +325,7 @@ class _NakedMenuState<T> extends State<NakedMenu<T>>
           builder: (context, states, _) {
             return widget.triggerBuilder(
               context,
-              NakedMenuState<T>(
+              NakedMenuState(
                 states: states,
                 isOpen: _isOpen,
                 selectedValue: widget.selectedValue,

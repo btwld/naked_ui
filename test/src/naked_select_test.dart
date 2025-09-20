@@ -144,7 +144,7 @@ void main() {
       await tester.pumpAndSettle();
 
       await tester.sendKeyEvent(LogicalKeyboardKey.escape);
-      await tester.pump();
+      await tester.pumpAndSettle();
 
       expect(find.text('Apple'), findsNothing);
     }, timeout: const Timeout(Duration(seconds: 10)));
@@ -180,7 +180,7 @@ void main() {
 
         // Overlay should have focus; now close with Escape
         await tester.sendKeyEvent(LogicalKeyboardKey.escape);
-        await tester.pump();
+        await tester.pumpAndSettle();
 
         // Expect focus to be back on the trigger
         expect(triggerFocusNode.hasFocus, isTrue);
@@ -218,7 +218,9 @@ void main() {
       expect(find.text('Apple'), findsOneWidget);
       expect(find.text('Banana'), findsOneWidget);
 
-      // Focus should be on first item, press Enter to select
+      // Navigate to first item with arrow down, then press Enter to select
+      await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
+      await tester.pumpAndSettle();
       await tester.sendKeyEvent(LogicalKeyboardKey.enter);
       await tester.pumpAndSettle();
 

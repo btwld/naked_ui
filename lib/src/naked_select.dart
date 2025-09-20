@@ -97,6 +97,17 @@ class NakedSelectOption<T> extends OverlayItem<T, NakedSelectItemState<T>> {
     super.builder,
   });
 
+  /// Handles the selection of this option.
+  void _handleSelection(_NakedSelectScope<T> scope) {
+    scope.onChanged?.call(value);
+    if (scope.closeOnSelect) scope.controller.close();
+  }
+
+  /// Computes additional widget states based on selection status.
+  Set<WidgetState>? _computeAdditionalStates(bool isSelected) {
+    return isSelected ? {WidgetState.selected} : null;
+  }
+
   @override
   Widget build(BuildContext context) {
     final scope = _NakedSelectScope.of<T>(context);
@@ -104,16 +115,9 @@ class NakedSelectOption<T> extends OverlayItem<T, NakedSelectItemState<T>> {
     final isSelected = scope.value == value;
     final effectiveEnabled = enabled && scope.enabled;
     final VoidCallback? onPressed = effectiveEnabled
-        ? () {
-            scope.onChanged?.call(value);
-            if (scope.closeOnSelect) scope.controller.close();
-          }
+        ? () => _handleSelection(scope)
         : null;
-
-    Set<WidgetState>? additionalStates;
-    if (isSelected) {
-      additionalStates = {WidgetState.selected};
-    }
+    final additionalStates = _computeAdditionalStates(isSelected);
 
     return buildButton(
       onPressed: onPressed,
@@ -129,6 +133,49 @@ class NakedSelectOption<T> extends OverlayItem<T, NakedSelectItemState<T>> {
 }
 
 /// Headless select/dropdown that renders items in an overlay anchored to a trigger.
+///
+/// ## Keyboard Navigation
+///
+/// The select follows Flutter's standard keyboard navigation patterns:
+///
+/// ### Opening and Closing
+/// - **Space/Enter on trigger**: Opens the overlay
+/// - **Escape**: Closes the overlay and returns focus to trigger
+/// - **Click outside**: Closes the overlay (if [closeOnClickOutside] is true)
+///
+/// ### Navigating Items
+/// - **Arrow Up/Down**: Navigate between focusable items in the overlay
+/// - **Enter/Space on item**: Selects the focused item
+/// - **Tab**: Moves focus through items in traversal order
+///
+/// ### Focus Management
+/// When the overlay opens, focus transfers to the overlay container but does NOT
+/// automatically focus the first item. Users must use arrow keys to navigate to
+/// items before selecting them. This follows Flutter Material patterns where
+/// explicit navigation is required.
+///
+/// The focus behavior ensures:
+/// - Keyboard-only users can access all functionality
+/// - Screen readers receive proper focus announcements
+/// - Navigation is predictable and explicit
+///
+/// ### Example Usage
+/// ```dart
+/// NakedSelect<String>(
+///   triggerBuilder: (context, state) => Text('Select: ${state.value ?? 'None'}'),
+///   overlayBuilder: (context, info) => Column(
+///     children: [
+///       NakedSelect.Option(value: 'apple', child: Text('Apple')),
+///       NakedSelect.Option(value: 'banana', child: Text('Banana')),
+///     ],
+///   ),
+///   onChanged: (value) => print('Selected: $value'),
+/// )
+/// ```
+///
+/// See also:
+/// - [NakedSelectOption], for individual selectable items
+/// - [NakedMenu], for action-based menus with similar keyboard behavior
 class NakedSelect<T> extends StatefulWidget {
   const NakedSelect({
     super.key,
