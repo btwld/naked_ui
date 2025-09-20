@@ -1,13 +1,17 @@
 ---
 title: NakedTooltip
+description: Hover/focus triggered tooltip overlay with positioning and lifecycle callbacks
+keywords: [flutter, tooltip, hover, overlay, headless]
 ---
 
-NakedTooltip provides core tooltip behavior and accessibility without imposing any visual styling. It handles show/hide, positions relative to a target, and supports auto‑dismiss with an optional removal delay for exit animations.
+`NakedTooltip` wires up a popover that appears on hover/focus and hides after a delay. Provide the trigger child and a builder for the tooltip content; the widget manages timers, positioning, and focus dismissal.
 
 <Info>
-  You can find this example in our [GitHub repository](https://github.com/btwld/naked_ui/blob/main/example/lib/api/naked_tooltip.0.dart).
+  Working example: [`example/lib/api/naked_tooltip.0.dart`](https://github.com/btwld/naked_ui/blob/main/example/lib/api/naked_tooltip.0.dart).
 </Info>
-<CodeGroup title="Usage Example" defaultLanguage="dart">
+
+## Quick Start
+
 ```dart
 class TooltipExample extends StatefulWidget {
   const TooltipExample({super.key});
@@ -18,122 +22,104 @@ class TooltipExample extends StatefulWidget {
 
 class _TooltipExampleState extends State<TooltipExample>
     with SingleTickerProviderStateMixin {
-  late final _animationController = AnimationController(
-    duration: const Duration(milliseconds: 300),
+  late final AnimationController _controller = AnimationController(
+    duration: const Duration(milliseconds: 200),
     vsync: this,
   );
 
   @override
   void dispose() {
-    _animationController.dispose();
+    _controller.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return NakedTooltip(
-      position: const NakedMenuPosition(
-        target: Alignment.topCenter,
-        follower: Alignment.bottomCenter,
+      positioning: const OverlayPositionConfig(
+        alignment: Alignment.topCenter,
+        fallbackAlignment: Alignment.bottomCenter,
       ),
-      waitDuration: const Duration(seconds: 0),
-      showDuration: const Duration(seconds: 0),
-      removalDelay: const Duration(milliseconds: 300),
-      onStateChange: (state) {
-        switch (state) {
-          case OverlayChildLifecycleState.present:
-            _animationController.forward();
-            break;
-          case OverlayChildLifecycleState.pendingRemoval:
-            _animationController.reverse();
-            break;
-          default:
-            break;
-        }
+      waitDuration: const Duration(milliseconds: 400),
+      showDuration: const Duration(seconds: 2),
+      onOpen: () => _controller.forward(),
+      onClose: () => _controller.reverse(),
+      tooltipBuilder: (context) {
+        return FadeTransition(
+          opacity: _controller,
+          child: Material(
+            elevation: 4,
+            borderRadius: BorderRadius.circular(8),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              child: const Text('Copy to clipboard'),
+            ),
+          ),
+        );
       },
-      tooltipBuilder: (context) => SlideTransition(
-        position: _animationController.drive(Tween<Offset>(
-          begin: const Offset(0, 0.1),
-          end: const Offset(0, 0),
-        )),
-        child: FadeTransition(
-          opacity: _animationController,
-          child: Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: Colors.grey[700],
-              borderRadius: BorderRadius.circular(4),
-            ),
-            child: const Text(
-              'This is a tooltip',
-              style: TextStyle(color: Colors.white),
-            ),
-          ),
-        ),
-      ),
       child: Container(
-        padding: const EdgeInsets.all(8),
+        padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
-          color: const Color(0xFF3D3D3D),
-          borderRadius: BorderRadius.circular(4),
+          color: Colors.grey.shade900,
+          borderRadius: BorderRadius.circular(8),
         ),
-        child: const Text(
-          'Hover me',
-          style: TextStyle(
-            color: Colors.white,
-          ),
-        ),
+        child: const Icon(Icons.copy, color: Colors.white, size: 18),
       ),
+      semanticsLabel: 'Copy button tooltip',
     );
   }
 }
 ```
-</CodeGroup>
 
 ## Constructor
 
 ```dart
 const NakedTooltip({
-  super.key,
+  Key? key,
   required this.child,
   required this.tooltipBuilder,
   this.showDuration = const Duration(seconds: 2),
   this.waitDuration = const Duration(seconds: 1),
-  this.position = const NakedMenuPosition(
-    target: Alignment.topCenter,
-    follower: Alignment.bottomCenter,
+  this.positioning = const OverlayPositionConfig(
+    alignment: Alignment.topCenter,
+    fallbackAlignment: Alignment.bottomCenter,
   ),
-  this.fallbackPositions = const [],
-  this.removalDelay = const Duration(seconds: 0),
-  this.onStateChange,
+  this.onOpen,
+  this.onClose,
+  this.onOpenRequested,
+  this.onCloseRequested,
+  this.semanticsLabel,
 })
 ```
 
-## Properties
+### Key Parameters
 
-#### child  → `Widget`
-The widget that triggers the tooltip.
+- `child` → trigger widget
+- `tooltipBuilder` → create the tooltip contents each time it shows
+- `showDuration` → how long the tooltip stays visible before hiding automatically
+- `waitDuration` → delay before showing once hover/focus occurs
+- `positioning` → `OverlayPositionConfig` controlling anchor & offset
+- `onOpen` / `onClose` → lifecycle hooks useful for animations
+- `onOpenRequested` / `onCloseRequested` → intercept show/hide requests (e.g. async delays)
+- `semanticsLabel` → text announced by assistive technologies on hover/focus
 
-#### tooltipBuilder → `WidgetBuilder`
-A builder function that creates the tooltip content. This function is called to generate the tooltip widget dynamically.
+## Behaviour Notes
 
-#### showDuration → `Duration`
-The duration for which the tooltip remains visible. Defaults to Duration(seconds: 2).
+- Tooltips open on pointer hover and keyboard focus
+- When `waitDuration` elapses, the overlay opens via `RawMenuAnchor`; timers reset on exit
+- The overlay hides after `showDuration`; supply `onClose` for exit animations
+- The trigger remains focusable; use `semanticsLabel` for descriptive text when the trigger has no visible label
 
-#### waitDuration → `Duration`
-The duration to wait before showing the tooltip after hover. Defaults to Duration(seconds: 1).
+## Positioning Tips
 
-#### position → `NakedMenuPosition`
-Defines how the tooltip overlay is positioned relative to the target.
+Use `OverlayPositionConfig.offset` to nudge the tooltip, and provide a `fallbackAlignment` to handle cramped layouts:
 
-#### fallbackPositions → `List<NakedMenuPosition>`
-Fallback alignments used if the tooltip doesn't fit in the viewport.
+```dart
+const OverlayPositionConfig(
+  alignment: Alignment.topCenter,
+  fallbackAlignment: Alignment.bottomCenter,
+  offset: Offset(0, -8),
+);
+```
 
-#### removalDelay → `Duration`
-The duration to wait before removing the Widget from the Overlay after the tooltip is hidden. Defaults to Duration(seconds: 0).
-
-#### onStateChange → `void Function(OverlayChildLifecycleState state)?`
-Event handler for tooltip lifecycle state changes: `present`, `pendingRemoval`, `removed`.
-
-#### semanticsLabel → `String?`
-Optional semantics tooltip label applied to the trigger. Screen readers announce this on focus/hover.
+The builder can read `RawMenuAnchorOverlayInfo` from the optional `info` argument (see the example) when you need pointer coordinates for arrow placement.

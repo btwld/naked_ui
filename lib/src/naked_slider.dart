@@ -26,6 +26,10 @@ const Map<ShortcutActivator, Intent> _kSliderShortcutsLtr =
       // Home/End
       SingleActivator(LogicalKeyboardKey.home): _SliderSetToMinIntent(),
       SingleActivator(LogicalKeyboardKey.end): _SliderSetToMaxIntent(),
+
+      // Page Up/Down
+      SingleActivator(LogicalKeyboardKey.pageUp): _SliderShiftIncrementIntent(),
+      SingleActivator(LogicalKeyboardKey.pageDown): _SliderShiftDecrementIntent(),
     };
 
 // Slider keyboard shortcuts (right-to-left layout)
@@ -50,6 +54,10 @@ const Map<ShortcutActivator, Intent> _kSliderShortcutsRtl =
       // Home/End
       SingleActivator(LogicalKeyboardKey.home): _SliderSetToMinIntent(),
       SingleActivator(LogicalKeyboardKey.end): _SliderSetToMaxIntent(),
+
+      // Page Up/Down
+      SingleActivator(LogicalKeyboardKey.pageUp): _SliderShiftIncrementIntent(),
+      SingleActivator(LogicalKeyboardKey.pageDown): _SliderShiftDecrementIntent(),
     };
 
 /// A headless slider without visuals.

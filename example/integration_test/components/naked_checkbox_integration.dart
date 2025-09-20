@@ -247,24 +247,27 @@ void main() {
                   key: checkboxKey,
                   value: checkboxValue,
                   onChanged: (value) => setState(() => checkboxValue = value!),
-                  builder: (context, states, child) {
-                    final isChecked = states.contains(WidgetState.selected);
+                  builder: (context, checkboxState, child) {
+                    final bool isChecked = checkboxState.isChecked == true;
                     final box = Container(
                       width: 24,
                       height: 24,
                       decoration: BoxDecoration(
                         color: isChecked ? Colors.blue : Colors.white,
                         border: Border.all(
-                          color: states.contains(WidgetState.hovered)
+                          color: checkboxState.isHovered
                               ? Colors.blue.shade400
                               : Colors.grey,
-                          width: states.contains(WidgetState.pressed) ? 3 : 2,
+                          width: checkboxState.isPressed ? 3 : 2,
                         ),
                         borderRadius: BorderRadius.circular(4),
                       ),
                       child: isChecked
-                          ? const Icon(Icons.check,
-                              color: Colors.white, size: 18)
+                          ? const Icon(
+                              Icons.check,
+                              color: Colors.white,
+                              size: 18,
+                            )
                           : null,
                     );
                     return Column(

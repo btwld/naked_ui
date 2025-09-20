@@ -1,146 +1,90 @@
 ---
 title: NakedTextField
+description: Builder-first text input that exposes raw EditableText while you provide the chrome
+keywords: [flutter, textfield, editabletext, headless, input]
 ---
 
-NakedTextField provides all the core functionality of a text field without imposing any visual styling or decoration, giving developers complete design freedom. It maintains all behavior including text editing, keyboard input, selection, and accessibility features while allowing custom visual representation.
+`NakedTextField` is a light wrapper around `EditableText` that keeps Flutter’s native text-editing behaviour—selection handles, keyboard shortcuts, IME configuration—while letting you render the visual chrome yourself via a builder.
 
 <Info>
-  You can find examples in our [GitHub repository](https://github.com/btwld/naked_ui/blob/main/example/lib/api/naked_textfield.0.dart).
+  See the complete example in [`example/lib/api/naked_textfield.0.dart`](https://github.com/btwld/naked_ui/blob/main/example/lib/api/naked_textfield.0.dart).
 </Info>
 
-<CodeGroup title="Usage Example" defaultLanguage="dart">
+## Quick Start
+
 ```dart
-class TextFieldExample extends StatefulWidget {
-  const TextFieldExample({super.key});
+class HeadlessField extends StatefulWidget {
+  const HeadlessField({super.key});
 
   @override
-  State<TextFieldExample> createState() => _TextFieldExampleState();
+  State<HeadlessField> createState() => _HeadlessFieldState();
 }
 
-class _TextFieldExampleState extends State<TextFieldExample> {
-  bool _isHovered = false;
-  bool _isPressed = false;
-  bool _isFocused = false;
-
-  Color get _backgroundColor {
-    const baseColor = Colors.white;
-    if (_isPressed || _isFocused) {
-      return baseColor;
-    }
-    if (_isHovered) {
-      return Colors.grey.shade200;
-    }
-    return baseColor;
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: 300,
-      child: NakedTextField(
-        cursorColor: Colors.grey.shade700,
-        
-        onHoverChange: (isHovered) => setState(() => _isHovered = isHovered),
-        onPressChange: (isPressed) => setState(() => _isPressed = isPressed),
-        onFocusChange: (isFocused) => setState(() => _isFocused = isFocused),
-        builder: (context, child) {
-          return AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(10),
-              color: _backgroundColor,
-              border: Border.all(
-                color: Colors.grey.shade300,
-                width: 1,
-              ),
-              boxShadow: [
-                if (_isFocused)
-                  BoxShadow(
-                    color: Colors.grey.shade100,
-                    spreadRadius: 3,
-                    offset: const Offset(0, 0),
-                  ),
-              ],
-            ),
-            child: child,
-          );
-        },
-      ),
-    );
-  }
-}
-```
-</CodeGroup>
-
-<CodeGroup title="Search Input with Icon" defaultLanguage="dart">
-```dart
-class SearchInputExample extends StatefulWidget {
-  const SearchInputExample({super.key});
-
-  @override
-  State<SearchInputExample> createState() => _SearchInputExampleState();
-}
-
-class _SearchInputExampleState extends State<SearchInputExample> {
-  final _controller = TextEditingController();
-  bool _isFocused = false;
+class _HeadlessFieldState extends State<HeadlessField> {
+  final controller = TextEditingController();
+  bool _hovered = false;
+  bool _focused = false;
 
   @override
   void dispose() {
-    _controller.dispose();
+    controller.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.grey.shade50,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: _isFocused ? Colors.blue : Colors.grey.shade300,
-          width: _isFocused ? 2 : 1,
-        ),
-      ),
-      child: Row(
-        children: [
-          const Padding(
-            padding: EdgeInsets.all(12),
-            child: Icon(
-              Icons.search,
-              color: Colors.grey,
-              size: 20,
+    return NakedTextField(
+      controller: controller,
+      onChanged: (value) => debugPrint('Value: $value'),
+      onHoverChange: (hovered) => setState(() => _hovered = hovered),
+      onFocusChange: (focused) => setState(() => _focused = focused),
+      builder: (context, editable) {
+        return AnimatedContainer(
+          duration: const Duration(milliseconds: 160),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(10),
+            color: Colors.white,
+            border: Border.all(
+              color: _focused
+                  ? Colors.blue
+                  : _hovered
+                      ? Colors.grey.shade400
+                      : Colors.grey.shade300,
+              width: _focused ? 2 : 1,
             ),
+            boxShadow: _focused
+                ? [
+                    BoxShadow(
+                      color: Colors.blue.withOpacity(0.12),
+                      blurRadius: 12,
+                      offset: const Offset(0, 4),
+                    ),
+                  ]
+                : null,
           ),
-          Expanded(
-            child: NakedTextField(
-              controller: _controller,
-              onFocusChange: (focused) => setState(() => _isFocused = focused),
-              decoration: const InputDecoration(
-                hintText: 'Search...',
-                border: InputBorder.none,
-                contentPadding: EdgeInsets.symmetric(vertical: 12),
-              ),
-            ),
-          ),
-          if (_controller.text.isNotEmpty)
-            IconButton(
-              onPressed: () {
-                _controller.clear();
-                setState(() {});
-              },
-              icon: const Icon(Icons.clear, size: 18),
-            ),
-        ],
-      ),
+          child: editable,
+        );
+      },
     );
   }
 }
 ```
-</CodeGroup>
 
-## Constructor
+## Builder Contract
+
+`NakedTextFieldBuilder` has the signature:
+
+```dart
+typedef NakedTextFieldBuilder = Widget Function(
+  BuildContext context,
+  Widget editableText,
+);
+```
+
+The provided `editableText` widget is an `EditableText` configured with all parameters from `NakedTextField`. Wrap it with decoration, icons, paddings, or animations—just return the composed widget.
+
+## Constructor Highlights
 
 ```dart
 const NakedTextField({
@@ -189,15 +133,14 @@ const NakedTextField({
   this.onTap,
   this.onTapAlwaysCalled = false,
   this.onTapChange,
-  this.onPressChange,
   this.onTapOutside,
-  this.onTapUpOutside,
   this.scrollController,
   this.scrollPhysics,
   this.autofillHints = const <String>[],
   this.contentInsertionConfiguration,
   this.clipBehavior = Clip.hardEdge,
   this.restorationId,
+  this.onTapUpOutside,
   this.stylusHandwritingEnabled = true,
   this.enableIMEPersonalizedLearning = true,
   this.contextMenuBuilder,
@@ -206,6 +149,7 @@ const NakedTextField({
   this.magnifierConfiguration,
   this.onHoverChange,
   this.onFocusChange,
+  this.onPressChange,
   this.style,
   required this.builder,
   this.ignorePointers,
@@ -214,209 +158,23 @@ const NakedTextField({
 })
 ```
 
-## Properties
+> Parameters mirror `EditableText`, so you can keep using the same configuration options you know from Flutter’s built-in text fields.
 
-#### controller → `TextEditingController?`
-Controls the text being edited. If null, a default TextEditingController will be created.
+## Event Hooks
 
-#### focusNode → `FocusNode?`
-Defines the keyboard focus for this widget. If null, a new FocusNode will be created.
+- `onHoverChange`, `onFocusChange`, `onPressChange` → expose interaction states for your decoration logic
+- `onTap`, `onTapChange`, `onTapOutside`, `onTapUpOutside` → fine-grained gesture hooks
+- `onChanged`, `onSubmitted`, `onEditingComplete` → forward the underlying `EditableText` callbacks
 
-#### undoController → `UndoHistoryController?`
-The controller for undo/redo history.
+## Accessibility & Semantics
 
-#### keyboardType → `TextInputType?`
-The type of keyboard to use for editing the text.
+- Supply `semanticLabel` / `semanticHint` when the visual chrome lacks textual context
+- `NakedTextField` wraps the builder result with proper `Semantics` for focusable text fields
+- Respect contrast and focus indicators in your builder to ensure the field remains discoverable
 
-#### textInputAction → `TextInputAction?`
-The type of action button to use for the keyboard.
+## Tips
 
-#### textCapitalization → `TextCapitalization`
-Configures how the platform keyboard will select an uppercase or lowercase keyboard. Defaults to TextCapitalization.none.
-
-#### textAlign → `TextAlign`
-How the text should be aligned horizontally. Defaults to TextAlign.start.
-
-#### textDirection → `TextDirection?`
-The directionality of the text.
-
-#### readOnly → `bool`
-Whether the text can be changed. Defaults to false.
-
-#### showCursor → `bool?`
-Whether to show cursor.
-
-#### autofocus → `bool`
-Whether this text field should focus itself if nothing else is already focused. Defaults to false.
-
-#### obscuringCharacter → `String`
-Character used for obscuring text if obscureText is true. Defaults to '•'.
-
-#### obscureText → `bool`
-Whether to hide the text being edited. Defaults to false.
-
-#### autocorrect → `bool`
-Whether to enable autocorrect. Defaults to true.
-
-#### smartDashesType → `SmartDashesType`
-Configuration of smart dashes behavior.
-
-#### smartQuotesType → `SmartQuotesType`
-Configuration of smart quotes behavior.
-
-#### enableSuggestions → `bool`
-Whether to show input suggestions as the user types. Defaults to true.
-
-#### maxLines → `int?`
-The maximum number of lines for the text to span. Defaults to 1.
-
-#### minLines → `int?`
-The minimum number of lines to occupy when the content spans fewer lines.
-
-#### expands → `bool`
-Whether this widget's height will be sized to fill its parent. Defaults to false.
-
-#### maxLength → `int?`
-The maximum number of characters to allow in the text field.
-
-#### maxLengthEnforcement → `MaxLengthEnforcement?`
-Determines how the maxLength limit should be enforced.
-
-#### onChanged → `ValueChanged<String>?`
-Called when the user initiates a change to the text field's value.
-
-#### onEditingComplete → `VoidCallback?`
-Called when the user indicates that they are done editing the text in the field.
-
-#### onSubmitted → `ValueChanged<String>?`
-Called when the user submits editable content.
-
-#### onAppPrivateCommand → `AppPrivateCommandCallback?`
-Private API for platform-specific customization.
-
-#### inputFormatters → `List<TextInputFormatter>?`
-Optional input validation and formatting overrides.
-
-#### enabled → `bool`
-Whether the text field is enabled. Defaults to true.
-
-#### cursorWidth → `double`
-Width of the cursor. Defaults to 2.0.
-
-#### cursorHeight → `double?`
-Height of the cursor.
-
-#### cursorRadius → `Radius?`
-Radius of the cursor.
-
-#### cursorOpacityAnimates → `bool?`
-Whether the cursor opacity animates.
-
-#### cursorColor → `Color?`
-Color of the cursor.
-
-#### selectionHeightStyle → `ui.BoxHeightStyle`
-Controls how tall the selection highlight boxes are computed to be. Defaults to ui.BoxHeightStyle.tight.
-
-#### selectionWidthStyle → `ui.BoxWidthStyle`
-Controls how wide the selection highlight boxes are computed to be. Defaults to ui.BoxWidthStyle.tight.
-
-#### keyboardAppearance → `Brightness?`
-The appearance of the keyboard.
-
-#### scrollPadding → `EdgeInsets`
-Padding around the scrollable content. Defaults to EdgeInsets.all(20.0).
-
-#### dragStartBehavior → `DragStartBehavior`
-Drag start behavior. Defaults to DragStartBehavior.start.
-
-#### enableInteractiveSelection → `bool`
-Whether the value can be selected. Defaults to true.
-
-#### selectionControls → `TextSelectionControls?`
-Controls the selection handles and contextual toolbar.
-
-#### onTap → `GestureTapCallback?`
-Triggered when the user taps on the field.
-
-#### onTapAlwaysCalled → `bool`
-Whether onTap should be called for every tap. Defaults to false.
-
-#### onTapChange → `ValueChanged<bool>?`
-Called when tap state changes (down/up inside).
-
-#### onPressChange → `ValueChanged<bool>?`
-Called when the pressed state changes. Provides the current pressed state as a boolean parameter:
-- `true` when the text field is pressed
-- `false` when the text field is released
-
-#### onTapOutside → `TapRegionCallback?`
-Called when a tap is detected outside of the field.
-
-#### onTapUpOutside → `TapRegionUpCallback?`
-Called when a tap up occurs outside of the field.
-
-#### scrollController → `ScrollController?`
-Controls scrolling of the text field.
-
-#### scrollPhysics → `ScrollPhysics?`
-Scroll physics to apply to the scrollable content.
-
-#### autofillHints → `Iterable<String>?`
-Autofill hint information. Defaults to an empty list.
-
-#### contentInsertionConfiguration → `ContentInsertionConfiguration?`
-Configuration for handling content insertion.
-
-#### clipBehavior → `Clip`
-Clip behavior for content inside the text field. Defaults to Clip.hardEdge.
-
-#### restorationId → `String?`
-Restoration ID for this widget.
-
-#### stylusHandwritingEnabled → `bool`
-Whether stylus handwriting features are enabled. Defaults to true.
-
-#### enableIMEPersonalizedLearning → `bool`
-Whether to enable IME personalized learning. Defaults to true.
-
-#### contextMenuBuilder → `EditableTextContextMenuBuilder?`
-Builder for the context (right-click or long press) menu.
-
-#### canRequestFocus → `bool`
-Whether this text field can request focus. Defaults to true.
-
-#### spellCheckConfiguration → `SpellCheckConfiguration?`
-Configuration for spell check behavior.
-
-#### magnifierConfiguration → `TextMagnifierConfiguration?`
-The magnifier configuration to use for this text field.
-
-#### onHoverChange → `ValueChanged<bool>?`
-Called when the hover state changes. Provides the current hover state as a boolean parameter:
-- `true` when the mouse pointer enters the text field
-- `false` when the mouse pointer exits the text field
-
-#### onFocusChange → `ValueChanged<bool>?`
-Called when the focus state changes. Provides the current focus state as a boolean parameter:
-- `true` when the text field gains focus
-- `false` when the text field loses focus
-
-#### groupId → `Object`
-The group ID for the text field. Defaults to EditableText.
-
-#### style → `TextStyle?`
-The style of the text field.
-
-#### ignorePointers → `bool?`
-Whether to ignore pointers. When true, the text field will not respond to pointer events.
-
-#### builder → `Widget Function(BuildContext context, Widget child)`
-Required builder function to create the custom appearance of the text field.
-The child parameter is the editable text content that should be integrated into your custom UI. 
-
-#### semanticLabel → `String?`
-Optional semantic label announced by screen readers.
-
-#### semanticHint → `String?`
-Optional hint announced by screen readers.
+- For Material/Cupertino visual parity, wrap the builder output with your design system components
+- Use `maxLines`, `minLines`, and `expands` to create multi-line editors
+- Provide an `UndoHistoryController` when you need cross-field undo stacks
+- Remember to dispose any controllers you allocate alongside the widget

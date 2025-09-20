@@ -1,291 +1,188 @@
 ---
 title: NakedSelect
+description: Headless single-select dropdown with typed trigger and option builders
+keywords: [flutter, select, dropdown, listbox, headless, overlay]
 ---
 
-NakedSelect is a headless dropdown component. It renders nothing by default and gives you the hooks to build a fully custom trigger and overlay while keeping menu semantics, focus handling, and selection state wired up for you.
+`NakedSelect` mirrors a native select/dropdown experience—keyboard navigation, focus trapping, semantics—while leaving visuals entirely up to you. Provide a trigger builder, render an overlay, and compose options with `NakedSelect.Option`.
 
 <Info>
-  You can find examples in our [GitHub repository](https://github.com/btwld/naked_ui/blob/main/example/lib/api/naked_select.0.dart).
+  Working samples are in [`example/lib/api/naked_select.0.dart`](https://github.com/btwld/naked_ui/blob/main/example/lib/api/naked_select.0.dart) (plus `.1`/`.2` for searchable and grouped variants).
 </Info>
 
-<CodeGroup title="Usage Example" defaultLanguage="dart">
+## Quick Start
+
 ```dart
-class AnimatedSelectExample extends StatefulWidget {
-  const AnimatedSelectExample({super.key});
+class BasicSelectExample extends StatefulWidget {
+  const BasicSelectExample({super.key});
 
   @override
-  State<AnimatedSelectExample> createState() => _AnimatedSelectExampleState();
+  State<BasicSelectExample> createState() => _BasicSelectExampleState();
 }
 
-class _AnimatedSelectExampleState extends State<AnimatedSelectExample>
-    with TickerProviderStateMixin {
-  String? _selectedValue;
-
-  late final AnimationController _controller = AnimationController(
-    duration: const Duration(milliseconds: 200),
-    vsync: this,
-  );
-
-  late final CurvedAnimation _fade = CurvedAnimation(
-    parent: _controller,
-    curve: Curves.easeOut,
-  );
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
+class _BasicSelectExampleState extends State<BasicSelectExample> {
+  String? _value = 'apple';
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: 280,
-      child: NakedSelect<String>(
-        value: _selectedValue,
-        onChanged: (value) => setState(() => _selectedValue = value),
-        onOpen: _controller.forward,
-        onClose: _controller.reverse,
-        items: const [
-          NakedSelectItem<String>(
-            value: 'Apple',
-            child: Text('Apple'),
-          ),
-          NakedSelectItem<String>(
-            value: 'Banana',
-            child: Text('Banana'),
-          ),
-          NakedSelectItem<String>(
-            value: 'Mango',
-            child: Text('Mango'),
-          ),
-        ],
-        overlayBuilder: (context, info, itemWidgets) {
-          return FadeTransition(
-            opacity: _fade,
-            child: SlideTransition(
-              position: _fade.drive(Tween<Offset>(
-                begin: const Offset(0, -0.05),
-                end: Offset.zero,
-              )),
-              child: Material(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
-                elevation: 4,
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 280),
-                  child: Padding(
-                    padding:
-                        const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: itemWidgets,
-                    ),
-                  ),
-                ),
-              ),
+    return NakedSelect<String>(
+      value: _value,
+      onChanged: (next) => setState(() => _value = next),
+      triggerBuilder: (context, selectState) {
+        final bool isOpen = selectState.isOpen;
+        final bool hovered = selectState.isHovered;
+        final bool focused = selectState.isFocused;
+
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(12),
+            color: hovered ? Colors.grey.shade100 : Colors.white,
+            border: Border.all(
+              color: focused ? Colors.blue : Colors.grey.shade300,
+              width: focused ? 2 : 1,
             ),
-          );
-        },
-        triggerBuilder: (context, state) {
-          final bool isHovered = state.isHovered;
-          final bool isFocused = state.isFocused;
-
-          final Color borderColor = isFocused
-              ? Colors.grey.shade800
-              : isHovered
-                  ? Colors.grey.shade400
-                  : Colors.grey.shade300;
-
-          final Color backgroundColor =
-              isHovered ? Colors.grey.shade100 : Colors.white;
-
-          return AnimatedContainer(
-            duration: const Duration(milliseconds: 150),
-            curve: Curves.easeOut,
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-            decoration: BoxDecoration(
-              color: backgroundColor,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: borderColor),
-              boxShadow: isFocused
-                  ? [
-                      BoxShadow(
-                        color: Colors.grey.shade300,
-                        blurRadius: 16,
-                        spreadRadius: 1,
-                      ),
-                    ]
-                  : const [
-                      BoxShadow(
-                        color: Color(0x15000000),
-                        blurRadius: 8,
-                        offset: Offset(0, 2),
-                      ),
-                    ],
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Expanded(
-                  child: Text(
-                    _selectedValue ?? 'Select a fruit',
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-                const Icon(Icons.keyboard_arrow_down_rounded, size: 20),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(selectState.value ?? 'Select fruit'),
+              const SizedBox(width: 12),
+              Icon(isOpen ? Icons.expand_less : Icons.expand_more, size: 18),
+            ],
+          ),
+        );
+      },
+      overlayBuilder: (context, info) {
+        return Material(
+          elevation: 6,
+          borderRadius: BorderRadius.circular(12),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxHeight: 220, minWidth: 220),
+            child: ListView(
+              padding: const EdgeInsets.symmetric(vertical: 6),
+              shrinkWrap: true,
+              children: const [
+                _SelectOption(value: 'apple', label: 'Apple'),
+                _SelectOption(value: 'banana', label: 'Banana'),
+                _SelectOption(value: 'mango', label: 'Mango'),
               ],
             ),
-          );
-        },
-      ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _SelectOption extends StatelessWidget {
+  const _SelectOption({required this.value, required this.label});
+
+  final String value;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return NakedSelect.Option<String>(
+      value: value,
+      builder: (context, optionState, _) {
+        final bool isSelected = optionState.isCurrentSelection;
+        final bool isHovered = optionState.isHovered;
+
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          color: isSelected
+              ? Colors.blue.withOpacity(0.12)
+              : isHovered
+                  ? Colors.grey.shade100
+                  : null,
+          child: Row(
+            children: [
+              Text(label),
+              if (isSelected) ...[
+                const Spacer(),
+                const Icon(Icons.check, size: 16, color: Colors.blue),
+              ],
+            ],
+          ),
+        );
+      },
     );
   }
 }
 ```
-</CodeGroup>
 
-## NakedSelect
+## State Snapshots
+
+### Trigger – `NakedSelectState<T>`
+- `isOpen` → overlay visibility
+- `value` → currently selected value (nullable)
+- `hasValue` helper plus raw `widgetStates` from the trigger builder
+
+### Options – `NakedSelectItemState<T>`
+- `value` → option value
+- `selectedValue` → value selected in the surrounding select
+- `isCurrentSelection` → shorthand boolean
+- `widgetStates` → hover/focus/pressed/disabled information
+
+## NakedSelect Constructor
 
 ```dart
 const NakedSelect({
   Key? key,
-  required Widget Function(BuildContext, NakedSelectState<T>) triggerBuilder,
-  required Widget Function(
-    BuildContext,
-    RawMenuOverlayInfo,
-    List<Widget>,
-  ) overlayBuilder,
-  required List<NakedSelectItem<T>> items,
-  T? value,
-  ValueChanged<T?>? onChanged,
-  bool closeOnSelect = true,
-  bool closeOnClickOutside = true,
-  bool enabled = true,
-  FocusNode? triggerFocusNode,
-  String? semanticLabel,
-  OverlayPositionConfig positioning = const OverlayPositionConfig(
+  required this.triggerBuilder,
+  required this.overlayBuilder,
+  this.value,
+  this.onChanged,
+  this.closeOnSelect = true,
+  this.closeOnClickOutside = true,
+  this.enabled = true,
+  this.triggerFocusNode,
+  this.semanticLabel,
+  this.positioning = const OverlayPositionConfig(
     alignment: Alignment.bottomLeft,
     fallbackAlignment: Alignment.topLeft,
   ),
-  VoidCallback? onOpen,
-  VoidCallback? onClose,
-  RawMenuAnchorOpenRequestedCallback? onOpenRequested,
-  RawMenuAnchorCloseRequestedCallback? onCloseRequested,
+  this.onOpen,
+  this.onClose,
+  this.onCanceled,
+  this.onOpenRequested,
+  this.onCloseRequested,
+  this.consumeOutsideTaps = true,
+  this.useRootOverlay = false,
 })
 ```
 
-### Properties
+### Key Parameters
 
-#### triggerBuilder → `Widget Function(BuildContext, NakedSelectState<T>)`
-Builds the interactive surface that opens the menu. Receives a typed [`NakedSelectState<T>`](#nakedselectstate) with convenience helpers like `isHovered`, `isFocused`, and `isOpen` plus access to the currently selected value.
+- `triggerBuilder` → `(BuildContext, NakedSelectState<T>)`
+- `overlayBuilder` → `(BuildContext, RawMenuOverlayInfo)` – build anything (list, grid, search field)
+- `value` / `onChanged` → manage selected value externally
+- `closeOnSelect` → close immediately after choosing an option
+- `enabled` → disables trigger & option activation when false
+- `semanticLabel` → override trigger semantics; `value?.toString()` is announced automatically otherwise
+- `triggerFocusNode` → reuse an external focus node to regain focus after close
 
-#### overlayBuilder → `Widget Function(BuildContext, RawMenuOverlayInfo, List<Widget>)`
-Builds the overlay content. The `itemWidgets` list already wraps each [NakedSelectItem] with selection + enabled logic. Use the provided `info` if you need anchor bounds or controller access.
+## Options via `NakedSelect.Option`
 
-#### items → `List<NakedSelectItem<T>>`
-The available options for this select.
-
-#### value → `T?`
-Currently selected value. Omit for uncontrolled usage.
-
-#### onChanged → `ValueChanged<T?>?`
-Notifies when the selected value changes.
-
-#### closeOnSelect → `bool`
-Closes the overlay immediately after a selection when `true`. Defaults to `true`.
-
-#### closeOnClickOutside → `bool`
-Automatically close when the user taps outside the overlay. Defaults to `true`.
-
-#### enabled → `bool`
-Toggles all interactions. When `false`, the trigger is disabled and options do not respond.
-
-#### triggerFocusNode → `FocusNode?`
-Optional focus node applied to the trigger for manual focus management.
-
-#### semanticLabel → `String?`
-Optional semantics label announced by assistive technologies on the trigger.
-
-#### positioning → `OverlayPositionConfig`
-Controls how the overlay is aligned relative to the trigger and which fallback alignment to use if the primary position does not fit on screen.
-
-#### onOpen → `VoidCallback?`
-Called once the menu finishes opening.
-
-#### onClose → `VoidCallback?`
-Called after the menu is closed.
-
-#### onOpenRequested → `RawMenuAnchorOpenRequestedCallback?`
-Intercepts open requests before the menu animates. Return `MenuAlignmentResult.defer` to override the default behavior.
-
-#### onCloseRequested → `RawMenuAnchorCloseRequestedCallback?`
-Intercepts close requests before the menu collapses.
-
-## NakedSelectItem
+`NakedSelect.Option<T>` is a factory for `NakedSelectOption<T>`:
 
 ```dart
-const NakedSelectItem({
-  required T value,
+const NakedSelect.Option({
   Key? key,
-  Widget? child,
-  NakedStateBuilder<NakedSelectItemState<T>>? builder,
-  bool enabled = true,
-  String? semanticLabel,
-})
-```
-
-### Fields
-
-#### value → `T`
-Payload returned when this item is selected.
-
-#### key → `Key?`
-Forwarded to the underlying `NakedButton` for keyed animations or tests.
-
-#### child → `Widget?`
-Static child widget rendered for the option.
-
-#### builder → `NakedStateBuilder<NakedSelectItemState<T>>?`
-Use when you need animated styling. Receives a [`NakedSelectItemState<T>`](#nakedselectitemstate) with convenience getters (e.g. `isSelected`, `isHovered`) and access to the option/value metadata.
-
-#### enabled → `bool`
-Disable selection for this specific item.
-
-#### semanticLabel → `String?`
-Optional semantics label forwarded to the button.
-
-## NakedSelectOption
-
-`NakedSelectOption` is a convenience widget for building overlay items directly in the tree produced by `overlayBuilder`.
-
-```dart
-const NakedSelectOption({
   required T value,
-  bool enabled = true,
-  String? semanticLabel,
   Widget? child,
   NakedStateBuilder<NakedSelectItemState<T>>? builder,
+  bool enabled = true,
+  String? semanticLabel,
 })
 ```
 
-Use it when you want to build the overlay entirely yourself instead of going through `items`. It reads the nearest `_NakedSelectScope`, updates selection, and applies the same widget state handling as `NakedSelectItem`.
+Use the builder to react to `optionState.isCurrentSelection` or `optionState.widgetStates` for hover styling.
 
-### NakedSelectState
+## Accessibility Notes
 
-`NakedSelectState<T>` is the typed state snapshot delivered to `triggerBuilder`. In addition to raw `WidgetState` access through `state.widgetStates`, it exposes:
-
-- `isHovered`, `isFocused`, `isPressed`, `isOpen`
-- `value` (the current selection) and `hasValue`
-- `isEnabled` / `isDisabled`
-- `when<T>()` helper for prioritised branching and `matchesAll` / `matchesAny` for
-  combinational checks
-
-### NakedSelectItemState
-
-`NakedSelectItemState<T>` powers option builders. It provides the same widget-state helpers plus:
-
-- `value`: the option's value
-- `selectedValue`: the parent select's current selection
-- `isCurrentSelection`: whether the option matches `selectedValue`
-- Access to the base helpers like `when`, `matchesAll`, and `matchesAny`
+- Each option is focusable and keyboard navigable; provide textual labels
+- Trigger announces `semanticLabel` and selected value; set both for clarity
+- Respect `closeOnSelect` for quick dismissal or keep it `false` for multi-step flows
+- Keep options at least 44×44 logical pixels for touch friendliness

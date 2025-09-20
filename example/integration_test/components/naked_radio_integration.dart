@@ -288,8 +288,8 @@ void main() {
                     key: radioKey,
                     value: radio_example.RadioOption.apple,
                     onHoverChange: (hovered) => isHovered = hovered,
-                    builder: (context, states, child) {
-                      isSelected = states.contains(WidgetState.selected);
+                    builder: (context, radioState, child) {
+                      isSelected = radioState.isSelected;
                       return Container(
                         width: 24,
                         height: 24,
@@ -297,15 +297,18 @@ void main() {
                           shape: BoxShape.circle,
                           color: isSelected ? Colors.blue : Colors.white,
                           border: Border.all(
-                            color: states.contains(WidgetState.hovered)
+                            color: radioState.isHovered
                                 ? Colors.blue.shade400
                                 : Colors.grey,
-                            width: states.contains(WidgetState.pressed) ? 3 : 2,
+                            width: radioState.isPressed ? 3 : 2,
                           ),
                         ),
                         child: isSelected
-                            ? const Icon(Icons.circle,
-                                color: Colors.white, size: 12)
+                            ? const Icon(
+                                Icons.circle,
+                                color: Colors.white,
+                                size: 12,
+                              )
                             : null,
                       );
                     },

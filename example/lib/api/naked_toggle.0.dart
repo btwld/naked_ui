@@ -24,11 +24,11 @@ class _ToggleButtonExampleState extends State<ToggleButtonExample> {
       asSwitch: false, // Toggle button semantics
       onChanged: onChanged,
       semanticLabel: tooltip,
-      builder: (context, states, child) {
-        final isSelected = states.contains(WidgetState.selected);
-        final isHovered = states.contains(WidgetState.hovered);
-        final isFocused = states.contains(WidgetState.focused);
-        final isPressed = states.contains(WidgetState.pressed);
+      builder: (context, toggleState, child) {
+        final isSelected = toggleState.isToggled;
+        final isHovered = toggleState.isHovered;
+        final isFocused = toggleState.isFocused;
+        final isPressed = toggleState.isPressed;
 
         return AnimatedContainer(
           duration: const Duration(milliseconds: 150),

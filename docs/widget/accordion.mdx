@@ -1,14 +1,17 @@
 ---
 title: NakedAccordion
+description: Headless accordion primitives with expansion state management and typed builders for fully custom triggers
+keywords: [flutter, accordion, expansion, headless, builder, widgetstate]
 ---
 
-NakedAccordion provides expandable/collapsible sections without imposing any visual styling, giving consumers complete design freedom. It manages the state of expanded sections through an `NakedAccordionController` and allows for fully customizable transitions.
+`NakedAccordion` gives you expandable sections without dictating layout or visuals. Pair it with `NakedAccordionController` to enforce how many panels can open, then render the trigger/header however you like via the typed state snapshot.
 
 <Info>
-  You can find this example in our [GitHub repository](https://github.com/btwld/naked_ui/blob/main/example/lib/api/naked_accordion.0.dart).
+  A complete example lives in [`example/lib/api/naked_accordion.0.dart`](https://github.com/btwld/naked_ui/blob/main/example/lib/api/naked_accordion.0.dart).
 </Info>
 
-<CodeGroup title="Usage Example" defaultLanguage="dart">
+## Quick Start
+
 ```dart
 class AccordionExample extends StatefulWidget {
   const AccordionExample({super.key});
@@ -18,296 +21,130 @@ class AccordionExample extends StatefulWidget {
 }
 
 class _AccordionExampleState extends State<AccordionExample> {
-  final _controller = NakedAccordionController<String>(max: 1, min: 1);
+  final controller = NakedAccordionController<String>(min: 1, max: 2);
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: 300,
-      child: NakedAccordion<String>(
-        controller: _controller,
-        initialExpandedValues: const ['1'],
-        children: const [
-          AccordionItem(
-            value: '1',
-            title: 'Section 1',
-            content:
-                'This is the content for section 1. You can put anything here!',
-          ),
-          SizedBox(height: 8),
-          AccordionItem(
-            value: '2',
-            title: 'Section 2',
-            content:
-                'This is the content for section 2. You can put anything here!',
-          ),
-        ],
-      ),
+    return NakedAccordion<String>(
+      controller: controller,
+      initialExpandedValues: const ['intro'],
+      children: const [
+        _AccordionSection(
+          value: 'intro',
+          title: 'Introduction',
+          body: 'Foundational information about the topic.',
+        ),
+        SizedBox(height: 8),
+        _AccordionSection(
+          value: 'details',
+          title: 'Details',
+          body: 'Deep-dive content that can be long-form text.',
+        ),
+      ],
     );
   }
 }
 
-class AccordionItem extends StatefulWidget {
-  const AccordionItem({
-    super.key,
+class _AccordionSection extends StatefulWidget {
+  const _AccordionSection({
     required this.value,
     required this.title,
-    required this.content,
+    required this.body,
   });
 
   final String value;
   final String title;
-  final String content;
+  final String body;
 
   @override
-  State<AccordionItem> createState() => _AccordionItemState();
+  State<_AccordionSection> createState() => _AccordionSectionState();
 }
 
-class _AccordionItemState extends State<AccordionItem> {
-  bool _isHovering = false;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(12),
-        color: Colors.grey.shade100,
-      ),
-      child: NakedAccordionItem<String>(
-        value: widget.value,
-        onHoverChange: (isHovering) => setState(() => _isHovering = isHovering),
-        trigger: (context, isExpanded) {
-          return AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            decoration: BoxDecoration(
-              border: Border.all(
-                color: _isHovering || isExpanded
-                    ? Colors.grey.shade100
-                    : Colors.grey.shade300,
-              ),
-              borderRadius: BorderRadius.circular(12),
-              color: _isHovering || isExpanded
-                  ? Colors.grey.shade100
-                  : Colors.white,
-            ),
-            padding: const EdgeInsets.all(12),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  widget.title,
-                  style: TextStyle(
-                    fontWeight: FontWeight.w500,
-                    color: Colors.grey.shade700,
-                  ),
-                ),
-                AnimatedRotation(
-                  turns: isExpanded ? 0.5 : 0,
-                  duration: const Duration(milliseconds: 200),
-                  child: Icon(
-                    Icons.keyboard_arrow_down_rounded,
-                    color: Colors.grey.shade600,
-                    weight: 100,
-                  ),
-                ),
-              ],
-            ),
-          );
-        },
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-          child: Text(
-            widget.content,
-            style: const TextStyle(color: Color(0xFF3D3D3D)),
-          ),
-        ),
-        transitionBuilder: (child) => AnimatedSwitcher(
-          duration: const Duration(milliseconds: 200),
-          transitionBuilder: (child, animation) {
-            return SizeTransition(
-              axis: Axis.vertical,
-              sizeFactor: animation,
-              axisAlignment: 1,
-              child: child,
-            );
-          },
-          child: child,
-        ),
-      ),
-    );
-  }
-}
-```
-</CodeGroup>
-
-<CodeGroup title="FAQ Section" defaultLanguage="dart">
-```dart
-class FAQExample extends StatefulWidget {
-  const FAQExample({super.key});
-
-  @override
-  State<FAQExample> createState() => _FAQExampleState();
-}
-
-class _FAQExampleState extends State<FAQExample> {
-  final _controller = NakedAccordionController<int>();
-
-  final List<FAQItem> _faqItems = [
-    FAQItem(
-      id: 1,
-      question: 'What is Naked UI?',
-      answer: 'Naked UI is a headless widget library for Flutter that provides behavior without styling, giving you complete design freedom.',
-    ),
-    FAQItem(
-      id: 2,
-      question: 'How do I customize the appearance?',
-      answer: 'Since Naked UI widgets are headless, you have complete control over styling. Use the builder patterns or child widgets to create your desired appearance.',
-    ),
-    FAQItem(
-      id: 3,
-      question: 'Is it accessible?',
-      answer: 'Yes! All Naked UI widgets include proper accessibility features like screen reader support, keyboard navigation, and semantic labels.',
-    ),
-    FAQItem(
-      id: 4,
-      question: 'Can I use it with existing UI libraries?',
-      answer: 'Absolutely! Naked UI works great alongside Material, Cupertino, or any custom design system.',
-    ),
-  ];
+class _AccordionSectionState extends State<_AccordionSection> {
+  bool _isHovered = false;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: NakedAccordion<int>(
-        controller: _controller,
-        children: _faqItems.map((faq) =>
-          FAQItemWidget(key: ValueKey(faq.id), faq: faq)
-        ).toList(),
-      ),
-    );
-  }
-}
+    return NakedAccordionItem<String>(
+      value: widget.value,
+      onHoverChange: (hovered) => setState(() => _isHovered = hovered),
+      trigger: (context, accordionState, _) {
+        final bool isExpanded = accordionState.isExpanded;
+        final bool canExpand = accordionState.canExpand;
+        final bool canCollapse = accordionState.canCollapse;
 
-class FAQItem {
-  final int id;
-  final String question;
-  final String answer;
-
-  FAQItem({required this.id, required this.question, required this.answer});
-}
-
-class FAQItemWidget extends StatelessWidget {
-  const FAQItemWidget({super.key, required this.faq});
-
-  final FAQItem faq;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        border: Border(
-          bottom: BorderSide(color: Colors.grey.shade200),
-        ),
-      ),
-      child: NakedAccordionItem<int>(
-        value: faq.id,
-        trigger: (context, isExpanded) => Container(
+        return AnimatedContainer(
+          duration: const Duration(milliseconds: 160),
           padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(12),
+            color: isExpanded || _isHovered ? Colors.grey.shade100 : Colors.white,
+            border: Border.all(
+              color: !canExpand
+                  ? Colors.grey.shade400
+                  : !canCollapse
+                      ? Colors.grey.shade200
+                      : Colors.grey.shade300,
+            ),
+          ),
           child: Row(
             children: [
               Expanded(
                 child: Text(
-                  faq.question,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                  ),
+                  widget.title,
+                  style: const TextStyle(fontWeight: FontWeight.w600),
                 ),
               ),
               AnimatedRotation(
                 turns: isExpanded ? 0.5 : 0,
-                duration: const Duration(milliseconds: 200),
-                child: const Icon(Icons.keyboard_arrow_down),
+                duration: const Duration(milliseconds: 160),
+                child: const Icon(Icons.keyboard_arrow_down_rounded),
               ),
             ],
           ),
-        ),
-        transitionBuilder: (child) => AnimatedSize(
-          duration: const Duration(milliseconds: 200),
+        );
+      },
+      transitionBuilder: (panel) => AnimatedSwitcher(
+        duration: const Duration(milliseconds: 200),
+        transitionBuilder: (child, animation) => SizeTransition(
+          axisAlignment: 1,
+          sizeFactor: animation,
           child: child,
         ),
-        child: Container(
-          padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-          child: Text(
-            faq.answer,
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.grey.shade700,
-              height: 1.5,
-            ),
-          ),
-        ),
+        child: panel,
+      ),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+        child: Text(widget.body),
       ),
     );
   }
 }
 ```
-</CodeGroup>
 
-## NakedAccordionController
+## Item State Snapshot
 
-The `NakedAccordionController` manages the state of the accordion, keeping track of which items are expanded or collapsed.
+`NakedAccordionItemState<T>` is passed to every trigger builder:
 
-```dart
-NakedAccordionController({
-  this.min = 0,
-  this.max,
-})
-```
+- `value` → item identifier
+- `isExpanded` → whether the panel is currently open
+- `canExpand` / `canCollapse` → controller-aware capabilities
+- `widgetStates` → raw `Set<WidgetState>` to resolve hover, focus, press
 
-### Properties
+Use these values to adjust affordances (e.g. disable icons when the controller prevents expansion).
 
-#### min → `int`
-The minimum number of expanded items allowed. Defaults to 0.
+## Controller Behaviour
 
-#### max → `int?`
-The maximum number of expanded items allowed. If null, there is no maximum limit.
+`NakedAccordionController<T>` exposes:
 
-### Methods
+- Constructor: `NakedAccordionController({int min = 0, int? max})`
+- `values` → `LinkedHashSet<T>` with insertion order (oldest → newest)
+- `open(value)`, `close(value)`, `toggle(value)`
+- `openAll(Iterable<T>)`, `replaceAll(Iterable<T>)`, `clear()`
+- `min` ensures at least that many sections stay expanded when closing
+- `max` limits how many sections can be open at once (FIFO eviction)
 
-#### open(T value) → `void`
-Opens the accordion item with the given value.
-
-#### close(T value) → `void`
-Closes the accordion item with the given value.
-
-#### toggle(T value) → `void`
-Toggles the accordion item with the given value.
-
-#### contains(T value) → `bool`
-Checks if an item with the given value is currently expanded.
-
-#### clear() → `void`
-Removes all expanded values.
-
-#### openAll(List&lt;T&gt; newValues) → `void`
-Opens all accordion items with the given values.
-
-
-## NakedAccordion
-
-### Constructor
+## NakedAccordion Constructor
 
 ```dart
 const NakedAccordion({
@@ -318,20 +155,13 @@ const NakedAccordion({
 })
 ```
 
-### Properties
+### Key Parameters
 
-#### children → `List<Widget>`
-The accordion items to display. These should be `NakedAccordionItem` widgets.
+- `children` → list of `Widget`; mix `NakedAccordionItem` with any spacing widgets you need
+- `controller` → required state holder
+- `initialExpandedValues` → values to open on first build when the controller is empty
 
-#### controller → `NakedAccordionController<T>`
-The controller that manages which items are expanded or collapsed.
-
-#### initialExpandedValues → `List<T>`
-Values that should be expanded when the accordion is first built. Defaults to an empty list.
-
-## NakedAccordionItem
-
-### Constructor
+## NakedAccordionItem Constructor
 
 ```dart
 const NakedAccordionItem({
@@ -340,7 +170,6 @@ const NakedAccordionItem({
   required this.value,
   required this.child,
   this.transitionBuilder,
-  
   this.enabled = true,
   this.mouseCursor = SystemMouseCursors.click,
   this.enableFeedback = true,
@@ -353,45 +182,16 @@ const NakedAccordionItem({
 })
 ```
 
-### Properties
+Important call-outs:
 
-#### trigger → `NakedAccordionTriggerBuilder`
-Builder function that creates the trigger widget. Receives the current `BuildContext` and a boolean `isExpanded`. Tapping the trigger toggles expansion automatically.
+- `trigger` → `NakedAccordionTriggerBuilder<T>` receives the typed item state and optional child placeholder
+- `transitionBuilder` wraps the lazily built panel when `isExpanded` is true
+- `onFocusChange`, `onHoverChange`, `onPressChange` mirror events from `WidgetStatesMixin`
+- `semanticLabel` sets the accessible name for the trigger element
 
-#### value → `T`
-The unique identifier for this accordion item. This value is used by the NakedAccordionController to track expansion state.
+## Accessibility Checklist
 
-#### child → `Widget`
-The content displayed when this item is expanded.
-
-#### transitionBuilder → `Widget Function(Widget child)?`
-Optional builder to customize the transition when expanding/collapsing. If not provided, content will appear/disappear instantly.
-
-
-
-#### enabled → `bool`
-Whether the item can be toggled.
-
-#### mouseCursor → `MouseCursor`
-Cursor to display when hovering over the trigger.
-
-#### enableFeedback → `bool`
-Whether to provide platform feedback on interaction.
-
-#### autofocus → `bool`
-Whether to automatically focus when created.
-
-#### focusNode → `FocusNode?`
-Optional focus node to control focus behavior.
-
-#### onFocusChange → `ValueChanged<bool>?`
-Called when focus state changes.
-
-#### onHoverChange → `ValueChanged<bool>?`
-Called when hover state changes.
-
-#### onPressChange → `ValueChanged<bool>?`
-Called when pressed state changes.
-
-#### semanticLabel → `String?`
-Accessibility label for the header button.
+- Provide meaningful trigger text and optionally `semanticLabel`
+- Keep targets large enough (minimum 44×44 logical pixels)
+- Surface focus/hover states via the builder state
+- Honour `canExpand`/`canCollapse` for iconography so expectations match behaviour
