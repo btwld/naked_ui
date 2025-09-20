@@ -75,7 +75,7 @@ abstract class OverlayScope<T> extends InheritedWidget {
 ///
 /// This class provides the common pattern for widgets that represent
 /// selectable/actionable items within overlay panels.
-abstract class OverlayItem<T, S extends NakedWidgetStateSnapshot>
+abstract class OverlayItem<T, S extends NakedWidgetState>
     extends StatelessWidget {
   const OverlayItem({
     super.key,

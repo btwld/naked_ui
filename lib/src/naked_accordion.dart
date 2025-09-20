@@ -1,10 +1,34 @@
 import 'dart:collection';
 
 import 'package:flutter/foundation.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
+import 'mixins/naked_mixins.dart';
 import 'utilities/naked_focusable_detector.dart';
+import 'utilities/widget_state_snapshot.dart';
+
+/// Immutable view passed to [NakedAccordionItem.trigger] builder.
+class NakedAccordionItemState<T> extends NakedWidgetState {
+  /// The item's unique identifier.
+  final T value;
+
+  /// Whether this item is currently expanded.
+  final bool isExpanded;
+
+  /// Whether this item can be collapsed (respects min constraint).
+  final bool canCollapse;
+
+  /// Whether this item can be expanded (respects max constraint).
+  final bool canExpand;
+
+  NakedAccordionItemState({
+    required super.states,
+    required this.value,
+    required this.isExpanded,
+    required this.canCollapse,
+    required this.canExpand,
+  });
+}
 
 /// A headless accordion controller without visuals.
 ///
@@ -229,19 +253,24 @@ class _NakedAccordionState<T> extends State<NakedAccordion<T>> {
   }
 }
 
-typedef NakedAccordionTriggerBuilder =
+typedef NakedAccordionTriggerBuilder<T> =
     /// Build the *header/trigger* for an accordion item.
-    /// The trigger should visually reflect [isExpanded]; activation toggles it.
-    Widget Function(BuildContext context, bool isExpanded);
+    /// Receives [NakedAccordionItemState] with expansion state, constraints, and interactions.
+    Widget Function(
+      BuildContext context,
+      NakedAccordionItemState<T> state,
+      Widget? child,
+    );
 
 /// A headless accordion item without visuals.
 ///
 /// Individual expandable item with custom trigger and panel content.
-/// Supports keyboard toggle and button semantics.
+/// Trigger builder receives [NakedAccordionItemState] with expansion
+/// state, constraints, and interaction states.
 ///
 /// See also:
 /// - [NakedAccordion], the container that manages accordion items.
-class NakedAccordionItem<T> extends StatelessWidget {
+class NakedAccordionItem<T> extends StatefulWidget {
   const NakedAccordionItem({
     super.key,
     required this.trigger,
@@ -260,7 +289,7 @@ class NakedAccordionItem<T> extends StatelessWidget {
   });
 
   /// The builder for the header/trigger.
-  final NakedAccordionTriggerBuilder trigger;
+  final NakedAccordionTriggerBuilder<T> trigger;
 
   /// The optional transition wrapper around the expanding panel.
   final Widget Function(Widget panel)? transitionBuilder;
@@ -298,8 +327,27 @@ class NakedAccordionItem<T> extends StatelessWidget {
   /// The focus node for the header.
   final FocusNode? focusNode;
 
+  @override
+  State<NakedAccordionItem<T>> createState() => _NakedAccordionItemState<T>();
+}
+
+class _NakedAccordionItemState<T> extends State<NakedAccordionItem<T>>
+    with WidgetStatesMixin<NakedAccordionItem<T>> {
   void _toggle(NakedAccordionController<T> controller) =>
-      controller.toggle(value);
+      controller.toggle(widget.value);
+
+  @override
+  void initializeWidgetStates() {
+    updateDisabledState(!widget.enabled);
+  }
+
+  @override
+  void didUpdateWidget(covariant NakedAccordionItem<T> oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.enabled != widget.enabled) {
+      updateDisabledState(!widget.enabled);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -309,14 +357,16 @@ class NakedAccordionItem<T> extends StatelessWidget {
     return ListenableBuilder(
       listenable: controller,
       builder: (context, _) {
-        final isExpanded = controller.contains(value);
+        final isExpanded = controller.contains(widget.value);
 
         // Build the panel *only* when expanded.
-        final Widget panel = isExpanded ? child : const SizedBox.shrink();
+        final Widget panel = isExpanded
+            ? widget.child
+            : const SizedBox.shrink();
 
         void onTap() {
-          if (!enabled) return;
-          if (enableFeedback) Feedback.forTap(context);
+          if (!widget.enabled) return;
+          if (widget.enableFeedback) Feedback.forTap(context);
           _toggle(controller);
         }
 

@@ -65,7 +65,6 @@ Rect calculateOverlayPosition({
   );
 
   if (_fitsInBounds(primaryRect, overlaySize)) {
-
     return _applyConstraints(primaryRect, config);
   }
 
@@ -80,7 +79,6 @@ Rect calculateOverlayPosition({
     );
 
     if (_fitsInBounds(fallbackRect, overlaySize)) {
-
       return _applyConstraints(fallbackRect, config);
     }
   }

@@ -5,6 +5,25 @@ import 'package:flutter/widgets.dart';
 
 import 'mixins/naked_mixins.dart';
 import 'utilities/naked_focusable_detector.dart';
+import 'utilities/widget_state_snapshot.dart';
+
+/// Immutable view passed to [NakedTab.builder].
+class NakedTabState extends NakedWidgetState {
+  /// The unique identifier for this tab.
+  final String tabId;
+
+  /// The currently selected tab identifier.
+  final String selectedTabId;
+
+  NakedTabState({
+    required super.states,
+    required this.tabId,
+    required this.selectedTabId,
+  });
+
+  /// Whether this tab is currently active/selected.
+  bool get isCurrentTab => tabId == selectedTabId;
+}
 
 /// A headless tab group without visuals.
 ///
@@ -160,7 +179,8 @@ class NakedTabList extends StatelessWidget {
 /// A headless tab trigger without visuals.
 ///
 /// Selection follows focus for keyboard navigation.
-/// Exposes interaction states for custom styling.
+/// Builder receives [NakedTabState] with tab ID, selected tab ID,
+/// and interaction states for custom styling.
 ///
 /// See also:
 /// - [NakedTabGroup], the container that manages tab state.
@@ -199,8 +219,8 @@ class NakedTab extends StatefulWidget {
   /// Called when press state changes.
   final ValueChanged<bool>? onPressChange;
 
-  /// The builder that receives interaction states.
-  final ValueWidgetBuilder<Set<WidgetState>>? builder;
+  /// The builder that receives current tab state.
+  final NakedStateBuilder<NakedTabState>? builder;
 
   /// The semantic label for the trigger.
   final String? semanticLabel;
@@ -280,8 +300,14 @@ class _NakedTabState extends State<NakedTab>
     updateDisabledState(!_isEnabled);
     updateSelectedState(isSelected, null);
 
+    final tabState = NakedTabState(
+      states: widgetStates,
+      tabId: widget.tabId,
+      selectedTabId: _scope.selectedTabId,
+    );
+
     final content = widget.builder != null
-        ? widget.builder!(context, widgetStates, widget.child)
+        ? widget.builder!(context, tabState, widget.child)
         : widget.child!;
 
     return NakedFocusableDetector(

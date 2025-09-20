@@ -11,6 +11,7 @@ class _WidgetStateObserver {
   /// Per-state callbacks. These take precedence over [onStateChange].
   final Map<WidgetState, ValueChanged<bool>> _callbacks;
 
+  // ignore: dispose-class-fields
   WidgetStatesController? _controller;
 
   Set<WidgetState>? _prev;
@@ -107,6 +108,7 @@ class _WidgetStatesHost extends StatefulWidget {
 
 class _WidgetStatesHostState extends State<_WidgetStatesHost> {
   WidgetStatesController? _internal; // Lazily created.
+  // ignore: dispose-fields
   _WidgetStateObserver? _obs; // Created only when callbacks are provided.
 
   WidgetStatesController get _controller =>

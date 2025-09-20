@@ -6,10 +6,10 @@ import 'package:flutter/widgets.dart';
 ///
 /// Use subclasses to expose component-specific metadata while retaining
 /// access to the underlying [WidgetState] set for custom styling.
-abstract class NakedWidgetStateSnapshot {
+abstract class NakedWidgetState {
   final UnmodifiableSetView<WidgetState> _states;
 
-  NakedWidgetStateSnapshot({required Set<WidgetState> states})
+  NakedWidgetState({required Set<WidgetState> states})
     : _states = UnmodifiableSetView(states);
 
   /// Raw set of [WidgetState]s reported by the underlying control.
@@ -98,5 +98,5 @@ abstract class NakedWidgetStateSnapshot {
 }
 
 /// Builder signature that receives a typed view over widget states.
-typedef NakedStateBuilder<S extends NakedWidgetStateSnapshot> =
+typedef NakedStateBuilder<S extends NakedWidgetState> =
     Widget Function(BuildContext context, S state, Widget? child);
