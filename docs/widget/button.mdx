@@ -190,7 +190,6 @@ const NakedButton({
   this.child,
   this.onPressed,
   this.onLongPress,
-  this.onDoubleTap,
   this.enabled = true,
   this.mouseCursor = SystemMouseCursors.click,
   this.enableFeedback = true,
@@ -216,9 +215,6 @@ Called when the button is tapped or activated via keyboard. If null, the button 
 
 #### onLongPress → `VoidCallback?`
 Called when the button is long pressed.
-
-#### onDoubleTap → `VoidCallback?`
-Called when the button is double tapped.
 
 #### onHoverChange → `ValueChanged<bool>?`
 Called when hover state changes. Provides the current hover state (true when hovered, false otherwise).

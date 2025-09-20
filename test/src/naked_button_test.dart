@@ -240,46 +240,6 @@ void main() {
       expect(wasLongPressed, isFalse);
     });
 
-    testWidgets('calls onDoubleTap when double tapped', (
-      WidgetTester tester,
-    ) async {
-      bool wasDoubleTapped = false;
-      await tester.pumpMaterialWidget(
-        NakedButton(
-          onPressed: () {},
-          onDoubleTap: () => wasDoubleTapped = true,
-          child: const Text('Test Button'),
-        ),
-      );
-
-      await tester.tap(find.byType(NakedButton));
-      await tester.pump(const Duration(milliseconds: 50));
-      await tester.tap(find.byType(NakedButton));
-      await tester.pumpAndSettle();
-
-      expect(wasDoubleTapped, isTrue);
-    });
-
-    testWidgets('does not call onDoubleTap when disabled', (
-      WidgetTester tester,
-    ) async {
-      bool wasDoubleTapped = false;
-      await tester.pumpMaterialWidget(
-        NakedButton(
-          onPressed: () {},
-          onDoubleTap: () => wasDoubleTapped = true,
-          enabled: false,
-          child: const Text('Test Button'),
-        ),
-      );
-
-      await tester.tap(find.byType(NakedButton));
-      await tester.pump(const Duration(milliseconds: 50));
-      await tester.tap(find.byType(NakedButton));
-      await tester.pumpAndSettle();
-
-      expect(wasDoubleTapped, isFalse);
-    });
 
     testWidgets('calls onLongPress when only long-press provided', (
       WidgetTester tester,

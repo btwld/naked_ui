@@ -349,33 +349,6 @@ void main() {
       expect(wasLongPressed, isTrue);
     });
 
-    testWidgets('button onDoubleTap works correctly', (tester) async {
-      final buttonKey = UniqueKey();
-      bool wasDoubleTapped = false;
-
-      await tester.pumpWidget(MaterialApp(
-        home: Scaffold(
-          body: Center(
-            child: NakedButton(
-              key: buttonKey,
-              onPressed: () {},
-              onDoubleTap: () => wasDoubleTapped = true,
-              child: const Text('Double Tap Button'),
-            ),
-          ),
-        ),
-      ));
-      await tester.pumpAndSettle();
-
-      // Double tap the button
-      await tester.tap(find.byKey(buttonKey));
-      await tester.pump(const Duration(milliseconds: 100));
-      await tester.tap(find.byKey(buttonKey));
-      await tester.pumpAndSettle();
-
-      // Verify double tap callback was called
-      expect(wasDoubleTapped, isTrue);
-    });
 
     testWidgets('button basic example works correctly', (tester) async {
       // Use the actual basic example app

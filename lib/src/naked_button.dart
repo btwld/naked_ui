@@ -25,7 +25,6 @@ class NakedButton extends StatefulWidget {
     this.child,
     this.onPressed,
     this.onLongPress,
-    this.onDoubleTap,
     this.enabled = true,
     this.mouseCursor = SystemMouseCursors.click,
     this.enableFeedback = true,
@@ -52,8 +51,6 @@ class NakedButton extends StatefulWidget {
   /// Called when the button is long-pressed.
   final VoidCallback? onLongPress;
 
-  /// Called when the button is double-tapped.
-  final VoidCallback? onDoubleTap;
 
   /// Called when focus changes.
   final ValueChanged<bool>? onFocusChange;
@@ -95,7 +92,7 @@ class NakedButton extends StatefulWidget {
 
   // Consider button interactive if any handler is provided.
   bool get _hasAnyHandler =>
-      onPressed != null || onLongPress != null || onDoubleTap != null;
+      onPressed != null || onLongPress != null;
 
   // Effective enabled combines `enabled` with having at least one handler.
   bool get _effectiveEnabled => enabled && _hasAnyHandler;
@@ -247,9 +244,6 @@ class _NakedButtonState extends State<NakedButton>
               : null,
           onTapCancel: widget._effectiveEnabled
               ? () => updatePressState(false, widget.onPressChange)
-              : null,
-          onDoubleTap: (widget.enabled && widget.onDoubleTap != null)
-              ? widget.onDoubleTap
               : null,
           onLongPress: (widget.enabled && widget.onLongPress != null)
               ? _handleLongPress
