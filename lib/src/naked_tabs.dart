@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
 import 'mixins/naked_mixins.dart';
+import 'utilities/intents.dart';
 import 'utilities/naked_focusable_detector.dart';
 import 'utilities/widget_state_snapshot.dart';
 
@@ -271,6 +272,28 @@ class _NakedTabState extends State<NakedTab>
     _scope.selectTab(widget.tabId);
   }
 
+  void _handleDirectionalFocus(TraversalDirection direction) {
+    if (!_isEnabled) return;
+
+    final focusScope = FocusScope.of(context);
+    final isHorizontal = _scope.orientation == Axis.horizontal;
+
+    switch (direction) {
+      case TraversalDirection.left:
+        if (isHorizontal) focusScope.previousFocus();
+        break;
+      case TraversalDirection.right:
+        if (isHorizontal) focusScope.nextFocus();
+        break;
+      case TraversalDirection.up:
+        if (!isHorizontal) focusScope.previousFocus();
+        break;
+      case TraversalDirection.down:
+        if (!isHorizontal) focusScope.nextFocus();
+        break;
+    }
+  }
+
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
@@ -324,15 +347,11 @@ class _NakedTabState extends State<NakedTab>
       focusNode: effectiveFocusNode,
       mouseCursor: _isEnabled ? widget.mouseCursor : SystemMouseCursors.basic,
       // Enter/Space still activate; focus change selects too (below).
-      shortcuts: const {
-        SingleActivator(LogicalKeyboardKey.enter): ActivateIntent(),
-        SingleActivator(LogicalKeyboardKey.space): ActivateIntent(),
-      },
-      actions: {
-        ActivateIntent: CallbackAction<ActivateIntent>(
-          onInvoke: (_) => _handleTap(),
-        ),
-      },
+      shortcuts: NakedIntentActions.tab.shortcuts,
+      actions: NakedIntentActions.tab.actions(
+        onActivate: () => _handleTap(),
+        onDirectionalFocus: _handleDirectionalFocus,
+      ),
       child: Semantics(
         container: true,
         enabled: _isEnabled,

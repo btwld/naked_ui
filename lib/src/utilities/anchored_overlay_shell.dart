@@ -1,5 +1,6 @@
-import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
+
+import 'intents.dart';
 
 /// Signature for a function that positions overlay content.
 typedef OverlayPositioner =
@@ -70,25 +71,14 @@ class AnchoredOverlayShell extends StatelessWidget {
             groupId: info.tapRegionGroupId,
             child: FocusTraversalGroup(
               child: Shortcuts(
-                shortcuts: const {
-                  SingleActivator(LogicalKeyboardKey.escape): DismissIntent(),
-                  SingleActivator(LogicalKeyboardKey.arrowDown):
-                      NextFocusIntent(),
-                  SingleActivator(LogicalKeyboardKey.arrowUp):
-                      PreviousFocusIntent(),
-                },
+                shortcuts: NakedIntentActions.menu.shortcuts,
                 child: Actions(
-                  actions: {
-                    DismissIntent: CallbackAction<DismissIntent>(
-                      onInvoke: (_) => controller.close(),
-                    ),
-                    NextFocusIntent: CallbackAction<NextFocusIntent>(
-                      onInvoke: (_) => FocusScope.of(context).nextFocus(),
-                    ),
-                    PreviousFocusIntent: CallbackAction<PreviousFocusIntent>(
-                      onInvoke: (_) => FocusScope.of(context).previousFocus(),
-                    ),
-                  },
+                  actions: NakedIntentActions.menu.actions(
+                    onDismiss: () => controller.close(),
+                    onNextFocus: () => FocusScope.of(context).nextFocus(),
+                    onPreviousFocus: () =>
+                        FocusScope.of(context).previousFocus(),
+                  ),
                   child: Focus(
                     autofocus: true,
                     canRequestFocus: true,

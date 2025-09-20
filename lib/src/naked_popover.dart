@@ -1,6 +1,6 @@
-import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
+import 'utilities/intents.dart';
 import 'utilities/naked_focusable_detector.dart';
 import 'utilities/positioning.dart';
 
@@ -124,15 +124,8 @@ class _NakedPopoverState extends State<NakedPopover> {
 
       return NakedFocusableDetector(
         focusNode: _internalTriggerNode,
-        shortcuts: const {
-          SingleActivator(LogicalKeyboardKey.enter): ActivateIntent(),
-          SingleActivator(LogicalKeyboardKey.space): ActivateIntent(),
-        },
-        actions: {
-          ActivateIntent: CallbackAction<ActivateIntent>(
-            onInvoke: (_) => _toggle(),
-          ),
-        },
+        shortcuts: NakedIntentActions.button.shortcuts,
+        actions: NakedIntentActions.button.actions(onPressed: () => _toggle()),
         child: GestureDetector(
           onTap: _toggle,
           behavior: HitTestBehavior.opaque,
@@ -191,16 +184,14 @@ class _NakedPopoverState extends State<NakedPopover> {
                 groupId: info.tapRegionGroupId,
                 child: FocusTraversalGroup(
                   child: Shortcuts(
-                    shortcuts: const {
-                      SingleActivator(LogicalKeyboardKey.escape):
-                          DismissIntent(),
-                    },
+                    shortcuts: NakedIntentActions.menu.shortcuts,
                     child: Actions(
-                      actions: {
-                        DismissIntent: CallbackAction<DismissIntent>(
-                          onInvoke: (_) => _menuController.close(),
-                        ),
-                      },
+                      actions: NakedIntentActions.menu.actions(
+                        onDismiss: () => _menuController.close(),
+                        onNextFocus: () => FocusScope.of(context).nextFocus(),
+                        onPreviousFocus: () =>
+                            FocusScope.of(context).previousFocus(),
+                      ),
                       child: FractionalTranslation(
                         translation: const Offset(-0.5, 0.0),
                         child: Builder(builder: widget.popoverBuilder),

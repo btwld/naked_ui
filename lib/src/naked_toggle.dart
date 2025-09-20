@@ -2,6 +2,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
 import 'mixins/naked_mixins.dart';
+import 'utilities/intents.dart';
 import 'utilities/naked_focusable_detector.dart';
 import 'utilities/widget_state_snapshot.dart';
 
@@ -188,15 +189,14 @@ class _NakedToggleState extends State<NakedToggle>
       onHoverChange: (h) => updateHoverState(h, widget.onHoverChange),
       focusNode: widget.focusNode,
       mouseCursor: _effectiveCursor,
-      shortcuts: const {
-        SingleActivator(LogicalKeyboardKey.enter): ActivateIntent(),
-        SingleActivator(LogicalKeyboardKey.space): ActivateIntent(),
-      },
-      actions: {
-        ActivateIntent: CallbackAction<ActivateIntent>(
-          onInvoke: (_) => widget._effectiveEnabled ? _activate() : null,
-        ),
-      },
+      shortcuts: NakedIntentActions.toggle.shortcuts,
+      actions: NakedIntentActions.toggle.actions(
+        onToggle: () {
+          if (widget._effectiveEnabled) {
+            _activate();
+          }
+        },
+      ),
       child: Semantics(
         enabled: widget._effectiveEnabled,
         toggled: widget.value,
@@ -396,15 +396,10 @@ class _NakedToggleOptionState<T> extends State<NakedToggleOption<T>>
       onHoverChange: (h) => updateHoverState(h, widget.onHoverChange),
       focusNode: widget.focusNode,
       mouseCursor: cursor,
-      shortcuts: const {
-        SingleActivator(LogicalKeyboardKey.enter): ActivateIntent(),
-        SingleActivator(LogicalKeyboardKey.space): ActivateIntent(),
-      },
-      actions: {
-        ActivateIntent: CallbackAction<ActivateIntent>(
-          onInvoke: (_) => _activate(scope),
-        ),
-      },
+      shortcuts: NakedIntentActions.toggle.shortcuts,
+      actions: NakedIntentActions.toggle.actions(
+        onToggle: () => _activate(scope),
+      ),
       child: Semantics(
         container: true,
         enabled: isEnabled,

@@ -1,5 +1,6 @@
-import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
+
+import 'utilities/intents.dart';
 
 /// Displays a headless dialog without default styling.
 ///
@@ -61,15 +62,11 @@ Future<T?> showNakedDialog<T>({
             // This mirrors barrier tap policy and keeps behavior predictable.
             if (barrierDismissible) {
               wrapped = Shortcuts(
-                shortcuts: const {
-                  SingleActivator(LogicalKeyboardKey.escape): DismissIntent(),
-                },
+                shortcuts: NakedIntentActions.dialog.shortcuts,
                 child: Actions(
-                  actions: {
-                    DismissIntent: CallbackAction<DismissIntent>(
-                      onInvoke: (_) => Navigator.of(routeContext).maybePop(),
-                    ),
-                  },
+                  actions: NakedIntentActions.dialog.actions(
+                    onDismiss: () => Navigator.of(routeContext).maybePop(),
+                  ),
                   child: wrapped,
                 ),
               );

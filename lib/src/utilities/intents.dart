@@ -1,284 +1,190 @@
-/// Material Widget Intents & Actions Reference
-/// Complete list of ACTUAL Intent classes available in Flutter's public API
-///
-/// Note: Many intents are internal to Material widgets and not publicly exposed.
-/// This reference includes only the Intent classes you can actually use.
-
-import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
-// =============================================================================
-// CORE ACTIVATION INTENTS (Available in Flutter)
-// =============================================================================
-
-class CoreIntents {
-  // These are the primary intents available in Flutter's public API
-
-  // Activation & Selection
-  static const activateIntent = ActivateIntent();
-  static const buttonActivateIntent = ButtonActivateIntent();
-  static const selectIntent = SelectIntent();
-
-  // Dismissal
-  static const dismissIntent = DismissIntent();
-
-  // Focus traversal
-  static const nextFocusIntent = NextFocusIntent();
-  static const previousFocusIntent = PreviousFocusIntent();
-
-  // Directional focus (with required direction parameter)
-  static const upIntent = DirectionalFocusIntent(TraversalDirection.up);
-  static const downIntent = DirectionalFocusIntent(TraversalDirection.down);
-  static const leftIntent = DirectionalFocusIntent(TraversalDirection.left);
-  static const rightIntent = DirectionalFocusIntent(TraversalDirection.right);
-
-  // Request focus (requires FocusNode parameter)
-  // RequestFocusIntent requires a FocusNode, so it can't be const
-  // Example: RequestFocusIntent(myFocusNode)
-
-  // Scrolling intents
-  static const scrollUpLine = ScrollIntent(
-    direction: AxisDirection.up,
-    type: ScrollIncrementType.line,
-  );
-  static const scrollDownLine = ScrollIntent(
-    direction: AxisDirection.down,
-    type: ScrollIncrementType.line,
-  );
-  static const scrollUpPage = ScrollIntent(
-    direction: AxisDirection.up,
-    type: ScrollIncrementType.page,
-  );
-  static const scrollDownPage = ScrollIntent(
-    direction: AxisDirection.down,
-    type: ScrollIncrementType.page,
-  );
-
-  // Document boundaries (available in newer Flutter versions)
-  // Note: ScrollToDocumentBoundaryIntent may not be available in all Flutter versions
-  // static const scrollToTop = ScrollToDocumentBoundaryIntent(forward: false);
-  // static const scrollToBottom = ScrollToDocumentBoundaryIntent(forward: true);
+/// Central namespace for Naked UI intent helpers. Access widget-specific helpers
+/// via namespaces such as `NakedIntentActions.button.shortcuts` and
+/// `NakedIntentActions.button.actions(...)`. Each helper returns the concrete
+/// types expected for that widget to keep usage strongly typed and predictable.
+///
+/// This class is not intended to be instantiated or extended; use the static
+/// members to access the helpers.
+class NakedIntentActions {
+  static const _ButtonIntentActions button = _ButtonIntentActions();
+  static const _CheckboxIntentActions checkbox = _CheckboxIntentActions();
+  static const _ToggleIntentActions toggle = _ToggleIntentActions();
+  static const _AccordionIntentActions accordion = _AccordionIntentActions();
+  static const _TabIntentActions tab = _TabIntentActions();
+  static const _MenuIntentActions menu = _MenuIntentActions();
+  static const _DialogIntentActions dialog = _DialogIntentActions();
 }
 
 // =============================================================================
-// TEXT EDITING INTENTS (Available in Flutter)
+// BUTTON / ACTIVATION-LIKE WIDGETS
 // =============================================================================
 
-class TextEditingIntents {
-  // These text editing intents are available but require parameters
+class _ButtonIntentActions {
+  const _ButtonIntentActions();
 
-  // Selection (all require SelectionChangedCause parameter, can't be const)
-  // SelectAllTextIntent(SelectionChangedCause cause)
-  // CopySelectionTextIntent(SelectionChangedCause cause)
-  // PasteTextIntent(SelectionChangedCause cause)
+  Map<ShortcutActivator, Intent> get shortcuts => _buttonShortcuts;
 
-  // Deletion (require forward parameter)
-  static const deleteForwardIntent = DeleteCharacterIntent(forward: true);
-  static const deleteBackwardIntent = DeleteCharacterIntent(forward: false);
+  Map<Type, Action<Intent>> actions({required VoidCallback onPressed}) =>
+      _activation(onPressed, includeButtonIntent: true);
+}
 
-  // Word boundary deletion
-  static const deleteWordForwardIntent = DeleteToNextWordBoundaryIntent(
-    forward: true,
-  );
-  static const deleteWordBackwardIntent = DeleteToNextWordBoundaryIntent(
-    forward: false,
-  );
+class _CheckboxIntentActions {
+  const _CheckboxIntentActions();
 
-  // Line deletion
-  static const deleteLineForwardIntent = DeleteToLineBreakIntent(forward: true);
-  static const deleteLineBackwardIntent = DeleteToLineBreakIntent(
-    forward: false,
-  );
+  Map<ShortcutActivator, Intent> get shortcuts => _buttonShortcuts;
 
-  // Undo/Redo (require SelectionChangedCause parameter, can't be const)
-  // UndoTextIntent(SelectionChangedCause cause)
-  // RedoTextIntent(SelectionChangedCause cause)
+  Map<Type, Action<Intent>> actions({required VoidCallback onToggle}) =>
+      _activation(onToggle, includeButtonIntent: true);
+}
 
-  // Selection extension (all require parameters)
-  // ExtendSelectionByCharacterIntent(forward: bool, collapseSelection: bool)
-  // ExtendSelectionToNextWordBoundaryIntent(forward: bool, collapseSelection: bool)
-  // ExtendSelectionToLineBreakIntent(forward: bool, collapseSelection: bool, collapseAtReversal: bool)
-  // ExtendSelectionVerticallyToAdjacentLineIntent(forward: bool, collapseSelection: bool)
+class _ToggleIntentActions {
+  const _ToggleIntentActions();
 
-  // Expand selection
-  // ExpandSelectionToLineBreakIntent(forward: bool)
+  Map<ShortcutActivator, Intent> get shortcuts => _buttonShortcuts;
 
-  // Transpose
-  static const transposeIntent = TransposeCharactersIntent();
+  Map<Type, Action<Intent>> actions({required VoidCallback onToggle}) =>
+      _activation(onToggle, includeButtonIntent: true);
+}
 
-  // Update selection (requires complex parameters)
-  // UpdateSelectionIntent(TextEditingValue currentTextEditingValue, TextSelection newSelection, SelectionChangedCause cause)
+class _AccordionIntentActions {
+  const _AccordionIntentActions();
+
+  Map<ShortcutActivator, Intent> get shortcuts => _buttonShortcuts;
+
+  Map<Type, Action<Intent>> actions({required VoidCallback onToggle}) =>
+      _activation(onToggle, includeButtonIntent: true);
 }
 
 // =============================================================================
-// WIDGET-SPECIFIC SHORTCUTS (How widgets typically use intents)
+// TAB
 // =============================================================================
 
-/// Button widget keyboard shortcuts
-class ButtonShortcuts {
-  static final Map<ShortcutActivator, Intent> shortcuts = {
-    const SingleActivator(LogicalKeyboardKey.space): const ActivateIntent(),
-    const SingleActivator(LogicalKeyboardKey.enter): const ActivateIntent(),
-    const SingleActivator(LogicalKeyboardKey.numpadEnter):
-        const ButtonActivateIntent(),
-  };
+class _TabIntentActions {
+  const _TabIntentActions();
+
+  Map<ShortcutActivator, Intent> get shortcuts => _tabShortcuts;
+
+  Map<Type, Action<Intent>> actions({
+    required VoidCallback onActivate,
+    required ValueChanged<TraversalDirection> onDirectionalFocus,
+  }) {
+    final map = _activation(onActivate, includeButtonIntent: true);
+    map[DirectionalFocusIntent] = CallbackAction<DirectionalFocusIntent>(
+      onInvoke: (intent) => onDirectionalFocus(intent.direction),
+    );
+
+    return map;
+  }
 }
 
-/// Checkbox widget keyboard shortcuts
-class CheckboxShortcuts {
-  static final Map<ShortcutActivator, Intent> shortcuts = {
-    const SingleActivator(LogicalKeyboardKey.space): const ActivateIntent(),
-    const SingleActivator(LogicalKeyboardKey.enter): const ActivateIntent(),
-  };
-}
+// =============================================================================
+// MENU / OVERLAY COLLECTIONS
+// =============================================================================
 
-/// Radio button keyboard shortcuts
-class RadioShortcuts {
-  static final Map<ShortcutActivator, Intent> shortcuts = {
-    const SingleActivator(LogicalKeyboardKey.space): const ActivateIntent(),
-    const SingleActivator(LogicalKeyboardKey.enter): const SelectIntent(),
-    const SingleActivator(LogicalKeyboardKey.arrowUp):
-        const DirectionalFocusIntent(TraversalDirection.up),
-    const SingleActivator(LogicalKeyboardKey.arrowDown):
-        const DirectionalFocusIntent(TraversalDirection.down),
-    const SingleActivator(LogicalKeyboardKey.arrowLeft):
-        const DirectionalFocusIntent(TraversalDirection.left),
-    const SingleActivator(LogicalKeyboardKey.arrowRight):
-        const DirectionalFocusIntent(TraversalDirection.right),
-  };
-}
+class _MenuIntentActions {
+  const _MenuIntentActions();
 
-/// Switch widget keyboard shortcuts
-class SwitchShortcuts {
-  static final Map<ShortcutActivator, Intent> shortcuts = {
-    const SingleActivator(LogicalKeyboardKey.space): const ActivateIntent(),
-    const SingleActivator(LogicalKeyboardKey.enter): const ActivateIntent(),
-  };
-}
+  Map<ShortcutActivator, Intent> get shortcuts => _menuShortcuts;
 
-/// Dropdown/Select keyboard shortcuts
-class DropdownShortcuts {
-  static final Map<ShortcutActivator, Intent> shortcuts = {
-    const SingleActivator(LogicalKeyboardKey.space): const ActivateIntent(),
-    const SingleActivator(LogicalKeyboardKey.enter): const ActivateIntent(),
-    const SingleActivator(LogicalKeyboardKey.escape): const DismissIntent(),
-    const SingleActivator(LogicalKeyboardKey.arrowUp):
-        const DirectionalFocusIntent(TraversalDirection.up),
-    const SingleActivator(LogicalKeyboardKey.arrowDown):
-        const DirectionalFocusIntent(TraversalDirection.down),
-  };
-}
-
-/// Dialog keyboard shortcuts
-class DialogShortcuts {
-  static final Map<ShortcutActivator, Intent> shortcuts = {
-    const SingleActivator(LogicalKeyboardKey.escape): const DismissIntent(),
-    const SingleActivator(LogicalKeyboardKey.enter): const ActivateIntent(),
-    const SingleActivator(LogicalKeyboardKey.tab): const NextFocusIntent(),
-    const SingleActivator(LogicalKeyboardKey.tab, shift: true):
-        const PreviousFocusIntent(),
-  };
-}
-
-/// Tab navigation keyboard shortcuts
-class TabShortcuts {
-  static final Map<ShortcutActivator, Intent> shortcuts = {
-    const SingleActivator(LogicalKeyboardKey.arrowLeft):
-        const DirectionalFocusIntent(TraversalDirection.left),
-    const SingleActivator(LogicalKeyboardKey.arrowRight):
-        const DirectionalFocusIntent(TraversalDirection.right),
-    const SingleActivator(LogicalKeyboardKey.arrowUp):
-        const DirectionalFocusIntent(TraversalDirection.up),
-    const SingleActivator(LogicalKeyboardKey.arrowDown):
-        const DirectionalFocusIntent(TraversalDirection.down),
-    const SingleActivator(LogicalKeyboardKey.space): const ActivateIntent(),
-    const SingleActivator(LogicalKeyboardKey.enter): const ActivateIntent(),
-  };
-}
-
-/// Text field keyboard shortcuts (partial - many require parameters)
-class TextFieldShortcuts {
-  static Map<ShortcutActivator, Intent> getShortcuts() {
-    return {
-      // Simple deletion shortcuts
-      const SingleActivator(LogicalKeyboardKey.delete):
-          const DeleteCharacterIntent(forward: true),
-      const SingleActivator(LogicalKeyboardKey.backspace):
-          const DeleteCharacterIntent(forward: false),
-      const SingleActivator(LogicalKeyboardKey.delete, control: true):
-          const DeleteToNextWordBoundaryIntent(forward: true),
-      const SingleActivator(LogicalKeyboardKey.backspace, control: true):
-          const DeleteToNextWordBoundaryIntent(forward: false),
-
-      // Transpose
-      const SingleActivator(LogicalKeyboardKey.keyT, control: true):
-          const TransposeCharactersIntent(),
-
-      // Note: Most text editing intents require runtime parameters and can't be const
-      // They're typically created dynamically in EditableText's action handlers
+  Map<Type, Action<Intent>> actions({
+    required VoidCallback onDismiss,
+    VoidCallback? onNextFocus,
+    VoidCallback? onPreviousFocus,
+  }) {
+    final map = <Type, Action<Intent>>{
+      DismissIntent: CallbackAction<DismissIntent>(
+        onInvoke: (_) => onDismiss(),
+      ),
     };
+
+    if (onNextFocus != null) {
+      map[NextFocusIntent] = CallbackAction<NextFocusIntent>(
+        onInvoke: (_) => onNextFocus(),
+      );
+    }
+
+    if (onPreviousFocus != null) {
+      map[PreviousFocusIntent] = CallbackAction<PreviousFocusIntent>(
+        onInvoke: (_) => onPreviousFocus(),
+      );
+    }
+
+    return map;
+  }
+}
+
+// =============================================================================
+// DIALOG
+// =============================================================================
+
+class _DialogIntentActions {
+  const _DialogIntentActions();
+
+  Map<ShortcutActivator, Intent> get shortcuts => _dialogShortcuts;
+
+  Map<Type, Action<Intent>> actions({required VoidCallback onDismiss}) => {
+    DismissIntent: CallbackAction<DismissIntent>(onInvoke: (_) => onDismiss()),
+  };
+}
+
+// =============================================================================
+// SHARED IMPLEMENTATION DETAILS
+// =============================================================================
+
+const Map<ShortcutActivator, Intent> _buttonShortcuts =
+    <ShortcutActivator, Intent>{
+      SingleActivator(LogicalKeyboardKey.enter): ActivateIntent(),
+      SingleActivator(LogicalKeyboardKey.space): ActivateIntent(),
+      SingleActivator(LogicalKeyboardKey.numpadEnter): ButtonActivateIntent(),
+    };
+
+const Map<ShortcutActivator, Intent> _tabShortcuts =
+    <ShortcutActivator, Intent>{
+      SingleActivator(LogicalKeyboardKey.enter): ActivateIntent(),
+      SingleActivator(LogicalKeyboardKey.space): ActivateIntent(),
+      SingleActivator(LogicalKeyboardKey.numpadEnter): ButtonActivateIntent(),
+      SingleActivator(LogicalKeyboardKey.arrowLeft): DirectionalFocusIntent(
+        TraversalDirection.left,
+      ),
+      SingleActivator(LogicalKeyboardKey.arrowRight): DirectionalFocusIntent(
+        TraversalDirection.right,
+      ),
+      SingleActivator(LogicalKeyboardKey.arrowUp): DirectionalFocusIntent(
+        TraversalDirection.up,
+      ),
+      SingleActivator(LogicalKeyboardKey.arrowDown): DirectionalFocusIntent(
+        TraversalDirection.down,
+      ),
+    };
+
+const Map<ShortcutActivator, Intent> _menuShortcuts =
+    <ShortcutActivator, Intent>{
+      SingleActivator(LogicalKeyboardKey.escape): DismissIntent(),
+      SingleActivator(LogicalKeyboardKey.arrowDown): NextFocusIntent(),
+      SingleActivator(LogicalKeyboardKey.arrowUp): PreviousFocusIntent(),
+    };
+
+const Map<ShortcutActivator, Intent> _dialogShortcuts =
+    <ShortcutActivator, Intent>{
+      SingleActivator(LogicalKeyboardKey.escape): DismissIntent(),
+    };
+
+Map<Type, Action<Intent>> _activation(
+  VoidCallback handler, {
+  bool includeButtonIntent = false,
+}) {
+  final map = <Type, Action<Intent>>{
+    ActivateIntent: CallbackAction<ActivateIntent>(onInvoke: (_) => handler()),
+  };
+
+  if (includeButtonIntent) {
+    map[ButtonActivateIntent] = CallbackAction<ButtonActivateIntent>(
+      onInvoke: (_) => handler(),
+    );
   }
 
-  // Example of how to create text editing intents with parameters:
-  static Intent createSelectAllIntent() =>
-      const SelectAllTextIntent(SelectionChangedCause.keyboard);
-
-  static Intent createCopyIntent() => CopySelectionTextIntent.copy;
-
-  static Intent createPasteIntent() =>
-      const PasteTextIntent(SelectionChangedCause.keyboard);
-
-  static Intent createUndoIntent() =>
-      const UndoTextIntent(SelectionChangedCause.keyboard);
-
-  static Intent createRedoIntent() =>
-      const RedoTextIntent(SelectionChangedCause.keyboard);
-}
-
-// =============================================================================
-// SLIDER KEYBOARD BEHAVIOR (Using DirectionalFocusIntent)
-// =============================================================================
-
-/// Slider uses DirectionalFocusIntent for arrow key handling
-class SliderShortcuts {
-  static final Map<ShortcutActivator, Intent> shortcuts = {
-    const SingleActivator(LogicalKeyboardKey.arrowUp):
-        const DirectionalFocusIntent(TraversalDirection.up),
-    const SingleActivator(LogicalKeyboardKey.arrowDown):
-        const DirectionalFocusIntent(TraversalDirection.down),
-    const SingleActivator(LogicalKeyboardKey.arrowLeft):
-        const DirectionalFocusIntent(TraversalDirection.left),
-    const SingleActivator(LogicalKeyboardKey.arrowRight):
-        const DirectionalFocusIntent(TraversalDirection.right),
-    // Page up/down typically handled via ScrollIntent
-    const SingleActivator(LogicalKeyboardKey.pageUp): const ScrollIntent(
-      direction: AxisDirection.up,
-      type: ScrollIncrementType.page,
-    ),
-    const SingleActivator(LogicalKeyboardKey.pageDown): const ScrollIntent(
-      direction: AxisDirection.down,
-      type: ScrollIncrementType.page,
-    ),
-  };
-}
-
-// =============================================================================
-// GLOBAL NAVIGATION SHORTCUTS
-// =============================================================================
-
-class GlobalNavigationShortcuts {
-  static final Map<ShortcutActivator, Intent> shortcuts = {
-    const SingleActivator(LogicalKeyboardKey.tab): const NextFocusIntent(),
-    const SingleActivator(LogicalKeyboardKey.tab, shift: true):
-        const PreviousFocusIntent(),
-    const SingleActivator(LogicalKeyboardKey.arrowUp):
-        const DirectionalFocusIntent(TraversalDirection.up),
-    const SingleActivator(LogicalKeyboardKey.arrowDown):
-        const DirectionalFocusIntent(TraversalDirection.down),
-    const SingleActivator(LogicalKeyboardKey.arrowLeft):
-        const DirectionalFocusIntent(TraversalDirection.left),
-    const SingleActivator(LogicalKeyboardKey.arrowRight):
-        const DirectionalFocusIntent(TraversalDirection.right),
-  };
+  return map;
 }

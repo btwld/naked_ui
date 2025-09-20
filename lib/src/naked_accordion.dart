@@ -1,10 +1,10 @@
 import 'dart:collection';
 
 import 'package:flutter/foundation.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
 import 'mixins/naked_mixins.dart';
+import 'utilities/intents.dart';
 import 'utilities/naked_focusable_detector.dart';
 import 'utilities/widget_state_snapshot.dart';
 
@@ -383,15 +383,8 @@ class _NakedAccordionItemState<T> extends State<NakedAccordionItem<T>>
               mouseCursor: widget.enabled
                   ? widget.mouseCursor
                   : SystemMouseCursors.basic,
-              shortcuts: const {
-                SingleActivator(LogicalKeyboardKey.enter): ActivateIntent(),
-                SingleActivator(LogicalKeyboardKey.space): ActivateIntent(),
-              },
-              actions: {
-                ActivateIntent: CallbackAction<ActivateIntent>(
-                  onInvoke: (_) => onTap(),
-                ),
-              },
+              shortcuts: NakedIntentActions.accordion.shortcuts,
+              actions: NakedIntentActions.accordion.actions(onToggle: onTap),
               child: Semantics(
                 enabled: widget.enabled,
                 label: widget.semanticLabel,

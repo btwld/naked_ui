@@ -2,6 +2,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
 import 'mixins/naked_mixins.dart';
+import 'utilities/intents.dart';
 import 'utilities/naked_focusable_detector.dart';
 import 'utilities/widget_state_snapshot.dart';
 
@@ -122,7 +123,7 @@ class NakedCheckbox extends StatefulWidget {
 class _NakedCheckboxState extends State<NakedCheckbox>
     with WidgetStatesMixin<NakedCheckbox> {
   // Private methods
-  void _handleKeyboardActivation([Intent? _]) {
+  void _handleKeyboardActivation() {
     if (!widget._effectiveEnabled) return;
 
     _handleActivation();
@@ -204,15 +205,10 @@ class _NakedCheckboxState extends State<NakedCheckbox>
         focusNode: widget.focusNode,
         mouseCursor: _effectiveCursor,
         // Use default includeFocusSemantics: true to let it handle focus semantics automatically
-        shortcuts: const {
-          SingleActivator(LogicalKeyboardKey.enter): ActivateIntent(),
-          SingleActivator(LogicalKeyboardKey.space): ActivateIntent(),
-        },
-        actions: {
-          ActivateIntent: CallbackAction<ActivateIntent>(
-            onInvoke: _handleKeyboardActivation,
-          ),
-        },
+        shortcuts: NakedIntentActions.checkbox.shortcuts,
+        actions: NakedIntentActions.checkbox.actions(
+          onToggle: () => _handleKeyboardActivation(),
+        ),
         child: Semantics(
           container: true,
           enabled: widget._effectiveEnabled,

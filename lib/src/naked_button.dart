@@ -1,9 +1,9 @@
 import 'dart:async';
 
-import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
 import 'mixins/naked_mixins.dart'; // WidgetStatesMixin, FocusNodeMixin
+import 'utilities/intents.dart';
 import 'utilities/naked_focusable_detector.dart';
 
 /// A headless button without visuals.
@@ -112,7 +112,7 @@ class _NakedButtonState extends State<NakedButton>
 
   // --- Activation & gestures -------------------------------------------------
 
-  void _handleKeyboardActivation([Intent? _]) {
+  void _handleKeyboardActivation() {
     if (!widget._effectiveEnabled || widget.onPressed == null) return;
 
     if (widget.enableFeedback) {
@@ -215,15 +215,10 @@ class _NakedButtonState extends State<NakedButton>
       mouseCursor: widget._effectiveEnabled
           ? widget.mouseCursor
           : SystemMouseCursors.basic,
-      shortcuts: const {
-        SingleActivator(LogicalKeyboardKey.enter): ActivateIntent(),
-        SingleActivator(LogicalKeyboardKey.space): ActivateIntent(),
-      },
-      actions: {
-        ActivateIntent: CallbackAction<ActivateIntent>(
-          onInvoke: _handleKeyboardActivation,
-        ),
-      },
+      shortcuts: NakedIntentActions.button.shortcuts,
+      actions: NakedIntentActions.button.actions(
+        onPressed: () => _handleKeyboardActivation(),
+      ),
       child: Semantics(
         enabled: widget._effectiveEnabled,
 
