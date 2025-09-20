@@ -88,7 +88,6 @@ class NakedTooltip extends StatefulWidget {
     this.semanticsLabel,
   });
 
-
   /// See also:
   /// - [NakedPopover], for anchored, click-triggered overlays.
 

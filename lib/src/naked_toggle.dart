@@ -3,11 +3,39 @@ import 'package:flutter/widgets.dart';
 
 import 'mixins/naked_mixins.dart';
 import 'utilities/naked_focusable_detector.dart';
+import 'utilities/widget_state_snapshot.dart';
+
+/// Immutable view passed to [NakedToggle.builder].
+class NakedToggleState extends NakedWidgetState {
+  /// Whether the toggle is currently on.
+  final bool isToggled;
+
+  NakedToggleState({required super.states, required this.isToggled});
+}
+
+/// Immutable view passed to [NakedToggleOption.builder].
+class NakedToggleOptionState<T> extends NakedWidgetState {
+  /// The option's value.
+  final T value;
+
+  /// The currently selected value from the surrounding toggle group.
+  final T? selectedValue;
+
+  NakedToggleOptionState({
+    required super.states,
+    required this.value,
+    required this.selectedValue,
+  });
+
+  /// Whether this option matches the current selection.
+  bool get isCurrentSelection =>
+      selectedValue != null && value == selectedValue;
+}
 
 /// A headless binary toggle control without visuals.
 ///
 /// Behaves as toggle button or switch based on [asSwitch]. Builder receives
-/// WidgetStates including disabled/focused/hovered/pressed/selected.
+/// [NakedToggleState] with toggle value and interaction states.
 ///
 /// ```dart
 /// NakedToggle(
@@ -76,8 +104,8 @@ class NakedToggle extends StatefulWidget {
   /// Called when press changes.
   final ValueChanged<bool>? onPressChange;
 
-  /// The builder that receives current WidgetStates.
-  final ValueWidgetBuilder<Set<WidgetState>>? builder;
+  /// The builder that receives current toggle state.
+  final NakedStateBuilder<NakedToggleState>? builder;
 
   /// The semantic label for screen readers.
   final String? semanticLabel;
@@ -111,10 +139,13 @@ class _NakedToggleState extends State<NakedToggle>
   }
 
   Widget _buildContent(BuildContext context) {
-    final states = widgetStates;
+    final toggleState = NakedToggleState(
+      states: widgetStates,
+      isToggled: widget.value,
+    );
 
     return widget.builder != null
-        ? widget.builder!(context, states, widget.child)
+        ? widget.builder!(context, toggleState, widget.child)
         : widget.child!;
   }
 
@@ -297,7 +328,7 @@ class NakedToggleOption<T> extends StatefulWidget {
   final ValueChanged<bool>? onFocusChange;
   final ValueChanged<bool>? onHoverChange;
   final ValueChanged<bool>? onPressChange;
-  final ValueWidgetBuilder<Set<WidgetState>>? builder;
+  final NakedStateBuilder<NakedToggleOptionState<T>>? builder;
   final String? semanticLabel;
 
   @override
@@ -344,8 +375,14 @@ class _NakedToggleOptionState<T> extends State<NakedToggleOption<T>>
     final isEnabled = scope.enabled && widget.enabled;
     final isSelected = scope.selectedValue == widget.value;
 
+    final optionState = NakedToggleOptionState<T>(
+      states: widgetStates,
+      value: widget.value,
+      selectedValue: scope.selectedValue,
+    );
+
     final content = widget.builder != null
-        ? widget.builder!(context, widgetStates, widget.child)
+        ? widget.builder!(context, optionState, widget.child)
         : widget.child!;
 
     final cursor = isEnabled

@@ -1,11 +1,31 @@
 import 'package:flutter/material.dart';
 
 import 'mixins/naked_mixins.dart';
+import 'utilities/hit_testable_container.dart';
+import 'utilities/widget_state_snapshot.dart';
+
+/// Immutable view passed to [NakedRadio.builder].
+class NakedRadioState<T> extends NakedWidgetState {
+  /// The value represented by this radio.
+  final T value;
+
+  /// The currently selected value from the surrounding radio group.
+  final T? groupValue;
+
+  NakedRadioState({
+    required super.states,
+    required this.value,
+    required this.groupValue,
+  });
+
+  /// Whether this radio matches the current selection.
+  bool get isSelected => groupValue != null && value == groupValue;
+}
 
 /// A headless radio without visuals.
 ///
-/// Must be placed under a [RadioGroup]. Exposes interaction states
-/// including hovered, pressed, focused, selected, and disabled.
+/// Must be placed under a [RadioGroup]. Builder receives [NakedRadioState]
+/// with radio value, group value, and interaction states.
 ///
 /// ```dart
 /// RadioGroup<String>(
@@ -17,6 +37,11 @@ import 'mixins/naked_mixins.dart';
 ///   ]),
 /// )
 /// ```
+///
+/// ## Accessibility
+/// For optimal accessibility, ensure your radio has a minimum touch target
+/// of 48x48dp. Smaller sizes will work but may be difficult for some users
+/// to tap accurately.
 ///
 /// See also:
 /// - [Radio], the Material-styled radio for typical apps.
@@ -71,11 +96,8 @@ class NakedRadio<T> extends StatefulWidget {
   /// Called when press state changes.
   final ValueChanged<bool>? onPressChange;
 
-  /// The builder that receives current interaction states.
-  ///
-  /// Includes the selected state when [value] matches the group's
-  /// selected value.
-  final ValueWidgetBuilder<Set<WidgetState>>? builder;
+  /// The builder that receives current radio state.
+  final NakedStateBuilder<NakedRadioState<T>>? builder;
 
   /// The registry override for advanced usage and testing.
   ///
@@ -144,15 +166,21 @@ class _NakedRadioState<T> extends State<NakedRadio<T>>
         }
 
         if (widget.builder != null) {
-          final built = widget.builder!(context, states, widget.child);
+          final radioStateTyped = NakedRadioState<T>(
+            states: states,
+            value: widget.value,
+            groupValue: registry.groupValue,
+          );
+
+          final built = widget.builder!(context, radioStateTyped, widget.child);
 
           // Ensure the area is hit-testable so RawRadio's GestureDetector
           // can receive taps even if the built widget has no gesture handlers.
-          return ColoredBox(color: Colors.transparent, child: built);
+          return HitTestableContainer(child: built);
         }
 
         // Ensure the child area is hit-testable for taps.
-        return ColoredBox(color: Colors.transparent, child: widget.child!);
+        return HitTestableContainer(child: widget.child!);
       },
     );
   }

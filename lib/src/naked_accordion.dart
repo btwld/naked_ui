@@ -1,6 +1,7 @@
 import 'dart:collection';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
 import 'mixins/naked_mixins.dart';
@@ -374,12 +375,14 @@ class _NakedAccordionItemState<T> extends State<NakedAccordionItem<T>>
           mainAxisSize: MainAxisSize.min,
           children: [
             NakedFocusableDetector(
-              enabled: enabled,
-              autofocus: autofocus,
-              onFocusChange: onFocusChange,
-              onHoverChange: onHoverChange,
-              focusNode: focusNode,
-              mouseCursor: enabled ? mouseCursor : SystemMouseCursors.basic,
+              enabled: widget.enabled,
+              autofocus: widget.autofocus,
+              onFocusChange: (f) => updateFocusState(f, widget.onFocusChange),
+              onHoverChange: (h) => updateHoverState(h, widget.onHoverChange),
+              focusNode: widget.focusNode,
+              mouseCursor: widget.enabled
+                  ? widget.mouseCursor
+                  : SystemMouseCursors.basic,
               shortcuts: const {
                 SingleActivator(LogicalKeyboardKey.enter): ActivateIntent(),
                 SingleActivator(LogicalKeyboardKey.space): ActivateIntent(),
@@ -390,27 +393,48 @@ class _NakedAccordionItemState<T> extends State<NakedAccordionItem<T>>
                 ),
               },
               child: Semantics(
-                enabled: enabled,
-                label: semanticLabel,
-                onTap: enabled ? onTap : null,
+                enabled: widget.enabled,
+                label: widget.semanticLabel,
+                onTap: widget.enabled ? onTap : null,
                 child: GestureDetector(
-                  onTapDown: (enabled && onPressChange != null)
-                      ? (_) => onPressChange!(true)
+                  onTapDown: (widget.enabled && widget.onPressChange != null)
+                      ? (_) => updatePressState(true, widget.onPressChange)
                       : null,
-                  onTapUp: (enabled && onPressChange != null)
-                      ? (_) => onPressChange!(false)
+                  onTapUp: (widget.enabled && widget.onPressChange != null)
+                      ? (_) => updatePressState(false, widget.onPressChange)
                       : null,
-                  onTap: enabled ? onTap : null,
-                  onTapCancel: (enabled && onPressChange != null)
-                      ? () => onPressChange!(false)
+                  onTap: widget.enabled ? onTap : null,
+                  onTapCancel: (widget.enabled && widget.onPressChange != null)
+                      ? () => updatePressState(false, widget.onPressChange)
                       : null,
                   behavior: HitTestBehavior.opaque,
                   excludeFromSemantics: true,
-                  child: ExcludeSemantics(child: trigger(context, isExpanded)),
+                  child: ExcludeSemantics(
+                    child: Builder(
+                      builder: (context) {
+                        final accordionState = NakedAccordionItemState<T>(
+                          states: widgetStates,
+                          value: widget.value,
+                          isExpanded: isExpanded,
+                          canCollapse:
+                              !isExpanded ||
+                              controller.values.length > controller.min,
+                          canExpand:
+                              isExpanded ||
+                              controller.max == null ||
+                              controller.values.length < controller.max!,
+                        );
+
+                        return widget.trigger(context, accordionState, null);
+                      },
+                    ),
+                  ),
                 ),
               ),
             ),
-            transitionBuilder != null ? transitionBuilder!(panel) : panel,
+            widget.transitionBuilder != null
+                ? widget.transitionBuilder!(panel)
+                : panel,
           ],
         );
       },

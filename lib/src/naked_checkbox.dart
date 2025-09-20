@@ -3,10 +3,30 @@ import 'package:flutter/widgets.dart';
 
 import 'mixins/naked_mixins.dart';
 import 'utilities/naked_focusable_detector.dart';
+import 'utilities/widget_state_snapshot.dart';
+
+/// Immutable view passed to [NakedCheckbox.builder].
+class NakedCheckboxState extends NakedWidgetState {
+  /// The current checked state (null for tristate intermediate).
+  final bool? isChecked;
+
+  /// Whether the checkbox is in tristate mode.
+  final bool tristate;
+
+  NakedCheckboxState({
+    required super.states,
+    required this.isChecked,
+    required this.tristate,
+  });
+
+  /// Whether the checkbox is in intermediate/mixed state.
+  bool get isIntermediate => tristate && isChecked == null;
+}
 
 /// A headless checkbox without visuals.
 ///
-/// Exposes interaction states and semantics for custom styling.
+/// Builder receives [NakedCheckboxState] with checked value, tristate flag,
+/// and interaction states for custom styling.
 ///
 /// ```dart
 /// NakedCheckbox(
@@ -87,11 +107,8 @@ class NakedCheckbox extends StatefulWidget {
   /// The autofocus flag.
   final bool autofocus;
 
-  /// The builder that receives current interaction states.
-  ///
-  /// States include: disabled, focused, hovered, pressed, selected.
-  /// The selected state reflects `value == true`.
-  final ValueWidgetBuilder<Set<WidgetState>>? builder;
+  /// The builder that receives current checkbox state.
+  final NakedStateBuilder<NakedCheckboxState>? builder;
 
   /// The semantic label for accessibility.
   final String? semanticLabel;
@@ -136,10 +153,14 @@ class _NakedCheckboxState extends State<NakedCheckbox>
   }
 
   Widget _buildContent(BuildContext context) {
-    final states = widgetStates;
+    final checkboxState = NakedCheckboxState(
+      states: widgetStates,
+      isChecked: widget.value,
+      tristate: widget.tristate,
+    );
 
     return widget.builder != null
-        ? widget.builder!(context, states, widget.child)
+        ? widget.builder!(context, checkboxState, widget.child)
         : widget.child!;
   }
 

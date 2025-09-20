@@ -6,8 +6,8 @@ import 'utilities/anchored_overlay_shell.dart';
 import 'utilities/positioning.dart';
 import 'utilities/widget_state_snapshot.dart';
 
-/// State snapshot provided to [NakedMenu.triggerBuilder].
-class NakedMenuState<T> extends NakedWidgetStateSnapshot {
+/// Immutable view passed to [NakedMenu.triggerBuilder].
+class NakedMenuState<T> extends NakedWidgetState {
   /// Whether the overlay is currently open.
   final bool isOpen;
 
@@ -23,8 +23,8 @@ class NakedMenuState<T> extends NakedWidgetStateSnapshot {
   bool get hasSelection => selectedValue != null;
 }
 
-/// State snapshot provided to [NakedMenuItem] builders.
-class NakedMenuItemState<T> extends NakedWidgetStateSnapshot {
+/// Immutable view passed to [NakedMenuItem] builders.
+class NakedMenuItemState<T> extends NakedWidgetState {
   /// The menu item's value.
   final T value;
 
@@ -57,17 +57,6 @@ class _NakedMenuScope<T> extends OverlayScope<T> {
   /// Returns null if no [NakedMenu] ancestor is found.
   static _NakedMenuScope<T>? maybeOf<T>(BuildContext context) {
     return OverlayScope.maybeOf(context);
-  }
-
-  /// Returns the [_NakedMenuScope] that most tightly encloses the given [context].
-  ///
-  /// If no [NakedMenu] ancestor is found, this method throws a [FlutterError].
-  static _NakedMenuScope<T> of<T>(BuildContext context) {
-    return OverlayScope.of(
-      context,
-      scopeConsumer: NakedMenuItem,
-      scopeOwner: NakedMenu,
-    );
   }
 
   final ValueChanged<T>? onSelected;

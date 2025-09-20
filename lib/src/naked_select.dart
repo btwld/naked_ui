@@ -6,8 +6,8 @@ import 'utilities/anchored_overlay_shell.dart';
 import 'utilities/positioning.dart';
 import 'utilities/widget_state_snapshot.dart';
 
-/// State snapshot provided to [NakedSelect.triggerBuilder].
-class NakedSelectState<T> extends NakedWidgetStateSnapshot {
+/// Immutable view passed to [NakedSelect.triggerBuilder].
+class NakedSelectState<T> extends NakedWidgetState {
   /// Whether the overlay is currently open.
   final bool isOpen;
 
@@ -24,8 +24,8 @@ class NakedSelectState<T> extends NakedWidgetStateSnapshot {
   bool get hasValue => value != null;
 }
 
-/// State snapshot provided to [NakedSelectOption] builders.
-class NakedSelectItemState<T> extends NakedWidgetStateSnapshot {
+/// Immutable view passed to [NakedSelectOption] builders.
+class NakedSelectItemState<T> extends NakedWidgetState {
   /// The option's value.
   final T value;
 
@@ -258,6 +258,7 @@ class NakedSelect<T> extends StatefulWidget {
 
 class _NakedSelectState<T> extends State<NakedSelect<T>>
     with OverlayStateMixin<NakedSelect<T>> {
+  // ignore: dispose-fields
   final _controller = MenuController();
 
   bool get _isOpen => _controller.isOpen;
