@@ -6,7 +6,7 @@ keywords: [flutter, tabs, tablist, headless, focus, accessibility]
 
 `NakedTabs` splits into three small pieces:
 
-1. `NakedTabGroup` – owns the selected tab id and focus handling
+1. `NakedTabs` – owns the selected tab id and focus handling
 2. `NakedTab` – trigger button that receives a typed state snapshot
 3. `NakedTabPanel` – panel that shows/hides content based on the active tab
 
@@ -29,7 +29,7 @@ class _TabsExampleState extends State<TabsExample> {
 
   @override
   Widget build(BuildContext context) {
-    return NakedTabGroup(
+    return NakedTabs(
       selectedTabId: _tab,
       onChanged: (id) => setState(() => _tab = id),
       child: Column(
@@ -169,10 +169,10 @@ typedef NakedStateBuilder<S extends NakedWidgetState> = Widget Function(
 );
 ```
 
-### NakedTabGroup
+### NakedTabs
 
 ```dart
-const NakedTabGroup({
+const NakedTabs({
   Key? key,
   required this.child,
   required this.selectedTabId,

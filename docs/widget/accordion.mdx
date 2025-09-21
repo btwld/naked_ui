@@ -25,7 +25,7 @@ class _AccordionExampleState extends State<AccordionExample> {
 
   @override
   Widget build(BuildContext context) {
-    return NakedAccordion<String>(
+    return NakedAccordionGroup<String>(
       controller: controller,
       initialExpandedValues: const ['intro'],
       children: const [
@@ -65,10 +65,10 @@ class _AccordionSectionState extends State<_AccordionSection> {
 
   @override
   Widget build(BuildContext context) {
-    return NakedAccordionItem<String>(
+    return NakedAccordionGroup<String>(
       value: widget.value,
       onHoverChange: (hovered) => setState(() => _isHovered = hovered),
-      trigger: (context, accordionState, _) {
+      triggerBuilder: (context, accordionState, _) {
         final bool isExpanded = accordionState.isExpanded;
         final bool canExpand = accordionState.canExpand;
         final bool canCollapse = accordionState.canCollapse;
@@ -124,7 +124,7 @@ class _AccordionSectionState extends State<_AccordionSection> {
 
 ## Item State Snapshot
 
-`NakedAccordionItemState<T>` is passed to every trigger builder:
+`NakedAccordionState<T>` is passed to every trigger builder:
 
 - `value` → item identifier
 - `isExpanded` → whether the panel is currently open
@@ -157,14 +157,14 @@ const NakedAccordion({
 
 ### Key Parameters
 
-- `children` → list of `Widget`; mix `NakedAccordionItem` with any spacing widgets you need
+- `children` → list of `Widget`; mix `NakedAccordion` with any spacing widgets you need
 - `controller` → required state holder
 - `initialExpandedValues` → values to open on first build when the controller is empty
 
-## NakedAccordionItem Constructor
+## NakedAccordion Constructor
 
 ```dart
-const NakedAccordionItem({
+const NakedAccordion({
   Key? key,
   required this.trigger,
   required this.value,

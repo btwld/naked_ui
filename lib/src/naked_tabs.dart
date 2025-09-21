@@ -22,7 +22,7 @@ class NakedTabState extends NakedWidgetState {
     required this.selectedTabId,
   });
 
-  /// Whether this tab is currently active/selected.
+  /// Whether this tab is currently selected.
   bool get isSelected => tabId == selectedTabId;
 }
 
@@ -32,7 +32,7 @@ class NakedTabState extends NakedWidgetState {
 /// [NakedTabPanel] for custom visuals.
 ///
 /// ```dart
-/// NakedTabGroup(
+/// NakedTabs(
 ///   selectedTabId: 'tab1',
 ///   onChanged: (id) => setState(() => selectedTabId = id),
 ///   child: Column(children: [
@@ -50,8 +50,8 @@ class NakedTabState extends NakedWidgetState {
 /// - [TabBar], the Material-styled tabs widget for typical apps.
 /// - [FocusTraversalGroup], for customizing keyboard focus traversal.
 
-class NakedTabGroup extends StatelessWidget {
-  const NakedTabGroup({
+class NakedTabs extends StatelessWidget {
+  const NakedTabs({
     super.key,
     required this.child,
     required this.selectedTabId,
@@ -64,13 +64,13 @@ class NakedTabGroup extends StatelessWidget {
   /// The tabs content.
   final Widget child;
 
-  /// The ID of the currently selected tab.
+  /// The identifier of the currently selected tab.
   final String selectedTabId;
 
   /// Called when the selected tab changes.
   final ValueChanged<String>? onChanged;
 
-  /// The enabled state of the tabs.
+  /// Whether the tabs are enabled.
   final bool enabled;
 
   /// The tab list orientation.
@@ -126,8 +126,8 @@ class NakedTabsScope extends InheritedWidget {
     final scope = context.dependOnInheritedWidgetOfExactType<NakedTabsScope>();
     if (scope == null) {
       throw FlutterError(
-        'NakedTabsScope.of() called outside of NakedTabGroup.\n'
-        'Wrap NakedTab and NakedTabPanel widgets in a NakedTabGroup.',
+        'NakedTabsScope.of() called outside of NakedTabs.\n'
+        'Wrap NakedTab and NakedTabPanel widgets in a NakedTabs.',
       );
     }
 
@@ -180,11 +180,11 @@ class NakedTabList extends StatelessWidget {
 /// A headless tab trigger without visuals.
 ///
 /// Selection follows focus for keyboard navigation.
-/// Builder receives [NakedTabState] with tab ID, selected tab ID,
+/// The builder receives a [NakedTabState] with the tab ID, selected tab ID,
 /// and interaction states for custom styling.
 ///
 /// See also:
-/// - [NakedTabGroup], the container that manages tab state.
+/// - [NakedTabs], the container that manages tab state.
 class NakedTab extends StatefulWidget {
   const NakedTab({
     super.key,
@@ -217,28 +217,28 @@ class NakedTab extends StatefulWidget {
   /// Called when hover changes.
   final ValueChanged<bool>? onHoverChange;
 
-  /// Called when press state changes.
+  /// Called when the pressed state changes.
   final ValueChanged<bool>? onPressChange;
 
-  /// The builder that receives current tab state.
+  /// Builds the tab using the current [NakedTabState].
   final NakedStateBuilder<NakedTabState>? builder;
 
-  /// The semantic label for the trigger.
+  /// Semantic label for the trigger.
   final String? semanticLabel;
 
-  /// The enabled state of the tab.
+  /// Whether the tab is enabled.
   final bool enabled;
 
   /// The mouse cursor when enabled.
   final MouseCursor mouseCursor;
 
-  /// The haptic feedback enablement flag.
+  /// Whether to provide haptic feedback on interactions.
   final bool enableFeedback;
 
   /// The focus node for the tab.
   final FocusNode? focusNode;
 
-  /// The autofocus flag.
+  /// Whether to autofocus.
   final bool autofocus;
 
   @override
@@ -298,9 +298,9 @@ class _NakedTabState extends State<NakedTab>
     // Find the first tab in the current tab group
     final scope = FocusScope.of(context);
     scope.focusInDirection(TraversalDirection.left);
-    // Keep moving left until we can't go further (reaching the first tab)
+    // Move left until we cannot go further (reaching the first tab).
     while (scope.focusInDirection(TraversalDirection.left)) {
-      // Keep going until we reach the first tab
+      // Continue until we reach the first tab.
     }
   }
 
@@ -308,9 +308,9 @@ class _NakedTabState extends State<NakedTab>
     // Find the last tab in the current tab group
     final scope = FocusScope.of(context);
     scope.focusInDirection(TraversalDirection.right);
-    // Keep moving right until we can't go further (reaching the last tab)
+    // Move right until we cannot go further (reaching the last tab).
     while (scope.focusInDirection(TraversalDirection.right)) {
-      // Keep going until we reach the last tab
+      // Continue until we reach the last tab.
     }
   }
 
@@ -339,7 +339,7 @@ class _NakedTabState extends State<NakedTab>
     assert(widget.tabId.isNotEmpty, 'tabId cannot be empty');
 
     final isSelected = _scope.isTabSelected(widget.tabId);
-    // Keep states synced for builder consumers.
+    // Maintain states synced for builder consumers.
     updateDisabledState(!_isEnabled);
     updateSelectedState(isSelected, null);
 
@@ -408,7 +408,7 @@ class _NakedTabState extends State<NakedTab>
 /// Supports state maintenance when hidden.
 ///
 /// See also:
-/// - [NakedTabGroup], the container that manages tab selection.
+/// - [NakedTabs], the container that manages tab selection.
 class NakedTabPanel extends StatelessWidget {
   const NakedTabPanel({
     super.key,
@@ -423,7 +423,7 @@ class NakedTabPanel extends StatelessWidget {
   /// The identifier of the tab this panel corresponds to.
   final String tabId;
 
-  /// The state maintenance flag when hidden.
+  /// Whether to maintain state when hidden.
   final bool maintainState;
 
   @override

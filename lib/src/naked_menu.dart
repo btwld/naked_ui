@@ -86,14 +86,14 @@ class NakedMenuItem<T> extends OverlayItem<T, NakedMenuItemState<T>> {
     this.closeOnActivate = true,
   });
 
-  /// Whether the menu will be closed when this item is activated.
+  /// Whether the menu closes when this item is activated.
   ///
   /// Defaults to true. Set to false to keep the menu open after this
   /// item is selected, which is useful for toggle actions or when
   /// the menu contains interactive content.
   final bool closeOnActivate;
 
-  /// Handles the activation of this menu item.
+  /// Handles activation of this menu item.
   ///
   /// Gracefully handles missing scope using null-safe operators.
   /// This allows NakedMenuItem to function as a basic button
@@ -104,7 +104,7 @@ class NakedMenuItem<T> extends OverlayItem<T, NakedMenuItemState<T>> {
     if (closeOnActivate) menu?.controller.close();
   }
 
-  /// Computes additional widget states based on menu scope.
+  /// Computes additional widget states based on the menu scope.
   ///
   /// Reserve optional support for "checked"/selected semantics when provided by scope.
   /// Use null-safe access since scope may not be available in all contexts.
@@ -209,7 +209,7 @@ class NakedMenu<T> extends StatefulWidget {
     this.positioning = const OverlayPositionConfig(),
   });
 
-  /// Type alias for NakedMenuItem for cleaner API access
+  /// Type alias for [NakedMenuItem] for cleaner API access.
   static final Item = NakedMenuItem.new;
 
   /// Builds the trigger surface.
@@ -219,7 +219,7 @@ class NakedMenu<T> extends StatefulWidget {
   /// Builds the overlay panel.
   final RawMenuAnchorOverlayBuilder overlayBuilder;
 
-  /// Controller that manages show/hide of the underlying [RawMenuAnchor].
+  /// Controls show/hide of the underlying [RawMenuAnchor].
   final MenuController controller;
 
   /// Called when an item is selected.
@@ -232,15 +232,15 @@ class NakedMenu<T> extends StatefulWidget {
   final VoidCallback? onOpen;
   final VoidCallback? onClose;
 
-  /// Called when the menu closes without selection.
+  /// Called when the menu closes without a selection.
   final VoidCallback? onCanceled;
 
-  /// Open/close interceptors (e.g. for animations).
+  /// Open/close interceptors (for example, to drive animations).
   final RawMenuAnchorOpenRequestedCallback? onOpenRequested;
 
   final RawMenuAnchorCloseRequestedCallback? onCloseRequested;
 
-  /// Whether taps outside the overlay should close the menu.
+  /// Whether taps outside the overlay close the menu.
   final bool closeOnClickOutside;
 
   /// Whether outside taps on the trigger are consumed.

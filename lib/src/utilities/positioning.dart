@@ -5,7 +5,7 @@ class OverlayPositionConfig {
   /// Primary alignment for positioning the overlay relative to the anchor.
   final Alignment alignment;
 
-  /// Fallback alignment when primary doesn't fit.
+  /// Fallback alignment when the primary alignment doesn't fit.
   final Alignment? fallbackAlignment;
 
   /// Additional offset to apply after alignment positioning.
@@ -34,7 +34,7 @@ class OverlayPositionConfig {
   });
 }
 
-/// Calculates overlay position using alignment-based positioning.
+/// Calculates the overlay position using alignment-based positioning.
 ///
 /// Returns a [Rect] that can be used with [Positioned.fromRect].
 Rect calculateOverlayPosition({
@@ -55,7 +55,7 @@ Rect calculateOverlayPosition({
     );
   }
 
-  // Try primary alignment first
+  // Try the primary alignment first.
   final primaryRect = _calculateAlignedRect(
     anchorRect,
     childSize,
@@ -68,7 +68,7 @@ Rect calculateOverlayPosition({
     return _applyConstraints(primaryRect, config);
   }
 
-  // Try fallback alignment if primary doesn't fit
+  // Try the fallback alignment when the primary doesn't fit.
   if (config.fallbackAlignment != null) {
     final fallbackRect = _calculateAlignedRect(
       anchorRect,
@@ -83,13 +83,13 @@ Rect calculateOverlayPosition({
     }
   }
 
-  // If nothing fits, clamp primary to bounds
+  // If nothing fits, clamp the primary to bounds.
   final clampedRect = _clampToBounds(primaryRect, overlaySize);
 
   return _applyConstraints(clampedRect, config);
 }
 
-/// Calculates positioned rect for given alignment.
+/// Calculates the positioned rect for a given alignment.
 Rect _calculateAlignedRect(
   Rect anchorRect,
   Size childSize,
@@ -106,7 +106,7 @@ Rect _calculateAlignedRect(
   return Rect.fromLTWH(position.dx, position.dy, width, childSize.height);
 }
 
-/// Checks if rect fits within overlay bounds.
+/// Checks whether a rect fits within the overlay bounds.
 bool _fitsInBounds(Rect rect, Size overlaySize) {
   return rect.left >= 0 &&
       rect.top >= 0 &&
@@ -114,7 +114,7 @@ bool _fitsInBounds(Rect rect, Size overlaySize) {
       rect.bottom <= overlaySize.height;
 }
 
-/// Clamps rect to overlay bounds.
+/// Clamps a rect to the overlay bounds.
 Rect _clampToBounds(Rect rect, Size overlaySize) {
   final left = rect.left.clamp(0.0, overlaySize.width - rect.width);
   final top = rect.top.clamp(0.0, overlaySize.height - rect.height);
@@ -122,7 +122,7 @@ Rect _clampToBounds(Rect rect, Size overlaySize) {
   return Rect.fromLTWH(left, top, rect.width, rect.height);
 }
 
-/// Applies width/height constraints to rect.
+/// Applies width and height constraints to a rect.
 Rect _applyConstraints(Rect rect, OverlayPositionConfig config) {
   double width = rect.width;
   double height = rect.height;

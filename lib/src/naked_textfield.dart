@@ -24,8 +24,7 @@ typedef NakedTextFieldBuilder =
 /// Headless, builder-first text input built on [EditableText].
 ///
 /// Exposes native-feeling defaults while remaining design-system agnostic.
-/// Renders no visuals—wrap the provided `editableText` via [builder]
-/// to style or decorate.
+/// Renders no visuals—wrap the provided [editableText] via [builder] to style or decorate.
 ///
 /// ```dart
 /// NakedTextField(
@@ -167,7 +166,7 @@ class NakedTextField extends StatefulWidget {
   /// The character used for obscuring text.
   final String obscuringCharacter;
 
-  /// Whether to obscure text (e.g., passwords).
+  /// Whether to obscure text (for example, passwords).
   final bool obscureText;
 
   /// Whether to enable autocorrect.
@@ -226,7 +225,7 @@ class NakedTextField extends StatefulWidget {
   final ui.BoxHeightStyle selectionHeightStyle;
   final ui.BoxWidthStyle selectionWidthStyle;
 
-  /// Keyboard appearance (iOS)
+  /// Keyboard appearance (iOS).
   final Brightness? keyboardAppearance;
 
   /// Scrolling
@@ -235,10 +234,10 @@ class NakedTextField extends StatefulWidget {
   final ScrollController? scrollController;
   final ScrollPhysics? scrollPhysics;
 
-  /// Clipping behavior for the underlying EditableText.
+  /// Clipping behavior for the underlying [EditableText].
   final Clip clipBehavior;
 
-  /// Selection & context menu
+  /// Selection and context menu
   final bool enableInteractiveSelection;
   final TextSelectionControls? selectionControls;
   final EditableTextContextMenuBuilder? contextMenuBuilder;
@@ -252,7 +251,7 @@ class NakedTextField extends StatefulWidget {
   final ValueChanged<bool>? onHoverChange;
   final ValueChanged<bool>? onPressChange;
 
-  /// Autofill & content insertion
+  /// Autofill and content insertion
   final Iterable<String>? autofillHints;
   final ContentInsertionConfiguration? contentInsertionConfiguration;
 
@@ -265,23 +264,23 @@ class NakedTextField extends StatefulWidget {
   /// Restoration
   final String? restorationId;
 
-  /// IME / stylus features
+  /// IME and stylus features
   final bool stylusHandwritingEnabled;
   final bool enableIMEPersonalizedLearning;
 
   /// Spell check
   final SpellCheckConfiguration? spellCheckConfiguration;
 
-  /// Grouping for IME (matches EditableText)
+  /// Grouping for IME (matches [EditableText]).
   final Object groupId;
 
-  /// Text style override (else derives from DefaultTextStyle)
+  /// Text style override (else derives from [DefaultTextStyle]).
   final TextStyle? style;
 
-  /// Ignore pointers
+  /// Whether to ignore pointers.
   final bool? ignorePointers;
 
-  /// Builder to wrap the underlying EditableText with visuals.
+  /// Builds the visual wrapper around the underlying [EditableText].
   final NakedTextFieldBuilder builder;
 
   /// Semantics
@@ -321,7 +320,7 @@ class _NakedTextFieldState extends State<NakedTextField>
 
   bool _showSelectionHandles = false;
 
-  // Keep track of the current navigation mode from MediaQuery.
+  // Track the current navigation mode from MediaQuery.
   NavigationMode? _navMode;
 
   // TextSelectionGestureDetectorBuilderDelegate

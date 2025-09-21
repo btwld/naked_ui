@@ -15,7 +15,7 @@ void main() {
       await tester.pumpWidget(const tabs_example.MyApp());
       await tester.pumpAndSettle();
 
-      final tabGroupFinder = find.byType(NakedTabGroup);
+      final tabGroupFinder = find.byType(NakedTabs);
       expect(tabGroupFinder, findsOneWidget);
 
       // Find all tabs
@@ -278,14 +278,14 @@ class _StatefulTabsWidgetState extends State<_StatefulTabsWidget> {
   @override
   Widget build(BuildContext context) {
     if (widget.customTab != null) {
-      return NakedTabGroup(
+      return NakedTabs(
         selectedTabId: selectedTabId,
         onChanged: (tabId) => setState(() => selectedTabId = tabId),
         child: widget.customTab!,
       );
     }
 
-    return NakedTabGroup(
+    return NakedTabs(
       selectedTabId: selectedTabId,
       onChanged: (tabId) => setState(() => selectedTabId = tabId),
       child: Column(

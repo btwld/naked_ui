@@ -198,10 +198,10 @@ mixin FocusNodeMixin<T extends StatefulWidget> on State<T> {
   FocusNode? _lastExternalNode;
 
   @protected
-  FocusNode? get effectiveFocusNode => widgetProvidedNode ?? _internalFocusNode;
+  FocusNode get effectiveFocusNode => widgetProvidedNode ?? _internalFocusNode!;
 
   void _notifyFocusChanged() {
-    final focused = effectiveFocusNode?.hasFocus ?? false;
+    final focused = effectiveFocusNode.hasFocus;
     onFocusChange?.call(focused);
   }
 
@@ -213,11 +213,11 @@ mixin FocusNodeMixin<T extends StatefulWidget> on State<T> {
     if (_lastExternalNode == null) {
       _internalFocusNode = FocusNode(debugLabel: focusNodeDebugLabel);
     }
-    effectiveFocusNode?.addListener(_notifyFocusChanged);
+    effectiveFocusNode.addListener(_notifyFocusChanged);
   }
 
   void requestEffectiveFocus() {
-    effectiveFocusNode?.requestFocus();
+    effectiveFocusNode.requestFocus();
   }
 
   @override
@@ -267,7 +267,7 @@ mixin FocusNodeMixin<T extends StatefulWidget> on State<T> {
   @override
   @mustCallSuper
   void dispose() {
-    effectiveFocusNode?.removeListener(_notifyFocusChanged);
+    effectiveFocusNode.removeListener(_notifyFocusChanged);
     _internalFocusNode?.dispose();
     _internalFocusNode = null;
     _lastExternalNode = null;

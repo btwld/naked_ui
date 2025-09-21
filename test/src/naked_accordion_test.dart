@@ -11,18 +11,18 @@ Widget builder(bool isExpanded, {required String text}) {
 void main() {
   group('Basic Functionality', () {
     Widget buildAccordion({List<String> initialExpandedValues = const []}) {
-      return NakedAccordion<String>(
+      return NakedAccordionGroup<String>(
         controller: NakedAccordionController(),
         initialExpandedValues: initialExpandedValues,
         children: [
-          NakedAccordionItem<String>(
+          NakedAccordion<String>(
             value: 'item1',
-            trigger: (_, itemState) => const Text('Trigger 1'),
+            triggerBuilder: (_, itemState) => const Text('Trigger 1'),
             child: const Text('Content 1'),
           ),
-          NakedAccordionItem<String>(
+          NakedAccordion<String>(
             value: 'item2',
-            trigger: (_, itemState) => const Text('Trigger 2'),
+            triggerBuilder: (_, itemState) => const Text('Trigger 2'),
             child: const Text('Content 2'),
           ),
         ],
@@ -63,12 +63,12 @@ void main() {
       required FocusNode focusNode,
       required bool autofocus,
     }) {
-      return NakedAccordion<String>(
+      return NakedAccordionGroup<String>(
         controller: NakedAccordionController<String>(),
         children: [
-          NakedAccordionItem<String>(
+          NakedAccordion<String>(
             value: 'item1',
-            trigger: (_, itemState) => const Text('Trigger 1'),
+            triggerBuilder: (_, itemState) => const Text('Trigger 1'),
             onFocusChange: (focused) => focusState = focused,
             autofocus: autofocus,
             focusNode: focusNode,
@@ -102,12 +102,12 @@ void main() {
 
     testWidgets('autofocus works correctly', (WidgetTester tester) async {
       await tester.pumpMaterialWidget(
-        NakedAccordion<String>(
+        NakedAccordionGroup<String>(
           controller: NakedAccordionController<String>(),
           children: [
-            NakedAccordionItem<String>(
+            NakedAccordion<String>(
               value: 'item1',
-              trigger: (_, itemState) => const Text('Trigger 1'),
+              triggerBuilder: (_, itemState) => const Text('Trigger 1'),
               onFocusChange: (focused) => focusState = focused,
               autofocus: true,
               child: const Text('Content 1'),
@@ -129,12 +129,12 @@ void main() {
     });
 
     Widget buildControlledAccordion() {
-      return NakedAccordion<String>(
+      return NakedAccordionGroup<String>(
         controller: controller,
         children: [
-          NakedAccordionItem<String>(
+          NakedAccordion<String>(
             value: 'item1',
-            trigger: (context, itemState) {
+            triggerBuilder: (context, itemState) {
               return GestureDetector(
                 onTap: () {},
                 child:
@@ -143,9 +143,9 @@ void main() {
             },
             child: const Text('Content 1'),
           ),
-          NakedAccordionItem<String>(
+          NakedAccordion<String>(
             value: 'item2',
-            trigger: (context, itemState) {
+            triggerBuilder: (context, itemState) {
               return GestureDetector(
                 onTap: () {},
                 child:
@@ -339,18 +339,18 @@ void main() {
     late NakedAccordionController<String> controller;
 
     Widget buildTriggeredAccordion() {
-      return NakedAccordion<String>(
+      return NakedAccordionGroup<String>(
         controller: controller,
         children: [
-          NakedAccordionItem<String>(
+          NakedAccordion<String>(
             value: 'item1',
-            trigger: (context, itemState) =>
+            triggerBuilder: (context, itemState) =>
                 Text(itemState.isExpanded ? 'Close 1' : 'Open 1'),
             child: const Text('Content 1'),
           ),
-          NakedAccordionItem<String>(
+          NakedAccordion<String>(
             value: 'item2',
-            trigger: (context, itemState) =>
+            triggerBuilder: (context, itemState) =>
                 Text(itemState.isExpanded ? 'Close 2' : 'Open 2'),
             child: const Text('Content 2'),
           ),

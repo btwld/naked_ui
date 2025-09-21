@@ -118,7 +118,7 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: NakedTabGroup(
+            body: NakedTabs(
               selectedTabId: 'tab1',
               enabled: true,
               // No onChanged callback

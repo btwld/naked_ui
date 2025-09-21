@@ -5,66 +5,58 @@ import 'mixins/naked_mixins.dart';
 import 'utilities/naked_focusable_detector.dart';
 
 // Slider keyboard shortcuts (left-to-right layout)
-const Map<ShortcutActivator, Intent> _kSliderShortcutsLtr =
-    <ShortcutActivator, Intent>{
-      // Horizontal
-      SingleActivator(LogicalKeyboardKey.arrowRight): _SliderIncrementIntent(),
-      SingleActivator(LogicalKeyboardKey.arrowLeft): _SliderDecrementIntent(),
-      SingleActivator(LogicalKeyboardKey.arrowLeft, shift: true):
-          _SliderShiftDecrementIntent(),
-      SingleActivator(LogicalKeyboardKey.arrowRight, shift: true):
-          _SliderShiftIncrementIntent(),
+const Map<ShortcutActivator, Intent>
+_kSliderShortcutsLtr = <ShortcutActivator, Intent>{
+  SingleActivator(LogicalKeyboardKey.arrowRight): _SliderIncrementIntent(),
+  SingleActivator(LogicalKeyboardKey.arrowLeft): _SliderDecrementIntent(),
+  SingleActivator(LogicalKeyboardKey.arrowLeft, shift: true):
+      _SliderShiftDecrementIntent(),
+  SingleActivator(LogicalKeyboardKey.arrowRight, shift: true):
+      _SliderShiftIncrementIntent(),
 
-      // Vertical
-      SingleActivator(LogicalKeyboardKey.arrowUp): _SliderIncrementIntent(),
-      SingleActivator(LogicalKeyboardKey.arrowUp, shift: true):
-          _SliderShiftIncrementIntent(),
-      SingleActivator(LogicalKeyboardKey.arrowDown): _SliderDecrementIntent(),
-      SingleActivator(LogicalKeyboardKey.arrowDown, shift: true):
-          _SliderShiftDecrementIntent(),
+  SingleActivator(LogicalKeyboardKey.arrowUp): _SliderIncrementIntent(),
+  SingleActivator(LogicalKeyboardKey.arrowUp, shift: true):
+      _SliderShiftIncrementIntent(),
+  SingleActivator(LogicalKeyboardKey.arrowDown): _SliderDecrementIntent(),
+  SingleActivator(LogicalKeyboardKey.arrowDown, shift: true):
+      _SliderShiftDecrementIntent(),
 
-      // Home/End
-      SingleActivator(LogicalKeyboardKey.home): _SliderSetToMinIntent(),
-      SingleActivator(LogicalKeyboardKey.end): _SliderSetToMaxIntent(),
+  SingleActivator(LogicalKeyboardKey.home): _SliderSetToMinIntent(),
+  SingleActivator(LogicalKeyboardKey.end): _SliderSetToMaxIntent(),
 
-      // Page Up/Down
-      SingleActivator(LogicalKeyboardKey.pageUp): _SliderShiftIncrementIntent(),
-      SingleActivator(LogicalKeyboardKey.pageDown): _SliderShiftDecrementIntent(),
-    };
+  SingleActivator(LogicalKeyboardKey.pageUp): _SliderShiftIncrementIntent(),
+  SingleActivator(LogicalKeyboardKey.pageDown): _SliderShiftDecrementIntent(),
+};
 
 // Slider keyboard shortcuts (right-to-left layout)
-const Map<ShortcutActivator, Intent> _kSliderShortcutsRtl =
-    <ShortcutActivator, Intent>{
-      // Horizontal (swapped for RTL)
-      SingleActivator(LogicalKeyboardKey.arrowLeft): _SliderIncrementIntent(),
-      SingleActivator(LogicalKeyboardKey.arrowRight): _SliderDecrementIntent(),
-      SingleActivator(LogicalKeyboardKey.arrowRight, shift: true):
-          _SliderShiftDecrementIntent(),
-      SingleActivator(LogicalKeyboardKey.arrowLeft, shift: true):
-          _SliderShiftIncrementIntent(),
+const Map<ShortcutActivator, Intent>
+_kSliderShortcutsRtl = <ShortcutActivator, Intent>{
+  SingleActivator(LogicalKeyboardKey.arrowLeft): _SliderIncrementIntent(),
+  SingleActivator(LogicalKeyboardKey.arrowRight): _SliderDecrementIntent(),
+  SingleActivator(LogicalKeyboardKey.arrowRight, shift: true):
+      _SliderShiftDecrementIntent(),
+  SingleActivator(LogicalKeyboardKey.arrowLeft, shift: true):
+      _SliderShiftIncrementIntent(),
 
-      // Vertical (unchanged)
-      SingleActivator(LogicalKeyboardKey.arrowUp): _SliderIncrementIntent(),
-      SingleActivator(LogicalKeyboardKey.arrowUp, shift: true):
-          _SliderShiftIncrementIntent(),
-      SingleActivator(LogicalKeyboardKey.arrowDown): _SliderDecrementIntent(),
-      SingleActivator(LogicalKeyboardKey.arrowDown, shift: true):
-          _SliderShiftDecrementIntent(),
+  SingleActivator(LogicalKeyboardKey.arrowUp): _SliderIncrementIntent(),
+  SingleActivator(LogicalKeyboardKey.arrowUp, shift: true):
+      _SliderShiftIncrementIntent(),
+  SingleActivator(LogicalKeyboardKey.arrowDown): _SliderDecrementIntent(),
+  SingleActivator(LogicalKeyboardKey.arrowDown, shift: true):
+      _SliderShiftDecrementIntent(),
 
-      // Home/End
-      SingleActivator(LogicalKeyboardKey.home): _SliderSetToMinIntent(),
-      SingleActivator(LogicalKeyboardKey.end): _SliderSetToMaxIntent(),
+  SingleActivator(LogicalKeyboardKey.home): _SliderSetToMinIntent(),
+  SingleActivator(LogicalKeyboardKey.end): _SliderSetToMaxIntent(),
 
-      // Page Up/Down
-      SingleActivator(LogicalKeyboardKey.pageUp): _SliderShiftIncrementIntent(),
-      SingleActivator(LogicalKeyboardKey.pageDown): _SliderShiftDecrementIntent(),
-    };
+  SingleActivator(LogicalKeyboardKey.pageUp): _SliderShiftIncrementIntent(),
+  SingleActivator(LogicalKeyboardKey.pageDown): _SliderShiftDecrementIntent(),
+};
 
 /// A headless slider without visuals.
 ///
-/// Controlled by [value] in range [[min], [max]]. Supports discrete
-/// [divisions] or continuous values. Handles keyboard navigation and
-/// drag gestures.
+/// Controlled by [value] in the range
+/// from [min] to [max]. Supports discrete [divisions] or continuous values.
+/// Handles keyboard navigation and drag gestures.
 ///
 /// ```dart
 /// NakedSlider(
@@ -132,25 +124,25 @@ class NakedSlider extends StatefulWidget {
   /// Called when focus changes.
   final ValueChanged<bool>? onFocusChange;
 
-  /// The enabled state of the slider.
+  /// Whether the slider is enabled.
   final bool enabled;
 
   /// The mouse cursor when enabled.
   final MouseCursor mouseCursor;
 
-  /// The haptic feedback enablement flag.
+  /// Whether to provide haptic feedback on interactions.
   final bool enableFeedback;
 
   /// The focus node for the slider.
   final FocusNode? focusNode;
 
-  /// The autofocus flag.
+  /// Whether to autofocus.
   final bool autofocus;
 
   /// The slider orientation.
   final Axis direction;
 
-  /// The number of discrete divisions. When null, continuous.
+  /// The number of discrete divisions. When null, the value is continuous.
   final int? divisions;
 
   /// The small keyboard step when [divisions] is null.
@@ -159,7 +151,7 @@ class NakedSlider extends StatefulWidget {
   /// The large keyboard step when holding Shift.
   final double largeKeyboardStep;
 
-  /// The semantic label for assistive technologies.
+  /// Semantic label for assistive technologies.
   final String? semanticLabel;
 
   @override
@@ -177,19 +169,11 @@ class _NakedSliderState extends State<NakedSlider>
   Offset? _dragStartPosition;
   double? _dragStartValue;
 
-  // ---------------------------
-  // Helpers & lifecycle
-  // ---------------------------
-
   bool get _isEnabled => widget.enabled && widget.onChanged != null;
   bool get _isRTL => Directionality.of(context) == TextDirection.rtl;
 
   MouseCursor get _cursor =>
       _isEnabled ? widget.mouseCursor : SystemMouseCursors.basic;
-
-  // ---------------------------
-  // Value math & normalization
-  // ---------------------------
 
   void _callOnChangeIfNeeded(double value) {
     _lastEmittedValue = value;
@@ -199,7 +183,6 @@ class _NakedSliderState extends State<NakedSlider>
   }
 
   double _normalizeValue(double value) {
-    // Clamp to bounds
     double v = value.clamp(widget.min, widget.max);
 
     // Snap to divisions if provided
@@ -233,10 +216,6 @@ class _NakedSliderState extends State<NakedSlider>
   }
 
   // (no absolute-position jump; drag uses relative deltas for expected behavior)
-
-  // ---------------------------
-  // Pointer handlers
-  // ---------------------------
 
   void _handleDragStart(DragStartDetails details) {
     if (!_isEnabled) return;
@@ -314,7 +293,7 @@ class _NakedSliderState extends State<NakedSlider>
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    // Keep focus traversal flags aligned with enablement.
+    // Maintain focus traversal flags aligned with enablement.
     final node = effectiveFocusNode;
     if (node != null) {
       node
@@ -327,7 +306,7 @@ class _NakedSliderState extends State<NakedSlider>
   void didUpdateWidget(covariant NakedSlider oldWidget) {
     super.didUpdateWidget(oldWidget);
 
-    // Keep state flags in sync (handles enabled and onChanged changes).
+    // Maintain state flags in sync (handles enabled and onChanged changes).
     syncWidgetStates();
 
     // Clear transient states when disabled.
@@ -344,13 +323,9 @@ class _NakedSliderState extends State<NakedSlider>
         ..skipTraversal = !_isEnabled;
     }
 
-    // Keep last value in step with controller updates.
+    // Maintain last value in step with controller updates.
     _lastEmittedValue = widget.value;
   }
-
-  // ---------------------------
-  // Keyboard actions/shortcuts
-  // ---------------------------
 
   Map<ShortcutActivator, Intent> get _shortcuts {
     final rtl = _isRTL;
@@ -374,10 +349,6 @@ class _NakedSliderState extends State<NakedSlider>
       _SliderSetToMaxIntent: _SliderSetToMaxAction(this),
     };
   }
-
-  // ---------------------------
-  // Build
-  // ---------------------------
 
   @override
   Widget build(BuildContext context) {
@@ -455,8 +426,6 @@ class _NakedSliderState extends State<NakedSlider>
   }
 }
 
-// ---- Intents ----
-
 /// Intent: increment slider value by a large step (Shift + Arrow).
 class _SliderShiftIncrementIntent extends _SliderIncrementIntent {
   const _SliderShiftIncrementIntent();
@@ -486,8 +455,6 @@ class _SliderSetToMinIntent extends Intent {
 class _SliderSetToMaxIntent extends Intent {
   const _SliderSetToMaxIntent();
 }
-
-// ---- Actions ----
 
 /// Action: handles keyboard increment intent.
 class _SliderIncrementAction extends Action<_SliderIncrementIntent> {

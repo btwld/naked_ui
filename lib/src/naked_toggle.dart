@@ -35,8 +35,8 @@ class NakedToggleOptionState<T> extends NakedWidgetState {
 
 /// A headless binary toggle control without visuals.
 ///
-/// Behaves as toggle button or switch based on [asSwitch]. Builder receives
-/// [NakedToggleState] with toggle value and interaction states.
+/// Behaves as a toggle button or switch based on [asSwitch]. The builder receives
+/// a [NakedToggleState] with the toggle value and interaction states.
 ///
 /// ```dart
 /// NakedToggle(
@@ -81,19 +81,19 @@ class NakedToggle extends StatefulWidget {
   /// The child widget; ignored if [builder] is provided.
   final Widget? child;
 
-  /// The interactive state of the control.
+  /// Whether the control is interactive.
   final bool enabled;
 
   /// The mouse cursor when interactive.
   final MouseCursor? mouseCursor;
 
-  /// The platform feedback enablement flag.
+  /// Whether to provide platform feedback on interactions.
   final bool enableFeedback;
 
   /// The focus node.
   final FocusNode? focusNode;
 
-  /// The autofocus flag.
+  /// Whether to autofocus.
   final bool autofocus;
 
   /// Called when focus changes.
@@ -102,16 +102,16 @@ class NakedToggle extends StatefulWidget {
   /// Called when hover changes.
   final ValueChanged<bool>? onHoverChange;
 
-  /// Called when press changes.
+  /// Called when the pressed state changes.
   final ValueChanged<bool>? onPressChange;
 
-  /// The builder that receives current toggle state.
+  /// Builds the toggle using the current [NakedToggleState].
   final NakedStateBuilder<NakedToggleState>? builder;
 
-  /// The semantic label for screen readers.
+  /// Semantic label for screen readers.
   final String? semanticLabel;
 
-  /// The switch semantics flag instead of button semantics.
+  /// Whether to use switch semantics instead of button semantics.
   final bool asSwitch;
 
   bool get _effectiveEnabled => enabled && onChanged != null;
@@ -122,7 +122,7 @@ class NakedToggle extends StatefulWidget {
 
 class _NakedToggleState extends State<NakedToggle>
     with WidgetStatesMixin<NakedToggle> {
-  // Keyboard activation handled inline in actions.onInvoke.
+  // Keyboard activation is handled inline in actions.onInvoke.
 
   void _activate() {
     if (!widget._effectiveEnabled) return;
@@ -168,7 +168,7 @@ class _NakedToggleState extends State<NakedToggle>
       final nowDisabled = !widget._effectiveEnabled;
       updateDisabledState(nowDisabled);
       if (nowDisabled) {
-        // Keep state set consistent with reality when disabling.
+        // Maintain state set consistency when disabling the toggle.
         updateState(WidgetState.hovered, false);
         updateState(WidgetState.pressed, false);
         updateState(WidgetState.focused, false);
@@ -286,7 +286,7 @@ class _ToggleScope<T> extends InheritedWidget {
   final ValueChanged<T?>? onChanged;
   final bool enabled;
 
-  // Fix: use the class generic T, not a new type parameter.
+  // Use the class generic T, not a new type parameter.
   bool isSelected(T value) => selectedValue == value;
 
   @override

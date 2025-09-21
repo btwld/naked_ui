@@ -59,7 +59,7 @@ void main() {
               setState(() {});
             }
 
-            return NakedTabGroup(
+            return NakedTabs(
               selectedTabId: selected,
               enabled: groupEnabled,
               onChanged: handleChanged,

@@ -48,13 +48,13 @@ class NakedPopover extends StatefulWidget {
   /// Positioning configuration for the overlay.
   final OverlayPositionConfig positioning;
 
-  /// The outside tap consumption flag.
+  /// Whether to consume taps outside the overlay.
   final bool consumeOutsideTaps;
 
-  /// The root overlay usage flag.
+  /// Whether to use the root overlay.
   final bool useRootOverlay;
 
-  /// The tap-to-open enablement flag.
+  /// Whether tapping the trigger opens the popover.
   final bool openOnTap;
 
   /// Focus node for the trigger widget.
@@ -86,7 +86,7 @@ class _NakedPopoverState extends State<NakedPopover> {
   // ignore: dispose-fields
   final _menuController = MenuController();
 
-  // Internal node used when the child doesn't already provide a Focus.
+  // Internal node used when the child does not already provide a Focus.
   final _internalTriggerNode = FocusNode(
     debugLabel: 'NakedPopover trigger (internal)',
   );
@@ -135,7 +135,7 @@ class _NakedPopoverState extends State<NakedPopover> {
     }
 
     // Case B: Child already provides a Focus node; don't add another focus owner.
-    // Keep behavior headless: tap toggles if enabled.
+    // Keep behavior headless: tap toggles when enabled.
     return GestureDetector(
       onTap: widget.openOnTap ? _toggle : null,
       behavior: HitTestBehavior.opaque,

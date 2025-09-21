@@ -21,6 +21,10 @@ class _WidgetStateObserver {
     Map<WidgetState, ValueChanged<bool>>? callbacks,
   }) : _callbacks = callbacks ?? const {};
 
+  /// Compares [prev] and [next] state sets and fires callbacks for changes.
+  ///
+  /// Notifies about states that became inactive (in [prev] but not [next])
+  /// and states that became active (in [next] but not [prev]).
   void _diffAndNotify(Set<WidgetState> prev, Set<WidgetState> next) {
     // Removed states became inactive; added states became active.
     for (final state in prev.difference(next)) {
@@ -41,6 +45,10 @@ class _WidgetStateObserver {
     }
   }
 
+  /// Attaches this observer to the given [controller].
+  ///
+  /// Begins listening for state changes and fires callbacks accordingly.
+  /// If already attached to the same [controller], this is a no-op.
   void attach(WidgetStatesController controller) {
     if (identical(_controller, controller)) return; // Already attached.
     detach();
@@ -54,6 +62,10 @@ class _WidgetStateObserver {
     controller.addListener(_subscription!);
   }
 
+  /// Detaches this observer from its current controller.
+  ///
+  /// Stops listening for state changes and cleans up resources.
+  /// Safe to call multiple times or when not attached.
   void detach() {
     final c = _controller;
     final s = _subscription;
@@ -237,6 +249,11 @@ class WidgetStatesModel extends InheritedModel<WidgetState> {
   });
 
   /// Returns the full state set and subscribes to all changes.
+  ///
+  /// The [context] is used to find the nearest [WidgetStatesModel] ancestor.
+  /// Throws an assertion error if no model is found.
+  ///
+  /// Returns the current set of widget states.
   static Set<WidgetState> of(BuildContext context) {
     final model = InheritedModel.inheritFrom<WidgetStatesModel>(context);
     assert(model != null, 'No WidgetStatesModel found in context');
@@ -245,6 +262,11 @@ class WidgetStatesModel extends InheritedModel<WidgetState> {
   }
 
   /// Returns whether [aspect] is active and subscribes only to that aspect.
+  ///
+  /// The [context] is used to find the nearest [WidgetStatesModel] ancestor.
+  /// The [aspect] parameter specifies which specific state to check.
+  ///
+  /// Returns true if the [aspect] state is currently active.
   static bool ofState(BuildContext context, WidgetState aspect) {
     final model = InheritedModel.inheritFrom<WidgetStatesModel>(
       context,
@@ -256,6 +278,11 @@ class WidgetStatesModel extends InheritedModel<WidgetState> {
   }
 
   /// Returns the controller without subscribing to updates.
+  ///
+  /// The [context] is used to find the nearest [WidgetStatesModel] ancestor.
+  /// Unlike [of], this does not create a dependency and won't trigger rebuilds.
+  ///
+  /// Returns the controller instance for manual state management.
   static WidgetStatesController controllerOf(BuildContext context) {
     final model = context.getInheritedWidgetOfExactType<WidgetStatesModel>();
     assert(model != null, 'No WidgetStatesModel found in context');
@@ -263,10 +290,17 @@ class WidgetStatesModel extends InheritedModel<WidgetState> {
     return model!.controller;
   }
 
-  /// Nullable variants (return null when absent).
+  /// Nullable variant of [of] that returns null when no model is found.
+  ///
+  /// The [context] is used to find the nearest [WidgetStatesModel] ancestor.
+  /// Returns null instead of throwing when no model is found.
   static Set<WidgetState>? maybeOf(BuildContext context) =>
       InheritedModel.inheritFrom<WidgetStatesModel>(context)?.controller.value;
 
+  /// Nullable variant of [controllerOf] that returns null when no model is found.
+  ///
+  /// The [context] is used to find the nearest [WidgetStatesModel] ancestor.
+  /// Returns null instead of throwing when no model is found.
   static WidgetStatesController? maybeControllerOf(BuildContext context) =>
       context.getInheritedWidgetOfExactType<WidgetStatesModel>()?.controller;
 

@@ -26,7 +26,7 @@ class NakedCheckboxState extends NakedWidgetState {
 
 /// A headless checkbox without visuals.
 ///
-/// Builder receives [NakedCheckboxState] with checked value, tristate flag,
+/// The builder receives a [NakedCheckboxState] with the checked value, whether tristate is enabled,
 /// and interaction states for custom styling.
 ///
 /// ```dart
@@ -75,7 +75,7 @@ class NakedCheckbox extends StatefulWidget {
   /// When [tristate] is true, null represents mixed state.
   final bool? value;
 
-  /// The tristate support flag.
+  /// Whether tristate is supported.
   ///
   /// When true, tapping cycles through false → true → null → false.
   /// When false, [value] must not be null.
@@ -93,25 +93,25 @@ class NakedCheckbox extends StatefulWidget {
   /// Called when press state changes.
   final ValueChanged<bool>? onPressChange;
 
-  /// The enabled state of the checkbox.
+  /// Whether the checkbox is enabled.
   final bool enabled;
 
   /// The mouse cursor for the checkbox.
   final MouseCursor? mouseCursor;
 
-  /// The haptic feedback enablement flag.
+  /// Whether to provide haptic feedback on interactions.
   final bool enableFeedback;
 
   /// The focus node for the checkbox.
   final FocusNode? focusNode;
 
-  /// The autofocus flag.
+  /// Whether to autofocus.
   final bool autofocus;
 
-  /// The builder that receives current checkbox state.
+  /// Builds the checkbox using the current [NakedCheckboxState].
   final NakedStateBuilder<NakedCheckboxState>? builder;
 
-  /// The semantic label for accessibility.
+  /// Semantic label for accessibility.
   final String? semanticLabel;
 
   bool get _effectiveEnabled => enabled && onChanged != null;
@@ -122,7 +122,6 @@ class NakedCheckbox extends StatefulWidget {
 
 class _NakedCheckboxState extends State<NakedCheckbox>
     with WidgetStatesMixin<NakedCheckbox> {
-  // Private methods
   void _handleKeyboardActivation() {
     if (!widget._effectiveEnabled) return;
 
@@ -165,7 +164,6 @@ class _NakedCheckboxState extends State<NakedCheckbox>
         : widget.child!;
   }
 
-  // Private getters
   MouseCursor get _effectiveCursor => widget._effectiveEnabled
       ? (widget.mouseCursor ?? SystemMouseCursors.click)
       : SystemMouseCursors.basic;

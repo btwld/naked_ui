@@ -36,13 +36,13 @@ void main() {
 
       await tester.pumpWidget(
         _buildTestApp(
-          NakedAccordion<String>(
+          NakedAccordionGroup<String>(
             controller: NakedAccordionController<String>(),
             children: [
-              NakedAccordionItem<String>(
+              NakedAccordion<String>(
                 value: 'item',
                 semanticLabel: 'Header',
-                trigger: (context, itemState) => const Text('Header'),
+                triggerBuilder: (context, itemState) => const Text('Header'),
                 child: const Text('Body'),
               ),
             ],
@@ -82,14 +82,14 @@ void main() {
 
       await tester.pumpWidget(
         _buildTestApp(
-          NakedAccordion<String>(
+          NakedAccordionGroup<String>(
             controller: NakedAccordionController<String>(),
             initialExpandedValues: const ['item'],
             children: [
-              NakedAccordionItem<String>(
+              NakedAccordion<String>(
                 value: 'item',
                 semanticLabel: 'Header',
-                trigger: (context, itemState) => const Text('Header'),
+                triggerBuilder: (context, itemState) => const Text('Header'),
                 child: const Text('Body'),
               ),
             ],

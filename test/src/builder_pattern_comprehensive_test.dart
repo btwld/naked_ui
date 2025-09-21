@@ -238,7 +238,7 @@ void main() {
         NakedTabState? capturedState;
 
         await tester.pumpMaterialWidget(
-          NakedTabGroup(
+          NakedTabs(
             selectedTabId: 'tab1',
             onChanged: (value) {},
             child: NakedTabList(

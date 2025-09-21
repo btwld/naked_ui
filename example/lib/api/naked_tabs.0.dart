@@ -33,7 +33,7 @@ class _TabsExampleState extends State<TabsExample> {
 
   @override
   Widget build(BuildContext context) {
-    return NakedTabGroup(
+    return NakedTabs(
       selectedTabId: _selectedTabId,
       onChanged: (tabId) => setState(() => _selectedTabId = tabId),
       child: Column(

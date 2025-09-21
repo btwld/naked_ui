@@ -61,39 +61,44 @@ class NakedButton extends StatefulWidget {
   /// Called when pressed state changes.
   final ValueChanged<bool>? onPressChange;
 
-  /// The builder that receives current WidgetStates.
+  /// Builds the button using the current set of [WidgetState] values.
   final ValueWidgetBuilder<Set<WidgetState>>? builder;
 
-  /// The enabled state of the button.
+  /// Whether the button is enabled.
   final bool enabled;
 
   /// The mouse cursor when enabled.
   final MouseCursor mouseCursor;
 
-  /// The platform feedback enablement flag.
+  /// Whether to provide platform feedback on interactions.
   final bool enableFeedback;
 
   /// The external [FocusNode] to control focus ownership.
   final FocusNode? focusNode;
 
-  /// The autofocus flag.
+  /// Whether to autofocus.
   final bool autofocus;
 
-  /// The focus request flag for press actions.
+  /// Whether pressing the button requests focus.
   final bool focusOnPress;
 
-  /// The tooltip exposed to assistive technologies.
+  /// Tooltip text for assistive technologies.
   ///
   /// Consider providing concise text; long labels are read verbosely.
   final String? tooltip;
 
-  /// The semantic label announced by screen readers.
+  /// Semantic label announced by assistive technologies.
   final String? semanticLabel;
 
-  // Consider button interactive if any handler is provided.
+  /// Whether the button has any interaction handlers.
+  ///
+  /// Returns true if either [onPressed] or [onLongPress] is provided.
   bool get _hasAnyHandler => onPressed != null || onLongPress != null;
 
-  // Effective enabled combines `enabled` with having at least one handler.
+  /// Whether the button is effectively enabled for interactions.
+  ///
+  /// Combines [enabled] with having at least one interaction handler.
+  /// A button is only interactive if it's enabled AND has handlers.
   bool get _effectiveEnabled => enabled && _hasAnyHandler;
 
   @override
@@ -105,12 +110,8 @@ class _NakedButtonState extends State<NakedButton>
   static const Duration _activationDuration = Duration(milliseconds: 100);
   Timer? _activationTimer;
 
-  // --- FocusNodeMixin contract ----------------------------------------------
-
   @override
   FocusNode? get widgetProvidedNode => widget.focusNode;
-
-  // --- Activation & gestures -------------------------------------------------
 
   void _handleKeyboardActivation() {
     if (!widget._effectiveEnabled || widget.onPressed == null) return;
@@ -144,7 +145,7 @@ class _NakedButtonState extends State<NakedButton>
       Feedback.forLongPress(context);
     }
     widget.onLongPress?.call();
-    // Pressed visual is kept during hold; cleared by onLongPressEnd.
+    // Press state is maintained during long press hold.
   }
 
   void _handleTapDown(TapDownDetails _) {
@@ -155,26 +156,22 @@ class _NakedButtonState extends State<NakedButton>
     updatePressState(true, widget.onPressChange);
   }
 
-  // --- WidgetStates initialization ------------------------------------------
-
   @override
   void initializeWidgetStates() {
     updateDisabledState(!widget._effectiveEnabled);
   }
 
-  // --- Lifecycle -------------------------------------------------------------
-
   @override
   void didUpdateWidget(covariant NakedButton oldWidget) {
     super.didUpdateWidget(
       oldWidget,
-    ); // lets FocusNodeMixin/other mixins run first
+    ); // Allows FocusNodeMixin and other mixins to run first.
 
-    // Track *effective* enabled, not just `enabled`.
+    // Track effective enabled state, not just the enabled property.
     if (oldWidget._effectiveEnabled != widget._effectiveEnabled) {
       updateDisabledState(!widget._effectiveEnabled);
 
-      // If disabled mid-press, clear press & timer defensively.
+      // Clear press state and timer if disabled during interaction.
       if (!widget._effectiveEnabled) {
         _activationTimer?.cancel();
         updatePressState(false, widget.onPressChange);
@@ -188,12 +185,8 @@ class _NakedButtonState extends State<NakedButton>
     super.dispose(); // FocusNodeMixin disposes internal focus node
   }
 
-  // --- Semantics -------------------------------------------------------------
-
   VoidCallback? get _semanticsTapHandler =>
       (widget.enabled && widget.onPressed != null) ? _handleTap : null;
-
-  // --- Build ----------------------------------------------------------------
 
   @override
   Widget build(BuildContext context) {
@@ -203,7 +196,6 @@ class _NakedButtonState extends State<NakedButton>
 
     return NakedFocusableDetector(
       enabled: widget._effectiveEnabled,
-      // <-- from mixin
       autofocus: widget.autofocus,
       onFocusChange: (focused) {
         updateFocusState(focused, widget.onFocusChange);
@@ -243,7 +235,7 @@ class _NakedButtonState extends State<NakedButton>
           onLongPress: (widget.enabled && widget.onLongPress != null)
               ? _handleLongPress
               : null,
-          // Long-press symmetry: pressed while holding, clear on end.
+          // Maintains press state symmetry: active during hold, cleared on end.
           onLongPressStart: (widget.enabled && widget.onLongPress != null)
               ? (_) => updatePressState(true, widget.onPressChange)
               : null,

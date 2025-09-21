@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../mixins/naked_mixins.dart';
 
-/// Minimal widget that composes MouseRegion, Focus, Shortcuts, and Actions
-/// based on what's actually needed. Exposes all Focus parameters for full control.
+/// Minimal widget that composes [MouseRegion], [Focus], [Shortcuts], and [Actions]
+/// based on what's needed. Exposes all [Focus] parameters for full control.
 class NakedFocusableDetector extends StatefulWidget {
   const NakedFocusableDetector({
     super.key,
@@ -27,7 +27,7 @@ class NakedFocusableDetector extends StatefulWidget {
     this.debugLabel,
   });
 
-  /// Widget to wrap with interaction detection.
+  /// The widget to wrap with interaction detection.
   final Widget child;
 
   /// Whether this widget is enabled for interaction.
@@ -51,13 +51,13 @@ class NakedFocusableDetector extends StatefulWidget {
   /// Whether to include focus semantics.
   final bool includeSemantics;
 
-  /// Called when focus state changes.
+  /// Called when the focus state changes.
   final ValueChanged<bool>? onFocusChange;
 
-  /// Called when hover state changes. Adds MouseRegion if provided.
+  /// Called when the hover state changes. Adds a [MouseRegion] when provided.
   final ValueChanged<bool>? onHoverChange;
 
-  /// Called when enabled state changes.
+  /// Called when the enabled state changes.
   final ValueChanged<bool>? onEnableChange;
 
   /// Raw keyboard event handler.
@@ -66,13 +66,13 @@ class NakedFocusableDetector extends StatefulWidget {
   /// Optional external focus node.
   final FocusNode? focusNode;
 
-  /// Mouse cursor. Only used if onHoverChange is provided.
+  /// Mouse cursor. Used only when [onHoverChange] is provided.
   final MouseCursor? mouseCursor;
 
-  /// Keyboard shortcuts. Only applied if provided and enabled.
+  /// Keyboard shortcuts. Applied only when provided and enabled.
   final Map<ShortcutActivator, Intent>? shortcuts;
 
-  /// Intent actions. Only applied if provided and enabled.
+  /// Intent actions. Applied only when provided and enabled.
   final Map<Type, Action<Intent>>? actions;
 
   /// Debug label for the focus node.

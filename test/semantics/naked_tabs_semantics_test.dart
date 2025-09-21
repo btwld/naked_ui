@@ -36,7 +36,7 @@ void main() {
     return MaterialApp(
       home: Scaffold(
         body: Center(
-          child: NakedTabGroup(
+          child: NakedTabs(
             selectedTabId: selected,
             onChanged: (_) {},
             child: Column(

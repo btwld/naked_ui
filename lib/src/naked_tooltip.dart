@@ -171,7 +171,7 @@ class _NakedTooltipState extends State<NakedTooltip> {
   @override
   Widget build(BuildContext context) {
     return RawMenuAnchor(
-      consumeOutsideTaps: false, // Don't consume taps for tooltips
+      consumeOutsideTaps: false, // Do not consume taps for tooltips
       onOpen: _handleOpen,
       onClose: _handleClose,
       onOpenRequested: widget.onOpenRequested ?? (_, show) => show(),

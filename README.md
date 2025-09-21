@@ -223,7 +223,7 @@ NakedToggle(
 ### NakedTabs
 
 ```dart
-NakedTabGroup(
+NakedTabs(
   selectedTabId: tab,
   onChanged: (id) => setState(() => tab = id),
   child: Column(
@@ -264,13 +264,13 @@ NakedTabGroup(
 ```dart
 final controller = NakedAccordionController<int>(min: 1, max: 2);
 
-NakedAccordion<int>(
+NakedAccordionGroup<int>(
   controller: controller,
   initialExpandedValues: const [0],
   children: [
-    NakedAccordionItem<int>(
+    NakedAccordionGroup<int>(
       value: 0,
-      trigger: (context, itemState, _) => ListTile(
+      triggerBuilder: (context, itemState, _) => ListTile(
         title: const Text('Section 1'),
         trailing: Icon(itemState.isExpanded
             ? Icons.expand_less

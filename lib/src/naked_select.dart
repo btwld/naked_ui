@@ -21,7 +21,7 @@ class NakedSelectState<T> extends NakedWidgetState {
     required this.value,
   });
 
-  /// Convenience flag to check if a selection exists.
+  /// Whether a selection exists.
   bool get hasValue => value != null;
 }
 
@@ -98,13 +98,13 @@ class NakedSelectOption<T> extends OverlayItem<T, NakedSelectItemState<T>> {
     super.builder,
   });
 
-  /// Handles the selection of this option.
+  /// Handles selection of this option.
   void _handleSelection(_NakedSelectScope<T> scope) {
     scope.onChanged?.call(value);
     if (scope.closeOnSelect) scope.controller.close();
   }
 
-  /// Computes additional widget states based on selection status.
+  /// Computes additional widget states based on the selection status.
   Set<WidgetState>? _computeAdditionalStates(bool isSelected) {
     return isSelected ? {WidgetState.selected} : null;
   }
@@ -202,7 +202,7 @@ class NakedSelect<T> extends StatefulWidget {
     this.useRootOverlay = false,
   });
 
-  /// Type alias for NakedSelectOption for cleaner API access
+  /// Type alias for [NakedSelectOption] for cleaner API access.
   static final Option = NakedSelectOption.new;
 
   /// Builds the trigger surface.
@@ -240,7 +240,7 @@ class NakedSelect<T> extends StatefulWidget {
   final VoidCallback? onOpen;
   final VoidCallback? onClose;
 
-  /// Called when the select closes without selection.
+  /// Called when the select closes without a selection.
   final VoidCallback? onCanceled;
 
   /// Open/close interceptors.

@@ -24,8 +24,8 @@ class NakedRadioState<T> extends NakedWidgetState {
 
 /// A headless radio without visuals.
 ///
-/// Must be placed under a [RadioGroup]. Builder receives [NakedRadioState]
-/// with radio value, group value, and interaction states.
+/// Must be placed under a [RadioGroup]. The builder receives a [NakedRadioState]
+/// with the radio value, group value, and interaction states.
 ///
 /// ```dart
 /// RadioGroup<String>(
@@ -72,7 +72,7 @@ class NakedRadio<T> extends StatefulWidget {
   /// The visual content when not using [builder].
   final Widget? child;
 
-  /// The enabled state of the radio.
+  /// Whether the radio is enabled.
   final bool enabled;
 
   /// The mouse cursor when hovering.
@@ -81,10 +81,10 @@ class NakedRadio<T> extends StatefulWidget {
   /// The focus node for the radio.
   final FocusNode? focusNode;
 
-  /// The autofocus flag.
+  /// Whether to autofocus.
   final bool autofocus;
 
-  /// The toggleable flag for clearing selection.
+  /// Whether tapping the selected radio clears the selection.
   final bool toggleable;
 
   /// Called when focus changes.
@@ -96,7 +96,7 @@ class NakedRadio<T> extends StatefulWidget {
   /// Called when press state changes.
   final ValueChanged<bool>? onPressChange;
 
-  /// The builder that receives current radio state.
+  /// Builds the radio using the current [NakedRadioState].
   final NakedStateBuilder<NakedRadioState<T>>? builder;
 
   /// The registry override for advanced usage and testing.
@@ -122,6 +122,17 @@ class _NakedRadioState<T> extends State<NakedRadio<T>>
   ValueChanged<bool>? get onFocusChange => widget.onFocusChange;
 
   @override
+  void didUpdateWidget(covariant NakedRadio<T> oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // When enablement flips, clear sentinels so the next interactive state
+    // change is reported instead of being suppressed by stale values.
+    if (oldWidget.enabled != widget.enabled) {
+      _lastReportedHover = null;
+      _lastReportedPressed = null;
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     final registry = widget.groupRegistry ?? RadioGroup.maybeOf<T>(context);
     if (registry == null) {
@@ -138,7 +149,7 @@ class _NakedRadioState<T> extends State<NakedRadio<T>>
       value: widget.value,
       mouseCursor: WidgetStateMouseCursor.resolveWith((_) => effectiveCursor),
       toggleable: widget.toggleable,
-      focusNode: effectiveFocusNode!,
+      focusNode: effectiveFocusNode, // FocusNodeMixin guarantees non-null
       autofocus: widget.autofocus && widget.enabled,
       groupRegistry: registry,
       enabled: widget.enabled,

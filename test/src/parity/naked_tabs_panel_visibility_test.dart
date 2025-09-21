@@ -12,7 +12,7 @@ void main() {
         String selected = '1';
         await tester.pumpMaterialWidget(
           StatefulBuilder(
-            builder: (context, setState) => NakedTabGroup(
+            builder: (context, setState) => NakedTabs(
               selectedTabId: selected,
               onChanged: (id) => setState(() => selected = id),
               child: Column(

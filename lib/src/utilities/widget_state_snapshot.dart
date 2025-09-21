@@ -9,6 +9,9 @@ import 'package:flutter/widgets.dart';
 abstract class NakedWidgetState {
   final UnmodifiableSetView<WidgetState> _states;
 
+  /// Creates a [NakedWidgetState] snapshot from the given [states] set.
+  ///
+  /// The [states] parameter contains the widget states to track.
   NakedWidgetState({required Set<WidgetState> states})
     : _states = UnmodifiableSetView(states);
 
@@ -28,6 +31,11 @@ abstract class NakedWidgetState {
   bool get isEnabled => !isDisabled;
 
   /// Whether *all* of the provided [states] are present.
+  ///
+  /// When [requireExact] is true, requires that the widget states
+  /// contain exactly the provided [states] and no others.
+  ///
+  /// Returns true if all [states] are present, false otherwise.
   bool matchesAll(Iterable<WidgetState> states, {bool requireExact = false}) {
     final required = states.toSet();
     if (required.isEmpty) return true;
@@ -38,6 +46,9 @@ abstract class NakedWidgetState {
   }
 
   /// Whether *any* of the provided [states] are present.
+  ///
+  /// Returns true if at least one of the [states] is present,
+  /// false if none are present.
   bool matchesAny(Iterable<WidgetState> states) {
     for (final state in states) {
       if (_states.contains(state)) return true;
@@ -47,6 +58,12 @@ abstract class NakedWidgetState {
   }
 
   /// Resolves to the first matching branch in priority order.
+  ///
+  /// Checks widget states in priority order and returns the first
+  /// matching value. If no states match, returns [orElse].
+  ///
+  /// Priority order: selected → hovered → focused → pressed → disabled
+  /// → dragged → error → scrolledUnder → [orElse].
   T when<T>({
     T? selected,
     T? hovered,
@@ -73,6 +90,11 @@ abstract class NakedWidgetState {
   }
 
   /// Nullable variant of [when] that returns null when no branch matches.
+  ///
+  /// Like [when], but returns null if no states match and [orElse] is null.
+  /// Useful when you want to check for specific states without a fallback.
+  ///
+  /// Returns the first matching state value, [orElse], or null.
   T? maybeWhen<T>({
     T? selected,
     T? hovered,

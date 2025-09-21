@@ -35,7 +35,7 @@ class _AccordionExampleState extends State<AccordionExample> {
   Widget build(BuildContext context) {
     return SizedBox(
       width: 300,
-      child: NakedAccordion<String>(
+      child: NakedAccordionGroup<String>(
         controller: _controller,
         initialExpandedValues: const ['1'],
         children: const [
@@ -84,10 +84,10 @@ class _AccordionItemState extends State<AccordionItem> {
         borderRadius: BorderRadius.circular(12),
         color: Colors.grey.shade100,
       ),
-      child: NakedAccordionItem<String>(
+      child: NakedAccordion<String>(
         value: widget.value,
         onHoverChange: (hovered) => setState(() => _isHovering = hovered),
-        trigger: (context, accordionState) {
+        triggerBuilder: (context, accordionState) {
           final isExpanded = accordionState.isExpanded;
 
           return AnimatedContainer(
