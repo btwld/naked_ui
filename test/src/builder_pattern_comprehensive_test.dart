@@ -258,7 +258,7 @@ void main() {
         );
 
         expect(capturedState, isNotNull);
-        expect(capturedState!.isCurrentTab, isTrue);
+        expect(capturedState!.isSelected, isTrue);
       });
     });
 

@@ -23,7 +23,7 @@ class NakedTabState extends NakedWidgetState {
   });
 
   /// Whether this tab is currently active/selected.
-  bool get isCurrentTab => tabId == selectedTabId;
+  bool get isSelected => tabId == selectedTabId;
 }
 
 /// A headless tab group without visuals.

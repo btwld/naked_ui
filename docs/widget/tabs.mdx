@@ -93,7 +93,7 @@ class _TabChip extends StatelessWidget {
     return NakedTab(
       tabId: tabId,
       builder: (context, tabState, _) {
-        final bool isActive = tabState.isCurrentTab;
+        final bool isActive = tabState.isSelected;
         final bool isHovered = tabState.isHovered;
         final bool isFocused = tabState.isFocused;
 
@@ -156,7 +156,7 @@ class _PanelBox extends StatelessWidget {
 
 - `tabId` → identifier for the tab
 - `selectedTabId` → the group’s current selection
-- `isCurrentTab` → shorthand bool
+- `isSelected` → shorthand bool
 - `widgetStates` → hover/focus/pressed/disabled
 
 ## Constructors

@@ -238,7 +238,7 @@ NakedTabGroup(
                 builder: (context, tabState, _) => Chip(
                   label: Text(id),
                   backgroundColor:
-                      tabState.isCurrentTab ? Colors.blue : Colors.grey.shade200,
+                      tabState.isSelected ? Colors.blue : Colors.grey.shade200,
                 ),
               ),
             );
