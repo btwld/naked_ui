@@ -106,6 +106,8 @@ const NakedToggle({
 - `builder` → `NakedStateBuilder<NakedToggleState>?`: tailor visuals from the typed state snapshot
 - `child` → `Widget?`: static child when you do not need dynamic styling
 - `asSwitch` → `bool`: `false` (button semantics) or `true` (switch semantics)
+- `enabled` → disable interaction entirely when false (visuals are still rendered)
+- `mouseCursor` → override the hover cursor when the toggle is enabled
 - `enableFeedback` → `bool`: haptic/audio feedback on activation (default `true`)
 - `focusNode`, `autofocus`, `onFocusChange`, `onHoverChange`, `onPressChange`: tap into interaction lifecycle hooks
 - `semanticLabel` → `String?`: accessibility label, especially important when no text label is visible
@@ -175,6 +177,44 @@ class _SegmentChip extends StatelessWidget {
   }
 }
 ```
+
+### Group API
+
+```dart
+const NakedToggleGroup({
+  Key? key,
+  required Widget child,
+  required T? selectedValue,
+  ValueChanged<T?>? onChanged,
+  bool enabled = true,
+})
+```
+
+- `selectedValue` / `onChanged` → control the currently active option externally
+- `enabled` → cascade a disabled state to every descendant option (while still rendering them)
+
+### Option API
+
+```dart
+const NakedToggleOption({
+  Key? key,
+  required T value,
+  Widget? child,
+  NakedStateBuilder<NakedToggleOptionState<T>>? builder,
+  bool enabled = true,
+  MouseCursor? mouseCursor,
+  bool enableFeedback = true,
+  FocusNode? focusNode,
+  bool autofocus = false,
+  ValueChanged<bool>? onFocusChange,
+  ValueChanged<bool>? onHoverChange,
+  ValueChanged<bool>? onPressChange,
+  String? semanticLabel,
+})
+```
+
+- Provide either `child` or `builder`; builders receive the typed toggle option state
+- `mouseCursor`, `enableFeedback`, and the interaction callbacks mirror the single toggle API so you can style segmented controls consistently
 
 `NakedToggleOptionState<T>` mirrors the base state helpers and exposes:
 - `value` → the option's value

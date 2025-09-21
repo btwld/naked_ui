@@ -294,6 +294,26 @@ class _NakedTabState extends State<NakedTab>
     }
   }
 
+  void _focusFirstTab() {
+    // Find the first tab in the current tab group
+    final scope = FocusScope.of(context);
+    scope.focusInDirection(TraversalDirection.left);
+    // Keep moving left until we can't go further (reaching the first tab)
+    while (scope.focusInDirection(TraversalDirection.left)) {
+      // Keep going until we reach the first tab
+    }
+  }
+
+  void _focusLastTab() {
+    // Find the last tab in the current tab group
+    final scope = FocusScope.of(context);
+    scope.focusInDirection(TraversalDirection.right);
+    // Keep moving right until we can't go further (reaching the last tab)
+    while (scope.focusInDirection(TraversalDirection.right)) {
+      // Keep going until we reach the last tab
+    }
+  }
+
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
@@ -351,6 +371,8 @@ class _NakedTabState extends State<NakedTab>
       actions: NakedIntentActions.tab.actions(
         onActivate: () => _handleTap(),
         onDirectionalFocus: _handleDirectionalFocus,
+        onFirstFocus: () => _focusFirstTab(),
+        onLastFocus: () => _focusLastTab(),
       ),
       child: Semantics(
         container: true,

@@ -83,14 +83,15 @@ void main() {
                 onHoverChange: (hovered) => isHovered = hovered,
                 onPressChange: (pressed) => isPressed = pressed,
                 onFocusChange: (focused) {},
-                builder: (context, states, child) {
+                builder: (context, radioState, child) {
                   return Container(
                     width: 20,
                     height: 20,
                     decoration: BoxDecoration(
                       border: Border.all(
-                        color: states.isSelected ? Colors.blue : Colors.grey,
-                        width: states.isSelected ? 4 : 2,
+                        color:
+                            radioState.isSelected ? Colors.blue : Colors.grey,
+                        width: radioState.isSelected ? 4 : 2,
                       ),
                       borderRadius: BorderRadius.circular(10),
                     ),
@@ -212,15 +213,16 @@ void main() {
                   NakedRadio<radio_example.RadioOption>(
                     key: radio1Key,
                     value: radio_example.RadioOption.apple,
-                    builder: (context, states, child) {
+                    builder: (context, radioState, child) {
                       return Container(
                         width: 20,
                         height: 20,
                         decoration: BoxDecoration(
                           border: Border.all(
-                            color:
-                                states.isSelected ? Colors.blue : Colors.grey,
-                            width: states.isSelected ? 4 : 2,
+                            color: radioState.isSelected
+                                ? Colors.blue
+                                : Colors.grey,
+                            width: radioState.isSelected ? 4 : 2,
                           ),
                           borderRadius: BorderRadius.circular(10),
                         ),
@@ -230,15 +232,16 @@ void main() {
                   NakedRadio<radio_example.RadioOption>(
                     key: radio2Key,
                     value: radio_example.RadioOption.banana,
-                    builder: (context, states, child) {
+                    builder: (context, radioState, child) {
                       return Container(
                         width: 20,
                         height: 20,
                         decoration: BoxDecoration(
                           border: Border.all(
-                            color:
-                                states.isSelected ? Colors.blue : Colors.grey,
-                            width: states.isSelected ? 4 : 2,
+                            color: radioState.isSelected
+                                ? Colors.blue
+                                : Colors.grey,
+                            width: radioState.isSelected ? 4 : 2,
                           ),
                           borderRadius: BorderRadius.circular(10),
                         ),

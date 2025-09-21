@@ -42,7 +42,7 @@ void main() {
               NakedAccordionItem<String>(
                 value: 'item',
                 semanticLabel: 'Header',
-                trigger: (context, isExpanded) => const Text('Header'),
+                trigger: (context, itemState) => const Text('Header'),
                 child: const Text('Body'),
               ),
             ],
@@ -55,7 +55,9 @@ void main() {
       handle.dispose();
     });
 
-    testWidgets('expanded accessibility parity vs ExpansionTile', (tester) async {
+    testWidgets('expanded accessibility parity vs ExpansionTile', (
+      tester,
+    ) async {
       final handle = tester.ensureSemantics();
 
       await tester.pumpWidget(
@@ -87,7 +89,7 @@ void main() {
               NakedAccordionItem<String>(
                 value: 'item',
                 semanticLabel: 'Header',
-                trigger: (context, isExpanded) => const Text('Header'),
+                trigger: (context, itemState) => const Text('Header'),
                 child: const Text('Body'),
               ),
             ],
@@ -99,23 +101,44 @@ void main() {
       final nData = nNode.getSemanticsData();
 
       // Test essential semantic properties for accessibility parity
-      expect(nData.hasAction(SemanticsAction.tap), mData.hasAction(SemanticsAction.tap),
-        reason: 'Both should have tap action');
-      expect(nData.hasAction(SemanticsAction.focus), mData.hasAction(SemanticsAction.focus),
-        reason: 'Both should have focus action');
-      expect(nData.hasFlag(SemanticsFlag.isEnabled), mData.hasFlag(SemanticsFlag.isEnabled),
-        reason: 'Both should have enabled flag');
-      expect(nData.hasFlag(SemanticsFlag.hasEnabledState), mData.hasFlag(SemanticsFlag.hasEnabledState),
-        reason: 'Both should have enabled state flag');
-      expect(nData.hasFlag(SemanticsFlag.isFocusable), mData.hasFlag(SemanticsFlag.isFocusable),
-        reason: 'Both should be focusable');
+      expect(
+        nData.hasAction(SemanticsAction.tap),
+        mData.hasAction(SemanticsAction.tap),
+        reason: 'Both should have tap action',
+      );
+      expect(
+        nData.hasAction(SemanticsAction.focus),
+        mData.hasAction(SemanticsAction.focus),
+        reason: 'Both should have focus action',
+      );
+      expect(
+        nData.flagsCollection.isEnabled,
+        mData.flagsCollection.isEnabled,
+        reason: 'Both should have enabled flag',
+      );
+      expect(
+        nData.flagsCollection.hasEnabledState,
+        mData.flagsCollection.hasEnabledState,
+        reason: 'Both should have enabled state flag',
+      );
+      expect(
+        nData.flagsCollection.isFocusable,
+        mData.flagsCollection.isFocusable,
+        reason: 'Both should be focusable',
+      );
 
       // Note: Label differs by design - NakedAccordion provides better accessibility
       // by keeping header and body semantics separate rather than merged
-      expect(nData.label, contains('Header'),
-        reason: 'NakedAccordion header should contain "Header"');
-      expect(mData.label, contains('Header'),
-        reason: 'ExpansionTile should contain "Header"');
+      expect(
+        nData.label,
+        contains('Header'),
+        reason: 'NakedAccordion header should contain "Header"',
+      );
+      expect(
+        mData.label,
+        contains('Header'),
+        reason: 'ExpansionTile should contain "Header"',
+      );
 
       handle.dispose();
     });

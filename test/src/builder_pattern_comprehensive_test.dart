@@ -190,39 +190,75 @@ void main() {
       });
 
       testWidgets('NakedCheckbox builder pattern', (WidgetTester tester) async {
-        await _testComponentBuilder(
-          tester,
-          (builder, child) => NakedCheckbox(
+        NakedCheckboxState? capturedState;
+        Widget? capturedChild;
+        const child = Text('Checkbox Child');
+
+        await tester.pumpMaterialWidget(
+          NakedCheckbox(
             value: false,
             onChanged: (value) {},
-            builder: builder,
+            builder: (context, state, childWidget) {
+              capturedState = state;
+              capturedChild = childWidget;
+              return childWidget ?? const SizedBox.shrink();
+            },
             child: child,
           ),
         );
+
+        expect(capturedState, isNotNull);
+        expect(capturedChild, equals(child));
       });
 
       testWidgets('NakedRadio builder pattern', (WidgetTester tester) async {
+        NakedRadioState<String>? capturedState;
+        const child = Text('Radio Child');
+
         await tester.pumpMaterialWidget(
           RadioGroup<String>(
-            groupValue: null,
-            onChanged: (value) {},
-            child: _buildRadioWithBuilder(),
+            groupValue: 'value1',
+            onChanged: (_) {},
+            child: NakedRadio<String>(
+              value: 'value1',
+              builder: (context, state, childWidget) {
+                capturedState = state;
+                return childWidget ?? const SizedBox.shrink();
+              },
+              child: child,
+            ),
           ),
         );
 
-        await _verifyBuilderBehavior(tester);
+        expect(capturedState, isNotNull);
+        expect(capturedState!.isSelected, isTrue);
       });
 
       testWidgets('NakedTab builder pattern', (WidgetTester tester) async {
+        NakedTabState? capturedState;
+
         await tester.pumpMaterialWidget(
           NakedTabGroup(
             selectedTabId: 'tab1',
             onChanged: (value) {},
-            child: Column(children: [_buildTabWithBuilder()]),
+            child: NakedTabList(
+              child: Row(
+                children: [
+                  NakedTab(
+                    tabId: 'tab1',
+                    builder: (context, tabState, child) {
+                      capturedState = tabState;
+                      return const Text('Builder Test');
+                    },
+                  ),
+                ],
+              ),
+            ),
           ),
         );
 
-        await _verifyBuilderBehavior(tester);
+        expect(capturedState, isNotNull);
+        expect(capturedState!.isCurrentTab, isTrue);
       });
     });
 
@@ -384,51 +420,6 @@ Future<void> _testComponentBuilder(
 
   expect(receivedStates, isNotNull);
   expect(receivedChild, equals(testChild));
-}
-
-/// Helper function to verify builder behavior
-Future<void> _verifyBuilderBehavior(WidgetTester tester) async {
-  expect(find.text('Builder Test'), findsOneWidget);
-
-  // Try to trigger state change if possible
-  final widget = find.text('Builder Test');
-  if (widget.evaluate().isNotEmpty) {
-    await tester.tap(widget);
-    await tester.pump();
-  }
-}
-
-/// Helper to build radio with builder for testing
-Widget _buildRadioWithBuilder() {
-  return NakedRadio<String>(
-    value: 'test',
-    builder: (context, states, child) {
-      return Container(
-        width: 20,
-        height: 20,
-        color: states.contains(WidgetState.selected)
-            ? Colors.blue
-            : Colors.grey,
-        child: const Text('Builder Test'),
-      );
-    },
-  );
-}
-
-/// Helper to build tab with builder for testing
-Widget _buildTabWithBuilder() {
-  return NakedTab(
-    tabId: 'tab1',
-    builder: (context, states, child) {
-      return Container(
-        padding: const EdgeInsets.all(8),
-        color: states.contains(WidgetState.selected)
-            ? Colors.blue
-            : Colors.grey,
-        child: const Text('Builder Test'),
-      );
-    },
-  );
 }
 
 /// Helper to get color based on widget states

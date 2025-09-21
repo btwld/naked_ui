@@ -39,7 +39,7 @@ void main() {
     Key? tab2Key,
     Key? panel1Key,
     Key? panel2Key,
-    ValueChanged<Set<WidgetState>>? tab1StatesSpy,
+    ValueChanged<NakedTabState>? tab1StatesSpy,
   }) {
     // Keep selection across rebuilds using a closure variable updated via StatefulBuilder.setState.
     String selected = initialSelected;
@@ -76,8 +76,8 @@ void main() {
                           onFocusChange: (_) {},
                           builder: tab1StatesSpy == null
                               ? null
-                              : (ctx, states, child) {
-                                  tab1StatesSpy(states);
+                              : (ctx, tabState, child) {
+                                  tab1StatesSpy(tabState);
                                   return child ?? const SizedBox.shrink();
                                 },
                           child: SizedBox(
@@ -276,7 +276,7 @@ void main() {
       _harness(
         initialSelected: 'tab1',
         tab1Key: tab1,
-        tab1StatesSpy: (s) => statesLog.add(Set<WidgetState>.from(s)),
+        tab1StatesSpy: (state) => statesLog.add(state.widgetStates.toSet()),
       ),
     );
     await tester.pumpAndSettle();

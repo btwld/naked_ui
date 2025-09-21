@@ -69,10 +69,13 @@ Future<T?> showNakedDialog<T>({
 ```
 
 - barrierColor: Required background overlay color.
+- barrierLabel: Announced by screen readers when the barrier appears; pass `MaterialLocalizations.of(context).modalBarrierDismissLabel` for localization.
 - barrierDismissible: Tap outside to dismiss (default true).
-- transitionDuration/transitionBuilder: Customize entry/exit animations.
-- requestFocus: Whether route requests initial focus.
-- useRootNavigator: Present on root navigator.
+- transitionDuration / transitionBuilder: Customize entry/exit animations.
+- anchorPoint: Supply a pointer offset to anchor desktop-style dialogs near the invocation point.
+- requestFocus: Whether the dialog route should grab focus when it enters.
+- traversalEdgeBehavior: Defaults to `TraversalEdgeBehavior.closedLoop` to keep focus inside the dialog; override for custom traversal.
+- useRootNavigator: Present on the root navigator instead of the nested one.
 
 ### `NakedDialog`
 
@@ -95,4 +98,3 @@ class NakedDialog extends StatelessWidget {
 
 - `NakedDialog` only sets semantics; visuals are entirely up to you.
 - For non‑modal popovers, set `modal: false` and manage dismissal yourself.
-

@@ -168,8 +168,11 @@ const NakedMenu({
 - `controller` → `MenuController` controlling show/hide
 - `onSelected` → callback invoked with item value (and closes menu by default)
 - `selectedValue` → optional value to mark items as selected via `WidgetState.selected`
-- `closeOnClickOutside` / `consumeOutsideTaps` / `useRootOverlay` → customise overlay behaviour
+- `positioning` → supply an `OverlayPositionConfig` for alignment/offset tweaks
+- `closeOnClickOutside` → hide the overlay when tapping anywhere outside the menu
+- `consumeOutsideTaps` / `useRootOverlay` → capture outside taps before they reach ancestors or target the root overlay
 - `triggerFocusNode` → reuse an external focus node (e.g. for returning focus on close)
+- Lifecycle hooks: `onOpen`, `onClose`, `onCanceled` announce overlay visibility; `onOpenRequested`, `onCloseRequested` let you throttle or animate RawMenuAnchor requests before they commit
 
 ## NakedMenuItem Essentials
 

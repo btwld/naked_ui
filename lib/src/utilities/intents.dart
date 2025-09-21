@@ -15,6 +15,7 @@ class NakedIntentActions {
   static const _AccordionIntentActions accordion = _AccordionIntentActions();
   static const _TabIntentActions tab = _TabIntentActions();
   static const _MenuIntentActions menu = _MenuIntentActions();
+  static const _SelectIntentActions select = _SelectIntentActions();
   static const _DialogIntentActions dialog = _DialogIntentActions();
 }
 
@@ -70,11 +71,25 @@ class _TabIntentActions {
   Map<Type, Action<Intent>> actions({
     required VoidCallback onActivate,
     required ValueChanged<TraversalDirection> onDirectionalFocus,
+    VoidCallback? onFirstFocus,
+    VoidCallback? onLastFocus,
   }) {
     final map = _activation(onActivate, includeButtonIntent: true);
     map[DirectionalFocusIntent] = CallbackAction<DirectionalFocusIntent>(
       onInvoke: (intent) => onDirectionalFocus(intent.direction),
     );
+
+    if (onFirstFocus != null) {
+      map[_FirstFocusIntent] = CallbackAction<_FirstFocusIntent>(
+        onInvoke: (_) => onFirstFocus(),
+      );
+    }
+
+    if (onLastFocus != null) {
+      map[_LastFocusIntent] = CallbackAction<_LastFocusIntent>(
+        onInvoke: (_) => onLastFocus(),
+      );
+    }
 
     return map;
   }
@@ -93,6 +108,8 @@ class _MenuIntentActions {
     required VoidCallback onDismiss,
     VoidCallback? onNextFocus,
     VoidCallback? onPreviousFocus,
+    VoidCallback? onFirstFocus,
+    VoidCallback? onLastFocus,
   }) {
     final map = <Type, Action<Intent>>{
       DismissIntent: CallbackAction<DismissIntent>(
@@ -109,6 +126,47 @@ class _MenuIntentActions {
     if (onPreviousFocus != null) {
       map[PreviousFocusIntent] = CallbackAction<PreviousFocusIntent>(
         onInvoke: (_) => onPreviousFocus(),
+      );
+    }
+
+    if (onFirstFocus != null) {
+      map[_FirstFocusIntent] = CallbackAction<_FirstFocusIntent>(
+        onInvoke: (_) => onFirstFocus(),
+      );
+    }
+
+    if (onLastFocus != null) {
+      map[_LastFocusIntent] = CallbackAction<_LastFocusIntent>(
+        onInvoke: (_) => onLastFocus(),
+      );
+    }
+
+    return map;
+  }
+}
+
+// =============================================================================
+// SELECT / COMBOBOX
+// =============================================================================
+
+class _SelectIntentActions {
+  const _SelectIntentActions();
+
+  Map<ShortcutActivator, Intent> get shortcuts => _selectShortcuts;
+
+  Map<Type, Action<Intent>> actions({
+    required VoidCallback onDismiss,
+    VoidCallback? onOpenOverlay,
+  }) {
+    final map = <Type, Action<Intent>>{
+      DismissIntent: CallbackAction<DismissIntent>(
+        onInvoke: (_) => onDismiss(),
+      ),
+    };
+
+    if (onOpenOverlay != null) {
+      map[_OpenOverlayIntent] = CallbackAction<_OpenOverlayIntent>(
+        onInvoke: (_) => onOpenOverlay(),
       );
     }
 
@@ -158,6 +216,8 @@ const Map<ShortcutActivator, Intent> _tabShortcuts =
       SingleActivator(LogicalKeyboardKey.arrowDown): DirectionalFocusIntent(
         TraversalDirection.down,
       ),
+      SingleActivator(LogicalKeyboardKey.home): _FirstFocusIntent(),
+      SingleActivator(LogicalKeyboardKey.end): _LastFocusIntent(),
     };
 
 const Map<ShortcutActivator, Intent> _menuShortcuts =
@@ -165,6 +225,21 @@ const Map<ShortcutActivator, Intent> _menuShortcuts =
       SingleActivator(LogicalKeyboardKey.escape): DismissIntent(),
       SingleActivator(LogicalKeyboardKey.arrowDown): NextFocusIntent(),
       SingleActivator(LogicalKeyboardKey.arrowUp): PreviousFocusIntent(),
+      SingleActivator(LogicalKeyboardKey.home): _FirstFocusIntent(),
+      SingleActivator(LogicalKeyboardKey.end): _LastFocusIntent(),
+    };
+
+const Map<ShortcutActivator, Intent> _selectShortcuts =
+    <ShortcutActivator, Intent>{
+      SingleActivator(LogicalKeyboardKey.escape): DismissIntent(),
+      SingleActivator(LogicalKeyboardKey.arrowDown): NextFocusIntent(),
+      SingleActivator(LogicalKeyboardKey.arrowUp): PreviousFocusIntent(),
+      SingleActivator(LogicalKeyboardKey.home): _FirstFocusIntent(),
+      SingleActivator(LogicalKeyboardKey.end): _LastFocusIntent(),
+      SingleActivator(LogicalKeyboardKey.pageUp): _PageUpIntent(),
+      SingleActivator(LogicalKeyboardKey.pageDown): _PageDownIntent(),
+      SingleActivator(LogicalKeyboardKey.arrowDown, alt: true): _OpenOverlayIntent(),
+      SingleActivator(LogicalKeyboardKey.arrowUp, alt: true): DismissIntent(),
     };
 
 const Map<ShortcutActivator, Intent> _dialogShortcuts =
@@ -187,4 +262,33 @@ Map<Type, Action<Intent>> _activation(
   }
 
   return map;
+}
+
+// =============================================================================
+// CUSTOM INTENTS FOR NAVIGATION
+// =============================================================================
+
+/// Intent: Move focus to first item in a collection.
+class _FirstFocusIntent extends Intent {
+  const _FirstFocusIntent();
+}
+
+/// Intent: Move focus to last item in a collection.
+class _LastFocusIntent extends Intent {
+  const _LastFocusIntent();
+}
+
+/// Intent: Move focus by page up (large jump backward).
+class _PageUpIntent extends Intent {
+  const _PageUpIntent();
+}
+
+/// Intent: Move focus by page down (large jump forward).
+class _PageDownIntent extends Intent {
+  const _PageDownIntent();
+}
+
+/// Intent: Open overlay/dropdown.
+class _OpenOverlayIntent extends Intent {
+  const _OpenOverlayIntent();
 }

@@ -158,10 +158,13 @@ const NakedSelect({
 - `triggerBuilder` → `(BuildContext, NakedSelectState<T>)`
 - `overlayBuilder` → `(BuildContext, RawMenuOverlayInfo)` – build anything (list, grid, search field)
 - `value` / `onChanged` → manage selected value externally
-- `closeOnSelect` → close immediately after choosing an option
+- `positioning` → tune `OverlayPositionConfig` alignment, fallback, and offset for the dropdown shell
+- `closeOnSelect` / `closeOnClickOutside` → opt into immediate dismissal after selection and pointer taps outside
+- `consumeOutsideTaps` / `useRootOverlay` → control how outside gestures are captured and which overlay stack is used
 - `enabled` → disables trigger & option activation when false
-- `semanticLabel` → override trigger semantics; `value?.toString()` is announced automatically otherwise
-- `triggerFocusNode` → reuse an external focus node to regain focus after close
+- `triggerFocusNode` → reuse an external focus node; focus is restored here automatically on close
+- `semanticLabel` → override trigger semantics; the current `value?.toString()` is announced when provided
+- Lifecycle hooks: `onOpen`, `onClose`, `onCanceled` fire around overlay visibility; `onOpenRequested`, `onCloseRequested` let you intercept RawMenuAnchor requests (e.g. for animations)
 
 ## Options via `NakedSelect.Option`
 

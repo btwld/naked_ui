@@ -160,6 +160,12 @@ const NakedTextField({
 
 > Parameters mirror `EditableText`, so you can keep using the same configuration options you know from Flutter’s built-in text fields.
 
+### Styling & Pointer Control
+
+- `style` lets you override the text style without wrapping the builder output in a new `DefaultTextStyle`
+- `ignorePointers` temporarily disables pointer input while leaving focus/keyboard flow intact—handy when showing loading states around the same editable instance
+- `groupId` matches `EditableText`’s grouping behaviour (set it when coordinating multiple fields for the same input method)
+
 ## Event Hooks
 
 - `onHoverChange`, `onFocusChange`, `onPressChange` → expose interaction states for your decoration logic

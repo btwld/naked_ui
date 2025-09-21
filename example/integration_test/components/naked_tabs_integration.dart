@@ -143,15 +143,15 @@ void main() {
               customTab: NakedTab(
                 key: tabKey,
                 tabId: 'test',
-                builder: (context, states, child) {
-                  isSelected = states.isSelected;
+                builder: (context, tabState, child) {
+                  isSelected = tabState.isSelected;
                   return Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: states.isSelected ? Colors.blue : Colors.grey,
+                      color: tabState.isSelected ? Colors.blue : Colors.grey,
                       border: Border.all(
-                        color: states.isHovered ? Colors.red : Colors.black,
-                        width: states.isPressed ? 4 : 2,
+                        color: tabState.isHovered ? Colors.red : Colors.black,
+                        width: tabState.isPressed ? 4 : 2,
                       ),
                     ),
                     child: child,

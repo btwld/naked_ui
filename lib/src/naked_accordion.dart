@@ -257,11 +257,7 @@ class _NakedAccordionState<T> extends State<NakedAccordion<T>> {
 typedef NakedAccordionTriggerBuilder<T> =
     /// Build the *header/trigger* for an accordion item.
     /// Receives [NakedAccordionItemState] with expansion state, constraints, and interactions.
-    Widget Function(
-      BuildContext context,
-      NakedAccordionItemState<T> state,
-      Widget? child,
-    );
+    Widget Function(BuildContext context, NakedAccordionItemState<T> state);
 
 /// A headless accordion item without visuals.
 ///
@@ -418,7 +414,7 @@ class _NakedAccordionItemState<T> extends State<NakedAccordionItem<T>>
                               controller.values.length < controller.max!,
                         );
 
-                        return widget.trigger(context, accordionState, null);
+                        return widget.trigger(context, accordionState);
                       },
                     ),
                   ),

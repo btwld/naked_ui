@@ -3,6 +3,7 @@ import 'package:flutter/widgets.dart';
 import 'base/overlay_base.dart';
 import 'naked_button.dart';
 import 'utilities/anchored_overlay_shell.dart';
+import 'utilities/intents.dart';
 import 'utilities/positioning.dart';
 import 'utilities/widget_state_snapshot.dart';
 
@@ -286,52 +287,61 @@ class _NakedSelectState<T> extends State<NakedSelect<T>>
   Widget build(BuildContext context) {
     final String? semanticsValue = widget.value?.toString();
 
-    return Semantics(
-      container: true,
-      enabled: widget.enabled,
-      button: true,
-      focusable: true,
-      expanded: _isOpen,
-      label: widget.semanticLabel,
-      value: semanticsValue,
-      onTap: widget.enabled ? _toggle : null,
-      child: AnchoredOverlayShell(
-        controller: _controller,
-        overlayBuilder: (context, info) {
-          return _NakedSelectScope<T>(
-            controller: _controller,
-            closeOnSelect: widget.closeOnSelect,
-            enabled: widget.enabled,
-            onChanged: _handleSelection,
-            value: widget.value,
-            child: Builder(
-              builder: (context) => widget.overlayBuilder(context, info),
-            ),
-          );
-        },
-        onOpen: _handleOpen,
-        onClose: _handleClose,
-        onOpenRequested: widget.onOpenRequested,
-        onCloseRequested: widget.onCloseRequested,
-        consumeOutsideTaps: widget.consumeOutsideTaps,
-        useRootOverlay: widget.useRootOverlay,
-        closeOnClickOutside: widget.closeOnClickOutside,
-        triggerFocusNode: widget.triggerFocusNode,
-        offset: widget.positioning.offset,
-        child: NakedButton(
-          onPressed: widget.enabled ? _toggle : null,
+    return Shortcuts(
+      shortcuts: NakedIntentActions.select.shortcuts,
+      child: Actions(
+        actions: NakedIntentActions.select.actions(
+          onDismiss: () => _controller.close(),
+          onOpenOverlay: () => _controller.open(),
+        ),
+        child: Semantics(
+          container: true,
           enabled: widget.enabled,
-          focusNode: widget.triggerFocusNode,
-          builder: (context, states, _) {
-            return widget.triggerBuilder(
-              context,
-              NakedSelectState(
-                states: states,
-                isOpen: _isOpen,
+          button: true,
+          focusable: true,
+          expanded: _isOpen,
+          label: widget.semanticLabel,
+          value: semanticsValue,
+          onTap: widget.enabled ? _toggle : null,
+          child: AnchoredOverlayShell(
+            controller: _controller,
+            overlayBuilder: (context, info) {
+              return _NakedSelectScope<T>(
+                controller: _controller,
+                closeOnSelect: widget.closeOnSelect,
+                enabled: widget.enabled,
+                onChanged: _handleSelection,
                 value: widget.value,
-              ),
-            );
-          },
+                child: Builder(
+                  builder: (context) => widget.overlayBuilder(context, info),
+                ),
+              );
+            },
+            onOpen: _handleOpen,
+            onClose: _handleClose,
+            onOpenRequested: widget.onOpenRequested,
+            onCloseRequested: widget.onCloseRequested,
+            consumeOutsideTaps: widget.consumeOutsideTaps,
+            useRootOverlay: widget.useRootOverlay,
+            closeOnClickOutside: widget.closeOnClickOutside,
+            triggerFocusNode: widget.triggerFocusNode,
+            offset: widget.positioning.offset,
+            child: NakedButton(
+              onPressed: widget.enabled ? _toggle : null,
+              enabled: widget.enabled,
+              focusNode: widget.triggerFocusNode,
+              builder: (context, states, _) {
+                return widget.triggerBuilder(
+                  context,
+                  NakedSelectState(
+                    states: states,
+                    isOpen: _isOpen,
+                    value: widget.value,
+                  ),
+                );
+              },
+            ),
+          ),
         ),
       ),
     );
