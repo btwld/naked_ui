@@ -255,15 +255,15 @@ void main() {
             child: NakedButton(
               key: buttonKey,
               onPressed: () {},
-              builder: (context, states, child) {
+              builder: (context, state, child) {
                 return Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: states.contains(WidgetState.hovered)
+                    color: state.states.contains(WidgetState.hovered)
                         ? Colors.blue.shade100
                         : Colors.grey.shade100,
                     border: Border.all(
-                      color: states.contains(WidgetState.pressed)
+                      color: state.states.contains(WidgetState.pressed)
                           ? Colors.blue
                           : Colors.grey,
                       width: 2,
@@ -348,7 +348,6 @@ void main() {
       // Verify long press callback was called
       expect(wasLongPressed, isTrue);
     });
-
 
     testWidgets('button basic example works correctly', (tester) async {
       // Use the actual basic example app

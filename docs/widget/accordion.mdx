@@ -4,7 +4,7 @@ description: Headless accordion primitives with expansion state management and t
 keywords: [flutter, accordion, expansion, headless, builder, widgetstate]
 ---
 
-`NakedAccordion` gives you expandable sections without dictating layout or visuals. Pair it with `NakedAccordionController` to enforce how many panels can open, then render the trigger/header however you like via the typed state snapshot.
+`NakedAccordion` gives you expandable sections without dictating layout or visuals. Pair it with `NakedAccordionController` to enforce how many panels can open, then render the trigger/header via the typed state snapshot.
 
 <Info>
   A complete example lives in [`example/lib/api/naked_accordion.0.dart`](https://github.com/btwld/naked_ui/blob/main/example/lib/api/naked_accordion.0.dart).
@@ -68,7 +68,7 @@ class _AccordionSectionState extends State<_AccordionSection> {
     return NakedAccordion<String>(
       value: widget.value,
       onHoverChange: (hovered) => setState(() => _isHovered = hovered),
-      triggerBuilder: (context, accordionState) {
+      builder: (context, accordionState) {
         final bool isExpanded = accordionState.isExpanded;
         final bool canExpand = accordionState.canExpand;
         final bool canCollapse = accordionState.canCollapse;
@@ -159,10 +159,12 @@ Use these values to adjust affordances (e.g. disable icons when the controller p
 - `min` ensures at least that many sections stay expanded when closing
 - `max` limits how many sections can be open at once (FIFO eviction)
 
-## NakedAccordion Constructor
+## Constructors
+
+### NakedAccordionGroup
 
 ```dart
-const NakedAccordion({
+const NakedAccordionGroup({
   Key? key,
   required this.children,
   required this.controller,
@@ -170,18 +172,16 @@ const NakedAccordion({
 })
 ```
 
-### Key Parameters
-
-- `children` → list of `Widget`; mix `NakedAccordion` with any spacing widgets you need
+- `children` → list of Widgets; mix `NakedAccordion` with any spacing widgets you need
 - `controller` → required state holder
 - `initialExpandedValues` → values to open on first build when the controller is empty
 
-## NakedAccordion Constructor
+### NakedAccordion
 
 ```dart
 const NakedAccordion({
   Key? key,
-  required this.trigger,
+  required this.builder,
   required this.value,
   required this.child,
   this.transitionBuilder,
@@ -197,17 +197,16 @@ const NakedAccordion({
 })
 ```
 
-Important call-outs:
+- `builder` → `NakedAccordionTriggerBuilder<T>` receiving `NakedAccordionItemState<T>`
+- `child` → panel content displayed when expanded
+- `value` → unique identifier tracked by the controller
+- Interaction callbacks mirror other Naked widgets (`onFocusChange`, `onHoverChange`, `onPressChange`)
+- `transitionBuilder` lets you wrap the panel with your own show/hide animation
+- `enabled` / `mouseCursor` / `enableFeedback` provide interaction affordance hooks
 
-- `trigger` → `NakedAccordionTriggerBuilder<T>` receives the typed item state and optional child placeholder
-- `transitionBuilder` wraps the lazily built panel when `isExpanded` is true
-- `onFocusChange`, `onHoverChange`, `onPressChange` mirror events from `WidgetStatesMixin`
-- `semanticLabel` sets the accessible name for the trigger element
-- `mouseCursor`, `enableFeedback`, and `autofocus` mirror the rest of the Naked primitives so you can align affordances with your design system
+## Accessibility Guidance
 
-## Accessibility Checklist
-
-- Provide meaningful trigger text and optionally `semanticLabel`
-- Keep targets large enough (minimum 44×44 logical pixels)
-- Surface focus/hover states via the builder state
-- Honour `canExpand`/`canCollapse` for iconography so expectations match behaviour
+- Headers expose button semantics and support keyboard activation via Space/Enter
+- Arrow keys move focus between headers when wrapped in traversal groups (handled automatically)
+- Provide clear focus styles through `accordionState.isFocused`
+- Panel content should include headings or text to clarify context for screen readers

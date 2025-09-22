@@ -42,7 +42,7 @@ void main() {
               NakedAccordion<String>(
                 value: 'item',
                 semanticLabel: 'Header',
-                triggerBuilder: (context, itemState) => const Text('Header'),
+                builder: (context, itemState) => const Text('Header'),
                 child: const Text('Body'),
               ),
             ],
@@ -55,7 +55,9 @@ void main() {
       handle.dispose();
     });
 
-    testWidgets('expanded semantic properties vs ExpansionTile', (tester) async {
+    testWidgets('expanded semantic properties vs ExpansionTile', (
+      tester,
+    ) async {
       final handle = tester.ensureSemantics();
 
       // Test our NakedAccordion expanded state
@@ -68,7 +70,7 @@ void main() {
               NakedAccordion<String>(
                 value: 'item',
                 semanticLabel: 'Header',
-                triggerBuilder: (context, itemState) => const Text('Header'),
+                builder: (context, itemState) => const Text('Header'),
                 child: const Text('Body'),
               ),
             ],
@@ -86,7 +88,10 @@ void main() {
       expect(headerData.flagsCollection.isFocusable, isTrue);
       expect(headerData.flagsCollection.hasEnabledState, isTrue);
       expect(headerData.flagsCollection.isEnabled, isTrue);
-      expect(headerData.label, 'Header'); // Our better approach: clean header label
+      expect(
+        headerData.label,
+        'Header',
+      ); // Our better approach: clean header label
 
       // Verify body content is accessible separately (better than Material's merged approach)
       final bodyFinder = find.text('Body');

@@ -165,21 +165,14 @@ class _PanelBox extends StatelessWidget {
 
 ## Constructors
 
-```dart
-typedef NakedStateBuilder<S extends NakedState> = Widget Function(
-  BuildContext context,
-  S state,
-  Widget? child,
-);
-```
-
 ### NakedTabs
 
 ```dart
 const NakedTabs({
   Key? key,
   required this.child,
-  required this.selectedTabId,
+  this.controller,
+  this.selectedTabId,
   this.onChanged,
   this.orientation = Axis.horizontal,
   this.enabled = true,
@@ -187,8 +180,9 @@ const NakedTabs({
 })
 ```
 
-- `selectedTabId` → active tab id (non-empty)
-- `onChanged` → handle selection changes; omit to render read-only tabs
+- Provide either `controller` or (`selectedTabId` with optional `onChanged`)
+- `selectedTabId` → active tab id when managing state externally
+- `onChanged` → handle selection changes when no controller is supplied
 - `orientation` → horizontal (default) or vertical arrow-key handling
 - `onEscapePressed` → optional callback when Escape is pressed while focused
 
@@ -213,7 +207,7 @@ const NakedTab({
 ```
 
 - Provide either `child` or `builder`
-- `builder` → `NakedStateBuilder<NakedTabState>`
+- `builder` → `ValueWidgetBuilder<NakedTabState>?`
 - `semanticLabel` → override accessible name
 - Interaction callbacks mirror other Naked components
 

@@ -41,7 +41,7 @@ void main() {
           body: Center(
             child: NakedMenu<String>(
               controller: menuController,
-              triggerBuilder: (context, state) => const Text('Open Menu'),
+              builder: (context, state, _) => const Text('Open Menu'),
               overlayBuilder: (context, info) => Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
@@ -93,7 +93,7 @@ void main() {
             child: NakedMenu<String>(
               controller: menuController,
               onClose: () => menuClosed = true,
-              triggerBuilder: (context, state) => const Text('Open Menu'),
+              builder: (context, state, _) => const Text('Open Menu'),
               overlayBuilder: (context, info) => Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
@@ -140,7 +140,7 @@ void main() {
             child: NakedMenu<String>(
               key: menuKey,
               controller: menuController,
-              triggerBuilder: (context, state) => const Text('Open Menu'),
+              builder: (context, state, _) => const Text('Open Menu'),
               overlayBuilder: (context, info) => Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
@@ -187,7 +187,7 @@ void main() {
                 NakedMenu<String>(
                   controller: menuController,
                   consumeOutsideTaps: true,
-                  triggerBuilder: (context, state) => const Text('Open Menu'),
+                  builder: (context, state, _) => const Text('Open Menu'),
                   overlayBuilder: (context, info) => Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(

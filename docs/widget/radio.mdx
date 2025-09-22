@@ -146,6 +146,7 @@ const NakedRadio<T>({
 Key notes:
 
 - Provide either `child` (static content) or `builder` (dynamic styling via `NakedRadioState`)
+- `builder` → `ValueWidgetBuilder<NakedRadioState<T>>?`
 - `toggleable` lets the selected radio clear the group when activated again
 - Pass `focusNode` to integrate with external focus management
 - Omit `onPressChange`/`onHoverChange` for lighter usage; they are optional hooks

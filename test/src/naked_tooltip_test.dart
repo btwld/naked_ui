@@ -11,7 +11,7 @@ void main() {
     testWidgets('renders child widget', (WidgetTester tester) async {
       await tester.pumpMaterialWidget(
         NakedTooltip(
-          builder: (context) => const Text('Tooltip Content'),
+          overlayBuilder: (context, info) => const Text('Tooltip Content'),
           child: const Text('Hover Me'),
         ),
       );
@@ -29,7 +29,7 @@ void main() {
             padding: const EdgeInsets.all(1.0),
             child: NakedTooltip(
               key: targetKey,
-              builder: (context) => const Text('Tooltip Content'),
+              overlayBuilder: (context, info) => const Text('Tooltip Content'),
               waitDuration: Duration.zero,
               showDuration: Duration.zero,
               child: const Text('Hover Me'),
@@ -60,7 +60,7 @@ void main() {
           Center(
             child: NakedTooltip(
               key: targetKey,
-              builder: (context) => const Text('Tooltip Content'),
+              overlayBuilder: (context, info) => const Text('Tooltip Content'),
               waitDuration: Duration.zero,
               showDuration: Duration.zero,
               child: const Text('Hover Me'),
@@ -95,7 +95,7 @@ void main() {
             padding: const EdgeInsets.all(1.0),
             child: NakedTooltip(
               key: targetKey,
-              builder: (context) => const Text('Tooltip Content'),
+              overlayBuilder: (context, info) => const Text('Tooltip Content'),
               waitDuration: Duration.zero,
               showDuration: Duration.zero,
               onOpen: () => onOpenCalled = true,
@@ -127,7 +127,7 @@ void main() {
             padding: const EdgeInsets.all(1.0),
             child: NakedTooltip(
               key: targetKey,
-              builder: (context) => const Text('Tooltip Content'),
+              overlayBuilder: (context, info) => const Text('Tooltip Content'),
               waitDuration: Duration.zero,
               showDuration: Duration.zero,
               onClose: () => onCloseCalled = true,
@@ -161,7 +161,7 @@ void main() {
           Center(
             child: NakedTooltip(
               key: targetKey,
-              builder: (context) => const Text('Tooltip Content'),
+              overlayBuilder: (context, info) => const Text('Tooltip Content'),
               waitDuration: const Duration(milliseconds: 50),
               showDuration: Duration.zero,
               child: const Text('Hover Me'),
@@ -200,7 +200,7 @@ void main() {
           Center(
             child: NakedTooltip(
               key: targetKey,
-              builder: (context) => const Text('Tooltip Content'),
+              overlayBuilder: (context, info) => const Text('Tooltip Content'),
               waitDuration: Duration.zero,
               showDuration: const Duration(milliseconds: 50),
               child: const Text('Hover Me'),
@@ -214,7 +214,10 @@ void main() {
         await tester.simulateHover(
           targetKey,
           onHover: () {
-            tooltipWasVisible = find.text('Tooltip Content').evaluate().isNotEmpty;
+            tooltipWasVisible = find
+                .text('Tooltip Content')
+                .evaluate()
+                .isNotEmpty;
           },
         );
 
@@ -240,7 +243,7 @@ void main() {
           Center(
             child: NakedTooltip(
               key: targetKey,
-              builder: (context) => Container(
+              overlayBuilder: (context, info) => Container(
                 key: const Key('tooltip'),
                 width: 100,
                 height: 40,
@@ -276,7 +279,9 @@ void main() {
 
             // Verify tooltip is positioned (detailed positioning logic depends on implementation)
             // Just verify the tooltip is visible and positioned somewhere on screen
-            final tooltipTopLeft = tester.getTopLeft(find.byKey(const Key('tooltip')));
+            final tooltipTopLeft = tester.getTopLeft(
+              find.byKey(const Key('tooltip')),
+            );
             expect(tooltipTopLeft.dx, greaterThanOrEqualTo(0));
             expect(tooltipTopLeft.dy, greaterThanOrEqualTo(0));
           },
@@ -297,7 +302,7 @@ void main() {
           Center(
             child: NakedTooltip(
               key: targetKey,
-              builder: (context) => const Text('Tooltip Content'),
+              overlayBuilder: (context, info) => const Text('Tooltip Content'),
               waitDuration: Duration.zero,
               showDuration: Duration.zero,
               semanticsLabel: semanticLabel,

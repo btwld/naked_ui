@@ -23,7 +23,7 @@ class PopoverExample extends StatelessWidget {
         alignment: Alignment.bottomCenter,
         fallbackAlignment: Alignment.topCenter,
       ),
-      popoverBuilder: (context) {
+      popoverBuilder: (context, info) {
         return Material(
           elevation: 6,
           borderRadius: BorderRadius.circular(12),
@@ -50,14 +50,17 @@ class PopoverExample extends StatelessWidget {
           ),
         );
       },
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-        decoration: BoxDecoration(
-          color: Colors.blue.shade600,
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: const Text('Open popover', style: TextStyle(color: Colors.white)),
-      ),
+      builder: (context, state, _) {
+        final bool pressed = state.isPressed;
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          decoration: BoxDecoration(
+            color: pressed ? Colors.blue.shade700 : Colors.blue.shade600,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: const Text('Open popover', style: TextStyle(color: Colors.white)),
+        );
+      },
     );
   }
 }
@@ -92,7 +95,7 @@ class _AnimatedPopoverState extends State<AnimatedPopover>
       positioning: const OverlayPositionConfig(),
       onOpen: () => _controller.forward(),
       onClose: () => _controller.reverse(),
-      popoverBuilder: (context) {
+      popoverBuilder: (context, info) {
         return FadeTransition(
           opacity: _controller,
           child: ScaleTransition(
@@ -126,7 +129,8 @@ class _AnimatedPopoverState extends State<AnimatedPopover>
 ```dart
 const NakedPopover({
   Key? key,
-  required this.child,
+  this.child,
+  this.builder,
   required this.popoverBuilder,
   this.positioning = const OverlayPositionConfig(),
   this.consumeOutsideTaps = true,
@@ -142,8 +146,8 @@ const NakedPopover({
 
 ### Key Parameters
 
-- `child` → trigger widget (tap/keyboard handled internally)
-- `popoverBuilder` → build the overlay content
+- `child` / `builder` → provide a static trigger or a `ValueWidgetBuilder<NakedPopoverState>` for dynamic styling
+- `popoverBuilder` → `(BuildContext, RawMenuAnchorOverlayInfo)` to build the overlay content
 - `positioning` → `OverlayPositionConfig` controlling alignment/offset/fallbacks
 - `openOnTap` → disable to manage open state manually (e.g. hover triggers)
 - `consumeOutsideTaps` / `useRootOverlay` → control gesture capture and overlay target
@@ -152,7 +156,7 @@ const NakedPopover({
 
 ## Behaviour & Accessibility
 
-- Tap trigger or press Space/Enter to open
+- Tap trigger or press Space/Enter to open when `openOnTap` is true
 - Escape closes and returns focus to the trigger
 - Outside taps close automatically (configurable via `consumeOutsideTaps`)
 - Wrap complex content in `FocusTraversalGroup` or provide your own focusable widgets inside the popover for keyboard navigation

@@ -15,9 +15,9 @@ void main() {
       await tester.pumpMaterialWidget(
         NakedButton(
           onPressed: () {},
-          builder: (context, states, child) {
+          builder: (context, state, child) {
             builderCallCount++;
-            isPressed = states.contains(WidgetState.pressed);
+            isPressed = state.states.contains(WidgetState.pressed);
             return Container(
               width: 100,
               height: 50,
@@ -61,12 +61,12 @@ void main() {
                 body: Center(
                   child: NakedButton(
                     onPressed: () {},
-                    builder: (context, states, child) {
+                    builder: (context, state, child) {
                       builderBuildCount++;
                       return Container(
                         width: 100,
                         height: 50,
-                        color: states.contains(WidgetState.pressed)
+                        color: state.states.contains(WidgetState.pressed)
                             ? Colors.blue
                             : Colors.grey,
                         child: child,
@@ -112,12 +112,12 @@ void main() {
       await tester.pumpMaterialWidget(
         NakedButton(
           onPressed: () {},
-          builder: (context, states, child) {
+          builder: (context, state, child) {
             builderBuildCount++;
             return Container(
               width: 100,
               height: 50,
-              color: states.contains(WidgetState.pressed)
+              color: state.states.contains(WidgetState.pressed)
                   ? Colors.blue
                   : Colors.grey,
               child: child, // Uses cached child
@@ -152,18 +152,18 @@ void main() {
       await tester.pumpMaterialWidget(
         NakedButton(
           onPressed: () {},
-          builder: (context, states, child) {
-            lastStates = states;
+          builder: (context, state, child) {
+            lastStates = state.states;
             return Container(
               width: 100,
               height: 50,
               decoration: BoxDecoration(
-                color: states.contains(WidgetState.pressed)
+                color: state.states.contains(WidgetState.pressed)
                     ? Colors.blue
-                    : states.contains(WidgetState.hovered)
+                    : state.states.contains(WidgetState.hovered)
                     ? Colors.lightBlue
                     : Colors.grey,
-                border: states.contains(WidgetState.focused)
+                border: state.states.contains(WidgetState.focused)
                     ? Border.all(color: Colors.orange, width: 2)
                     : null,
               ),
@@ -192,8 +192,8 @@ void main() {
       await tester.pumpMaterialWidget(
         NakedButton(
           onPressed: () {},
-          builder: (context, states, child) {
-            if (states.contains(WidgetState.pressed)) {
+          builder: (context, state, child) {
+            if (state.states.contains(WidgetState.pressed)) {
               return Container(
                 width: 100,
                 height: 50,
@@ -242,12 +242,12 @@ void main() {
         NakedButton(
           onPressed: () {},
           enabled: false,
-          builder: (context, states, child) {
-            lastStates = states;
+          builder: (context, state, child) {
+            lastStates = state.states;
             return Container(
               width: 100,
               height: 50,
-              color: states.contains(WidgetState.disabled)
+              color: state.states.contains(WidgetState.disabled)
                   ? Colors.grey.shade300
                   : Colors.blue,
               child: child,

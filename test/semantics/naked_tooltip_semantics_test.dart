@@ -12,26 +12,23 @@ void main() {
     );
   }
 
-  Widget _buildMaterialTooltip({required String message, required String child}) {
-    return Tooltip(
-      message: message,
-      child: Text(child),
-    );
+  Widget _buildMaterialTooltip({
+    required String message,
+    required String child,
+  }) {
+    return Tooltip(message: message, child: Text(child));
   }
 
   Widget _buildNakedTooltip({required String message, required String child}) {
     return NakedTooltip(
       semanticsLabel: message,
-      tooltipBuilder: (context) => Container(
+      overlayBuilder: (context, info) => Container(
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
           color: Colors.grey[800],
           borderRadius: BorderRadius.circular(4),
         ),
-        child: Text(
-          message,
-          style: const TextStyle(color: Colors.white),
-        ),
+        child: Text(message, style: const TextStyle(color: Colors.white)),
       ),
       child: Text(child),
     );
@@ -43,10 +40,7 @@ void main() {
 
       await tester.pumpWidget(
         _buildTestApp(
-          _buildNakedTooltip(
-            message: 'Tooltip message',
-            child: 'Trigger text',
-          ),
+          _buildNakedTooltip(message: 'Tooltip message', child: 'Trigger text'),
         ),
       );
 
@@ -79,7 +73,7 @@ void main() {
         return _buildTestApp(
           NakedTooltip(
             semanticsLabel: 'Button tooltip',
-            tooltipBuilder: (context) => Container(
+            overlayBuilder: (context, info) => Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
                 color: Colors.grey[800],
@@ -117,10 +111,7 @@ void main() {
       // Test with simple text triggers (not buttons)
       await tester.pumpWidget(
         _buildTestApp(
-          _buildMaterialTooltip(
-            message: 'Hover tooltip',
-            child: 'Hover me',
-          ),
+          _buildMaterialTooltip(message: 'Hover tooltip', child: 'Hover me'),
         ),
       );
 
@@ -134,10 +125,7 @@ void main() {
       // Test Naked tooltip
       await tester.pumpWidget(
         _buildTestApp(
-          _buildNakedTooltip(
-            message: 'Hover tooltip',
-            child: 'Hover me',
-          ),
+          _buildNakedTooltip(message: 'Hover tooltip', child: 'Hover me'),
         ),
       );
 
@@ -181,7 +169,7 @@ void main() {
       await tester.pumpWidget(
         _buildTestApp(
           NakedTooltip(
-            tooltipBuilder: (context) => const Text('Tooltip content'),
+            overlayBuilder: (context, info) => const Text('Tooltip content'),
             child: const Text('No label'),
           ),
         ),

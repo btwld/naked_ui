@@ -160,7 +160,8 @@ class SliderThumbPainter extends CustomPainter {
 ```dart
 const NakedSlider({
   Key? key,
-  required this.child,
+  this.child,
+  this.builder,
   required this.value,
   this.min = 0.0,
   this.max = 1.0,
@@ -185,8 +186,11 @@ const NakedSlider({
 
 ## Properties
 
-#### child  → `Widget`
-The child widget to display. Typically includes a track and thumb visualization.
+#### child  → `Widget?`
+Optional static child to display. Provide either `child` or `builder`.
+
+#### builder → `ValueWidgetBuilder<NakedSliderState>?`
+Optional builder that receives the current `NakedSliderState` along with the `child`. Use this for reactive styling without a StatefulWidget.
 
 #### value → `double`
 The current value of the slider.
@@ -246,4 +250,3 @@ Whether to provide haptic feedback on drag start. Defaults to true.
 
 #### semanticLabel → `String?`
 Semantic label for screen readers.
-

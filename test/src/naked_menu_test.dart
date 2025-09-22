@@ -23,7 +23,7 @@ void main() {
       NakedMenu<String> buildBasicMenu(MenuController controller) {
         return NakedMenu<String>(
           controller: controller,
-          triggerBuilder: (context, state) => const Text('child'),
+          builder: (context, state, child) => const Text('child'),
           overlayBuilder: (context, info) => const Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -69,7 +69,7 @@ void main() {
                   ),
                   NakedMenu<String>(
                     controller: controller,
-                    triggerBuilder: (context, state) => const Text('child'),
+                    builder: (context, state, child) => const Text('child'),
                     overlayBuilder: (context, info) => const Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -106,7 +106,7 @@ void main() {
                 alignment: Alignment.bottomCenter,
                 fallbackAlignment: Alignment.topCenter,
               ),
-              triggerBuilder: (context, state) => Container(
+              builder: (context, state, child) => Container(
                 key: trigger,
                 width: 100,
                 height: 40,
@@ -165,7 +165,7 @@ void main() {
               return NakedMenu<String>(
                 onClose: () => onMenuCloseCalled = true,
                 controller: controller,
-                triggerBuilder: (context, state) => const Text('child'),
+                builder: (context, state, child) => const Text('child'),
                 overlayBuilder: (context, info) => const Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -201,7 +201,7 @@ void main() {
               controller: controller,
               onClose: () => onMenuCloseCalled = true,
               onSelected: (value) => selectedValue = value,
-              triggerBuilder: (context, state) => const Text('Menu trigger'),
+              builder: (context, state, child) => const Text('Menu trigger'),
               overlayBuilder: (context, info) => const Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -228,44 +228,48 @@ void main() {
           expect(find.text('Item 1'), findsNothing); // Menu should be closed
         },
       );
-      testWidgets('keeps menu open when closeOnActivate is false on menu item', (
-        WidgetTester tester,
-      ) async {
-        bool onMenuCloseCalled = false;
-        const menuKey = Key('menu');
-        const item1Key = Key('item1');
-        final controller = MenuController();
+      testWidgets(
+        'keeps menu open when closeOnActivate is false on menu item',
+        (WidgetTester tester) async {
+          bool onMenuCloseCalled = false;
+          const menuKey = Key('menu');
+          const item1Key = Key('item1');
+          final controller = MenuController();
 
-        await tester.pumpMaterialWidget(
-          NakedMenu(
-            controller: controller,
-            onClose: () => onMenuCloseCalled = true,
-            overlayBuilder: (context, info) => Container(
-              key: menuKey,
-              constraints: const BoxConstraints(maxWidth: 100, maxHeight: 100),
-              child: const NakedMenuItem<String>(
-                key: item1Key,
-                value: 'item1',
-                closeOnActivate: false,
-                child: Text('Item 1'),
+          await tester.pumpMaterialWidget(
+            NakedMenu(
+              controller: controller,
+              onClose: () => onMenuCloseCalled = true,
+              overlayBuilder: (context, info) => Container(
+                key: menuKey,
+                constraints: const BoxConstraints(
+                  maxWidth: 100,
+                  maxHeight: 100,
+                ),
+                child: const NakedMenuItem<String>(
+                  key: item1Key,
+                  value: 'item1',
+                  closeOnActivate: false,
+                  child: Text('Item 1'),
+                ),
               ),
+              builder: (context, state, child) => const Text('child'),
             ),
-            triggerBuilder: (context, state) => const Text('child'),
-          ),
-        );
+          );
 
-        controller.open();
+          controller.open();
 
-        await tester.pump();
-        expect(find.byKey(menuKey), findsOneWidget);
+          await tester.pump();
+          expect(find.byKey(menuKey), findsOneWidget);
 
-        await tester.tap(find.text('Item 1'));
-        await tester.pumpAndSettle();
+          await tester.tap(find.text('Item 1'));
+          await tester.pumpAndSettle();
 
-        // Menu should still be open since closeOnActivate is false
-        expect(onMenuCloseCalled, false);
-        expect(find.byKey(menuKey), findsOneWidget);
-      });
+          // Menu should still be open since closeOnActivate is false
+          expect(onMenuCloseCalled, false);
+          expect(find.byKey(menuKey), findsOneWidget);
+        },
+      );
     });
     group('Keyboard Interaction', () {
       testWidgets('Traps focus within menu when opens', (
@@ -279,17 +283,11 @@ void main() {
               controller: controller,
               overlayBuilder: (context, info) => const Column(
                 children: [
-                  NakedMenuItem<String>(
-                    value: 'item1',
-                    child: Text('Item 1'),
-                  ),
-                  NakedMenuItem<String>(
-                    value: 'item2',
-                    child: Text('Item 2'),
-                  ),
+                  NakedMenuItem<String>(value: 'item1', child: Text('Item 1')),
+                  NakedMenuItem<String>(value: 'item2', child: Text('Item 2')),
                 ],
               ),
-              triggerBuilder: (context, state) => const Text('child'),
+              builder: (context, state, child) => const Text('child'),
             ),
           ),
         );
@@ -353,7 +351,7 @@ void main() {
                         height: 50,
                         child: Center(child: Text('Menu Content')),
                       ),
-                      triggerBuilder: (context, state) => const Text('child'),
+                      builder: (context, state, child) => const Text('child'),
                     ),
                   ),
                 ],

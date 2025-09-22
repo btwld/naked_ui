@@ -181,7 +181,7 @@ class _CyberpunkSelectExampleState extends State<CyberpunkSelectExample> {
       child: NakedSelect<String>(
         value: _selectedValue,
         onChanged: (value) => setState(() => _selectedValue = value),
-        triggerBuilder: (context, state) {
+        builder: (context, state, _) {
           final focused = state.isFocused;
           final hovered = state.isHovered;
 

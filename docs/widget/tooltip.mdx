@@ -4,7 +4,7 @@ description: Hover/focus triggered tooltip overlay with positioning and lifecycl
 keywords: [flutter, tooltip, hover, overlay, headless]
 ---
 
-`NakedTooltip` wires up a popover that appears on hover/focus and hides after a delay. Provide the trigger child and a builder for the tooltip content; the widget manages timers, positioning, and focus dismissal.
+`NakedTooltip` wires up a popover that appears on hover/focus and hides after a delay. Provide the trigger child (and optional trigger builder) plus an overlay builder for the tooltip content; the widget manages timers, positioning, and focus dismissal.
 
 <Info>
   Working example: [`example/lib/api/naked_tooltip.0.dart`](https://github.com/btwld/naked_ui/blob/main/example/lib/api/naked_tooltip.0.dart).
@@ -44,7 +44,15 @@ class _TooltipExampleState extends State<TooltipExample>
       showDuration: const Duration(seconds: 2),
       onOpen: () => _controller.forward(),
       onClose: () => _controller.reverse(),
-      builder: (context) {
+      child: Container(
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: Colors.grey.shade900,
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: const Icon(Icons.copy, color: Colors.white, size: 18),
+      ),
+      overlayBuilder: (context, info) {
         return FadeTransition(
           opacity: _controller,
           child: Material(
@@ -57,14 +65,6 @@ class _TooltipExampleState extends State<TooltipExample>
           ),
         );
       },
-      child: Container(
-        padding: const EdgeInsets.all(10),
-        decoration: BoxDecoration(
-          color: Colors.grey.shade900,
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: const Icon(Icons.copy, color: Colors.white, size: 18),
-      ),
       semanticsLabel: 'Copy button tooltip',
     );
   }
@@ -76,8 +76,9 @@ class _TooltipExampleState extends State<TooltipExample>
 ```dart
 const NakedTooltip({
   Key? key,
-  required this.child,
-  required this.builder,
+  this.child,
+  this.builder,
+  required this.overlayBuilder,
   this.showDuration = const Duration(seconds: 2),
   this.waitDuration = const Duration(seconds: 1),
   this.positioning = const OverlayPositionConfig(
@@ -94,8 +95,8 @@ const NakedTooltip({
 
 ### Key Parameters
 
-- `child` → trigger widget
-- `builder` → create the tooltip contents each time it shows
+- `child` / `builder` → trigger content or a `ValueWidgetBuilder<NakedTooltipState>` for dynamic styling
+- `overlayBuilder` → `(BuildContext, RawMenuAnchorOverlayInfo)` that returns the tooltip body each time it shows
 - `showDuration` → how long the tooltip stays visible before hiding automatically
 - `waitDuration` → delay before showing once hover/focus occurs
 - `positioning` → `OverlayPositionConfig` controlling anchor & offset
@@ -122,4 +123,4 @@ const OverlayPositionConfig(
 );
 ```
 
-The builder can read `RawMenuAnchorOverlayInfo` from the optional `info` argument (see the example) when you need pointer coordinates for arrow placement.
+The overlay builder receives `RawMenuAnchorOverlayInfo` (`info` in the sample) with `anchorRect`, `overlaySize`, and `position` should you need pointer coordinates for arrow placement.

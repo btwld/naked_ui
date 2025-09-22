@@ -116,7 +116,7 @@ class _SimpleSelectExampleState extends State<SimpleSelectExample> {
       child: NakedSelect<String>(
         value: _selectedValue,
         onChanged: (value) => setState(() => _selectedValue = value),
-        triggerBuilder: (context, state) {
+        builder: (context, state, _) {
           final focused = state.isFocused;
 
           return Container(

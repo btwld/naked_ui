@@ -126,7 +126,7 @@ const NakedCheckbox({
 - `value` → current checked value (`bool?` when `tristate`)
 - `tristate` → enable false → true → null cycling
 - `onChanged` → receive the next value; omit to render a disabled checkbox
-- `builder` → `NakedStateBuilder<NakedCheckboxState>` for dynamic visuals
+- `builder` → `ValueWidgetBuilder<NakedCheckboxState>?` for dynamic visuals
 - `child` → static child when you do not need the builder
 - Interaction callbacks: `onFocusChange`, `onHoverChange`, `onPressChange`
 - `semanticLabel` → accessible name announced by screen readers

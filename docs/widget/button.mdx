@@ -298,8 +298,8 @@ Optional focus node to control focus behavior.
 #### autofocus → `bool`
 Whether to automatically focus this button when first built. Defaults to false.
 
-#### builder → `NakedStateBuilder<NakedButtonState>?`
-Optional builder that receives the current [NakedButtonState] to drive visuals. Use this instead of callbacks for stateless widgets.
+#### builder → `ValueWidgetBuilder<NakedButtonState>?`
+Optional builder that receives the current [NakedButtonState] (and optional `child`) to drive visuals. Use this instead of callbacks for stateless widgets.
 
 #### focusOnPress → `bool`
 Whether to request focus when the button is pressed. Defaults to false.

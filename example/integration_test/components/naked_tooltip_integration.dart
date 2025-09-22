@@ -53,7 +53,7 @@ void main() {
               onOpen: () {
                 tooltipOpened = true;
               },
-              tooltipBuilder: (context) => Container(
+              overlayBuilder: (context, info) => Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
                   color: Colors.black,
@@ -111,7 +111,7 @@ void main() {
               showDuration: Duration.zero,
               onOpen: () => tooltipOpened = true,
               onClose: () => tooltipClosed = true,
-              tooltipBuilder: (context) => Container(
+              overlayBuilder: (context, info) => Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
                   color: Colors.black,
@@ -174,7 +174,7 @@ void main() {
               ),
               waitDuration: Duration.zero,
               showDuration: Duration.zero,
-              tooltipBuilder: (context) => Container(
+              overlayBuilder: (context, info) => Container(
                 width: 100,
                 height: 50,
                 padding: const EdgeInsets.all(8),
@@ -222,7 +222,8 @@ void main() {
       final tooltipRect = tester.getRect(find.text('Positioned Tooltip'));
 
       // Be more flexible with positioning - just check that tooltip is visible and positioned reasonably
-      expect(tooltipRect.top, greaterThan(triggerRect.top - 50)); // Allow some overlap tolerance
+      expect(tooltipRect.top,
+          greaterThan(triggerRect.top - 50)); // Allow some overlap tolerance
     });
   });
 }

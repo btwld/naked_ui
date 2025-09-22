@@ -70,7 +70,7 @@ void main() {
               children: [
                 NakedAccordion<String>(
                   value: 'item1',
-                  triggerBuilder: (context, itemState) => GestureDetector(
+                  builder: (context, itemState) => GestureDetector(
                     onTap: () => controller.toggle('item1'),
                     child: Container(
                       padding: const EdgeInsets.all(12),
@@ -90,7 +90,7 @@ void main() {
                 ),
                 NakedAccordion<String>(
                   value: 'item2',
-                  triggerBuilder: (context, itemState) => GestureDetector(
+                  builder: (context, itemState) => GestureDetector(
                     onTap: () => controller.toggle('item2'),
                     child: Container(
                       padding: const EdgeInsets.all(12),
@@ -150,7 +150,7 @@ void main() {
               children: [
                 NakedAccordion<String>(
                   value: 'item1',
-                  triggerBuilder: (context, itemState) => GestureDetector(
+                  builder: (context, itemState) => GestureDetector(
                     onTap: () => controller.toggle('item1'),
                     child: Container(
                       padding: const EdgeInsets.all(12),
@@ -161,7 +161,7 @@ void main() {
                 ),
                 NakedAccordion<String>(
                   value: 'item2',
-                  triggerBuilder: (context, itemState) => GestureDetector(
+                  builder: (context, itemState) => GestureDetector(
                     onTap: () => controller.toggle('item2'),
                     child: Container(
                       padding: const EdgeInsets.all(12),
@@ -214,7 +214,7 @@ void main() {
                   onHoverChange: (hovered) => isHovered = hovered,
                   onPressChange: (pressed) => isPressed = pressed,
                   onFocusChange: (focused) {},
-                  triggerBuilder: (context, itemState) => Container(
+                  builder: (context, itemState) => Container(
                     padding: const EdgeInsets.all(12),
                     child: const Text('Test Item'),
                   ),
@@ -251,7 +251,7 @@ void main() {
                 NakedAccordion<String>(
                   key: itemKey,
                   value: 'keyboard',
-                  triggerBuilder: (context, itemState) => Container(
+                  builder: (context, itemState) => Container(
                     padding: const EdgeInsets.all(12),
                     child: const Text('Keyboard Item'),
                   ),
@@ -291,7 +291,7 @@ void main() {
                   value: 'disabled',
                   enabled: false,
                   onHoverChange: (hovered) => hoverChanged = true,
-                  triggerBuilder: (context, itemState) => Container(
+                  builder: (context, itemState) => Container(
                     padding: const EdgeInsets.all(12),
                     child: const Text('Disabled Item'),
                   ),

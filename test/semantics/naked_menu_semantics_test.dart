@@ -17,7 +17,7 @@ void main() {
     final controller = MenuController();
     return NakedMenu<String>(
       controller: controller,
-      triggerBuilder: (context, state) => const Text('Show Menu'),
+      builder: (context, state, child) => const Text('Show Menu'),
       overlayBuilder: (context, info) => Container(
         width: 200,
         padding: const EdgeInsets.all(8),
@@ -120,7 +120,7 @@ void main() {
         _buildTestApp(
           NakedMenu<String>(
             controller: controller,
-            triggerBuilder: (context, state) => const Text('Open'),
+            builder: (context, state, child) => const Text('Open'),
             overlayBuilder: (context, info) => const Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -162,7 +162,7 @@ void main() {
             onSelected: (v) {
               if (v == 'selectable') itemPressed = true;
             },
-            triggerBuilder: (context, state) => const Text('Open'),
+            builder: (context, state, child) => const Text('Open'),
             overlayBuilder: (context, info) => const Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -199,7 +199,7 @@ void main() {
           NakedMenu<String>(
             controller: controller,
             triggerFocusNode: focusNode,
-            triggerBuilder: (context, state) => const Text('Focusable Menu'),
+            builder: (context, state, child) => const Text('Focusable Menu'),
             overlayBuilder: (context, info) => const Column(
               mainAxisSize: MainAxisSize.min,
               children: [NakedMenuItem(value: 'v', child: Text('Item'))],
@@ -227,7 +227,7 @@ void main() {
         _buildTestApp(
           NakedMenu<String>(
             controller: controller,
-            triggerBuilder: (context, state) => const Text('Menu trigger'),
+            builder: (context, state, child) => const Text('Menu trigger'),
             overlayBuilder: (context, info) => const Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -293,7 +293,7 @@ void main() {
         _buildTestApp(
           NakedMenu<String>(
             controller: controller,
-            triggerBuilder: (context, state) => const Text('Labeled Menu'),
+            builder: (context, state, child) => const Text('Labeled Menu'),
             overlayBuilder: (context, info) => const Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -325,7 +325,7 @@ void main() {
         _buildTestApp(
           NakedMenu<String>(
             controller: controller,
-            triggerBuilder: (context, state) => const Text('File'),
+            builder: (context, state, child) => const Text('File'),
             overlayBuilder: (context, info) => Container(
               width: 150,
               padding: const EdgeInsets.all(4),

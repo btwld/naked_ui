@@ -13,10 +13,9 @@ void main() {
     );
   }
 
-
   Widget _buildNakedPopover() {
     return NakedPopover(
-      popoverBuilder: (context) => Container(
+      popoverBuilder: (context, info) => Container(
         width: 200,
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
@@ -51,7 +50,10 @@ void main() {
       await tester.pumpWidget(_buildTestApp(_buildNakedPopover()));
 
       // Verify trigger element has button-like semantics
-      final summary = summarizeMergedFromRoot(tester, control: ControlType.button);
+      final summary = summarizeMergedFromRoot(
+        tester,
+        control: ControlType.button,
+      );
       expect(summary.actions.contains('tap'), isTrue);
       expect(summary.flags.contains('isFocusable'), isTrue);
 
@@ -91,7 +93,10 @@ void main() {
       await tester.pumpWidget(_buildTestApp(_buildNakedPopover()));
 
       // Verify trigger is focusable (basic semantics test)
-      final summary = summarizeMergedFromRoot(tester, control: ControlType.button);
+      final summary = summarizeMergedFromRoot(
+        tester,
+        control: ControlType.button,
+      );
       expect(summary.flags.contains('isFocusable'), isTrue);
 
       handle.dispose();
@@ -126,7 +131,7 @@ void main() {
       await tester.pumpWidget(
         _buildTestApp(
           NakedPopover(
-            popoverBuilder: (context) => Container(
+            popoverBuilder: (context, info) => Container(
               width: 200,
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
@@ -188,7 +193,7 @@ void main() {
         _buildTestApp(
           NakedPopover(
             openOnTap: false, // Disable tap interaction
-            popoverBuilder: (context) => const Text('Disabled Popover'),
+            popoverBuilder: (context, info) => const Text('Disabled Popover'),
             child: const Text('Disabled Trigger'),
           ),
         ),
@@ -213,7 +218,7 @@ void main() {
             positioning: const OverlayPositionConfig(
               alignment: Alignment.bottomLeft,
             ),
-            popoverBuilder: (context) => Container(
+            popoverBuilder: (context, info) => Container(
               width: 150,
               height: 100,
               color: Colors.blue,
@@ -242,7 +247,7 @@ void main() {
           Column(
             children: [
               NakedPopover(
-                popoverBuilder: (context) => Container(
+                popoverBuilder: (context, info) => Container(
                   width: 150,
                   padding: const EdgeInsets.all(8),
                   color: Colors.red,
@@ -252,7 +257,7 @@ void main() {
               ),
               const SizedBox(height: 50),
               NakedPopover(
-                popoverBuilder: (context) => Container(
+                popoverBuilder: (context, info) => Container(
                   width: 150,
                   padding: const EdgeInsets.all(8),
                   color: Colors.blue,

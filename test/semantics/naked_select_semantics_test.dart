@@ -19,7 +19,7 @@ void main() {
       value: selectedValue,
       onChanged: enabled ? (value) {} : null,
       enabled: enabled,
-      triggerBuilder: (context, state) => const Text('Select Option'),
+      builder: (context, state, child) => const Text('Select Option'),
       overlayBuilder: (context, info) => Container(
         width: 200,
         padding: const EdgeInsets.all(8),
@@ -139,7 +139,7 @@ void main() {
         _buildTestApp(
           NakedSelect<String>(
             triggerFocusNode: focusNode,
-            triggerBuilder: (context, state) => const Text('Select option'),
+            builder: (context, state, child) => const Text('Select option'),
             overlayBuilder: (context, info) => const Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -194,7 +194,7 @@ void main() {
             value: 'option1',
             onChanged: (value) {},
             triggerFocusNode: focusNode,
-            triggerBuilder: (context, state) => const Text('Focusable Select'),
+            builder: (context, state, child) => const Text('Focusable Select'),
             overlayBuilder: (context, info) => Container(
               width: 200,
               padding: const EdgeInsets.all(8),
@@ -253,7 +253,7 @@ void main() {
             value: 'option1',
             onChanged: (value) {},
             semanticLabel: 'Choose an option',
-            triggerBuilder: (context, state) => const Text('Labeled Select'),
+            builder: (context, state, child) => const Text('Labeled Select'),
             overlayBuilder: (context, info) => Container(
               width: 200,
               padding: const EdgeInsets.all(8),

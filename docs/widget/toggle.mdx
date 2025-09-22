@@ -163,7 +163,7 @@ const NakedToggle({
 
 - `value` → `bool`: the current on/off state (required)
 - `onChanged` → `ValueChanged<bool>?`: called with the next value; omit to render a disabled toggle
-- `builder` → `NakedStateBuilder<NakedToggleState>?`: tailor visuals from the typed state snapshot
+- `builder` → `ValueWidgetBuilder<NakedToggleState>?`: tailor visuals from the typed state snapshot
 - `child` → `Widget?`: static child when you do not need dynamic styling
 - `asSwitch` → `bool`: `false` (button semantics) or `true` (switch semantics)
 - `enabled` → disable interaction entirely when false (visuals are still rendered)
@@ -260,7 +260,7 @@ const NakedToggleOption({
   Key? key,
   required T value,
   Widget? child,
-  NakedStateBuilder<NakedToggleOptionState<T>>? builder,
+  ValueWidgetBuilder<NakedToggleOptionState<T>>? builder,
   bool enabled = true,
   MouseCursor? mouseCursor,
   bool enableFeedback = true,

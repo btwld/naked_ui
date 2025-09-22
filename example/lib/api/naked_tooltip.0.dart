@@ -53,7 +53,7 @@ class _TooltipExampleState extends State<TooltipExample>
       showDuration: const Duration(seconds: 0),
       onOpen: () => _animationController.forward(),
       onClose: () => _animationController.reverse(),
-      tooltipBuilder: (context) => SlideTransition(
+      overlayBuilder: (context, info) => SlideTransition(
         position: _animationController.drive(Tween<Offset>(
           begin: const Offset(0, 0.1),
           end: const Offset(0, 0),

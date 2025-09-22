@@ -24,7 +24,7 @@ class BasicPopoverExample extends StatelessWidget {
                 alignment: Alignment.bottomCenter,
                 fallbackAlignment: Alignment.topCenter,
               ),
-              popoverBuilder: (context) => Container(
+              popoverBuilder: (context, info) => Container(
                 constraints: const BoxConstraints(maxWidth: 280),
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(

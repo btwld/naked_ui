@@ -133,7 +133,7 @@ RadioGroup<String>(
 NakedSelect<String>(
   value: fruit,
   onChanged: (value) => setState(() => fruit = value),
-  triggerBuilder: (context, selectState) {
+  builder: (context, selectState, _) {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -268,17 +268,30 @@ NakedAccordionGroup<int>(
   controller: controller,
   initialExpandedValues: const [0],
   children: [
-    NakedAccordionGroup<int>(
+    NakedAccordion<int>(
       value: 0,
-      triggerBuilder: (context, itemState, _) => ListTile(
+      builder: (context, itemState) => ListTile(
         title: const Text('Section 1'),
-        trailing: Icon(itemState.isExpanded
-            ? Icons.expand_less
-            : Icons.expand_more),
+        trailing: Icon(
+          itemState.isExpanded ? Icons.expand_less : Icons.expand_more,
+        ),
       ),
       child: const Padding(
         padding: EdgeInsets.all(16),
         child: Text('Content for section 1'),
+      ),
+    ),
+    NakedAccordion<int>(
+      value: 1,
+      builder: (context, itemState) => ListTile(
+        title: const Text('Section 2'),
+        trailing: Icon(
+          itemState.isExpanded ? Icons.expand_less : Icons.expand_more,
+        ),
+      ),
+      child: const Padding(
+        padding: EdgeInsets.all(16),
+        child: Text('Content for section 2'),
       ),
     ),
   ],
@@ -292,9 +305,9 @@ final menuController = MenuController();
 
 NakedMenu<String>(
   controller: menuController,
-  selectedValue: action,
   onSelected: (value) => setState(() => action = value),
-  triggerBuilder: (context, menuState) => Text(menuState.isOpen ? 'Close' : 'Open'),
+  builder: (context, menuState, _) =>
+      Text(menuState.isOpen ? 'Close' : 'Open'),
   overlayBuilder: (context, info) => Column(
     mainAxisSize: MainAxisSize.min,
     children: [
@@ -337,7 +350,7 @@ final result = await showNakedDialog<String>(
 ```dart
 NakedTooltip(
   semanticsLabel: 'Copy to clipboard',
-  tooltipBuilder: (context) => Container(
+  overlayBuilder: (context, info) => Container(
     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
     decoration: BoxDecoration(
       color: Colors.black,
@@ -353,7 +366,7 @@ NakedTooltip(
 
 ```dart
 NakedPopover(
-  popoverBuilder: (context) => Card(
+  popoverBuilder: (context, info) => Card(
     child: Padding(
       padding: const EdgeInsets.all(12),
       child: const Text('Popover content'),

@@ -87,7 +87,7 @@ class _AccordionItemState extends State<AccordionItem> {
       child: NakedAccordion<String>(
         value: widget.value,
         onHoverChange: (hovered) => setState(() => _isHovering = hovered),
-        triggerBuilder: (context, accordionState) {
+        builder: (context, accordionState) {
           final isExpanded = accordionState.isExpanded;
 
           return AnimatedContainer(

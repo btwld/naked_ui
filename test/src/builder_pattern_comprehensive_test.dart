@@ -23,12 +23,12 @@ void main() {
         await tester.pumpMaterialWidget(
           NakedButton(
             onPressed: () {},
-            builder: (context, states, child) {
-              receivedStates = states;
+            builder: (context, state, child) {
+              receivedStates = state.states;
               return Container(
                 width: 100,
                 height: 50,
-                color: states.contains(WidgetState.pressed)
+                color: state.states.contains(WidgetState.pressed)
                     ? Colors.red
                     : Colors.blue,
                 child: child,
@@ -55,7 +55,7 @@ void main() {
         await tester.pumpMaterialWidget(
           NakedButton(
             onPressed: () {},
-            builder: (context, states, child) {
+            builder: (context, state, child) {
               receivedChild = child;
               return Container(child: child);
             },
@@ -75,8 +75,8 @@ void main() {
           NakedButton(
             key: key,
             onPressed: () {},
-            builder: (context, states, child) {
-              if (states.contains(WidgetState.hovered)) {
+            builder: (context, state, child) {
+              if (state.states.contains(WidgetState.hovered)) {
                 return const Text('HOVERED');
               }
               return const Text('NORMAL');
@@ -114,10 +114,10 @@ void main() {
           NakedButton(
             key: key,
             onPressed: () {},
-            builder: (context, states, child) {
+            builder: (context, state, child) {
               builderCallCount++;
               return Container(
-                color: states.contains(WidgetState.hovered)
+                color: state.states.contains(WidgetState.hovered)
                     ? Colors.red
                     : Colors.blue,
                 child: child,
@@ -154,10 +154,10 @@ void main() {
           NakedButton(
             key: key,
             onPressed: () {},
-            builder: (context, states, child) {
+            builder: (context, state, child) {
               builderBuildCount++;
               return Container(
-                color: states.contains(WidgetState.hovered)
+                color: state.states.contains(WidgetState.hovered)
                     ? Colors.red
                     : Colors.blue,
                 child: child, // Reuses the child
@@ -271,7 +271,7 @@ void main() {
         await tester.pumpMaterialWidget(
           NakedButton(
             onPressed: () {},
-            builder: (context, states, child) {
+            builder: (context, state, child) {
               receivedChild = child;
               return Container(
                 width: 100,
@@ -294,7 +294,7 @@ void main() {
         await tester.pumpMaterialWidget(
           NakedButton(
             onPressed: () {},
-            builder: (context, states, child) {
+            builder: (context, state, child) {
               // Ignore the child completely
               return const Text('Custom Content');
             },
@@ -320,14 +320,14 @@ void main() {
             onPressed: () {},
             enabled: true,
             autofocus: true,
-            builder: (context, states, child) {
-              lastStates = states;
+            builder: (context, state, child) {
+              lastStates = state.states;
               return Container(
                 width: 100,
                 height: 50,
                 decoration: BoxDecoration(
-                  color: _getColorForStates(states),
-                  border: states.contains(WidgetState.focused)
+                  color: _getColorForStates(state.states),
+                  border: state.states.contains(WidgetState.focused)
                       ? Border.all(color: Colors.orange, width: 2)
                       : null,
                 ),
@@ -363,8 +363,8 @@ void main() {
           NakedButton(
             onPressed: () {},
             enabled: true,
-            builder: (context, states, child) {
-              enabledStates = states;
+            builder: (context, state, child) {
+              enabledStates = state.states;
               return Container(child: child);
             },
             child: const Text('Enabled'),
@@ -380,8 +380,8 @@ void main() {
               body: NakedButton(
                 onPressed: () {},
                 enabled: false,
-                builder: (context, states, child) {
-                  disabledStates = states;
+                builder: (context, state, child) {
+                  disabledStates = state.states;
                   return Container(child: child);
                 },
                 child: const Text('Disabled'),
@@ -399,7 +399,7 @@ void main() {
 /// Helper function to test builder pattern consistency across components
 Future<void> _testComponentBuilder(
   WidgetTester tester,
-  Widget Function(ValueWidgetBuilder<Set<WidgetState>>, Widget?)
+  Widget Function(ValueWidgetBuilder<NakedButtonState>, Widget?)
   componentBuilder,
 ) async {
   Set<WidgetState>? receivedStates;
@@ -408,11 +408,13 @@ Future<void> _testComponentBuilder(
   const testChild = Text('Test Child');
 
   await tester.pumpMaterialWidget(
-    componentBuilder((context, states, child) {
-      receivedStates = states;
+    componentBuilder((context, state, child) {
+      receivedStates = state.states;
       receivedChild = child;
       return Container(
-        color: states.contains(WidgetState.pressed) ? Colors.red : Colors.blue,
+        color: state.states.contains(WidgetState.pressed)
+            ? Colors.red
+            : Colors.blue,
         child: child,
       );
     }, testChild),

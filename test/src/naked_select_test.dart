@@ -24,7 +24,7 @@ void main() {
         enabled: enabled,
         closeOnSelect: closeOnSelect,
         onClose: onMenuClose,
-        triggerBuilder: (context, state) => const Text('Select option'),
+        builder: (context, state, child) => const Text('Select option'),
         overlayBuilder: (context, info) => Container(
           key: kMenuKey,
           child: Column(
@@ -158,7 +158,7 @@ void main() {
           Center(
             child: NakedSelect<String>(
               triggerFocusNode: triggerFocusNode,
-              triggerBuilder: (context, state) => const Text('Select option'),
+              builder: (context, state, child) => const Text('Select option'),
               overlayBuilder: (context, info) => const Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -195,7 +195,7 @@ void main() {
         Center(
           child: NakedSelect<String>(
             onChanged: (value) => selectedValue = value,
-            triggerBuilder: (context, state) => const Text('Select option'),
+            builder: (context, state, child) => const Text('Select option'),
             overlayBuilder: (context, info) => const Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -235,7 +235,7 @@ void main() {
       await tester.pumpMaterialWidget(
         Center(
           child: NakedSelect<String>(
-            triggerBuilder: (context, state) {
+            builder: (context, state, child) {
               return Container(
                 key: const Key('trigger'),
                 color: state.states.contains(WidgetState.hovered)
@@ -274,7 +274,7 @@ void main() {
       await tester.pumpMaterialWidget(
         Center(
           child: NakedSelect<String>(
-            triggerBuilder: (context, state) {
+            builder: (context, state, child) {
               return Container(
                 key: const Key('trigger'),
                 color: state.states.contains(WidgetState.pressed)
@@ -317,7 +317,7 @@ void main() {
         Center(
           child: NakedSelect<String>(
             triggerFocusNode: focusNode,
-            triggerBuilder: (context, state) {
+            builder: (context, state, child) {
               return Container(
                 key: const Key('trigger'),
                 decoration: BoxDecoration(
@@ -357,7 +357,7 @@ void main() {
       await tester.pumpMaterialWidget(
         Center(
           child: NakedSelect<String>(
-            triggerBuilder: (context, state) => const Text('Select option'),
+            builder: (context, state, child) => const Text('Select option'),
             overlayBuilder: (context, info) => Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -427,7 +427,7 @@ void main() {
                   alignment: Alignment.bottomLeft,
                   fallbackAlignment: Alignment.topLeft,
                 ),
-                triggerBuilder: (context, state) => const Text('Select option'),
+                builder: (context, state, child) => const Text('Select option'),
                 overlayBuilder: (context, info) => Container(
                   key: kMenuKey,
                   width: 120,
@@ -541,7 +541,7 @@ void main() {
             // Simulate removalDelay by delaying the actual close
             Future.delayed(const Duration(milliseconds: 200), hideOverlay);
           },
-          triggerBuilder: (context, state) => const Text('Select option'),
+          builder: (context, state, child) => const Text('Select option'),
           overlayBuilder: (context, info) => const Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -580,7 +580,7 @@ void main() {
         Center(
           child: NakedSelect<String>(
             enabled: false,
-            triggerBuilder: (context, state) => const Text('Select option'),
+            builder: (context, state, child) => const Text('Select option'),
             overlayBuilder: (context, info) => const Column(
               mainAxisSize: MainAxisSize.min,
               children: [

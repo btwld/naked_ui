@@ -46,7 +46,7 @@ extension KeyboardTestHelpers on WidgetTester {
     } catch (e) {
       // If keyboard events fail in integration test environment, just continue
       // This is a known issue with keyboard simulation in Flutter integration tests
-      print('Keyboard activation test skipped due to: $e');
+      debugPrint('Keyboard activation test skipped due to: $e');
     }
   }
 }

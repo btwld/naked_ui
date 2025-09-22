@@ -67,7 +67,7 @@ void main() {
           body: Center(
             child: NakedPopover(
               key: popoverKey,
-              popoverBuilder: (context) => const Text('Popover Content'),
+              popoverBuilder: (context, info) => const Text('Popover Content'),
               child: NakedButton(
                 onPressed: () {},
                 child: const Text('Trigger'),

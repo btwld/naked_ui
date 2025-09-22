@@ -59,7 +59,7 @@ class _SimpleMenuExampleState extends State<SimpleMenuExample> {
           SnackBar(content: Text('Selected: $item')),
         );
       },
-      triggerBuilder: (context, state) {
+      builder: (context, state, _) {
         final isPressed = state.isPressed;
         return Container(
           padding: const EdgeInsets.all(12),
