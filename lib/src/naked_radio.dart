@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'mixins/naked_mixins.dart';
 import 'utilities/hit_testable_container.dart';
+import 'utilities/naked_state_scope.dart';
 import 'utilities/state.dart';
 
 /// Immutable view passed to [NakedRadio.builder].
@@ -103,7 +104,7 @@ class NakedRadio<T> extends StatefulWidget {
   final ValueChanged<bool>? onPressChange;
 
   /// Builds the radio using the current [NakedRadioState].
-  final NakedStateBuilder<NakedRadioState<T>>? builder;
+  final ValueWidgetBuilder<NakedRadioState<T>>? builder;
 
   /// The registry override for advanced usage and testing.
   ///
@@ -193,15 +194,34 @@ class _NakedRadioState<T> extends State<NakedRadio<T>>
             value: widget.value,
           );
 
-          final built = widget.builder!(context, radioStateTyped, widget.child);
+          final content = widget.builder!(
+            context,
+            radioStateTyped,
+            widget.child,
+          );
 
           // Ensure the area is hit-testable so RawRadio's GestureDetector
           // can receive taps even if the built widget has no gesture handlers.
-          return HitTestableContainer(child: built);
+          return HitTestableContainer(
+            child: NakedStateScope(value: radioStateTyped, child: content),
+          );
         }
 
         // Ensure the child area is hit-testable for taps.
-        return HitTestableContainer(child: widget.child!);
+        // Even without builder, provide state to descendants
+        final isSelected = registry.groupValue == widget.value;
+        final statesWithSelection = {
+          ...states,
+          if (isSelected) WidgetState.selected,
+        };
+        final radioStateTyped = NakedRadioState<T>(
+          states: statesWithSelection,
+          value: widget.value,
+        );
+
+        return HitTestableContainer(
+          child: NakedStateScope(value: radioStateTyped, child: widget.child!),
+        );
       },
     );
   }

@@ -5,6 +5,7 @@ import 'package:flutter/widgets.dart';
 import 'mixins/naked_mixins.dart';
 import 'utilities/intents.dart';
 import 'utilities/naked_focusable_detector.dart';
+import 'utilities/naked_state_scope.dart';
 import 'utilities/state.dart';
 
 /// Immutable view passed to [NakedCheckbox.builder].
@@ -138,7 +139,7 @@ class NakedCheckbox extends StatefulWidget {
   final bool autofocus;
 
   /// Builds the checkbox using the current [NakedCheckboxState].
-  final NakedStateBuilder<NakedCheckboxState>? builder;
+  final ValueWidgetBuilder<NakedCheckboxState>? builder;
 
   /// Semantic label for accessibility.
   final String? semanticLabel;
@@ -188,9 +189,11 @@ class _NakedCheckboxState extends State<NakedCheckbox>
       tristate: widget.tristate,
     );
 
-    return widget.builder != null
+    final content = widget.builder != null
         ? widget.builder!(context, checkboxState, widget.child)
         : widget.child!;
+
+    return NakedStateScope(value: checkboxState, child: content);
   }
 
   MouseCursor get _effectiveCursor => widget._effectiveEnabled

@@ -308,7 +308,7 @@ class NakedAccordionScope<T> extends InheritedWidget {
 ///   children: [
 ///     NakedAccordion(
 ///       value: 'section1',
-///       triggerBuilder: (context, state) => Text('Section 1'),
+///       builder: (context, state) => Text('Section 1'),
 ///       child: Text('Content 1'),
 ///     ),
 ///   ],
@@ -397,7 +397,7 @@ typedef NakedAccordionTriggerBuilder<T> =
 
 /// A headless accordion item with a customizable trigger and panel.
 ///
-/// The [triggerBuilder] receives a [NakedAccordionItemState] that includes
+/// The [builder] receives a [NakedAccordionItemState] that includes
 /// expansion status, constraint affordances, and interaction states.
 ///
 /// See also:
@@ -405,7 +405,7 @@ typedef NakedAccordionTriggerBuilder<T> =
 class NakedAccordion<T> extends StatefulWidget {
   const NakedAccordion({
     super.key,
-    required this.triggerBuilder,
+    required this.builder,
     required this.value,
     required this.child,
     this.transitionBuilder,
@@ -421,7 +421,7 @@ class NakedAccordion<T> extends StatefulWidget {
   });
 
   /// Builds the header or trigger for the item.
-  final NakedAccordionTriggerBuilder<T> triggerBuilder;
+  final NakedAccordionTriggerBuilder<T> builder;
 
   /// Optional transition builder applied to the expanding panel.
   final Widget Function(Widget panel)? transitionBuilder;
@@ -554,7 +554,7 @@ class _NakedAccordionState<T> extends State<NakedAccordion<T>>
 
                         return NakedStateScope(
                           value: accordionState,
-                          child: widget.triggerBuilder(context, accordionState),
+                          child: widget.builder(context, accordionState),
                         );
                       },
                     ),

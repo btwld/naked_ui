@@ -6,6 +6,7 @@ import 'package:flutter/widgets.dart';
 import 'mixins/naked_mixins.dart'; // WidgetStatesMixin, FocusNodeMixin
 import 'utilities/intents.dart';
 import 'utilities/naked_focusable_detector.dart';
+import 'utilities/naked_state_scope.dart';
 import 'utilities/state.dart';
 
 /// Immutable view passed to [NakedButton.builder].
@@ -94,7 +95,7 @@ class NakedButton extends StatefulWidget {
   final ValueChanged<bool>? onPressChange;
 
   /// Builds the button using the current [NakedButtonState].
-  final NakedStateBuilder<NakedButtonState>? builder;
+  final ValueWidgetBuilder<NakedButtonState>? builder;
 
   /// Whether the button is enabled.
   final bool enabled;
@@ -191,9 +192,11 @@ class _NakedButtonState extends State<NakedButton>
   Widget _buildContent(BuildContext context) {
     final buttonState = NakedButtonState(states: widgetStates);
 
-    return widget.builder != null
+    final content = widget.builder != null
         ? widget.builder!(context, buttonState, widget.child)
         : widget.child!;
+
+    return NakedStateScope(value: buttonState, child: content);
   }
 
   @override

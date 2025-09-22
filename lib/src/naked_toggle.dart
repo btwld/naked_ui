@@ -5,6 +5,7 @@ import 'package:flutter/widgets.dart';
 import 'mixins/naked_mixins.dart';
 import 'utilities/intents.dart';
 import 'utilities/naked_focusable_detector.dart';
+import 'utilities/naked_state_scope.dart';
 import 'utilities/state.dart';
 
 /// Immutable view passed to [NakedToggle.builder].
@@ -151,7 +152,7 @@ class NakedToggle extends StatefulWidget {
   final ValueChanged<bool>? onPressChange;
 
   /// Builds the toggle using the current [NakedToggleState].
-  final NakedStateBuilder<NakedToggleState>? builder;
+  final ValueWidgetBuilder<NakedToggleState>? builder;
 
   /// Semantic label for screen readers.
   final String? semanticLabel;
@@ -190,9 +191,11 @@ class _NakedToggleState extends State<NakedToggle>
       isToggled: widget.value,
     );
 
-    return widget.builder != null
+    final content = widget.builder != null
         ? widget.builder!(context, toggleState, widget.child)
         : widget.child!;
+
+    return NakedStateScope(value: toggleState, child: content);
   }
 
   MouseCursor get _effectiveCursor => widget._effectiveEnabled
@@ -373,7 +376,7 @@ class NakedToggleOption<T> extends StatefulWidget {
   final ValueChanged<bool>? onFocusChange;
   final ValueChanged<bool>? onHoverChange;
   final ValueChanged<bool>? onPressChange;
-  final NakedStateBuilder<NakedToggleOptionState<T>>? builder;
+  final ValueWidgetBuilder<NakedToggleOptionState<T>>? builder;
   final String? semanticLabel;
 
   @override
@@ -429,6 +432,8 @@ class _NakedToggleOptionState<T> extends State<NakedToggleOption<T>>
         ? widget.builder!(context, optionState, widget.child)
         : widget.child!;
 
+    final wrappedContent = NakedStateScope(value: optionState, child: content);
+
     final cursor = isEnabled
         ? (widget.mouseCursor ?? SystemMouseCursors.click)
         : SystemMouseCursors.basic;
@@ -464,7 +469,7 @@ class _NakedToggleOptionState<T> extends State<NakedToggleOption<T>>
               : null,
           behavior: HitTestBehavior.opaque,
           excludeFromSemantics: true,
-          child: content,
+          child: wrappedContent,
         ),
       ),
     );

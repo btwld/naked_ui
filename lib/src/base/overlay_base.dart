@@ -101,7 +101,7 @@ abstract class OverlayItem<T, S extends NakedState> extends StatelessWidget {
   final Widget? child;
 
   /// Optional builder function for custom styling based on widget states.
-  final NakedStateBuilder<S>? builder;
+  final ValueWidgetBuilder<S>? builder;
 
   /// Helper method to build a [NakedButton] with consistent behavior.
   ///

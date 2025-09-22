@@ -4,12 +4,13 @@ import 'package:flutter/widgets.dart';
 import 'base/overlay_base.dart';
 import 'naked_button.dart';
 import 'utilities/anchored_overlay_shell.dart';
+import 'utilities/naked_state_scope.dart';
 import 'utilities/positioning.dart';
 import 'utilities/state.dart';
 
 typedef NakedMenuController = MenuController;
 
-/// Immutable view passed to [NakedMenu.triggerBuilder].
+/// Immutable view passed to [NakedMenu.builder].
 class NakedMenuState extends NakedState {
   /// Whether the overlay is currently open.
   final bool isOpen;
@@ -194,7 +195,7 @@ class NakedMenuItem<T> extends OverlayItem<T, NakedMenuItemState<T>> {
 /// final menuController = NakedMenuController<String>();
 /// NakedMenu<String>(
 ///   controller: menuController,
-///   triggerBuilder: (context, state) => Text('Menu'),
+///   builder: (context, state) => Text('Menu'),
 ///   overlayBuilder: (context, info) => Column(
 ///     children: [
 ///       NakedMenu.Item(value: 'copy', child: Text('Copy')),
@@ -211,7 +212,8 @@ class NakedMenuItem<T> extends OverlayItem<T, NakedMenuItemState<T>> {
 class NakedMenu<T> extends StatefulWidget {
   const NakedMenu({
     super.key,
-    required this.triggerBuilder,
+    this.child,
+    this.builder,
     required this.overlayBuilder,
     required this.controller,
     this.onSelected,
@@ -225,14 +227,19 @@ class NakedMenu<T> extends StatefulWidget {
     this.closeOnClickOutside = true,
     this.triggerFocusNode,
     this.positioning = const OverlayPositionConfig(),
-  });
+  }) : assert(
+         child != null || builder != null,
+         'Either child or builder must be provided',
+       );
 
   /// Type alias for [NakedMenuItem] for cleaner API access.
   static final Item = NakedMenuItem.new;
 
+  /// The static trigger widget.
+  final Widget? child;
+
   /// Builds the trigger surface.
-  final Widget Function(BuildContext context, NakedMenuState state)
-  triggerBuilder;
+  final ValueWidgetBuilder<NakedMenuState>? builder;
 
   /// Builds the overlay panel.
   final RawMenuAnchorOverlayBuilder overlayBuilder;
@@ -328,11 +335,17 @@ class _NakedMenuState<T> extends State<NakedMenu<T>>
         child: NakedButton(
           onPressed: _toggle,
           focusNode: widget.triggerFocusNode,
-          builder: (context, buttonState, _) {
-            return widget.triggerBuilder(
-              context,
-              NakedMenuState(states: buttonState.states, isOpen: _isOpen),
+          child: widget.child,
+          builder: (context, buttonState, child) {
+            final menuState = NakedMenuState(
+              states: buttonState.states,
+              isOpen: _isOpen,
             );
+            final content = widget.builder != null
+                ? widget.builder!(context, menuState, child)
+                : child!;
+
+            return NakedStateScope(value: menuState, child: content);
           },
         ),
       ),

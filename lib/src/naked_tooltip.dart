@@ -44,10 +44,10 @@ import 'utilities/positioning.dart';
 ///         onPressed: () {},
 ///         child: const Text('Show Tooltip'),
 ///       ),
-///       builder: (context) {
+///       overlayBuilder: (context, info) {
 ///         return AnimatedBuilder(
 ///           animation: _controller,
-///           builder: (context, child) {
+///           overlayBuilder: (context, child) {
 ///             return Opacity(
 ///               opacity: _controller.value,
 ///               child: Container(
@@ -74,7 +74,7 @@ class NakedTooltip extends StatefulWidget {
   const NakedTooltip({
     super.key,
     required this.child,
-    required this.builder,
+    required this.overlayBuilder,
     this.showDuration = const Duration(seconds: 2),
     this.waitDuration = const Duration(seconds: 1),
     this.positioning = const OverlayPositionConfig(
@@ -94,8 +94,8 @@ class NakedTooltip extends StatefulWidget {
   /// The widget that triggers the tooltip.
   final Widget child;
 
-  /// The tooltip content builder.
-  final WidgetBuilder builder;
+  /// The tooltip content overlayBuilder.
+  final RawMenuAnchorOverlayBuilder overlayBuilder;
 
   /// The semantic label for screen readers.
   final String? semanticsLabel;
@@ -188,7 +188,7 @@ class _NakedTooltipState extends State<NakedTooltip> {
 
         return Positioned.fromRect(
           rect: overlayRect,
-          child: widget.builder(context),
+          child: widget.overlayBuilder(context, info),
         );
       },
       child: Semantics(

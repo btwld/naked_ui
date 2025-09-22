@@ -189,6 +189,3 @@ abstract class NakedState {
   }
 }
 
-/// Builder signature that receives a typed view over widget states.
-typedef NakedStateBuilder<S extends NakedState> =
-    Widget Function(BuildContext context, S state, Widget? child);

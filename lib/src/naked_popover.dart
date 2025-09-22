@@ -2,7 +2,32 @@ import 'package:flutter/widgets.dart';
 
 import 'utilities/intents.dart';
 import 'utilities/naked_focusable_detector.dart';
+import 'utilities/naked_state_scope.dart';
 import 'utilities/positioning.dart';
+import 'utilities/state.dart';
+
+/// Immutable view passed to [NakedPopover.builder].
+class NakedPopoverState extends NakedState {
+  /// Whether the overlay is currently open.
+  final bool isOpen;
+
+  NakedPopoverState({required super.states, required this.isOpen});
+
+  /// Returns the nearest [NakedPopoverState] provided by [NakedStateScope].
+  static NakedPopoverState of(BuildContext context) => NakedState.of(context);
+
+  /// Returns the nearest [NakedPopoverState] if available.
+  static NakedPopoverState? maybeOf(BuildContext context) =>
+      NakedState.maybeOf(context);
+
+  /// Returns the [WidgetStatesController] from the nearest scope.
+  static WidgetStatesController controllerOf(BuildContext context) =>
+      NakedState.controllerOf(context);
+
+  /// Returns the [WidgetStatesController] from the nearest scope, if any.
+  static WidgetStatesController? maybeControllerOf(BuildContext context) =>
+      NakedState.maybeControllerOf(context);
+}
 
 /// A headless popover without visuals.
 ///
@@ -10,12 +35,25 @@ import 'utilities/positioning.dart';
 /// Handles tap interactions, positioning, and focus management.
 ///
 /// ```dart
+/// // Static trigger
 /// NakedPopover(
-///   popoverBuilder: (context) => Container(
+///   popoverBuilder: (context, info) => Container(
 ///     padding: EdgeInsets.all(16),
 ///     child: Text('Popover content'),
 ///   ),
 ///   child: Text('Click me'),
+/// )
+///
+/// // Dynamic trigger with state
+/// NakedPopover(
+///   popoverBuilder: (context, info) => Container(
+///     padding: EdgeInsets.all(16),
+///     child: Text('Popover content'),
+///   ),
+///   builder: (context, state, child) => Container(
+///     color: state.isPressed ? Colors.blue : Colors.grey,
+///     child: Text('Click me'),
+///   ),
 /// )
 /// ```
 ///
@@ -26,7 +64,8 @@ import 'utilities/positioning.dart';
 class NakedPopover extends StatefulWidget {
   const NakedPopover({
     super.key,
-    required this.child,
+    this.child,
+    this.builder,
     required this.popoverBuilder,
     this.positioning = const OverlayPositionConfig(),
     this.consumeOutsideTaps = true,
@@ -37,13 +76,19 @@ class NakedPopover extends StatefulWidget {
     this.onClose,
     this.onOpenRequested,
     this.onCloseRequested,
-  });
+  }) : assert(
+         child != null || builder != null,
+         'Either child or builder must be provided',
+       );
 
-  /// The trigger widget that opens the popover.
-  final Widget child;
+  /// The static trigger widget.
+  final Widget? child;
+
+  /// Builds the trigger surface.
+  final ValueWidgetBuilder<NakedPopoverState>? builder;
 
   /// The builder for popover content.
-  final WidgetBuilder popoverBuilder;
+  final RawMenuAnchorOverlayBuilder popoverBuilder;
 
   /// Positioning configuration for the overlay.
   final OverlayPositionConfig positioning;
@@ -85,6 +130,7 @@ class NakedPopover extends StatefulWidget {
 class _NakedPopoverState extends State<NakedPopover> {
   // ignore: dispose-fields
   final _menuController = MenuController();
+  late final _statesController = WidgetStatesController();
 
   // Internal node used when the child does not already provide a Focus.
   final _internalTriggerNode = FocusNode(
@@ -115,11 +161,22 @@ class _NakedPopoverState extends State<NakedPopover> {
     return null;
   }
 
-  Widget _buildTrigger(FocusNode returnNode) {
+  Widget _buildTrigger(BuildContext context, FocusNode returnNode) {
+    final popoverState = NakedPopoverState(
+      states: _statesController.value,
+      isOpen: _menuController.isOpen,
+    );
+
+    final content = widget.builder != null
+        ? widget.builder!(context, popoverState, widget.child)
+        : (widget.child ?? const SizedBox.shrink());
+
+    final child = NakedStateScope(value: popoverState, child: content);
+
     // Case A: We own the focus node (no Focus provided by the child).
     if (identical(returnNode, _internalTriggerNode)) {
       if (!widget.openOnTap) {
-        return Focus(focusNode: _internalTriggerNode, child: widget.child);
+        return Focus(focusNode: _internalTriggerNode, child: child);
       }
 
       return NakedFocusableDetector(
@@ -129,7 +186,7 @@ class _NakedPopoverState extends State<NakedPopover> {
         child: GestureDetector(
           onTap: _toggle,
           behavior: HitTestBehavior.opaque,
-          child: widget.child,
+          child: child,
         ),
       );
     }
@@ -139,12 +196,13 @@ class _NakedPopoverState extends State<NakedPopover> {
     return GestureDetector(
       onTap: widget.openOnTap ? _toggle : null,
       behavior: HitTestBehavior.opaque,
-      child: widget.child, // retains the caller's Focus node
+      child: child, // retains the caller's Focus node
     );
   }
 
   @override
   void dispose() {
+    _statesController.dispose();
     _internalTriggerNode.dispose();
     super.dispose();
   }
@@ -194,7 +252,7 @@ class _NakedPopoverState extends State<NakedPopover> {
                       ),
                       child: FractionalTranslation(
                         translation: const Offset(-0.5, 0.0),
-                        child: Builder(builder: widget.popoverBuilder),
+                        child: widget.popoverBuilder(context, info),
                       ),
                     ),
                   ),
@@ -205,7 +263,7 @@ class _NakedPopoverState extends State<NakedPopover> {
         );
       },
 
-      child: _buildTrigger(returnNode),
+      child: _buildTrigger(context, returnNode),
     );
   }
 }

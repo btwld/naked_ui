@@ -7,6 +7,7 @@ import 'package:flutter/widgets.dart';
 import 'mixins/naked_mixins.dart';
 import 'utilities/intents.dart';
 import 'utilities/naked_focusable_detector.dart';
+import 'utilities/naked_state_scope.dart';
 import 'utilities/state.dart';
 
 /// A controller for managing tab selection state.
@@ -299,7 +300,7 @@ class NakedTab extends StatefulWidget {
   final ValueChanged<bool>? onPressChange;
 
   /// Builds the tab using the current [NakedTabState].
-  final NakedStateBuilder<NakedTabState>? builder;
+  final ValueWidgetBuilder<NakedTabState>? builder;
 
   /// Semantic label for the trigger.
   final String? semanticLabel;
@@ -425,6 +426,8 @@ class _NakedTabState extends State<NakedTab>
         ? widget.builder!(context, tabState, widget.child)
         : widget.child!;
 
+    final wrappedContent = NakedStateScope(value: tabState, child: content);
+
     return NakedFocusableDetector(
       enabled: _isEnabled,
       autofocus: widget.autofocus,
@@ -467,7 +470,7 @@ class _NakedTabState extends State<NakedTab>
               : null,
           behavior: HitTestBehavior.opaque,
           excludeFromSemantics: true,
-          child: content,
+          child: wrappedContent,
         ),
       ),
     );
