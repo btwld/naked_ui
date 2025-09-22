@@ -6,21 +6,14 @@ import 'utilities/anchored_overlay_shell.dart';
 import 'utilities/positioning.dart';
 import 'utilities/widget_state_snapshot.dart';
 
+typedef NakedMenuController = MenuController;
+
 /// Immutable view passed to [NakedMenu.triggerBuilder].
-class NakedMenuState<T> extends NakedWidgetState {
+class NakedMenuState extends NakedWidgetState {
   /// Whether the overlay is currently open.
   final bool isOpen;
 
-  /// The value currently marked as selected, if any.
-  final T? selectedValue;
-
-  NakedMenuState({
-    required super.states,
-    required this.isOpen,
-    required this.selectedValue,
-  });
-
-  bool get hasSelection => selectedValue != null;
+  NakedMenuState({required super.states, required this.isOpen});
 }
 
 /// Immutable view passed to [NakedMenuItem] builders.
@@ -28,18 +21,7 @@ class NakedMenuItemState<T> extends NakedWidgetState {
   /// The menu item's value.
   final T value;
 
-  /// The parent menu's selected value.
-  final T? selectedValue;
-
-  NakedMenuItemState({
-    required super.states,
-    required this.value,
-    required this.selectedValue,
-  });
-
-  /// Whether this item matches the selected value.
-  bool get isCurrentSelection =>
-      selectedValue != null && value == selectedValue;
+  NakedMenuItemState({required super.states, required this.value});
 }
 
 /// Internal scope provided by [NakedMenu] to its overlay subtree.
@@ -48,7 +30,6 @@ class _NakedMenuScope<T> extends OverlayScope<T> {
     required this.onSelected,
     required this.controller,
     required super.child,
-    this.selectedValue,
     super.key,
   });
 
@@ -61,13 +42,11 @@ class _NakedMenuScope<T> extends OverlayScope<T> {
 
   final ValueChanged<T>? onSelected;
   final MenuController controller;
-  final T? selectedValue; // reserved for optional "checked" semantics
 
   @override
   bool updateShouldNotify(covariant _NakedMenuScope<T> oldWidget) {
     return onSelected != oldWidget.onSelected ||
-        controller != oldWidget.controller ||
-        selectedValue != oldWidget.selectedValue;
+        controller != oldWidget.controller;
   }
 }
 
@@ -106,13 +85,8 @@ class NakedMenuItem<T> extends OverlayItem<T, NakedMenuItemState<T>> {
 
   /// Computes additional widget states based on the menu scope.
   ///
-  /// Reserve optional support for "checked"/selected semantics when provided by scope.
-  /// Use null-safe access since scope may not be available in all contexts.
+  /// No additional states since menu items don't track selection.
   Set<WidgetState>? _computeAdditionalStates(_NakedMenuScope<T>? menu) {
-    if (menu?.selectedValue != null && menu!.selectedValue == value) {
-      return {WidgetState.selected};
-    }
-
     return null;
   }
 
@@ -134,12 +108,8 @@ class NakedMenuItem<T> extends OverlayItem<T, NakedMenuItemState<T>> {
       onPressed: onPressed,
       effectiveEnabled: enabled,
       additionalStates: additionalStates,
-      mapStates: (states) => NakedMenuItemState<T>(
-        states: states,
-        value: value,
-        // Use null-safe access for selectedValue since scope may be null
-        selectedValue: menu?.selectedValue,
-      ),
+      mapStates: (states) =>
+          NakedMenuItemState<T>(states: states, value: value),
     );
   }
 }
@@ -173,8 +143,9 @@ class NakedMenuItem<T> extends OverlayItem<T, NakedMenuItemState<T>> {
 ///
 /// ### Example Usage
 /// ```dart
+/// final menuController = NakedMenuController<String>();
 /// NakedMenu<String>(
-///   controller: MenuController(),
+///   controller: menuController,
 ///   triggerBuilder: (context, state) => Text('Menu'),
 ///   overlayBuilder: (context, info) => Column(
 ///     children: [
@@ -182,7 +153,7 @@ class NakedMenuItem<T> extends OverlayItem<T, NakedMenuItemState<T>> {
 ///       NakedMenu.Item(value: 'paste', child: Text('Paste')),
 ///     ],
 ///   ),
-///   onSelected: (value) => print('Action: $value'),
+///   onSelected: (value) => menuController.select(value),
 /// )
 /// ```
 ///
@@ -196,7 +167,6 @@ class NakedMenu<T> extends StatefulWidget {
     required this.overlayBuilder,
     required this.controller,
     this.onSelected,
-    this.selectedValue,
     this.onOpen,
     this.onClose,
     this.onCanceled,
@@ -213,20 +183,19 @@ class NakedMenu<T> extends StatefulWidget {
   static final Item = NakedMenuItem.new;
 
   /// Builds the trigger surface.
-  final Widget Function(BuildContext context, NakedMenuState<T> state)
+  final Widget Function(BuildContext context, NakedMenuState state)
   triggerBuilder;
 
   /// Builds the overlay panel.
   final RawMenuAnchorOverlayBuilder overlayBuilder;
 
-  /// Controls show/hide of the underlying [RawMenuAnchor].
-  final MenuController controller;
+  /// Controls show/hide of the underlying [RawMenuAnchor] and manages selection state.
+  final NakedMenuController controller;
 
   /// Called when an item is selected.
+  ///
+  /// Note: You can also use [controller.select] to update selection state directly.
   final ValueChanged<T>? onSelected;
-
-  /// Optional selected value to mark items with [WidgetState.selected].
-  final T? selectedValue;
 
   /// Lifecycle callbacks.
   final VoidCallback? onOpen;
@@ -263,8 +232,9 @@ class _NakedMenuState<T> extends State<NakedMenu<T>>
     with OverlayStateMixin<NakedMenu<T>> {
   bool get _isOpen => widget.controller.isOpen;
 
-  void _toggle() =>
-      _isOpen ? widget.controller.close() : widget.controller.open();
+  void _toggle() => widget.controller.isOpen
+      ? widget.controller.close()
+      : widget.controller.open();
 
   void _handleOpen() {
     handleOpen(widget.onOpen);
@@ -291,7 +261,6 @@ class _NakedMenuState<T> extends State<NakedMenu<T>>
         return _NakedMenuScope<T>(
           onSelected: _handleSelection,
           controller: widget.controller,
-          selectedValue: widget.selectedValue,
           child: Builder(
             builder: (context) => widget.overlayBuilder(context, info),
           ),
@@ -314,11 +283,7 @@ class _NakedMenuState<T> extends State<NakedMenu<T>>
           builder: (context, states, _) {
             return widget.triggerBuilder(
               context,
-              NakedMenuState(
-                states: states,
-                isOpen: _isOpen,
-                selectedValue: widget.selectedValue,
-              ),
+              NakedMenuState(states: states, isOpen: _isOpen),
             );
           },
         ),

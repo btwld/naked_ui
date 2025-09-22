@@ -260,11 +260,20 @@ class NakedSelect<T> extends StatefulWidget {
 class _NakedSelectState<T> extends State<NakedSelect<T>>
     with OverlayStateMixin<NakedSelect<T>> {
   // ignore: dispose-fields
-  final _controller = MenuController();
+  late final MenuController _menuController;
+  T? _internalValue;
 
-  bool get _isOpen => _controller.isOpen;
+  @override
+  void initState() {
+    super.initState();
+    _menuController = MenuController();
+    _internalValue = widget.value;
+  }
 
-  void _toggle() => _isOpen ? _controller.close() : _controller.open();
+  T? get _effectiveValue => widget.value ?? _internalValue;
+
+  void _toggle() =>
+      _menuController.isOpen ? _menuController.close() : _menuController.open();
 
   void _handleOpen() {
     handleOpen(widget.onOpen);
@@ -280,19 +289,33 @@ class _NakedSelectState<T> extends State<NakedSelect<T>>
 
   void _handleSelection(T? value) {
     markSelectionMade();
+    setState(() {
+      _internalValue = value;
+    });
     widget.onChanged?.call(value);
   }
 
   @override
+  void didUpdateWidget(covariant NakedSelect<T> oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Sync internal value when widget value changes
+    if (widget.value != oldWidget.value) {
+      _internalValue = widget.value;
+    }
+  }
+
+  bool get _isOpen => _menuController.isOpen;
+
+  @override
   Widget build(BuildContext context) {
-    final String? semanticsValue = widget.value?.toString();
+    final semanticsValue = _effectiveValue?.toString();
 
     return Shortcuts(
       shortcuts: NakedIntentActions.select.shortcuts,
       child: Actions(
         actions: NakedIntentActions.select.actions(
-          onDismiss: () => _controller.close(),
-          onOpenOverlay: () => _controller.open(),
+          onDismiss: () => _menuController.close(),
+          onOpenOverlay: () => _menuController.open(),
         ),
         child: Semantics(
           container: true,
@@ -304,14 +327,14 @@ class _NakedSelectState<T> extends State<NakedSelect<T>>
           value: semanticsValue,
           onTap: widget.enabled ? _toggle : null,
           child: AnchoredOverlayShell(
-            controller: _controller,
+            controller: _menuController,
             overlayBuilder: (context, info) {
               return _NakedSelectScope<T>(
-                controller: _controller,
+                controller: _menuController,
                 closeOnSelect: widget.closeOnSelect,
                 enabled: widget.enabled,
                 onChanged: _handleSelection,
-                value: widget.value,
+                value: _effectiveValue,
                 child: Builder(
                   builder: (context) => widget.overlayBuilder(context, info),
                 ),
@@ -336,7 +359,7 @@ class _NakedSelectState<T> extends State<NakedSelect<T>>
                   NakedSelectState(
                     states: states,
                     isOpen: _isOpen,
-                    value: widget.value,
+                    value: _effectiveValue,
                   ),
                 );
               },

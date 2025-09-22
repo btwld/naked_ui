@@ -5,9 +5,9 @@ import 'package:naked_ui/naked_ui.dart';
 import '../../test_helpers.dart';
 
 void main() {
-  group('Tabs - Panel visibility and semantics exposure', () {
+  group('Tabs - View visibility and semantics exposure', () {
     testWidgets(
-      'Only active panel is visible/exposed when maintainState=false',
+      'Only active view is visible/exposed when maintainState=false',
       (tester) async {
         String selected = '1';
         await tester.pumpMaterialWidget(
@@ -17,7 +17,7 @@ void main() {
               onChanged: (id) => setState(() => selected = id),
               child: Column(
                 children: const [
-                  NakedTabList(
+                  NakedTabBar(
                     child: Row(
                       children: [
                         NakedTab(tabId: '1', child: Text('Tab 1')),
@@ -26,15 +26,15 @@ void main() {
                       ],
                     ),
                   ),
-                  NakedTabPanel(
+                  NakedTabView(
                     tabId: '1',
                     maintainState: false,
-                    child: Text('Panel 1'),
+                    child: Text('View 1'),
                   ),
-                  NakedTabPanel(
+                  NakedTabView(
                     tabId: '2',
                     maintainState: false,
-                    child: Text('Panel 2'),
+                    child: Text('View 2'),
                   ),
                 ],
               ),
@@ -42,17 +42,17 @@ void main() {
           ),
         );
 
-        // Initially, only Panel 1 should be visible
-        expect(find.text('Panel 1'), findsOneWidget);
-        expect(find.text('Panel 2'), findsNothing);
+        // Initially, only View 1 should be visible
+        expect(find.text('View 1'), findsOneWidget);
+        expect(find.text('View 2'), findsNothing);
 
         // Switch to Tab 2 by tapping
         await tester.tap(find.text('Tab 2'));
         await tester.pumpAndSettle();
 
-        // Now only Panel 2 should be visible
-        expect(find.text('Panel 2'), findsOneWidget);
-        expect(find.text('Panel 1'), findsNothing);
+        // Now only View 2 should be visible
+        expect(find.text('View 2'), findsOneWidget);
+        expect(find.text('View 1'), findsNothing);
       },
     );
   });

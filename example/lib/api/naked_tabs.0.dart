@@ -46,7 +46,7 @@ class _TabsExampleState extends State<TabsExample> {
               color: Colors.grey.shade100,
               borderRadius: BorderRadius.circular(10),
             ),
-            child: NakedTabList(
+            child: NakedTabBar(
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -80,7 +80,7 @@ class _TabsExampleState extends State<TabsExample> {
           const SizedBox(
             height: 8,
           ),
-          NakedTabPanel(
+          NakedTabView(
             tabId: 'light',
             child: Container(
               padding: const EdgeInsets.all(16),
@@ -88,7 +88,7 @@ class _TabsExampleState extends State<TabsExample> {
               child: const Text('Content for Tab 1'),
             ),
           ),
-          NakedTabPanel(
+          NakedTabView(
             tabId: 'dark',
             child: Container(
               padding: const EdgeInsets.all(16),
@@ -96,7 +96,7 @@ class _TabsExampleState extends State<TabsExample> {
               child: const Text('Content for Tab 2'),
             ),
           ),
-          NakedTabPanel(
+          NakedTabView(
             tabId: 'system',
             child: Container(
               padding: const EdgeInsets.all(16),

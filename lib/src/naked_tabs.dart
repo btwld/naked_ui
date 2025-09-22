@@ -8,40 +8,75 @@ import 'utilities/intents.dart';
 import 'utilities/naked_focusable_detector.dart';
 import 'utilities/widget_state_snapshot.dart';
 
+/// A controller for managing tab selection state.
+///
+/// Extends [ChangeNotifier] to notify listeners when the selected tab changes.
+class NakedTabController extends ChangeNotifier {
+  String _selectedTabId;
+  String? _previousTabId;
+
+  /// Creates a [NakedTabController] with the given initial tab.
+  NakedTabController({required String selectedTabId})
+    : _selectedTabId = selectedTabId;
+
+  /// The currently selected tab identifier.
+  String get selectedTabId => _selectedTabId;
+
+  /// The previously selected tab identifier, if any.
+  String? get previousTabId => _previousTabId;
+
+  /// Selects the tab with the given [tabId].
+  void selectTab(String tabId) {
+    if (tabId == _selectedTabId) return;
+    _previousTabId = _selectedTabId;
+    _selectedTabId = tabId;
+    notifyListeners();
+  }
+
+  /// Selects the previous tab, if available.
+  void selectPrevious() {
+    if (_previousTabId != null) {
+      selectTab(_previousTabId!);
+    }
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+  }
+}
+
 /// Immutable view passed to [NakedTab.builder].
 class NakedTabState extends NakedWidgetState {
   /// The unique identifier for this tab.
   final String tabId;
 
-  /// The currently selected tab identifier.
-  final String selectedTabId;
+  /// Whether this tab is currently selected.
+  final bool isSelected;
 
   NakedTabState({
     required super.states,
     required this.tabId,
-    required this.selectedTabId,
+    required this.isSelected,
   });
-
-  /// Whether this tab is currently selected.
-  bool get isSelected => tabId == selectedTabId;
 }
 
 /// A headless tab group without visuals.
 ///
-/// Selection follows focus. Use [NakedTabList], [NakedTab], and
-/// [NakedTabPanel] for custom visuals.
+/// Selection follows focus. Use [NakedTabBar], [NakedTab], and
+/// [NakedTabView] for custom visuals.
 ///
 /// ```dart
 /// NakedTabs(
 ///   selectedTabId: 'tab1',
 ///   onChanged: (id) => setState(() => selectedTabId = id),
 ///   child: Column(children: [
-///     NakedTabList(child: Row(children: [
+///     NakedTabBar(child: Row(children: [
 ///       NakedTab(tabId: 'tab1', child: Text('Tab 1')),
 ///       NakedTab(tabId: 'tab2', child: Text('Tab 2')),
 ///     ])),
-///     NakedTabPanel(tabId: 'tab1', child: Text('Panel 1')),
-///     NakedTabPanel(tabId: 'tab2', child: Text('Panel 2')),
+///     NakedTabView(tabId: 'tab1', child: Text('View 1')),
+///     NakedTabView(tabId: 'tab2', child: Text('View 2')),
 ///   ]),
 /// )
 /// ```
@@ -54,20 +89,33 @@ class NakedTabs extends StatelessWidget {
   const NakedTabs({
     super.key,
     required this.child,
-    required this.selectedTabId,
+    this.controller,
+    this.selectedTabId,
     this.onChanged,
     this.orientation = Axis.horizontal,
     this.enabled = true,
     this.onEscapePressed,
-  });
+  }) : assert(
+         controller != null || selectedTabId != null,
+         'Either controller or selectedTabId must be provided',
+       );
 
   /// The tabs content.
   final Widget child;
 
+  /// Optional controller for managing tab state.
+  ///
+  /// If not provided, the widget will use [selectedTabId] and [onChanged] for state management.
+  final NakedTabController? controller;
+
   /// The identifier of the currently selected tab.
-  final String selectedTabId;
+  ///
+  /// Ignored if [controller] is provided.
+  final String? selectedTabId;
 
   /// Called when the selected tab changes.
+  ///
+  /// Ignored if [controller] is provided.
   final ValueChanged<String>? onChanged;
 
   /// Whether the tabs are enabled.
@@ -79,17 +127,26 @@ class NakedTabs extends StatelessWidget {
   /// Called when Escape is pressed while a tab has focus.
   final VoidCallback? onEscapePressed;
 
-  bool get _effectiveEnabled => enabled && onChanged != null;
+  String get _effectiveSelectedTabId =>
+      controller?.selectedTabId ?? selectedTabId!;
+
+  bool get _effectiveEnabled =>
+      enabled && (controller != null || onChanged != null);
 
   void _selectTab(String tabId) {
-    if (!_effectiveEnabled || tabId == selectedTabId) return;
+    if (!_effectiveEnabled || tabId == _effectiveSelectedTabId) return;
     assert(tabId.isNotEmpty, 'Tab ID cannot be empty');
-    onChanged?.call(tabId);
+
+    if (controller != null) {
+      controller!.selectTab(tabId);
+    } else {
+      onChanged?.call(tabId);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    assert(selectedTabId.isNotEmpty, 'selectedTabId cannot be empty');
+    assert(_effectiveSelectedTabId.isNotEmpty, 'selectedTabId cannot be empty');
 
     // Headless group-level ESC handling using default ESC -> DismissIntent mapping.
     return Actions(
@@ -99,7 +156,7 @@ class NakedTabs extends StatelessWidget {
         ),
       },
       child: NakedTabsScope(
-        selectedTabId: selectedTabId,
+        selectedTabId: _effectiveSelectedTabId,
         onChanged: _selectTab,
         orientation: orientation,
         enabled: _effectiveEnabled,
@@ -127,7 +184,7 @@ class NakedTabsScope extends InheritedWidget {
     if (scope == null) {
       throw FlutterError(
         'NakedTabsScope.of() called outside of NakedTabs.\n'
-        'Wrap NakedTab and NakedTabPanel widgets in a NakedTabs.',
+        'Wrap NakedTab and NakedTabView widgets in a NakedTabs.',
       );
     }
 
@@ -163,8 +220,8 @@ class NakedTabsScope extends InheritedWidget {
 ///
 /// See also:
 /// - [NakedTab], the individual tab trigger components.
-class NakedTabList extends StatelessWidget {
-  const NakedTabList({super.key, required this.child});
+class NakedTabBar extends StatelessWidget {
+  const NakedTabBar({super.key, required this.child});
   final Widget child;
 
   @override
@@ -255,19 +312,17 @@ class _NakedTabState extends State<NakedTab>
 
   void _applyFocusability() {
     final node = effectiveFocusNode;
-    if (node != null) {
-      node
-        ..canRequestFocus = _isEnabled
-        ..skipTraversal = !_isEnabled;
-    }
+    node
+      ..canRequestFocus = _isEnabled
+      ..skipTraversal = !_isEnabled;
   }
 
   void _handleTap() {
     if (!_isEnabled) return;
     if (widget.enableFeedback) HapticFeedback.selectionClick();
-    // Selection follows focus anyway; tap still ensures we’re focused.
-    if (effectiveFocusNode?.canRequestFocus ?? false) {
-      effectiveFocusNode!.requestFocus();
+    // Selection follows focus anyway; tap still ensures we're focused.
+    if (effectiveFocusNode.canRequestFocus) {
+      effectiveFocusNode.requestFocus();
     }
     _scope.selectTab(widget.tabId);
   }
@@ -346,7 +401,7 @@ class _NakedTabState extends State<NakedTab>
     final tabState = NakedTabState(
       states: widgetStates,
       tabId: widget.tabId,
-      selectedTabId: _scope.selectedTabId,
+      isSelected: isSelected,
     );
 
     final content = widget.builder != null
@@ -402,25 +457,25 @@ class _NakedTabState extends State<NakedTab>
   }
 }
 
-/// A headless tab panel without visuals.
+/// A headless tab view without visuals.
 ///
 /// Displays content for a specific tab when selected.
 /// Supports state maintenance when hidden.
 ///
 /// See also:
 /// - [NakedTabs], the container that manages tab selection.
-class NakedTabPanel extends StatelessWidget {
-  const NakedTabPanel({
+class NakedTabView extends StatelessWidget {
+  const NakedTabView({
     super.key,
     required this.child,
     required this.tabId,
     this.maintainState = true,
   });
 
-  /// The panel content for the associated [tabId].
+  /// The view content for the associated [tabId].
   final Widget child;
 
-  /// The identifier of the tab this panel corresponds to.
+  /// The identifier of the tab this view corresponds to.
   final String tabId;
 
   /// Whether to maintain state when hidden.

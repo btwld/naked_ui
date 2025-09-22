@@ -8,7 +8,7 @@ keywords: [flutter, tabs, tablist, headless, focus, accessibility]
 
 1. `NakedTabs` – owns the selected tab id and focus handling
 2. `NakedTab` – trigger button that receives a typed state snapshot
-3. `NakedTabPanel` – panel that shows/hides content based on the active tab
+3. `NakedTabView` – panel that shows/hides content based on the active tab
 
 <Info>
   See the complete implementation in [`example/lib/api/naked_tabs.0.dart`](https://github.com/btwld/naked_ui/blob/main/example/lib/api/naked_tabs.0.dart).
@@ -41,7 +41,7 @@ class _TabsExampleState extends State<TabsExample> {
               color: Colors.grey.shade100,
               borderRadius: BorderRadius.circular(12),
             ),
-            child: NakedTabList(
+            child: NakedTabBar(
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: const [
@@ -55,21 +55,21 @@ class _TabsExampleState extends State<TabsExample> {
             ),
           ),
           const SizedBox(height: 16),
-          NakedTabPanel(
+          NakedTabView(
             tabId: 'overview',
             child: _PanelBox(
               color: Colors.blue.shade50,
               text: 'High-level description lives here.',
             ),
           ),
-          NakedTabPanel(
+          NakedTabView(
             tabId: 'usage',
             child: _PanelBox(
               color: Colors.green.shade50,
               text: 'Usage guidance, best practices, etc.',
             ),
           ),
-          NakedTabPanel(
+          NakedTabView(
             tabId: 'api',
             child: _PanelBox(
               color: Colors.orange.shade50,
@@ -213,10 +213,10 @@ const NakedTab({
 - `semanticLabel` → override accessible name
 - Interaction callbacks mirror other Naked components
 
-### NakedTabPanel
+### NakedTabView
 
 ```dart
-const NakedTabPanel({
+const NakedTabView({
   Key? key,
   required this.child,
   required this.tabId,

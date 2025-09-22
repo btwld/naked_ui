@@ -228,7 +228,7 @@ NakedTabs(
   onChanged: (id) => setState(() => tab = id),
   child: Column(
     children: [
-      NakedTabList(
+      NakedTabBar(
         child: Row(
           children: ['preview', 'code'].map((id) {
             return Padding(
@@ -246,11 +246,11 @@ NakedTabs(
         ),
       ),
       const SizedBox(height: 12),
-      NakedTabPanel(
+      NakedTabView(
         tabId: 'preview',
         child: const Text('Preview content'),
       ),
-      NakedTabPanel(
+      NakedTabView(
         tabId: 'code',
         child: const Text('Source code'),
       ),

@@ -241,7 +241,7 @@ void main() {
           NakedTabs(
             selectedTabId: 'tab1',
             onChanged: (value) {},
-            child: NakedTabList(
+            child: NakedTabBar(
               child: Row(
                 children: [
                   NakedTab(

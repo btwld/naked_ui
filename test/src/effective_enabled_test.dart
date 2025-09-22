@@ -124,7 +124,7 @@ void main() {
               // No onChanged callback
               child: Column(
                 children: const [
-                  NakedTabList(
+                  NakedTabBar(
                     child: Row(
                       children: [
                         NakedTab(tabId: 'tab1', child: Text('Tab 1')),

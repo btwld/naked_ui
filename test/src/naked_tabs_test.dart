@@ -37,8 +37,8 @@ void main() {
     VoidCallback? onEscapeSpy,
     Key? tab1Key,
     Key? tab2Key,
-    Key? panel1Key,
-    Key? panel2Key,
+    Key? view1Key,
+    Key? view2Key,
     ValueChanged<NakedTabState>? tab1StatesSpy,
   }) {
     // Keep selection across rebuilds using a closure variable updated via StatefulBuilder.setState.
@@ -66,7 +66,7 @@ void main() {
               onEscapePressed: onEscapeSpy,
               child: Column(
                 children: [
-                  NakedTabList(
+                  NakedTabBar(
                     child: Row(
                       children: [
                         NakedTab(
@@ -101,20 +101,20 @@ void main() {
                       ],
                     ),
                   ),
-                  NakedTabPanel(
+                  NakedTabView(
                     tabId: 'tab1',
                     maintainState: maintainState,
                     child: SizedBox(
-                      key: panel1Key ?? const Key('panel1'),
+                      key: view1Key ?? const Key('view1'),
                       height: 10,
                       width: 10,
                     ),
                   ),
-                  NakedTabPanel(
+                  NakedTabView(
                     tabId: 'tab2',
                     maintainState: maintainState,
                     child: SizedBox(
-                      key: panel2Key ?? const Key('panel2'),
+                      key: view2Key ?? const Key('view2'),
                       height: 10,
                       width: 10,
                     ),
@@ -235,13 +235,13 @@ void main() {
     expect(changes.isEmpty || changes.last == 'tab1', isTrue);
   });
 
-  testWidgets('Panels show/hide; maintainState=false removes inactive panel', (
+  testWidgets('Panels show/hide; maintainState=false removes inactive view', (
     tester,
   ) async {
     final changes = <String>[];
     final tab2 = UniqueKey();
-    final panel1 = UniqueKey();
-    final panel2 = UniqueKey();
+    final view1 = UniqueKey();
+    final view2 = UniqueKey();
 
     await tester.pumpWidget(
       _harness(
@@ -249,21 +249,21 @@ void main() {
         maintainState: false,
         onChangedSpy: changes.add,
         tab2Key: tab2,
-        panel1Key: panel1,
-        panel2Key: panel2,
+        view1Key: view1,
+        view2Key: view2,
       ),
     );
     await tester.pumpAndSettle();
 
-    expect(find.byKey(panel1), findsOneWidget);
-    expect(find.byKey(panel2), findsNothing);
+    expect(find.byKey(view1), findsOneWidget);
+    expect(find.byKey(view2), findsNothing);
 
-    // Focus tab2 -> selects tab2; panel2 becomes visible; panel1 removed.
+    // Focus tab2 -> selects tab2; view2 becomes visible; view1 removed.
     await tester.tap(find.byKey(tab2));
     await tester.pump();
 
-    expect(find.byKey(panel2), findsOneWidget);
-    expect(find.byKey(panel1), findsNothing);
+    expect(find.byKey(view2), findsOneWidget);
+    expect(find.byKey(view1), findsNothing);
   });
 
   testWidgets('Hover and pressed states surface through builder', (

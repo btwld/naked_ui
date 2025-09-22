@@ -229,8 +229,8 @@ class _NakedSliderState extends State<NakedSlider>
     widget.onDragStart?.call();
 
     // Ensure subsequent keyboard nudges apply here.
-    if ((effectiveFocusNode?.canRequestFocus ?? false))
-      effectiveFocusNode!.requestFocus();
+    if ((effectiveFocusNode.canRequestFocus ?? false))
+      effectiveFocusNode.requestFocus();
   }
 
   void _handleDragUpdate(DragUpdateDetails details) {
@@ -295,12 +295,10 @@ class _NakedSliderState extends State<NakedSlider>
     super.didChangeDependencies();
     // Maintain focus traversal flags aligned with enablement.
     final node = effectiveFocusNode;
-    if (node != null) {
-      node
-        ..canRequestFocus = _isEnabled
-        ..skipTraversal = !_isEnabled;
+    node
+      ..canRequestFocus = _isEnabled
+      ..skipTraversal = !_isEnabled;
     }
-  }
 
   @override
   void didUpdateWidget(covariant NakedSlider oldWidget) {
@@ -317,12 +315,10 @@ class _NakedSliderState extends State<NakedSlider>
 
     // Maintain traversal flags under prop changes.
     final node2 = effectiveFocusNode;
-    if (node2 != null) {
-      node2
-        ..canRequestFocus = _isEnabled
-        ..skipTraversal = !_isEnabled;
-    }
-
+    node2
+      ..canRequestFocus = _isEnabled
+      ..skipTraversal = !_isEnabled;
+  
     // Maintain last value in step with controller updates.
     _lastEmittedValue = widget.value;
   }
