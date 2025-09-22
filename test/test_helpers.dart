@@ -3,7 +3,6 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:naked_ui/naked_ui.dart';
 
 extension WidgetTesterExtension on WidgetTester {
   Future<void> pumpMaterialWidget(Widget widget) async {
@@ -67,7 +66,7 @@ extension WidgetTesterExtension on WidgetTester {
     expect(region.cursor, cursor);
   }
 
-  /// Helper to verify widget state extensions work correctly
+  /// Helper to verify widget interaction states for Set<WidgetState> snapshots.
   void expectWidgetStates(
     Set<WidgetState> actualStates, {
     bool? expectHovered,
@@ -77,24 +76,39 @@ extension WidgetTesterExtension on WidgetTester {
     bool? expectSelected,
   }) {
     if (expectHovered != null) {
-      expect(actualStates.isHovered, expectHovered,
-          reason: 'Hover state mismatch');
+      expect(
+        actualStates.contains(WidgetState.hovered),
+        expectHovered,
+        reason: 'Hover state mismatch',
+      );
     }
     if (expectFocused != null) {
-      expect(actualStates.isFocused, expectFocused,
-          reason: 'Focus state mismatch');
+      expect(
+        actualStates.contains(WidgetState.focused),
+        expectFocused,
+        reason: 'Focus state mismatch',
+      );
     }
     if (expectPressed != null) {
-      expect(actualStates.isPressed, expectPressed,
-          reason: 'Press state mismatch');
+      expect(
+        actualStates.contains(WidgetState.pressed),
+        expectPressed,
+        reason: 'Press state mismatch',
+      );
     }
     if (expectDisabled != null) {
-      expect(actualStates.isDisabled, expectDisabled,
-          reason: 'Disabled state mismatch');
+      expect(
+        actualStates.contains(WidgetState.disabled),
+        expectDisabled,
+        reason: 'Disabled state mismatch',
+      );
     }
     if (expectSelected != null) {
-      expect(actualStates.isSelected, expectSelected,
-          reason: 'Selected state mismatch');
+      expect(
+        actualStates.contains(WidgetState.selected),
+        expectSelected,
+        reason: 'Selected state mismatch',
+      );
     }
   }
 }
