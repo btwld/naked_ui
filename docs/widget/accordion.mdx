@@ -122,9 +122,18 @@ class _AccordionSectionState extends State<_AccordionSection> {
 }
 ```
 
+## Group State Snapshot
+
+`NakedAccordionGroupState` is provided by `NakedAccordionGroup`:
+
+- `expandedCount` → number of currently expanded items
+- `canExpandMore` / `canCollapseMore` → whether additional opens/closes are allowed under the controller constraints
+- `minExpanded` / `maxExpanded` → configuration echoed for convenience
+- `widgetStates` → hover/focus/pressed/disabled states captured from the group container
+
 ## Item State Snapshot
 
-`NakedAccordionState<T>` is passed to every trigger builder:
+`NakedAccordionItemState<T>` is passed to every trigger builder:
 
 - `value` → item identifier
 - `isExpanded` → whether the panel is currently open
@@ -132,6 +141,12 @@ class _AccordionSectionState extends State<_AccordionSection> {
 - `widgetStates` → raw `Set<WidgetState>` to resolve hover, focus, press
 
 Use these values to adjust affordances (e.g. disable icons when the controller prevents expansion).
+
+### Access from Context
+
+- `NakedAccordionGroupState.of(context)` / `maybeOf(context)` → read the nearest group state
+- `NakedAccordionItemState.of<T>(context)` / `maybeOf<T>(context)` → read the nearest item state
+- `NakedAccordionGroupState.controllerOf(context)` / `maybeControllerOf(context)` → access the shared `WidgetStatesController` for observers outside builders
 
 ## Controller Behaviour
 

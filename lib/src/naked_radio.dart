@@ -10,6 +10,22 @@ class NakedRadioState<T> extends NakedState {
   final T value;
 
   NakedRadioState({required super.states, required this.value});
+
+  /// Returns the nearest [NakedRadioState] of the requested type.
+  static NakedRadioState<S> of<S>(BuildContext context) =>
+      NakedState.of<NakedRadioState<S>>(context);
+
+  /// Returns the nearest [NakedRadioState] if available, otherwise null.
+  static NakedRadioState<S>? maybeOf<S>(BuildContext context) =>
+      NakedState.maybeOf<NakedRadioState<S>>(context);
+
+  /// Returns the [WidgetStatesController] from the nearest scope.
+  static WidgetStatesController controllerOf(BuildContext context) =>
+      NakedState.controllerOf(context);
+
+  /// Returns the [WidgetStatesController] from the nearest scope, if any.
+  static WidgetStatesController? maybeControllerOf(BuildContext context) =>
+      NakedState.maybeControllerOf(context);
 }
 
 /// A headless radio without visuals.

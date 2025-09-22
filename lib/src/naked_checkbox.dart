@@ -20,6 +20,22 @@ class NakedCheckboxState extends NakedState {
     required this.tristate,
   });
 
+  /// Returns the nearest [NakedCheckboxState] provided by [NakedStateScope].
+  static NakedCheckboxState of(BuildContext context) =>
+      NakedState.of<NakedCheckboxState>(context);
+
+  /// Returns the nearest [NakedCheckboxState] if one is available.
+  static NakedCheckboxState? maybeOf(BuildContext context) =>
+      NakedState.maybeOf<NakedCheckboxState>(context);
+
+  /// Returns the [WidgetStatesController] from the nearest scope.
+  static WidgetStatesController controllerOf(BuildContext context) =>
+      NakedState.controllerOf(context);
+
+  /// Returns the [WidgetStatesController] from the nearest scope, if any.
+  static WidgetStatesController? maybeControllerOf(BuildContext context) =>
+      NakedState.maybeControllerOf(context);
+
   /// Whether the checkbox is in intermediate/mixed state.
   bool get isIntermediate => tristate && isChecked == null;
 }

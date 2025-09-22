@@ -53,6 +53,22 @@ class NakedAccordionGroupState extends NakedState {
       maxExpanded: maxExpanded,
     );
   }
+
+  /// Returns the nearest [NakedAccordionGroupState] from context.
+  static NakedAccordionGroupState of(BuildContext context) =>
+      NakedState.of<NakedAccordionGroupState>(context);
+
+  /// Returns the nearest [NakedAccordionGroupState] if available.
+  static NakedAccordionGroupState? maybeOf(BuildContext context) =>
+      NakedState.maybeOf<NakedAccordionGroupState>(context);
+
+  /// Returns the [WidgetStatesController] from the nearest scope.
+  static WidgetStatesController controllerOf(BuildContext context) =>
+      NakedState.controllerOf(context);
+
+  /// Returns the [WidgetStatesController] from the nearest scope, if any.
+  static WidgetStatesController? maybeControllerOf(BuildContext context) =>
+      NakedState.maybeControllerOf(context);
 }
 
 /// Immutable state exposed to a [NakedAccordion] trigger builder.
@@ -76,6 +92,22 @@ class NakedAccordionItemState<T> extends NakedState {
     required this.canCollapse,
     required this.canExpand,
   });
+
+  /// Returns the nearest [NakedAccordionItemState] of the requested type.
+  static NakedAccordionItemState<S> of<S>(BuildContext context) =>
+      NakedState.of<NakedAccordionItemState<S>>(context);
+
+  /// Returns the nearest [NakedAccordionItemState] if available.
+  static NakedAccordionItemState<S>? maybeOf<S>(BuildContext context) =>
+      NakedState.maybeOf<NakedAccordionItemState<S>>(context);
+
+  /// Returns the [WidgetStatesController] from the nearest scope.
+  static WidgetStatesController controllerOf(BuildContext context) =>
+      NakedState.controllerOf(context);
+
+  /// Returns the [WidgetStatesController] from the nearest scope, if any.
+  static WidgetStatesController? maybeControllerOf(BuildContext context) =>
+      NakedState.maybeControllerOf(context);
 }
 
 /// Maintains accordion expansion state without imposing visuals.

@@ -86,7 +86,7 @@ class _SelectOption extends StatelessWidget {
     return NakedSelect.Option<String>(
       value: value,
       builder: (context, optionState, _) {
-        final bool isSelected = optionState.isCurrentSelection;
+        final bool isSelected = optionState.isSelected;
         final bool isHovered = optionState.isHovered;
 
         return Container(
@@ -119,11 +119,16 @@ class _SelectOption extends StatelessWidget {
 - `value` → currently selected value (nullable)
 - `hasValue` helper plus raw `widgetStates` from the trigger builder
 
-### Options – `NakedSelectItemState<T>`
+### Options – `NakedSelectOptionState<T>`
 - `value` → option value
-- `selectedValue` → value selected in the surrounding select
-- `isCurrentSelection` → shorthand boolean
+- `isSelected` → convenience getter supplied via `WidgetState.selected`
 - `widgetStates` → hover/focus/pressed/disabled information
+
+### Access from Context
+
+- `NakedSelectState.of<T>(context)` / `maybeOf<T>(context)` → read the trigger state
+- `NakedSelectOptionState.of<T>(context)` / `maybeOf<T>(context)` → read the option state inside overlays
+- `NakedSelectState.controllerOf(context)` / `maybeControllerOf(context)` → obtain the shared `WidgetStatesController`
 
 ## NakedSelect Constructor
 
@@ -175,13 +180,13 @@ const NakedSelect.Option({
   Key? key,
   required T value,
   Widget? child,
-  NakedStateBuilder<NakedSelectItemState<T>>? builder,
+  NakedStateBuilder<NakedSelectOptionState<T>>? builder,
   bool enabled = true,
   String? semanticLabel,
 })
 ```
 
-Use the builder to react to `optionState.isCurrentSelection` or `optionState.widgetStates` for hover styling.
+Use the builder to react to `optionState.isSelected` or `optionState.widgetStates` for hover styling.
 
 ## Accessibility Notes
 

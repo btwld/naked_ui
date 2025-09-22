@@ -133,7 +133,7 @@ class ToggleGroupExample extends StatelessWidget {
           NakedToggleOption<String>(
             value: 'grid',
             builder: (context, optionState, _) {
-              final isCurrent = optionState.isCurrentSelection;
+              final isCurrent = optionState.isSelected;
               return _SegmentChip(label: 'Grid', selected: isCurrent);
             },
           ),
@@ -141,7 +141,7 @@ class ToggleGroupExample extends StatelessWidget {
           NakedToggleOption<String>(
             value: 'list',
             builder: (context, optionState, _) {
-              final isCurrent = optionState.isCurrentSelection;
+              final isCurrent = optionState.isSelected;
               return _SegmentChip(label: 'List', selected: isCurrent);
             },
           ),
@@ -218,8 +218,14 @@ const NakedToggleOption({
 
 `NakedToggleOptionState<T>` mirrors the base state helpers and exposes:
 - `value` → the option's value
-- `selectedValue` → current group selection
-- `isCurrentSelection` → convenience boolean
+- `isSelected` → convenience getter supplied via `WidgetState.selected`
+- `widgetStates` → hover/focus/pressed/disabled flags for styling
+
+### Access from Context
+
+- `NakedToggleState.of(context)` / `maybeOf(context)` → read the nearest toggle state
+- `NakedToggleOptionState.of<T>(context)` / `maybeOf<T>(context)` → read the nearest option state
+- `NakedToggleState.controllerOf(context)` / `maybeControllerOf(context)` → obtain the shared `WidgetStatesController`
 
 ## Accessibility Notes
 

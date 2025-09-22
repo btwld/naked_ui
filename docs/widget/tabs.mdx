@@ -155,14 +155,18 @@ class _PanelBox extends StatelessWidget {
 `NakedTabState` exposes:
 
 - `tabId` → identifier for the tab
-- `selectedTabId` → the group’s current selection
-- `isSelected` → shorthand bool
-- `widgetStates` → hover/focus/pressed/disabled
+- `isSelected` → convenience getter supplied via `WidgetState.selected`
+- `widgetStates` → hover/focus/pressed/disabled flags for styling
+
+### Access from Context
+
+- `NakedTabState.of(context)` / `maybeOf(context)` → obtain the nearest tab state
+- `NakedTabState.controllerOf(context)` / `maybeControllerOf(context)` → reach the shared `WidgetStatesController`
 
 ## Constructors
 
 ```dart
-typedef NakedStateBuilder<S extends NakedWidgetState> = Widget Function(
+typedef NakedStateBuilder<S extends NakedState> = Widget Function(
   BuildContext context,
   S state,
   Widget? child,

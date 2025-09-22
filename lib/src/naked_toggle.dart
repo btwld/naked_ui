@@ -12,6 +12,22 @@ class NakedToggleState extends NakedState {
   final bool isToggled;
 
   NakedToggleState({required super.states, required this.isToggled});
+
+  /// Returns the nearest [NakedToggleState] from context.
+  static NakedToggleState of(BuildContext context) =>
+      NakedState.of<NakedToggleState>(context);
+
+  /// Returns the nearest [NakedToggleState] if available.
+  static NakedToggleState? maybeOf(BuildContext context) =>
+      NakedState.maybeOf<NakedToggleState>(context);
+
+  /// Returns the [WidgetStatesController] from the nearest scope.
+  static WidgetStatesController controllerOf(BuildContext context) =>
+      NakedState.controllerOf(context);
+
+  /// Returns the [WidgetStatesController] from the nearest scope, if any.
+  static WidgetStatesController? maybeControllerOf(BuildContext context) =>
+      NakedState.maybeControllerOf(context);
 }
 
 /// Immutable view passed to [NakedToggleOption.builder].
@@ -20,6 +36,22 @@ class NakedToggleOptionState<T> extends NakedState {
   final T value;
 
   NakedToggleOptionState({required super.states, required this.value});
+
+  /// Returns the nearest [NakedToggleOptionState] of the requested type.
+  static NakedToggleOptionState<S> of<S>(BuildContext context) =>
+      NakedState.of<NakedToggleOptionState<S>>(context);
+
+  /// Returns the nearest [NakedToggleOptionState] if available.
+  static NakedToggleOptionState<S>? maybeOf<S>(BuildContext context) =>
+      NakedState.maybeOf<NakedToggleOptionState<S>>(context);
+
+  /// Returns the [WidgetStatesController] from the nearest scope.
+  static WidgetStatesController controllerOf(BuildContext context) =>
+      NakedState.controllerOf(context);
+
+  /// Returns the [WidgetStatesController] from the nearest scope, if any.
+  static WidgetStatesController? maybeControllerOf(BuildContext context) =>
+      NakedState.maybeControllerOf(context);
 }
 
 /// A headless binary toggle control without visuals.

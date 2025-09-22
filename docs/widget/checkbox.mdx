@@ -89,6 +89,13 @@ class _CheckboxExampleState extends State<CheckboxExample> {
 - `isIntermediate` → convenience flag for the null case
 - `widgetStates` → hover/focus/pressed/disabled information
 
+### Access from Context
+
+- `NakedCheckboxState.of(context)` → read the nearest scope (throws if missing)
+- `NakedCheckboxState.maybeOf(context)` → nullable variant
+- `NakedCheckboxState.controllerOf(context)` → access the underlying `WidgetStatesController`
+- `NakedCheckboxState.maybeControllerOf(context)` → nullable controller lookup
+
 ## Constructor
 
 ```dart

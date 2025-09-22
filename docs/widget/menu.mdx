@@ -32,9 +32,9 @@ class _MenuExampleState extends State<MenuExample> {
       triggerBuilder: (context, menuState) {
         return NakedButton(
           onPressed: () => controller.isOpen ? controller.close() : controller.open(),
-          builder: (context, widgetStates, _) {
+          builder: (context, _, __) {
             final bool isOpen = menuState.isOpen;
-            final bool isHovered = widgetStates.contains(WidgetState.hovered);
+            final bool isHovered = menuState.isHovered;
 
             return Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
@@ -71,13 +71,28 @@ class _MenuExampleState extends State<MenuExample> {
               ),
             ],
           ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: const [
-              _MenuEntry(value: 'edit', icon: Icons.edit, label: 'Edit'),
-              _MenuEntry(value: 'duplicate', icon: Icons.copy, label: 'Duplicate'),
-              Divider(height: 1),
-              _MenuEntry(value: 'delete', icon: Icons.delete, label: 'Delete'),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _MenuEntry(
+                value: 'edit',
+                icon: Icons.edit,
+                label: 'Edit',
+                selectedValue: _selection,
+              ),
+              _MenuEntry(
+                value: 'duplicate',
+                icon: Icons.copy,
+                label: 'Duplicate',
+                selectedValue: _selection,
+              ),
+              const Divider(height: 1),
+              _MenuEntry(
+                value: 'delete',
+                icon: Icons.delete,
+                label: 'Delete',
+                selectedValue: _selection,
+              ),
             ],
           ),
         );
@@ -92,11 +107,13 @@ class _MenuEntry extends StatelessWidget {
     required this.value,
     required this.icon,
     required this.label,
+    required this.selectedValue,
   });
 
   final String value;
   final IconData icon;
   final String label;
+  final String? selectedValue;
 
   @override
   Widget build(BuildContext context) {
@@ -104,7 +121,7 @@ class _MenuEntry extends StatelessWidget {
       value: value,
       builder: (context, itemState, _) {
         final bool hovered = itemState.isHovered;
-        final bool selected = itemState.isCurrentSelection;
+        final bool selected = selectedValue == value;
 
         return Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
@@ -127,16 +144,19 @@ class _MenuEntry extends StatelessWidget {
 
 ## State Snapshots
 
-### Trigger – `NakedMenuState<T>`
+### Trigger – `NakedMenuState`
 - `isOpen` → whether the overlay is visible
-- `selectedValue` → optional value currently marked as selected
-- `widgetStates` (via builder) → hover/focus/pressed states from the trigger button
+- `widgetStates` → hover/focus/pressed/disabled states exposed through the builder (use `menuState.isHovered`, `isPressed`, etc.)
 
 ### Items – `NakedMenuItemState<T>`
-- `value` → the item's value
-- `selectedValue` → the menu's selected value (if provided)
-- `isCurrentSelection` → convenience boolean
+- `value` → the item's value for comparisons with your own selection model
 - `widgetStates` → hover/focus/pressed/disabled states for styling
+
+### Access from Context
+
+- `NakedMenuState.of(context)` / `maybeOf(context)` → retrieve the trigger state
+- `NakedMenuItemState.of<T>(context)` / `maybeOf<T>(context)` → read the nearest item state
+- `NakedMenuState.controllerOf(context)` / `maybeControllerOf(context)` → access the shared `WidgetStatesController`
 
 ## NakedMenu Constructor
 
@@ -147,7 +167,6 @@ const NakedMenu({
   required this.overlayBuilder,
   required this.controller,
   this.onSelected,
-  this.selectedValue,
   this.onOpen,
   this.onClose,
   this.onCanceled,
@@ -167,7 +186,6 @@ const NakedMenu({
 - `overlayBuilder` → `(BuildContext, RawMenuOverlayInfo)` from `RawMenuAnchor`
 - `controller` → `MenuController` controlling show/hide
 - `onSelected` → callback invoked with item value (and closes menu by default)
-- `selectedValue` → optional value to mark items as selected via `WidgetState.selected`
 - `positioning` → supply an `OverlayPositionConfig` for alignment/offset tweaks
 - `closeOnClickOutside` → hide the overlay when tapping anywhere outside the menu
 - `consumeOutsideTaps` / `useRootOverlay` → capture outside taps before they reach ancestors or target the root overlay

@@ -149,7 +149,7 @@ NakedSelect<String>(
               value: label.toLowerCase(),
               builder: (context, optionState, _) => ListTile(
                 title: Text(label),
-                trailing: optionState.isCurrentSelection
+                trailing: optionState.isSelected
                     ? const Icon(Icons.check)
                     : null,
               ),

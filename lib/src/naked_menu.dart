@@ -14,6 +14,22 @@ class NakedMenuState extends NakedState {
   final bool isOpen;
 
   NakedMenuState({required super.states, required this.isOpen});
+
+  /// Returns the nearest [NakedMenuState] provided by [NakedStateScope].
+  static NakedMenuState of(BuildContext context) =>
+      NakedState.of<NakedMenuState>(context);
+
+  /// Returns the nearest [NakedMenuState] if available.
+  static NakedMenuState? maybeOf(BuildContext context) =>
+      NakedState.maybeOf<NakedMenuState>(context);
+
+  /// Returns the [WidgetStatesController] from the nearest scope.
+  static WidgetStatesController controllerOf(BuildContext context) =>
+      NakedState.controllerOf(context);
+
+  /// Returns the [WidgetStatesController] from the nearest scope, if any.
+  static WidgetStatesController? maybeControllerOf(BuildContext context) =>
+      NakedState.maybeControllerOf(context);
 }
 
 /// Immutable view passed to [NakedMenuItem] builders.
@@ -22,6 +38,22 @@ class NakedMenuItemState<T> extends NakedState {
   final T value;
 
   NakedMenuItemState({required super.states, required this.value});
+
+  /// Returns the nearest [NakedMenuItemState] of the requested type.
+  static NakedMenuItemState<S> of<S>(BuildContext context) =>
+      NakedState.of<NakedMenuItemState<S>>(context);
+
+  /// Returns the nearest [NakedMenuItemState] if available.
+  static NakedMenuItemState<S>? maybeOf<S>(BuildContext context) =>
+      NakedState.maybeOf<NakedMenuItemState<S>>(context);
+
+  /// Returns the [WidgetStatesController] from the nearest scope.
+  static WidgetStatesController controllerOf(BuildContext context) =>
+      NakedState.controllerOf(context);
+
+  /// Returns the [WidgetStatesController] from the nearest scope, if any.
+  static WidgetStatesController? maybeControllerOf(BuildContext context) =>
+      NakedState.maybeControllerOf(context);
 }
 
 /// Internal scope provided by [NakedMenu] to its overlay subtree.

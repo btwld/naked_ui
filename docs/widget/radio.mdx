@@ -100,10 +100,14 @@ class _RadioChip extends StatelessWidget {
 
 `NakedRadioState<T>` (delivered to the builder) exposes:
 
-- `value` → radio value
-- `groupValue` → current selection from the surrounding `RadioGroup`
-- `isSelected` → `groupValue == value`
-- `widgetStates` → focus/hover/pressed/disabled information
+- `value` → radio value for this option
+- `isSelected` → convenience getter (via `WidgetState.selected`)
+- `widgetStates` → hover/focus/pressed/disabled information
+
+### Access from Context
+
+- `NakedRadioState.of<T>(context)` / `maybeOf<T>(context)` → obtain the nearest typed state
+- `NakedRadioState.controllerOf(context)` / `maybeControllerOf(context)` → access the underlying `WidgetStatesController` when you need listeners outside the builder
 
 ## RadioGroup Constructor
 

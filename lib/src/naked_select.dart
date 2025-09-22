@@ -21,6 +21,22 @@ class NakedSelectState<T> extends NakedState {
     required this.value,
   });
 
+  /// Returns the nearest [NakedSelectState] of the requested type.
+  static NakedSelectState<S> of<S>(BuildContext context) =>
+      NakedState.of<NakedSelectState<S>>(context);
+
+  /// Returns the nearest [NakedSelectState] if available.
+  static NakedSelectState<S>? maybeOf<S>(BuildContext context) =>
+      NakedState.maybeOf<NakedSelectState<S>>(context);
+
+  /// Returns the [WidgetStatesController] from the nearest scope.
+  static WidgetStatesController controllerOf(BuildContext context) =>
+      NakedState.controllerOf(context);
+
+  /// Returns the [WidgetStatesController] from the nearest scope, if any.
+  static WidgetStatesController? maybeControllerOf(BuildContext context) =>
+      NakedState.maybeControllerOf(context);
+
   /// Whether a selection exists.
   bool get hasValue => value != null;
 }
@@ -31,6 +47,22 @@ class NakedSelectOptionState<T> extends NakedState {
   final T value;
 
   NakedSelectOptionState({required super.states, required this.value});
+
+  /// Returns the nearest [NakedSelectOptionState] of the requested type.
+  static NakedSelectOptionState<S> of<S>(BuildContext context) =>
+      NakedState.of<NakedSelectOptionState<S>>(context);
+
+  /// Returns the nearest [NakedSelectOptionState] if available.
+  static NakedSelectOptionState<S>? maybeOf<S>(BuildContext context) =>
+      NakedState.maybeOf<NakedSelectOptionState<S>>(context);
+
+  /// Returns the [WidgetStatesController] from the nearest scope.
+  static WidgetStatesController controllerOf(BuildContext context) =>
+      NakedState.controllerOf(context);
+
+  /// Returns the [WidgetStatesController] from the nearest scope, if any.
+  static WidgetStatesController? maybeControllerOf(BuildContext context) =>
+      NakedState.maybeControllerOf(context);
 }
 
 /// Internal scope provided by [NakedSelect] to its overlay subtree.

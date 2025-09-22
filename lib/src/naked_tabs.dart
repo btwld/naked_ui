@@ -52,6 +52,22 @@ class NakedTabState extends NakedState {
   final String tabId;
 
   NakedTabState({required super.states, required this.tabId});
+
+  /// Returns the nearest [NakedTabState] from context.
+  static NakedTabState of(BuildContext context) =>
+      NakedState.of<NakedTabState>(context);
+
+  /// Returns the nearest [NakedTabState] if available.
+  static NakedTabState? maybeOf(BuildContext context) =>
+      NakedState.maybeOf<NakedTabState>(context);
+
+  /// Returns the [WidgetStatesController] from the nearest scope.
+  static WidgetStatesController controllerOf(BuildContext context) =>
+      NakedState.controllerOf(context);
+
+  /// Returns the [WidgetStatesController] from the nearest scope, if any.
+  static WidgetStatesController? maybeControllerOf(BuildContext context) =>
+      NakedState.maybeControllerOf(context);
 }
 
 /// A headless tab group without visuals.
