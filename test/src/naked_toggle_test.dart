@@ -83,12 +83,12 @@ void main() {
                   NakedToggleOption<String>(
                     value: 'a',
                     builder: (context, optionState, child) =>
-                        Text(optionState.isCurrentSelection ? 'A*' : 'A'),
+                        Text(optionState.isSelected ? 'A*' : 'A'),
                   ),
                   NakedToggleOption<String>(
                     value: 'b',
                     builder: (context, optionState, child) =>
-                        Text(optionState.isCurrentSelection ? 'B*' : 'B'),
+                        Text(optionState.isSelected ? 'B*' : 'B'),
                   ),
                 ],
               ),

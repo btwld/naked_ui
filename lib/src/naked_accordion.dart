@@ -6,10 +6,57 @@ import 'package:flutter/widgets.dart';
 import 'mixins/naked_mixins.dart';
 import 'utilities/intents.dart';
 import 'utilities/naked_focusable_detector.dart';
-import 'utilities/widget_state_snapshot.dart';
+import 'utilities/naked_state_scope.dart';
+import 'utilities/state.dart';
+
+/// Immutable state exposed to a [NakedAccordionGroup] container.
+class NakedAccordionGroupState extends NakedState {
+  /// Number of currently expanded items.
+  final int expandedCount;
+
+  /// Whether more items can be expanded based on [maxExpanded].
+  final bool canExpandMore;
+
+  /// Whether items can be collapsed based on [minExpanded].
+  final bool canCollapseMore;
+
+  /// The minimum number of expanded items allowed.
+  final int minExpanded;
+
+  /// The maximum number of expanded items allowed (null = unlimited).
+  final int? maxExpanded;
+
+  NakedAccordionGroupState._({
+    required super.states,
+    required this.expandedCount,
+    required this.canExpandMore,
+    required this.canCollapseMore,
+    required this.minExpanded,
+    required this.maxExpanded,
+  });
+
+  factory NakedAccordionGroupState({
+    required Set<WidgetState> states,
+    required int expandedCount,
+    required int minExpanded,
+    int? maxExpanded,
+  }) {
+    final canExpandMore = maxExpanded == null || expandedCount < maxExpanded;
+    final canCollapseMore = expandedCount > minExpanded;
+
+    return NakedAccordionGroupState._(
+      states: states,
+      expandedCount: expandedCount,
+      canExpandMore: canExpandMore,
+      canCollapseMore: canCollapseMore,
+      minExpanded: minExpanded,
+      maxExpanded: maxExpanded,
+    );
+  }
+}
 
 /// Immutable state exposed to a [NakedAccordion] trigger builder.
-class NakedAccordionItemState<T> extends NakedWidgetState {
+class NakedAccordionItemState<T> extends NakedState {
   /// The item's unique identifier.
   final T value;
 
@@ -244,14 +291,27 @@ class _NakedAccordionGroupState<T> extends State<NakedAccordionGroup<T>> {
   @override
   Widget build(BuildContext context) {
     // Keep traversal predictable without overriding global arrow key handling.
-    return NakedAccordionScope<T>(
-      controller: _controller,
-      child: FocusTraversalGroup(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: widget.children,
-        ),
-      ),
+    return ListenableBuilder(
+      listenable: _controller,
+      builder: (context, _) {
+        return NakedStateScope(
+          value: NakedAccordionGroupState(
+            states: const {},
+            expandedCount: _controller.values.length,
+            minExpanded: _controller.min,
+            maxExpanded: _controller.max,
+          ),
+          child: NakedAccordionScope<T>(
+            controller: _controller,
+            child: FocusTraversalGroup(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: widget.children,
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 }
@@ -381,11 +441,7 @@ class _NakedAccordionState<T> extends State<NakedAccordion<T>>
               shortcuts: NakedIntentActions.accordion.shortcuts,
               actions: NakedIntentActions.accordion.actions(onToggle: onTap),
               child: Semantics(
-                container: true,
                 enabled: widget.enabled,
-                button: true,
-                focusable: true,
-                expanded: isExpanded,
                 label: widget.semanticLabel,
                 onTap: widget.enabled ? onTap : null,
                 child: GestureDetector(
@@ -404,17 +460,26 @@ class _NakedAccordionState<T> extends State<NakedAccordion<T>>
                   child: ExcludeSemantics(
                     child: Builder(
                       builder: (context) {
+                        final canCollapse =
+                            isExpanded &&
+                            (controller.values.length > controller.min);
+
+                        final canExpand =
+                            !isExpanded &&
+                            (controller.max == null ||
+                                controller.values.length < controller.max!);
                         final accordionState = NakedAccordionItemState<T>(
                           states: widgetStates,
                           value: widget.value,
                           isExpanded: isExpanded,
-                          canCollapse:
-                              isExpanded &&
-                              (controller.values.length > controller.min),
-                          canExpand: !isExpanded && (controller.max != 0),
+                          canCollapse: canCollapse,
+                          canExpand: canExpand,
                         );
 
-                        return widget.triggerBuilder(context, accordionState);
+                        return NakedStateScope(
+                          value: accordionState,
+                          child: widget.triggerBuilder(context, accordionState),
+                        );
                       },
                     ),
                   ),

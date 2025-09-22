@@ -119,8 +119,8 @@ class _CyberpunkSelectExampleState extends State<CyberpunkSelectExample> {
             decoration: BoxDecoration(
               color: backdropColor,
               border: Border.all(color: borderColor, width: 1),
-              boxShadow: state.matchesAny(
-                const [WidgetState.selected, WidgetState.hovered],
+              boxShadow: state.matches(
+                {WidgetState.selected, WidgetState.hovered},
               )
                   ? [
                       BoxShadow(

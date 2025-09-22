@@ -4,12 +4,12 @@ import 'base/overlay_base.dart';
 import 'naked_button.dart';
 import 'utilities/anchored_overlay_shell.dart';
 import 'utilities/positioning.dart';
-import 'utilities/widget_state_snapshot.dart';
+import 'utilities/state.dart';
 
 typedef NakedMenuController = MenuController;
 
 /// Immutable view passed to [NakedMenu.triggerBuilder].
-class NakedMenuState extends NakedWidgetState {
+class NakedMenuState extends NakedState {
   /// Whether the overlay is currently open.
   final bool isOpen;
 
@@ -17,7 +17,7 @@ class NakedMenuState extends NakedWidgetState {
 }
 
 /// Immutable view passed to [NakedMenuItem] builders.
-class NakedMenuItemState<T> extends NakedWidgetState {
+class NakedMenuItemState<T> extends NakedState {
   /// The menu item's value.
   final T value;
 
@@ -83,13 +83,6 @@ class NakedMenuItem<T> extends OverlayItem<T, NakedMenuItemState<T>> {
     if (closeOnActivate) menu?.controller.close();
   }
 
-  /// Computes additional widget states based on the menu scope.
-  ///
-  /// No additional states since menu items don't track selection.
-  Set<WidgetState>? _computeAdditionalStates(_NakedMenuScope<T>? menu) {
-    return null;
-  }
-
   @override
   Widget build(BuildContext context) {
     // Use maybeOf instead of of to handle InheritedWidget timing gracefully.
@@ -97,17 +90,16 @@ class NakedMenuItem<T> extends OverlayItem<T, NakedMenuItemState<T>> {
     // available during the same build phase when it's being created.
     // The scope is created in overlayBuilder and may not be fully established
     // in the widget tree when NakedMenuItem builds in the same cycle.
-    final menu = _NakedMenuScope.maybeOf<T>(context);
+    final scope = _NakedMenuScope.maybeOf<T>(context);
 
     final VoidCallback? onPressed = enabled
-        ? () => _handleActivation(menu)
+        ? () => _handleActivation(scope)
         : null;
-    final additionalStates = _computeAdditionalStates(menu);
 
     return buildButton(
       onPressed: onPressed,
       effectiveEnabled: enabled,
-      additionalStates: additionalStates,
+
       mapStates: (states) =>
           NakedMenuItemState<T>(states: states, value: value),
     );

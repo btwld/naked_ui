@@ -4,10 +4,10 @@ import 'package:flutter/widgets.dart';
 import 'mixins/naked_mixins.dart';
 import 'utilities/intents.dart';
 import 'utilities/naked_focusable_detector.dart';
-import 'utilities/widget_state_snapshot.dart';
+import 'utilities/state.dart';
 
 /// Immutable view passed to [NakedCheckbox.builder].
-class NakedCheckboxState extends NakedWidgetState {
+class NakedCheckboxState extends NakedState {
   /// The current checked state (null for tristate intermediate).
   final bool? isChecked;
 

@@ -6,7 +6,7 @@ import 'package:flutter/widgets.dart';
 import 'mixins/naked_mixins.dart';
 import 'utilities/intents.dart';
 import 'utilities/naked_focusable_detector.dart';
-import 'utilities/widget_state_snapshot.dart';
+import 'utilities/state.dart';
 
 /// A controller for managing tab selection state.
 ///
@@ -47,18 +47,11 @@ class NakedTabController extends ChangeNotifier {
 }
 
 /// Immutable view passed to [NakedTab.builder].
-class NakedTabState extends NakedWidgetState {
+class NakedTabState extends NakedState {
   /// The unique identifier for this tab.
   final String tabId;
 
-  /// Whether this tab is currently selected.
-  final bool isSelected;
-
-  NakedTabState({
-    required super.states,
-    required this.tabId,
-    required this.isSelected,
-  });
+  NakedTabState({required super.states, required this.tabId});
 }
 
 /// A headless tab group without visuals.
@@ -398,11 +391,7 @@ class _NakedTabState extends State<NakedTab>
     updateDisabledState(!_isEnabled);
     updateSelectedState(isSelected, null);
 
-    final tabState = NakedTabState(
-      states: widgetStates,
-      tabId: widget.tabId,
-      isSelected: isSelected,
-    );
+    final tabState = NakedTabState(states: widgetStates, tabId: widget.tabId);
 
     final content = widget.builder != null
         ? widget.builder!(context, tabState, widget.child)

@@ -2,24 +2,14 @@ import 'package:flutter/material.dart';
 
 import 'mixins/naked_mixins.dart';
 import 'utilities/hit_testable_container.dart';
-import 'utilities/widget_state_snapshot.dart';
+import 'utilities/state.dart';
 
 /// Immutable view passed to [NakedRadio.builder].
-class NakedRadioState<T> extends NakedWidgetState {
+class NakedRadioState<T> extends NakedState {
   /// The value represented by this radio.
   final T value;
 
-  /// The currently selected value from the surrounding radio group.
-  final T? groupValue;
-
-  NakedRadioState({
-    required super.states,
-    required this.value,
-    required this.groupValue,
-  });
-
-  /// Whether this radio matches the current selection.
-  bool get isSelected => groupValue != null && value == groupValue;
+  NakedRadioState({required super.states, required this.value});
 }
 
 /// A headless radio without visuals.
@@ -177,10 +167,14 @@ class _NakedRadioState<T> extends State<NakedRadio<T>>
         }
 
         if (widget.builder != null) {
+          final isSelected = registry.groupValue == widget.value;
+          final statesWithSelection = {
+            ...states,
+            if (isSelected) WidgetState.selected,
+          };
           final radioStateTyped = NakedRadioState<T>(
-            states: states,
+            states: statesWithSelection,
             value: widget.value,
-            groupValue: registry.groupValue,
           );
 
           final built = widget.builder!(context, radioStateTyped, widget.child);

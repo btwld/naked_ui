@@ -238,7 +238,7 @@ void main() {
             triggerBuilder: (context, state) {
               return Container(
                 key: const Key('trigger'),
-                color: state.widgetStates.contains(WidgetState.hovered)
+                color: state.states.contains(WidgetState.hovered)
                     ? Colors.grey[200]
                     : null,
                 child: const Text('Select option'),
@@ -277,7 +277,7 @@ void main() {
             triggerBuilder: (context, state) {
               return Container(
                 key: const Key('trigger'),
-                color: state.widgetStates.contains(WidgetState.pressed)
+                color: state.states.contains(WidgetState.pressed)
                     ? Colors.grey[400]
                     : null,
                 child: const Text('Select option'),
@@ -321,7 +321,7 @@ void main() {
               return Container(
                 key: const Key('trigger'),
                 decoration: BoxDecoration(
-                  border: state.widgetStates.contains(WidgetState.focused)
+                  border: state.states.contains(WidgetState.focused)
                       ? Border.all(color: Colors.blue, width: 2)
                       : null,
                 ),
@@ -366,7 +366,7 @@ void main() {
                   builder: (context, state, child) {
                     return Container(
                       key: const Key('apple-option'),
-                      color: state.widgetStates.contains(WidgetState.hovered)
+                      color: state.states.contains(WidgetState.hovered)
                           ? const Color(0xFFE0E0E0)
                           : null,
                       child: child,

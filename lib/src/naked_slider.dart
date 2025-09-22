@@ -229,7 +229,7 @@ class _NakedSliderState extends State<NakedSlider>
     widget.onDragStart?.call();
 
     // Ensure subsequent keyboard nudges apply here.
-    if ((effectiveFocusNode.canRequestFocus ?? false))
+    if (effectiveFocusNode.canRequestFocus)
       effectiveFocusNode.requestFocus();
   }
 

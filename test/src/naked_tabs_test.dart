@@ -276,7 +276,7 @@ void main() {
       _harness(
         initialSelected: 'tab1',
         tab1Key: tab1,
-        tab1StatesSpy: (state) => statesLog.add(state.widgetStates.toSet()),
+        tab1StatesSpy: (state) => statesLog.add(state.states.toSet()),
       ),
     );
     await tester.pumpAndSettle();

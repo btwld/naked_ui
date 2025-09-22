@@ -5,10 +5,10 @@ import 'naked_button.dart';
 import 'utilities/anchored_overlay_shell.dart';
 import 'utilities/intents.dart';
 import 'utilities/positioning.dart';
-import 'utilities/widget_state_snapshot.dart';
+import 'utilities/state.dart';
 
 /// Immutable view passed to [NakedSelect.triggerBuilder].
-class NakedSelectState<T> extends NakedWidgetState {
+class NakedSelectState<T> extends NakedState {
   /// Whether the overlay is currently open.
   final bool isOpen;
 
@@ -26,22 +26,11 @@ class NakedSelectState<T> extends NakedWidgetState {
 }
 
 /// Immutable view passed to [NakedSelectOption] builders.
-class NakedSelectItemState<T> extends NakedWidgetState {
+class NakedSelectOptionState<T> extends NakedState {
   /// The option's value.
   final T value;
 
-  /// The currently selected value from the surrounding select.
-  final T? selectedValue;
-
-  NakedSelectItemState({
-    required super.states,
-    required this.value,
-    required this.selectedValue,
-  });
-
-  /// Whether this option matches the current selection.
-  bool get isCurrentSelection =>
-      selectedValue != null && value == selectedValue;
+  NakedSelectOptionState({required super.states, required this.value});
 }
 
 /// Internal scope provided by [NakedSelect] to its overlay subtree.
@@ -88,7 +77,7 @@ class _NakedSelectScope<T> extends OverlayScope<T> {
 ///
 /// This enables fully declarative composition inside [NakedSelect.overlayBuilder]
 /// without relying on the data-driven approach.
-class NakedSelectOption<T> extends OverlayItem<T, NakedSelectItemState<T>> {
+class NakedSelectOption<T> extends OverlayItem<T, NakedSelectOptionState<T>> {
   const NakedSelectOption({
     super.key,
     required super.value,
@@ -104,31 +93,21 @@ class NakedSelectOption<T> extends OverlayItem<T, NakedSelectItemState<T>> {
     if (scope.closeOnSelect) scope.controller.close();
   }
 
-  /// Computes additional widget states based on the selection status.
-  Set<WidgetState>? _computeAdditionalStates(bool isSelected) {
-    return isSelected ? {WidgetState.selected} : null;
-  }
-
   @override
   Widget build(BuildContext context) {
     final scope = _NakedSelectScope.of<T>(context);
 
     final isSelected = scope.value == value;
     final effectiveEnabled = enabled && scope.enabled;
-    final VoidCallback? onPressed = effectiveEnabled
-        ? () => _handleSelection(scope)
-        : null;
-    final additionalStates = _computeAdditionalStates(isSelected);
+    final onPressed = effectiveEnabled ? () => _handleSelection(scope) : null;
 
     return buildButton(
       onPressed: onPressed,
       effectiveEnabled: effectiveEnabled,
-      additionalStates: additionalStates,
-      mapStates: (states) => NakedSelectItemState<T>(
-        states: states,
-        value: value,
-        selectedValue: scope.value,
-      ),
+      isSelected: isSelected,
+      mapStates: (states) {
+        return NakedSelectOptionState<T>(states: states, value: value);
+      },
     );
   }
 }

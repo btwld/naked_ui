@@ -4,10 +4,10 @@ import 'package:flutter/widgets.dart';
 import 'mixins/naked_mixins.dart';
 import 'utilities/intents.dart';
 import 'utilities/naked_focusable_detector.dart';
-import 'utilities/widget_state_snapshot.dart';
+import 'utilities/state.dart';
 
 /// Immutable view passed to [NakedToggle.builder].
-class NakedToggleState extends NakedWidgetState {
+class NakedToggleState extends NakedState {
   /// Whether the toggle is currently on.
   final bool isToggled;
 
@@ -15,22 +15,11 @@ class NakedToggleState extends NakedWidgetState {
 }
 
 /// Immutable view passed to [NakedToggleOption.builder].
-class NakedToggleOptionState<T> extends NakedWidgetState {
+class NakedToggleOptionState<T> extends NakedState {
   /// The option's value.
   final T value;
 
-  /// The currently selected value from the surrounding toggle group.
-  final T? selectedValue;
-
-  NakedToggleOptionState({
-    required super.states,
-    required this.value,
-    required this.selectedValue,
-  });
-
-  /// Whether this option matches the current selection.
-  bool get isCurrentSelection =>
-      selectedValue != null && value == selectedValue;
+  NakedToggleOptionState({required super.states, required this.value});
 }
 
 /// A headless binary toggle control without visuals.
@@ -378,7 +367,6 @@ class _NakedToggleOptionState<T> extends State<NakedToggleOption<T>>
     final optionState = NakedToggleOptionState<T>(
       states: widgetStates,
       value: widget.value,
-      selectedValue: scope.selectedValue,
     );
 
     final content = widget.builder != null
