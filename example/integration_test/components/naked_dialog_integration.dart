@@ -19,15 +19,15 @@ void main() {
       final openButtonFinder = find.text('Show Basic Dialog');
       expect(openButtonFinder, findsOneWidget);
 
-      // Initially, dialog should not be visible
-      expect(find.byType(NakedDialog), findsNothing);
+      // Initially, dialog content should not be visible
+      expect(find.text('Confirm Action'), findsNothing);
 
       // Tap to open dialog
       await tester.tap(openButtonFinder);
       await tester.pumpAndSettle();
 
-      // Verify dialog is now visible
-      expect(find.byType(NakedDialog), findsOneWidget);
+      // Verify dialog content is now visible
+      expect(find.text('Confirm Action'), findsOneWidget);
 
       // Find and tap the close button (Cancel or Confirm)
       final closeButtonFinder = find.text('Cancel');
@@ -36,8 +36,8 @@ void main() {
       await tester.tap(closeButtonFinder);
       await tester.pumpAndSettle();
 
-      // Verify dialog is closed
-      expect(find.byType(NakedDialog), findsNothing);
+      // Verify dialog content is closed
+      expect(find.text('Confirm Action'), findsNothing);
     });
 
     testWidgets('dialog closes when tapping outside', (tester) async {
@@ -48,15 +48,15 @@ void main() {
       await tester.tap(find.text('Show Basic Dialog'));
       await tester.pumpAndSettle();
 
-      // Verify dialog is visible
-      expect(find.byType(NakedDialog), findsOneWidget);
+      // Verify dialog content is visible
+      expect(find.text('Confirm Action'), findsOneWidget);
 
       // Tap outside the dialog
       await tester.tapAt(const Offset(50, 50));
       await tester.pumpAndSettle();
 
-      // Verify dialog is closed
-      expect(find.byType(NakedDialog), findsNothing);
+      // Verify dialog content is closed
+      expect(find.text('Confirm Action'), findsNothing);
     });
 
     testWidgets('dialog responds to keyboard activation', (tester) async {
@@ -91,8 +91,8 @@ void main() {
       await tester.tap(find.text('Show Basic Dialog'));
       await tester.pumpAndSettle();
 
-      // Verify dialog is focused
-      expect(find.byType(NakedDialog), findsOneWidget);
+      // Verify dialog content is focused/visible
+      expect(find.text('Confirm Action'), findsOneWidget);
 
       // Test that focus is properly managed within dialog
       final focusableElements = find.byType(TextButton);

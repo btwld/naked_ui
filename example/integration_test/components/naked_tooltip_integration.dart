@@ -27,7 +27,7 @@ void main() {
       final gesture = await tester.createGesture(kind: PointerDeviceKind.mouse);
       await gesture.addPointer(location: tester.getCenter(triggerFinder));
       addTearDown(gesture.removePointer);
-      await tester.pump(); // Wait for waitDuration (0 seconds in example)
+      await tester.pumpAndSettle(); // Wait for waitDuration and animations
 
       // Tooltip should be visible now
       expect(find.text('This is a tooltip'), findsOneWidget);
@@ -211,7 +211,7 @@ void main() {
       final gesture = await tester.createGesture(kind: PointerDeviceKind.mouse);
       await gesture.addPointer(location: tester.getCenter(triggerFinder));
       addTearDown(gesture.removePointer);
-      await tester.pump();
+      await tester.pumpAndSettle();
       await tester.pumpAndSettle();
 
       // Tooltip should be visible and positioned correctly

@@ -21,7 +21,7 @@ void main() {
 
       // Tap to open dropdown
       await tester.tap(selectFinder);
-      await tester.pump();
+      await tester.pumpAndSettle();
 
       // Dropdown should be open now
       expect(find.text('Apple'), findsOneWidget);
@@ -85,10 +85,8 @@ void main() {
       await tester.tap(find.text('Select an option'));
       await tester.pumpAndSettle();
 
-      // Select an item (use item finder to avoid text ambiguity)
-      final itemFinder = find.byType(NakedSelectOption<String>).first;
-      expect(itemFinder, findsWidgets);
-      await tester.tap(itemFinder);
+      // Select an item (use .last pattern for overlay items)
+      await tester.tap(find.text('Apple').last);
       await tester.pumpAndSettle();
 
       // Verify selection
@@ -139,9 +137,9 @@ void main() {
 
       // Open and select
       await tester.tap(find.text('Select'));
-      await tester.pump();
-      await tester.tap(find.text('Test Value'));
-      await tester.pump();
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Test Value').last);
+      await tester.pumpAndSettle();
 
       // Verify callback
       expect(lastSelectedValue, 'Test Value');
@@ -187,13 +185,13 @@ void main() {
 
       // Open dropdown
       await tester.tap(find.text('Select'));
-      await tester.pump();
+      await tester.pumpAndSettle();
       expect(find.text('Option 1'), findsOneWidget);
       expect(find.text('Option 2'), findsOneWidget);
 
       // Select an item
-      await tester.tap(find.text('Option 1'));
-      await tester.pump();
+      await tester.tap(find.text('Option 1').last);
+      await tester.pumpAndSettle();
 
       // Dropdown should be closed (closeOnSelect: true)
       expect(find.text('Option 2'), findsNothing);
@@ -233,7 +231,7 @@ void main() {
 
       // Try to tap - should not open
       await tester.tap(find.text('Disabled Select'));
-      await tester.pump();
+      await tester.pumpAndSettle();
 
       // Menu should not be open
       expect(find.text('Menu Content'), findsNothing);
@@ -251,14 +249,8 @@ void main() {
           .first);
       await tester.pumpAndSettle();
 
-      // Select an option (disambiguate by selecting the menu item text under NakedSelectOption)
-      final option2Item = find
-          .descendant(
-            of: find.byType(NakedSelectOption<String>),
-            matching: find.text('Banana'),
-          )
-          .first;
-      await tester.tap(option2Item);
+      // Select an option (use .last pattern for overlay items)
+      await tester.tap(find.text('Banana').last);
       await tester.pumpAndSettle();
 
       // Dropdown should close and show selected value

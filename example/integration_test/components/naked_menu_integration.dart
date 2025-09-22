@@ -15,9 +15,6 @@ void main() {
       await tester.pumpWidget(const menu_example.MyApp());
       await tester.pump(const Duration(milliseconds: 100));
 
-      final menuFinder = find.byType(NakedMenu);
-      expect(menuFinder, findsOneWidget);
-
       // Find the trigger button
       final triggerButton = find.byType(NakedButton);
       expect(triggerButton, findsOneWidget);
@@ -27,7 +24,7 @@ void main() {
 
       // Tap to open menu
       await tester.tap(triggerButton);
-      await tester.pump();
+      await tester.pumpAndSettle();
 
       // Menu should be open now
       expect(find.text('Edit'), findsOneWidget);
@@ -73,11 +70,11 @@ void main() {
 
       // Open menu
       await tester.tap(find.text('Open Menu'));
-      await tester.pump();
+      await tester.pumpAndSettle();
 
       // Tap menu item
       await tester.tap(find.text('Item 1'));
-      await tester.pump();
+      await tester.pumpAndSettle();
 
       // Verify selection
       expect(selectedItem, 'Item 1');
@@ -121,12 +118,12 @@ void main() {
 
       // Open menu
       await tester.tap(find.text('Open Menu'));
-      await tester.pump();
+      await tester.pumpAndSettle();
       expect(find.text('Menu Content'), findsOneWidget);
 
       // Close menu programmatically
       menuController.close();
-      await tester.pump();
+      await tester.pumpAndSettle();
 
       // Verify callback was called
       expect(menuClosed, isTrue);
@@ -168,12 +165,12 @@ void main() {
 
       // Open menu
       await tester.tap(find.text('Open Menu'));
-      await tester.pump();
+      await tester.pumpAndSettle();
       expect(find.text('Menu Content'), findsOneWidget);
 
       // Test keyboard navigation - Escape should close menu
       await tester.testKeyboardActivation(find.byKey(menuKey));
-      await tester.pump();
+      await tester.pumpAndSettle();
 
       // Menu should still be open (keyboard activation tests Enter, not Escape)
       expect(find.text('Menu Content'), findsOneWidget);
@@ -219,12 +216,12 @@ void main() {
 
       // Open menu
       await tester.tap(find.text('Open Menu'));
-      await tester.pump();
+      await tester.pumpAndSettle();
       expect(find.text('Menu Content'), findsOneWidget);
 
       // Tap outside the menu
       await tester.tap(find.text('Outside Area'));
-      await tester.pump();
+      await tester.pumpAndSettle();
 
       // Menu should close
       expect(find.text('Menu Content'), findsNothing);
@@ -239,14 +236,14 @@ void main() {
 
       // Open menu
       await tester.tap(triggerButton);
-      await tester.pump();
+      await tester.pumpAndSettle();
 
       // Find and tap a menu item
       final menuItem = find.text('Edit');
       expect(menuItem, findsOneWidget);
 
       await tester.tap(menuItem);
-      await tester.pump();
+      await tester.pumpAndSettle();
 
       // Check that snackbar appears (from the example's onPressed callback)
       expect(find.text('Selected: edit'), findsOneWidget);

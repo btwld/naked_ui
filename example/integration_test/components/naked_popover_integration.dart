@@ -22,18 +22,21 @@ void main() {
       expect(triggerButtonFinder, findsOneWidget);
 
       // Initially, popover content should not be visible
-      expect(find.byType(NakedPopover), findsWidgets);
+      expect(find.text('Popover Content'), findsNothing);
 
       // Tap to open popover
       await tester.tap(triggerButtonFinder);
       await tester.pumpAndSettle();
 
       // Verify popover content is now visible
-      expect(find.byType(NakedPopover), findsWidgets);
+      expect(find.text('Popover Content'), findsOneWidget);
 
       // Tap outside to close popover
       await tester.tapAt(const Offset(50, 50));
       await tester.pumpAndSettle();
+
+      // Verify popover content is closed
+      expect(find.text('Popover Content'), findsNothing);
     });
 
     testWidgets('popover responds to hover interactions', (tester) async {
