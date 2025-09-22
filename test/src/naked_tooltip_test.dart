@@ -11,7 +11,7 @@ void main() {
     testWidgets('renders child widget', (WidgetTester tester) async {
       await tester.pumpMaterialWidget(
         NakedTooltip(
-          tooltipBuilder: (context) => const Text('Tooltip Content'),
+          builder: (context) => const Text('Tooltip Content'),
           child: const Text('Hover Me'),
         ),
       );
@@ -29,7 +29,7 @@ void main() {
             padding: const EdgeInsets.all(1.0),
             child: NakedTooltip(
               key: targetKey,
-              tooltipBuilder: (context) => const Text('Tooltip Content'),
+              builder: (context) => const Text('Tooltip Content'),
               waitDuration: Duration.zero,
               showDuration: Duration.zero,
               child: const Text('Hover Me'),
@@ -60,7 +60,7 @@ void main() {
           Center(
             child: NakedTooltip(
               key: targetKey,
-              tooltipBuilder: (context) => const Text('Tooltip Content'),
+              builder: (context) => const Text('Tooltip Content'),
               waitDuration: Duration.zero,
               showDuration: Duration.zero,
               child: const Text('Hover Me'),
@@ -95,7 +95,7 @@ void main() {
             padding: const EdgeInsets.all(1.0),
             child: NakedTooltip(
               key: targetKey,
-              tooltipBuilder: (context) => const Text('Tooltip Content'),
+              builder: (context) => const Text('Tooltip Content'),
               waitDuration: Duration.zero,
               showDuration: Duration.zero,
               onOpen: () => onOpenCalled = true,
@@ -127,7 +127,7 @@ void main() {
             padding: const EdgeInsets.all(1.0),
             child: NakedTooltip(
               key: targetKey,
-              tooltipBuilder: (context) => const Text('Tooltip Content'),
+              builder: (context) => const Text('Tooltip Content'),
               waitDuration: Duration.zero,
               showDuration: Duration.zero,
               onClose: () => onCloseCalled = true,
@@ -161,7 +161,7 @@ void main() {
           Center(
             child: NakedTooltip(
               key: targetKey,
-              tooltipBuilder: (context) => const Text('Tooltip Content'),
+              builder: (context) => const Text('Tooltip Content'),
               waitDuration: const Duration(milliseconds: 50),
               showDuration: Duration.zero,
               child: const Text('Hover Me'),
@@ -200,7 +200,7 @@ void main() {
           Center(
             child: NakedTooltip(
               key: targetKey,
-              tooltipBuilder: (context) => const Text('Tooltip Content'),
+              builder: (context) => const Text('Tooltip Content'),
               waitDuration: Duration.zero,
               showDuration: const Duration(milliseconds: 50),
               child: const Text('Hover Me'),
@@ -240,7 +240,7 @@ void main() {
           Center(
             child: NakedTooltip(
               key: targetKey,
-              tooltipBuilder: (context) => Container(
+              builder: (context) => Container(
                 key: const Key('tooltip'),
                 width: 100,
                 height: 40,
@@ -297,7 +297,7 @@ void main() {
           Center(
             child: NakedTooltip(
               key: targetKey,
-              tooltipBuilder: (context) => const Text('Tooltip Content'),
+              builder: (context) => const Text('Tooltip Content'),
               waitDuration: Duration.zero,
               showDuration: Duration.zero,
               semanticsLabel: semanticLabel,

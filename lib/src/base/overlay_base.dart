@@ -121,8 +121,8 @@ abstract class OverlayItem<T, S extends NakedState> extends StatelessWidget {
       child: child,
       builder: builder == null
           ? null
-          : (context, states, child) {
-              final effectiveStates = {...states};
+          : (context, buttonState, child) {
+              final effectiveStates = <WidgetState>{...buttonState.states};
               if (isSelected == true) {
                 effectiveStates.add(WidgetState.selected);
               }

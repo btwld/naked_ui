@@ -44,7 +44,7 @@ class _TooltipExampleState extends State<TooltipExample>
       showDuration: const Duration(seconds: 2),
       onOpen: () => _controller.forward(),
       onClose: () => _controller.reverse(),
-      tooltipBuilder: (context) {
+      builder: (context) {
         return FadeTransition(
           opacity: _controller,
           child: Material(
@@ -77,7 +77,7 @@ class _TooltipExampleState extends State<TooltipExample>
 const NakedTooltip({
   Key? key,
   required this.child,
-  required this.tooltipBuilder,
+  required this.builder,
   this.showDuration = const Duration(seconds: 2),
   this.waitDuration = const Duration(seconds: 1),
   this.positioning = const OverlayPositionConfig(
@@ -95,7 +95,7 @@ const NakedTooltip({
 ### Key Parameters
 
 - `child` → trigger widget
-- `tooltipBuilder` → create the tooltip contents each time it shows
+- `builder` → create the tooltip contents each time it shows
 - `showDuration` → how long the tooltip stays visible before hiding automatically
 - `waitDuration` → delay before showing once hover/focus occurs
 - `positioning` → `OverlayPositionConfig` controlling anchor & offset

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
@@ -37,6 +38,19 @@ class NakedCheckboxState extends NakedState {
 
   /// Whether the checkbox is in intermediate/mixed state.
   bool get isIntermediate => tristate && isChecked == null;
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+
+    return other is NakedCheckboxState &&
+        setEquals(other.states, states) &&
+        other.isChecked == isChecked &&
+        other.tristate == tristate;
+  }
+
+  @override
+  int get hashCode => Object.hash(states, isChecked, tristate);
 }
 
 /// A headless checkbox without visuals.

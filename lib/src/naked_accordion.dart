@@ -69,6 +69,29 @@ class NakedAccordionGroupState extends NakedState {
   /// Returns the [WidgetStatesController] from the nearest scope, if any.
   static WidgetStatesController? maybeControllerOf(BuildContext context) =>
       NakedState.maybeControllerOf(context);
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+
+    return other is NakedAccordionGroupState &&
+        setEquals(other.states, states) &&
+        other.expandedCount == expandedCount &&
+        other.canExpandMore == canExpandMore &&
+        other.canCollapseMore == canCollapseMore &&
+        other.minExpanded == minExpanded &&
+        other.maxExpanded == maxExpanded;
+  }
+
+  @override
+  int get hashCode => Object.hash(
+        states,
+        expandedCount,
+        canExpandMore,
+        canCollapseMore,
+        minExpanded,
+        maxExpanded,
+      );
 }
 
 /// Immutable state exposed to a [NakedAccordion] trigger builder.
@@ -108,6 +131,27 @@ class NakedAccordionItemState<T> extends NakedState {
   /// Returns the [WidgetStatesController] from the nearest scope, if any.
   static WidgetStatesController? maybeControllerOf(BuildContext context) =>
       NakedState.maybeControllerOf(context);
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+
+    return other is NakedAccordionItemState<T> &&
+        setEquals(other.states, states) &&
+        other.value == value &&
+        other.isExpanded == isExpanded &&
+        other.canCollapse == canCollapse &&
+        other.canExpand == canExpand;
+  }
+
+  @override
+  int get hashCode => Object.hash(
+        states,
+        value,
+        isExpanded,
+        canCollapse,
+        canExpand,
+      );
 }
 
 /// Maintains accordion expansion state without imposing visuals.

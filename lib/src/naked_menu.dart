@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 
 import 'base/overlay_base.dart';
@@ -29,6 +30,18 @@ class NakedMenuState extends NakedState {
   /// Returns the [WidgetStatesController] from the nearest scope, if any.
   static WidgetStatesController? maybeControllerOf(BuildContext context) =>
       NakedState.maybeControllerOf(context);
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+
+    return other is NakedMenuState &&
+        setEquals(other.states, states) &&
+        other.isOpen == isOpen;
+  }
+
+  @override
+  int get hashCode => Object.hash(states, isOpen);
 }
 
 /// Immutable view passed to [NakedMenuItem] builders.
@@ -53,6 +66,18 @@ class NakedMenuItemState<T> extends NakedState {
   /// Returns the [WidgetStatesController] from the nearest scope, if any.
   static WidgetStatesController? maybeControllerOf(BuildContext context) =>
       NakedState.maybeControllerOf(context);
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+
+    return other is NakedMenuItemState<T> &&
+        setEquals(other.states, states) &&
+        other.value == value;
+  }
+
+  @override
+  int get hashCode => Object.hash(states, value);
 }
 
 /// Internal scope provided by [NakedMenu] to its overlay subtree.
@@ -303,10 +328,10 @@ class _NakedMenuState<T> extends State<NakedMenu<T>>
         child: NakedButton(
           onPressed: _toggle,
           focusNode: widget.triggerFocusNode,
-          builder: (context, states, _) {
+          builder: (context, buttonState, _) {
             return widget.triggerBuilder(
               context,
-              NakedMenuState(states: states, isOpen: _isOpen),
+              NakedMenuState(states: buttonState.states, isOpen: _isOpen),
             );
           },
         ),

@@ -364,11 +364,11 @@ class _NakedSelectState<T> extends State<NakedSelect<T>>
               onPressed: widget.enabled ? _toggle : null,
               enabled: widget.enabled,
               focusNode: widget.triggerFocusNode,
-              builder: (context, states, _) {
+              builder: (context, buttonState, _) {
                 return widget.triggerBuilder(
                   context,
                   NakedSelectState(
-                    states: states,
+                    states: buttonState.states,
                     isOpen: _isOpen,
                     value: _effectiveValue,
                   ),

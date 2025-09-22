@@ -7,14 +7,69 @@ keywords: [flutter, button, headless, unstyled, accessibility, interaction, hove
 NakedButton provides interaction behavior and accessibility features without imposing any visual styling, giving consumers complete design freedom. It integrates with `NakedFocusableDetector` to provide enhanced keyboard accessibility, hover detection, and focus management.
 
 <Tip>
-  Use the state callbacks (`onHoverChange`, `onPressChange`, `onFocusChange`) to create responsive visual feedback that enhances user experience.
+  Use the `builder` function to create responsive visual feedback based on the button's interaction state. This eliminates the need for StatefulWidget in most cases.
 </Tip>
 
 
 <Info>
   You can find this example in our [GitHub repository](https://github.com/btwld/naked_ui/blob/main/example/lib/api/naked_button.0.dart).
 </Info>
-<CodeGroup title="Usage Example" defaultLanguage="dart">
+<CodeGroup title="Builder Pattern (Recommended)" defaultLanguage="dart">
+```dart
+class ButtonExample extends StatelessWidget {
+  const ButtonExample({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return NakedButton(
+      onPressed: () {
+        debugPrint('Button pressed!');
+      },
+      builder: (context, buttonState, child) {
+        const baseColor = Color(0xFF3D3D3D);
+
+        final backgroundColor = buttonState.when(
+          pressed: baseColor.withValues(alpha: 0.8),
+          hovered: baseColor.withValues(alpha: 0.9),
+          orElse: baseColor,
+        );
+
+        final scale = buttonState.isPressed ? 0.95 : 1.0;
+
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 2),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(
+              color: buttonState.isFocused ? Colors.black : Colors.transparent,
+              width: 1,
+            ),
+          ),
+          child: AnimatedScale(
+            scale: scale,
+            duration: const Duration(milliseconds: 200),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              decoration: BoxDecoration(
+                color: backgroundColor,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Text(
+                'Button',
+                style: TextStyle(color: Colors.white),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+```
+</CodeGroup>
+
+<CodeGroup title="Callback Pattern (Legacy)" defaultLanguage="dart">
 ```dart
 class ButtonExample extends StatefulWidget {
   const ButtonExample({super.key});
@@ -243,8 +298,8 @@ Optional focus node to control focus behavior.
 #### autofocus → `bool`
 Whether to automatically focus this button when first built. Defaults to false.
 
-#### builder → `ValueWidgetBuilder<Set<WidgetState>>?`
-Optional builder that receives the current states to drive visuals.
+#### builder → `NakedStateBuilder<NakedButtonState>?`
+Optional builder that receives the current [NakedButtonState] to drive visuals. Use this instead of callbacks for stateless widgets.
 
 #### focusOnPress → `bool`
 Whether to request focus when the button is pressed. Defaults to false.

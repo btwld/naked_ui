@@ -1,10 +1,42 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 
 import 'mixins/naked_mixins.dart'; // WidgetStatesMixin, FocusNodeMixin
 import 'utilities/intents.dart';
 import 'utilities/naked_focusable_detector.dart';
+import 'utilities/state.dart';
+
+/// Immutable view passed to [NakedButton.builder].
+class NakedButtonState extends NakedState {
+  NakedButtonState({required super.states});
+
+  /// Returns the nearest [NakedButtonState] provided by [NakedStateScope].
+  static NakedButtonState of(BuildContext context) => NakedState.of(context);
+
+  /// Returns the nearest [NakedButtonState] if one is available.
+  static NakedButtonState? maybeOf(BuildContext context) =>
+      NakedState.maybeOf(context);
+
+  /// Returns the [WidgetStatesController] from the nearest scope.
+  static WidgetStatesController controllerOf(BuildContext context) =>
+      NakedState.controllerOf(context);
+
+  /// Returns the [WidgetStatesController] from the nearest scope, if any.
+  static WidgetStatesController? maybeControllerOf(BuildContext context) =>
+      NakedState.maybeControllerOf(context);
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+
+    return other is NakedButtonState && setEquals(other.states, states);
+  }
+
+  @override
+  int get hashCode => states.hashCode;
+}
 
 /// A headless button without visuals.
 ///
@@ -61,8 +93,8 @@ class NakedButton extends StatefulWidget {
   /// Called when pressed state changes.
   final ValueChanged<bool>? onPressChange;
 
-  /// Builds the button using the current set of [WidgetState] values.
-  final ValueWidgetBuilder<Set<WidgetState>>? builder;
+  /// Builds the button using the current [NakedButtonState].
+  final NakedStateBuilder<NakedButtonState>? builder;
 
   /// Whether the button is enabled.
   final bool enabled;
@@ -156,6 +188,14 @@ class _NakedButtonState extends State<NakedButton>
     updatePressState(true, widget.onPressChange);
   }
 
+  Widget _buildContent(BuildContext context) {
+    final buttonState = NakedButtonState(states: widgetStates);
+
+    return widget.builder != null
+        ? widget.builder!(context, buttonState, widget.child)
+        : widget.child!;
+  }
+
   @override
   void initializeWidgetStates() {
     updateDisabledState(!widget._effectiveEnabled);
@@ -190,9 +230,7 @@ class _NakedButtonState extends State<NakedButton>
 
   @override
   Widget build(BuildContext context) {
-    final content = widget.builder != null
-        ? widget.builder!(context, widgetStates, widget.child)
-        : widget.child!;
+    final content = _buildContent(context);
 
     return NakedFocusableDetector(
       enabled: widget._effectiveEnabled,
