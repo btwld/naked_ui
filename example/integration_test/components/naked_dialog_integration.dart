@@ -16,7 +16,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // Find the button that opens the dialog
-      final openButtonFinder = find.text('Open Dialog');
+      final openButtonFinder = find.text('Show Basic Dialog');
       expect(openButtonFinder, findsOneWidget);
 
       // Initially, dialog should not be visible
@@ -29,8 +29,8 @@ void main() {
       // Verify dialog is now visible
       expect(find.byType(NakedDialog), findsOneWidget);
 
-      // Find and tap the close button (usually "Close" or "Cancel")
-      final closeButtonFinder = find.text('Close').last;
+      // Find and tap the close button (Cancel or Confirm)
+      final closeButtonFinder = find.text('Cancel');
       expect(closeButtonFinder, findsOneWidget);
 
       await tester.tap(closeButtonFinder);
@@ -45,7 +45,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // Open dialog
-      await tester.tap(find.text('Open Dialog'));
+      await tester.tap(find.text('Show Basic Dialog'));
       await tester.pumpAndSettle();
 
       // Verify dialog is visible
@@ -88,7 +88,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // Open dialog
-      await tester.tap(find.text('Open Dialog'));
+      await tester.tap(find.text('Show Basic Dialog'));
       await tester.pumpAndSettle();
 
       // Verify dialog is focused

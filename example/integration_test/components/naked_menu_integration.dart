@@ -23,16 +23,16 @@ void main() {
       expect(triggerButton, findsOneWidget);
 
       // Initially menu should be closed (no overlay content)
-      expect(find.text('Menu Item 1'), findsNothing);
+      expect(find.text('Edit'), findsNothing);
 
       // Tap to open menu
       await tester.tap(triggerButton);
       await tester.pump();
 
       // Menu should be open now
-      expect(find.text('Menu Item 1'), findsOneWidget);
-      expect(find.text('Menu Item 2'), findsOneWidget);
-      expect(find.text('Menu Item 3'), findsOneWidget);
+      expect(find.text('Edit'), findsOneWidget);
+      expect(find.text('Copy'), findsOneWidget);
+      expect(find.text('Delete'), findsOneWidget);
     });
 
     testWidgets('menu items respond to selection', (tester) async {
@@ -242,17 +242,17 @@ void main() {
       await tester.pump();
 
       // Find and tap a menu item
-      final menuItem = find.text('Menu Item 1');
+      final menuItem = find.text('Edit');
       expect(menuItem, findsOneWidget);
 
       await tester.tap(menuItem);
       await tester.pump();
 
       // Check that snackbar appears (from the example's onPressed callback)
-      expect(find.text('Item 1 selected'), findsOneWidget);
+      expect(find.text('Selected: edit'), findsOneWidget);
 
       // Menu should be closed after item selection
-      expect(find.text('Menu Item 1'), findsNothing);
+      expect(find.text('Edit'), findsNothing);
     });
   });
 }

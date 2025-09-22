@@ -17,16 +17,16 @@ void main() {
       expect(selectFinder, findsOneWidget);
 
       // Initially dropdown should be closed
-      expect(find.text('Option 1'), findsNothing);
+      expect(find.text('Apple'), findsNothing);
 
       // Tap to open dropdown
       await tester.tap(selectFinder);
       await tester.pump();
 
       // Dropdown should be open now
-      expect(find.text('Option 1'), findsOneWidget);
-      expect(find.text('Option 2'), findsOneWidget);
-      expect(find.text('Option 3'), findsOneWidget);
+      expect(find.text('Apple'), findsOneWidget);
+      expect(find.text('Banana'), findsOneWidget);
+      expect(find.text('Orange'), findsOneWidget);
     });
 
     testWidgets('single selection mode works correctly', (tester) async {
@@ -255,14 +255,14 @@ void main() {
       final option2Item = find
           .descendant(
             of: find.byType(NakedSelectOption<String>),
-            matching: find.text('Option 2'),
+            matching: find.text('Banana'),
           )
           .first;
       await tester.tap(option2Item);
       await tester.pumpAndSettle();
 
       // Dropdown should close and show selected value
-      expect(find.text('Option 1'), findsNothing); // Menu closed
+      expect(find.text('Apple'), findsNothing); // Menu closed
 
       // Test that we can open again and see the selection reflected
       await tester.tap(find
@@ -274,17 +274,17 @@ void main() {
       expect(
           find.descendant(
               of: find.byType(NakedSelectOption<String>),
-              matching: find.text('Option 1')),
+              matching: find.text('Apple')),
           findsOneWidget);
       expect(
           find.descendant(
               of: find.byType(NakedSelectOption<String>),
-              matching: find.text('Option 2')),
+              matching: find.text('Banana')),
           findsOneWidget);
       expect(
           find.descendant(
               of: find.byType(NakedSelectOption<String>),
-              matching: find.text('Option 3')),
+              matching: find.text('Orange')),
           findsOneWidget);
     });
   });
