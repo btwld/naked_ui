@@ -23,11 +23,11 @@ class NakedSelectState<T> extends NakedState {
 
   /// Returns the nearest [NakedSelectState] of the requested type.
   static NakedSelectState<S> of<S>(BuildContext context) =>
-      NakedState.of<NakedSelectState<S>>(context);
+      NakedState.of(context);
 
   /// Returns the nearest [NakedSelectState] if available.
   static NakedSelectState<S>? maybeOf<S>(BuildContext context) =>
-      NakedState.maybeOf<NakedSelectState<S>>(context);
+      NakedState.maybeOf(context);
 
   /// Returns the [WidgetStatesController] from the nearest scope.
   static WidgetStatesController controllerOf(BuildContext context) =>
@@ -50,11 +50,11 @@ class NakedSelectOptionState<T> extends NakedState {
 
   /// Returns the nearest [NakedSelectOptionState] of the requested type.
   static NakedSelectOptionState<S> of<S>(BuildContext context) =>
-      NakedState.of<NakedSelectOptionState<S>>(context);
+      NakedState.of(context);
 
   /// Returns the nearest [NakedSelectOptionState] if available.
   static NakedSelectOptionState<S>? maybeOf<S>(BuildContext context) =>
-      NakedState.maybeOf<NakedSelectOptionState<S>>(context);
+      NakedState.maybeOf(context);
 
   /// Returns the [WidgetStatesController] from the nearest scope.
   static WidgetStatesController controllerOf(BuildContext context) =>

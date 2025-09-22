@@ -65,10 +65,10 @@ class _AccordionSectionState extends State<_AccordionSection> {
 
   @override
   Widget build(BuildContext context) {
-    return NakedAccordionGroup<String>(
+    return NakedAccordion<String>(
       value: widget.value,
       onHoverChange: (hovered) => setState(() => _isHovered = hovered),
-      triggerBuilder: (context, accordionState, _) {
+      triggerBuilder: (context, accordionState) {
         final bool isExpanded = accordionState.isExpanded;
         final bool canExpand = accordionState.canExpand;
         final bool canCollapse = accordionState.canCollapse;

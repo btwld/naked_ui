@@ -21,64 +21,67 @@ class CheckboxExample extends StatefulWidget {
 }
 
 class _CheckboxExampleState extends State<CheckboxExample> {
-  bool? _acceptedTerms = false;
+  bool _isChecked = false;
 
   @override
   Widget build(BuildContext context) {
     return NakedCheckbox(
-      value: _acceptedTerms,
-      tristate: true,
-      onChanged: (next) => setState(() => _acceptedTerms = next),
+      value: _isChecked,
+      onChanged: (next) => setState(() => _isChecked = next!),
       builder: (context, checkboxState, _) {
         final bool isChecked = checkboxState.isChecked == true;
-        final bool isIndeterminate = checkboxState.isIntermediate;
         final bool isHovered = checkboxState.isHovered;
         final bool isFocused = checkboxState.isFocused;
 
-        return AnimatedContainer(
-          duration: const Duration(milliseconds: 150),
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(10),
-            color: isHovered ? Colors.grey.shade100 : Colors.white,
-            border: Border.all(
-              color: isFocused ? Colors.blue : Colors.grey.shade300,
-              width: isFocused ? 2 : 1,
+        return Row(
+          mainAxisSize: MainAxisSize.min,
+          spacing: 8,
+          children: [
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              height: 20,
+              width: 20,
+              decoration: BoxDecoration(
+                border: Border.all(
+                  color: isChecked
+                      ? const Color(0xFF3D3D3D)
+                      : isFocused
+                          ? const Color(0xFF3D3D3D).withValues(alpha: 0.8)
+                          : isHovered
+                              ? const Color(0xFF3D3D3D).withValues(alpha: 0.6)
+                              : const Color(0xFF3D3D3D).withValues(alpha: 0.4),
+                  width: 2,
+                ),
+                borderRadius: BorderRadius.circular(6),
+                color: isChecked ? const Color(0xFF3D3D3D) : Colors.transparent,
+              ),
+              child: isChecked
+                  ? const Icon(
+                      Icons.check,
+                      size: 16,
+                      color: Colors.white,
+                    )
+                  : null,
             ),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 20,
-                height: 20,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(6),
-                  border: Border.all(color: Colors.grey.shade500, width: 2),
-                  color: isChecked ? Colors.blue : Colors.white,
-                ),
-                child: AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 120),
-                  child: isChecked
-                      ? const Icon(Icons.check, size: 14, color: Colors.white)
-                      : isIndeterminate
-                          ? const Icon(Icons.remove, size: 14, color: Colors.blue)
-                          : const SizedBox.shrink(),
-                ),
+            const Text(
+              'Label',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF3D3D3D),
               ),
-              const SizedBox(width: 12),
-              Text(
-                isIndeterminate ? 'Partially accepted' : 'Accept terms',
-                style: const TextStyle(fontWeight: FontWeight.w600),
-              ),
-            ],
-          ),
+            ),
+          ],
         );
       },
     );
   }
 }
 ```
+
+<Tip>
+  For tristate checkboxes (supporting null/indeterminate state), set `tristate: true` and use `bool?` for the value. The checkbox will cycle through false → true → null → false when tapped.
+</Tip>
 
 ## Typed Checkbox State
 

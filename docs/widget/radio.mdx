@@ -13,7 +13,7 @@ Combine `RadioGroup` with `NakedRadio` to build completely custom radio buttons.
 ## Quick Start
 
 ```dart
-enum RadioOption { banana, apple, mango }
+enum RadioOption { banana, apple }
 
 class RadioExample extends StatefulWidget {
   const RadioExample({super.key});
@@ -36,7 +36,6 @@ class _RadioExampleState extends State<RadioExample> {
         children: [
           _RadioChip(value: RadioOption.banana, label: 'Banana'),
           _RadioChip(value: RadioOption.apple, label: 'Apple'),
-          _RadioChip(value: RadioOption.mango, label: 'Mango'),
         ],
       ),
     );

@@ -14,12 +14,11 @@ class NakedToggleState extends NakedState {
   NakedToggleState({required super.states, required this.isToggled});
 
   /// Returns the nearest [NakedToggleState] from context.
-  static NakedToggleState of(BuildContext context) =>
-      NakedState.of<NakedToggleState>(context);
+  static NakedToggleState of(BuildContext context) => NakedState.of(context);
 
   /// Returns the nearest [NakedToggleState] if available.
   static NakedToggleState? maybeOf(BuildContext context) =>
-      NakedState.maybeOf<NakedToggleState>(context);
+      NakedState.maybeOf(context);
 
   /// Returns the [WidgetStatesController] from the nearest scope.
   static WidgetStatesController controllerOf(BuildContext context) =>
@@ -39,11 +38,11 @@ class NakedToggleOptionState<T> extends NakedState {
 
   /// Returns the nearest [NakedToggleOptionState] of the requested type.
   static NakedToggleOptionState<S> of<S>(BuildContext context) =>
-      NakedState.of<NakedToggleOptionState<S>>(context);
+      NakedState.of(context);
 
   /// Returns the nearest [NakedToggleOptionState] if available.
   static NakedToggleOptionState<S>? maybeOf<S>(BuildContext context) =>
-      NakedState.maybeOf<NakedToggleOptionState<S>>(context);
+      NakedState.maybeOf(context);
 
   /// Returns the [WidgetStatesController] from the nearest scope.
   static WidgetStatesController controllerOf(BuildContext context) =>

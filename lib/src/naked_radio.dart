@@ -13,11 +13,11 @@ class NakedRadioState<T> extends NakedState {
 
   /// Returns the nearest [NakedRadioState] of the requested type.
   static NakedRadioState<S> of<S>(BuildContext context) =>
-      NakedState.of<NakedRadioState<S>>(context);
+      NakedState.of(context);
 
   /// Returns the nearest [NakedRadioState] if available, otherwise null.
   static NakedRadioState<S>? maybeOf<S>(BuildContext context) =>
-      NakedState.maybeOf<NakedRadioState<S>>(context);
+      NakedState.maybeOf(context);
 
   /// Returns the [WidgetStatesController] from the nearest scope.
   static WidgetStatesController controllerOf(BuildContext context) =>

@@ -21,12 +21,11 @@ class NakedCheckboxState extends NakedState {
   });
 
   /// Returns the nearest [NakedCheckboxState] provided by [NakedStateScope].
-  static NakedCheckboxState of(BuildContext context) =>
-      NakedState.of<NakedCheckboxState>(context);
+  static NakedCheckboxState of(BuildContext context) => NakedState.of(context);
 
   /// Returns the nearest [NakedCheckboxState] if one is available.
   static NakedCheckboxState? maybeOf(BuildContext context) =>
-      NakedState.maybeOf<NakedCheckboxState>(context);
+      NakedState.maybeOf(context);
 
   /// Returns the [WidgetStatesController] from the nearest scope.
   static WidgetStatesController controllerOf(BuildContext context) =>

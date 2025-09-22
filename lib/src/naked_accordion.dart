@@ -56,11 +56,11 @@ class NakedAccordionGroupState extends NakedState {
 
   /// Returns the nearest [NakedAccordionGroupState] from context.
   static NakedAccordionGroupState of(BuildContext context) =>
-      NakedState.of<NakedAccordionGroupState>(context);
+      NakedState.of(context);
 
   /// Returns the nearest [NakedAccordionGroupState] if available.
   static NakedAccordionGroupState? maybeOf(BuildContext context) =>
-      NakedState.maybeOf<NakedAccordionGroupState>(context);
+      NakedState.maybeOf(context);
 
   /// Returns the [WidgetStatesController] from the nearest scope.
   static WidgetStatesController controllerOf(BuildContext context) =>
@@ -95,11 +95,11 @@ class NakedAccordionItemState<T> extends NakedState {
 
   /// Returns the nearest [NakedAccordionItemState] of the requested type.
   static NakedAccordionItemState<S> of<S>(BuildContext context) =>
-      NakedState.of<NakedAccordionItemState<S>>(context);
+      NakedState.of(context);
 
   /// Returns the nearest [NakedAccordionItemState] if available.
   static NakedAccordionItemState<S>? maybeOf<S>(BuildContext context) =>
-      NakedState.maybeOf<NakedAccordionItemState<S>>(context);
+      NakedState.maybeOf(context);
 
   /// Returns the [WidgetStatesController] from the nearest scope.
   static WidgetStatesController controllerOf(BuildContext context) =>

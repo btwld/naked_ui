@@ -16,12 +16,11 @@ class NakedMenuState extends NakedState {
   NakedMenuState({required super.states, required this.isOpen});
 
   /// Returns the nearest [NakedMenuState] provided by [NakedStateScope].
-  static NakedMenuState of(BuildContext context) =>
-      NakedState.of<NakedMenuState>(context);
+  static NakedMenuState of(BuildContext context) => NakedState.of(context);
 
   /// Returns the nearest [NakedMenuState] if available.
   static NakedMenuState? maybeOf(BuildContext context) =>
-      NakedState.maybeOf<NakedMenuState>(context);
+      NakedState.maybeOf(context);
 
   /// Returns the [WidgetStatesController] from the nearest scope.
   static WidgetStatesController controllerOf(BuildContext context) =>
@@ -41,11 +40,11 @@ class NakedMenuItemState<T> extends NakedState {
 
   /// Returns the nearest [NakedMenuItemState] of the requested type.
   static NakedMenuItemState<S> of<S>(BuildContext context) =>
-      NakedState.of<NakedMenuItemState<S>>(context);
+      NakedState.of(context);
 
   /// Returns the nearest [NakedMenuItemState] if available.
   static NakedMenuItemState<S>? maybeOf<S>(BuildContext context) =>
-      NakedState.maybeOf<NakedMenuItemState<S>>(context);
+      NakedState.maybeOf(context);
 
   /// Returns the [WidgetStatesController] from the nearest scope.
   static WidgetStatesController controllerOf(BuildContext context) =>
