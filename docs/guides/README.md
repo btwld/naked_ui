@@ -4,14 +4,16 @@ This guide provides documentation for the Naked component library, focusing on u
 
 ## Contents
 
-- [State Callback Naming Convention](./state_callbacks.md) - Understanding the standardized callback naming pattern
+- [State Management Patterns](./state_callbacks.md) - Modern builder pattern vs legacy callbacks
+- [Interaction Behaviors](./interaction_behaviors.md) - Understanding the underlying interaction architecture
 
 ## About Naked Components
 
 Naked components are unstyled, headless UI components for Flutter that provide behavior without visual styling. They give you complete control over appearance while handling complex interaction patterns, accessibility, and state management.
 
 Key features:
-- State callbacks for fine-grained UI control
+- **Builder pattern** for direct state access (recommended)
+- Legacy state callbacks for backward compatibility
 - Built-in keyboard accessibility
 - Screen reader support
 - Flexible composition
@@ -31,15 +33,55 @@ Then import it in your Dart code:
 import 'package:naked_ui/naked_ui.dart';
 ```
 
-Basic usage example:
+## Usage Examples
+
+### Modern Builder Pattern (Recommended)
 
 ```dart
-class MyButton extends StatefulWidget {
+class MyButton extends StatelessWidget {
   @override
-  _MyButtonState createState() => _MyButtonState();
+  Widget build(BuildContext context) {
+    return NakedButton(
+      onPressed: () {
+        print('Button pressed!');
+      },
+      builder: (context, state, child) {
+        final color = state.when(
+          pressed: Colors.blue.shade700,
+          hovered: Colors.blue.shade500,
+          orElse: Colors.blue.shade400,
+        );
+
+        return Container(
+          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          decoration: BoxDecoration(
+            color: color,
+            borderRadius: BorderRadius.circular(4),
+            border: Border.all(
+              color: state.isFocused ? Colors.white : Colors.transparent,
+              width: 2,
+            ),
+          ),
+          child: Text(
+            'Click Me',
+            style: TextStyle(color: Colors.white),
+          ),
+        );
+      },
+    );
+  }
+}
+```
+
+### Legacy Callback Pattern
+
+```dart
+class MyLegacyButton extends StatefulWidget {
+  @override
+  _MyLegacyButtonState createState() => _MyLegacyButtonState();
 }
 
-class _MyButtonState extends State<MyButton> {
+class _MyLegacyButtonState extends State<MyLegacyButton> {
   bool _isHovered = false;
   bool _isPressed = false;
   bool _isFocused = false;
@@ -76,3 +118,5 @@ class _MyButtonState extends State<MyButton> {
   }
 }
 ```
+
+The builder pattern is recommended as it eliminates boilerplate, enables stateless widgets, and provides cleaner conditional logic.

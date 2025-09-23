@@ -13,7 +13,7 @@ void main() {
     testWidgets('renders child and is closed by default', (tester) async {
       await tester.pumpMaterialWidget(
         NakedPopover(
-          popoverBuilder: (_) => const Text('Popover Content'),
+          popoverBuilder: (context, info) => const Text('Popover Content'),
           child: const Text('Trigger'),
         ),
       );
@@ -26,7 +26,7 @@ void main() {
       await tester.pumpMaterialWidget(
         Center(
           child: NakedPopover(
-            popoverBuilder: (_) => const Text('Popover Content'),
+            popoverBuilder: (context, info) => const Text('Popover Content'),
             child: const Text('Trigger'),
           ),
         ),
@@ -48,7 +48,7 @@ void main() {
       await tester.pumpMaterialWidget(
         Center(
           child: NakedPopover(
-            popoverBuilder: (_) => const Text('Popover Content'),
+            popoverBuilder: (context, info) => const Text('Popover Content'),
             child: const Text('Trigger'),
           ),
         ),
@@ -71,7 +71,7 @@ void main() {
         await tester.pumpMaterialWidget(
           Center(
             child: NakedPopover(
-              popoverBuilder: (_) => const Text('Popover Content'),
+              popoverBuilder: (context, info) => const Text('Popover Content'),
               child: Focus(
                 // give the trigger a node we can assert on
                 focusNode: triggerFocusNode,
@@ -100,7 +100,7 @@ void main() {
       await tester.pumpMaterialWidget(
         Center(
           child: NakedPopover(
-            popoverBuilder: (_) => const Text('Popover Content'),
+            popoverBuilder: (context, info) => const Text('Popover Content'),
             child: const Text('Trigger'),
           ),
         ),
@@ -121,7 +121,7 @@ void main() {
       await tester.pumpMaterialWidget(
         Center(
           child: NakedPopover(
-            popoverBuilder: (_) => const Text('Popover Content'),
+            popoverBuilder: (context, info) => const Text('Popover Content'),
             child: const Text('Trigger'),
           ),
         ),
@@ -142,11 +142,10 @@ void main() {
       await tester.pumpMaterialWidget(
         Center(
           child: NakedPopover(
-            position: NakedMenuPosition(
-              target: Alignment.bottomCenter,
-              follower: Alignment.topCenter,
+            positioning: const OverlayPositionConfig(
+              alignment: Alignment.bottomCenter,
             ),
-            popoverBuilder: (_) => const SizedBox(
+            popoverBuilder: (context, info) => const SizedBox(
               key: popoverKey,
               width: 100,
               height: 60,
@@ -192,7 +191,7 @@ void main() {
               ),
               Center(
                 child: NakedPopover(
-                  popoverBuilder: (_) => const SizedBox(
+                  popoverBuilder: (context, info) => const SizedBox(
                     width: 100,
                     height: 60,
                     child: Text('Popover Content'),
@@ -242,7 +241,7 @@ void main() {
         SizedBox.expand(
           child: Center(
             child: NakedPopover(
-              popoverBuilder: (_) => const SizedBox(
+              popoverBuilder: (context, info) => const SizedBox(
                 width: 120,
                 height: 80,
                 child: Text('Popover Content'),

@@ -11,18 +11,18 @@ Widget builder(bool isExpanded, {required String text}) {
 void main() {
   group('Basic Functionality', () {
     Widget buildAccordion({List<String> initialExpandedValues = const []}) {
-      return NakedAccordion<String>(
+      return NakedAccordionGroup<String>(
         controller: NakedAccordionController(),
         initialExpandedValues: initialExpandedValues,
         children: [
-          NakedAccordionItem<String>(
+          NakedAccordion<String>(
             value: 'item1',
-            trigger: (_, isExpanded) => const Text('Trigger 1'),
+            builder: (_, itemState) => const Text('Trigger 1'),
             child: const Text('Content 1'),
           ),
-          NakedAccordionItem<String>(
+          NakedAccordion<String>(
             value: 'item2',
-            trigger: (_, isExpanded) => const Text('Trigger 2'),
+            builder: (_, itemState) => const Text('Trigger 2'),
             child: const Text('Content 2'),
           ),
         ],
@@ -63,12 +63,12 @@ void main() {
       required FocusNode focusNode,
       required bool autofocus,
     }) {
-      return NakedAccordion<String>(
+      return NakedAccordionGroup<String>(
         controller: NakedAccordionController<String>(),
         children: [
-          NakedAccordionItem<String>(
+          NakedAccordion<String>(
             value: 'item1',
-            trigger: (_, isExpanded) => const Text('Trigger 1'),
+            builder: (_, itemState) => const Text('Trigger 1'),
             onFocusChange: (focused) => focusState = focused,
             autofocus: autofocus,
             focusNode: focusNode,
@@ -102,12 +102,12 @@ void main() {
 
     testWidgets('autofocus works correctly', (WidgetTester tester) async {
       await tester.pumpMaterialWidget(
-        NakedAccordion<String>(
+        NakedAccordionGroup<String>(
           controller: NakedAccordionController<String>(),
           children: [
-            NakedAccordionItem<String>(
+            NakedAccordion<String>(
               value: 'item1',
-              trigger: (_, isExpanded) => const Text('Trigger 1'),
+              builder: (_, itemState) => const Text('Trigger 1'),
               onFocusChange: (focused) => focusState = focused,
               autofocus: true,
               child: const Text('Content 1'),
@@ -129,25 +129,25 @@ void main() {
     });
 
     Widget buildControlledAccordion() {
-      return NakedAccordion<String>(
+      return NakedAccordionGroup<String>(
         controller: controller,
         children: [
-          NakedAccordionItem<String>(
+          NakedAccordion<String>(
             value: 'item1',
-            trigger: (context, isExpanded) {
+            builder: (context, itemState) {
               return GestureDetector(
                 onTap: () {},
-                child: Text(isExpanded ? 'Close 1' : 'Open 1'),
+                child: Text(itemState.isExpanded ? 'Close 1' : 'Open 1'),
               );
             },
             child: const Text('Content 1'),
           ),
-          NakedAccordionItem<String>(
+          NakedAccordion<String>(
             value: 'item2',
-            trigger: (context, isExpanded) {
+            builder: (context, itemState) {
               return GestureDetector(
                 onTap: () {},
-                child: Text(isExpanded ? 'Close 2' : 'Open 2'),
+                child: Text(itemState.isExpanded ? 'Close 2' : 'Open 2'),
               );
             },
             child: const Text('Content 2'),
@@ -337,19 +337,19 @@ void main() {
     late NakedAccordionController<String> controller;
 
     Widget buildTriggeredAccordion() {
-      return NakedAccordion<String>(
+      return NakedAccordionGroup<String>(
         controller: controller,
         children: [
-          NakedAccordionItem<String>(
+          NakedAccordion<String>(
             value: 'item1',
-            trigger: (context, isExpanded) =>
-                Text(isExpanded ? 'Close 1' : 'Open 1'),
+            builder: (context, itemState) =>
+                Text(itemState.isExpanded ? 'Close 1' : 'Open 1'),
             child: const Text('Content 1'),
           ),
-          NakedAccordionItem<String>(
+          NakedAccordion<String>(
             value: 'item2',
-            trigger: (context, isExpanded) =>
-                Text(isExpanded ? 'Close 2' : 'Open 2'),
+            builder: (context, itemState) =>
+                Text(itemState.isExpanded ? 'Close 2' : 'Open 2'),
             child: const Text('Content 2'),
           ),
         ],

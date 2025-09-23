@@ -82,15 +82,13 @@ void main() {
                 children: [
                   NakedToggleOption<String>(
                     value: 'a',
-                    builder: (context, states, child) => Text(
-                      states.contains(WidgetState.selected) ? 'A*' : 'A',
-                    ),
+                    builder: (context, optionState, child) =>
+                        Text(optionState.isSelected ? 'A*' : 'A'),
                   ),
                   NakedToggleOption<String>(
                     value: 'b',
-                    builder: (context, states, child) => Text(
-                      states.contains(WidgetState.selected) ? 'B*' : 'B',
-                    ),
+                    builder: (context, optionState, child) =>
+                        Text(optionState.isSelected ? 'B*' : 'B'),
                   ),
                 ],
               ),

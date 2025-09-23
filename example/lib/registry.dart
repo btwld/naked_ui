@@ -1,40 +1,33 @@
 import 'package:flutter/widgets.dart';
 
-// Button
-import 'api/naked_button.1.dart' as button_advanced_example;
-import 'api/naked_button.0.dart' as button_basic_example;
-
-// Checkbox
-import 'api/naked_checkbox.0.dart' as checkbox_basic_example;
-import 'api/naked_checkbox.2.dart' as checkbox_builder_example;
-
-// Radio
-import 'api/naked_radio.1.dart' as radio_group_example;
-import 'api/naked_radio.0.dart' as radio_basic_example;
-
-// Select
-import 'api/naked_select.0.dart' as select_example;
-
-// Tabs
-import 'api/naked_tabs.0.dart' as tabs_example;
-
-// Slider
-import 'api/naked_slider.0.dart' as slider_example;
-
-// TextField
-import 'api/naked_textfield.0.dart' as textfield_example;
-
-// Menu
-import 'api/naked_menu.0.dart' as menu_example;
-
 // Accordion
 import 'api/naked_accordion.0.dart' as accordion_example;
-
-// Tooltip
-import 'api/naked_tooltip.0.dart' as tooltip_example;
-
+// Button
+import 'api/naked_button.0.dart' as button_basic_example;
+// Checkbox
+import 'api/naked_checkbox.0.dart' as checkbox_basic_example;
 // Dialog
 import 'api/naked_dialog.0.dart' as dialog_basic_example;
+// Menu
+import 'api/naked_menu.0.dart' as menu_example;
+// Popover
+import 'api/naked_popover.0.dart' as popover_example;
+// Radio
+import 'api/naked_radio.0.dart' as radio_basic_example;
+// Select
+import 'api/naked_select.0.dart' as select_example;
+import 'api/naked_select.1.dart' as select_checkmark_example;
+import 'api/naked_select.2.dart' as select_cyberpunk_example;
+// Slider
+import 'api/naked_slider.0.dart' as slider_example;
+// Tabs
+import 'api/naked_tabs.0.dart' as tabs_example;
+// TextField
+import 'api/naked_textfield.0.dart' as textfield_example;
+// Toggle
+import 'api/naked_toggle.0.dart' as toggle_example;
+// Tooltip
+import 'api/naked_tooltip.0.dart' as tooltip_example;
 
 class Demo {
   final String id; // slug used in routes
@@ -66,15 +59,6 @@ class DemoRegistry {
       tags: ['button'],
     ),
     Demo(
-      id: 'button-advanced',
-      title: 'Button – Advanced',
-      category: 'Button',
-      builder: (_) => const button_advanced_example.AdvancedButtonExample(),
-      sourceUrl:
-          'https://github.com/btwld/naked_ui/blob/main/example/lib/api/naked_button.1.dart',
-      tags: ['button', 'states', 'builder'],
-    ),
-    Demo(
       id: 'checkbox-basic',
       title: 'Checkbox – Basic',
       category: 'Checkbox',
@@ -82,15 +66,6 @@ class DemoRegistry {
       sourceUrl:
           'https://github.com/btwld/naked_ui/blob/main/example/lib/api/naked_checkbox.0.dart',
       tags: ['checkbox'],
-    ),
-    Demo(
-      id: 'checkbox-builder',
-      title: 'Checkbox – Builder',
-      category: 'Checkbox',
-      builder: (_) => const checkbox_builder_example.CheckboxBuilderExample(),
-      sourceUrl:
-          'https://github.com/btwld/naked_ui/blob/main/example/lib/api/naked_checkbox.2.dart',
-      tags: ['checkbox', 'builder'],
     ),
     Demo(
       id: 'radio-basic',
@@ -102,22 +77,32 @@ class DemoRegistry {
       tags: ['radio'],
     ),
     Demo(
-      id: 'radio-groups',
-      title: 'Radio – Groups',
-      category: 'Radio',
-      builder: (_) => const radio_group_example.RadioGroupExample(),
-      sourceUrl:
-          'https://github.com/btwld/naked_ui/blob/main/example/lib/api/naked_radio.1.dart',
-      tags: ['radio', 'group'],
-    ),
-    Demo(
       id: 'select-basic',
       title: 'Select – Basic',
       category: 'Select',
-      builder: (_) => const select_example.SelectExample(),
+      builder: (_) => const select_example.SimpleSelectExample(),
       sourceUrl:
           'https://github.com/btwld/naked_ui/blob/main/example/lib/api/naked_select.0.dart',
       tags: ['select'],
+    ),
+    Demo(
+      id: 'select-checkmark',
+      title: 'Select – Checkmark',
+      category: 'Select',
+      builder: (_) => const select_checkmark_example.CheckmarkSelectExample(),
+      sourceUrl:
+          'https://github.com/btwld/naked_ui/blob/main/example/lib/api/naked_select.1.dart',
+      tags: ['select', 'checkmark'],
+    ),
+    Demo(
+      id: 'select-cyberpunk',
+      title: 'Select – Cyberpunk',
+      category: 'Select',
+      builder: (_) =>
+          const select_cyberpunk_example.CyberpunkSelectExample(),
+      sourceUrl:
+          'https://github.com/btwld/naked_ui/blob/main/example/lib/api/naked_select.2.dart',
+      tags: ['select', 'cyberpunk', 'glow'],
     ),
     Demo(
       id: 'tabs-basic',
@@ -150,7 +135,7 @@ class DemoRegistry {
       id: 'menu-basic',
       title: 'Menu – Basic',
       category: 'Menu',
-      builder: (_) => const menu_example.MenuExample(),
+      builder: (_) => const menu_example.SimpleMenuExample(),
       sourceUrl:
           'https://github.com/btwld/naked_ui/blob/main/example/lib/api/naked_menu.0.dart',
       tags: ['menu'],
@@ -181,6 +166,24 @@ class DemoRegistry {
       sourceUrl:
           'https://github.com/btwld/naked_ui/blob/main/example/lib/api/naked_dialog.0.dart',
       tags: ['dialog'],
+    ),
+    Demo(
+      id: 'popover-basic',
+      title: 'Popover – Basic',
+      category: 'Popover',
+      builder: (_) => const popover_example.BasicPopoverExample(),
+      sourceUrl:
+          'https://github.com/btwld/naked_ui/blob/main/example/lib/api/naked_popover.0.dart',
+      tags: ['popover'],
+    ),
+    Demo(
+      id: 'toggle-basic',
+      title: 'Toggle – Basic',
+      category: 'Toggle',
+      builder: (_) => const toggle_example.ToggleButtonExample(),
+      sourceUrl:
+          'https://github.com/btwld/naked_ui/blob/main/example/lib/api/naked_toggle.0.dart',
+      tags: ['toggle'],
     ),
   ];
 

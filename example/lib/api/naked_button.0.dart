@@ -29,63 +29,53 @@ class ButtonExample extends StatefulWidget {
 }
 
 class _ButtonExampleState extends State<ButtonExample> {
-  bool _isHovered = false;
-  bool _isPressed = false;
-  bool _isFocused = false;
-
-  Color get backgroundColor {
-    const baseColor = Color(0xFF3D3D3D);
-    if (_isPressed) {
-      return baseColor.withValues(alpha: 0.8);
-    }
-    if (_isHovered) {
-      return baseColor.withValues(alpha: 0.9);
-    }
-    return baseColor;
-  }
-
-  double get scale {
-    if (_isPressed) {
-      return 0.95;
-    }
-    return 1;
-  }
-
   @override
   Widget build(BuildContext context) {
+    const baseColor = Color(0xFF3D3D3D);
+
     return NakedButton(
       onPressed: () {
         debugPrint('Button pressed!');
       },
-      onFocusChange: (focused) => setState(() => _isFocused = focused),
-      onHoverChange: (hovered) => setState(() => _isHovered = hovered),
-      onPressChange: (pressed) => setState(() => _isPressed = pressed),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 2),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(
-            color: _isFocused ? Colors.black : Colors.transparent,
-            width: 1,
+      builder: (context, state, child) {
+        final backgroundColor = state.when(
+          pressed: baseColor.withValues(alpha: 0.8),
+          hovered: baseColor.withValues(alpha: 0.9),
+          orElse: baseColor,
+        );
+
+        final scale = state.when(
+          pressed: 0.95,
+          orElse: 1.0,
+        );
+
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 2),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(
+              color: state.isFocused ? Colors.black : Colors.transparent,
+              width: 1,
+            ),
           ),
-        ),
-        child: AnimatedScale(
-          scale: scale,
-          duration: const Duration(milliseconds: 200),
-          child: AnimatedContainer(
+          child: AnimatedScale(
+            scale: scale,
             duration: const Duration(milliseconds: 200),
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-            decoration: BoxDecoration(
-              color: backgroundColor,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: const Text(
-              'Button',
-              style: TextStyle(color: Colors.white),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              decoration: BoxDecoration(
+                color: backgroundColor,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Text(
+                'Button',
+                style: TextStyle(color: Colors.white),
+              ),
             ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }

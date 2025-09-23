@@ -4,27 +4,11 @@
 
 - Added: Popover; Toggle
 - API: Standardized state callbacks (onHoverChange/onPressChange/onFocusChange); removed onDisabledState (use enabled); added onSelectChange/onDragChange where applicable
-- Behavior: Menu uses RawMenuAnchor; Select adds type-ahead and focus return; Tabs select on focus; Slider keyboard/drag refinements
+- Better use of Raw Flutter components where available
 - Accessibility: Improved semantics across button, checkbox, radio, slider, select, tabs, dialog, tooltip
-- Focus/State: Unified focus handling (FocusableMixin) and consistent hover/press/selected for builders
+- Focus/State: Unified focus handling (FocusNodeMixin) and consistent hover/press/selected for builders
 
----
-
-## 0.2.0
-
-- Added: Popover; Toggle
-- Removed: none
-- API: Standardized callbacks across components
-  - onStateHover → onHoverChange
-  - onStatePressed → onPressChange
-  - onStateFocus → onFocusChange
-  - onStateDragging → onDragChange
-  - onStateSelected → onSelectChange
-  - Removed: onDisabledState (use enabled)
-- Behavior: Menu uses RawMenuAnchor
-- Accessibility/State: Improved interactive state handling
-
----
+- Architecture: Builder-first APIs (e.g., NakedTextField builder) with state provided via NakedStateScope
 
 ## 0.0.1-dev.2 (2025-07-03)
 

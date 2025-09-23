@@ -36,13 +36,13 @@ void main() {
     return MaterialApp(
       home: Scaffold(
         body: Center(
-          child: NakedTabGroup(
+          child: NakedTabs(
             selectedTabId: selected,
             onChanged: (_) {},
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                NakedTabList(
+                NakedTabBar(
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: const [
@@ -53,8 +53,8 @@ void main() {
                   ),
                 ),
                 const SizedBox(height: 16),
-                const NakedTabPanel(tabId: 'A', child: Text('A body')),
-                const NakedTabPanel(tabId: 'B', child: Text('B body')),
+                const NakedTabView(tabId: 'A', child: Text('A body')),
+                const NakedTabView(tabId: 'B', child: Text('B body')),
               ],
             ),
           ),

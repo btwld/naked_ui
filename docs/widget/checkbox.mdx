@@ -1,14 +1,17 @@
 ---
 title: NakedCheckbox
+description: Headless checkbox primitive with tristate support and typed state snapshots
+keywords: [flutter, checkbox, tristate, headless, accessibility]
 ---
-NakedCheckbox provides core interaction behavior and accessibility without imposing any visual styling, giving consumers complete design freedom. It integrates with `FocusableActionDetector` to provide enhanced keyboard accessibility, hover detection, and focus management.
 
-This component uses direct callbacks for state changes instead of managing its own state, giving consumers control over their state management approach.
+`NakedCheckbox` handles toggle semantics, keyboard activation, focus, and accessibility while leaving visuals entirely to you. Use the callbacks for simple state-driven styling or the typed builder to access the current value and interaction states.
 
 <Info>
-  You can find this example in our [GitHub repository](https://github.com/btwld/naked_ui/blob/main/example/lib/api/naked_checkbox.0.dart).
+  Browse the runnable sample at [`example/lib/api/naked_checkbox.0.dart`](https://github.com/btwld/naked_ui/blob/main/example/lib/api/naked_checkbox.0.dart).
 </Info>
-<CodeGroup title="Usage Example" defaultLanguage="dart">
+
+## Quick Start
+
 ```dart
 class CheckboxExample extends StatefulWidget {
   const CheckboxExample({super.key});
@@ -19,273 +22,82 @@ class CheckboxExample extends StatefulWidget {
 
 class _CheckboxExampleState extends State<CheckboxExample> {
   bool _isChecked = false;
-  bool _isHovered = false;
-  bool _isPressed = false;
-  bool _isFocused = false;
-
-  Color get borderColor {
-    const baseColor = Color(0xFF3D3D3D);
-
-    if (_isChecked) {
-      return baseColor;
-    }
-    if (_isFocused) {
-      return baseColor.withValues(alpha: 0.8);
-    }
-    if (_isHovered || _isPressed) {
-      return baseColor.withValues(alpha: 0.6);
-    }
-    return baseColor.withValues(alpha: 0.4);
-  }
 
   @override
   Widget build(BuildContext context) {
     return NakedCheckbox(
       value: _isChecked,
-      onChanged: (value) {
-        setState(() {
-          _isChecked = value!;
-        });
-      },
-      onHoverChange: (isHovered) => setState(() => _isHovered = isHovered),
-      onPressChange: (isPressed) => setState(() => _isPressed = isPressed),
-      onFocusChange: (isFocused) => setState(() => _isFocused = isFocused),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        spacing: 8,
-        children: [
-          AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            height: 20,
-            width: 20,
-            decoration: BoxDecoration(
-              border: Border.all(
-                color: borderColor,
-                width: 2,
+      onChanged: (next) => setState(() => _isChecked = next!),
+      builder: (context, checkboxState, _) {
+        final bool isChecked = checkboxState.isChecked == true;
+        final bool isHovered = checkboxState.isHovered;
+        final bool isFocused = checkboxState.isFocused;
+
+        return Row(
+          mainAxisSize: MainAxisSize.min,
+          spacing: 8,
+          children: [
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              height: 20,
+              width: 20,
+              decoration: BoxDecoration(
+                border: Border.all(
+                  color: isChecked
+                      ? const Color(0xFF3D3D3D)
+                      : isFocused
+                          ? const Color(0xFF3D3D3D).withValues(alpha: 0.8)
+                          : isHovered
+                              ? const Color(0xFF3D3D3D).withValues(alpha: 0.6)
+                              : const Color(0xFF3D3D3D).withValues(alpha: 0.4),
+                  width: 2,
+                ),
+                borderRadius: BorderRadius.circular(6),
+                color: isChecked ? const Color(0xFF3D3D3D) : Colors.transparent,
               ),
-              borderRadius: BorderRadius.circular(6),
-              color: _isChecked ? const Color(0xFF3D3D3D) : Colors.transparent,
+              child: isChecked
+                  ? const Icon(
+                      Icons.check,
+                      size: 16,
+                      color: Colors.white,
+                    )
+                  : null,
             ),
-            child: _isChecked
-                ? const Icon(
-                    Icons.check,
-                    size: 16,
-                    color: Colors.white,
-                  )
-                : null,
-          ),
-          const Text(
-            'Label',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: Color(0xFF3D3D3D),
+            const Text(
+              'Label',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF3D3D3D),
+              ),
             ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-```
-</CodeGroup>
-
-<CodeGroup title="Todo List" defaultLanguage="dart">
-```dart
-class TodoListExample extends StatefulWidget {
-  const TodoListExample({super.key});
-
-  @override
-  State<TodoListExample> createState() => _TodoListExampleState();
-}
-
-class _TodoListExampleState extends State<TodoListExample> {
-  final List<TodoItem> _todos = [
-    TodoItem(id: 1, text: 'Buy groceries', completed: false),
-    TodoItem(id: 2, text: 'Walk the dog', completed: true),
-    TodoItem(id: 3, text: 'Finish project', completed: false),
-  ];
-
-  void _toggleTodo(int id) {
-    setState(() {
-      final index = _todos.indexWhere((todo) => todo.id == id);
-      if (index != -1) {
-        _todos[index] = _todos[index].copyWith(
-          completed: !_todos[index].completed,
+          ],
         );
-      }
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: _todos.map((todo) {
-        return Padding(
-          padding: const EdgeInsets.symmetric(vertical: 4),
-          child: NakedCheckbox(
-            value: todo.completed,
-            onChanged: (_) => _toggleTodo(todo.id),
-            child: Row(
-              children: [
-                Container(
-                  width: 20,
-                  height: 20,
-                  decoration: BoxDecoration(
-                    color: todo.completed ? Colors.green : Colors.transparent,
-                    border: Border.all(
-                      color: todo.completed ? Colors.green : Colors.grey,
-                      width: 2,
-                    ),
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                  child: todo.completed
-                    ? const Icon(Icons.check, size: 16, color: Colors.white)
-                    : null,
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    todo.text,
-                    style: TextStyle(
-                      fontSize: 16,
-                      decoration: todo.completed
-                        ? TextDecoration.lineThrough
-                        : null,
-                      color: todo.completed
-                        ? Colors.grey.shade600
-                        : Colors.black,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      }).toList(),
-    );
-  }
-}
-
-class TodoItem {
-  final int id;
-  final String text;
-  final bool completed;
-
-  TodoItem({required this.id, required this.text, required this.completed});
-
-  TodoItem copyWith({bool? completed}) {
-    return TodoItem(
-      id: id,
-      text: text,
-      completed: completed ?? this.completed,
+      },
     );
   }
 }
 ```
-</CodeGroup>
 
-<CodeGroup title="Terms & Conditions" defaultLanguage="dart">
-```dart
-class TermsAcceptanceExample extends StatefulWidget {
-  const TermsAcceptanceExample({super.key});
+<Tip>
+  For tristate checkboxes (supporting null/indeterminate state), set `tristate: true` and use `bool?` for the value. The checkbox will cycle through false → true → null → false when tapped.
+</Tip>
 
-  @override
-  State<TermsAcceptanceExample> createState() => _TermsAcceptanceExampleState();
-}
+## Typed Checkbox State
 
-class _TermsAcceptanceExampleState extends State<TermsAcceptanceExample> {
-  bool _acceptedTerms = false;
-  bool _acceptedPrivacy = false;
+`NakedCheckboxState` delivers everything the builder needs:
 
-  bool get canProceed => _acceptedTerms && _acceptedPrivacy;
+- `isChecked` → `bool?` (null when tristate and currently indeterminate)
+- `tristate` → whether tristate mode is enabled
+- `isIntermediate` → convenience flag for the null case
+- `widgetStates` → hover/focus/pressed/disabled information
 
-  Widget _buildCheckbox({
-    required bool value,
-    required ValueChanged<bool> onChanged,
-    required String text,
-  }) {
-    return NakedCheckbox(
-      value: value,
-      onChanged: (val) => onChanged(val ?? false),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 20,
-            height: 20,
-            margin: const EdgeInsets.only(top: 2),
-            decoration: BoxDecoration(
-              color: value ? Colors.blue : Colors.transparent,
-              border: Border.all(color: Colors.blue, width: 2),
-              borderRadius: BorderRadius.circular(4),
-            ),
-            child: value
-              ? const Icon(Icons.check, size: 16, color: Colors.white)
-              : null,
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              text,
-              style: const TextStyle(fontSize: 14),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+### Access from Context
 
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Before continuing, please accept:',
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-        ),
-        const SizedBox(height: 16),
-        _buildCheckbox(
-          value: _acceptedTerms,
-          onChanged: (value) => setState(() => _acceptedTerms = value),
-          text: 'I agree to the Terms and Conditions',
-        ),
-        const SizedBox(height: 12),
-        _buildCheckbox(
-          value: _acceptedPrivacy,
-          onChanged: (value) => setState(() => _acceptedPrivacy = value),
-          text: 'I agree to the Privacy Policy',
-        ),
-        const SizedBox(height: 24),
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: canProceed ? Colors.blue : Colors.grey.shade300,
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Text(
-            'Continue',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: canProceed ? Colors.white : Colors.grey.shade600,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-}
-```
-</CodeGroup>
-
-### See also:
-
-  * [`NakedButton`](https://docs.page/btwld/naked_ui/widget/button), a component that allows users to trigger actions.
-  * The Flutter `Checkbox` widget, which provides a similar functionality with
-    Material Design styling.
+- `NakedCheckboxState.of(context)` → read the nearest scope (throws if missing)
+- `NakedCheckboxState.maybeOf(context)` → nullable variant
+- `NakedCheckboxState.controllerOf(context)` → access the underlying `WidgetStatesController`
+- `NakedCheckboxState.maybeControllerOf(context)` → nullable controller lookup
 
 ## Constructor
 
@@ -297,60 +109,31 @@ const NakedCheckbox({
   this.tristate = false,
   this.onChanged,
   this.enabled = true,
-  
   this.mouseCursor,
   this.enableFeedback = true,
   this.focusNode,
   this.autofocus = false,
-  this.onFocusChange,
-  this.onHoverChange,
-  this.onPressChange,
-  this.builder,
+  this.onFocusChange,    // Legacy - prefer builder
+  this.onHoverChange,    // Legacy - prefer builder
+  this.onPressChange,    // Legacy - prefer builder
+  this.builder,          // Recommended approach
   this.semanticLabel,
 })
 ```
 
-## Properties
+### Key Parameters
 
-#### child → `Widget?`
-The child widget to display. Provide either `child` or `builder`.
+- `value` → current checked value (`bool?` when `tristate`)
+- `tristate` → enable false → true → null cycling
+- `onChanged` → receive the next value; omit to render a disabled checkbox
+- `builder` → `ValueWidgetBuilder<NakedCheckboxState>?` for dynamic visuals
+- `child` → static child when you do not need the builder
+- Legacy interaction callbacks: `onFocusChange`, `onHoverChange`, `onPressChange` (prefer `builder` pattern)
+- `semanticLabel` → accessible name announced by screen readers
 
-#### value → `bool?`
-Whether this checkbox is checked. When `tristate` is true, a value of null corresponds to the mixed state. When `tristate` is false, this value must not be null.
+## Accessibility Notes
 
-#### tristate → `bool`
-If true the checkbox's `value` can be true, false, or null. When a tri-state checkbox is tapped, its `onChanged` callback will cycle through false => true => null => false. Defaults to false.
-
-#### onChanged → `ValueChanged<bool?>?`
-Called when the checkbox is toggled. The callback provides the new state of the checkbox. If null, the checkbox will be considered disabled.
-
-#### onHoverChange → `ValueChanged<bool>?`
-Called when hover state changes. Provides the current hover state (true when hovered, false otherwise).
-
-#### onPressChange → `ValueChanged<bool>?`
-Called when pressed state changes. Provides the current pressed state (true when pressed, false otherwise).
-
-#### onFocusChange → `ValueChanged<bool>?`
-Called when focus state changes. Provides the current focus state (true when focused, false otherwise).
-
-#### enabled → `bool`
-Whether the checkbox is enabled. Defaults to true.
-
-
-
-#### mouseCursor → `MouseCursor?`
-The cursor to show when hovering over the checkbox. Defaults to SystemMouseCursors.click.
-
-#### enableFeedback → `bool`
-Whether to provide haptic/feedback on toggle. Defaults to true.
-
-#### focusNode → `FocusNode?`
-Optional focus node to control focus behavior.
-
-
-
-#### builder → `ValueWidgetBuilder<Set<WidgetState>>?`
-Optional builder that receives the current states to drive visuals.
-
-#### semanticLabel → `String?`
-Semantic label for screen readers.
+- Ensure the control is labelled either via surrounding text or `semanticLabel`
+- Provide pressed/hover/focus affordances for keyboard and pointer users
+- When using `tristate`, explain the meaning of the intermediate state in adjacent text
+- Minimum recommended touch target is 44×44 logical pixels

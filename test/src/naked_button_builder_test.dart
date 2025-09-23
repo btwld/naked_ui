@@ -15,9 +15,9 @@ void main() {
       await tester.pumpMaterialWidget(
         NakedButton(
           onPressed: () {},
-          builder: (context, states, child) {
+          builder: (context, state, child) {
             builderCallCount++;
-            isPressed = states.contains(WidgetState.pressed);
+            isPressed = state.states.contains(WidgetState.pressed);
             return Container(
               width: 100,
               height: 50,
@@ -61,12 +61,12 @@ void main() {
                 body: Center(
                   child: NakedButton(
                     onPressed: () {},
-                    builder: (context, states, child) {
+                    builder: (context, state, child) {
                       builderBuildCount++;
                       return Container(
                         width: 100,
                         height: 50,
-                        color: states.contains(WidgetState.pressed)
+                        color: state.states.contains(WidgetState.pressed)
                             ? Colors.blue
                             : Colors.grey,
                         child: child,
@@ -112,12 +112,12 @@ void main() {
       await tester.pumpMaterialWidget(
         NakedButton(
           onPressed: () {},
-          builder: (context, states, child) {
+          builder: (context, state, child) {
             builderBuildCount++;
             return Container(
               width: 100,
               height: 50,
-              color: states.contains(WidgetState.pressed)
+              color: state.states.contains(WidgetState.pressed)
                   ? Colors.blue
                   : Colors.grey,
               child: child, // Uses cached child
@@ -152,18 +152,18 @@ void main() {
       await tester.pumpMaterialWidget(
         NakedButton(
           onPressed: () {},
-          builder: (context, states, child) {
-            lastStates = states;
+          builder: (context, state, child) {
+            lastStates = state.states;
             return Container(
               width: 100,
               height: 50,
               decoration: BoxDecoration(
-                color: states.contains(WidgetState.pressed)
+                color: state.states.contains(WidgetState.pressed)
                     ? Colors.blue
-                    : states.contains(WidgetState.hovered)
+                    : state.states.contains(WidgetState.hovered)
                     ? Colors.lightBlue
                     : Colors.grey,
-                border: states.contains(WidgetState.focused)
+                border: state.states.contains(WidgetState.focused)
                     ? Border.all(color: Colors.orange, width: 2)
                     : null,
               ),
@@ -192,8 +192,8 @@ void main() {
       await tester.pumpMaterialWidget(
         NakedButton(
           onPressed: () {},
-          builder: (context, states, child) {
-            if (states.contains(WidgetState.pressed)) {
+          builder: (context, state, child) {
+            if (state.states.contains(WidgetState.pressed)) {
               return Container(
                 width: 100,
                 height: 50,
@@ -242,12 +242,12 @@ void main() {
         NakedButton(
           onPressed: () {},
           enabled: false,
-          builder: (context, states, child) {
-            lastStates = states;
+          builder: (context, state, child) {
+            lastStates = state.states;
             return Container(
               width: 100,
               height: 50,
-              color: states.contains(WidgetState.disabled)
+              color: state.states.contains(WidgetState.disabled)
                   ? Colors.grey.shade300
                   : Colors.blue,
               child: child,
@@ -267,6 +267,113 @@ void main() {
       // Should still be disabled
       expect(lastStates, contains(WidgetState.disabled));
       expect(lastStates, isNot(contains(WidgetState.pressed)));
+    });
+
+    testWidgets('builder demonstrates modern state.when() API', (
+      WidgetTester tester,
+    ) async {
+      String currentColor = 'default';
+
+      await tester.pumpMaterialWidget(
+        NakedButton(
+          onPressed: () {},
+          builder: (context, state, child) {
+            // Modern way: Use state.when() for conditional styling
+            final color = state.when(
+              disabled: Colors.grey.shade300,
+              pressed: Colors.red,
+              hovered: Colors.lightBlue,
+              focused: Colors.orange,
+              orElse: Colors.blue,
+            );
+            currentColor = color.toString();
+
+            return Container(
+              width: 100,
+              height: 50,
+              color: color,
+              child: child,
+            );
+          },
+          child: const Text('Modern State API'),
+        ),
+      );
+
+      // Check default state
+      expect(currentColor, contains('blue'));
+
+      // Test press state with modern API
+      final gesture = await tester.startGesture(
+        tester.getCenter(find.byType(NakedButton)),
+      );
+      await tester.pumpAndSettle();
+
+      // Should show pressed color
+      expect(currentColor, contains('red'));
+
+      await gesture.up();
+      await tester.pump();
+
+      // Should return to default
+      expect(currentColor, contains('blue'));
+    });
+
+    testWidgets('builder demonstrates direct state accessors', (
+      WidgetTester tester,
+    ) async {
+      bool? isHovered;
+      bool? isPressed;
+      bool? isFocused;
+      bool? isDisabled;
+
+      await tester.pumpMaterialWidget(
+        NakedButton(
+          onPressed: () {},
+          autofocus: true,
+          builder: (context, state, child) {
+            // Modern way: Direct boolean accessors
+            isHovered = state.isHovered;
+            isPressed = state.isPressed;
+            isFocused = state.isFocused;
+            isDisabled = state.isDisabled;
+
+            return Container(
+              width: 100,
+              height: 50,
+              decoration: BoxDecoration(
+                color: Colors.blue,
+                border: state.isFocused
+                    ? Border.all(color: Colors.orange, width: 2)
+                    : null,
+              ),
+              child: child,
+            );
+          },
+          child: const Text('Direct Accessors'),
+        ),
+      );
+
+      await tester.pump(); // Allow autofocus to take effect
+
+      // Check state accessors
+      expect(isFocused, isTrue);
+      expect(isHovered, isFalse);
+      expect(isPressed, isFalse);
+      expect(isDisabled, isFalse);
+
+      // Test press state
+      final gesture = await tester.startGesture(
+        tester.getCenter(find.byType(NakedButton)),
+      );
+      await tester.pump();
+
+      expect(isPressed, isTrue);
+      expect(isFocused, isTrue); // Still focused
+
+      await gesture.up();
+      await tester.pump();
+
+      expect(isPressed, isFalse);
     });
   });
 }

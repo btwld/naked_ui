@@ -30,27 +30,11 @@ class CheckboxExample extends StatefulWidget {
 
 class _CheckboxExampleState extends State<CheckboxExample> {
   bool _isChecked = false;
-  bool _isHovered = false;
-  bool _isPressed = false;
-  bool _isFocused = false;
-
-  Color get borderColor {
-    const baseColor = Color(0xFF3D3D3D);
-
-    if (_isChecked) {
-      return baseColor;
-    }
-    if (_isFocused) {
-      return baseColor.withValues(alpha: 0.8);
-    }
-    if (_isHovered || _isPressed) {
-      return baseColor.withValues(alpha: 0.6);
-    }
-    return baseColor.withValues(alpha: 0.4);
-  }
 
   @override
   Widget build(BuildContext context) {
+    const baseColor = Color(0xFF3D3D3D);
+
     return NakedCheckbox(
       value: _isChecked,
       onChanged: (value) {
@@ -58,43 +42,49 @@ class _CheckboxExampleState extends State<CheckboxExample> {
           _isChecked = value!;
         });
       },
-      onFocusChange: (focused) => setState(() => _isFocused = focused),
-      onHoverChange: (hovered) => setState(() => _isHovered = hovered),
-      onPressChange: (pressed) => setState(() => _isPressed = pressed),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        spacing: 8,
-        children: [
-          AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            height: 20,
-            width: 20,
-            decoration: BoxDecoration(
-              border: Border.all(
-                color: borderColor,
-                width: 2,
+      builder: (context, state, child) {
+        final borderColor = state.when(
+          focused: _isChecked ? baseColor : baseColor.withValues(alpha: 0.8),
+          hovered: _isChecked ? baseColor : baseColor.withValues(alpha: 0.6),
+          pressed: _isChecked ? baseColor : baseColor.withValues(alpha: 0.6),
+          orElse: _isChecked ? baseColor : baseColor.withValues(alpha: 0.4),
+        );
+
+        return Row(
+          mainAxisSize: MainAxisSize.min,
+          spacing: 8,
+          children: [
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              height: 20,
+              width: 20,
+              decoration: BoxDecoration(
+                border: Border.all(
+                  color: borderColor,
+                  width: 2,
+                ),
+                borderRadius: BorderRadius.circular(6),
+                color: state.isChecked == true ? baseColor : Colors.transparent,
               ),
-              borderRadius: BorderRadius.circular(6),
-              color: _isChecked ? const Color(0xFF3D3D3D) : Colors.transparent,
+              child: state.isChecked == true
+                  ? const Icon(
+                      Icons.check,
+                      size: 16,
+                      color: Colors.white,
+                    )
+                  : null,
             ),
-            child: _isChecked
-                ? const Icon(
-                    Icons.check,
-                    size: 16,
-                    color: Colors.white,
-                  )
-                : null,
-          ),
-          const Text(
-            'Label',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: Color(0xFF3D3D3D),
+            const Text(
+              'Label',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: baseColor,
+              ),
             ),
-          ),
-        ],
-      ),
+          ],
+        );
+      },
     );
   }
 }

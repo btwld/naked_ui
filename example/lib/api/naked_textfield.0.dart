@@ -29,21 +29,6 @@ class TextFieldExample extends StatefulWidget {
 }
 
 class _TextFieldExampleState extends State<TextFieldExample> {
-  bool _isHovered = false;
-  bool _isPressed = false;
-  bool _isFocused = false;
-
-  Color get _backgroundColor {
-    const baseColor = Colors.white;
-    if (_isPressed || _isFocused) {
-      return baseColor;
-    }
-    if (_isHovered) {
-      return Colors.grey.shade200;
-    }
-    return baseColor;
-  }
-
   @override
   Widget build(BuildContext context) {
     return SizedBox(
@@ -55,30 +40,37 @@ class _TextFieldExampleState extends State<TextFieldExample> {
           fontSize: 14,
           fontWeight: FontWeight.w400,
         ),
-        onHoverChange: (isHovered) => setState(() => _isHovered = isHovered),
-        onPressChange: (isPressed) => setState(() => _isPressed = isPressed),
-        onFocusChange: (isFocused) => setState(() => _isFocused = isFocused),
-        builder: (context, textArea) {
-          return AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(10),
-              color: _backgroundColor,
-              border: Border.all(
-                color: Colors.grey.shade300,
-                width: 1,
-              ),
-              boxShadow: [
-                if (_isFocused)
-                  BoxShadow(
-                    color: Colors.grey.shade100,
-                    spreadRadius: 3,
-                    offset: const Offset(0, 0),
+        builder: (context, editableText) {
+          return Builder(
+            builder: (context) {
+              final state = NakedTextFieldState.of(context);
+              return AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(10),
+                  color: state.when(
+                    pressed: Colors.white,
+                    focused: Colors.white,
+                    hovered: Colors.grey.shade200,
+                    orElse: Colors.white,
                   ),
-              ],
-            ),
-            child: textArea,
+                  border: Border.all(
+                    color: Colors.grey.shade300,
+                    width: 1,
+                  ),
+                  boxShadow: [
+                    if (state.isFocused)
+                      BoxShadow(
+                        color: Colors.grey.shade100,
+                        spreadRadius: 3,
+                        offset: const Offset(0, 0),
+                      ),
+                  ],
+                ),
+                child: editableText,
+              );
+            },
           );
         },
       ),

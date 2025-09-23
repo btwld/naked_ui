@@ -1,9 +1,43 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
-import 'package:flutter/services.dart';
 
-import 'mixins/naked_mixins.dart'; // WidgetStatesMixin, FocusableMixin
+import 'mixins/naked_mixins.dart'; // WidgetStatesMixin, FocusNodeMixin
+import 'utilities/intents.dart';
+import 'utilities/naked_focusable_detector.dart';
+import 'utilities/naked_state_scope.dart';
+import 'utilities/state.dart';
+
+/// Immutable view passed to [NakedButton.builder].
+class NakedButtonState extends NakedState {
+  NakedButtonState({required super.states});
+
+  /// Returns the nearest [NakedButtonState] provided by [NakedStateScope].
+  static NakedButtonState of(BuildContext context) => NakedState.of(context);
+
+  /// Returns the nearest [NakedButtonState] if one is available.
+  static NakedButtonState? maybeOf(BuildContext context) =>
+      NakedState.maybeOf(context);
+
+  /// Returns the [WidgetStatesController] from the nearest scope.
+  static WidgetStatesController controllerOf(BuildContext context) =>
+      NakedState.controllerOf(context);
+
+  /// Returns the [WidgetStatesController] from the nearest scope, if any.
+  static WidgetStatesController? maybeControllerOf(BuildContext context) =>
+      NakedState.maybeControllerOf(context);
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+
+    return other is NakedButtonState && setEquals(other.states, states);
+  }
+
+  @override
+  int get hashCode => states.hashCode;
+}
 
 /// A headless button without visuals.
 ///
@@ -25,7 +59,6 @@ class NakedButton extends StatefulWidget {
     this.child,
     this.onPressed,
     this.onLongPress,
-    this.onDoubleTap,
     this.enabled = true,
     this.mouseCursor = SystemMouseCursors.click,
     this.enableFeedback = true,
@@ -52,9 +85,6 @@ class NakedButton extends StatefulWidget {
   /// Called when the button is long-pressed.
   final VoidCallback? onLongPress;
 
-  /// Called when the button is double-tapped.
-  final VoidCallback? onDoubleTap;
-
   /// Called when focus changes.
   final ValueChanged<bool>? onFocusChange;
 
@@ -64,40 +94,44 @@ class NakedButton extends StatefulWidget {
   /// Called when pressed state changes.
   final ValueChanged<bool>? onPressChange;
 
-  /// The builder that receives current WidgetStates.
-  final ValueWidgetBuilder<Set<WidgetState>>? builder;
+  /// Builds the button using the current [NakedButtonState].
+  final ValueWidgetBuilder<NakedButtonState>? builder;
 
-  /// The enabled state of the button.
+  /// Whether the button is enabled.
   final bool enabled;
 
   /// The mouse cursor when enabled.
   final MouseCursor mouseCursor;
 
-  /// The platform feedback enablement flag.
+  /// Whether to provide platform feedback on interactions.
   final bool enableFeedback;
 
   /// The external [FocusNode] to control focus ownership.
   final FocusNode? focusNode;
 
-  /// The autofocus flag.
+  /// Whether to autofocus.
   final bool autofocus;
 
-  /// The focus request flag for press actions.
+  /// Whether pressing the button requests focus.
   final bool focusOnPress;
 
-  /// The tooltip exposed to assistive technologies.
+  /// Tooltip text for assistive technologies.
   ///
   /// Consider providing concise text; long labels are read verbosely.
   final String? tooltip;
 
-  /// The semantic label announced by screen readers.
+  /// Semantic label announced by assistive technologies.
   final String? semanticLabel;
 
-  // Consider button interactive if any handler is provided.
-  bool get _hasAnyHandler =>
-      onPressed != null || onLongPress != null || onDoubleTap != null;
+  /// Whether the button has any interaction handlers.
+  ///
+  /// Returns true if either [onPressed] or [onLongPress] is provided.
+  bool get _hasAnyHandler => onPressed != null || onLongPress != null;
 
-  // Effective enabled combines `enabled` with having at least one handler.
+  /// Whether the button is effectively enabled for interactions.
+  ///
+  /// Combines [enabled] with having at least one interaction handler.
+  /// A button is only interactive if it's enabled AND has handlers.
   bool get _effectiveEnabled => enabled && _hasAnyHandler;
 
   @override
@@ -105,18 +139,14 @@ class NakedButton extends StatefulWidget {
 }
 
 class _NakedButtonState extends State<NakedButton>
-    with WidgetStatesMixin<NakedButton>, FocusableMixin<NakedButton> {
+    with WidgetStatesMixin<NakedButton>, FocusNodeMixin<NakedButton> {
   static const Duration _activationDuration = Duration(milliseconds: 100);
   Timer? _activationTimer;
 
-  // --- FocusableMixin contract ----------------------------------------------
-
   @override
-  FocusNode? get focusableExternalNode => widget.focusNode;
+  FocusNode? get widgetProvidedNode => widget.focusNode;
 
-  // --- Activation & gestures -------------------------------------------------
-
-  void _handleKeyboardActivation([Intent? _]) {
+  void _handleKeyboardActivation() {
     if (!widget._effectiveEnabled || widget.onPressed == null) return;
 
     if (widget.enableFeedback) {
@@ -148,7 +178,7 @@ class _NakedButtonState extends State<NakedButton>
       Feedback.forLongPress(context);
     }
     widget.onLongPress?.call();
-    // Pressed visual is kept during hold; cleared by onLongPressEnd.
+    // Press state is maintained during long press hold.
   }
 
   void _handleTapDown(TapDownDetails _) {
@@ -159,26 +189,32 @@ class _NakedButtonState extends State<NakedButton>
     updatePressState(true, widget.onPressChange);
   }
 
-  // --- WidgetStates initialization ------------------------------------------
+  Widget _buildContent(BuildContext context) {
+    final buttonState = NakedButtonState(states: widgetStates);
+
+    final content = widget.builder != null
+        ? widget.builder!(context, buttonState, widget.child)
+        : widget.child!;
+
+    return NakedStateScope(value: buttonState, child: content);
+  }
 
   @override
   void initializeWidgetStates() {
     updateDisabledState(!widget._effectiveEnabled);
   }
 
-  // --- Lifecycle -------------------------------------------------------------
-
   @override
   void didUpdateWidget(covariant NakedButton oldWidget) {
     super.didUpdateWidget(
       oldWidget,
-    ); // lets FocusableMixin/other mixins run first
+    ); // Allows FocusNodeMixin and other mixins to run first.
 
-    // Track *effective* enabled, not just `enabled`.
+    // Track effective enabled state, not just the enabled property.
     if (oldWidget._effectiveEnabled != widget._effectiveEnabled) {
       updateDisabledState(!widget._effectiveEnabled);
 
-      // If disabled mid-press, clear press & timer defensively.
+      // Clear press state and timer if disabled during interaction.
       if (!widget._effectiveEnabled) {
         _activationTimer?.cancel();
         updatePressState(false, widget.onPressChange);
@@ -189,46 +225,36 @@ class _NakedButtonState extends State<NakedButton>
   @override
   void dispose() {
     _activationTimer?.cancel();
-    super.dispose(); // FocusableMixin disposes internal focus node
+    super.dispose(); // FocusNodeMixin disposes internal focus node
   }
-
-  // --- Semantics -------------------------------------------------------------
 
   VoidCallback? get _semanticsTapHandler =>
       (widget.enabled && widget.onPressed != null) ? _handleTap : null;
 
-  // --- Build ----------------------------------------------------------------
-
   @override
   Widget build(BuildContext context) {
-    final content = widget.builder != null
-        ? widget.builder!(context, widgetStates, widget.child)
-        : widget.child!;
+    final content = _buildContent(context);
 
-    return FocusableActionDetector(
+    return NakedFocusableDetector(
       enabled: widget._effectiveEnabled,
-      focusNode: effectiveFocusNode, // <-- from mixin
       autofocus: widget.autofocus,
-      shortcuts: const {
-        SingleActivator(LogicalKeyboardKey.enter): ActivateIntent(),
-        SingleActivator(LogicalKeyboardKey.space): ActivateIntent(),
-      },
-      actions: {
-        ActivateIntent: CallbackAction<ActivateIntent>(
-          onInvoke: _handleKeyboardActivation,
-        ),
-      },
-      onShowHoverHighlight: (hovered) {
-        updateHoverState(hovered, widget.onHoverChange);
-      },
       onFocusChange: (focused) {
         updateFocusState(focused, widget.onFocusChange);
       },
+      onHoverChange: (hovered) {
+        updateHoverState(hovered, widget.onHoverChange);
+      },
+      focusNode: effectiveFocusNode,
       mouseCursor: widget._effectiveEnabled
           ? widget.mouseCursor
           : SystemMouseCursors.basic,
+      shortcuts: NakedIntentActions.button.shortcuts,
+      actions: NakedIntentActions.button.actions(
+        onPressed: () => _handleKeyboardActivation(),
+      ),
       child: Semantics(
         enabled: widget._effectiveEnabled,
+
         button: true,
         label: widget.semanticLabel,
         tooltip: widget.tooltip,
@@ -247,13 +273,10 @@ class _NakedButtonState extends State<NakedButton>
           onTapCancel: widget._effectiveEnabled
               ? () => updatePressState(false, widget.onPressChange)
               : null,
-          onDoubleTap: (widget.enabled && widget.onDoubleTap != null)
-              ? widget.onDoubleTap
-              : null,
           onLongPress: (widget.enabled && widget.onLongPress != null)
               ? _handleLongPress
               : null,
-          // Long-press symmetry: pressed while holding, clear on end.
+          // Maintains press state symmetry: active during hold, cleared on end.
           onLongPressStart: (widget.enabled && widget.onLongPress != null)
               ? (_) => updatePressState(true, widget.onPressChange)
               : null,

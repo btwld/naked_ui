@@ -1,444 +1,177 @@
 ---
 title: NakedPopover
-description: Flexible headless popover component with smart positioning, lifecycle management, and focus handling
-keywords: [flutter, popover, overlay, positioning, headless, tooltip, dropdown, modal, anchored]
+description: Headless anchored popover with focus management, outside-tap dismissal, and lifecycle hooks
+keywords: [flutter, popover, overlay, anchored, headless, focus]
 ---
 
-NakedPopover provides a flexible popover overlay system without imposing any visual styling. It handles positioning, outside-tap dismissal, focus management, and lifecycle callbacks, giving consumers complete design freedom while maintaining proper accessibility.
-
-<Tip>
-  Always provide fallback positions to ensure your popover displays correctly on different screen sizes and orientations.
-</Tip>
+`NakedPopover` turns any widget into an anchored overlay trigger. You keep full control of trigger visuals and popover content while the component handles positioning, focus return, Esc/outside dismissal, and lifecycle callbacks.
 
 <Info>
-  You can find this example in our [GitHub repository](https://github.com/btwld/naked_ui/blob/main/example/lib/api/naked_popover.0.dart).
+  Explore the sample in [`example/lib/api/naked_popover.0.dart`](https://github.com/btwld/naked_ui/blob/main/example/lib/api/naked_popover.0.dart).
 </Info>
 
-<CodeGroup title="Basic Popover Example" defaultLanguage="dart">
+## Quick Start
+
 ```dart
-class BasicPopoverExample extends StatelessWidget {
-  const BasicPopoverExample({super.key});
+class PopoverExample extends StatelessWidget {
+  const PopoverExample({super.key});
 
   @override
   Widget build(BuildContext context) {
     return NakedPopover(
-      position: const NakedMenuPosition(
-        target: Alignment.bottomCenter,
-        follower: Alignment.topCenter,
+      positioning: const OverlayPositionConfig(
+        alignment: Alignment.bottomCenter,
+        fallbackAlignment: Alignment.topCenter,
       ),
-      popoverBuilder: (context) => Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(8),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.1),
-              blurRadius: 8,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text(
-              'Popover Content',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
+      popoverBuilder: (context, info) {
+        return Material(
+          elevation: 6,
+          borderRadius: BorderRadius.circular(12),
+          child: SizedBox(
+            width: 220,
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text('Invite teammates',
+                      style: TextStyle(fontWeight: FontWeight.w600)),
+                  const SizedBox(height: 8),
+                  const Text('Share this project link to collaborate.'),
+                  const SizedBox(height: 12),
+                  ElevatedButton(
+                    onPressed: () => Navigator.of(context).maybePop(),
+                    child: const Text('Copy link'),
+                  ),
+                ],
               ),
             ),
-            const SizedBox(height: 8),
-            const Text('This is the content inside the popover.'),
-            const SizedBox(height: 12),
-            ElevatedButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Close'),
-            ),
-          ],
-        ),
-      ),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        decoration: BoxDecoration(
-          color: const Color(0xFF3D3D3D),
-          borderRadius: BorderRadius.circular(4),
-        ),
-        child: const Text(
-          'Click me',
-          style: TextStyle(color: Colors.white),
-        ),
-      ),
+          ),
+        );
+      },
+      builder: (context, state, _) {
+        final bool pressed = state.isPressed;
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          decoration: BoxDecoration(
+            color: pressed ? Colors.blue.shade700 : Colors.blue.shade600,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: const Text('Open popover', style: TextStyle(color: Colors.white)),
+        );
+      },
     );
   }
 }
 ```
-</CodeGroup>
 
-<CodeGroup title="Advanced Popover with Animation" defaultLanguage="dart">
+## Animated Popover with Lifecycle Hooks
+
 ```dart
-class AnimatedPopoverExample extends StatefulWidget {
-  const AnimatedPopoverExample({super.key});
+class AnimatedPopover extends StatefulWidget {
+  const AnimatedPopover({super.key});
 
   @override
-  State<AnimatedPopoverExample> createState() => _AnimatedPopoverExampleState();
+  State<AnimatedPopover> createState() => _AnimatedPopoverState();
 }
 
-class _AnimatedPopoverExampleState extends State<AnimatedPopoverExample>
+class _AnimatedPopoverState extends State<AnimatedPopover>
     with SingleTickerProviderStateMixin {
-  late final _animationController = AnimationController(
+  late final AnimationController _controller = AnimationController(
     duration: const Duration(milliseconds: 200),
     vsync: this,
   );
 
-  late final _scaleAnimation = Tween<double>(
-    begin: 0.8,
-    end: 1.0,
-  ).animate(CurvedAnimation(
-    parent: _animationController,
-    curve: Curves.easeOutBack,
-  ));
-
-  late final _fadeAnimation = Tween<double>(
-    begin: 0.0,
-    end: 1.0,
-  ).animate(CurvedAnimation(
-    parent: _animationController,
-    curve: Curves.easeOut,
-  ));
-
   @override
   void dispose() {
-    _animationController.dispose();
+    _controller.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return NakedPopover(
-      position: const NakedMenuPosition(
-        target: Alignment.topCenter,
-        follower: Alignment.bottomCenter,
-      ),
-      fallbackPositions: const [
-        NakedMenuPosition(
-          target: Alignment.bottomCenter,
-          follower: Alignment.topCenter,
-        ),
-        NakedMenuPosition(
-          target: Alignment.centerRight,
-          follower: Alignment.centerLeft,
-        ),
-      ],
-      removalDelay: const Duration(milliseconds: 200),
-      onStateChange: (state) {
-        switch (state) {
-          case OverlayChildLifecycleState.present:
-            _animationController.forward();
-            break;
-          case OverlayChildLifecycleState.pendingRemoval:
-            _animationController.reverse();
-            break;
-          default:
-            break;
-        }
-      },
-      popoverBuilder: (context) => AnimatedBuilder(
-        animation: _animationController,
-        builder: (context, child) => FadeTransition(
-          opacity: _fadeAnimation,
+      positioning: const OverlayPositionConfig(),
+      onOpen: () => _controller.forward(),
+      onClose: () => _controller.reverse(),
+      popoverBuilder: (context, info) {
+        return FadeTransition(
+          opacity: _controller,
           child: ScaleTransition(
-            scale: _scaleAnimation,
-            child: Container(
-              constraints: const BoxConstraints(maxWidth: 280),
-              padding: const EdgeInsets.all(16),
+            scale: Tween<double>(begin: 0.9, end: 1.0).animate(
+              CurvedAnimation(parent: _controller, curve: Curves.easeOutBack),
+            ),
+            child: DecoratedBox(
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: Colors.black,
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.grey.shade200),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.1),
-                    blurRadius: 12,
-                    offset: const Offset(0, 6),
-                  ),
-                ],
               ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.info_outline,
-                        color: Colors.blue.shade600,
-                        size: 20,
-                      ),
-                      const SizedBox(width: 8),
-                      const Expanded(
-                        child: Text(
-                          'Information',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  const Text(
-                    'This popover demonstrates advanced positioning with fallbacks and smooth animations.',
-                    style: TextStyle(fontSize: 14),
-                  ),
-                  const SizedBox(height: 16),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      TextButton(
-                        onPressed: () => Navigator.of(context).pop(),
-                        child: const Text('Got it'),
-                      ),
-                    ],
-                  ),
-                ],
+              child: const Padding(
+                padding: EdgeInsets.all(16),
+                child: Text(
+                  'Animated popover content',
+                  style: TextStyle(color: Colors.white),
+                ),
               ),
             ),
           ),
-        ),
-      ),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        decoration: BoxDecoration(
-          color: Colors.blue.shade600,
-          borderRadius: BorderRadius.circular(6),
-        ),
-        child: const Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.help_outline, color: Colors.white, size: 16),
-            SizedBox(width: 4),
-            Text(
-              'Help',
-              style: TextStyle(color: Colors.white, fontSize: 14),
-            ),
-          ],
-        ),
-      ),
+        );
+      },
+      child: const Icon(Icons.info_outline, color: Colors.black87),
     );
   }
 }
 ```
-</CodeGroup>
-
-<CodeGroup title="Context Menu Popover" defaultLanguage="dart">
-```dart
-class ContextMenuExample extends StatelessWidget {
-  const ContextMenuExample({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return NakedPopover(
-      openOnTap: false, // Don't open on regular tap
-      position: const NakedMenuPosition(
-        target: Alignment.topLeft,
-        follower: Alignment.topLeft,
-      ),
-      popoverBuilder: (context) => Container(
-        padding: const EdgeInsets.symmetric(vertical: 8),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: Colors.grey.shade300),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.1),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            _buildMenuItem(Icons.edit, 'Edit', () {}),
-            _buildMenuItem(Icons.copy, 'Copy', () {}),
-            _buildMenuItem(Icons.share, 'Share', () {}),
-            const Divider(height: 1),
-            _buildMenuItem(Icons.delete, 'Delete', () {}, isDestructive: true),
-          ],
-        ),
-      ),
-      child: GestureDetector(
-        onSecondaryTapDown: (details) {
-          // Handle right-click to show context menu
-          // You'd need to manually trigger the popover here
-        },
-        child: Container(
-          width: 200,
-          height: 100,
-          decoration: BoxDecoration(
-            color: Colors.grey.shade100,
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: Colors.grey.shade300),
-          ),
-          child: const Center(
-            child: Text('Right-click for context menu'),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildMenuItem(
-    IconData icon,
-    String label,
-    VoidCallback onTap, {
-    bool isDestructive = false,
-  }) {
-    return InkWell(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        child: Row(
-          children: [
-            Icon(
-              icon,
-              size: 16,
-              color: isDestructive ? Colors.red : Colors.grey.shade700,
-            ),
-            const SizedBox(width: 12),
-            Text(
-              label,
-              style: TextStyle(
-                color: isDestructive ? Colors.red : Colors.grey.shade900,
-                fontSize: 14,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-```
-</CodeGroup>
 
 ## Constructor
 
 ```dart
 const NakedPopover({
   Key? key,
-  required this.child,
+  this.child,
+  this.builder,
   required this.popoverBuilder,
-  this.position = const NakedMenuPosition(),
-  this.fallbackPositions = const [],
+  this.positioning = const OverlayPositionConfig(),
   this.consumeOutsideTaps = true,
   this.useRootOverlay = false,
   this.openOnTap = true,
-  this.removalDelay = Duration.zero,
-  this.onStateChange,
+  this.triggerFocusNode,
+  this.onOpen,
+  this.onClose,
+  this.onOpenRequested,
+  this.onCloseRequested,
 })
 ```
 
-## Properties
+### Key Parameters
 
-#### child → `Widget`
-The widget that triggers the popover when tapped.
+- `child` / `builder` → provide a static trigger or a `ValueWidgetBuilder<NakedPopoverState>` for dynamic styling
+- `popoverBuilder` → `(BuildContext, RawMenuAnchorOverlayInfo)` to build the overlay content
+- `positioning` → `OverlayPositionConfig` controlling alignment/offset/fallbacks
+- `openOnTap` → disable to manage open state manually (e.g. hover triggers)
+- `consumeOutsideTaps` / `useRootOverlay` → control gesture capture and overlay target
+- `triggerFocusNode` → provide an external `FocusNode` for restoring focus after close
+- Lifecycle hooks: `onOpen`, `onClose`, `onOpenRequested`, `onCloseRequested`
 
-#### popoverBuilder → `WidgetBuilder`
-A builder function that creates the popover content. This function is called each time the popover is shown.
+## Behaviour & Accessibility
 
-#### position → `NakedMenuPosition`
-Defines how the popover is positioned relative to the trigger widget. Defaults to bottom-left alignment.
+- Tap trigger or press Space/Enter to open when `openOnTap` is true
+- Escape closes and returns focus to the trigger
+- Outside taps close automatically (configurable via `consumeOutsideTaps`)
+- Wrap complex content in `FocusTraversalGroup` or provide your own focusable widgets inside the popover for keyboard navigation
+- Provide a `semanticLabel` inside the popover content as needed (e.g. heading)
 
-#### fallbackPositions → `List<NakedMenuPosition>`
-Alternative positions to try if the primary position doesn't fit within the viewport. The system will automatically choose the best-fitting position.
+## Positioning Helpers
 
-#### consumeOutsideTaps → `bool`
-Whether tapping outside the popover should dismiss it. Defaults to true.
-
-#### useRootOverlay → `bool`
-Whether to use the root overlay for positioning. When true, the popover can extend beyond the bounds of its parent widgets. Defaults to false.
-
-#### openOnTap → `bool`
-Whether the popover should open when the child is tapped. Set to false for manual control or custom triggers. Defaults to true.
-
-#### removalDelay → `Duration`
-The duration to wait before removing the popover from the overlay after it's dismissed. Useful for exit animations. Defaults to Duration.zero.
-
-#### onStateChange → `OverlayChildLifecycleCallback?`
-Called when the popover's lifecycle state changes. Receives:
-- `OverlayChildLifecycleState.present`: Popover is now visible
-- `OverlayChildLifecycleState.pendingRemoval`: Popover is being dismissed but still visible
-- `OverlayChildLifecycleState.removed`: Popover has been removed from overlay
-
-## NakedMenuPosition
-
-Defines positioning for the popover relative to its trigger:
+Use `OverlayPositionConfig` to adjust anchor placement:
 
 ```dart
-const NakedMenuPosition({
-  this.target = Alignment.bottomLeft,
-  this.follower = Alignment.topLeft,
-})
+const OverlayPositionConfig(
+  alignment: Alignment.bottomCenter,
+  fallbackAlignment: Alignment.topCenter,
+  offset: Offset(0, 8),
+);
 ```
 
-#### target → `Alignment`
-The anchor point on the trigger widget.
-
-#### follower → `Alignment`
-The anchor point on the popover that aligns with the target.
-
-## Common Positioning Patterns
-
-```dart
-// Below trigger, centered
-NakedMenuPosition(
-  target: Alignment.bottomCenter,
-  follower: Alignment.topCenter,
-)
-
-// Above trigger, centered
-NakedMenuPosition(
-  target: Alignment.topCenter,
-  follower: Alignment.bottomCenter,
-)
-
-// Right side of trigger
-NakedMenuPosition(
-  target: Alignment.centerRight,
-  follower: Alignment.centerLeft,
-)
-
-// Left side of trigger
-NakedMenuPosition(
-  target: Alignment.centerLeft,
-  follower: Alignment.centerRight,
-)
-```
-
-## Best Practices
-
-<Warning>
-  Always test your popovers on different screen sizes and orientations to ensure they display correctly in all scenarios.
-</Warning>
-
-<Tip>
-  Use `removalDelay` when implementing exit animations to ensure smooth transitions and prevent flickering.
-</Tip>
-
-<Note>
-  When a popover contains interactive elements, ensure proper focus management by returning focus to the trigger element when the popover closes.
-</Note>
-
-**Essential Guidelines:**
-
-1. **Always provide fallback positions** to handle edge cases where the popover might not fit
-2. **Use removalDelay for animations** to ensure smooth transitions
-3. **Consider accessibility** - ensure popover content is keyboard navigable
-4. **Handle focus management** properly when the popover contains interactive elements
-5. **Test on different screen sizes** to ensure positioning works correctly
-6. **Use semantic markup** within popover content for screen readers
+The builder receives `RawMenuAnchorOverlayInfo` (`info` in the sample) with `anchorRect`, `overlaySize`, and `position` should you need custom math.

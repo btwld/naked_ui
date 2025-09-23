@@ -358,10 +358,10 @@ void main() {
   });
 
   group('Builder Tests', () {
-    testWidgets('builder receives Set<WidgetState>', (
+    testWidgets('builder receives NakedRadioState snapshot', (
       WidgetTester tester,
     ) async {
-      Set<WidgetState>? capturedStates;
+      NakedRadioState<String>? capturedState;
 
       await tester.pumpMaterialWidget(
         RadioGroup<String>(
@@ -371,10 +371,10 @@ void main() {
             children: [
               NakedRadio<String>(
                 value: 'value1',
-                builder: (context, states, child) {
-                  capturedStates = states;
+                builder: (context, radioState, child) {
+                  capturedState = radioState;
                   return Container(
-                    color: states.isSelected ? Colors.blue : Colors.grey,
+                    color: radioState.isSelected ? Colors.blue : Colors.grey,
                     child: const Text('Radio 1'),
                   );
                 },
@@ -386,19 +386,19 @@ void main() {
       );
 
       // Verify builder was called with states
-      expect(capturedStates, isNotNull);
-      expect(capturedStates, isA<Set<WidgetState>>());
+      expect(capturedState, isNotNull);
+      expect(capturedState, isA<NakedRadioState<String>>());
 
       // Should be selected since groupValue matches value
-      expect(capturedStates!.isSelected, isTrue);
+      expect(capturedState!.isSelected, isTrue);
     });
 
     testWidgets('builder updates when selection changes', (
       WidgetTester tester,
     ) async {
       String? groupValue = 'value1';
-      Set<WidgetState>? radio1States;
-      Set<WidgetState>? radio2States;
+      NakedRadioState<String>? radio1State;
+      NakedRadioState<String>? radio2State;
 
       await tester.pumpWidget(
         MaterialApp(
@@ -416,12 +416,12 @@ void main() {
                     children: [
                       NakedRadio<String>(
                         value: 'value1',
-                        builder: (context, states, child) {
-                          radio1States = states;
+                        builder: (context, radioState, child) {
+                          radio1State = radioState;
                           return GestureDetector(
                             key: const Key('radio1'),
                             child: Container(
-                              color: states.isSelected
+                              color: radioState.isSelected
                                   ? Colors.blue
                                   : Colors.grey,
                               child: const Text('Radio 1'),
@@ -432,12 +432,12 @@ void main() {
                       ),
                       NakedRadio<String>(
                         value: 'value2',
-                        builder: (context, states, child) {
-                          radio2States = states;
+                        builder: (context, radioState, child) {
+                          radio2State = radioState;
                           return GestureDetector(
                             key: const Key('radio2'),
                             child: Container(
-                              color: states.isSelected
+                              color: radioState.isSelected
                                   ? Colors.blue
                                   : Colors.grey,
                               child: const Text('Radio 2'),
@@ -456,16 +456,16 @@ void main() {
       );
 
       // Initially radio1 is selected
-      expect(radio1States!.isSelected, isTrue);
-      expect(radio2States!.isSelected, isFalse);
+      expect(radio1State!.isSelected, isTrue);
+      expect(radio2State!.isSelected, isFalse);
 
       // Tap radio2
       await tester.tap(find.byKey(const Key('radio2')));
       await tester.pump();
 
       // Now radio2 should be selected
-      expect(radio1States!.isSelected, isFalse);
-      expect(radio2States!.isSelected, isTrue);
+      expect(radio1State!.isSelected, isFalse);
+      expect(radio2State!.isSelected, isTrue);
     });
   });
 }

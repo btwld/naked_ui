@@ -267,7 +267,7 @@ void main() {
     });
 
     testWidgets(
-      'event callbacks: tap and longPress parity; doubleTap (Naked only)',
+      'event callbacks: tap and longPress parity',
       (tester) async {
         final handle = tester.ensureSemantics();
 
@@ -314,28 +314,6 @@ void main() {
         await tester.longPress(find.byType(NakedButton));
         await tester.pump();
         expect(nakedLongPressed, isTrue);
-
-        bool nakedDoubleTapped = false;
-        await tester.pumpWidget(
-          _buildTestApp(
-            NakedButton(
-              onPressed: () {},
-              onDoubleTap: () {
-                nakedDoubleTapped = true;
-              },
-              child: const Text('Evt Double'),
-            ),
-          ),
-        );
-        // Two quick taps at the exact same location
-        final target = find.byType(NakedButton);
-        await tester.tap(target);
-        await tester.pump(const Duration(milliseconds: 50));
-        await tester.tap(target);
-        // Allow DoubleTapGestureRecognizer to resolve and cancel its timer
-        await tester.pump(kDoubleTapTimeout + const Duration(milliseconds: 10));
-        await tester.pump();
-        expect(nakedDoubleTapped, isTrue);
 
         handle.dispose();
       },

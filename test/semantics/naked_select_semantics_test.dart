@@ -1,5 +1,6 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/semantics.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:naked_ui/naked_ui.dart';
@@ -13,16 +14,13 @@ void main() {
     );
   }
 
-
   Widget _buildNakedSelect({String? selectedValue, bool enabled = true}) {
     return NakedSelect<String>(
-      selectedValue: selectedValue ?? 'option1',
-      onSelectedValueChanged: enabled ? (value) {} : null,
+      value: selectedValue,
+      onChanged: enabled ? (value) {} : null,
       enabled: enabled,
-      child: const NakedSelectTrigger(
-        child: Text('Select Option'),
-      ),
-      menu: Container(
+      builder: (context, state, child) => const Text('Select Option'),
+      overlayBuilder: (context, info) => Container(
         width: 200,
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
@@ -40,54 +38,9 @@ void main() {
         child: const Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            NakedSelectItem(
-              value: 'option1',
-              child: Text('Option 1'),
-            ),
-            NakedSelectItem(
-              value: 'option2',
-              child: Text('Option 2'),
-            ),
-            NakedSelectItem(
-              value: 'option3',
-              child: Text('Option 3'),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildNakedMultiSelect() {
-    return NakedSelect<String>.multiple(
-      selectedValues: const {'option1'},
-      onSelectedValuesChanged: (values) {},
-      child: const NakedSelectTrigger(
-        child: Text('Multi Select'),
-      ),
-      menu: Container(
-        width: 200,
-        padding: const EdgeInsets.all(8),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          border: Border.all(color: Colors.grey),
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: const Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            NakedSelectItem(
-              value: 'option1',
-              child: Text('Option 1'),
-            ),
-            NakedSelectItem(
-              value: 'option2',
-              child: Text('Option 2'),
-            ),
-            NakedSelectItem(
-              value: 'option3',
-              child: Text('Option 3'),
-            ),
+            NakedSelectOption(value: 'option1', child: Text('Option 1')),
+            NakedSelectOption(value: 'option2', child: Text('Option 2')),
+            NakedSelectOption(value: 'option3', child: Text('Option 3')),
           ],
         ),
       ),
@@ -101,7 +54,10 @@ void main() {
       await tester.pumpWidget(_buildTestApp(_buildNakedSelect()));
 
       // Verify trigger has button semantics
-      final summary = summarizeMergedFromRoot(tester, control: ControlType.button);
+      final summary = summarizeMergedFromRoot(
+        tester,
+        control: ControlType.button,
+      );
       expect(summary.flags.contains('isButton'), isTrue);
       expect(summary.flags.contains('isFocusable'), isTrue);
       expect(summary.actions.contains('tap'), isTrue);
@@ -177,41 +133,55 @@ void main() {
 
     testWidgets('keyboard navigation semantics', (tester) async {
       final handle = tester.ensureSemantics();
+      final focusNode = FocusNode();
 
-      await tester.pumpWidget(_buildTestApp(_buildNakedSelect()));
+      await tester.pumpWidget(
+        _buildTestApp(
+          NakedSelect<String>(
+            triggerFocusNode: focusNode,
+            builder: (context, state, child) => const Text('Select option'),
+            overlayBuilder: (context, info) => const Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                NakedSelectOption<String>(value: 'apple', child: Text('Apple')),
+                NakedSelectOption<String>(
+                  value: 'banana',
+                  child: Text('Banana'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
 
-      // Open select
-      await tester.tap(find.text('Select Option'));
+      // Focus the trigger
+      focusNode.requestFocus();
+      await tester.pump();
+
+      // Verify trigger has keyboard semantics
+      final triggerSemantics = tester.getSemantics(find.text('Select option'));
+      expect(
+        triggerSemantics.getSemanticsData().hasAction(SemanticsAction.tap),
+        isTrue,
+      );
+      expect(
+        triggerSemantics.getSemanticsData().flagsCollection.isFocused,
+        isTrue,
+      );
+
+      // Open with keyboard
+      await tester.sendKeyEvent(LogicalKeyboardKey.enter);
       await tester.pumpAndSettle();
 
-      // Verify select is open
-      expect(find.text('Option 1'), findsOneWidget);
-
-      // Press Escape to close
-      await tester.sendKeyEvent(LogicalKeyboardKey.escape);
-      await tester.pumpAndSettle();
-
-      // Verify select closed
-      expect(find.text('Option 1'), findsNothing);
+      // Verify overlay items have proper keyboard semantics
+      final appleSemantics = tester.getSemantics(find.text('Apple'));
+      expect(
+        appleSemantics.getSemanticsData().hasAction(SemanticsAction.tap),
+        isTrue,
+      );
 
       handle.dispose();
-    });
-
-    testWidgets('multi-select semantics', (tester) async {
-      final handle = tester.ensureSemantics();
-
-      await tester.pumpWidget(_buildTestApp(_buildNakedMultiSelect()));
-
-      // Open multi-select
-      await tester.tap(find.text('Multi Select'));
-      await tester.pumpAndSettle();
-
-      // Verify items are available
-      expect(find.text('Option 1'), findsOneWidget);
-      expect(find.text('Option 2'), findsOneWidget);
-      expect(find.text('Option 3'), findsOneWidget);
-
-      handle.dispose();
+      focusNode.dispose();
     });
 
     testWidgets('focus management semantics', (tester) async {
@@ -221,13 +191,11 @@ void main() {
       await tester.pumpWidget(
         _buildTestApp(
           NakedSelect<String>(
-            selectedValue: 'option1',
-            onSelectedValueChanged: (value) {},
-            child: NakedSelectTrigger(
-              focusNode: focusNode,
-              child: const Text('Focusable Select'),
-            ),
-            menu: Container(
+            value: 'option1',
+            onChanged: (value) {},
+            triggerFocusNode: focusNode,
+            builder: (context, state, child) => const Text('Focusable Select'),
+            overlayBuilder: (context, info) => Container(
               width: 200,
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
@@ -238,10 +206,7 @@ void main() {
               child: const Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  NakedSelectItem(
-                    value: 'option1',
-                    child: Text('Option 1'),
-                  ),
+                  NakedSelectOption(value: 'option1', child: Text('Option 1')),
                 ],
               ),
             ),
@@ -285,13 +250,11 @@ void main() {
       await tester.pumpWidget(
         _buildTestApp(
           NakedSelect<String>(
-            selectedValue: 'option1',
-            onSelectedValueChanged: (value) {},
+            value: 'option1',
+            onChanged: (value) {},
             semanticLabel: 'Choose an option',
-            child: const NakedSelectTrigger(
-              child: Text('Labeled Select'),
-            ),
-            menu: Container(
+            builder: (context, state, child) => const Text('Labeled Select'),
+            overlayBuilder: (context, info) => Container(
               width: 200,
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
@@ -302,10 +265,7 @@ void main() {
               child: const Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  NakedSelectItem(
-                    value: 'option1',
-                    child: Text('Option 1'),
-                  ),
+                  NakedSelectOption(value: 'option1', child: Text('Option 1')),
                 ],
               ),
             ),
@@ -315,26 +275,6 @@ void main() {
 
       // Verify select with semantic label
       expect(find.text('Labeled Select'), findsOneWidget);
-
-      handle.dispose();
-    });
-
-    testWidgets('type-ahead functionality semantics', (tester) async {
-      final handle = tester.ensureSemantics();
-
-      await tester.pumpWidget(_buildTestApp(_buildNakedSelect()));
-
-      // Open select
-      await tester.tap(find.text('Select Option'));
-      await tester.pumpAndSettle();
-
-      // Verify select is open
-      expect(find.text('Option 1'), findsOneWidget);
-
-      // Type-ahead behavior is complex to test reliably in this context
-      // Just verify the basic structure is accessible
-      expect(find.text('Option 2'), findsOneWidget);
-      expect(find.text('Option 3'), findsOneWidget);
 
       handle.dispose();
     });

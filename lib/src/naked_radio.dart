@@ -1,11 +1,38 @@
 import 'package:flutter/material.dart';
 
 import 'mixins/naked_mixins.dart';
+import 'utilities/hit_testable_container.dart';
+import 'utilities/naked_state_scope.dart';
+import 'utilities/state.dart';
+
+/// Immutable view passed to [NakedRadio.builder].
+class NakedRadioState<T> extends NakedState {
+  /// The value represented by this radio.
+  final T value;
+
+  NakedRadioState({required super.states, required this.value});
+
+  /// Returns the nearest [NakedRadioState] of the requested type.
+  static NakedRadioState<S> of<S>(BuildContext context) =>
+      NakedState.of(context);
+
+  /// Returns the nearest [NakedRadioState] if available, otherwise null.
+  static NakedRadioState<S>? maybeOf<S>(BuildContext context) =>
+      NakedState.maybeOf(context);
+
+  /// Returns the [WidgetStatesController] from the nearest scope.
+  static WidgetStatesController controllerOf(BuildContext context) =>
+      NakedState.controllerOf(context);
+
+  /// Returns the [WidgetStatesController] from the nearest scope, if any.
+  static WidgetStatesController? maybeControllerOf(BuildContext context) =>
+      NakedState.maybeControllerOf(context);
+}
 
 /// A headless radio without visuals.
 ///
-/// Must be placed under a [RadioGroup]. Exposes interaction states
-/// including hovered, pressed, focused, selected, and disabled.
+/// Must be placed under a [RadioGroup]. The builder receives a [NakedRadioState]
+/// with the radio value, group value, and interaction states.
 ///
 /// ```dart
 /// RadioGroup<String>(
@@ -17,6 +44,11 @@ import 'mixins/naked_mixins.dart';
 ///   ]),
 /// )
 /// ```
+///
+/// ## Accessibility
+/// For optimal accessibility, ensure your radio has a minimum touch target
+/// of 48x48dp. Smaller sizes will work but may be difficult for some users
+/// to tap accurately.
 ///
 /// See also:
 /// - [Radio], the Material-styled radio for typical apps.
@@ -47,7 +79,7 @@ class NakedRadio<T> extends StatefulWidget {
   /// The visual content when not using [builder].
   final Widget? child;
 
-  /// The enabled state of the radio.
+  /// Whether the radio is enabled.
   final bool enabled;
 
   /// The mouse cursor when hovering.
@@ -56,10 +88,10 @@ class NakedRadio<T> extends StatefulWidget {
   /// The focus node for the radio.
   final FocusNode? focusNode;
 
-  /// The autofocus flag.
+  /// Whether to autofocus.
   final bool autofocus;
 
-  /// The toggleable flag for clearing selection.
+  /// Whether tapping the selected radio clears the selection.
   final bool toggleable;
 
   /// Called when focus changes.
@@ -71,11 +103,8 @@ class NakedRadio<T> extends StatefulWidget {
   /// Called when press state changes.
   final ValueChanged<bool>? onPressChange;
 
-  /// The builder that receives current interaction states.
-  ///
-  /// Includes the selected state when [value] matches the group's
-  /// selected value.
-  final ValueWidgetBuilder<Set<WidgetState>>? builder;
+  /// Builds the radio using the current [NakedRadioState].
+  final ValueWidgetBuilder<NakedRadioState<T>>? builder;
 
   /// The registry override for advanced usage and testing.
   ///
@@ -87,17 +116,28 @@ class NakedRadio<T> extends StatefulWidget {
 }
 
 class _NakedRadioState<T> extends State<NakedRadio<T>>
-    with FocusableMixin<NakedRadio<T>> {
+    with FocusNodeMixin<NakedRadio<T>> {
   bool? _lastReportedPressed;
   bool? _lastReportedHover;
 
   @protected
   @override
-  FocusNode? get focusableExternalNode => widget.focusNode;
+  FocusNode? get widgetProvidedNode => widget.focusNode;
 
   @protected
   @override
-  ValueChanged<bool>? get focusableOnFocusChange => widget.onFocusChange;
+  ValueChanged<bool>? get onFocusChange => widget.onFocusChange;
+
+  @override
+  void didUpdateWidget(covariant NakedRadio<T> oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // When enablement flips, clear sentinels so the next interactive state
+    // change is reported instead of being suppressed by stale values.
+    if (oldWidget.enabled != widget.enabled) {
+      _lastReportedHover = null;
+      _lastReportedPressed = null;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -116,7 +156,7 @@ class _NakedRadioState<T> extends State<NakedRadio<T>>
       value: widget.value,
       mouseCursor: WidgetStateMouseCursor.resolveWith((_) => effectiveCursor),
       toggleable: widget.toggleable,
-      focusNode: effectiveFocusNode!, // from FocusableMixin
+      focusNode: effectiveFocusNode, // FocusNodeMixin guarantees non-null
       autofocus: widget.autofocus && widget.enabled,
       groupRegistry: registry,
       enabled: widget.enabled,
@@ -144,15 +184,44 @@ class _NakedRadioState<T> extends State<NakedRadio<T>>
         }
 
         if (widget.builder != null) {
-          final built = widget.builder!(context, states, widget.child);
+          final isSelected = registry.groupValue == widget.value;
+          final statesWithSelection = {
+            ...states,
+            if (isSelected) WidgetState.selected,
+          };
+          final radioStateTyped = NakedRadioState<T>(
+            states: statesWithSelection,
+            value: widget.value,
+          );
+
+          final content = widget.builder!(
+            context,
+            radioStateTyped,
+            widget.child,
+          );
 
           // Ensure the area is hit-testable so RawRadio's GestureDetector
           // can receive taps even if the built widget has no gesture handlers.
-          return ColoredBox(color: Colors.transparent, child: built);
+          return HitTestableContainer(
+            child: NakedStateScope(value: radioStateTyped, child: content),
+          );
         }
 
         // Ensure the child area is hit-testable for taps.
-        return ColoredBox(color: Colors.transparent, child: widget.child!);
+        // Even without builder, provide state to descendants
+        final isSelected = registry.groupValue == widget.value;
+        final statesWithSelection = {
+          ...states,
+          if (isSelected) WidgetState.selected,
+        };
+        final radioStateTyped = NakedRadioState<T>(
+          states: statesWithSelection,
+          value: widget.value,
+        );
+
+        return HitTestableContainer(
+          child: NakedStateScope(value: radioStateTyped, child: widget.child!),
+        );
       },
     );
   }

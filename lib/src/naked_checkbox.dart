@@ -1,11 +1,63 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
 import 'mixins/naked_mixins.dart';
+import 'utilities/intents.dart';
+import 'utilities/naked_focusable_detector.dart';
+import 'utilities/naked_state_scope.dart';
+import 'utilities/state.dart';
+
+/// Immutable view passed to [NakedCheckbox.builder].
+class NakedCheckboxState extends NakedState {
+  /// The current checked state (null for tristate intermediate).
+  final bool? isChecked;
+
+  /// Whether the checkbox is in tristate mode.
+  final bool tristate;
+
+  NakedCheckboxState({
+    required super.states,
+    required this.isChecked,
+    required this.tristate,
+  });
+
+  /// Returns the nearest [NakedCheckboxState] provided by [NakedStateScope].
+  static NakedCheckboxState of(BuildContext context) => NakedState.of(context);
+
+  /// Returns the nearest [NakedCheckboxState] if one is available.
+  static NakedCheckboxState? maybeOf(BuildContext context) =>
+      NakedState.maybeOf(context);
+
+  /// Returns the [WidgetStatesController] from the nearest scope.
+  static WidgetStatesController controllerOf(BuildContext context) =>
+      NakedState.controllerOf(context);
+
+  /// Returns the [WidgetStatesController] from the nearest scope, if any.
+  static WidgetStatesController? maybeControllerOf(BuildContext context) =>
+      NakedState.maybeControllerOf(context);
+
+  /// Whether the checkbox is in intermediate/mixed state.
+  bool get isIntermediate => tristate && isChecked == null;
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+
+    return other is NakedCheckboxState &&
+        setEquals(other.states, states) &&
+        other.isChecked == isChecked &&
+        other.tristate == tristate;
+  }
+
+  @override
+  int get hashCode => Object.hash(states, isChecked, tristate);
+}
 
 /// A headless checkbox without visuals.
 ///
-/// Exposes interaction states and semantics for custom styling.
+/// The builder receives a [NakedCheckboxState] with the checked value, whether tristate is enabled,
+/// and interaction states for custom styling.
 ///
 /// ```dart
 /// NakedCheckbox(
@@ -53,7 +105,7 @@ class NakedCheckbox extends StatefulWidget {
   /// When [tristate] is true, null represents mixed state.
   final bool? value;
 
-  /// The tristate support flag.
+  /// Whether tristate is supported.
   ///
   /// When true, tapping cycles through false → true → null → false.
   /// When false, [value] must not be null.
@@ -71,28 +123,25 @@ class NakedCheckbox extends StatefulWidget {
   /// Called when press state changes.
   final ValueChanged<bool>? onPressChange;
 
-  /// The enabled state of the checkbox.
+  /// Whether the checkbox is enabled.
   final bool enabled;
 
   /// The mouse cursor for the checkbox.
   final MouseCursor? mouseCursor;
 
-  /// The haptic feedback enablement flag.
+  /// Whether to provide haptic feedback on interactions.
   final bool enableFeedback;
 
   /// The focus node for the checkbox.
   final FocusNode? focusNode;
 
-  /// The autofocus flag.
+  /// Whether to autofocus.
   final bool autofocus;
 
-  /// The builder that receives current interaction states.
-  ///
-  /// States include: disabled, focused, hovered, pressed, selected.
-  /// The selected state reflects `value == true`.
-  final ValueWidgetBuilder<Set<WidgetState>>? builder;
+  /// Builds the checkbox using the current [NakedCheckboxState].
+  final ValueWidgetBuilder<NakedCheckboxState>? builder;
 
-  /// The semantic label for accessibility.
+  /// Semantic label for accessibility.
   final String? semanticLabel;
 
   bool get _effectiveEnabled => enabled && onChanged != null;
@@ -103,8 +152,7 @@ class NakedCheckbox extends StatefulWidget {
 
 class _NakedCheckboxState extends State<NakedCheckbox>
     with WidgetStatesMixin<NakedCheckbox> {
-  // Private methods
-  void _handleKeyboardActivation([Intent? _]) {
+  void _handleKeyboardActivation() {
     if (!widget._effectiveEnabled) return;
 
     _handleActivation();
@@ -135,14 +183,19 @@ class _NakedCheckboxState extends State<NakedCheckbox>
   }
 
   Widget _buildContent(BuildContext context) {
-    final states = widgetStates;
+    final checkboxState = NakedCheckboxState(
+      states: widgetStates,
+      isChecked: widget.value,
+      tristate: widget.tristate,
+    );
 
-    return widget.builder != null
-        ? widget.builder!(context, states, widget.child)
+    final content = widget.builder != null
+        ? widget.builder!(context, checkboxState, widget.child)
         : widget.child!;
+
+    return NakedStateScope(value: checkboxState, child: content);
   }
 
-  // Private getters
   MouseCursor get _effectiveCursor => widget._effectiveEnabled
       ? (widget.mouseCursor ?? SystemMouseCursors.click)
       : SystemMouseCursors.basic;
@@ -169,28 +222,23 @@ class _NakedCheckboxState extends State<NakedCheckbox>
   @override
   Widget build(BuildContext context) {
     return MergeSemantics(
-      child: FocusableActionDetector(
+      child: NakedFocusableDetector(
         // Keyboard and focus handling
         enabled: widget._effectiveEnabled,
-        focusNode: widget.focusNode,
         autofocus: widget.autofocus,
-        // Use default includeFocusSemantics: true to let it handle focus semantics automatically
-        shortcuts: const {
-          SingleActivator(LogicalKeyboardKey.enter): ActivateIntent(),
-          SingleActivator(LogicalKeyboardKey.space): ActivateIntent(),
-        },
-        actions: {
-          ActivateIntent: CallbackAction<ActivateIntent>(
-            onInvoke: _handleKeyboardActivation,
-          ),
-        },
-        onShowHoverHighlight: (hovered) {
-          updateHoverState(hovered, widget.onHoverChange);
-        },
         onFocusChange: (focused) {
           updateFocusState(focused, widget.onFocusChange);
         },
+        onHoverChange: (hovered) {
+          updateHoverState(hovered, widget.onHoverChange);
+        },
+        focusNode: widget.focusNode,
         mouseCursor: _effectiveCursor,
+        // Use default includeFocusSemantics: true to let it handle focus semantics automatically
+        shortcuts: NakedIntentActions.checkbox.shortcuts,
+        actions: NakedIntentActions.checkbox.actions(
+          onToggle: () => _handleKeyboardActivation(),
+        ),
         child: Semantics(
           container: true,
           enabled: widget._effectiveEnabled,

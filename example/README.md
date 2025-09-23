@@ -17,36 +17,99 @@ samples, guidance on mobile development, and a full API reference.
 
 ## Testing
 
-### Running Integration Tests on macOS
+This example app includes comprehensive unit and integration tests for all Naked UI components.
 
-To run the integration tests on macOS, follow these steps:
+### Quick Start - Running Tests
 
-1. **Ensure macOS platform is supported**:
+From the project root directory:
+
+```bash
+# Run unit tests only
+dart tool/test.dart
+
+# Run all tests (unit + integration)
+dart tool/test.dart --all
+
+# Run integration tests only
+dart tool/test.dart --integration
+
+# Run specific component tests
+dart tool/test.dart --component=button
+dart tool/test.dart --component=textfield
+
+# Get detailed output for debugging
+dart tool/test.dart --all --verbose
+```
+
+### Test Types
+
+#### Unit Tests
+- Fast, isolated tests for widget behavior
+- Located in `test/widget_test.dart`
+- Run automatically on every test command
+
+#### Integration Tests
+- Full UI automation tests on macOS
+- Test real user interactions: hover, click, keyboard navigation
+- Located in `integration_test/components/`
+- Require macOS platform for UI testing
+
+### Available Integration Test Components
+
+- **button** - NakedButton interactions and states
+- **checkbox** - NakedCheckbox toggle and accessibility
+- **radio** - NakedRadio selection and groups
+- **slider** - NakedSlider dragging and value changes
+- **textfield** - NakedTextField input and validation
+- **select** - NakedSelect dropdown and selection
+- **popover** - NakedPopover positioning and dismissal
+- **tooltip** - NakedTooltip display and timing
+- **menu** - NakedMenu navigation and actions
+- **accordion** - NakedAccordion expand/collapse
+- **tabs** - NakedTabs switching and keyboard nav
+- **dialog** - NakedDialog modal behavior
+
+### Prerequisites
+
+1. **macOS platform support** (for integration tests):
    ```bash
    flutter create --platforms=macos .
    ```
 
-2. **Run the integration tests**:
+2. **Flutter dependencies up to date**:
    ```bash
-   flutter test integration_test/app_navigation_test.dart -d macos
+   flutter pub get
    ```
 
-3. **Viewing test results**:
-   - Integration tests will launch the application and perform automated UI testing
-   - Test results will be displayed in the terminal
-   - Any failures will be reported with details about the specific issue
+### Troubleshooting
 
-### Debugging Integration Tests
+#### Integration Tests Hang or Fail
 
-If you encounter issues with integration tests:
-
-1. **Run the app manually first**:
+1. **Check app runs manually first**:
    ```bash
    flutter run -d macos
    ```
 
-2. **Check for UI rendering issues** by navigating to all components manually
+2. **Run individual component tests**:
+   ```bash
+   dart tool/test.dart --component=button
+   ```
 
-3. **Examine specific test failures** in the terminal output to pinpoint the failing widgets or navigation issues
+3. **Use verbose output for details**:
+   ```bash
+   dart tool/test.dart --integration --verbose
+   ```
 
-4. **Update test expectations** if the UI structure has changed
+#### Common Issues
+
+- **Timeout errors**: Integration tests have 5-minute timeout
+- **macOS permissions**: Grant screen recording/accessibility permissions if prompted
+- **Focus issues**: Tests automatically clean up focus state between runs
+- **Gesture cleanup**: Improved hover simulation prevents test interference
+
+#### Test Environment
+
+- **Platform**: macOS required for integration tests
+- **Timeout**: 5 minutes for full integration suite
+- **Environment**: `RUN_INTEGRATION=1` set automatically
+- **Reporter**: Compact by default, expanded with `--verbose`

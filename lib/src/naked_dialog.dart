@@ -1,14 +1,14 @@
-import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
+
+import 'utilities/intents.dart';
 
 /// Displays a headless dialog without default styling.
 ///
-/// Unlike [showDialog], imposes no visuals—you control all appearance
-/// via [builder]. The [barrierColor] is required and controls both
-/// visual scrim and barrier hit testing.
+/// Unlike [showDialog], imposes no visuals—appearance is fully controlled by
+/// [builder]. The [barrierColor] is required and controls both visual scrim and
+/// barrier hit testing.
 ///
-/// Returns a [Future] with the value passed to [Navigator.pop], or null
-/// if dismissed.
+/// Returns a [Future] with the value passed to [Navigator.pop], or null if dismissed.
 ///
 /// Example:
 /// ```dart
@@ -61,15 +61,11 @@ Future<T?> showNakedDialog<T>({
             // This mirrors barrier tap policy and keeps behavior predictable.
             if (barrierDismissible) {
               wrapped = Shortcuts(
-                shortcuts: const {
-                  SingleActivator(LogicalKeyboardKey.escape): DismissIntent(),
-                },
+                shortcuts: NakedIntentActions.dialog.shortcuts,
                 child: Actions(
-                  actions: {
-                    DismissIntent: CallbackAction<DismissIntent>(
-                      onInvoke: (_) => Navigator.of(routeContext).maybePop(),
-                    ),
-                  },
+                  actions: NakedIntentActions.dialog.actions(
+                    onDismiss: () => Navigator.of(routeContext).maybePop(),
+                  ),
                   child: wrapped,
                 ),
               );
@@ -109,7 +105,7 @@ class NakedDialog extends StatelessWidget {
   /// Whether to block background content interaction.
   final bool modal;
 
-  /// The semantic label for accessibility.
+  /// Semantic label for accessibility.
   final String? semanticLabel;
 
   @override

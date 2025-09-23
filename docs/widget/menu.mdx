@@ -1,13 +1,17 @@
 ---
 title: NakedMenu
+description: Anchored overlay menu with typed trigger and item builders for complete visual control
+keywords: [flutter, menu, dropdown, context-menu, overlay, headless]
 ---
 
-NakedMenu provides dropdown menu behavior and accessibility features without imposing any visual styling, giving consumers complete design freedom. It anchors an overlay to a trigger, using `RawMenuAnchor` under the hood for correct layering and focus/keyboard handling.
+`NakedMenu` anchors an overlay to any widget and handles focus, keyboard navigation, outside-click dismissal, and accessibility without shipping visuals. Supply a trigger builder (or child), render whatever overlay you need, and use the typed state structures to style active or hovered items.
 
 <Info>
-  You can find this example in our [GitHub repository](https://github.com/btwld/naked_ui/blob/main/example/lib/api/naked_menu.0.dart).
+  Browse the full sample at [`example/lib/api/naked_menu.0.dart`](https://github.com/btwld/naked_ui/blob/main/example/lib/api/naked_menu.0.dart).
 </Info>
-<CodeGroup title="Usage Example" defaultLanguage="dart">
+
+## Quick Start
+
 ```dart
 class MenuExample extends StatefulWidget {
   const MenuExample({super.key});
@@ -17,211 +21,200 @@ class MenuExample extends StatefulWidget {
 }
 
 class _MenuExampleState extends State<MenuExample> {
-  final _controller = MenuController();
-
-  void _onItemPressed(String item) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Item $item selected')),
-    );
-  }
+  final controller = MenuController();
+  String? _selection;
 
   @override
   Widget build(BuildContext context) {
-    return NakedMenu(
-      builder: (context) => NakedButton(
-        onPressed: () => _controller.open(),
-        child: Container(
-          padding: const EdgeInsets.all(8),
+    return NakedMenu<String>(
+      controller: controller,
+      builder: (context, menuState, _) {
+        final bool isOpen = menuState.isOpen;
+        final bool isHovered = menuState.isHovered;
+
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(10),
+            color: isOpen || isHovered ? Colors.grey.shade100 : Colors.white,
+            border: Border.all(
+              color: isOpen || isHovered ? Colors.grey.shade400 : Colors.grey.shade300,
+            ),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(_selection ?? 'Actions'),
+              const SizedBox(width: 8),
+              Icon(isOpen ? Icons.expand_less : Icons.expand_more, size: 16),
+            ],
+          ),
+        );
+      },
+      overlayBuilder: (context, info) {
+        return Container(
+          margin: const EdgeInsets.only(top: 4),
+          padding: const EdgeInsets.symmetric(vertical: 6),
+          constraints: BoxConstraints(
+            minWidth: info.anchorRect.width,
+            maxWidth: 220,
+          ),
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: Colors.grey.shade300),
+            borderRadius: BorderRadius.circular(10),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.08),
+                blurRadius: 12,
+                offset: const Offset(0, 6),
+              ),
+            ],
           ),
-          child: const Icon(Icons.settings, size: 18),
-        ),
-      ),
-      overlayBuilder: (context) => Container(
-        padding: const EdgeInsets.all(8),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          border: Border.all(color: Colors.grey.shade200),
-          borderRadius: BorderRadius.circular(8),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.05),
-              blurRadius: 8,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        constraints: const BoxConstraints(
-          maxWidth: 200,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ItemContent(
-              title: 'Menu Item 1',
-              onPressed: () => _onItemPressed('1'),
-            ),
-            ItemContent(
-              title: 'Menu Item 2',
-              onPressed: () => _onItemPressed('2'),
-            ),
-            ItemContent(
-              title: 'Menu Item 3',
-              onPressed: () => _onItemPressed('3'),
-            ),
-          ],
-        ),
-      ),
-      controller: _controller,
-      onClose: () => _controller.close(),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _MenuItem(
+                value: 'edit',
+                icon: Icons.edit,
+                label: 'Edit',
+                selectedValue: _selection,
+              ),
+              _MenuItem(
+                value: 'duplicate',
+                icon: Icons.copy,
+                label: 'Duplicate',
+                selectedValue: _selection,
+              ),
+              const Divider(height: 1),
+              _MenuItem(
+                value: 'delete',
+                icon: Icons.delete,
+                label: 'Delete',
+                selectedValue: _selection,
+              ),
+            ],
+          ),
+        );
+      },
+      onSelected: (value) => setState(() => _selection = value),
     );
   }
 }
 
-class ItemContent extends StatefulWidget {
-  const ItemContent({
-    super.key,
-    required this.title,
-    required this.onPressed,
+class _MenuItem extends StatelessWidget {
+  const _MenuItem({
+    required this.value,
+    required this.icon,
+    required this.label,
+    required this.selectedValue,
   });
 
-  final String title;
-  final VoidCallback onPressed;
-
-  @override
-  State<ItemContent> createState() => _ItemContentState();
-}
-
-class _ItemContentState extends State<ItemContent> {
-  bool _isHovered = false;
+  final String value;
+  final IconData icon;
+  final String label;
+  final String? selectedValue;
 
   @override
   Widget build(BuildContext context) {
-    return NakedMenuItem(
-      onPressed: widget.onPressed,
-      onHoverChange: (isHovered) => setState(() => _isHovered = isHovered),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.all(8.0),
-        decoration: BoxDecoration(
-          color: _isHovered ? Colors.grey.shade100 : Colors.white,
-          borderRadius: BorderRadius.circular(4),
-        ),
-        child:
-            Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-          Text(widget.title),
-          AnimatedOpacity(
-            opacity: _isHovered ? 1.0 : 0.0,
-            duration: const Duration(milliseconds: 200),
-            child: const Icon(
-              Icons.arrow_forward_ios,
-              size: 12,
-              color: Colors.grey,
-            ),
+    return NakedMenuItem<String>(
+      value: value,
+      builder: (context, itemState, _) {
+        final bool hovered = itemState.isHovered;
+        final bool selected = selectedValue == value;
+
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          color: hovered ? Colors.grey.shade100 : null,
+          child: Row(
+            children: [
+              Icon(icon, size: 16,
+                  color: selected ? Colors.blue : Colors.grey.shade700),
+              const SizedBox(width: 12),
+              Expanded(child: Text(label)),
+              if (selected)
+                const Icon(Icons.check, size: 16, color: Colors.blue),
+            ],
           ),
-        ]),
-      ),
+        );
+      },
     );
   }
 }
 ```
-</CodeGroup>
 
-## Constructor
+## State Snapshots
+
+### Trigger – `NakedMenuState`
+- `isOpen` → whether the overlay is visible
+- `widgetStates` → hover/focus/pressed/disabled states exposed in the builder (`menuState.isHovered`, `menuState.isPressed`, etc.)
+
+### Items – `NakedMenuItemState<T>`
+- `value` → the item's value for comparisons with your own selection model
+- `widgetStates` → hover/focus/pressed/disabled states for styling
+
+### Access from Context
+
+- `NakedMenuState.of(context)` / `maybeOf(context)` → retrieve the trigger state
+- `NakedMenuItemState.of<T>(context)` / `maybeOf<T>(context)` → read the nearest item state
+- `NakedMenuState.controllerOf(context)` / `maybeControllerOf(context)` → access the shared `WidgetStatesController`
+
+## NakedMenu Constructor
 
 ```dart
 const NakedMenu({
   Key? key,
-  required this.builder,
+  this.child,
+  this.builder,
   required this.overlayBuilder,
   required this.controller,
+  this.onSelected,
+  this.onOpen,
   this.onClose,
+  this.onCanceled,
+  this.onOpenRequested,
+  this.onCloseRequested,
   this.consumeOutsideTaps = true,
   this.useRootOverlay = false,
-  this.autofocus = false,
-  this.menuPosition = const NakedMenuPosition(
-    target: Alignment.bottomLeft,
-    follower: Alignment.topLeft,
-  ),
-  this.fallbackPositions = const [
-    NakedMenuPosition(
-      target: Alignment.topLeft,
-      follower: Alignment.bottomLeft,
-    ),
-  ],
+  this.closeOnClickOutside = true,
+  this.triggerFocusNode,
+  this.positioning = const OverlayPositionConfig(),
 })
 ```
 
-## Properties
+### Key Parameters
 
-#### builder → `WidgetBuilder`
-The target widget that triggers the menu. This is typically a button or other interactive element.
+- `child` / `builder` → supply a static trigger child or a dynamic `ValueWidgetBuilder<NakedMenuState>`
+- `overlayBuilder` → `(BuildContext, RawMenuAnchorOverlayInfo)` from `RawMenuAnchor`
+- `controller` → `MenuController` (also exported as `NakedMenuController`) controlling show/hide
+- `onSelected` → callback invoked with the selected value; the controller also exposes `select`
+- `positioning` → provide an `OverlayPositionConfig` for alignment or offset tweaks
+- `closeOnClickOutside` → hide the overlay when tapping outside (default `true`)
+- `consumeOutsideTaps` / `useRootOverlay` → capture outside taps before they reach ancestors or target the root overlay stack
+- `triggerFocusNode` → reuse an external focus node so focus returns to the trigger after closing
+- Lifecycle hooks: `onOpen`, `onClose`, `onCanceled` announce overlay visibility; `onOpenRequested`, `onCloseRequested` let you intercept RawMenuAnchor requests before they commit
 
-#### overlayBuilder → `WidgetBuilder`
-The menu widget to display when open. This is the content displayed in the overlay when the menu is open.
+## NakedMenuItem Essentials
 
-#### controller → `MenuController`
-The controller that manages the visibility of the menu. Use this to open/close the menu programmatically.
-
-#### onClose → `VoidCallback?`
-Called when the menu should close.
-
-#### consumeOutsideTaps → `bool`
-Whether to close the menu when clicking outside. Defaults to true.
-
-#### useRootOverlay → `bool`
-Whether to use the root overlay for rendering the menu. Defaults to false.
-
-#### autofocus → `bool`
-Whether to automatically focus the menu when opened. Defaults to false.
-
-#### menuPosition → `NakedMenuPosition`
-The alignment of the menu relative to its target.
-
-#### fallbackPositions → `List<NakedMenuPosition>`
-Fallback alignments to try if the menu doesn't fit in the preferred position.
-
-## Accessibility
-
-Focus management and keyboard navigation are handled automatically. The menu can be closed by pressing Escape, clicking outside (if `consumeOutsideTaps` is true), or selecting an item (if `closeOnSelect` is true). When opened, focus is automatically moved to the menu content.
-
-For accessibility, the menu supports screen readers and keyboard navigation. Menu items should use `NakedMenuItem` which provides proper interaction states and accessibility features.
-
-## NakedMenuItem
+`NakedMenuItem<T>` extends the shared `OverlayItem` base. Provide either `child` or a builder; the builder gets a `NakedMenuItemState<T>` typed snapshot. `NakedMenu.Item` is exported as a convenience alias for the constructor.
 
 ```dart
 const NakedMenuItem({
   Key? key,
-  this.child,
-  this.onPressed,
-  this.enabled = true,
-  this.closeOnSelect = true,
-  
-  this.mouseCursor = SystemMouseCursors.click,
-  this.enableFeedback = true,
-  this.focusNode,
-  this.autofocus = false,
-  this.onFocusChange,
-  this.onHoverChange,
-  this.onPressChange,
-  this.builder,
-  this.semanticLabel,
+  required T value,
+  Widget? child,
+  ValueWidgetBuilder<NakedMenuItemState<T>>? builder,
+  bool enabled = true,
+  String? semanticLabel,
+  bool closeOnActivate = true,
 })
 ```
 
-### Properties
+Set `closeOnActivate` to `false` for menus that keep focus while toggling options.
 
-- child: Visual content for the item. Provide either `child` or `builder`.
-- onPressed: Called when the item is selected.
-- enabled: Whether the item is enabled.
-- closeOnSelect: Whether to close the menu when selected. Defaults to true.
+## Accessibility Tips
 
-- mouseCursor: Cursor when hovering. Defaults to click.
-- enableFeedback: Whether to provide feedback on selection.
-- focusNode/autofocus: Focus handling.
-- onFocusChange/onHoverChange/onPressChange: State callbacks.
-- builder: Optional builder receiving `Set<WidgetState>`.
-- semanticLabel: Optional accessibility label for the item.
+- Always expose a textual label on the trigger and/or provide `semanticLabel`
+- Menu items should stay at least 44×44 logical pixels for touch targets
+- Provide visual hover/focus states using `itemState.isHovered` and `itemState.isFocused`
+- Restoring focus: pass a `triggerFocusNode` so focus returns to the trigger after closing
+- Arrow keys work automatically; ensure your overlay contains focusable descendants

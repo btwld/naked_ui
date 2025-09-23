@@ -45,19 +45,15 @@ class _TooltipExampleState extends State<TooltipExample>
   Widget build(BuildContext context) {
     return NakedTooltip(
       semanticsLabel: 'This is a tooltip',
-      position: const NakedMenuPosition(
-        target: Alignment.topCenter,
-        follower: Alignment.bottomCenter,
+      positioning: const OverlayPositionConfig(
+        alignment: Alignment.topCenter,
+        fallbackAlignment: Alignment.bottomCenter,
       ),
       waitDuration: const Duration(seconds: 0),
       showDuration: const Duration(seconds: 0),
-      removalDelay: const Duration(milliseconds: 300),
-      onStateChange: (state) {
-        state == OverlayChildLifecycleState.present
-            ? _animationController.forward()
-            : _animationController.reverse();
-      },
-      tooltipBuilder: (context) => SlideTransition(
+      onOpen: () => _animationController.forward(),
+      onClose: () => _animationController.reverse(),
+      overlayBuilder: (context, info) => SlideTransition(
         position: _animationController.drive(Tween<Offset>(
           begin: const Offset(0, 0.1),
           end: const Offset(0, 0),

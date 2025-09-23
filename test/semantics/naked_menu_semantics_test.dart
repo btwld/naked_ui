@@ -1,6 +1,6 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import 'package:flutter/semantics.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:naked_ui/naked_ui.dart';
 
@@ -13,16 +13,12 @@ void main() {
     );
   }
 
-
   Widget _buildNakedMenu() {
     final controller = MenuController();
-    return NakedMenu(
+    return NakedMenu<String>(
       controller: controller,
-      builder: (context) => NakedButton(
-        onPressed: controller.open,
-        child: const Text('Show Menu'),
-      ),
-      overlayBuilder: (context) => Container(
+      builder: (context, state, child) => const Text('Show Menu'),
+      overlayBuilder: (context, info) => Container(
         width: 200,
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
@@ -37,18 +33,13 @@ void main() {
             ),
           ],
         ),
-        child: Column(
+        child: const Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            NakedMenuItem(value: 'item1', child: Text('Item 1')),
+            NakedMenuItem(value: 'item2', child: Text('Item 2')),
             NakedMenuItem(
-              onPressed: () {},
-              child: const Text('Item 1'),
-            ),
-            NakedMenuItem(
-              onPressed: () {},
-              child: const Text('Item 2'),
-            ),
-            const NakedMenuItem(
+              value: 'disabled',
               enabled: false,
               child: Text('Disabled Item'),
             ),
@@ -65,7 +56,10 @@ void main() {
       await tester.pumpWidget(_buildTestApp(_buildNakedMenu()));
 
       // Verify trigger has button semantics
-      final summary = summarizeMergedFromRoot(tester, control: ControlType.button);
+      final summary = summarizeMergedFromRoot(
+        tester,
+        control: ControlType.button,
+      );
       expect(summary.flags.contains('isButton'), isTrue);
       expect(summary.flags.contains('isFocusable'), isTrue);
       expect(summary.actions.contains('tap'), isTrue);
@@ -120,19 +114,19 @@ void main() {
 
     testWidgets('disabled menu item semantics', (tester) async {
       final handle = tester.ensureSemantics();
+      final controller = MenuController();
 
       await tester.pumpWidget(
         _buildTestApp(
-          Container(
-            padding: const EdgeInsets.all(20),
-            child: Column(
+          NakedMenu<String>(
+            controller: controller,
+            builder: (context, state, child) => const Text('Open'),
+            overlayBuilder: (context, info) => const Column(
               mainAxisSize: MainAxisSize.min,
               children: [
+                NakedMenuItem(value: 'enabled', child: Text('Enabled Item')),
                 NakedMenuItem(
-                  onPressed: () {},
-                  child: const Text('Enabled Item'),
-                ),
-                const NakedMenuItem(
+                  value: 'disabled',
                   enabled: false,
                   child: Text('Disabled Item'),
                 ),
@@ -142,8 +136,14 @@ void main() {
         ),
       );
 
+      await tester.tap(find.text('Open'));
+      await tester.pumpAndSettle();
+
       // Check enabled item semantics
-      final enabledSummary = summarizeMergedFromRoot(tester, control: ControlType.button);
+      final enabledSummary = summarizeMergedFromRoot(
+        tester,
+        control: ControlType.button,
+      );
       expect(enabledSummary.flags.contains('isEnabled'), isTrue);
       expect(enabledSummary.actions.contains('tap'), isTrue);
 
@@ -153,18 +153,31 @@ void main() {
     testWidgets('menu item selection semantics', (tester) async {
       final handle = tester.ensureSemantics();
       bool itemPressed = false;
+      final controller = MenuController();
 
       await tester.pumpWidget(
         _buildTestApp(
-          Container(
-            padding: const EdgeInsets.all(20),
-            child: NakedMenuItem(
-              onPressed: () => itemPressed = true,
-              child: const Text('Selectable Item'),
+          NakedMenu<String>(
+            controller: controller,
+            onSelected: (v) {
+              if (v == 'selectable') itemPressed = true;
+            },
+            builder: (context, state, child) => const Text('Open'),
+            overlayBuilder: (context, info) => const Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                NakedMenuItem(
+                  value: 'selectable',
+                  child: Text('Selectable Item'),
+                ),
+              ],
             ),
           ),
         ),
       );
+
+      await tester.tap(find.text('Open'));
+      await tester.pumpAndSettle();
 
       // Tap the item
       await tester.tap(find.text('Selectable Item'));
@@ -179,13 +192,18 @@ void main() {
     testWidgets('menu focus management semantics', (tester) async {
       final handle = tester.ensureSemantics();
       final focusNode = FocusNode();
+      final controller = MenuController();
 
       await tester.pumpWidget(
         _buildTestApp(
-          NakedMenuItem(
-            focusNode: focusNode,
-            onPressed: () {},
-            child: const Text('Focusable Item'),
+          NakedMenu<String>(
+            controller: controller,
+            triggerFocusNode: focusNode,
+            builder: (context, state, child) => const Text('Focusable Menu'),
+            overlayBuilder: (context, info) => const Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [NakedMenuItem(value: 'v', child: Text('Item'))],
+            ),
           ),
         ),
       );
@@ -203,22 +221,47 @@ void main() {
 
     testWidgets('keyboard navigation semantics', (tester) async {
       final handle = tester.ensureSemantics();
+      final controller = MenuController();
 
-      await tester.pumpWidget(_buildTestApp(_buildNakedMenu()));
+      await tester.pumpWidget(
+        _buildTestApp(
+          NakedMenu<String>(
+            controller: controller,
+            builder: (context, state, child) => const Text('Menu trigger'),
+            overlayBuilder: (context, info) => const Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                NakedMenuItem<String>(value: 'item1', child: Text('Item 1')),
+                NakedMenuItem<String>(value: 'item2', child: Text('Item 2')),
+              ],
+            ),
+          ),
+        ),
+      );
 
-      // Open menu
-      await tester.tap(find.text('Show Menu'));
+      // Open the menu
+      controller.open();
       await tester.pumpAndSettle();
 
-      // Verify menu is open
-      expect(find.text('Item 1'), findsOneWidget);
+      // Verify menu items have keyboard semantics
+      final item1Semantics = tester.getSemantics(find.text('Item 1'));
+      expect(
+        item1Semantics.getSemanticsData().hasAction(SemanticsAction.tap),
+        isTrue,
+      );
 
-      // Press Escape to close
-      await tester.sendKeyEvent(LogicalKeyboardKey.escape);
-      await tester.pumpAndSettle();
+      final item2Semantics = tester.getSemantics(find.text('Item 2'));
+      expect(
+        item2Semantics.getSemanticsData().hasAction(SemanticsAction.tap),
+        isTrue,
+      );
 
-      // Verify menu closed
-      expect(find.text('Item 1'), findsNothing);
+      // Verify trigger has keyboard semantics
+      final triggerSemantics = tester.getSemantics(find.text('Menu trigger'));
+      expect(
+        triggerSemantics.getSemanticsData().hasAction(SemanticsAction.tap),
+        isTrue,
+      );
 
       handle.dispose();
     });
@@ -244,19 +287,29 @@ void main() {
 
     testWidgets('menu with semantic labels', (tester) async {
       final handle = tester.ensureSemantics();
+      final controller = MenuController();
 
       await tester.pumpWidget(
         _buildTestApp(
-          Container(
-            padding: const EdgeInsets.all(20),
-            child: NakedMenuItem(
-              semanticLabel: 'Save document',
-              onPressed: () {},
-              child: const Text('Save'),
+          NakedMenu<String>(
+            controller: controller,
+            builder: (context, state, child) => const Text('Labeled Menu'),
+            overlayBuilder: (context, info) => const Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                NakedMenuItem(
+                  value: 'save',
+                  semanticLabel: 'Save document',
+                  child: Text('Save'),
+                ),
+              ],
             ),
           ),
         ),
       );
+
+      await tester.tap(find.text('Labeled Menu'));
+      await tester.pumpAndSettle();
 
       // Verify semantic label is applied
       expect(find.text('Save'), findsOneWidget);
@@ -270,13 +323,10 @@ void main() {
 
       await tester.pumpWidget(
         _buildTestApp(
-          NakedMenu(
+          NakedMenu<String>(
             controller: controller,
-            builder: (context) => NakedButton(
-              onPressed: controller.open,
-              child: const Text('File'),
-            ),
-            overlayBuilder: (context) => Container(
+            builder: (context, state, child) => const Text('File'),
+            overlayBuilder: (context, info) => Container(
               width: 150,
               padding: const EdgeInsets.all(4),
               decoration: BoxDecoration(
@@ -284,31 +334,16 @@ void main() {
                 border: Border.all(color: Colors.grey),
                 borderRadius: BorderRadius.circular(4),
               ),
-              child: Column(
+              child: const Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  NakedMenuItem(
-                    onPressed: () {},
-                    child: const Text('New'),
-                  ),
-                  NakedMenuItem(
-                    onPressed: () {},
-                    child: const Text('Open'),
-                  ),
-                  const Divider(height: 1),
-                  NakedMenuItem(
-                    onPressed: () {},
-                    child: const Text('Save'),
-                  ),
-                  NakedMenuItem(
-                    onPressed: () {},
-                    child: const Text('Save As...'),
-                  ),
-                  const Divider(height: 1),
-                  NakedMenuItem(
-                    onPressed: () {},
-                    child: const Text('Exit'),
-                  ),
+                  NakedMenuItem(value: 'new', child: Text('New')),
+                  NakedMenuItem(value: 'open', child: Text('Open')),
+                  Divider(height: 1),
+                  NakedMenuItem(value: 'save', child: Text('Save')),
+                  NakedMenuItem(value: 'saveAs', child: Text('Save As...')),
+                  Divider(height: 1),
+                  NakedMenuItem(value: 'exit', child: Text('Exit')),
                 ],
               ),
             ),

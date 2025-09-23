@@ -15,7 +15,7 @@ void main() {
       await tester.pumpWidget(const accordion_example.MyApp());
       await tester.pump(const Duration(milliseconds: 100));
 
-      final accordionFinder = find.byType(NakedAccordion<String>);
+      final accordionFinder = find.byType(NakedAccordionGroup<String>);
       expect(accordionFinder, findsOneWidget);
 
       // Initially Section 1 should be expanded (from initialExpandedValues)
@@ -65,17 +65,17 @@ void main() {
       await tester.pumpWidget(MaterialApp(
         home: Scaffold(
           body: Center(
-            child: NakedAccordion<String>(
+            child: NakedAccordionGroup<String>(
               controller: controller,
               children: [
-                NakedAccordionItem<String>(
+                NakedAccordion<String>(
                   value: 'item1',
-                  trigger: (context, isExpanded) => GestureDetector(
+                  builder: (context, itemState) => GestureDetector(
                     onTap: () => controller.toggle('item1'),
                     child: Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: isExpanded
+                        color: itemState.isExpanded
                             ? Colors.blue.shade100
                             : Colors.grey.shade100,
                         border: Border.all(color: Colors.grey),
@@ -88,14 +88,14 @@ void main() {
                     child: Text('Content 1'),
                   ),
                 ),
-                NakedAccordionItem<String>(
+                NakedAccordion<String>(
                   value: 'item2',
-                  trigger: (context, isExpanded) => GestureDetector(
+                  builder: (context, itemState) => GestureDetector(
                     onTap: () => controller.toggle('item2'),
                     child: Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: isExpanded
+                        color: itemState.isExpanded
                             ? Colors.blue.shade100
                             : Colors.grey.shade100,
                         border: Border.all(color: Colors.grey),
@@ -144,13 +144,13 @@ void main() {
       await tester.pumpWidget(MaterialApp(
         home: Scaffold(
           body: Center(
-            child: NakedAccordion<String>(
+            child: NakedAccordionGroup<String>(
               controller: controller,
               initialExpandedValues: const ['item1'], // Start with one expanded
               children: [
-                NakedAccordionItem<String>(
+                NakedAccordion<String>(
                   value: 'item1',
-                  trigger: (context, isExpanded) => GestureDetector(
+                  builder: (context, itemState) => GestureDetector(
                     onTap: () => controller.toggle('item1'),
                     child: Container(
                       padding: const EdgeInsets.all(12),
@@ -159,9 +159,9 @@ void main() {
                   ),
                   child: const Text('Content 1'),
                 ),
-                NakedAccordionItem<String>(
+                NakedAccordion<String>(
                   value: 'item2',
-                  trigger: (context, isExpanded) => GestureDetector(
+                  builder: (context, itemState) => GestureDetector(
                     onTap: () => controller.toggle('item2'),
                     child: Container(
                       padding: const EdgeInsets.all(12),
@@ -205,16 +205,16 @@ void main() {
       await tester.pumpWidget(MaterialApp(
         home: Scaffold(
           body: Center(
-            child: NakedAccordion<String>(
+            child: NakedAccordionGroup<String>(
               controller: controller,
               children: [
-                NakedAccordionItem<String>(
+                NakedAccordion<String>(
                   key: itemKey,
                   value: 'test',
                   onHoverChange: (hovered) => isHovered = hovered,
                   onPressChange: (pressed) => isPressed = pressed,
                   onFocusChange: (focused) {},
-                  trigger: (context, isExpanded) => Container(
+                  builder: (context, itemState) => Container(
                     padding: const EdgeInsets.all(12),
                     child: const Text('Test Item'),
                   ),
@@ -245,13 +245,13 @@ void main() {
       await tester.pumpWidget(MaterialApp(
         home: Scaffold(
           body: Center(
-            child: NakedAccordion<String>(
+            child: NakedAccordionGroup<String>(
               controller: controller,
               children: [
-                NakedAccordionItem<String>(
+                NakedAccordion<String>(
                   key: itemKey,
                   value: 'keyboard',
-                  trigger: (context, isExpanded) => Container(
+                  builder: (context, itemState) => Container(
                     padding: const EdgeInsets.all(12),
                     child: const Text('Keyboard Item'),
                   ),
@@ -283,15 +283,15 @@ void main() {
       await tester.pumpWidget(MaterialApp(
         home: Scaffold(
           body: Center(
-            child: NakedAccordion<String>(
+            child: NakedAccordionGroup<String>(
               controller: controller,
               children: [
-                NakedAccordionItem<String>(
+                NakedAccordion<String>(
                   key: itemKey,
                   value: 'disabled',
                   enabled: false,
                   onHoverChange: (hovered) => hoverChanged = true,
-                  trigger: (context, isExpanded) => Container(
+                  builder: (context, itemState) => Container(
                     padding: const EdgeInsets.all(12),
                     child: const Text('Disabled Item'),
                   ),

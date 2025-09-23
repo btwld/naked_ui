@@ -1,77 +1,104 @@
-import 'package:flutter/services.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 
 import 'mixins/naked_mixins.dart';
+import 'utilities/intents.dart';
+import 'utilities/naked_focusable_detector.dart';
+import 'utilities/naked_state_scope.dart';
+import 'utilities/state.dart';
 
-// Slider keyboard shortcuts (left-to-right layout)
-const Map<ShortcutActivator, Intent> _kSliderShortcutsLtr =
-    <ShortcutActivator, Intent>{
-      // Horizontal
-      SingleActivator(LogicalKeyboardKey.arrowRight): _SliderIncrementIntent(),
-      SingleActivator(LogicalKeyboardKey.arrowLeft): _SliderDecrementIntent(),
-      SingleActivator(LogicalKeyboardKey.arrowLeft, shift: true):
-          _SliderShiftDecrementIntent(),
-      SingleActivator(LogicalKeyboardKey.arrowRight, shift: true):
-          _SliderShiftIncrementIntent(),
+/// Immutable view passed to [NakedSlider.builder].
+class NakedSliderState extends NakedState {
+  /// The current slider value.
+  final double value;
 
-      // Vertical
-      SingleActivator(LogicalKeyboardKey.arrowUp): _SliderIncrementIntent(),
-      SingleActivator(LogicalKeyboardKey.arrowUp, shift: true):
-          _SliderShiftIncrementIntent(),
-      SingleActivator(LogicalKeyboardKey.arrowDown): _SliderDecrementIntent(),
-      SingleActivator(LogicalKeyboardKey.arrowDown, shift: true):
-          _SliderShiftDecrementIntent(),
+  /// The minimum value of the slider.
+  final double min;
 
-      // Home/End
-      SingleActivator(LogicalKeyboardKey.home): _SliderSetToMinIntent(),
-      SingleActivator(LogicalKeyboardKey.end): _SliderSetToMaxIntent(),
-    };
+  /// The maximum value of the slider.
+  final double max;
 
-// Slider keyboard shortcuts (right-to-left layout)
-const Map<ShortcutActivator, Intent> _kSliderShortcutsRtl =
-    <ShortcutActivator, Intent>{
-      // Horizontal (swapped for RTL)
-      SingleActivator(LogicalKeyboardKey.arrowLeft): _SliderIncrementIntent(),
-      SingleActivator(LogicalKeyboardKey.arrowRight): _SliderDecrementIntent(),
-      SingleActivator(LogicalKeyboardKey.arrowRight, shift: true):
-          _SliderShiftDecrementIntent(),
-      SingleActivator(LogicalKeyboardKey.arrowLeft, shift: true):
-          _SliderShiftIncrementIntent(),
+  /// The number of discrete divisions, if any.
+  final int? divisions;
 
-      // Vertical (unchanged)
-      SingleActivator(LogicalKeyboardKey.arrowUp): _SliderIncrementIntent(),
-      SingleActivator(LogicalKeyboardKey.arrowUp, shift: true):
-          _SliderShiftIncrementIntent(),
-      SingleActivator(LogicalKeyboardKey.arrowDown): _SliderDecrementIntent(),
-      SingleActivator(LogicalKeyboardKey.arrowDown, shift: true):
-          _SliderShiftDecrementIntent(),
+  /// Whether the slider is currently being dragged.
+  final bool isDragging;
 
-      // Home/End
-      SingleActivator(LogicalKeyboardKey.home): _SliderSetToMinIntent(),
-      SingleActivator(LogicalKeyboardKey.end): _SliderSetToMaxIntent(),
-    };
+  NakedSliderState({
+    required super.states,
+    required this.value,
+    required this.min,
+    required this.max,
+    this.divisions,
+    required this.isDragging,
+  });
+
+  /// Returns the nearest [NakedSliderState] provided by [NakedStateScope].
+  static NakedSliderState of(BuildContext context) => NakedState.of(context);
+
+  /// Returns the nearest [NakedSliderState] if one is available.
+  static NakedSliderState? maybeOf(BuildContext context) =>
+      NakedState.maybeOf(context);
+
+  /// Returns the [WidgetStatesController] from the nearest scope.
+  static WidgetStatesController controllerOf(BuildContext context) =>
+      NakedState.controllerOf(context);
+
+  /// Returns the [WidgetStatesController] from the nearest scope, if any.
+  static WidgetStatesController? maybeControllerOf(BuildContext context) =>
+      NakedState.maybeControllerOf(context);
+
+  /// The slider value as a percentage (0.0 to 1.0).
+  double get percentage => (value - min) / (max - min);
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+
+    return other is NakedSliderState &&
+        setEquals(other.states, states) &&
+        other.value == value &&
+        other.min == min &&
+        other.max == max &&
+        other.divisions == divisions &&
+        other.isDragging == isDragging;
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(states, value, min, max, divisions, isDragging);
+}
+
 
 /// A headless slider without visuals.
 ///
-/// Controlled by [value] in range [[min], [max]]. Supports discrete
-/// [divisions] or continuous values. Handles keyboard navigation and
-/// drag gestures.
+/// Controlled by [value] in the range
+/// from [min] to [max]. Supports discrete [divisions] or continuous values.
+/// Handles keyboard navigation and drag gestures.
+///
+/// The [builder] receives a [NakedSliderState] with the current value,
+/// range information, and interaction states.
 ///
 /// ```dart
 /// NakedSlider(
 ///   value: sliderValue,
 ///   onChanged: (value) => setState(() => sliderValue = value),
-///   child: MyCustomSliderTrack(),
+///   builder: (context, state, child) => MyCustomSliderTrack(
+///     value: state.value,
+///     isDragging: state.isDragging,
+///     isHovered: state.isHovered,
+///   ),
 /// )
 /// ```
 ///
 /// See also:
 /// - [Slider], the Material-styled slider for typical apps.
-/// - [FocusableActionDetector], used to integrate keyboard and focus handling.
+/// - [NakedFocusableDetector], used to integrate keyboard and focus handling.
 class NakedSlider extends StatefulWidget {
   const NakedSlider({
     super.key,
-    required this.child,
+    this.child,
+    this.builder,
     required this.value,
     this.min = 0.0,
     this.max = 1.0,
@@ -91,10 +118,17 @@ class NakedSlider extends StatefulWidget {
     this.keyboardStep = 0.01,
     this.largeKeyboardStep = 0.1,
     this.semanticLabel,
-  }) : assert(min < max, 'min must be less than max');
+  }) : assert(min < max, 'min must be less than max'),
+       assert(
+         child != null || builder != null,
+         'Either child or builder must be provided',
+       );
 
   /// The slider content (track/handle/etc.).
-  final Widget child;
+  final Widget? child;
+
+  /// Builds the slider using the current [NakedSliderState].
+  final ValueWidgetBuilder<NakedSliderState>? builder;
 
   /// The current slider value.
   final double value;
@@ -123,25 +157,25 @@ class NakedSlider extends StatefulWidget {
   /// Called when focus changes.
   final ValueChanged<bool>? onFocusChange;
 
-  /// The enabled state of the slider.
+  /// Whether the slider is enabled.
   final bool enabled;
 
   /// The mouse cursor when enabled.
   final MouseCursor mouseCursor;
 
-  /// The haptic feedback enablement flag.
+  /// Whether to provide haptic feedback on interactions.
   final bool enableFeedback;
 
   /// The focus node for the slider.
   final FocusNode? focusNode;
 
-  /// The autofocus flag.
+  /// Whether to autofocus.
   final bool autofocus;
 
   /// The slider orientation.
   final Axis direction;
 
-  /// The number of discrete divisions. When null, continuous.
+  /// The number of discrete divisions. When null, the value is continuous.
   final int? divisions;
 
   /// The small keyboard step when [divisions] is null.
@@ -150,7 +184,7 @@ class NakedSlider extends StatefulWidget {
   /// The large keyboard step when holding Shift.
   final double largeKeyboardStep;
 
-  /// The semantic label for assistive technologies.
+  /// Semantic label for assistive technologies.
   final String? semanticLabel;
 
   @override
@@ -158,9 +192,9 @@ class NakedSlider extends StatefulWidget {
 }
 
 class _NakedSliderState extends State<NakedSlider>
-    with WidgetStatesMixin<NakedSlider>, FocusableMixin<NakedSlider> {
+    with WidgetStatesMixin<NakedSlider>, FocusNodeMixin<NakedSlider> {
   @override
-  FocusNode? get focusableExternalNode => widget.focusNode;
+  FocusNode? get widgetProvidedNode => widget.focusNode;
 
   bool _isDragging = false;
   // track latest normalized value we told the world about
@@ -168,19 +202,11 @@ class _NakedSliderState extends State<NakedSlider>
   Offset? _dragStartPosition;
   double? _dragStartValue;
 
-  // ---------------------------
-  // Helpers & lifecycle
-  // ---------------------------
-
   bool get _isEnabled => widget.enabled && widget.onChanged != null;
   bool get _isRTL => Directionality.of(context) == TextDirection.rtl;
 
   MouseCursor get _cursor =>
       _isEnabled ? widget.mouseCursor : SystemMouseCursors.basic;
-
-  // ---------------------------
-  // Value math & normalization
-  // ---------------------------
 
   void _callOnChangeIfNeeded(double value) {
     _lastEmittedValue = value;
@@ -190,7 +216,6 @@ class _NakedSliderState extends State<NakedSlider>
   }
 
   double _normalizeValue(double value) {
-    // Clamp to bounds
     double v = value.clamp(widget.min, widget.max);
 
     // Snap to divisions if provided
@@ -225,10 +250,6 @@ class _NakedSliderState extends State<NakedSlider>
 
   // (no absolute-position jump; drag uses relative deltas for expected behavior)
 
-  // ---------------------------
-  // Pointer handlers
-  // ---------------------------
-
   void _handleDragStart(DragStartDetails details) {
     if (!_isEnabled) return;
 
@@ -241,8 +262,7 @@ class _NakedSliderState extends State<NakedSlider>
     widget.onDragStart?.call();
 
     // Ensure subsequent keyboard nudges apply here.
-    if ((effectiveFocusNode?.canRequestFocus ?? false))
-      effectiveFocusNode!.requestFocus();
+    if (effectiveFocusNode.canRequestFocus) effectiveFocusNode.requestFocus();
   }
 
   void _handleDragUpdate(DragUpdateDetails details) {
@@ -305,20 +325,18 @@ class _NakedSliderState extends State<NakedSlider>
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    // Keep focus traversal flags aligned with enablement.
+    // Maintain focus traversal flags aligned with enablement.
     final node = effectiveFocusNode;
-    if (node != null) {
-      node
-        ..canRequestFocus = _isEnabled
-        ..skipTraversal = !_isEnabled;
-    }
+    node
+      ..canRequestFocus = _isEnabled
+      ..skipTraversal = !_isEnabled;
   }
 
   @override
   void didUpdateWidget(covariant NakedSlider oldWidget) {
     super.didUpdateWidget(oldWidget);
 
-    // Keep state flags in sync (handles enabled and onChanged changes).
+    // Maintain state flags in sync (handles enabled and onChanged changes).
     syncWidgetStates();
 
     // Clear transient states when disabled.
@@ -329,49 +347,45 @@ class _NakedSliderState extends State<NakedSlider>
 
     // Maintain traversal flags under prop changes.
     final node2 = effectiveFocusNode;
-    if (node2 != null) {
-      node2
-        ..canRequestFocus = _isEnabled
-        ..skipTraversal = !_isEnabled;
-    }
+    node2
+      ..canRequestFocus = _isEnabled
+      ..skipTraversal = !_isEnabled;
 
-    // Keep last value in step with controller updates.
+    // Maintain last value in step with controller updates.
     _lastEmittedValue = widget.value;
   }
 
-  // ---------------------------
-  // Keyboard actions/shortcuts
-  // ---------------------------
-
   Map<ShortcutActivator, Intent> get _shortcuts {
-    final rtl = _isRTL;
-
-    return rtl ? _kSliderShortcutsRtl : _kSliderShortcutsLtr;
+    return NakedIntentActions.slider.shortcuts(isRTL: _isRTL);
   }
 
   Map<Type, Action<Intent>> get _actions {
-    return {
-      _SliderIncrementIntent: _SliderIncrementAction(this),
-      _SliderDecrementIntent: _SliderDecrementAction(this),
-      _SliderShiftDecrementIntent: _SliderDecrementAction(
-        this,
-        isShiftPressed: true,
-      ),
-      _SliderShiftIncrementIntent: _SliderIncrementAction(
-        this,
-        isShiftPressed: true,
-      ),
-      _SliderSetToMinIntent: _SliderSetToMinAction(this),
-      _SliderSetToMaxIntent: _SliderSetToMaxAction(this),
-    };
+    return NakedIntentActions.slider.actions(
+      onChanged: _callOnChangeIfNeeded,
+      calculateStep: _calculateStep,
+      normalizeValue: _normalizeValue,
+      currentValue: widget.value,
+      minValue: widget.min,
+      maxValue: widget.max,
+      enableFeedback: widget.enableFeedback,
+    );
   }
-
-  // ---------------------------
-  // Build
-  // ---------------------------
 
   @override
   Widget build(BuildContext context) {
+    final sliderState = NakedSliderState(
+      states: widgetStates,
+      value: widget.value,
+      min: widget.min,
+      max: widget.max,
+      divisions: widget.divisions,
+      isDragging: _isDragging,
+    );
+
+    final content = widget.builder != null
+        ? widget.builder!(context, sliderState, widget.child)
+        : widget.child!;
+
     final childGesture = GestureDetector(
       onVerticalDragStart: widget.direction == Axis.vertical && _isEnabled
           ? _handleDragStart
@@ -400,21 +414,25 @@ class _NakedSliderState extends State<NakedSlider>
           : null,
       behavior: HitTestBehavior.opaque,
       excludeFromSemantics: true, // semantics provided by the wrapper below
-      child: widget.child,
+      child: content,
     );
 
-    return FocusableActionDetector(
+    final wrappedContent = NakedStateScope(
+      value: sliderState,
+      child: childGesture,
+    );
+
+    return NakedFocusableDetector(
       enabled: _isEnabled,
-      focusNode: effectiveFocusNode,
       autofocus: widget.autofocus,
       descendantsAreTraversable: false, // no focus into the visual child
-      shortcuts: _shortcuts,
-      actions: _actions,
-      onShowHoverHighlight: (hover) =>
-          updateHoverState(hover, widget.onHoverChange),
       onFocusChange: (focused) =>
           updateFocusState(focused, widget.onFocusChange),
+      onHoverChange: (hover) => updateHoverState(hover, widget.onHoverChange),
+      focusNode: effectiveFocusNode,
       mouseCursor: _cursor,
+      shortcuts: _shortcuts,
+      actions: _actions,
       child: Semantics(
         container: true,
         enabled: _isEnabled,
@@ -441,100 +459,9 @@ class _NakedSliderState extends State<NakedSlider>
                 _callOnChangeIfNeeded(_normalizeValue(widget.value - step));
               }
             : null,
-        child: childGesture,
+        child: wrappedContent,
       ),
     );
   }
 }
 
-// ---- Intents ----
-
-/// Intent: increment slider value by a large step (Shift + Arrow).
-class _SliderShiftIncrementIntent extends _SliderIncrementIntent {
-  const _SliderShiftIncrementIntent();
-}
-
-/// Intent: decrement slider value by a large step (Shift + Arrow).
-class _SliderShiftDecrementIntent extends _SliderDecrementIntent {
-  const _SliderShiftDecrementIntent();
-}
-
-/// Intent: increment slider value by one step.
-class _SliderIncrementIntent extends Intent {
-  const _SliderIncrementIntent();
-}
-
-/// Intent: decrement slider value by one step.
-class _SliderDecrementIntent extends Intent {
-  const _SliderDecrementIntent();
-}
-
-/// Intent: set slider value to minimum.
-class _SliderSetToMinIntent extends Intent {
-  const _SliderSetToMinIntent();
-}
-
-/// Intent: set slider value to maximum.
-class _SliderSetToMaxIntent extends Intent {
-  const _SliderSetToMaxIntent();
-}
-
-// ---- Actions ----
-
-/// Action: handles keyboard increment intent.
-class _SliderIncrementAction extends Action<_SliderIncrementIntent> {
-  final _NakedSliderState state;
-  final bool isShiftPressed;
-  _SliderIncrementAction(this.state, {this.isShiftPressed = false});
-  @override
-  void invoke(_SliderIncrementIntent intent) {
-    final step = state._calculateStep(isShiftPressed);
-    final newValue = state._normalizeValue(state.widget.value + step);
-    if (state.widget.enableFeedback && newValue != state.widget.value) {
-      HapticFeedback.selectionClick();
-    }
-    state._callOnChangeIfNeeded(newValue);
-  }
-}
-
-/// Action: handles keyboard decrement intent.
-class _SliderDecrementAction extends Action<_SliderDecrementIntent> {
-  final _NakedSliderState state;
-  final bool isShiftPressed;
-  _SliderDecrementAction(this.state, {this.isShiftPressed = false});
-  @override
-  void invoke(_SliderDecrementIntent intent) {
-    final step = state._calculateStep(isShiftPressed);
-    final newValue = state._normalizeValue(state.widget.value - step);
-    if (state.widget.enableFeedback && newValue != state.widget.value) {
-      HapticFeedback.selectionClick();
-    }
-    state._callOnChangeIfNeeded(newValue);
-  }
-}
-
-/// Action: handles keyboard set-to-min intent.
-class _SliderSetToMinAction extends Action<_SliderSetToMinIntent> {
-  final _NakedSliderState state;
-  _SliderSetToMinAction(this.state);
-  @override
-  void invoke(_SliderSetToMinIntent intent) {
-    if (state.widget.enableFeedback && state.widget.value != state.widget.min) {
-      HapticFeedback.selectionClick();
-    }
-    state._callOnChangeIfNeeded(state.widget.min);
-  }
-}
-
-/// Action: handles keyboard set-to-max intent.
-class _SliderSetToMaxAction extends Action<_SliderSetToMaxIntent> {
-  final _NakedSliderState state;
-  _SliderSetToMaxAction(this.state);
-  @override
-  void invoke(_SliderSetToMaxIntent intent) {
-    if (state.widget.enableFeedback && state.widget.value != state.widget.max) {
-      HapticFeedback.selectionClick();
-    }
-    state._callOnChangeIfNeeded(state.widget.max);
-  }
-}

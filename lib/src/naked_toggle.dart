@@ -1,12 +1,88 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
 import 'mixins/naked_mixins.dart';
+import 'utilities/intents.dart';
+import 'utilities/naked_focusable_detector.dart';
+import 'utilities/naked_state_scope.dart';
+import 'utilities/state.dart';
+
+/// Immutable view passed to [NakedToggle.builder].
+class NakedToggleState extends NakedState {
+  /// Whether the toggle is currently on.
+  final bool isToggled;
+
+  NakedToggleState({required super.states, required this.isToggled});
+
+  /// Returns the nearest [NakedToggleState] from context.
+  static NakedToggleState of(BuildContext context) => NakedState.of(context);
+
+  /// Returns the nearest [NakedToggleState] if available.
+  static NakedToggleState? maybeOf(BuildContext context) =>
+      NakedState.maybeOf(context);
+
+  /// Returns the [WidgetStatesController] from the nearest scope.
+  static WidgetStatesController controllerOf(BuildContext context) =>
+      NakedState.controllerOf(context);
+
+  /// Returns the [WidgetStatesController] from the nearest scope, if any.
+  static WidgetStatesController? maybeControllerOf(BuildContext context) =>
+      NakedState.maybeControllerOf(context);
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+
+    return other is NakedToggleState &&
+        setEquals(other.states, states) &&
+        other.isToggled == isToggled;
+  }
+
+  @override
+  int get hashCode => Object.hash(states, isToggled);
+}
+
+/// Immutable view passed to [NakedToggleOption.builder].
+class NakedToggleOptionState<T> extends NakedState {
+  /// The option's value.
+  final T value;
+
+  NakedToggleOptionState({required super.states, required this.value});
+
+  /// Returns the nearest [NakedToggleOptionState] of the requested type.
+  static NakedToggleOptionState<S> of<S>(BuildContext context) =>
+      NakedState.of(context);
+
+  /// Returns the nearest [NakedToggleOptionState] if available.
+  static NakedToggleOptionState<S>? maybeOf<S>(BuildContext context) =>
+      NakedState.maybeOf(context);
+
+  /// Returns the [WidgetStatesController] from the nearest scope.
+  static WidgetStatesController controllerOf(BuildContext context) =>
+      NakedState.controllerOf(context);
+
+  /// Returns the [WidgetStatesController] from the nearest scope, if any.
+  static WidgetStatesController? maybeControllerOf(BuildContext context) =>
+      NakedState.maybeControllerOf(context);
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+
+    return other is NakedToggleOptionState<T> &&
+        setEquals(other.states, states) &&
+        other.value == value;
+  }
+
+  @override
+  int get hashCode => Object.hash(states, value);
+}
 
 /// A headless binary toggle control without visuals.
 ///
-/// Behaves as toggle button or switch based on [asSwitch]. Builder receives
-/// WidgetStates including disabled/focused/hovered/pressed/selected.
+/// Behaves as a toggle button or switch based on [asSwitch]. The builder receives
+/// a [NakedToggleState] with the toggle value and interaction states.
 ///
 /// ```dart
 /// NakedToggle(
@@ -51,19 +127,19 @@ class NakedToggle extends StatefulWidget {
   /// The child widget; ignored if [builder] is provided.
   final Widget? child;
 
-  /// The interactive state of the control.
+  /// Whether the control is interactive.
   final bool enabled;
 
   /// The mouse cursor when interactive.
   final MouseCursor? mouseCursor;
 
-  /// The platform feedback enablement flag.
+  /// Whether to provide platform feedback on interactions.
   final bool enableFeedback;
 
   /// The focus node.
   final FocusNode? focusNode;
 
-  /// The autofocus flag.
+  /// Whether to autofocus.
   final bool autofocus;
 
   /// Called when focus changes.
@@ -72,16 +148,16 @@ class NakedToggle extends StatefulWidget {
   /// Called when hover changes.
   final ValueChanged<bool>? onHoverChange;
 
-  /// Called when press changes.
+  /// Called when the pressed state changes.
   final ValueChanged<bool>? onPressChange;
 
-  /// The builder that receives current WidgetStates.
-  final ValueWidgetBuilder<Set<WidgetState>>? builder;
+  /// Builds the toggle using the current [NakedToggleState].
+  final ValueWidgetBuilder<NakedToggleState>? builder;
 
-  /// The semantic label for screen readers.
+  /// Semantic label for screen readers.
   final String? semanticLabel;
 
-  /// The switch semantics flag instead of button semantics.
+  /// Whether to use switch semantics instead of button semantics.
   final bool asSwitch;
 
   bool get _effectiveEnabled => enabled && onChanged != null;
@@ -92,7 +168,7 @@ class NakedToggle extends StatefulWidget {
 
 class _NakedToggleState extends State<NakedToggle>
     with WidgetStatesMixin<NakedToggle> {
-  // Keyboard activation handled inline in actions.onInvoke.
+  // Keyboard activation is handled inline in actions.onInvoke.
 
   void _activate() {
     if (!widget._effectiveEnabled) return;
@@ -110,11 +186,16 @@ class _NakedToggleState extends State<NakedToggle>
   }
 
   Widget _buildContent(BuildContext context) {
-    final states = widgetStates;
+    final toggleState = NakedToggleState(
+      states: widgetStates,
+      isToggled: widget.value,
+    );
 
-    return widget.builder != null
-        ? widget.builder!(context, states, widget.child)
+    final content = widget.builder != null
+        ? widget.builder!(context, toggleState, widget.child)
         : widget.child!;
+
+    return NakedStateScope(value: toggleState, child: content);
   }
 
   MouseCursor get _effectiveCursor => widget._effectiveEnabled
@@ -135,7 +216,7 @@ class _NakedToggleState extends State<NakedToggle>
       final nowDisabled = !widget._effectiveEnabled;
       updateDisabledState(nowDisabled);
       if (nowDisabled) {
-        // Keep state set consistent with reality when disabling.
+        // Maintain state set consistency when disabling the toggle.
         updateState(WidgetState.hovered, false);
         updateState(WidgetState.pressed, false);
         updateState(WidgetState.focused, false);
@@ -149,22 +230,21 @@ class _NakedToggleState extends State<NakedToggle>
 
   @override
   Widget build(BuildContext context) {
-    return FocusableActionDetector(
+    return NakedFocusableDetector(
       enabled: widget._effectiveEnabled,
-      focusNode: widget.focusNode,
       autofocus: widget.autofocus,
-      shortcuts: const {
-        SingleActivator(LogicalKeyboardKey.enter): ActivateIntent(),
-        SingleActivator(LogicalKeyboardKey.space): ActivateIntent(),
-      },
-      actions: {
-        ActivateIntent: CallbackAction<ActivateIntent>(
-          onInvoke: (_) => widget._effectiveEnabled ? _activate() : null,
-        ),
-      },
-      onShowHoverHighlight: (h) => updateHoverState(h, widget.onHoverChange),
       onFocusChange: (f) => updateFocusState(f, widget.onFocusChange),
+      onHoverChange: (h) => updateHoverState(h, widget.onHoverChange),
+      focusNode: widget.focusNode,
       mouseCursor: _effectiveCursor,
+      shortcuts: NakedIntentActions.toggle.shortcuts,
+      actions: NakedIntentActions.toggle.actions(
+        onToggle: () {
+          if (widget._effectiveEnabled) {
+            _activate();
+          }
+        },
+      ),
       child: Semantics(
         enabled: widget._effectiveEnabled,
         toggled: widget.value,
@@ -254,7 +334,7 @@ class _ToggleScope<T> extends InheritedWidget {
   final ValueChanged<T?>? onChanged;
   final bool enabled;
 
-  // Fix: use the class generic T, not a new type parameter.
+  // Use the class generic T, not a new type parameter.
   bool isSelected(T value) => selectedValue == value;
 
   @override
@@ -296,7 +376,7 @@ class NakedToggleOption<T> extends StatefulWidget {
   final ValueChanged<bool>? onFocusChange;
   final ValueChanged<bool>? onHoverChange;
   final ValueChanged<bool>? onPressChange;
-  final ValueWidgetBuilder<Set<WidgetState>>? builder;
+  final ValueWidgetBuilder<NakedToggleOptionState<T>>? builder;
   final String? semanticLabel;
 
   @override
@@ -343,30 +423,32 @@ class _NakedToggleOptionState<T> extends State<NakedToggleOption<T>>
     final isEnabled = scope.enabled && widget.enabled;
     final isSelected = scope.selectedValue == widget.value;
 
+    final optionState = NakedToggleOptionState<T>(
+      states: widgetStates,
+      value: widget.value,
+    );
+
     final content = widget.builder != null
-        ? widget.builder!(context, widgetStates, widget.child)
+        ? widget.builder!(context, optionState, widget.child)
         : widget.child!;
+
+    final wrappedContent = NakedStateScope(value: optionState, child: content);
 
     final cursor = isEnabled
         ? (widget.mouseCursor ?? SystemMouseCursors.click)
         : SystemMouseCursors.basic;
 
-    return FocusableActionDetector(
+    return NakedFocusableDetector(
       enabled: isEnabled,
-      focusNode: widget.focusNode,
       autofocus: widget.autofocus,
-      shortcuts: const {
-        SingleActivator(LogicalKeyboardKey.enter): ActivateIntent(),
-        SingleActivator(LogicalKeyboardKey.space): ActivateIntent(),
-      },
-      actions: {
-        ActivateIntent: CallbackAction<ActivateIntent>(
-          onInvoke: (_) => _activate(scope),
-        ),
-      },
-      onShowHoverHighlight: (h) => updateHoverState(h, widget.onHoverChange),
       onFocusChange: (f) => updateFocusState(f, widget.onFocusChange),
+      onHoverChange: (h) => updateHoverState(h, widget.onHoverChange),
+      focusNode: widget.focusNode,
       mouseCursor: cursor,
+      shortcuts: NakedIntentActions.toggle.shortcuts,
+      actions: NakedIntentActions.toggle.actions(
+        onToggle: () => _activate(scope),
+      ),
       child: Semantics(
         container: true,
         enabled: isEnabled,
@@ -387,7 +469,7 @@ class _NakedToggleOptionState<T> extends State<NakedToggleOption<T>>
               : null,
           behavior: HitTestBehavior.opaque,
           excludeFromSemantics: true,
-          child: content,
+          child: wrappedContent,
         ),
       ),
     );

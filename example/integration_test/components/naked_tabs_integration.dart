@@ -10,12 +10,12 @@ void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
   group('NakedTabs Integration Tests', () {
-    testWidgets('tabs change panel visibility correctly', (tester) async {
+    testWidgets('tabs change view visibility correctly', (tester) async {
       // Use the actual example app
       await tester.pumpWidget(const tabs_example.MyApp());
       await tester.pumpAndSettle();
 
-      final tabGroupFinder = find.byType(NakedTabGroup);
+      final tabGroupFinder = find.byType(NakedTabs);
       expect(tabGroupFinder, findsOneWidget);
 
       // Find all tabs
@@ -143,15 +143,15 @@ void main() {
               customTab: NakedTab(
                 key: tabKey,
                 tabId: 'test',
-                builder: (context, states, child) {
-                  isSelected = states.isSelected;
+                builder: (context, tabState, child) {
+                  isSelected = tabState.isSelected;
                   return Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: states.isSelected ? Colors.blue : Colors.grey,
+                      color: tabState.isSelected ? Colors.blue : Colors.grey,
                       border: Border.all(
-                        color: states.isHovered ? Colors.red : Colors.black,
-                        width: states.isPressed ? 4 : 2,
+                        color: tabState.isHovered ? Colors.red : Colors.black,
+                        width: tabState.isPressed ? 4 : 2,
                       ),
                     ),
                     child: child,
@@ -181,7 +181,7 @@ void main() {
       expect(containerFinder, findsOneWidget);
     });
 
-    testWidgets('tab panels show/hide based on selection', (tester) async {
+    testWidgets('tab views show/hide based on selection', (tester) async {
       await tester.pumpWidget(const MaterialApp(
         home: Scaffold(
           body: Center(
@@ -212,12 +212,12 @@ void main() {
       await tester.pumpAndSettle();
 
       // Find the tab list container
-      final tabListFinder = find.byType(NakedTabList);
+      final tabListFinder = find.byType(NakedTabBar);
       expect(tabListFinder, findsOneWidget);
 
-      // Find all tab panels
-      final tabPanelFinders = find.byType(NakedTabPanel);
-      expect(tabPanelFinders, findsNWidgets(3));
+      // Find all tab views
+      final tabViewFinders = find.byType(NakedTabView);
+      expect(tabViewFinders, findsNWidgets(3));
 
       // Test interaction with styled tabs
       final tabs = ['Light', 'Dark', 'System'];
@@ -232,10 +232,10 @@ void main() {
         await tester.tap(find.text(tabs[i]));
         await tester.pumpAndSettle();
 
-        // Verify correct panel is visible
+        // Verify correct view is visible
         expect(find.text(expectedContents[i]), findsOneWidget);
 
-        // Verify other panels are hidden
+        // Verify other views are hidden
         for (int j = 0; j < expectedContents.length; j++) {
           if (j != i) {
             expect(find.text(expectedContents[j]), findsNothing);
@@ -278,20 +278,20 @@ class _StatefulTabsWidgetState extends State<_StatefulTabsWidget> {
   @override
   Widget build(BuildContext context) {
     if (widget.customTab != null) {
-      return NakedTabGroup(
+      return NakedTabs(
         selectedTabId: selectedTabId,
         onChanged: (tabId) => setState(() => selectedTabId = tabId),
         child: widget.customTab!,
       );
     }
 
-    return NakedTabGroup(
+    return NakedTabs(
       selectedTabId: selectedTabId,
       onChanged: (tabId) => setState(() => selectedTabId = tabId),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          NakedTabList(
+          NakedTabBar(
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -313,15 +313,15 @@ class _StatefulTabsWidgetState extends State<_StatefulTabsWidget> {
               ],
             ),
           ),
-          const NakedTabPanel(
+          const NakedTabView(
             tabId: 'light',
             child: Text('Light Content'),
           ),
-          const NakedTabPanel(
+          const NakedTabView(
             tabId: 'dark',
             child: Text('Dark Content'),
           ),
-          const NakedTabPanel(
+          const NakedTabView(
             tabId: 'system',
             child: Text('System Content'),
           ),

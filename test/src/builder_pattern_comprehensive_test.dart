@@ -23,12 +23,12 @@ void main() {
         await tester.pumpMaterialWidget(
           NakedButton(
             onPressed: () {},
-            builder: (context, states, child) {
-              receivedStates = states;
+            builder: (context, state, child) {
+              receivedStates = state.states;
               return Container(
                 width: 100,
                 height: 50,
-                color: states.contains(WidgetState.pressed)
+                color: state.states.contains(WidgetState.pressed)
                     ? Colors.red
                     : Colors.blue,
                 child: child,
@@ -55,7 +55,7 @@ void main() {
         await tester.pumpMaterialWidget(
           NakedButton(
             onPressed: () {},
-            builder: (context, states, child) {
+            builder: (context, state, child) {
               receivedChild = child;
               return Container(child: child);
             },
@@ -75,8 +75,8 @@ void main() {
           NakedButton(
             key: key,
             onPressed: () {},
-            builder: (context, states, child) {
-              if (states.contains(WidgetState.hovered)) {
+            builder: (context, state, child) {
+              if (state.states.contains(WidgetState.hovered)) {
                 return const Text('HOVERED');
               }
               return const Text('NORMAL');
@@ -114,10 +114,10 @@ void main() {
           NakedButton(
             key: key,
             onPressed: () {},
-            builder: (context, states, child) {
+            builder: (context, state, child) {
               builderCallCount++;
               return Container(
-                color: states.contains(WidgetState.hovered)
+                color: state.states.contains(WidgetState.hovered)
                     ? Colors.red
                     : Colors.blue,
                 child: child,
@@ -154,10 +154,10 @@ void main() {
           NakedButton(
             key: key,
             onPressed: () {},
-            builder: (context, states, child) {
+            builder: (context, state, child) {
               builderBuildCount++;
               return Container(
-                color: states.contains(WidgetState.hovered)
+                color: state.states.contains(WidgetState.hovered)
                     ? Colors.red
                     : Colors.blue,
                 child: child, // Reuses the child
@@ -190,39 +190,75 @@ void main() {
       });
 
       testWidgets('NakedCheckbox builder pattern', (WidgetTester tester) async {
-        await _testComponentBuilder(
-          tester,
-          (builder, child) => NakedCheckbox(
+        NakedCheckboxState? capturedState;
+        Widget? capturedChild;
+        const child = Text('Checkbox Child');
+
+        await tester.pumpMaterialWidget(
+          NakedCheckbox(
             value: false,
             onChanged: (value) {},
-            builder: builder,
+            builder: (context, state, childWidget) {
+              capturedState = state;
+              capturedChild = childWidget;
+              return childWidget ?? const SizedBox.shrink();
+            },
             child: child,
           ),
         );
+
+        expect(capturedState, isNotNull);
+        expect(capturedChild, equals(child));
       });
 
       testWidgets('NakedRadio builder pattern', (WidgetTester tester) async {
+        NakedRadioState<String>? capturedState;
+        const child = Text('Radio Child');
+
         await tester.pumpMaterialWidget(
           RadioGroup<String>(
-            groupValue: null,
-            onChanged: (value) {},
-            child: _buildRadioWithBuilder(),
+            groupValue: 'value1',
+            onChanged: (_) {},
+            child: NakedRadio<String>(
+              value: 'value1',
+              builder: (context, state, childWidget) {
+                capturedState = state;
+                return childWidget ?? const SizedBox.shrink();
+              },
+              child: child,
+            ),
           ),
         );
 
-        await _verifyBuilderBehavior(tester);
+        expect(capturedState, isNotNull);
+        expect(capturedState!.isSelected, isTrue);
       });
 
       testWidgets('NakedTab builder pattern', (WidgetTester tester) async {
+        NakedTabState? capturedState;
+
         await tester.pumpMaterialWidget(
-          NakedTabGroup(
+          NakedTabs(
             selectedTabId: 'tab1',
             onChanged: (value) {},
-            child: Column(children: [_buildTabWithBuilder()]),
+            child: NakedTabBar(
+              child: Row(
+                children: [
+                  NakedTab(
+                    tabId: 'tab1',
+                    builder: (context, tabState, child) {
+                      capturedState = tabState;
+                      return const Text('Builder Test');
+                    },
+                  ),
+                ],
+              ),
+            ),
           ),
         );
 
-        await _verifyBuilderBehavior(tester);
+        expect(capturedState, isNotNull);
+        expect(capturedState!.isSelected, isTrue);
       });
     });
 
@@ -235,7 +271,7 @@ void main() {
         await tester.pumpMaterialWidget(
           NakedButton(
             onPressed: () {},
-            builder: (context, states, child) {
+            builder: (context, state, child) {
               receivedChild = child;
               return Container(
                 width: 100,
@@ -258,7 +294,7 @@ void main() {
         await tester.pumpMaterialWidget(
           NakedButton(
             onPressed: () {},
-            builder: (context, states, child) {
+            builder: (context, state, child) {
               // Ignore the child completely
               return const Text('Custom Content');
             },
@@ -284,14 +320,14 @@ void main() {
             onPressed: () {},
             enabled: true,
             autofocus: true,
-            builder: (context, states, child) {
-              lastStates = states;
+            builder: (context, state, child) {
+              lastStates = state.states;
               return Container(
                 width: 100,
                 height: 50,
                 decoration: BoxDecoration(
-                  color: _getColorForStates(states),
-                  border: states.contains(WidgetState.focused)
+                  color: _getColorForStates(state.states),
+                  border: state.states.contains(WidgetState.focused)
                       ? Border.all(color: Colors.orange, width: 2)
                       : null,
                 ),
@@ -316,6 +352,62 @@ void main() {
         expect(lastStates, isNot(contains(WidgetState.hovered)));
       });
 
+      testWidgets('builder demonstrates modern direct state accessors', (
+        WidgetTester tester,
+      ) async {
+        bool? lastHovered;
+        bool? lastPressed;
+        bool? lastFocused;
+
+        final key = UniqueKey();
+        await tester.pumpMaterialWidget(
+          NakedButton(
+            key: key,
+            onPressed: () {},
+            enabled: true,
+            autofocus: true,
+            builder: (context, state, child) {
+              lastHovered = state.isHovered;
+              lastPressed = state.isPressed;
+              lastFocused = state.isFocused;
+              return Container(
+                width: 100,
+                height: 50,
+                decoration: BoxDecoration(
+                  color: state.when(
+                    pressed: Colors.red,
+                    hovered: Colors.lightBlue,
+                    focused: Colors.orange,
+                    orElse: Colors.blue,
+                  ),
+                  border: state.isFocused
+                      ? Border.all(color: Colors.orange, width: 2)
+                      : null,
+                ),
+                child: child,
+              );
+            },
+            child: const Text('Modern API'),
+          ),
+        );
+
+        // Allow autofocus to take effect
+        await tester.pump();
+        expect(lastFocused, isTrue);
+        expect(lastHovered, isFalse);
+        expect(lastPressed, isFalse);
+
+        // Test hover state
+        await tester.simulateHover(
+          key,
+          onHover: () {
+            expect(lastHovered, isTrue);
+            expect(lastFocused, isTrue); // Still focused
+          },
+        );
+        expect(lastHovered, isFalse); // After hover exit
+      });
+
       testWidgets('builder handles disabled state', (
         WidgetTester tester,
       ) async {
@@ -327,8 +419,8 @@ void main() {
           NakedButton(
             onPressed: () {},
             enabled: true,
-            builder: (context, states, child) {
-              enabledStates = states;
+            builder: (context, state, child) {
+              enabledStates = state.states;
               return Container(child: child);
             },
             child: const Text('Enabled'),
@@ -344,8 +436,8 @@ void main() {
               body: NakedButton(
                 onPressed: () {},
                 enabled: false,
-                builder: (context, states, child) {
-                  disabledStates = states;
+                builder: (context, state, child) {
+                  disabledStates = state.states;
                   return Container(child: child);
                 },
                 child: const Text('Disabled'),
@@ -363,7 +455,7 @@ void main() {
 /// Helper function to test builder pattern consistency across components
 Future<void> _testComponentBuilder(
   WidgetTester tester,
-  Widget Function(ValueWidgetBuilder<Set<WidgetState>>, Widget?)
+  Widget Function(ValueWidgetBuilder<NakedButtonState>, Widget?)
   componentBuilder,
 ) async {
   Set<WidgetState>? receivedStates;
@@ -372,11 +464,13 @@ Future<void> _testComponentBuilder(
   const testChild = Text('Test Child');
 
   await tester.pumpMaterialWidget(
-    componentBuilder((context, states, child) {
-      receivedStates = states;
+    componentBuilder((context, state, child) {
+      receivedStates = state.states;
       receivedChild = child;
       return Container(
-        color: states.contains(WidgetState.pressed) ? Colors.red : Colors.blue,
+        color: state.states.contains(WidgetState.pressed)
+            ? Colors.red
+            : Colors.blue,
         child: child,
       );
     }, testChild),
@@ -384,51 +478,6 @@ Future<void> _testComponentBuilder(
 
   expect(receivedStates, isNotNull);
   expect(receivedChild, equals(testChild));
-}
-
-/// Helper function to verify builder behavior
-Future<void> _verifyBuilderBehavior(WidgetTester tester) async {
-  expect(find.text('Builder Test'), findsOneWidget);
-
-  // Try to trigger state change if possible
-  final widget = find.text('Builder Test');
-  if (widget.evaluate().isNotEmpty) {
-    await tester.tap(widget);
-    await tester.pump();
-  }
-}
-
-/// Helper to build radio with builder for testing
-Widget _buildRadioWithBuilder() {
-  return NakedRadio<String>(
-    value: 'test',
-    builder: (context, states, child) {
-      return Container(
-        width: 20,
-        height: 20,
-        color: states.contains(WidgetState.selected)
-            ? Colors.blue
-            : Colors.grey,
-        child: const Text('Builder Test'),
-      );
-    },
-  );
-}
-
-/// Helper to build tab with builder for testing
-Widget _buildTabWithBuilder() {
-  return NakedTab(
-    tabId: 'tab1',
-    builder: (context, states, child) {
-      return Container(
-        padding: const EdgeInsets.all(8),
-        color: states.contains(WidgetState.selected)
-            ? Colors.blue
-            : Colors.grey,
-        child: const Text('Builder Test'),
-      );
-    },
-  );
 }
 
 /// Helper to get color based on widget states

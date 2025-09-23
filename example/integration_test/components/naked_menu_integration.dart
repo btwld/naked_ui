@@ -1,10 +1,9 @@
+import 'package:example/api/naked_menu.0.dart' as menu_example;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:naked_ui/naked_ui.dart';
-import 'package:example/api/naked_menu.0.dart' as menu_example;
-
-import '../helpers/test_helpers.dart';
 
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
@@ -15,24 +14,21 @@ void main() {
       await tester.pumpWidget(const menu_example.MyApp());
       await tester.pump(const Duration(milliseconds: 100));
 
-      final menuFinder = find.byType(NakedMenu);
-      expect(menuFinder, findsOneWidget);
-
       // Find the trigger button
       final triggerButton = find.byType(NakedButton);
       expect(triggerButton, findsOneWidget);
 
       // Initially menu should be closed (no overlay content)
-      expect(find.text('Menu Item 1'), findsNothing);
+      expect(find.text('Edit'), findsNothing);
 
       // Tap to open menu
       await tester.tap(triggerButton);
-      await tester.pump();
+      await tester.pumpAndSettle();
 
       // Menu should be open now
-      expect(find.text('Menu Item 1'), findsOneWidget);
-      expect(find.text('Menu Item 2'), findsOneWidget);
-      expect(find.text('Menu Item 3'), findsOneWidget);
+      expect(find.text('Edit'), findsOneWidget);
+      expect(find.text('Copy'), findsOneWidget);
+      expect(find.text('Delete'), findsOneWidget);
     });
 
     testWidgets('menu items respond to selection', (tester) async {
@@ -42,39 +38,29 @@ void main() {
       await tester.pumpWidget(MaterialApp(
         home: Scaffold(
           body: Center(
-            child: NakedMenu(
+            child: NakedMenu<String>(
               controller: menuController,
-              builder: (context) => NakedButton(
-                onPressed: () => menuController.open(),
-                child: const Text('Open Menu'),
-              ),
-              overlayBuilder: (context) => Container(
+              builder: (context, state, _) => const Text('Open Menu'),
+              overlayBuilder: (context, info) => Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   border: Border.all(color: Colors.grey),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: Column(
+                child: const Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    NakedButton(
-                      onPressed: () {
-                        selectedItem = 'Item 1';
-                        menuController.close();
-                      },
-                      child: const Text('Item 1'),
-                    ),
-                    NakedButton(
-                      onPressed: () {
-                        selectedItem = 'Item 2';
-                        menuController.close();
-                      },
-                      child: const Text('Item 2'),
-                    ),
+                    NakedMenuItem<String>(
+                        value: 'Item 1', child: Text('Item 1')),
+                    NakedMenuItem<String>(
+                        value: 'Item 2', child: Text('Item 2')),
                   ],
                 ),
               ),
+              onSelected: (value) {
+                selectedItem = value;
+              },
             ),
           ),
         ),
@@ -83,11 +69,11 @@ void main() {
 
       // Open menu
       await tester.tap(find.text('Open Menu'));
-      await tester.pump();
+      await tester.pumpAndSettle();
 
       // Tap menu item
       await tester.tap(find.text('Item 1'));
-      await tester.pump();
+      await tester.pumpAndSettle();
 
       // Verify selection
       expect(selectedItem, 'Item 1');
@@ -103,20 +89,25 @@ void main() {
       await tester.pumpWidget(MaterialApp(
         home: Scaffold(
           body: Center(
-            child: NakedMenu(
+            child: NakedMenu<String>(
               controller: menuController,
               onClose: () => menuClosed = true,
-              builder: (context) => NakedButton(
-                onPressed: () => menuController.open(),
-                child: const Text('Open Menu'),
-              ),
-              overlayBuilder: (context) => Container(
+              builder: (context, state, _) => const Text('Open Menu'),
+              overlayBuilder: (context, info) => Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   border: Border.all(color: Colors.grey),
                 ),
-                child: const Text('Menu Content'),
+                child: const Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    NakedMenuItem<String>(
+                      value: 'content',
+                      child: Text('Menu Content'),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
@@ -126,12 +117,12 @@ void main() {
 
       // Open menu
       await tester.tap(find.text('Open Menu'));
-      await tester.pump();
+      await tester.pumpAndSettle();
       expect(find.text('Menu Content'), findsOneWidget);
 
       // Close menu programmatically
       menuController.close();
-      await tester.pump();
+      await tester.pumpAndSettle();
 
       // Verify callback was called
       expect(menuClosed, isTrue);
@@ -145,20 +136,25 @@ void main() {
       await tester.pumpWidget(MaterialApp(
         home: Scaffold(
           body: Center(
-            child: NakedMenu(
+            child: NakedMenu<String>(
               key: menuKey,
               controller: menuController,
-              builder: (context) => NakedButton(
-                onPressed: () => menuController.open(),
-                child: const Text('Open Menu'),
-              ),
-              overlayBuilder: (context) => Container(
+              builder: (context, state, _) => const Text('Open Menu'),
+              overlayBuilder: (context, info) => Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   border: Border.all(color: Colors.grey),
                 ),
-                child: const Text('Menu Content'),
+                child: const Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    NakedMenuItem<String>(
+                      value: 'content',
+                      child: Text('Menu Content'),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
@@ -168,15 +164,15 @@ void main() {
 
       // Open menu
       await tester.tap(find.text('Open Menu'));
-      await tester.pump();
+      await tester.pumpAndSettle();
       expect(find.text('Menu Content'), findsOneWidget);
 
-      // Test keyboard navigation - Escape should close menu
-      await tester.testKeyboardActivation(find.byKey(menuKey));
-      await tester.pump();
+      // Test keyboard navigation: pressing Escape should close the menu
+      await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+      await tester.pumpAndSettle();
 
-      // Menu should still be open (keyboard activation tests Enter, not Escape)
-      expect(find.text('Menu Content'), findsOneWidget);
+      // Menu should be closed after Escape
+      expect(find.text('Menu Content'), findsNothing);
     });
 
     testWidgets('menu closes on outside tap when enabled', (tester) async {
@@ -187,20 +183,25 @@ void main() {
           body: Center(
             child: Column(
               children: [
-                NakedMenu(
+                NakedMenu<String>(
                   controller: menuController,
                   consumeOutsideTaps: true,
-                  builder: (context) => NakedButton(
-                    onPressed: () => menuController.open(),
-                    child: const Text('Open Menu'),
-                  ),
-                  overlayBuilder: (context) => Container(
+                  builder: (context, state, _) => const Text('Open Menu'),
+                  overlayBuilder: (context, info) => Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
                       color: Colors.white,
                       border: Border.all(color: Colors.grey),
                     ),
-                    child: const Text('Menu Content'),
+                    child: const Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        NakedMenuItem<String>(
+                          value: 'content',
+                          child: Text('Menu Content'),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
                 const SizedBox(height: 100),
@@ -214,12 +215,12 @@ void main() {
 
       // Open menu
       await tester.tap(find.text('Open Menu'));
-      await tester.pump();
+      await tester.pumpAndSettle();
       expect(find.text('Menu Content'), findsOneWidget);
 
       // Tap outside the menu
       await tester.tap(find.text('Outside Area'));
-      await tester.pump();
+      await tester.pumpAndSettle();
 
       // Menu should close
       expect(find.text('Menu Content'), findsNothing);
@@ -234,20 +235,20 @@ void main() {
 
       // Open menu
       await tester.tap(triggerButton);
-      await tester.pump();
+      await tester.pumpAndSettle();
 
       // Find and tap a menu item
-      final menuItem = find.text('Menu Item 1');
+      final menuItem = find.text('Edit');
       expect(menuItem, findsOneWidget);
 
       await tester.tap(menuItem);
-      await tester.pump();
+      await tester.pumpAndSettle();
 
       // Check that snackbar appears (from the example's onPressed callback)
-      expect(find.text('Item 1 selected'), findsOneWidget);
+      expect(find.text('Selected: edit'), findsOneWidget);
 
       // Menu should be closed after item selection
-      expect(find.text('Menu Item 1'), findsNothing);
+      expect(find.text('Edit'), findsNothing);
     });
   });
 }

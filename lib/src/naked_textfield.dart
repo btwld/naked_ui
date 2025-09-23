@@ -16,14 +16,80 @@ import 'package:flutter/material.dart'
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
+import 'mixins/naked_mixins.dart';
+import 'utilities/naked_focusable_detector.dart';
+import 'utilities/naked_state_scope.dart';
+import 'utilities/state.dart';
+
 typedef NakedTextFieldBuilder =
     Widget Function(BuildContext context, Widget editableText);
+
+/// Immutable view passed to [NakedTextField.builder].
+class NakedTextFieldState extends NakedState {
+  /// The current text value.
+  final String text;
+
+  /// Whether the text field is currently focused.
+  final bool isFocused;
+
+  /// Whether the text field has text content.
+  final bool hasText;
+
+  /// Whether the text field is read-only.
+  final bool isReadOnly;
+
+  /// Whether the text field is enabled.
+  final bool isEnabled;
+
+  NakedTextFieldState({
+    required super.states,
+    required this.text,
+    required this.isFocused,
+    required this.hasText,
+    required this.isReadOnly,
+    required this.isEnabled,
+  });
+
+  /// Returns the nearest [NakedTextFieldState] provided by [NakedStateScope].
+  static NakedTextFieldState of(BuildContext context) => NakedState.of(context);
+
+  /// Returns the nearest [NakedTextFieldState] if one is available.
+  static NakedTextFieldState? maybeOf(BuildContext context) =>
+      NakedState.maybeOf(context);
+
+  /// Returns the [WidgetStatesController] from the nearest scope.
+  static WidgetStatesController controllerOf(BuildContext context) =>
+      NakedState.controllerOf(context);
+
+  /// Returns the [WidgetStatesController] from the nearest scope, if any.
+  static WidgetStatesController? maybeControllerOf(BuildContext context) =>
+      NakedState.maybeControllerOf(context);
+
+  /// Whether the text field is empty.
+  bool get isEmpty => !hasText;
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+
+    return other is NakedTextFieldState &&
+        setEquals(other.states, states) &&
+        other.text == text &&
+        other.isFocused == isFocused &&
+        other.hasText == hasText &&
+        other.isReadOnly == isReadOnly &&
+        other.isEnabled == isEnabled;
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(states, text, isFocused, hasText, isReadOnly, isEnabled);
+}
 
 /// Headless, builder-first text input built on [EditableText].
 ///
 /// Exposes native-feeling defaults while remaining design-system agnostic.
-/// Renders no visuals—wrap the provided `editableText` via [builder]
-/// to style or decorate.
+/// Renders no visuals—wrap the provided [editableText] via [builder] to style or decorate.
 ///
 /// ```dart
 /// NakedTextField(
@@ -104,7 +170,7 @@ class NakedTextField extends StatefulWidget {
     this.onFocusChange,
     this.onPressChange,
     this.style,
-    required this.builder,
+    this.builder,
     this.ignorePointers,
     this.semanticLabel,
     this.semanticHint,
@@ -117,6 +183,7 @@ class NakedTextField extends StatefulWidget {
            (obscureText ? SmartQuotesType.disabled : SmartQuotesType.enabled),
        assert(maxLines == null || maxLines > 0),
        assert(minLines == null || minLines > 0),
+       assert(builder != null, 'NakedTextField requires a builder'),
        assert(
          (maxLines == null) || (minLines == null) || (maxLines >= minLines),
          "minLines can't be greater than maxLines",
@@ -130,8 +197,6 @@ class NakedTextField extends StatefulWidget {
          'Obscured fields cannot be multiline.',
        ),
        assert(maxLength == null || maxLength > 0);
-
-  // ==== Public API ====
 
   /// The magnifier configuration (defaults to platform-appropriate).
   final TextMagnifierConfiguration? magnifierConfiguration;
@@ -165,7 +230,7 @@ class NakedTextField extends StatefulWidget {
   /// The character used for obscuring text.
   final String obscuringCharacter;
 
-  /// Whether to obscure text (e.g., passwords).
+  /// Whether to obscure text (for example, passwords).
   final bool obscureText;
 
   /// Whether to enable autocorrect.
@@ -224,7 +289,7 @@ class NakedTextField extends StatefulWidget {
   final ui.BoxHeightStyle selectionHeightStyle;
   final ui.BoxWidthStyle selectionWidthStyle;
 
-  /// Keyboard appearance (iOS)
+  /// Keyboard appearance (iOS).
   final Brightness? keyboardAppearance;
 
   /// Scrolling
@@ -233,10 +298,10 @@ class NakedTextField extends StatefulWidget {
   final ScrollController? scrollController;
   final ScrollPhysics? scrollPhysics;
 
-  /// Clipping behavior for the underlying EditableText.
+  /// Clipping behavior for the underlying [EditableText].
   final Clip clipBehavior;
 
-  /// Selection & context menu
+  /// Selection and context menu
   final bool enableInteractiveSelection;
   final TextSelectionControls? selectionControls;
   final EditableTextContextMenuBuilder? contextMenuBuilder;
@@ -250,7 +315,7 @@ class NakedTextField extends StatefulWidget {
   final ValueChanged<bool>? onHoverChange;
   final ValueChanged<bool>? onPressChange;
 
-  /// Autofill & content insertion
+  /// Autofill and content insertion
   final Iterable<String>? autofillHints;
   final ContentInsertionConfiguration? contentInsertionConfiguration;
 
@@ -263,24 +328,24 @@ class NakedTextField extends StatefulWidget {
   /// Restoration
   final String? restorationId;
 
-  /// IME / stylus features
+  /// IME and stylus features
   final bool stylusHandwritingEnabled;
   final bool enableIMEPersonalizedLearning;
 
   /// Spell check
   final SpellCheckConfiguration? spellCheckConfiguration;
 
-  /// Grouping for IME (matches EditableText)
+  /// Grouping for IME (matches [EditableText]).
   final Object groupId;
 
-  /// Text style override (else derives from DefaultTextStyle)
+  /// Text style override (else derives from [DefaultTextStyle]).
   final TextStyle? style;
 
-  /// Ignore pointers
+  /// Whether to ignore pointers.
   final bool? ignorePointers;
 
-  /// Builder to wrap the underlying EditableText with visuals.
-  final NakedTextFieldBuilder builder;
+  /// Builds the visual wrapper around the underlying [EditableText].
+  final NakedTextFieldBuilder? builder;
 
   /// Semantics
   final String? semanticLabel;
@@ -291,7 +356,7 @@ class NakedTextField extends StatefulWidget {
 }
 
 class _NakedTextFieldState extends State<NakedTextField>
-    with RestorationMixin
+    with RestorationMixin, WidgetStatesMixin<NakedTextField>
     implements TextSelectionGestureDetectorBuilderDelegate, AutofillClient {
   // Neutral base colors that don't imply a design system.
   static const Color _defaultTextColor = Color(0xFF000000);
@@ -301,41 +366,11 @@ class _NakedTextFieldState extends State<NakedTextField>
   // iOS cursor horizontal offset (native-looking nudge).
   static const int _iOSHorizontalOffset = -2;
 
-  RestorableTextEditingController? _controller;
-  TextEditingController get _effectiveController =>
-      widget.controller ?? _controller!.value;
-
-  FocusNode? _focusNode;
-  FocusNode get _effectiveFocusNode =>
-      widget.focusNode ?? (_focusNode ??= FocusNode());
-
-  MaxLengthEnforcement get _effectiveMaxLengthEnforcement =>
-      widget.maxLengthEnforcement ??
-      LengthLimitingTextInputFormatter.getDefaultMaxLengthEnforcement(
-        defaultTargetPlatform,
-      );
-
-  late TextSelectionGestureDetectorBuilder _selectionGestureDetectorBuilder;
-
-  bool _showSelectionHandles = false;
-
-  // Keep track of the current navigation mode from MediaQuery.
-  NavigationMode? _navMode;
-
-  // TextSelectionGestureDetectorBuilderDelegate
-  @override
-  late bool forcePressEnabled;
-
   @override
   final GlobalKey<EditableTextState> editableTextKey =
       GlobalKey<EditableTextState>();
 
-  @override
-  bool get selectionEnabled => widget.enableInteractiveSelection;
-
-  EditableTextState? get _editableText => editableTextKey.currentState;
-
-  // === Lifecycle ===
+  // State management and lifecycle methods
 
   @override
   void initState() {
@@ -348,15 +383,20 @@ class _NakedTextFieldState extends State<NakedTextField>
       _createLocalController();
     }
 
-    // IMPORTANT: No MediaQuery reads here.
+    // Set initial focus capabilities based on widget properties.
+    // MediaQuery access is deferred to didChangeDependencies.
     _effectiveFocusNode.canRequestFocus =
         widget.canRequestFocus && widget.enabled;
     _effectiveFocusNode.addListener(_handleFocusChange);
+    // Attach controller listener via unified handler.
+    if (widget.controller != null) {
+      _updateAttachedController(widget.controller);
+    } else if (_controller != null && !restorePending) {
+      _updateAttachedController(_controller!.value);
+    }
   }
 
-  // === Helpers ===
-
-  // Compute focusability from a cached nav mode (no MediaQuery reads here).
+  // Determines if focus can be requested based on navigation mode.
   bool _canRequestFocusFor(NavigationMode? mode) {
     switch (mode) {
       case NavigationMode.directional:
@@ -377,10 +417,34 @@ class _NakedTextFieldState extends State<NakedTextField>
     }
   }
 
+  // Centralized attach/detach to the current effective controller.
+  void _updateAttachedController(TextEditingController? newController) {
+    // Detach from any previously attached controller.
+    _detachControllerListener?.call();
+    _detachControllerListener = null;
+
+    // Attach to the new controller if provided.
+    if (newController != null) {
+      newController.addListener(_handleControllerChanged);
+      _detachControllerListener = () {
+        newController.removeListener(_handleControllerChanged);
+      };
+    }
+  }
+
   void _requestKeyboard() => _editableText?.requestKeyboard();
 
+  // Rebuild on text changes to keep Semantics and NakedTextFieldState in sync.
+  void _handleControllerChanged() {
+    if (!mounted) return;
+    // ignore: no-empty-block
+    setState(() {});
+  }
+
   void _handleFocusChange() {
-    widget.onFocusChange?.call(_effectiveFocusNode.hasFocus);
+    final focused = _effectiveFocusNode.hasFocus;
+    // Keep WidgetStates in sync and fire callback only when changed.
+    updateFocusState(focused, widget.onFocusChange);
     if (!mounted) return;
     // Rebuild for selection highlight & semantics updates tied to focus.
     // ignore: no-empty-block
@@ -450,15 +514,20 @@ class _NakedTextFieldState extends State<NakedTextField>
   }
 
   void _handleMouseEnter(PointerEnterEvent _) =>
-      widget.onHoverChange?.call(true);
+      updateHoverState(true, widget.onHoverChange);
 
   void _handleMouseExit(PointerExitEvent _) =>
-      widget.onHoverChange?.call(false);
+      updateHoverState(false, widget.onHoverChange);
+
+  @override
+  void initializeWidgetStates() {
+    updateDisabledState(!widget.enabled);
+  }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    // Now it's legal to read MediaQuery.
+    // Read navigation mode from MediaQuery after dependencies are available.
     _navMode = MediaQuery.maybeNavigationModeOf(context);
     _effectiveFocusNode.canRequestFocus = _canRequestFocusFor(_navMode);
   }
@@ -471,10 +540,18 @@ class _NakedTextFieldState extends State<NakedTextField>
     if (widget.controller == null && oldWidget.controller != null) {
       _createLocalController(oldWidget.controller!.value);
     } else if (widget.controller != null && oldWidget.controller == null) {
+      // Detach listener before unregistering/disposal to avoid accessing
+      // RestorableListenable.value while unregistered.
+      _controller!.value.removeListener(_handleControllerChanged);
       unregisterFromRestoration(_controller!);
       _controller!.dispose();
       _controller = null;
     }
+
+    // After potential swap, attach listener to the current effective controller.
+    final TextEditingController? nextController =
+        widget.controller ?? (!restorePending ? _controller?.value : null);
+    _updateAttachedController(nextController);
 
     // Focus node swap: keep our listener correct.
     if (widget.focusNode != oldWidget.focusNode) {
@@ -482,7 +559,7 @@ class _NakedTextFieldState extends State<NakedTextField>
       (widget.focusNode ?? _focusNode)?.addListener(_handleFocusChange);
     }
 
-    // DO NOT read MediaQuery here; reuse cached mode (updated in didChangeDependencies).
+    // Use cached navigation mode to avoid MediaQuery access during widget updates.
     _effectiveFocusNode.canRequestFocus = _canRequestFocusFor(_navMode);
 
     // If readOnly changed while focused, recompute handle visibility.
@@ -503,12 +580,17 @@ class _NakedTextFieldState extends State<NakedTextField>
   void restoreState(RestorationBucket? oldBucket, bool initialRestore) {
     if (_controller != null) {
       registerForRestoration(_controller!, 'controller');
+      // Attach listener after restoration registration for local controller.
+      _updateAttachedController(_controller!.value);
     }
   }
 
   @override
   void dispose() {
     _effectiveFocusNode.removeListener(_handleFocusChange);
+    // Detach controller listener to avoid leaks.
+    _detachControllerListener?.call();
+    _detachControllerListener = null;
     _focusNode?.dispose();
     _controller?.dispose();
     super.dispose();
@@ -518,7 +600,41 @@ class _NakedTextFieldState extends State<NakedTextField>
   void autofill(TextEditingValue newEditingValue) =>
       _editableText?.autofill(newEditingValue);
 
-  // === AutofillClient ===
+  RestorableTextEditingController? _controller;
+
+  VoidCallback? _detachControllerListener;
+
+  TextEditingController get _effectiveController =>
+      widget.controller ?? _controller!.value;
+
+  FocusNode? _focusNode;
+
+  FocusNode get _effectiveFocusNode =>
+      widget.focusNode ?? (_focusNode ??= FocusNode());
+
+  MaxLengthEnforcement get _effectiveMaxLengthEnforcement =>
+      widget.maxLengthEnforcement ??
+      LengthLimitingTextInputFormatter.getDefaultMaxLengthEnforcement(
+        defaultTargetPlatform,
+      );
+
+  late TextSelectionGestureDetectorBuilder _selectionGestureDetectorBuilder;
+
+  bool _showSelectionHandles = false;
+
+  // Track the current navigation mode from MediaQuery.
+  NavigationMode? _navMode;
+
+  // TextSelectionGestureDetectorBuilderDelegate
+  @override
+  late bool forcePressEnabled;
+
+  @override
+  bool get selectionEnabled => widget.enableInteractiveSelection;
+
+  EditableTextState? get _editableText => editableTextKey.currentState;
+
+  // AutofillClient implementation
 
   @override
   String get autofillId => _editableText!.autofillId;
@@ -543,7 +659,7 @@ class _NakedTextFieldState extends State<NakedTextField>
   @override
   String? get restorationId => widget.restorationId;
 
-  // === Build ===
+  // Widget building and rendering
 
   @override
   Widget build(BuildContext context) {
@@ -703,12 +819,30 @@ class _NakedTextFieldState extends State<NakedTextField>
       );
     }
 
-    final Widget composed = withSemantics(widget.builder(context, editable));
-    // Ensure a focus action is exposed in semantics parity with Material.
-    final Widget composedWithFocusSemantics = FocusableActionDetector(
-      enabled: widget.enabled,
-      includeFocusSemantics: true,
+    // Create the text field state
+    final textFieldState = NakedTextFieldState(
+      states: widgetStates,
+      text: controller.text,
+      isFocused: focusNode.hasFocus,
+      hasText: controller.text.isNotEmpty,
+      isReadOnly: widget.readOnly,
+      isEnabled: widget.enabled,
+    );
+
+    // Build content using the builder and always provide state via scope
+    final Widget content = widget.builder!(context, editable);
+
+    final Widget composed = withSemantics(content);
+    final Widget wrappedContent = NakedStateScope(
+      value: textFieldState,
       child: composed,
+    );
+
+    // Ensure a focus action is exposed in semantics parity with Material.
+    final Widget composedWithFocusSemantics = NakedFocusableDetector(
+      enabled: widget.enabled,
+      includeSemantics: true,
+      child: wrappedContent,
     );
 
     // Selection/gesture plumbing
@@ -732,7 +866,7 @@ class _NakedTextFieldState extends State<NakedTextField>
   }
 }
 
-// == Selection gesture builder ==
+// Text selection gesture handling
 
 class _NakedSelectionGestureDetectorBuilder
     extends TextSelectionGestureDetectorBuilder {
@@ -773,7 +907,7 @@ class _NakedSelectionGestureDetectorBuilder
   bool get onUserTapAlwaysCalled => _state.widget.onTapAlwaysCalled;
 }
 
-// == Centralized platform defaults (adaptive styling & behavior) ==
+// Platform-specific styling and behavior defaults
 
 class _PlatformDefaults {
   final bool forcePressEnabled;
