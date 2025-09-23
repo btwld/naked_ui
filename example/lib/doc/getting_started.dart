@@ -17,6 +17,7 @@ class MyApp extends StatelessWidget {
           child: MyCustomButton(
             text: 'Click me',
             onPressed: () {
+              // ignore: avoid_print
               print('Button pressed!');
             },
           ),
@@ -31,17 +32,17 @@ class MyCustomButton extends StatelessWidget {
   final VoidCallback onPressed;
 
   const MyCustomButton({
-    Key? key,
+    super.key,
     required this.text,
     required this.onPressed,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
     return NakedButton(
       onPressed: onPressed,
       builder: (context, state, child) => Container(
-        padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         decoration: BoxDecoration(
           color: state.when(
             pressed: Colors.blue.shade800, // Darker when pressed
@@ -56,7 +57,7 @@ class MyCustomButton extends StatelessWidget {
         ),
         child: Text(
           text,
-          style: TextStyle(color: Colors.white),
+          style: const TextStyle(color: Colors.white),
         ),
       ),
     );
