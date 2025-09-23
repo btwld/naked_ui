@@ -388,9 +388,11 @@ class _NakedTextFieldState extends State<NakedTextField>
     _effectiveFocusNode.canRequestFocus =
         widget.canRequestFocus && widget.enabled;
     _effectiveFocusNode.addListener(_handleFocusChange);
-    // Attach controller listener now only when using an external controller.
+    // Attach controller listener via unified handler.
     if (widget.controller != null) {
-      widget.controller!.addListener(_handleControllerChanged);
+      _updateAttachedController(widget.controller);
+    } else if (_controller != null && !restorePending) {
+      _updateAttachedController(_controller!.value);
     }
   }
 
@@ -412,6 +414,21 @@ class _NakedTextFieldState extends State<NakedTextField>
         : RestorableTextEditingController.fromValue(value);
     if (!restorePending) {
       registerForRestoration(_controller!, 'controller');
+    }
+  }
+
+  // Centralized attach/detach to the current effective controller.
+  void _updateAttachedController(TextEditingController? newController) {
+    // Detach from any previously attached controller.
+    _detachControllerListener?.call();
+    _detachControllerListener = null;
+
+    // Attach to the new controller if provided.
+    if (newController != null) {
+      newController.addListener(_handleControllerChanged);
+      _detachControllerListener = () {
+        newController.removeListener(_handleControllerChanged);
+      };
     }
   }
 
@@ -520,8 +537,6 @@ class _NakedTextFieldState extends State<NakedTextField>
     super.didUpdateWidget(oldWidget);
 
     // Controller ownership swap while preserving state/restoration.
-    final TextEditingController? oldEffectiveController =
-        oldWidget.controller ?? _controller?.value;
     if (widget.controller == null && oldWidget.controller != null) {
       _createLocalController(oldWidget.controller!.value);
     } else if (widget.controller != null && oldWidget.controller == null) {
@@ -533,13 +548,10 @@ class _NakedTextFieldState extends State<NakedTextField>
       _controller = null;
     }
 
-    // After potential swap, compute the new effective controller and maintain listener.
-    final TextEditingController? newEffectiveController =
-        widget.controller ?? _controller?.value;
-    if (!identical(newEffectiveController, oldEffectiveController)) {
-      oldEffectiveController?.removeListener(_handleControllerChanged);
-      newEffectiveController?.addListener(_handleControllerChanged);
-    }
+    // After potential swap, attach listener to the current effective controller.
+    final TextEditingController? nextController =
+        widget.controller ?? (!restorePending ? _controller?.value : null);
+    _updateAttachedController(nextController);
 
     // Focus node swap: keep our listener correct.
     if (widget.focusNode != oldWidget.focusNode) {
@@ -569,7 +581,7 @@ class _NakedTextFieldState extends State<NakedTextField>
     if (_controller != null) {
       registerForRestoration(_controller!, 'controller');
       // Attach listener after restoration registration for local controller.
-      _controller!.value.addListener(_handleControllerChanged);
+      _updateAttachedController(_controller!.value);
     }
   }
 
@@ -577,8 +589,8 @@ class _NakedTextFieldState extends State<NakedTextField>
   void dispose() {
     _effectiveFocusNode.removeListener(_handleFocusChange);
     // Detach controller listener to avoid leaks.
-    widget.controller?.removeListener(_handleControllerChanged);
-    _controller?.value.removeListener(_handleControllerChanged);
+    _detachControllerListener?.call();
+    _detachControllerListener = null;
     _focusNode?.dispose();
     _controller?.dispose();
     super.dispose();
@@ -589,6 +601,8 @@ class _NakedTextFieldState extends State<NakedTextField>
       _editableText?.autofill(newEditingValue);
 
   RestorableTextEditingController? _controller;
+
+  VoidCallback? _detachControllerListener;
 
   TextEditingController get _effectiveController =>
       widget.controller ?? _controller!.value;
