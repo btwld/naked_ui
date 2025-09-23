@@ -352,6 +352,62 @@ void main() {
         expect(lastStates, isNot(contains(WidgetState.hovered)));
       });
 
+      testWidgets('builder demonstrates modern direct state accessors', (
+        WidgetTester tester,
+      ) async {
+        bool? lastHovered;
+        bool? lastPressed;
+        bool? lastFocused;
+
+        final key = UniqueKey();
+        await tester.pumpMaterialWidget(
+          NakedButton(
+            key: key,
+            onPressed: () {},
+            enabled: true,
+            autofocus: true,
+            builder: (context, state, child) {
+              lastHovered = state.isHovered;
+              lastPressed = state.isPressed;
+              lastFocused = state.isFocused;
+              return Container(
+                width: 100,
+                height: 50,
+                decoration: BoxDecoration(
+                  color: state.when(
+                    pressed: Colors.red,
+                    hovered: Colors.lightBlue,
+                    focused: Colors.orange,
+                    orElse: Colors.blue,
+                  ),
+                  border: state.isFocused
+                      ? Border.all(color: Colors.orange, width: 2)
+                      : null,
+                ),
+                child: child,
+              );
+            },
+            child: const Text('Modern API'),
+          ),
+        );
+
+        // Allow autofocus to take effect
+        await tester.pump();
+        expect(lastFocused, isTrue);
+        expect(lastHovered, isFalse);
+        expect(lastPressed, isFalse);
+
+        // Test hover state
+        await tester.simulateHover(
+          key,
+          onHover: () {
+            expect(lastHovered, isTrue);
+            expect(lastFocused, isTrue); // Still focused
+          },
+        );
+        expect(lastHovered, isFalse); // After hover exit
+      });
+
       testWidgets('builder handles disabled state', (
         WidgetTester tester,
       ) async {

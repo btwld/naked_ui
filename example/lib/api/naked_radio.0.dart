@@ -68,41 +68,29 @@ class RadioButton extends StatefulWidget {
 }
 
 class _RadioButtonState extends State<RadioButton> {
-  bool _isHovered = false;
-  bool _isPressed = false;
-  bool _isFocused = false;
-
-  Color borderColor(bool isSelected) {
-    const baseColor = Color(0xFF3D3D3D);
-    if (isSelected) {
-      return baseColor;
-    }
-    if (_isPressed || _isFocused) {
-      return baseColor.withValues(alpha: 0.6);
-    }
-    if (_isHovered) {
-      return baseColor.withValues(alpha: 0.3);
-    }
-    return baseColor.withValues(alpha: 0.2);
-  }
-
   @override
   Widget build(BuildContext context) {
+    const baseColor = Color(0xFF3D3D3D);
+
     return NakedRadio<RadioOption>(
       value: widget.value,
-      onFocusChange: (focused) => setState(() => _isFocused = focused),
-      onHoverChange: (hovered) => setState(() => _isHovered = hovered),
-      onPressChange: (pressed) => setState(() => _isPressed = pressed),
-      builder: (context, states, child) {
-        final isSelected = states.isSelected;
+      builder: (context, state, child) {
+        final borderColor = state.when(
+          selected: baseColor,
+          pressed: baseColor.withValues(alpha: 0.6),
+          focused: baseColor.withValues(alpha: 0.6),
+          hovered: baseColor.withValues(alpha: 0.3),
+          orElse: baseColor.withValues(alpha: 0.2),
+        );
+
         return AnimatedContainer(
           duration: const Duration(milliseconds: 100),
           width: 20,
           height: 20,
           decoration: BoxDecoration(
             border: Border.all(
-              color: borderColor(isSelected),
-              width: isSelected ? 6 : 2,
+              color: borderColor,
+              width: state.isSelected ? 6 : 2,
             ),
             borderRadius: BorderRadius.circular(10),
           ),

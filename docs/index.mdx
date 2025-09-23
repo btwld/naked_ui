@@ -46,15 +46,15 @@ All Naked components follow a similar pattern:
 
 1. **Create your visual design**: Design your UI components using standard Flutter widgets
 2. **Wrap with Naked behavior**: Wrap your design with the appropriate Naked component
-3. **Handle state changes**: Use the provided callbacks to update your visual design based on component state
+3. **Handle state changes**: Use the builder pattern to access component state and update your visual design accordingly
 
 ## Example: Creating a Custom Button
 
 ```dart
-class MyCustomButton extends StatefulWidget {
+class MyCustomButton extends StatelessWidget {
   final String text;
   final VoidCallback onPressed;
-  
+
   const MyCustomButton({
     Key? key,
     required this.text,
@@ -62,37 +62,25 @@ class MyCustomButton extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  _MyCustomButtonState createState() => _MyCustomButtonState();
-}
-
-class _MyCustomButtonState extends State<MyCustomButton> {
-  bool _isHovered = false;
-  bool _isPressed = false;
-  bool _isFocused = false;
-
-  @override
   Widget build(BuildContext context) {
     return NakedButton(
-      onPressed: widget.onPressed,
-      onHoverChange: (isHovered) => setState(() => _isHovered = isHovered),
-      onPressChange: (isPressed) => setState(() => _isPressed = isPressed),
-      onFocusChange: (isFocused) => setState(() => _isFocused = isFocused),
-      child: Container(
+      onPressed: onPressed,
+      builder: (context, state, child) => Container(
         padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         decoration: BoxDecoration(
-          color: _isPressed
-              ? Colors.blue.shade800  // Darker when pressed
-              : _isHovered
-                  ? Colors.blue.shade600  // Slightly darker when hovered
-                  : Colors.blue.shade500, // Default color
+          color: state.when(
+            pressed: Colors.blue.shade800,    // Darker when pressed
+            hovered: Colors.blue.shade600,    // Slightly darker when hovered
+            orElse: Colors.blue.shade500,     // Default color
+          ),
           borderRadius: BorderRadius.circular(4),
           border: Border.all(
-            color: _isFocused ? Colors.white : Colors.transparent,
+            color: state.isFocused ? Colors.white : Colors.transparent,
             width: 2,
           ),
         ),
         child: Text(
-          widget.text,
+          text,
           style: TextStyle(color: Colors.white),
         ),
       ),
@@ -105,15 +93,33 @@ class _MyCustomButtonState extends State<MyCustomButton> {
 
 Each component has its own set of configuration options. Here are some common patterns:
 
-### State Callbacks
+### Builder Pattern
 
-Most components provide state callbacks that notify you when the component's state changes:
+Most components use a builder pattern that provides access to the current state:
 
 ```dart
 NakedButton(
-  onHoverChange: (isHovered) => handleHover(isHovered),
-  onPressChange: (isPressed) => handlePress(isPressed),
-  onFocusChange: (isFocused) => handleFocus(isFocused),
+  builder: (context, state, child) {
+    // Access state properties directly
+    if (state.isPressed) {
+      // Handle pressed state
+    }
+    if (state.isHovered) {
+      // Handle hover state
+    }
+    if (state.isFocused) {
+      // Handle focus state
+    }
+
+    // Use state.when() for conditional styling
+    final color = state.when(
+      pressed: Colors.blue.shade800,
+      hovered: Colors.blue.shade600,
+      orElse: Colors.blue,
+    );
+
+    return YourWidget(color: color);
+  },
   // Other properties...
 )
 ```

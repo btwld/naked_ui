@@ -232,65 +232,55 @@ class _TriggerButton extends StatefulWidget {
 }
 
 class _TriggerButtonState extends State<_TriggerButton> {
-  bool _isHovered = false;
-  bool _isPressed = false;
-
-  Color get backgroundColor {
-    const baseColor = Color(0xFF3D3D3D);
-    if (_isPressed) {
-      return baseColor.withValues(alpha: 0.8);
-    }
-    if (_isHovered) {
-      return baseColor.withValues(alpha: 0.9);
-    }
-    return baseColor;
-  }
-
-  double get scale {
-    if (_isPressed) return 0.98;
-    return 1.0;
-  }
-
   @override
   Widget build(BuildContext context) {
     return NakedButton(
       onPressed: widget.onPressed,
-      onHoverChange: (hovered) => setState(() => _isHovered = hovered),
-      onPressChange: (pressed) => setState(() => _isPressed = pressed),
-      child: AnimatedScale(
-        scale: scale,
-        duration: const Duration(milliseconds: 150),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-          decoration: BoxDecoration(
-            color: backgroundColor,
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                widget.text,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
+      builder: (context, state, child) {
+        const baseColor = Color(0xFF3D3D3D);
+        final backgroundColor = state.when(
+          pressed: baseColor.withValues(alpha: 0.8),
+          hovered: baseColor.withValues(alpha: 0.9),
+          orElse: baseColor,
+        );
+
+        final scale = state.isPressed ? 0.98 : 1.0;
+
+        return AnimatedScale(
+          scale: scale,
+          duration: const Duration(milliseconds: 150),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+            decoration: BoxDecoration(
+              color: backgroundColor,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  widget.text,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                widget.description,
-                style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.8),
-                  fontSize: 12,
+                const SizedBox(height: 4),
+                Text(
+                  widget.description,
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.8),
+                    fontSize: 12,
+                  ),
+                  textAlign: TextAlign.center,
                 ),
-                textAlign: TextAlign.center,
-              ),
-            ],
+              ],
+            ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }
@@ -313,47 +303,40 @@ class _DialogButton extends StatefulWidget {
 }
 
 class _DialogButtonState extends State<_DialogButton> {
-  bool _isHovered = false;
-  bool _isPressed = false;
-
-  Color get backgroundColor {
-    if (_isPressed) {
-      return widget.backgroundColor.withValues(alpha: 0.8);
-    }
-    if (_isHovered) {
-      return widget.backgroundColor.withValues(alpha: 0.9);
-    }
-    return widget.backgroundColor;
-  }
-
-  double get scale => _isPressed ? 0.95 : 1.0;
-
   @override
   Widget build(BuildContext context) {
     return NakedButton(
       onPressed: widget.onPressed,
-      onHoverChange: (hovered) => setState(() => _isHovered = hovered),
-      onPressChange: (pressed) => setState(() => _isPressed = pressed),
-      child: AnimatedScale(
-        scale: scale,
-        duration: const Duration(milliseconds: 150),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          decoration: BoxDecoration(
-            color: backgroundColor,
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Text(
-            widget.text,
-            style: TextStyle(
-              color: widget.textColor,
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
+      builder: (context, state, child) {
+        final backgroundColor = state.when(
+          pressed: widget.backgroundColor.withValues(alpha: 0.8),
+          hovered: widget.backgroundColor.withValues(alpha: 0.9),
+          orElse: widget.backgroundColor,
+        );
+
+        final scale = state.isPressed ? 0.95 : 1.0;
+
+        return AnimatedScale(
+          scale: scale,
+          duration: const Duration(milliseconds: 150),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            decoration: BoxDecoration(
+              color: backgroundColor,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Text(
+              widget.text,
+              style: TextStyle(
+                color: widget.textColor,
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }

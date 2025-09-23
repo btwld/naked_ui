@@ -75,8 +75,6 @@ class AccordionItem extends StatefulWidget {
 }
 
 class _AccordionItemState extends State<AccordionItem> {
-  bool _isHovering = false;
-
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -86,20 +84,20 @@ class _AccordionItemState extends State<AccordionItem> {
       ),
       child: NakedAccordion<String>(
         value: widget.value,
-        onHoverChange: (hovered) => setState(() => _isHovering = hovered),
-        builder: (context, accordionState) {
-          final isExpanded = accordionState.isExpanded;
+        builder: (context, state) {
+          final isExpanded = state.isExpanded;
+          final isHoveredOrExpanded = state.isHovered || isExpanded;
 
           return AnimatedContainer(
             duration: const Duration(milliseconds: 200),
             decoration: BoxDecoration(
               border: Border.all(
-                color: _isHovering || isExpanded
+                color: isHoveredOrExpanded
                     ? Colors.grey.shade100
                     : Colors.grey.shade300,
               ),
               borderRadius: BorderRadius.circular(12),
-              color: _isHovering || isExpanded
+              color: isHoveredOrExpanded
                   ? Colors.grey.shade100
                   : Colors.white,
             ),

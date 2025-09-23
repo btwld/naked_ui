@@ -61,24 +61,22 @@ class _AccordionSection extends StatefulWidget {
 }
 
 class _AccordionSectionState extends State<_AccordionSection> {
-  bool _isHovered = false;
-
   @override
   Widget build(BuildContext context) {
     return NakedAccordion<String>(
       value: widget.value,
-      onHoverChange: (hovered) => setState(() => _isHovered = hovered),
       builder: (context, accordionState) {
         final bool isExpanded = accordionState.isExpanded;
         final bool canExpand = accordionState.canExpand;
         final bool canCollapse = accordionState.canCollapse;
+        final bool isHovered = accordionState.isHovered;
 
         return AnimatedContainer(
           duration: const Duration(milliseconds: 160),
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(12),
-            color: isExpanded || _isHovered ? Colors.grey.shade100 : Colors.white,
+            color: isExpanded || isHovered ? Colors.grey.shade100 : Colors.white,
             border: Border.all(
               color: !canExpand
                   ? Colors.grey.shade400
@@ -181,7 +179,7 @@ const NakedAccordionGroup({
 ```dart
 const NakedAccordion({
   Key? key,
-  required this.builder,
+  required this.builder,        // Recommended approach
   required this.value,
   required this.child,
   this.transitionBuilder,
@@ -190,9 +188,9 @@ const NakedAccordion({
   this.enableFeedback = true,
   this.autofocus = false,
   this.focusNode,
-  this.onFocusChange,
-  this.onHoverChange,
-  this.onPressChange,
+  this.onFocusChange,           // Legacy - prefer builder
+  this.onHoverChange,           // Legacy - prefer builder
+  this.onPressChange,           // Legacy - prefer builder
   this.semanticLabel,
 })
 ```
@@ -200,7 +198,7 @@ const NakedAccordion({
 - `builder` → `NakedAccordionTriggerBuilder<T>` receiving `NakedAccordionItemState<T>`
 - `child` → panel content displayed when expanded
 - `value` → unique identifier tracked by the controller
-- Interaction callbacks mirror other Naked widgets (`onFocusChange`, `onHoverChange`, `onPressChange`)
+- Legacy interaction callbacks: `onFocusChange`, `onHoverChange`, `onPressChange` (prefer `builder` pattern to access `accordionState.isHovered`, etc.)
 - `transitionBuilder` lets you wrap the panel with your own show/hide animation
 - `enabled` / `mouseCursor` / `enableFeedback` provide interaction affordance hooks
 

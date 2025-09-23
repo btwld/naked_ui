@@ -20,9 +20,7 @@ class NakedIntentActions {
   static const _SliderIntentActions slider = _SliderIntentActions();
 }
 
-// =============================================================================
-// BUTTON / ACTIVATION-LIKE WIDGETS
-// =============================================================================
+// Intent helpers for button and activation-based widgets
 
 class _ButtonIntentActions {
   const _ButtonIntentActions();
@@ -60,9 +58,7 @@ class _AccordionIntentActions {
       _activation(onToggle, includeButtonIntent: true);
 }
 
-// =============================================================================
-// TAB
-// =============================================================================
+// Intent helpers for tab widgets
 
 class _TabIntentActions {
   const _TabIntentActions();
@@ -96,9 +92,7 @@ class _TabIntentActions {
   }
 }
 
-// =============================================================================
-// MENU / OVERLAY COLLECTIONS
-// =============================================================================
+// Intent helpers for menu and overlay collection widgets
 
 class _MenuIntentActions {
   const _MenuIntentActions();
@@ -146,9 +140,7 @@ class _MenuIntentActions {
   }
 }
 
-// =============================================================================
-// SELECT / COMBOBOX
-// =============================================================================
+// Intent helpers for select and combobox widgets
 
 class _SelectIntentActions {
   const _SelectIntentActions();
@@ -175,9 +167,7 @@ class _SelectIntentActions {
   }
 }
 
-// =============================================================================
-// DIALOG
-// =============================================================================
+// Intent helpers for dialog widgets
 
 class _DialogIntentActions {
   const _DialogIntentActions();
@@ -189,9 +179,7 @@ class _DialogIntentActions {
   };
 }
 
-// =============================================================================
-// SLIDER
-// =============================================================================
+// Intent helpers for slider widgets
 
 class _SliderIntentActions {
   const _SliderIntentActions();
@@ -255,9 +243,7 @@ class _SliderIntentActions {
   }
 }
 
-// =============================================================================
-// SHARED IMPLEMENTATION DETAILS
-// =============================================================================
+// Shared shortcut definitions and helper functions
 
 const Map<ShortcutActivator, Intent> _buttonShortcuts =
     <ShortcutActivator, Intent>{
@@ -379,9 +365,7 @@ Map<Type, Action<Intent>> _activation(
   return map;
 }
 
-// =============================================================================
-// CUSTOM INTENTS FOR NAVIGATION
-// =============================================================================
+// Custom intent definitions for keyboard navigation and slider actions
 
 /// Intent: Move focus to first item in a collection.
 class _FirstFocusIntent extends Intent {

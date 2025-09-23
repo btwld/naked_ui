@@ -22,8 +22,6 @@ class HeadlessField extends StatefulWidget {
 
 class _HeadlessFieldState extends State<HeadlessField> {
   final controller = TextEditingController();
-  bool _hovered = false;
-  bool _focused = false;
 
   @override
   void dispose() {
@@ -36,9 +34,14 @@ class _HeadlessFieldState extends State<HeadlessField> {
     return NakedTextField(
       controller: controller,
       onChanged: (value) => debugPrint('Value: $value'),
-      onHoverChange: (hovered) => setState(() => _hovered = hovered),
-      onFocusChange: (focused) => setState(() => _focused = focused),
-      builder: (context, editable) {
+      builder: (context, state, editable) {
+        final borderColor = state.when(
+          focused: Colors.blue,
+          hovered: Colors.grey.shade400,
+          orElse: Colors.grey.shade300,
+        );
+        final borderWidth = state.isFocused ? 2 : 1;
+
         return AnimatedContainer(
           duration: const Duration(milliseconds: 160),
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
@@ -46,14 +49,10 @@ class _HeadlessFieldState extends State<HeadlessField> {
             borderRadius: BorderRadius.circular(10),
             color: Colors.white,
             border: Border.all(
-              color: _focused
-                  ? Colors.blue
-                  : _hovered
-                      ? Colors.grey.shade400
-                      : Colors.grey.shade300,
-              width: _focused ? 2 : 1,
+              color: borderColor,
+              width: borderWidth,
             ),
-            boxShadow: _focused
+            boxShadow: state.isFocused
                 ? [
                     BoxShadow(
                       color: Colors.blue.withOpacity(0.12),
@@ -78,11 +77,12 @@ class _HeadlessFieldState extends State<HeadlessField> {
 ```dart
 typedef NakedTextFieldBuilder = Widget Function(
   BuildContext context,
+  NakedTextFieldState state,
   Widget editableText,
 );
 ```
 
-The provided `editableText` widget is an `EditableText` configured with all parameters from `NakedTextField`. Wrap it with decoration, icons, paddings, or animations—just return the composed widget.
+The provided `editableText` widget is an `EditableText` configured with all parameters from `NakedTextField`. The `state` parameter gives you access to interaction states like `state.isFocused`, `state.isHovered`, and `state.when()` for conditional styling. Wrap the editable text with decoration, icons, paddings, or animations—just return the composed widget.
 
 ## Constructor Highlights
 
@@ -147,9 +147,9 @@ const NakedTextField({
   this.canRequestFocus = true,
   this.spellCheckConfiguration,
   this.magnifierConfiguration,
-  this.onHoverChange,
-  this.onFocusChange,
-  this.onPressChange,
+  this.onHoverChange,        // Legacy - prefer builder
+  this.onFocusChange,        // Legacy - prefer builder
+  this.onPressChange,        // Legacy - prefer builder
   this.style,
   required this.builder,
   this.ignorePointers,
@@ -168,7 +168,7 @@ const NakedTextField({
 
 ## Event Hooks
 
-- `onHoverChange`, `onFocusChange`, `onPressChange` → expose interaction states for your decoration logic
+- `onHoverChange`, `onFocusChange`, `onPressChange` → legacy interaction callbacks (prefer `builder` pattern to access `state.isHovered`, `state.isFocused`, etc.)
 - `onTap`, `onTapChange`, `onTapOutside`, `onTapUpOutside` → fine-grained gesture hooks
 - `onChanged`, `onSubmitted`, `onEditingComplete` → forward the underlying `EditableText` callbacks
 

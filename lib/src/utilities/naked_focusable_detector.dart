@@ -143,15 +143,12 @@ class _NakedFocusableDetectorState extends State<NakedFocusableDetector>
     );
 
     // Wrap with MouseRegion if hover detection is needed
-    // Following Material Design behavior: disabled widgets don't respond to
-    // hover interactions but remain in the widget tree for stability
+    // When disabled, MouseRegion still exists (for cursor) but doesn't trigger callbacks
     if (widget.onHoverChange != null) {
       result = MouseRegion(
         onEnter: widget.enabled ? (_) => widget.onHoverChange!(true) : null,
         onExit: widget.enabled ? (_) => widget.onHoverChange!(false) : null,
-        cursor: widget.enabled
-            ? (widget.mouseCursor ?? MouseCursor.defer)
-            : SystemMouseCursors.basic,
+        cursor: widget.mouseCursor ?? MouseCursor.defer,
         child: result,
       );
     }

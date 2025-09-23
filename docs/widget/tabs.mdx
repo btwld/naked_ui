@@ -155,7 +155,7 @@ class _PanelBox extends StatelessWidget {
 `NakedTabState` exposes:
 
 - `tabId` → identifier for the tab
-- `isSelected` → convenience getter supplied via `WidgetState.selected`
+- `isSelected` → convenience getter for selection state
 - `widgetStates` → hover/focus/pressed/disabled flags for styling
 
 ### Access from Context
@@ -198,10 +198,10 @@ const NakedTab({
   this.enableFeedback = true,
   this.focusNode,
   this.autofocus = false,
-  this.onFocusChange,
-  this.onHoverChange,
-  this.onPressChange,
-  this.builder,
+  this.onFocusChange,    // Legacy - prefer builder
+  this.onHoverChange,    // Legacy - prefer builder
+  this.onPressChange,    // Legacy - prefer builder
+  this.builder,          // Recommended approach
   this.semanticLabel,
 })
 ```
@@ -209,7 +209,7 @@ const NakedTab({
 - Provide either `child` or `builder`
 - `builder` → `ValueWidgetBuilder<NakedTabState>?`
 - `semanticLabel` → override accessible name
-- Interaction callbacks mirror other Naked components
+- Legacy interaction callbacks: `onFocusChange`, `onHoverChange`, `onPressChange` (prefer `builder` pattern)
 
 ### NakedTabView
 

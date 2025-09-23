@@ -259,11 +259,11 @@ void main() {
                 return Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: state.states.contains(WidgetState.hovered)
+                    color: state.isHovered
                         ? Colors.blue.shade100
                         : Colors.grey.shade100,
                     border: Border.all(
-                      color: state.states.contains(WidgetState.pressed)
+                      color: state.isPressed
                           ? Colors.blue
                           : Colors.grey,
                       width: 2,

@@ -11,9 +11,7 @@ import 'package:flutter/widgets.dart';
 import '../naked_button.dart';
 import '../utilities/state.dart';
 
-// =============================================================================
-// OVERLAY SCOPE PATTERN
-// =============================================================================
+// Overlay scope pattern implementation
 
 /// Base class for overlay scope widgets that provide context to their children.
 ///
@@ -67,9 +65,7 @@ abstract class OverlayScope<T> extends InheritedWidget {
   }
 }
 
-// =============================================================================
-// OVERLAY ITEM PATTERN
-// =============================================================================
+// Base implementation for overlay item widgets
 
 /// Base class for overlay item widgets (actions, options, etc.)
 ///
@@ -133,9 +129,7 @@ abstract class OverlayItem<T, S extends NakedState> extends StatelessWidget {
   }
 }
 
-// =============================================================================
-// OVERLAY STATE MANAGEMENT
-// =============================================================================
+// State management utilities for overlay widgets
 
 /// Mixin that provides common state management for overlay widgets.
 ///

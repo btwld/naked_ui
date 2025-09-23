@@ -7,7 +7,63 @@ NakedSlider provides interaction behavior and accessibility features without imp
 <Info>
   You can find this example in our [GitHub repository](https://github.com/btwld/naked_ui/blob/main/example/lib/api/naked_slider.0.dart).
 </Info>
-<CodeGroup title="Usage Example" defaultLanguage="dart">
+<CodeGroup title="Builder Pattern (Recommended)" defaultLanguage="dart">
+```dart
+class SliderExample extends StatefulWidget {
+  const SliderExample({super.key});
+
+  @override
+  State<SliderExample> createState() => _SliderExampleState();
+}
+
+class _SliderExampleState extends State<SliderExample> {
+  double _value = 0.5;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 200,
+      child: SizedBox(
+        width: double.infinity,
+        height: 20,
+        child: NakedSlider(
+          value: _value,
+          onChanged: (newValue) {
+            setState(() {
+              _value = newValue;
+            });
+          },
+          builder: (context, state, child) {
+            final thumbColor = state.when(
+              pressed: Colors.blue,
+              hovered: Colors.grey.shade300,
+              orElse: Colors.white,
+            );
+            final borderColor = state.isFocused ? Colors.blue : Colors.black;
+
+            return CustomPaint(
+              foregroundPainter: SliderThumbPainter(
+                value: _value,
+                thumbColor: thumbColor,
+                thumbSize: 18,
+                borderColor: borderColor,
+              ),
+              painter: SliderTrackPainter(
+                value: _value,
+                activeTrackColor: Colors.black,
+                trackColor: Colors.black.withValues(alpha: 0.1),
+              ),
+            );
+          },
+        ),
+      ),
+    );
+  }
+}
+```
+</CodeGroup>
+
+<CodeGroup title="Static Child Pattern" defaultLanguage="dart">
 ```dart
 class SliderExample extends StatefulWidget {
   const SliderExample({super.key});
@@ -161,16 +217,16 @@ class SliderThumbPainter extends CustomPainter {
 const NakedSlider({
   Key? key,
   this.child,
-  this.builder,
+  this.builder,              // Recommended approach
   required this.value,
   this.min = 0.0,
   this.max = 1.0,
   this.onChanged,
   this.onDragStart,
   this.onDragEnd,
-  this.onHoverChange,
+  this.onHoverChange,        // Legacy - prefer builder
   this.onDragChange,
-  this.onFocusChange,
+  this.onFocusChange,        // Legacy - prefer builder
   this.enabled = true,
   this.mouseCursor = SystemMouseCursors.click,
   this.enableFeedback = true,
@@ -210,14 +266,14 @@ Called when the user starts dragging the slider.
 #### onDragEnd → `ValueChanged<double>?`
 Called when the user ends dragging the slider.
 
-#### onHoverChange → `ValueChanged<bool>?`
-Called when hover state changes. Provides the current hover state (true when hovered, false otherwise).
+#### onHoverChange → `ValueChanged<bool>?` (Legacy)
+Called when hover state changes. Provides the current hover state (true when hovered, false otherwise). **Note**: This is legacy - prefer using the `builder` pattern to access `state.isHovered`.
 
 #### onDragChange → `ValueChanged<bool>?`
 Called when dragging state changes. Provides the current dragging state (true when dragging, false otherwise).
 
-#### onFocusChange → `ValueChanged<bool>?`
-Called when focus state changes. Provides the current focus state (true when focused, false otherwise).
+#### onFocusChange → `ValueChanged<bool>?` (Legacy)
+Called when focus state changes. Provides the current focus state (true when focused, false otherwise). **Note**: This is legacy - prefer using the `builder` pattern to access `state.isFocused`.
 
 #### enabled → `bool`
 Whether the slider is enabled. When true, the slider will respond to user interaction. Defaults to true.

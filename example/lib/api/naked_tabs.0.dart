@@ -127,45 +127,44 @@ class TabItem extends StatefulWidget {
 }
 
 class _TabItemState extends State<TabItem> {
-  bool _isHovered = false;
-
-  Color get _backgroundColor {
-    if (widget.isSelected) return Colors.white;
-    if (_isHovered) return Colors.grey.shade200;
-    return Colors.grey.shade100;
-  }
-
-  Color get _textColor {
-    if (widget.isSelected) return Colors.black87;
-    return Colors.black38;
-  }
-
   @override
   Widget build(BuildContext context) {
     return NakedTab(
       tabId: widget.tabId,
-      onHoverChange: (hovered) => setState(() => _isHovered = hovered),
-      child: Container(
-        alignment: Alignment.center,
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-        decoration: BoxDecoration(
-          color: _backgroundColor,
-          borderRadius: const BorderRadius.only(
-            topLeft: Radius.circular(4),
-            topRight: Radius.circular(4),
+      builder: (context, state, child) {
+        final backgroundColor = widget.isSelected
+            ? Colors.white
+            : state.when(
+                hovered: Colors.grey.shade200,
+                orElse: Colors.grey.shade100,
+              );
+
+        final textColor = widget.isSelected
+            ? Colors.black87
+            : Colors.black38;
+
+        return Container(
+          alignment: Alignment.center,
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          decoration: BoxDecoration(
+            color: backgroundColor,
+            borderRadius: const BorderRadius.only(
+              topLeft: Radius.circular(4),
+              topRight: Radius.circular(4),
+            ),
           ),
-        ),
-        child: AnimatedDefaultTextStyle(
-          duration: const Duration(milliseconds: 150),
-          style: TextStyle(
-            color: _textColor,
-            fontWeight: FontWeight.bold,
+          child: AnimatedDefaultTextStyle(
+            duration: const Duration(milliseconds: 150),
+            style: TextStyle(
+              color: textColor,
+              fontWeight: FontWeight.bold,
+            ),
+            child: Text(
+              widget.label,
+            ),
           ),
-          child: Text(
-            widget.label,
-          ),
-        ),
-      ),
+        );
+      },
     );
   }
 }

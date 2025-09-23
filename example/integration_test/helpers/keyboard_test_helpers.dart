@@ -3,6 +3,21 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 extension KeyboardTestHelpers on WidgetTester {
+  /// Performs cleanup between tests to prevent gesture and focus state leakage.
+  /// Call this in tearDown() to ensure proper test isolation.
+  Future<void> cleanupBetweenTests() async {
+    // Clear any remaining focus
+    FocusManager.instance.primaryFocus?.unfocus();
+
+    // Reset focus highlight strategy to default
+    FocusManager.instance.highlightStrategy = FocusHighlightStrategy.automatic;
+
+    // Allow any pending animations to complete
+    await pumpAndSettle();
+
+    // Clear any pending timers or animations
+    await pump(const Duration(milliseconds: 100));
+  }
   /// Test tab navigation order through a list of widgets without relying on raw key events.
   /// Uses Focus traversal directly to avoid platform keyboard flakiness in integration runs.
   Future<void> verifyTabOrder(List<Finder> expectedOrder) async {

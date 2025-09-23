@@ -198,8 +198,6 @@ class NakedTextField extends StatefulWidget {
        ),
        assert(maxLength == null || maxLength > 0);
 
-  // ==== Public API ====
-
   /// The magnifier configuration (defaults to platform-appropriate).
   final TextMagnifierConfiguration? magnifierConfiguration;
 
@@ -372,7 +370,7 @@ class _NakedTextFieldState extends State<NakedTextField>
   final GlobalKey<EditableTextState> editableTextKey =
       GlobalKey<EditableTextState>();
 
-  // === Lifecycle ===
+  // State management and lifecycle methods
 
   @override
   void initState() {
@@ -385,13 +383,18 @@ class _NakedTextFieldState extends State<NakedTextField>
       _createLocalController();
     }
 
-    // IMPORTANT: No MediaQuery reads here.
+    // Set initial focus capabilities based on widget properties.
+    // MediaQuery access is deferred to didChangeDependencies.
     _effectiveFocusNode.canRequestFocus =
         widget.canRequestFocus && widget.enabled;
     _effectiveFocusNode.addListener(_handleFocusChange);
-  } // === Helpers ===
+    // Attach controller listener now only when using an external controller.
+    if (widget.controller != null) {
+      widget.controller!.addListener(_handleControllerChanged);
+    }
+  }
 
-  // Compute focusability from a cached nav mode (no MediaQuery reads here).
+  // Determines if focus can be requested based on navigation mode.
   bool _canRequestFocusFor(NavigationMode? mode) {
     switch (mode) {
       case NavigationMode.directional:
@@ -414,8 +417,17 @@ class _NakedTextFieldState extends State<NakedTextField>
 
   void _requestKeyboard() => _editableText?.requestKeyboard();
 
+  // Rebuild on text changes to keep Semantics and NakedTextFieldState in sync.
+  void _handleControllerChanged() {
+    if (!mounted) return;
+    // ignore: no-empty-block
+    setState(() {});
+  }
+
   void _handleFocusChange() {
-    widget.onFocusChange?.call(_effectiveFocusNode.hasFocus);
+    final focused = _effectiveFocusNode.hasFocus;
+    // Keep WidgetStates in sync and fire callback only when changed.
+    updateFocusState(focused, widget.onFocusChange);
     if (!mounted) return;
     // Rebuild for selection highlight & semantics updates tied to focus.
     // ignore: no-empty-block
@@ -485,10 +497,10 @@ class _NakedTextFieldState extends State<NakedTextField>
   }
 
   void _handleMouseEnter(PointerEnterEvent _) =>
-      widget.onHoverChange?.call(true);
+      updateHoverState(true, widget.onHoverChange);
 
   void _handleMouseExit(PointerExitEvent _) =>
-      widget.onHoverChange?.call(false);
+      updateHoverState(false, widget.onHoverChange);
 
   @override
   void initializeWidgetStates() {
@@ -498,7 +510,7 @@ class _NakedTextFieldState extends State<NakedTextField>
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    // Now it's legal to read MediaQuery.
+    // Read navigation mode from MediaQuery after dependencies are available.
     _navMode = MediaQuery.maybeNavigationModeOf(context);
     _effectiveFocusNode.canRequestFocus = _canRequestFocusFor(_navMode);
   }
@@ -508,12 +520,25 @@ class _NakedTextFieldState extends State<NakedTextField>
     super.didUpdateWidget(oldWidget);
 
     // Controller ownership swap while preserving state/restoration.
+    final TextEditingController? oldEffectiveController =
+        oldWidget.controller ?? _controller?.value;
     if (widget.controller == null && oldWidget.controller != null) {
       _createLocalController(oldWidget.controller!.value);
     } else if (widget.controller != null && oldWidget.controller == null) {
+      // Detach listener before unregistering/disposal to avoid accessing
+      // RestorableListenable.value while unregistered.
+      _controller!.value.removeListener(_handleControllerChanged);
       unregisterFromRestoration(_controller!);
       _controller!.dispose();
       _controller = null;
+    }
+
+    // After potential swap, compute the new effective controller and maintain listener.
+    final TextEditingController? newEffectiveController =
+        widget.controller ?? _controller?.value;
+    if (!identical(newEffectiveController, oldEffectiveController)) {
+      oldEffectiveController?.removeListener(_handleControllerChanged);
+      newEffectiveController?.addListener(_handleControllerChanged);
     }
 
     // Focus node swap: keep our listener correct.
@@ -522,7 +547,7 @@ class _NakedTextFieldState extends State<NakedTextField>
       (widget.focusNode ?? _focusNode)?.addListener(_handleFocusChange);
     }
 
-    // DO NOT read MediaQuery here; reuse cached mode (updated in didChangeDependencies).
+    // Use cached navigation mode to avoid MediaQuery access during widget updates.
     _effectiveFocusNode.canRequestFocus = _canRequestFocusFor(_navMode);
 
     // If readOnly changed while focused, recompute handle visibility.
@@ -543,12 +568,17 @@ class _NakedTextFieldState extends State<NakedTextField>
   void restoreState(RestorationBucket? oldBucket, bool initialRestore) {
     if (_controller != null) {
       registerForRestoration(_controller!, 'controller');
+      // Attach listener after restoration registration for local controller.
+      _controller!.value.addListener(_handleControllerChanged);
     }
   }
 
   @override
   void dispose() {
     _effectiveFocusNode.removeListener(_handleFocusChange);
+    // Detach controller listener to avoid leaks.
+    widget.controller?.removeListener(_handleControllerChanged);
+    _controller?.value.removeListener(_handleControllerChanged);
     _focusNode?.dispose();
     _controller?.dispose();
     super.dispose();
@@ -590,7 +620,7 @@ class _NakedTextFieldState extends State<NakedTextField>
 
   EditableTextState? get _editableText => editableTextKey.currentState;
 
-  // === AutofillClient ===
+  // AutofillClient implementation
 
   @override
   String get autofillId => _editableText!.autofillId;
@@ -615,7 +645,7 @@ class _NakedTextFieldState extends State<NakedTextField>
   @override
   String? get restorationId => widget.restorationId;
 
-  // === Build ===
+  // Widget building and rendering
 
   @override
   Widget build(BuildContext context) {
@@ -822,7 +852,7 @@ class _NakedTextFieldState extends State<NakedTextField>
   }
 }
 
-// == Selection gesture builder ==
+// Text selection gesture handling
 
 class _NakedSelectionGestureDetectorBuilder
     extends TextSelectionGestureDetectorBuilder {
@@ -863,7 +893,7 @@ class _NakedSelectionGestureDetectorBuilder
   bool get onUserTapAlwaysCalled => _state.widget.onTapAlwaysCalled;
 }
 
-// == Centralized platform defaults (adaptive styling & behavior) ==
+// Platform-specific styling and behavior defaults
 
 class _PlatformDefaults {
   final bool forcePressEnabled;

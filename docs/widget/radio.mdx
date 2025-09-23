@@ -100,7 +100,7 @@ class _RadioChip extends StatelessWidget {
 `NakedRadioState<T>` (delivered to the builder) exposes:
 
 - `value` → radio value for this option
-- `isSelected` → convenience getter (via `WidgetState.selected`)
+- `isSelected` → convenience getter for selection state
 - `widgetStates` → hover/focus/pressed/disabled information
 
 ### Access from Context
@@ -135,10 +135,10 @@ const NakedRadio<T>({
   this.focusNode,
   this.autofocus = false,
   this.toggleable = false,
-  this.onFocusChange,
-  this.onHoverChange,
-  this.onPressChange,
-  this.builder,
+  this.onFocusChange,    // Legacy - prefer builder
+  this.onHoverChange,    // Legacy - prefer builder
+  this.onPressChange,    // Legacy - prefer builder
+  this.builder,          // Recommended approach
   this.groupRegistry,
 })
 ```
@@ -149,7 +149,7 @@ Key notes:
 - `builder` → `ValueWidgetBuilder<NakedRadioState<T>>?`
 - `toggleable` lets the selected radio clear the group when activated again
 - Pass `focusNode` to integrate with external focus management
-- Omit `onPressChange`/`onHoverChange` for lighter usage; they are optional hooks
+- Legacy interaction callbacks: `onPressChange`/`onHoverChange`/`onFocusChange` (prefer `builder` pattern)
 
 ## Accessibility Tips
 

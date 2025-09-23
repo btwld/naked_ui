@@ -61,18 +61,16 @@ Each snippet shows the essence of using a component inside a `StatefulWidget`. R
 ```dart
 NakedButton(
   onPressed: () => debugPrint('Pressed'),
-  builder: (context, states, _) {
-    final bool pressed = states.contains(WidgetState.pressed);
-    final bool hovered = states.contains(WidgetState.hovered);
+  builder: (context, state, _) {
     return AnimatedContainer(
       duration: const Duration(milliseconds: 120),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       decoration: BoxDecoration(
-        color: pressed
-            ? Colors.blue.shade700
-            : hovered
-                ? Colors.blue.shade500
-                : Colors.blue,
+        color: state.when(
+          pressed: Colors.blue.shade700,
+          hovered: Colors.blue.shade500,
+          orElse: Colors.blue,
+        ),
         borderRadius: BorderRadius.circular(8),
       ),
       child: const Text('Button', style: TextStyle(color: Colors.white)),
@@ -89,11 +87,14 @@ bool checked = false;
 NakedCheckbox(
   value: checked,
   onChanged: (next) => setState(() => checked = next ?? false),
-  builder: (context, checkboxState, _) => Icon(
-    checkboxState.isChecked == true
+  builder: (context, state, _) => Icon(
+    state.isChecked == true
         ? Icons.check_box
         : Icons.check_box_outline_blank,
-    color: checkboxState.isHovered ? Colors.blue : Colors.grey.shade700,
+    color: state.when(
+      hovered: Colors.blue,
+      orElse: Colors.grey.shade700,
+    ),
   ),
 );
 ```
@@ -108,16 +109,22 @@ RadioGroup<String>(
     children: ['A', 'B'].map((label) {
       return NakedRadio<String>(
         value: label,
-        builder: (context, radioState, _) => AnimatedContainer(
+        builder: (context, state, _) => AnimatedContainer(
           duration: const Duration(milliseconds: 100),
           margin: const EdgeInsets.only(right: 12),
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: radioState.isSelected ? Colors.blue : Colors.white,
+            color: state.isSelected ? Colors.blue : Colors.white,
             border: Border.all(
-              color: radioState.isHovered ? Colors.blue : Colors.grey.shade400,
-              width: radioState.isPressed ? 4 : 2,
+              color: state.when(
+                hovered: Colors.blue,
+                orElse: Colors.grey.shade400,
+              ),
+              width: state.when(
+                pressed: 4,
+                orElse: 2,
+              ),
             ),
           ),
         ),
@@ -133,12 +140,12 @@ RadioGroup<String>(
 NakedSelect<String>(
   value: fruit,
   onChanged: (value) => setState(() => fruit = value),
-  builder: (context, selectState, _) {
+  builder: (context, state, _) {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text(selectState.value ?? 'Pick fruit'),
-        Icon(selectState.isOpen ? Icons.expand_less : Icons.expand_more),
+        Text(state.value ?? 'Pick fruit'),
+        Icon(state.isOpen ? Icons.expand_less : Icons.expand_more),
       ],
     );
   },
@@ -147,9 +154,13 @@ NakedSelect<String>(
     children: ['Apple', 'Banana', 'Mango']
         .map((label) => NakedSelect.Option<String>(
               value: label.toLowerCase(),
-              builder: (context, optionState, _) => ListTile(
+              builder: (context, state, _) => ListTile(
                 title: Text(label),
-                trailing: optionState.isSelected
+                tileColor: state.when(
+                  hovered: Colors.grey.shade100,
+                  orElse: Colors.transparent,
+                ),
+                trailing: state.isSelected
                     ? const Icon(Icons.check)
                     : null,
               ),
@@ -202,16 +213,19 @@ NakedToggle(
   value: isOn,
   asSwitch: true,
   onChanged: (value) => setState(() => isOn = value),
-  builder: (context, toggleState, _) => AnimatedContainer(
+  builder: (context, state, _) => AnimatedContainer(
     duration: const Duration(milliseconds: 150),
     width: 48,
     height: 28,
     decoration: BoxDecoration(
       borderRadius: BorderRadius.circular(14),
-      color: toggleState.isToggled ? Colors.green : Colors.grey.shade400,
+      color: state.when(
+        hovered: state.isToggled ? Colors.green.shade600 : Colors.grey.shade500,
+        orElse: state.isToggled ? Colors.green : Colors.grey.shade400,
+      ),
     ),
     alignment:
-        toggleState.isToggled ? Alignment.centerRight : Alignment.centerLeft,
+        state.isToggled ? Alignment.centerRight : Alignment.centerLeft,
     padding: const EdgeInsets.all(3),
     child: const DecoratedBox(
       decoration: BoxDecoration(shape: BoxShape.circle, color: Colors.white),
@@ -235,10 +249,13 @@ NakedTabs(
               padding: const EdgeInsets.only(right: 8),
               child: NakedTab(
                 tabId: id,
-                builder: (context, tabState, _) => Chip(
+                builder: (context, state, _) => Chip(
                   label: Text(id),
-                  backgroundColor:
-                      tabState.isSelected ? Colors.blue : Colors.grey.shade200,
+                  backgroundColor: state.when(
+                    selected: Colors.blue,
+                    hovered: Colors.grey.shade300,
+                    orElse: Colors.grey.shade200,
+                  ),
                 ),
               ),
             );
@@ -270,10 +287,18 @@ NakedAccordionGroup<int>(
   children: [
     NakedAccordion<int>(
       value: 0,
-      builder: (context, itemState) => ListTile(
-        title: const Text('Section 1'),
-        trailing: Icon(
-          itemState.isExpanded ? Icons.expand_less : Icons.expand_more,
+      builder: (context, state) => Container(
+        decoration: BoxDecoration(
+          color: state.when(
+            hovered: Colors.grey.shade100,
+            orElse: Colors.transparent,
+          ),
+        ),
+        child: ListTile(
+          title: const Text('Section 1'),
+          trailing: Icon(
+            state.isExpanded ? Icons.expand_less : Icons.expand_more,
+          ),
         ),
       ),
       child: const Padding(
@@ -283,10 +308,18 @@ NakedAccordionGroup<int>(
     ),
     NakedAccordion<int>(
       value: 1,
-      builder: (context, itemState) => ListTile(
-        title: const Text('Section 2'),
-        trailing: Icon(
-          itemState.isExpanded ? Icons.expand_less : Icons.expand_more,
+      builder: (context, state) => Container(
+        decoration: BoxDecoration(
+          color: state.when(
+            hovered: Colors.grey.shade100,
+            orElse: Colors.transparent,
+          ),
+        ),
+        child: ListTile(
+          title: const Text('Section 2'),
+          trailing: Icon(
+            state.isExpanded ? Icons.expand_less : Icons.expand_more,
+          ),
         ),
       ),
       child: const Padding(
@@ -306,13 +339,40 @@ final menuController = MenuController();
 NakedMenu<String>(
   controller: menuController,
   onSelected: (value) => setState(() => action = value),
-  builder: (context, menuState, _) =>
-      Text(menuState.isOpen ? 'Close' : 'Open'),
+  builder: (context, state, _) => Container(
+    padding: const EdgeInsets.all(8),
+    decoration: BoxDecoration(
+      color: state.when(
+        hovered: Colors.grey.shade200,
+        orElse: Colors.transparent,
+      ),
+      borderRadius: BorderRadius.circular(4),
+    ),
+    child: Text(state.isOpen ? 'Close' : 'Open'),
+  ),
   overlayBuilder: (context, info) => Column(
     mainAxisSize: MainAxisSize.min,
     children: [
-      NakedMenu.Item(value: 'edit', child: const Text('Edit')),
-      NakedMenu.Item(value: 'delete', child: const Text('Delete')),
+      NakedMenu.Item(
+        value: 'edit',
+        builder: (context, state, _) => Container(
+          color: state.when(
+            hovered: Colors.grey.shade200,
+            orElse: Colors.transparent,
+          ),
+          child: const ListTile(title: Text('Edit')),
+        ),
+      ),
+      NakedMenu.Item(
+        value: 'delete',
+        builder: (context, state, _) => Container(
+          color: state.when(
+            hovered: Colors.grey.shade200,
+            orElse: Colors.transparent,
+          ),
+          child: const ListTile(title: Text('Delete')),
+        ),
+      ),
     ],
   ),
 );
@@ -399,10 +459,134 @@ NakedTextField(
 
 ---
 
+## Testing
+
+This package includes comprehensive unit and integration tests for all components.
+
+### Quick Start - Running Tests
+
+```bash
+# Run unit tests only (default)
+dart tool/test.dart
+
+# Run all tests (unit + integration)
+dart tool/test.dart --all
+
+# Run integration tests only
+dart tool/test.dart --integration
+
+# Run specific component integration tests
+dart tool/test.dart --component=button
+dart tool/test.dart --component=textfield
+
+# Get detailed output for debugging
+dart tool/test.dart --all --verbose
+```
+
+### Test Types
+
+#### Unit Tests
+- Fast, isolated tests for widget behavior and semantics
+- Located in `test/` directory
+- Run automatically on every test command
+
+#### Integration Tests
+- Full UI automation tests on macOS
+- Test real user interactions: hover, click, keyboard navigation
+- Located in `example/integration_test/components/`
+- Individual component tests available
+
+### Available Integration Test Components
+
+- **button** - NakedButton interactions and states
+- **checkbox** - NakedCheckbox toggle and accessibility
+- **radio** - NakedRadio selection and groups
+- **slider** - NakedSlider dragging and value changes
+- **textfield** - NakedTextField input and validation
+- **select** - NakedSelect dropdown and selection
+- **popover** - NakedPopover positioning and dismissal
+- **tooltip** - NakedTooltip display and timing
+- **menu** - NakedMenu navigation and actions
+- **accordion** - NakedAccordion expand/collapse
+- **tabs** - NakedTabs switching and keyboard nav
+- **dialog** - NakedDialog modal behavior
+
+### Prerequisites
+
+1. **macOS platform support** (for integration tests):
+   ```bash
+   flutter create --platforms=macos .
+   ```
+
+2. **Flutter dependencies up to date**:
+   ```bash
+   flutter pub get
+   ```
+
+### Troubleshooting
+
+#### Integration Tests Hang or Fail
+
+1. **Check app runs manually first**:
+   ```bash
+   flutter run -d macos
+   ```
+
+2. **Run individual component tests**:
+   ```bash
+   dart tool/test.dart --component=button
+   ```
+
+3. **Use verbose output for details**:
+   ```bash
+   dart tool/test.dart --integration --verbose
+   ```
+
+#### Test Environment
+
+- **Platform**: macOS required for integration tests
+- **Timeout**: 5-minute timeout for full integration suite
+- **Environment**: `RUN_INTEGRATION=1` set automatically by test script
+- **Reporter**: Compact by default, expanded with `--verbose`
+
+---
+
+## Development
+
+### Melos Support
+
+This project uses [Melos](https://melos.invertase.dev/) for monorepo management:
+
+```bash
+# Install melos globally
+dart pub global activate melos
+
+# Bootstrap the workspace
+melos bootstrap
+
+# Run tests via melos
+melos run test
+melos run test:integration
+melos run test:all
+```
+
+### CI/CD
+
+The test script is designed for CI environments:
+
+```yaml
+# Example GitHub Actions
+- name: Run tests
+  run: dart tool/test.dart --all
+```
+
+---
+
 ## Further Reading
 
 - Documentation hub: https://docs.page/btwld/naked_ui
 - Example app: `example/lib/main.dart`
 - Migration guide: `MIGRATION.md`
+- Testing guide: `example/README.md#testing`
 
 Need deeper guidance or have questions? Open an issue on GitHub or reach out in the docs discussions.
