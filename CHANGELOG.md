@@ -12,7 +12,6 @@
 
 ## 0.0.1-dev.2 (2025-07-03)
 
-
 ### Features
 
 * "Naked" - A Behavior-First UI Component Library for Flutter ([#579](https://github.com/btwld/naked_ui/issues/579)) ([c55b55f](https://github.com/btwld/naked_ui/commit/c55b55ffa47206fd49da9eebf85e834b5f08220e))
