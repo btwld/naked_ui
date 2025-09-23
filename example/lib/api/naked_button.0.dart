@@ -21,40 +21,32 @@ class MyApp extends StatelessWidget {
   }
 }
 
-class ButtonExample extends StatefulWidget {
+class ButtonExample extends StatelessWidget {
   const ButtonExample({super.key});
 
   @override
-  State<ButtonExample> createState() => _ButtonExampleState();
-}
-
-class _ButtonExampleState extends State<ButtonExample> {
-  @override
   Widget build(BuildContext context) {
-    const baseColor = Color(0xFF3D3D3D);
-
     return NakedButton(
       onPressed: () {
         debugPrint('Button pressed!');
       },
-      builder: (context, state, child) {
-        final backgroundColor = state.when(
+      builder: (context, buttonState, child) {
+        const baseColor = Color(0xFF3D3D3D);
+
+        final backgroundColor = buttonState.when(
           pressed: baseColor.withValues(alpha: 0.8),
           hovered: baseColor.withValues(alpha: 0.9),
           orElse: baseColor,
         );
 
-        final scale = state.when(
-          pressed: 0.95,
-          orElse: 1.0,
-        );
+        final scale = buttonState.isPressed ? 0.95 : 1.0;
 
         return Container(
           padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 2),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(14),
             border: Border.all(
-              color: state.isFocused ? Colors.black : Colors.transparent,
+              color: buttonState.isFocused ? Colors.black : Colors.transparent,
               width: 1,
             ),
           ),
