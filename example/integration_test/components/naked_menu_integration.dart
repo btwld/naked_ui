@@ -1,10 +1,9 @@
 import 'package:example/api/naked_menu.0.dart' as menu_example;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:naked_ui/naked_ui.dart';
-
-import '../helpers/test_helpers.dart';
 
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
@@ -168,12 +167,12 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('Menu Content'), findsOneWidget);
 
-      // Test keyboard navigation - Escape should close menu
-      await tester.testKeyboardActivation(find.byKey(menuKey));
+      // Test keyboard navigation: pressing Escape should close the menu
+      await tester.sendKeyEvent(LogicalKeyboardKey.escape);
       await tester.pumpAndSettle();
 
-      // Menu should still be open (keyboard activation tests Enter, not Escape)
-      expect(find.text('Menu Content'), findsOneWidget);
+      // Menu should be closed after Escape
+      expect(find.text('Menu Content'), findsNothing);
     });
 
     testWidgets('menu closes on outside tap when enabled', (tester) async {

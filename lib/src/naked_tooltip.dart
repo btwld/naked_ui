@@ -1,9 +1,48 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/widgets.dart';
 
+import 'mixins/naked_mixins.dart';
+import 'utilities/naked_state_scope.dart';
 import 'utilities/positioning.dart';
+import 'utilities/state.dart';
+
+/// Immutable view passed to [NakedTooltip.builder].
+class NakedTooltipState extends NakedState {
+  /// Whether the tooltip is currently open.
+  final bool isOpen;
+
+  NakedTooltipState({required super.states, required this.isOpen});
+
+  /// Returns the nearest [NakedTooltipState] provided by [NakedStateScope].
+  static NakedTooltipState of(BuildContext context) => NakedState.of(context);
+
+  /// Returns the nearest [NakedTooltipState] if one is available.
+  static NakedTooltipState? maybeOf(BuildContext context) =>
+      NakedState.maybeOf(context);
+
+  /// Returns the [WidgetStatesController] from the nearest scope.
+  static WidgetStatesController controllerOf(BuildContext context) =>
+      NakedState.controllerOf(context);
+
+  /// Returns the [WidgetStatesController] from the nearest scope, if any.
+  static WidgetStatesController? maybeControllerOf(BuildContext context) =>
+      NakedState.maybeControllerOf(context);
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+
+    return other is NakedTooltipState &&
+        setEquals(other.states, states) &&
+        other.isOpen == isOpen;
+  }
+
+  @override
+  int get hashCode => Object.hash(states, isOpen);
+}
 
 /// Provides tooltip behavior without visual styling.
 ///
@@ -73,7 +112,8 @@ class NakedTooltip extends StatefulWidget {
   /// Creates a headless tooltip.
   const NakedTooltip({
     super.key,
-    required this.child,
+    this.child,
+    this.builder,
     required this.overlayBuilder,
     this.showDuration = const Duration(seconds: 2),
     this.waitDuration = const Duration(seconds: 1),
@@ -86,13 +126,19 @@ class NakedTooltip extends StatefulWidget {
     this.onOpenRequested,
     this.onCloseRequested,
     this.semanticsLabel,
-  });
+  }) : assert(
+         child != null || builder != null,
+         'Either child or builder must be provided',
+       );
 
   /// See also:
   /// - [NakedPopover], for anchored, click-triggered overlays.
 
   /// The widget that triggers the tooltip.
-  final Widget child;
+  final Widget? child;
+
+  /// Builds the tooltip trigger using the current [NakedTooltipState].
+  final ValueWidgetBuilder<NakedTooltipState>? builder;
 
   /// The tooltip content overlayBuilder.
   final RawMenuAnchorOverlayBuilder overlayBuilder;
@@ -131,7 +177,8 @@ class NakedTooltip extends StatefulWidget {
   State<NakedTooltip> createState() => _NakedTooltipState();
 }
 
-class _NakedTooltipState extends State<NakedTooltip> {
+class _NakedTooltipState extends State<NakedTooltip>
+    with WidgetStatesMixin<NakedTooltip> {
   // ignore: dispose-fields
   final _menuController = MenuController();
   Timer? _showTimer;
@@ -170,6 +217,17 @@ class _NakedTooltipState extends State<NakedTooltip> {
 
   @override
   Widget build(BuildContext context) {
+    final tooltipState = NakedTooltipState(
+      states: widgetStates,
+      isOpen: _menuController.isOpen,
+    );
+
+    final content = widget.builder != null
+        ? widget.builder!(context, tooltipState, widget.child)
+        : widget.child!;
+
+    final wrappedContent = NakedStateScope(value: tooltipState, child: content);
+
     return RawMenuAnchor(
       consumeOutsideTaps: false, // Do not consume taps for tooltips
       onOpen: _handleOpen,
@@ -197,7 +255,7 @@ class _NakedTooltipState extends State<NakedTooltip> {
         child: MouseRegion(
           onEnter: _handleMouseEnter,
           onExit: _handleMouseExit,
-          child: widget.child,
+          child: wrappedContent,
         ),
       ),
     );

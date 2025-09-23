@@ -16,10 +16,75 @@ import 'package:flutter/material.dart'
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
+import 'mixins/naked_mixins.dart';
 import 'utilities/naked_focusable_detector.dart';
+import 'utilities/naked_state_scope.dart';
+import 'utilities/state.dart';
 
 typedef NakedTextFieldBuilder =
     Widget Function(BuildContext context, Widget editableText);
+
+/// Immutable view passed to [NakedTextField.builder].
+class NakedTextFieldState extends NakedState {
+  /// The current text value.
+  final String text;
+
+  /// Whether the text field is currently focused.
+  final bool isFocused;
+
+  /// Whether the text field has text content.
+  final bool hasText;
+
+  /// Whether the text field is read-only.
+  final bool isReadOnly;
+
+  /// Whether the text field is enabled.
+  final bool isEnabled;
+
+  NakedTextFieldState({
+    required super.states,
+    required this.text,
+    required this.isFocused,
+    required this.hasText,
+    required this.isReadOnly,
+    required this.isEnabled,
+  });
+
+  /// Returns the nearest [NakedTextFieldState] provided by [NakedStateScope].
+  static NakedTextFieldState of(BuildContext context) => NakedState.of(context);
+
+  /// Returns the nearest [NakedTextFieldState] if one is available.
+  static NakedTextFieldState? maybeOf(BuildContext context) =>
+      NakedState.maybeOf(context);
+
+  /// Returns the [WidgetStatesController] from the nearest scope.
+  static WidgetStatesController controllerOf(BuildContext context) =>
+      NakedState.controllerOf(context);
+
+  /// Returns the [WidgetStatesController] from the nearest scope, if any.
+  static WidgetStatesController? maybeControllerOf(BuildContext context) =>
+      NakedState.maybeControllerOf(context);
+
+  /// Whether the text field is empty.
+  bool get isEmpty => !hasText;
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+
+    return other is NakedTextFieldState &&
+        setEquals(other.states, states) &&
+        other.text == text &&
+        other.isFocused == isFocused &&
+        other.hasText == hasText &&
+        other.isReadOnly == isReadOnly &&
+        other.isEnabled == isEnabled;
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(states, text, isFocused, hasText, isReadOnly, isEnabled);
+}
 
 /// Headless, builder-first text input built on [EditableText].
 ///
@@ -105,7 +170,7 @@ class NakedTextField extends StatefulWidget {
     this.onFocusChange,
     this.onPressChange,
     this.style,
-    required this.builder,
+    this.builder,
     this.ignorePointers,
     this.semanticLabel,
     this.semanticHint,
@@ -118,6 +183,7 @@ class NakedTextField extends StatefulWidget {
            (obscureText ? SmartQuotesType.disabled : SmartQuotesType.enabled),
        assert(maxLines == null || maxLines > 0),
        assert(minLines == null || minLines > 0),
+       assert(builder != null, 'NakedTextField requires a builder'),
        assert(
          (maxLines == null) || (minLines == null) || (maxLines >= minLines),
          "minLines can't be greater than maxLines",
@@ -281,7 +347,7 @@ class NakedTextField extends StatefulWidget {
   final bool? ignorePointers;
 
   /// Builds the visual wrapper around the underlying [EditableText].
-  final NakedTextFieldBuilder builder;
+  final NakedTextFieldBuilder? builder;
 
   /// Semantics
   final String? semanticLabel;
@@ -292,7 +358,7 @@ class NakedTextField extends StatefulWidget {
 }
 
 class _NakedTextFieldState extends State<NakedTextField>
-    with RestorationMixin
+    with RestorationMixin, WidgetStatesMixin<NakedTextField>
     implements TextSelectionGestureDetectorBuilderDelegate, AutofillClient {
   // Neutral base colors that don't imply a design system.
   static const Color _defaultTextColor = Color(0xFF000000);
@@ -302,39 +368,9 @@ class _NakedTextFieldState extends State<NakedTextField>
   // iOS cursor horizontal offset (native-looking nudge).
   static const int _iOSHorizontalOffset = -2;
 
-  RestorableTextEditingController? _controller;
-  TextEditingController get _effectiveController =>
-      widget.controller ?? _controller!.value;
-
-  FocusNode? _focusNode;
-  FocusNode get _effectiveFocusNode =>
-      widget.focusNode ?? (_focusNode ??= FocusNode());
-
-  MaxLengthEnforcement get _effectiveMaxLengthEnforcement =>
-      widget.maxLengthEnforcement ??
-      LengthLimitingTextInputFormatter.getDefaultMaxLengthEnforcement(
-        defaultTargetPlatform,
-      );
-
-  late TextSelectionGestureDetectorBuilder _selectionGestureDetectorBuilder;
-
-  bool _showSelectionHandles = false;
-
-  // Track the current navigation mode from MediaQuery.
-  NavigationMode? _navMode;
-
-  // TextSelectionGestureDetectorBuilderDelegate
-  @override
-  late bool forcePressEnabled;
-
   @override
   final GlobalKey<EditableTextState> editableTextKey =
       GlobalKey<EditableTextState>();
-
-  @override
-  bool get selectionEnabled => widget.enableInteractiveSelection;
-
-  EditableTextState? get _editableText => editableTextKey.currentState;
 
   // === Lifecycle ===
 
@@ -353,9 +389,7 @@ class _NakedTextFieldState extends State<NakedTextField>
     _effectiveFocusNode.canRequestFocus =
         widget.canRequestFocus && widget.enabled;
     _effectiveFocusNode.addListener(_handleFocusChange);
-  }
-
-  // === Helpers ===
+  } // === Helpers ===
 
   // Compute focusability from a cached nav mode (no MediaQuery reads here).
   bool _canRequestFocusFor(NavigationMode? mode) {
@@ -457,6 +491,11 @@ class _NakedTextFieldState extends State<NakedTextField>
       widget.onHoverChange?.call(false);
 
   @override
+  void initializeWidgetStates() {
+    updateDisabledState(!widget.enabled);
+  }
+
+  @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     // Now it's legal to read MediaQuery.
@@ -518,6 +557,38 @@ class _NakedTextFieldState extends State<NakedTextField>
   @override
   void autofill(TextEditingValue newEditingValue) =>
       _editableText?.autofill(newEditingValue);
+
+  RestorableTextEditingController? _controller;
+
+  TextEditingController get _effectiveController =>
+      widget.controller ?? _controller!.value;
+
+  FocusNode? _focusNode;
+
+  FocusNode get _effectiveFocusNode =>
+      widget.focusNode ?? (_focusNode ??= FocusNode());
+
+  MaxLengthEnforcement get _effectiveMaxLengthEnforcement =>
+      widget.maxLengthEnforcement ??
+      LengthLimitingTextInputFormatter.getDefaultMaxLengthEnforcement(
+        defaultTargetPlatform,
+      );
+
+  late TextSelectionGestureDetectorBuilder _selectionGestureDetectorBuilder;
+
+  bool _showSelectionHandles = false;
+
+  // Track the current navigation mode from MediaQuery.
+  NavigationMode? _navMode;
+
+  // TextSelectionGestureDetectorBuilderDelegate
+  @override
+  late bool forcePressEnabled;
+
+  @override
+  bool get selectionEnabled => widget.enableInteractiveSelection;
+
+  EditableTextState? get _editableText => editableTextKey.currentState;
 
   // === AutofillClient ===
 
@@ -704,12 +775,30 @@ class _NakedTextFieldState extends State<NakedTextField>
       );
     }
 
-    final Widget composed = withSemantics(widget.builder(context, editable));
+    // Create the text field state
+    final textFieldState = NakedTextFieldState(
+      states: widgetStates,
+      text: controller.text,
+      isFocused: focusNode.hasFocus,
+      hasText: controller.text.isNotEmpty,
+      isReadOnly: widget.readOnly,
+      isEnabled: widget.enabled,
+    );
+
+    // Build content using the builder and always provide state via scope
+    final Widget content = widget.builder!(context, editable);
+
+    final Widget composed = withSemantics(content);
+    final Widget wrappedContent = NakedStateScope(
+      value: textFieldState,
+      child: composed,
+    );
+
     // Ensure a focus action is exposed in semantics parity with Material.
     final Widget composedWithFocusSemantics = NakedFocusableDetector(
       enabled: widget.enabled,
       includeSemantics: true,
-      child: composed,
+      child: wrappedContent,
     );
 
     // Selection/gesture plumbing

@@ -17,8 +17,8 @@ void main() {
       ));
       await tester.pumpAndSettle();
 
-      // Find the button that triggers the popover
-      final triggerButtonFinder = find.byType(NakedButton).first;
+      // Find the trigger for the popover (text inside the trigger container)
+      final triggerButtonFinder = find.text('Show Popover');
       expect(triggerButtonFinder, findsOneWidget);
 
       // Initially, popover content should not be visible
@@ -46,17 +46,13 @@ void main() {
       await tester.pumpAndSettle();
 
       // Find the popover trigger
-      final triggerFinder = find.byType(NakedButton).first;
+      final triggerFinder = find.text('Show Popover');
       expect(triggerFinder, findsOneWidget);
 
-      // Simulate hover to show popover
-      final triggerWidget = tester.widget<NakedButton>(triggerFinder);
-      final triggerKey = triggerWidget.key;
-
-      if (triggerKey != null) {
-        await tester.simulateHover(triggerKey);
-        await tester.pumpAndSettle();
-      }
+      // Popover is click-triggered; verify it opens on tap
+      await tester.tap(triggerFinder);
+      await tester.pumpAndSettle();
+      expect(find.text('Popover Content'), findsOneWidget);
     });
 
     testWidgets('popover handles keyboard activation', (tester) async {
@@ -93,7 +89,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // Find the popover trigger
-      final triggerFinder = find.byType(NakedButton).first;
+      final triggerFinder = find.text('Show Popover');
       expect(triggerFinder, findsOneWidget);
 
       // Open popover
@@ -116,15 +112,13 @@ void main() {
       await tester.pumpAndSettle();
 
       // Open popover
-      final triggerFinder = find.byType(NakedButton).first;
+      final triggerFinder = find.text('Show Popover');
       await tester.tap(triggerFinder);
       await tester.pumpAndSettle();
 
-      // Test focus management within popover
-      final buttonFinders = find.byType(NakedButton);
-      if (buttonFinders.evaluate().isNotEmpty) {
-        final firstButton = buttonFinders.first;
-        await tester.tap(firstButton);
+      // Test focus/interaction within popover - tap the Close button inside overlay
+      if (find.text('Close').evaluate().isNotEmpty) {
+        await tester.tap(find.text('Close'));
         await tester.pumpAndSettle();
       }
     });

@@ -240,12 +240,12 @@ void main() {
     testWidgets('works with example app interaction', (tester) async {
       // Test the full example with hover states and complex styling
       await tester.pumpWidget(const select_example.MyApp());
-      await tester.pump(const Duration(milliseconds: 100));
+      await tester.pumpAndSettle();
 
-      // Open dropdown via the trigger
-      await tester.tap(find
-          .descendant(of: find.byType(NakedSelect), matching: find.byType(Text))
-          .first);
+      // Open dropdown via the trigger (tap the select widget itself)
+      final selectFinder = find.byType(NakedSelect<String>);
+      expect(selectFinder, findsOneWidget);
+      await tester.tap(selectFinder);
       await tester.pumpAndSettle();
 
       // Select an option (use .last pattern for overlay items)
@@ -256,9 +256,7 @@ void main() {
       expect(find.text('Apple'), findsNothing); // Menu closed
 
       // Test that we can open again and see the selection reflected
-      await tester.tap(find
-          .descendant(of: find.byType(NakedSelect), matching: find.byType(Text))
-          .first);
+      await tester.tap(selectFinder);
       await tester.pumpAndSettle();
 
       // Should see all options again (scope to menu items to avoid trigger label)

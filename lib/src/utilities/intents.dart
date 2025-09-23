@@ -17,6 +17,7 @@ class NakedIntentActions {
   static const _MenuIntentActions menu = _MenuIntentActions();
   static const _SelectIntentActions select = _SelectIntentActions();
   static const _DialogIntentActions dialog = _DialogIntentActions();
+  static const _SliderIntentActions slider = _SliderIntentActions();
 }
 
 // =============================================================================
@@ -189,6 +190,72 @@ class _DialogIntentActions {
 }
 
 // =============================================================================
+// SLIDER
+// =============================================================================
+
+class _SliderIntentActions {
+  const _SliderIntentActions();
+
+  Map<ShortcutActivator, Intent> shortcuts({required bool isRTL}) =>
+      isRTL ? _sliderShortcutsRtl : _sliderShortcutsLtr;
+
+  Map<Type, Action<Intent>> actions({
+    required ValueChanged<double> onChanged,
+    required double Function(bool isShift) calculateStep,
+    required double Function(double value) normalizeValue,
+    required double currentValue,
+    required double minValue,
+    required double maxValue,
+    required bool enableFeedback,
+  }) {
+    return {
+      _SliderIncrementIntent: _SliderIncrementAction(
+        onChanged: onChanged,
+        calculateStep: calculateStep,
+        normalizeValue: normalizeValue,
+        getCurrentValue: () => currentValue,
+        enableFeedback: enableFeedback,
+      ),
+      _SliderDecrementIntent: _SliderDecrementAction(
+        onChanged: onChanged,
+        calculateStep: calculateStep,
+        normalizeValue: normalizeValue,
+        getCurrentValue: () => currentValue,
+        enableFeedback: enableFeedback,
+      ),
+      _SliderShiftIncrementIntent: _SliderIncrementAction(
+        onChanged: onChanged,
+        calculateStep: calculateStep,
+        normalizeValue: normalizeValue,
+        getCurrentValue: () => currentValue,
+        enableFeedback: enableFeedback,
+        isShiftPressed: true,
+      ),
+      _SliderShiftDecrementIntent: _SliderDecrementAction(
+        onChanged: onChanged,
+        calculateStep: calculateStep,
+        normalizeValue: normalizeValue,
+        getCurrentValue: () => currentValue,
+        enableFeedback: enableFeedback,
+        isShiftPressed: true,
+      ),
+      _SliderSetToMinIntent: _SliderSetToMinAction(
+        onChanged: onChanged,
+        getMinValue: () => minValue,
+        getCurrentValue: () => currentValue,
+        enableFeedback: enableFeedback,
+      ),
+      _SliderSetToMaxIntent: _SliderSetToMaxAction(
+        onChanged: onChanged,
+        getMaxValue: () => maxValue,
+        getCurrentValue: () => currentValue,
+        enableFeedback: enableFeedback,
+      ),
+    };
+  }
+}
+
+// =============================================================================
 // SHARED IMPLEMENTATION DETAILS
 // =============================================================================
 
@@ -247,6 +314,54 @@ const Map<ShortcutActivator, Intent> _dialogShortcuts =
       SingleActivator(LogicalKeyboardKey.escape): DismissIntent(),
     };
 
+const Map<ShortcutActivator, Intent> _sliderShortcutsLtr =
+    <ShortcutActivator, Intent>{
+      SingleActivator(LogicalKeyboardKey.arrowRight): _SliderIncrementIntent(),
+      SingleActivator(LogicalKeyboardKey.arrowLeft): _SliderDecrementIntent(),
+      SingleActivator(LogicalKeyboardKey.arrowLeft, shift: true):
+          _SliderShiftDecrementIntent(),
+      SingleActivator(LogicalKeyboardKey.arrowRight, shift: true):
+          _SliderShiftIncrementIntent(),
+
+      SingleActivator(LogicalKeyboardKey.arrowUp): _SliderIncrementIntent(),
+      SingleActivator(LogicalKeyboardKey.arrowUp, shift: true):
+          _SliderShiftIncrementIntent(),
+      SingleActivator(LogicalKeyboardKey.arrowDown): _SliderDecrementIntent(),
+      SingleActivator(LogicalKeyboardKey.arrowDown, shift: true):
+          _SliderShiftDecrementIntent(),
+
+      SingleActivator(LogicalKeyboardKey.home): _SliderSetToMinIntent(),
+      SingleActivator(LogicalKeyboardKey.end): _SliderSetToMaxIntent(),
+
+      SingleActivator(LogicalKeyboardKey.pageUp): _SliderShiftIncrementIntent(),
+      SingleActivator(LogicalKeyboardKey.pageDown):
+          _SliderShiftDecrementIntent(),
+    };
+
+const Map<ShortcutActivator, Intent> _sliderShortcutsRtl =
+    <ShortcutActivator, Intent>{
+      SingleActivator(LogicalKeyboardKey.arrowLeft): _SliderIncrementIntent(),
+      SingleActivator(LogicalKeyboardKey.arrowRight): _SliderDecrementIntent(),
+      SingleActivator(LogicalKeyboardKey.arrowRight, shift: true):
+          _SliderShiftDecrementIntent(),
+      SingleActivator(LogicalKeyboardKey.arrowLeft, shift: true):
+          _SliderShiftIncrementIntent(),
+
+      SingleActivator(LogicalKeyboardKey.arrowUp): _SliderIncrementIntent(),
+      SingleActivator(LogicalKeyboardKey.arrowUp, shift: true):
+          _SliderShiftIncrementIntent(),
+      SingleActivator(LogicalKeyboardKey.arrowDown): _SliderDecrementIntent(),
+      SingleActivator(LogicalKeyboardKey.arrowDown, shift: true):
+          _SliderShiftDecrementIntent(),
+
+      SingleActivator(LogicalKeyboardKey.home): _SliderSetToMinIntent(),
+      SingleActivator(LogicalKeyboardKey.end): _SliderSetToMaxIntent(),
+
+      SingleActivator(LogicalKeyboardKey.pageUp): _SliderShiftIncrementIntent(),
+      SingleActivator(LogicalKeyboardKey.pageDown):
+          _SliderShiftDecrementIntent(),
+    };
+
 Map<Type, Action<Intent>> _activation(
   VoidCallback handler, {
   bool includeButtonIntent = false,
@@ -291,4 +406,144 @@ class _PageDownIntent extends Intent {
 /// Intent: Open overlay/dropdown.
 class _OpenOverlayIntent extends Intent {
   const _OpenOverlayIntent();
+}
+
+/// Intent: increment slider value by one step.
+class _SliderIncrementIntent extends Intent {
+  const _SliderIncrementIntent();
+}
+
+/// Intent: decrement slider value by one step.
+class _SliderDecrementIntent extends Intent {
+  const _SliderDecrementIntent();
+}
+
+/// Intent: increment slider value by a large step (Shift + Arrow).
+class _SliderShiftIncrementIntent extends _SliderIncrementIntent {
+  const _SliderShiftIncrementIntent();
+}
+
+/// Intent: decrement slider value by a large step (Shift + Arrow).
+class _SliderShiftDecrementIntent extends _SliderDecrementIntent {
+  const _SliderShiftDecrementIntent();
+}
+
+/// Intent: set slider value to minimum.
+class _SliderSetToMinIntent extends Intent {
+  const _SliderSetToMinIntent();
+}
+
+/// Intent: set slider value to maximum.
+class _SliderSetToMaxIntent extends Intent {
+  const _SliderSetToMaxIntent();
+}
+
+/// Action: handles keyboard increment intent.
+class _SliderIncrementAction extends Action<_SliderIncrementIntent> {
+  final ValueChanged<double> onChanged;
+  final double Function(bool isShift) calculateStep;
+  final double Function(double value) normalizeValue;
+  final double Function() getCurrentValue;
+  final bool enableFeedback;
+  final bool isShiftPressed;
+
+  _SliderIncrementAction({
+    required this.onChanged,
+    required this.calculateStep,
+    required this.normalizeValue,
+    required this.getCurrentValue,
+    required this.enableFeedback,
+    this.isShiftPressed = false,
+  });
+
+  @override
+  void invoke(_SliderIncrementIntent intent) {
+    final step = calculateStep(isShiftPressed);
+    final currentValue = getCurrentValue();
+    final newValue = normalizeValue(currentValue + step);
+    if (enableFeedback && newValue != currentValue) {
+      HapticFeedback.selectionClick();
+    }
+    onChanged(newValue);
+  }
+}
+
+/// Action: handles keyboard decrement intent.
+class _SliderDecrementAction extends Action<_SliderDecrementIntent> {
+  final ValueChanged<double> onChanged;
+  final double Function(bool isShift) calculateStep;
+  final double Function(double value) normalizeValue;
+  final double Function() getCurrentValue;
+  final bool enableFeedback;
+  final bool isShiftPressed;
+
+  _SliderDecrementAction({
+    required this.onChanged,
+    required this.calculateStep,
+    required this.normalizeValue,
+    required this.getCurrentValue,
+    required this.enableFeedback,
+    this.isShiftPressed = false,
+  });
+
+  @override
+  void invoke(_SliderDecrementIntent intent) {
+    final step = calculateStep(isShiftPressed);
+    final currentValue = getCurrentValue();
+    final newValue = normalizeValue(currentValue - step);
+    if (enableFeedback && newValue != currentValue) {
+      HapticFeedback.selectionClick();
+    }
+    onChanged(newValue);
+  }
+}
+
+/// Action: handles keyboard set-to-min intent.
+class _SliderSetToMinAction extends Action<_SliderSetToMinIntent> {
+  final ValueChanged<double> onChanged;
+  final double Function() getMinValue;
+  final double Function() getCurrentValue;
+  final bool enableFeedback;
+
+  _SliderSetToMinAction({
+    required this.onChanged,
+    required this.getMinValue,
+    required this.getCurrentValue,
+    required this.enableFeedback,
+  });
+
+  @override
+  void invoke(_SliderSetToMinIntent intent) {
+    final minValue = getMinValue();
+    final currentValue = getCurrentValue();
+    if (enableFeedback && currentValue != minValue) {
+      HapticFeedback.selectionClick();
+    }
+    onChanged(minValue);
+  }
+}
+
+/// Action: handles keyboard set-to-max intent.
+class _SliderSetToMaxAction extends Action<_SliderSetToMaxIntent> {
+  final ValueChanged<double> onChanged;
+  final double Function() getMaxValue;
+  final double Function() getCurrentValue;
+  final bool enableFeedback;
+
+  _SliderSetToMaxAction({
+    required this.onChanged,
+    required this.getMaxValue,
+    required this.getCurrentValue,
+    required this.enableFeedback,
+  });
+
+  @override
+  void invoke(_SliderSetToMaxIntent intent) {
+    final maxValue = getMaxValue();
+    final currentValue = getCurrentValue();
+    if (enableFeedback && currentValue != maxValue) {
+      HapticFeedback.selectionClick();
+    }
+    onChanged(maxValue);
+  }
 }
