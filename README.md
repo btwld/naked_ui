@@ -1,3 +1,5 @@
+# naked_ui
+
 The Naked UI library provides headless components that handle functionality, interaction, and accessibility without imposing any visual styling. This approach gives you full control over your design system while ensuring components work correctly and meet accessibility standards.
 
 ## Key Features
