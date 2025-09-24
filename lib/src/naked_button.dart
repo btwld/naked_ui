@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 
-import 'mixins/naked_mixins.dart'; // WidgetStatesMixin, FocusNodeMixin
+import 'mixins/naked_mixins.dart';
 import 'utilities/intents.dart';
 import 'utilities/naked_focusable_detector.dart';
 import 'utilities/naked_state_scope.dart';
@@ -13,18 +13,11 @@ import 'utilities/state.dart';
 class NakedButtonState extends NakedState {
   NakedButtonState({required super.states});
 
-  /// Returns the nearest [NakedButtonState] provided by [NakedStateScope].
   static NakedButtonState of(BuildContext context) => NakedState.of(context);
-
-  /// Returns the nearest [NakedButtonState] if one is available.
   static NakedButtonState? maybeOf(BuildContext context) =>
       NakedState.maybeOf(context);
-
-  /// Returns the [WidgetStatesController] from the nearest scope.
   static WidgetStatesController controllerOf(BuildContext context) =>
       NakedState.controllerOf(context);
-
-  /// Returns the [WidgetStatesController] from the nearest scope, if any.
   static WidgetStatesController? maybeControllerOf(BuildContext context) =>
       NakedState.maybeControllerOf(context);
 
@@ -39,20 +32,7 @@ class NakedButtonState extends NakedState {
   int get hashCode => states.hashCode;
 }
 
-/// A headless button without visuals.
-///
-/// Exposes interaction states and supports keyboard activation.
-/// Requires [child] or [builder] for custom rendering.
-///
-/// ```dart
-/// NakedButton(
-///   onPressed: () => print('Pressed'),
-///   child: Text('Click me'),
-/// )
-/// ```
-///
-/// See also:
-/// - [ElevatedButton], the Material-styled button for typical apps.
+/// A headless button without visuals that provides interaction states.
 class NakedButton extends StatefulWidget {
   const NakedButton({
     super.key,
@@ -76,63 +56,21 @@ class NakedButton extends StatefulWidget {
          'Either child or builder must be provided',
        );
 
-  /// The visual contents of the button when not using [builder].
   final Widget? child;
-
-  /// Called when the button is activated (tap, Enter/Space).
   final VoidCallback? onPressed;
-
-  /// Called when the button is long-pressed.
   final VoidCallback? onLongPress;
-
-  /// Called when focus changes.
   final ValueChanged<bool>? onFocusChange;
-
-  /// Called when hover changes.
   final ValueChanged<bool>? onHoverChange;
-
-  /// Called when pressed state changes.
   final ValueChanged<bool>? onPressChange;
-
-  /// Builds the button using the current [NakedButtonState].
   final ValueWidgetBuilder<NakedButtonState>? builder;
-
-  /// Whether the button is enabled.
   final bool enabled;
-
-  /// The mouse cursor when enabled.
   final MouseCursor mouseCursor;
-
-  /// Whether to provide platform feedback on interactions.
   final bool enableFeedback;
-
-  /// The external [FocusNode] to control focus ownership.
   final FocusNode? focusNode;
-
-  /// Whether to autofocus.
   final bool autofocus;
-
-  /// Whether pressing the button requests focus.
   final bool focusOnPress;
-
-  /// Tooltip text for assistive technologies.
-  ///
-  /// Consider providing concise text; long labels are read verbosely.
   final String? tooltip;
-
-  /// Semantic label announced by assistive technologies.
   final String? semanticLabel;
-
-  /// Whether the button has any interaction handlers.
-  ///
-  /// Returns true if either [onPressed] or [onLongPress] is provided.
-  bool get _hasAnyHandler => onPressed != null || onLongPress != null;
-
-  /// Whether the button is effectively enabled for interactions.
-  ///
-  /// Combines [enabled] with having at least one interaction handler.
-  /// A button is only interactive if it's enabled AND has handlers.
-  bool get _effectiveEnabled => enabled && _hasAnyHandler;
 
   @override
   State<NakedButton> createState() => _NakedButtonState();
@@ -140,83 +78,95 @@ class NakedButton extends StatefulWidget {
 
 class _NakedButtonState extends State<NakedButton>
     with WidgetStatesMixin<NakedButton>, FocusNodeMixin<NakedButton> {
-  static const Duration _activationDuration = Duration(milliseconds: 100);
-  Timer? _activationTimer;
+  Timer? _keyboardPressTimer;
+
+  // Simple derived state - no over-engineering
+  bool get _isInteractive =>
+      widget.enabled &&
+      (widget.onPressed != null || widget.onLongPress != null);
 
   @override
   FocusNode? get widgetProvidedNode => widget.focusNode;
 
+  void _cleanupKeyboardTimer() {
+    _keyboardPressTimer?.cancel();
+    _keyboardPressTimer = null;
+  }
+
   void _handleKeyboardActivation() {
-    if (!widget._effectiveEnabled || widget.onPressed == null) return;
+    if (!widget.enabled || widget.onPressed == null) return;
 
     if (widget.enableFeedback) {
       Feedback.forTap(context);
     }
 
-    updatePressState(true, widget.onPressChange);
     widget.onPressed!();
 
-    _activationTimer?.cancel();
-    _activationTimer = Timer(_activationDuration, () {
+    // Visual feedback for keyboard activation
+    updatePressState(true, widget.onPressChange);
+
+    _cleanupKeyboardTimer();
+    _keyboardPressTimer = Timer(const Duration(milliseconds: 100), () {
       if (mounted) {
         updatePressState(false, widget.onPressChange);
       }
+      _keyboardPressTimer = null;
     });
   }
 
   void _handleTap() {
-    if (!widget._effectiveEnabled) return;
+    if (!widget.enabled || widget.onPressed == null) return;
+
     if (widget.enableFeedback) {
       Feedback.forTap(context);
     }
-    widget.onPressed?.call();
+    widget.onPressed!();
   }
 
   void _handleLongPress() {
-    if (!widget._effectiveEnabled) return;
-    if (widget.enableFeedback) {
+    if (!widget.enabled) return;
+
+    if (widget.enableFeedback && widget.onLongPress != null) {
       Feedback.forLongPress(context);
     }
+
+    // Only call user's handler if they provided one
     widget.onLongPress?.call();
-    // Press state is maintained during long press hold.
   }
 
-  void _handleTapDown(TapDownDetails _) {
+  void _onPressStart(TapDownDetails details) {
     if (widget.focusOnPress) {
-      // Delegates to mixin; works with internal or external node.
       requestEffectiveFocus();
     }
     updatePressState(true, widget.onPressChange);
   }
 
-  Widget _buildContent(BuildContext context) {
-    final buttonState = NakedButtonState(states: widgetStates);
-
-    final content = widget.builder != null
-        ? widget.builder!(context, buttonState, widget.child)
-        : widget.child!;
-
-    return NakedStateScope(value: buttonState, child: content);
+  void _onPressEnd() {
+    updatePressState(false, widget.onPressChange);
   }
 
   @override
   void initializeWidgetStates() {
-    updateDisabledState(!widget._effectiveEnabled);
+    // Set initial disabled state based on interactive state
+    updateDisabledState(!_isInteractive);
   }
 
   @override
   void didUpdateWidget(covariant NakedButton oldWidget) {
-    super.didUpdateWidget(
-      oldWidget,
-    ); // Allows FocusNodeMixin and other mixins to run first.
+    super.didUpdateWidget(oldWidget);
 
-    // Track effective enabled state, not just the enabled property.
-    if (oldWidget._effectiveEnabled != widget._effectiveEnabled) {
-      updateDisabledState(!widget._effectiveEnabled);
+    // Only update if interactive state actually changed
+    final wasInteractive =
+        oldWidget.enabled &&
+        (oldWidget.onPressed != null || oldWidget.onLongPress != null);
 
-      // Clear press state and timer if disabled during interaction.
-      if (!widget._effectiveEnabled) {
-        _activationTimer?.cancel();
+    if (wasInteractive != _isInteractive) {
+      updateDisabledState(!_isInteractive);
+
+      // Clean up if becoming non-interactive
+      if (!_isInteractive) {
+        _cleanupKeyboardTimer();
+        // Force clear pressed state when disabled
         updatePressState(false, widget.onPressChange);
       }
     }
@@ -224,19 +174,23 @@ class _NakedButtonState extends State<NakedButton>
 
   @override
   void dispose() {
-    _activationTimer?.cancel();
-    super.dispose(); // FocusNodeMixin disposes internal focus node
+    _cleanupKeyboardTimer();
+    super.dispose(); // Mixins handle their cleanup
   }
-
-  VoidCallback? get _semanticsTapHandler =>
-      (widget.enabled && widget.onPressed != null) ? _handleTap : null;
 
   @override
   Widget build(BuildContext context) {
-    final content = _buildContent(context);
+    final buttonState = NakedButtonState(states: widgetStates);
+
+    final content = NakedStateScope(
+      value: buttonState,
+      child: widget.builder != null
+          ? widget.builder!(context, buttonState, widget.child)
+          : widget.child!,
+    );
 
     return NakedFocusableDetector(
-      enabled: widget._effectiveEnabled,
+      enabled: _isInteractive,
       autofocus: widget.autofocus,
       onFocusChange: (focused) {
         updateFocusState(focused, widget.onFocusChange);
@@ -245,44 +199,50 @@ class _NakedButtonState extends State<NakedButton>
         updateHoverState(hovered, widget.onHoverChange);
       },
       focusNode: effectiveFocusNode,
-      mouseCursor: widget._effectiveEnabled
+      mouseCursor: _isInteractive
           ? widget.mouseCursor
           : SystemMouseCursors.basic,
       shortcuts: NakedIntentActions.button.shortcuts,
       actions: NakedIntentActions.button.actions(
-        onPressed: () => _handleKeyboardActivation(),
+        onPressed: _handleKeyboardActivation,
       ),
       child: Semantics(
-        enabled: widget._effectiveEnabled,
-
+        enabled: _isInteractive,
         button: true,
         label: widget.semanticLabel,
         tooltip: widget.tooltip,
-        onTap: _semanticsTapHandler,
-        onLongPress: (widget.enabled && widget.onLongPress != null)
-            ? _handleLongPress
-            : null,
+        // Semantics check internally if needed
+        onTap: widget.onPressed != null ? _handleTap : null,
+        onLongPress: widget.onLongPress != null ? _handleLongPress : null,
         child: GestureDetector(
-          onTapDown: widget._effectiveEnabled ? _handleTapDown : null,
-          onTapUp: widget._effectiveEnabled
-              ? (_) => updatePressState(false, widget.onPressChange)
+          // GESTURE LIFECYCLE (based on Flutter's documented behavior):
+          //
+          // Quick tap: onTapDown → onTapUp → onTap
+          // Long hold: onTapDown → onTapCancel → onLongPressStart → onLongPress → onLongPressEnd
+          // Drag away: onTapDown → onTapCancel
+          //
+          // The key issue: onTapCancel fires when tap times out (~400ms) even though
+          // finger is still down. onLongPressStart then fires immediately after to
+          // indicate long press has begun. We use this to re-establish pressed state.
+
+          // Initial press
+          onTapDown: _isInteractive ? _onPressStart : null,
+
+          // Tap completion or cancellation
+          onTapUp: _isInteractive ? (_) => _onPressEnd() : null,
+          onTap: _isInteractive ? _handleTap : null,
+
+          onTapCancel: _isInteractive ? _onPressEnd : null,
+          // Always provide onLongPress when interactive to ensure Flutter creates
+          // LongPressGestureRecognizer, which enables onLongPressStart/End lifecycle
+          onLongPress: _isInteractive ? _handleLongPress : null,
+          // Long press sequence - onLongPressStart is CRITICAL
+          // It re-establishes pressed=true after onTapCancel clears it
+          onLongPressStart: _isInteractive
+              ? (details) => updatePressState(true, widget.onPressChange)
               : null,
-          onTap: (widget.enabled && widget.onPressed != null)
-              ? _handleTap
-              : null,
-          onTapCancel: widget._effectiveEnabled
-              ? () => updatePressState(false, widget.onPressChange)
-              : null,
-          onLongPress: (widget.enabled && widget.onLongPress != null)
-              ? _handleLongPress
-              : null,
-          // Maintains press state symmetry: active during hold, cleared on end.
-          onLongPressStart: (widget.enabled && widget.onLongPress != null)
-              ? (_) => updatePressState(true, widget.onPressChange)
-              : null,
-          onLongPressEnd: (widget.enabled && widget.onLongPress != null)
-              ? (_) => updatePressState(false, widget.onPressChange)
-              : null,
+          onLongPressEnd: _isInteractive ? (_) => _onPressEnd() : null,
+
           behavior: HitTestBehavior.opaque,
           excludeFromSemantics: true,
           child: content,

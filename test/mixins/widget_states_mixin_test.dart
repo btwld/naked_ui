@@ -61,10 +61,10 @@ class _TestWidgetWithStatesMixinState extends State<TestWidgetWithStatesMixin>
   }
 
   // Public wrapper methods for protected state-modifying methods
-  bool testUpdateState(WidgetState state, bool value) => updateState(state, value);
+  bool testUpdateState(WidgetState state, bool value) =>
+      updateState(state, value);
   bool testUpdateDisabledState(bool value) => updateDisabledState(value);
   void testSyncWidgetStates() => syncWidgetStates();
-
 
   @override
   Widget build(BuildContext context) {

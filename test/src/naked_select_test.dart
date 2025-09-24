@@ -293,7 +293,8 @@ void main() {
       final gesture = await tester.startGesture(
         tester.getCenter(find.text('Select option')),
       );
-      await tester.pump();
+      // Allow time for gesture recognition to complete
+      await tester.pump(const Duration(milliseconds: 100));
 
       // Verify pressed state is reflected in the UI
       final container = tester.widget<Container>(
