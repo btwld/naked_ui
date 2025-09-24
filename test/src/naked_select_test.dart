@@ -238,9 +238,7 @@ void main() {
             builder: (context, state, child) {
               return Container(
                 key: const Key('trigger'),
-                color: state.isHovered
-                    ? Colors.grey[200]
-                    : null,
+                color: state.isHovered ? Colors.grey[200] : null,
                 child: const Text('Select option'),
               );
             },
@@ -277,9 +275,7 @@ void main() {
             builder: (context, state, child) {
               return Container(
                 key: const Key('trigger'),
-                color: state.isPressed
-                    ? Colors.grey[400]
-                    : null,
+                color: state.isPressed ? Colors.grey[400] : null,
                 child: const Text('Select option'),
               );
             },
@@ -366,9 +362,7 @@ void main() {
                   builder: (context, state, child) {
                     return Container(
                       key: const Key('apple-option'),
-                      color: state.isHovered
-                          ? const Color(0xFFE0E0E0)
-                          : null,
+                      color: state.isHovered ? const Color(0xFFE0E0E0) : null,
                       child: child,
                     );
                   },

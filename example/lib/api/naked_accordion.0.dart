@@ -97,9 +97,7 @@ class _AccordionItemState extends State<AccordionItem> {
                     : Colors.grey.shade300,
               ),
               borderRadius: BorderRadius.circular(12),
-              color: isHoveredOrExpanded
-                  ? Colors.grey.shade100
-                  : Colors.white,
+              color: isHoveredOrExpanded ? Colors.grey.shade100 : Colors.white,
             ),
             padding: const EdgeInsets.all(12),
             child: Row(

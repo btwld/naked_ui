@@ -291,7 +291,8 @@ const Map<ShortcutActivator, Intent> _selectShortcuts =
       SingleActivator(LogicalKeyboardKey.end): _LastFocusIntent(),
       SingleActivator(LogicalKeyboardKey.pageUp): _PageUpIntent(),
       SingleActivator(LogicalKeyboardKey.pageDown): _PageDownIntent(),
-      SingleActivator(LogicalKeyboardKey.arrowDown, alt: true): _OpenOverlayIntent(),
+      SingleActivator(LogicalKeyboardKey.arrowDown, alt: true):
+          _OpenOverlayIntent(),
       SingleActivator(LogicalKeyboardKey.arrowUp, alt: true): DismissIntent(),
     };
 

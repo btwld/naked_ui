@@ -139,9 +139,7 @@ class _TabItemState extends State<TabItem> {
                 orElse: Colors.grey.shade100,
               );
 
-        final textColor = widget.isSelected
-            ? Colors.black87
-            : Colors.black38;
+        final textColor = widget.isSelected ? Colors.black87 : Colors.black38;
 
         return Container(
           alignment: Alignment.center,

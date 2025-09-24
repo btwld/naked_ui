@@ -13,22 +13,28 @@ void main() {
   }
 
   Widget _buildMaterialSwitch({required bool value, required bool enabled}) {
-    return Switch(
-      value: value,
-      onChanged: enabled ? (_) {} : null,
-    );
+    return Switch(value: value, onChanged: enabled ? (_) {} : null);
   }
 
-  Widget _buildNakedToggleAsSwitch({required bool value, required bool enabled}) {
+  Widget _buildNakedToggleAsSwitch({
+    required bool value,
+    required bool enabled,
+  }) {
     return NakedToggle(
       value: value,
       onChanged: enabled ? (_) {} : null,
       asSwitch: true,
-      child: const SizedBox(width: 40, height: 20), // No text to match Material Switch
+      child: const SizedBox(
+        width: 40,
+        height: 20,
+      ), // No text to match Material Switch
     );
   }
 
-  Widget _buildNakedToggleAsButton({required bool value, required bool enabled}) {
+  Widget _buildNakedToggleAsButton({
+    required bool value,
+    required bool enabled,
+  }) {
     return NakedToggle(
       value: value,
       onChanged: enabled ? (_) {} : null,
@@ -43,8 +49,12 @@ void main() {
         final handle = tester.ensureSemantics();
         await expectSemanticsParity(
           tester: tester,
-          material: _buildTestApp(_buildMaterialSwitch(value: false, enabled: true)),
-          naked: _buildTestApp(_buildNakedToggleAsSwitch(value: false, enabled: true)),
+          material: _buildTestApp(
+            _buildMaterialSwitch(value: false, enabled: true),
+          ),
+          naked: _buildTestApp(
+            _buildNakedToggleAsSwitch(value: false, enabled: true),
+          ),
           control: ControlType.toggle,
         );
         handle.dispose();
@@ -54,8 +64,12 @@ void main() {
         final handle = tester.ensureSemantics();
         await expectSemanticsParity(
           tester: tester,
-          material: _buildTestApp(_buildMaterialSwitch(value: true, enabled: true)),
-          naked: _buildTestApp(_buildNakedToggleAsSwitch(value: true, enabled: true)),
+          material: _buildTestApp(
+            _buildMaterialSwitch(value: true, enabled: true),
+          ),
+          naked: _buildTestApp(
+            _buildNakedToggleAsSwitch(value: true, enabled: true),
+          ),
           control: ControlType.toggle,
         );
         handle.dispose();
@@ -65,8 +79,12 @@ void main() {
         final handle = tester.ensureSemantics();
         await expectSemanticsParity(
           tester: tester,
-          material: _buildTestApp(_buildMaterialSwitch(value: false, enabled: false)),
-          naked: _buildTestApp(_buildNakedToggleAsSwitch(value: false, enabled: false)),
+          material: _buildTestApp(
+            _buildMaterialSwitch(value: false, enabled: false),
+          ),
+          naked: _buildTestApp(
+            _buildNakedToggleAsSwitch(value: false, enabled: false),
+          ),
           control: ControlType.toggle,
         );
         handle.dispose();
@@ -81,7 +99,10 @@ void main() {
           _buildTestApp(_buildNakedToggleAsButton(value: false, enabled: true)),
         );
 
-        final summary = summarizeMergedFromRoot(tester, control: ControlType.button);
+        final summary = summarizeMergedFromRoot(
+          tester,
+          control: ControlType.button,
+        );
 
         // Verify it has button semantics with toggle state
         expect(summary.flags.contains('isButton'), isTrue);
@@ -99,7 +120,10 @@ void main() {
           _buildTestApp(_buildNakedToggleAsButton(value: true, enabled: true)),
         );
 
-        final summary = summarizeMergedFromRoot(tester, control: ControlType.button);
+        final summary = summarizeMergedFromRoot(
+          tester,
+          control: ControlType.button,
+        );
 
         // Verify it has button semantics with toggle state
         expect(summary.flags.contains('isButton'), isTrue);
@@ -129,7 +153,10 @@ void main() {
         );
         focusNodeMaterial.requestFocus();
         await tester.pump();
-        final materialFocused = summarizeMergedFromRoot(tester, control: ControlType.toggle);
+        final materialFocused = summarizeMergedFromRoot(
+          tester,
+          control: ControlType.toggle,
+        );
 
         // Naked focused
         await tester.pumpWidget(
@@ -139,13 +166,19 @@ void main() {
               onChanged: (_) {},
               asSwitch: true,
               focusNode: focusNodeNaked,
-              child: const SizedBox(width: 40, height: 20), // No text to match Material Switch
+              child: const SizedBox(
+                width: 40,
+                height: 20,
+              ), // No text to match Material Switch
             ),
           ),
         );
         focusNodeNaked.requestFocus();
         await tester.pump();
-        final nakedFocused = summarizeMergedFromRoot(tester, control: ControlType.toggle);
+        final nakedFocused = summarizeMergedFromRoot(
+          tester,
+          control: ControlType.toggle,
+        );
 
         expect(nakedFocused, equals(materialFocused));
 
@@ -166,7 +199,10 @@ void main() {
         );
         await mouse.moveTo(tester.getCenter(find.byType(Switch)));
         await tester.pump();
-        final materialHovered = summarizeMergedFromRoot(tester, control: ControlType.toggle);
+        final materialHovered = summarizeMergedFromRoot(
+          tester,
+          control: ControlType.toggle,
+        );
 
         // Naked hovered
         await tester.pumpWidget(
@@ -174,7 +210,10 @@ void main() {
         );
         await mouse.moveTo(tester.getCenter(find.byType(NakedToggle)));
         await tester.pump();
-        final nakedHovered = summarizeMergedFromRoot(tester, control: ControlType.toggle);
+        final nakedHovered = summarizeMergedFromRoot(
+          tester,
+          control: ControlType.toggle,
+        );
 
         expect(nakedHovered, equals(materialHovered));
 
@@ -231,7 +270,10 @@ void main() {
         ),
       );
 
-      final summary = summarizeMergedFromRoot(tester, control: ControlType.toggle);
+      final summary = summarizeMergedFromRoot(
+        tester,
+        control: ControlType.toggle,
+      );
       expect(summary.label, equals('Enable notifications'));
 
       handle.dispose();

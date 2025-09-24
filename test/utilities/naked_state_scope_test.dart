@@ -7,10 +7,8 @@ import 'package:naked_ui/src/utilities/state.dart';
 class TestNakedState extends NakedState {
   final String label;
 
-  TestNakedState({
-    required Set<WidgetState> states,
-    required this.label,
-  }) : super(states: states);
+  TestNakedState({required Set<WidgetState> states, required this.label})
+    : super(states: states);
 }
 
 void main() {
@@ -62,7 +60,10 @@ void main() {
                           onPressed: () {
                             setState(() {
                               testState = TestNakedState(
-                                states: {WidgetState.focused, WidgetState.pressed},
+                                states: {
+                                  WidgetState.focused,
+                                  WidgetState.pressed,
+                                },
                                 label: 'test',
                               );
                             });
@@ -87,7 +88,10 @@ void main() {
       await tester.pump();
 
       // Controller should be updated (the same controller instance is updated)
-      expect(capturedController!.value, equals({WidgetState.focused, WidgetState.pressed}));
+      expect(
+        capturedController!.value,
+        equals({WidgetState.focused, WidgetState.pressed}),
+      );
     });
 
     testWidgets('controllerOf does not create dependency', (tester) async {

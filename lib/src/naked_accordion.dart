@@ -85,13 +85,13 @@ class NakedAccordionGroupState extends NakedState {
 
   @override
   int get hashCode => Object.hash(
-        states,
-        expandedCount,
-        canExpandMore,
-        canCollapseMore,
-        minExpanded,
-        maxExpanded,
-      );
+    states,
+    expandedCount,
+    canExpandMore,
+    canCollapseMore,
+    minExpanded,
+    maxExpanded,
+  );
 }
 
 /// Immutable state exposed to a [NakedAccordion] trigger builder.
@@ -145,13 +145,8 @@ class NakedAccordionItemState<T> extends NakedState {
   }
 
   @override
-  int get hashCode => Object.hash(
-        states,
-        value,
-        isExpanded,
-        canCollapse,
-        canExpand,
-      );
+  int get hashCode =>
+      Object.hash(states, value, isExpanded, canCollapse, canExpand);
 }
 
 /// Maintains accordion expansion state without imposing visuals.

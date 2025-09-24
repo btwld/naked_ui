@@ -98,8 +98,7 @@ class DemoRegistry {
       id: 'select-cyberpunk',
       title: 'Select – Cyberpunk',
       category: 'Select',
-      builder: (_) =>
-          const select_cyberpunk_example.CyberpunkSelectExample(),
+      builder: (_) => const select_cyberpunk_example.CyberpunkSelectExample(),
       sourceUrl:
           'https://github.com/btwld/naked_ui/blob/main/example/lib/api/naked_select.2.dart',
       tags: ['select', 'cyberpunk', 'glow'],

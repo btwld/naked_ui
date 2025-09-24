@@ -188,4 +188,3 @@ abstract class NakedState {
     );
   }
 }
-

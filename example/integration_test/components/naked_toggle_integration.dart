@@ -129,7 +129,8 @@ void main() {
       }
     });
 
-    testWidgets('disabled toggle does not respond to interactions', (tester) async {
+    testWidgets('disabled toggle does not respond to interactions',
+        (tester) async {
       final toggleKey = UniqueKey();
 
       await tester.pumpWidget(MaterialApp(
