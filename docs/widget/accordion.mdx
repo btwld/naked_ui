@@ -4,15 +4,25 @@ description: Headless accordion primitives with expansion state management and t
 keywords: [flutter, accordion, expansion, headless, builder, widgetstate]
 ---
 
-`NakedAccordion` gives you expandable sections without dictating layout or visuals. Pair it with `NakedAccordionController` to enforce how many panels can open, then render the trigger/header via the typed state snapshot.
+Headless accordion component. Handles section expansion, keyboard navigation, and accessibility. Use builder pattern for custom styling.
+
+## When to use this
+
+- **FAQ sections**: Expandable questions and answers
+- **Settings groups**: Organize related configuration options
+- **Content organization**: Break long content into scannable sections
+- **Space-saving layouts**: Show/hide content sections as needed
 
 <Info>
   A complete example lives in [`example/lib/api/naked_accordion.0.dart`](https://github.com/btwld/naked_ui/blob/main/example/lib/api/naked_accordion.0.dart).
 </Info>
 
-## Quick Start
+## Basic implementation
 
 ```dart
+import 'package:flutter/material.dart';
+import 'package:naked_ui/naked_ui.dart';
+
 class AccordionExample extends StatefulWidget {
   const AccordionExample({super.key});
 
@@ -65,11 +75,11 @@ class _AccordionSectionState extends State<_AccordionSection> {
   Widget build(BuildContext context) {
     return NakedAccordion<String>(
       value: widget.value,
-      builder: (context, accordionState) {
-        final bool isExpanded = accordionState.isExpanded;
-        final bool canExpand = accordionState.canExpand;
-        final bool canCollapse = accordionState.canCollapse;
-        final bool isHovered = accordionState.isHovered;
+      builder: (context, state) {
+        final bool isExpanded = state.isExpanded;
+        final bool canExpand = state.canExpand;
+        final bool canCollapse = state.canCollapse;
+        final bool isHovered = state.isHovered;
 
         return AnimatedContainer(
           duration: const Duration(milliseconds: 160),
@@ -198,7 +208,7 @@ const NakedAccordion({
 - `builder` → `NakedAccordionTriggerBuilder<T>` receiving `NakedAccordionItemState<T>`
 - `child` → panel content displayed when expanded
 - `value` → unique identifier tracked by the controller
-- Legacy interaction callbacks: `onFocusChange`, `onHoverChange`, `onPressChange` (prefer `builder` pattern to access `accordionState.isHovered`, etc.)
+- Legacy interaction callbacks: `onFocusChange`, `onHoverChange`, `onPressChange` (prefer `builder` pattern to access `state.isHovered`, etc.)
 - `transitionBuilder` lets you wrap the panel with your own show/hide animation
 - `enabled` / `mouseCursor` / `enableFeedback` provide interaction affordance hooks
 
@@ -206,5 +216,5 @@ const NakedAccordion({
 
 - Headers expose button semantics and support keyboard activation via Space/Enter
 - Arrow keys move focus between headers when wrapped in traversal groups (handled automatically)
-- Provide clear focus styles through `accordionState.isFocused`
+- Provide clear focus styles through `state.isFocused`
 - Panel content should include headings or text to clarify context for screen readers

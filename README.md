@@ -1,123 +1,49 @@
 # naked_ui
 
-The Naked UI library provides headless components that handle functionality, interaction, and accessibility without imposing any visual styling. This approach gives you full control over your design system while ensuring components work correctly and meet accessibility standards.
+**Unstyled Flutter components that you design.**
 
-## Key Features
+Build buttons, inputs, menus, and dialogs that look exactly how you want them. Naked UI handles all the complex behavior—keyboard navigation, accessibility, focus management—while you control every pixel of the design.
 
-- Zero‑styling: behavior only — you own presentation
-- Accessible: correct semantics and keyboard navigation
-- Observable state: hover, focus, press, drag, select
-- Composable: small, predictable APIs
+## Why Naked UI?
 
-## Documentation
+**Complete design control.** Every component is completely unstyled—no theme overrides or framework limitations.
 
-📚 **[View Full Documentation](https://docs.page/btwld/naked_ui)**
+**Built-in accessibility.** All components include keyboard navigation, screen reader support, and touch interactions.
 
-The complete documentation covers detailed component APIs and examples, guides and best practices, accessibility implementation details, as well as advanced usage patterns and customization.
+**Consistent API.** Every component follows the same pattern: wrap your design, receive state updates, customize appearance.
 
-## Supported Components
-
-- NakedButton — button interactions (hover, press, focus)
-- NakedCheckbox — toggle behavior and semantics
-- NakedRadio — single‑select radio with group management
-- NakedSelect — dropdown/select with keyboard navigation
-- NakedSlider — value slider with drag + keys
-- NakedToggle — toggle button or switch behavior
-- NakedTabs — tablist + roving focus
-- NakedAccordion — expandable/collapsible sections
-- NakedMenu — anchored overlay menu
-- NakedDialog — modal dialog behavior + focus trap
-- NakedTooltip — anchored tooltip with lifecycle
-- NakedPopover — anchored, dismissible popover overlay
-
-## Basic Usage Pattern
-
-1. Build your custom visuals using standard Flutter widgets
-2. Wrap the visuals in the corresponding Naked component
-3. React to typed state callbacks or use the builder snapshot to style interaction states
-
-1. **Create your visual design**: Design your UI components using standard Flutter widgets
-2. **Wrap with Naked behavior**: Wrap your design with the appropriate Naked component
-3. **Handle state changes**: Use the builder pattern to access component state and update your visual design accordingly
-
-## Example: Creating a Custom Button
-
-```dart
-class MyCustomButton extends StatelessWidget {
-  final String text;
-  final VoidCallback onPressed;
-
-  const MyCustomButton({
-    Key? key,
-    required this.text,
-    required this.onPressed,
-  }) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return NakedButton(
-      onPressed: onPressed,
-      builder: (context, state, child) => Container(
-        padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-        decoration: BoxDecoration(
-          color: state.when(
-            pressed: Colors.blue.shade800,    // Darker when pressed
-            hovered: Colors.blue.shade600,    // Slightly darker when hovered
-            orElse: Colors.blue.shade500,     // Default color
-          ),
-          borderRadius: BorderRadius.circular(4),
-          border: Border.all(
-            color: state.isFocused ? Colors.white : Colors.transparent,
-            width: 2,
-          ),
-        ),
-        child: Text(
-          text,
-          style: TextStyle(color: Colors.white),
-        ),
-      ),
-      const SizedBox(height: 12),
-      NakedTabView(
-        tabId: 'preview',
-        child: const Text('Preview content'),
-      ),
-      NakedTabView(
-        tabId: 'code',
-        child: const Text('Source code'),
-      ),
-    ],
-  ),
-);
-```
-
-## Builder Pattern
-
-Naked UI components use the builder pattern to give you access to the current interaction state, allowing you to drive your own visual design and behavior:
+## Quick example
 
 ```dart
 NakedButton(
+  onPressed: () => print('Hello!'),
   builder: (context, state, child) {
-    // Access state properties directly
-    if (state.isPressed) {
-      // Handle pressed state
-    }
-    if (state.isHovered) {
-      // Handle hover state
-    }
-    if (state.isFocused) {
-      // Handle focus state
-    }
-
-    // Use state.when() for conditional styling
-    final color = state.when(
-      pressed: Colors.blue.shade800,
-      hovered: Colors.blue.shade600,
-      orElse: Colors.blue,
+    return Container(
+      padding: EdgeInsets.all(12),
+      color: state.isPressed ? Colors.blue : Colors.grey,
+      child: Text('Press me!'),
     );
-
-    return YourWidget(color: color);
   },
-  // Other properties...
 )
 ```
-See each component's documentation for details on all available configuration options.
+
+This creates a fully accessible button with press state handling. The component also supports hover and focus states. Customize appearance with borders, animations, gradients, or any styling.
+
+## Available components
+
+Button • Checkbox • Radio • Select • Slider • Toggle • Tabs • Accordion • Menu • Dialog • Tooltip • Popover
+
+## Get started
+
+📚 **[Full Documentation & Examples](https://docs.page/btwld/naked_ui)**
+
+```yaml
+dependencies:
+  naked_ui: ^latest_version
+```
+
+```dart
+import 'package:naked_ui/naked_ui.dart';
+```
+
+View the [Getting Started guide](https://docs.page/btwld/naked_ui) for detailed examples and implementation patterns.

@@ -1,18 +1,28 @@
 ---
 title: NakedTextField
-description: Builder-first text input that exposes raw EditableText while you provide the chrome
+description: Headless text input component with native editing behavior
 keywords: [flutter, textfield, editabletext, headless, input]
 ---
 
-`NakedTextField` is a light wrapper around `EditableText` that keeps Flutter’s native text-editing behaviour—selection handles, keyboard shortcuts, IME configuration—while letting you render the visual chrome yourself via a builder.
+Headless text input component. Preserves native text editing behavior (selection handles, keyboard shortcuts, IME). Use builder pattern for custom styling.
+
+## When to use this
+
+- **Form inputs**: Text fields in forms (name, email, message, etc.)
+- **Search boxes**: Search inputs with custom styling
+- **Text areas**: Multi-line text input with custom appearance
+- **Specialized inputs**: Custom styled inputs that standard TextFields can't provide
 
 <Info>
   See the complete example in [`example/lib/api/naked_textfield.0.dart`](https://github.com/btwld/naked_ui/blob/main/example/lib/api/naked_textfield.0.dart).
 </Info>
 
-## Quick Start
+## Basic implementation
 
 ```dart
+import 'package:flutter/material.dart';
+import 'package:naked_ui/naked_ui.dart';
+
 class HeadlessField extends StatefulWidget {
   const HeadlessField({super.key});
 

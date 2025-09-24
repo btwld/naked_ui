@@ -5,6 +5,55 @@ description: Behavior-first, zero-styling Flutter components
 
 The Naked UI library provides headless components that handle functionality, interaction, and accessibility without imposing any visual styling. This approach gives you full control over your design system while ensuring components work correctly and meet accessibility standards.
 
+## What is headless UI?
+
+Headless components handle interaction behavior and accessibility without visual styling. They provide:
+
+- Keyboard navigation (pressing Tab, Enter, arrow keys)
+- Screen reader announcements 
+- Mouse interactions (hover, click, drag)
+- Focus management
+- Touch gestures
+
+Headless components provide behavior and accessibility without visual styling.
+
+### Standard UI library approach
+
+Most UI libraries give you components that look like this:
+
+```dart
+// Standard UI library approach
+ElevatedButton(
+  onPressed: () {},
+  child: Text('Click me'), // Fixed appearance
+)
+```
+
+Standard libraries limit customization to predefined themes and styles. Design flexibility is constrained.
+
+### The Naked UI approach
+
+Naked UI provides custom styling through builders:
+
+```dart
+NakedButton(
+  onPressed: () {},
+  builder: (context, state, child) {
+    // Custom styling based on state
+    return Container(
+      decoration: BoxDecoration(
+        color: state.isPressed ? Colors.blue.shade700 : Colors.blue,
+        borderRadius: BorderRadius.circular(8),
+        // Customize any aspect of design
+      ),
+      child: Text('Click me'),
+    );
+  },
+)
+```
+
+Components handle behavior. Builders define appearance.
+
 ## Key Features
 
 - Zero‑styling: behavior only — you own presentation
@@ -40,105 +89,136 @@ Then: `flutter pub get`
 
 Import: `import 'package:naked_ui/naked_ui.dart';`
 
-### Basic Usage Pattern
+### Basic implementation
 
-All Naked components follow a similar pattern:
-
-1. **Create your visual design**: Design your UI components using standard Flutter widgets
-2. **Wrap with Naked behavior**: Wrap your design with the appropriate Naked component
-3. **Handle state changes**: Use the builder pattern to access component state and update your visual design accordingly
-
-## Example: Creating a Custom Button
+Build a simple button:
 
 ```dart
-class MyCustomButton extends StatelessWidget {
-  final String text;
-  final VoidCallback onPressed;
+import 'package:flutter/material.dart';
+import 'package:naked_ui/naked_ui.dart';
 
-  const MyCustomButton({
-    Key? key,
-    required this.text,
-    required this.onPressed,
-  }) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return NakedButton(
-      onPressed: onPressed,
-      builder: (context, state, child) => Container(
-        padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-        decoration: BoxDecoration(
-          color: state.when(
-            pressed: Colors.blue.shade800,    // Darker when pressed
-            hovered: Colors.blue.shade600,    // Slightly darker when hovered
-            orElse: Colors.blue.shade500,     // Default color
-          ),
-          borderRadius: BorderRadius.circular(4),
-          border: Border.all(
-            color: state.isFocused ? Colors.white : Colors.transparent,
-            width: 2,
-          ),
-        ),
-        child: Text(
-          text,
-          style: TextStyle(color: Colors.white),
-        ),
-      ),
-    );
-  }
-}
-```
-
-## Configuration
-
-Each component has its own set of configuration options. Here are some common patterns:
-
-### Builder Pattern
-
-Most components use a builder pattern that provides access to the current state:
-
-```dart
 NakedButton(
+  onPressed: () => print('Hello World!'),
   builder: (context, state, child) {
-    // Access state properties directly
-    if (state.isPressed) {
-      // Handle pressed state
-    }
-    if (state.isHovered) {
-      // Handle hover state
-    }
-    if (state.isFocused) {
-      // Handle focus state
-    }
-
-    // Use state.when() for conditional styling
-    final color = state.when(
-      pressed: Colors.blue.shade800,
-      hovered: Colors.blue.shade600,
-      orElse: Colors.blue,
+    return Container(
+      padding: const EdgeInsets.all(12),
+      color: state.isPressed ? Colors.blue : Colors.grey,
+      child: const Text('Submit'),
     );
-
-    return YourWidget(color: color);
   },
-  // Other properties...
 )
 ```
 
+This button includes:
+- Press state color changes
+- Automatic keyboard navigation
+- Screen reader support  
+- Mouse and touch interaction
 
+The color changes when pressed due to the `state.isPressed` condition.
 
-### Custom Focus Handling
+### Implementation details
 
-You can provide your own focus nodes for advanced focus management:
+1. `NakedButton` manages interaction behavior and accessibility
+2. `builder` function defines visual appearance based on state
+3. `state.isPressed` provides current press state
+4. Return any Widget for custom styling
+
+### Enhanced patterns
+
+**Multiple states**: Use `state.when()` to handle pressed, hovered, and focused states
+**Animations**: Wrap containers in AnimatedContainer for smooth transitions  
+**Advanced styling**: Add borders, shadows, gradients, or any visual elements
+
+Check out our [Button documentation](/widget/button) for advanced examples and patterns.
+
+## Advanced state management
+
+Common patterns for enhanced interactivity:
+
+### Multiple interaction states
+
+Handle pressed, hovered, and focused states:
 
 ```dart
-final FocusNode _myFocusNode = FocusNode();
+import 'package:flutter/material.dart';
+import 'package:naked_ui/naked_ui.dart';
 
-// In your widget build method:
 NakedButton(
-  focusNode: _myFocusNode,
-  autofocus: true,
-  // Other properties...
+  onPressed: () {},
+  builder: (context, state, child) {
+    // Method 1: Check each state individually
+    Color buttonColor = Colors.grey;
+    if (state.isPressed) buttonColor = Colors.blue.shade800;
+    else if (state.isHovered) buttonColor = Colors.blue.shade600; 
+    else if (state.isFocused) buttonColor = Colors.blue.shade400;
+
+    // Method 2: Use state.when() for cleaner code
+    final color = state.when(
+      pressed: Colors.blue.shade800,    // Darkest when clicked
+      hovered: Colors.blue.shade600,    // Medium when mouse over
+      focused: Colors.blue.shade400,    // Light when keyboard focused
+      orElse: Colors.grey,              // Default state
+    );
+
+    return Container(
+      padding: const EdgeInsets.all(12),
+      color: color,
+      child: const Text('Interactive button'),
+    );
+  },
 )
 ```
 
-See each component's documentation for details on all available configuration options.
+The `state.when()` method provides cleaner conditional logic.
+
+### Programmatic focus control
+
+For precise focus management in forms or complex UIs:
+
+```dart
+import 'package:flutter/material.dart';
+import 'package:naked_ui/naked_ui.dart';
+
+final myFocusNode = FocusNode();
+
+NakedButton(
+  focusNode: myFocusNode,        // Use your own focus node
+  autofocus: true,               // Focus automatically when built
+  onPressed: () {
+    myFocusNode.requestFocus();  // Focus programmatically
+  },
+  builder: (context, state, child) => /* your design */,
+)
+```
+
+## Component selection guide
+
+All components follow the same builder pattern. Choose based on interaction requirements:
+
+### For user actions
+- **[Button](/widget/button)** - Any clickable action (submit, save, delete, etc.)
+- **[Toggle](/widget/toggle)** - On/off switches (dark mode, notifications)
+- **[Checkbox](/widget/checkbox)** - Select multiple options from a list
+- **[Radio](/widget/radio)** - Pick one option from a group
+
+### For user input
+- **[TextField](/widget/textfield)** - Text input (names, messages, search)
+- **[Select](/widget/select)** - Choose from a dropdown list (countries, categories)
+- **[Slider](/widget/slider)** - Pick numeric values (volume, price range)
+
+### For organizing content
+- **[Tabs](/widget/tabs)** - Switch between different content sections
+- **[Accordion](/widget/accordion)** - Expandable sections (FAQ, settings groups)
+- **[Dialog](/widget/dialog)** - Modal windows (confirmations, forms)
+
+### For helpful overlays
+- **[Tooltip](/widget/tooltip)** - Show help text on hover
+- **[Popover](/widget/popover)** - Show additional info or controls
+- **[Menu](/widget/menu)** - Context menus and dropdown actions
+
+### Getting started
+
+**Recommended approach**: Begin with Button—the simplest component for learning the core patterns. Other components use the same builder-based approach.
+
+**Next steps**: Review component-specific documentation for detailed implementation examples and API references.

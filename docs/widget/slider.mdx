@@ -1,214 +1,175 @@
 ---
 title: NakedSlider
+description: Headless slider component with drag interactions and accessibility
+keywords: [flutter, slider, range, headless, accessibility, custom]
 ---
 
-NakedSlider provides interaction behavior and accessibility features without imposing any visual styling, giving consumers complete design freedom. It integrates with `NakedFocusableDetector` to provide enhanced keyboard accessibility, hover detection, and focus management.
+Headless slider component. Handles drag interactions, keyboard navigation (arrow keys), and accessibility. Use builder pattern for custom styling.
+
+## When to use this
+
+- **Value selection**: Let users pick numbers within a range (volume, brightness, price filters)
+- **Settings controls**: Adjust app preferences with visual feedback
+- **Form inputs**: Numeric input with immediate visual feedback
+- **Custom designs**: When you need sliders that match your design system perfectly
 
 <Info>
-  You can find this example in our [GitHub repository](https://github.com/btwld/naked_ui/blob/main/example/lib/api/naked_slider.0.dart).
+  See complete examples in our [GitHub repository](https://github.com/btwld/naked_ui/blob/main/example/lib/api/naked_slider.0.dart).
 </Info>
-<CodeGroup title="Builder Pattern (Recommended)" defaultLanguage="dart">
-```dart
-class SliderExample extends StatefulWidget {
-  const SliderExample({super.key});
+## Basic implementation
 
+```dart
+import 'package:flutter/material.dart';
+import 'package:naked_ui/naked_ui.dart';
+
+class SimpleSlider extends StatefulWidget {
   @override
-  State<SliderExample> createState() => _SliderExampleState();
+  State<SimpleSlider> createState() => _SimpleSliderState();
 }
 
-class _SliderExampleState extends State<SliderExample> {
+class _SimpleSliderState extends State<SimpleSlider> {
   double _value = 0.5;
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: 200,
-      child: SizedBox(
-        width: double.infinity,
-        height: 20,
-        child: NakedSlider(
-          value: _value,
-          onChanged: (newValue) {
-            setState(() {
-              _value = newValue;
-            });
-          },
-          builder: (context, state, child) {
-            final thumbColor = state.when(
-              pressed: Colors.blue,
-              hovered: Colors.grey.shade300,
-              orElse: Colors.white,
-            );
-            final borderColor = state.isFocused ? Colors.blue : Colors.black;
-
-            return CustomPaint(
-              foregroundPainter: SliderThumbPainter(
-                value: _value,
-                thumbColor: thumbColor,
-                thumbSize: 18,
-                borderColor: borderColor,
+    return NakedSlider(
+      value: _value,
+      onChanged: (newValue) => setState(() => _value = newValue),
+      builder: (context, state, child) {
+        return Container(
+          width: 200,
+          height: 20,
+          child: Stack(
+            children: [
+              // Track
+              Container(
+                width: 200,
+                height: 4,
+                margin: const EdgeInsets.only(top: 8),
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade300,
+                  borderRadius: BorderRadius.circular(2),
+                ),
               ),
-              painter: SliderTrackPainter(
-                value: _value,
-                activeTrackColor: Colors.black,
-                trackColor: Colors.black.withValues(alpha: 0.1),
+              // Progress
+              Container(
+                width: 200 * _value,
+                height: 4,
+                margin: const EdgeInsets.only(top: 8),
+                decoration: BoxDecoration(
+                  color: Colors.blue,
+                  borderRadius: BorderRadius.circular(2),
+                ),
               ),
-            );
-          },
-        ),
-      ),
+              // Thumb
+              Positioned(
+                left: (200 - 20) * _value,
+                child: Container(
+                  width: 20,
+                  height: 20,
+                  decoration: BoxDecoration(
+                    color: state.isDragging ? Colors.blue.shade700 : Colors.blue,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }
 ```
-</CodeGroup>
 
-<CodeGroup title="Static Child Pattern" defaultLanguage="dart">
+## Multiple state styling
+
+Handle hover, focus, and drag states:
+
 ```dart
-class SliderExample extends StatefulWidget {
-  const SliderExample({super.key});
-
-  @override
-  State<SliderExample> createState() => _SliderExampleState();
-}
-
-class _SliderExampleState extends State<SliderExample> {
-  double _value = 0.5;
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: 200,
-      child: SizedBox(
-        width: double.infinity,
-        height: 20,
-        child: NakedSlider(
-          value: _value,
-          onChanged: (newValue) {
-            setState(() {
-              _value = newValue;
-            });
-          },
-          child: CustomPaint(
-            foregroundPainter: SliderThumbPainter(
-              value: _value,
-              thumbColor: Colors.white,
-              thumbSize: 18,
-              borderColor: Colors.black,
-            ),
-            painter: SliderTrackPainter(
-              value: _value,
-              activeTrackColor: Colors.black,
-              trackColor: Colors.black.withValues(alpha: 0.1),
-            ),
+builder: (context, state, child) {
+  // Different colors for different states
+  Color thumbColor = Colors.blue;
+  if (state.isDragging) thumbColor = Colors.blue.shade800;
+  else if (state.isHovered) thumbColor = Colors.blue.shade600;
+  
+  // Focus indicator
+  final borderColor = state.isFocused ? Colors.orange : Colors.transparent;
+  
+  return Stack(
+    children: [
+      // Your track containers here...
+      
+      // Enhanced thumb with focus ring
+      Positioned(
+        left: (200 - 24) * _value,
+        child: Container(
+          width: 24,
+          height: 24,
+          decoration: BoxDecoration(
+            color: thumbColor,
+            shape: BoxShape.circle,
+            border: Border.all(color: borderColor, width: 2),
+            // Add shadow when dragging
+            boxShadow: state.isDragging ? [
+              BoxShadow(
+                color: Colors.blue.withOpacity(0.3),
+                blurRadius: 8,
+                spreadRadius: 2,
+              ),
+            ] : null,
           ),
         ),
       ),
-    );
-  }
+    ],
+  );
 }
 ```
-</CodeGroup>
 
-<Accordion title="Click to see the CustomPainters">
+## Implementation patterns
+
+### Volume control with icons
+
 ```dart
-
-class SliderTrackPainter extends CustomPainter {
-  final double value;
-  final Color activeTrackColor;
-  final Color trackColor;
-
-  SliderTrackPainter({
-    required this.value,
-    required this.activeTrackColor,
-    required this.trackColor,
-  });
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final Paint backgroundPaint = Paint()
-      ..color = trackColor
-      ..style = PaintingStyle.fill
-      ..strokeWidth = 6.0
-      ..strokeCap = StrokeCap.round;
-
-    final Paint progressPaint = Paint()
-      ..color = activeTrackColor
-      ..style = PaintingStyle.fill
-      ..strokeWidth = 6.0
-      ..strokeCap = StrokeCap.round;
-
-    final double verticalCenter = size.height / 2;
-
-    canvas.drawLine(
-      Offset(0, verticalCenter),
-      Offset(size.width, verticalCenter),
-      backgroundPaint,
-    );
-
-    canvas.drawLine(
-      Offset(0, verticalCenter),
-      Offset(size.width * value, verticalCenter),
-      progressPaint,
-    );
-  }
-
-  @override
-  bool shouldRepaint(SliderTrackPainter oldDelegate) {
-    return oldDelegate.value != value ||
-        oldDelegate.activeTrackColor != activeTrackColor ||
-        oldDelegate.trackColor != trackColor;
-  }
-}
-
-class SliderThumbPainter extends CustomPainter {
-  final double value;
-  final double thumbSize;
-  final Color thumbColor;
-  final Color borderColor;
-
-  SliderThumbPainter({
-    required this.value,
-    required this.thumbSize,
-    required this.thumbColor,
-    required this.borderColor,
-  });
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final Paint thumbPaint = Paint()
-      ..color = thumbColor
-      ..style = PaintingStyle.fill;
-
-    final Paint borderPaint = Paint()
-      ..color = borderColor
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2.0;
-
-    final double verticalCenter = size.height / 2;
-
-    canvas.drawCircle(
-      Offset(size.width * value, verticalCenter),
-      thumbSize / 2,
-      thumbPaint,
-    );
-
-    canvas.drawCircle(
-      Offset(size.width * value, verticalCenter),
-      thumbSize / 2,
-      borderPaint,
-    );
-  }
-
-  @override
-  bool shouldRepaint(SliderThumbPainter oldDelegate) {
-    return oldDelegate.value != value ||
-        oldDelegate.thumbColor != thumbColor ||
-        oldDelegate.thumbSize != thumbSize;
-  }
-}
+Row(
+  children: [
+    Icon(Icons.volume_down),
+    const SizedBox(width: 12),
+    Expanded(
+      child: NakedSlider(
+        value: _volume,
+        onChanged: (value) => setState(() => _volume = value),
+        builder: (context, state, child) {
+          // Your slider design with volume-specific styling
+          return YourSliderDesign();
+        },
+      ),
+    ),
+    const SizedBox(width: 12),
+    Icon(Icons.volume_up),
+  ],
+)
 ```
-</Accordion>
+
+### Discrete value slider
+
+```dart
+NakedSlider(
+  value: _rating,
+  min: 1,
+  max: 5,
+  divisions: 4, // Creates 5 discrete steps (1, 2, 3, 4, 5)
+  onChanged: (value) => setState(() => _rating = value.round().toDouble()),
+  builder: (context, state, child) {
+    // Show star rating or discrete indicators
+    return YourStarRating();
+  },
+)
+```
+
+### Custom painters (advanced)
+
+For complex designs, you can use CustomPaint for pixel-perfect control. Check out our [complete CustomPaint examples](https://github.com/btwld/naked_ui/blob/main/example/lib/api/naked_slider.0.dart) in the repository.
 
 
 ## Constructor

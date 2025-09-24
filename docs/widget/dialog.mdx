@@ -1,8 +1,17 @@
 ---
 title: NakedDialog
+description: Headless dialog component with focus management and accessibility
+keywords: [flutter, dialog, modal, headless, overlay]
 ---
 
-Headless dialog API that separates behavior from presentation. Use `showNakedDialog` to present any widget as a modal or non‑modal dialog with full control over visuals. Wrap your dialog content with `NakedDialog` to get correct semantics when modal.
+Headless dialog component. Handles focus management, backdrop interaction, and accessibility. Use builder pattern for custom styling.
+
+## When to use this
+
+- **Confirmations**: "Are you sure?" dialogs for destructive actions
+- **Forms**: Modal forms for user input (login, contact, etc.)
+- **Content display**: Show detailed information or images
+- **Custom modals**: When standard dialog styles don't match your design
 
 <Info>
   Examples: 
@@ -10,9 +19,12 @@ Headless dialog API that separates behavior from presentation. Use `showNakedDia
   - Transitions: https://github.com/btwld/naked_ui/blob/main/example/lib/api/naked_dialog.1.dart
 </Info>
 
-## Usage
+## Basic implementation
 
 ```dart
+import 'package:flutter/material.dart';
+import 'package:naked_ui/naked_ui.dart';
+
 final result = await showNakedDialog<String>(
   context: context,
   barrierColor: Colors.black54,
@@ -29,7 +41,7 @@ final result = await showNakedDialog<String>(
         mainAxisSize: MainAxisSize.min,
         children: [
           const Padding(
-            padding: EdgeInsets.all(16),
+            padding: const EdgeInsets.all(16),
             child: Text('Are you sure?'),
           ),
           Row(

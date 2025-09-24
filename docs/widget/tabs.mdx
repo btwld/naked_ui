@@ -4,19 +4,31 @@ description: Headless tab primitives with roving focus and typed state builders
 keywords: [flutter, tabs, tablist, headless, focus, accessibility]
 ---
 
-`NakedTabs` splits into three small pieces:
+Headless tabs component. Handles keyboard navigation (arrow keys) and selection state. Use builder pattern for custom styling.
 
-1. `NakedTabs` – owns the selected tab id and focus handling
-2. `NakedTab` – trigger button that receives a typed state snapshot
-3. `NakedTabView` – panel that shows/hides content based on the active tab
+## When to use this
+
+- **Content organization**: Switch between related content sections
+- **Settings panels**: Group settings into categorized tabs
+- **Data views**: Toggle between different data representations
+- **Navigation**: Section navigation within a single page
+
+## Components
+
+- `NakedTabs` – owns the selected tab id and focus handling
+- `NakedTab` – trigger button that receives a typed state snapshot  
+- `NakedTabView` – panel that shows/hides content based on the active tab
 
 <Info>
   See the complete implementation in [`example/lib/api/naked_tabs.0.dart`](https://github.com/btwld/naked_ui/blob/main/example/lib/api/naked_tabs.0.dart).
 </Info>
 
-## Quick Start
+## Basic implementation
 
 ```dart
+import 'package:flutter/material.dart';
+import 'package:naked_ui/naked_ui.dart';
+
 class TabsExample extends StatefulWidget {
   const TabsExample({super.key});
 

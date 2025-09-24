@@ -4,62 +4,42 @@ description: Headless button component for Flutter with full control over stylin
 keywords: [flutter, button, headless, unstyled, accessibility, interaction, hover, focus, press]
 ---
 
-NakedButton provides interaction behavior and accessibility features without imposing any visual styling, giving consumers complete design freedom. It integrates with `NakedFocusableDetector` to provide enhanced keyboard accessibility, hover detection, and focus management.
+Headless button component. Handles click interactions, keyboard navigation, and accessibility. Use builder pattern for custom styling.
 
-<Info>
-  Use the `builder` function to create responsive visual feedback based on the button's interaction state. This eliminates the need for StatefulWidget in most cases.
-</Info>
+## When to use this
 
+- **Primary actions**: Submit forms, confirm dialogs, save data
+- **Navigation**: Navigate between screens or sections
+- **Trigger functions**: Show modals, start processes, toggle features
+- **Custom designs**: When standard button styles don't match your design system
 
 <Info>
   You can find this example in our [GitHub repository](https://github.com/btwld/naked_ui/blob/main/example/lib/api/naked_button.0.dart).
 </Info>
-<CodeGroup title="Builder Pattern (Recommended)" defaultLanguage="dart">
+## Basic implementation
+
+<CodeGroup title="Basic implementation" defaultLanguage="dart">
 ```dart
+import 'package:flutter/material.dart';
+import 'package:naked_ui/naked_ui.dart';
+
 class ButtonExample extends StatelessWidget {
   const ButtonExample({super.key});
 
   @override
   Widget build(BuildContext context) {
     return NakedButton(
-      onPressed: () {
-        debugPrint('Button pressed!');
-      },
-      builder: (context, buttonState, child) {
-        const baseColor = Color(0xFF3D3D3D);
-
-        final backgroundColor = buttonState.when(
-          pressed: baseColor.withValues(alpha: 0.8),
-          hovered: baseColor.withValues(alpha: 0.9),
-          orElse: baseColor,
-        );
-
-        final scale = buttonState.isPressed ? 0.95 : 1.0;
-
+      onPressed: () {},
+      builder: (context, state, child) {
         return Container(
-          padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 2),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(
-              color: buttonState.isFocused ? Colors.black : Colors.transparent,
-              width: 1,
-            ),
+            color: state.isPressed ? Colors.blue.shade700 : Colors.blue,
+            borderRadius: BorderRadius.circular(8),
           ),
-          child: AnimatedScale(
-            scale: scale,
-            duration: const Duration(milliseconds: 200),
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-              decoration: BoxDecoration(
-                color: backgroundColor,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: const Text(
-                'Button',
-                style: TextStyle(color: Colors.white),
-              ),
-            ),
+          child: const Text(
+            'Button',
+            style: TextStyle(color: Colors.white),
           ),
         );
       },
@@ -71,6 +51,9 @@ class ButtonExample extends StatelessWidget {
 
 <CodeGroup title="Callback Pattern (Legacy)" defaultLanguage="dart">
 ```dart
+import 'package:flutter/material.dart';
+import 'package:naked_ui/naked_ui.dart';
+
 class ButtonExample extends StatefulWidget {
   const ButtonExample({super.key});
 
@@ -144,6 +127,9 @@ class _ButtonExampleState extends State<ButtonExample> {
 
 <CodeGroup title="Icon Button with Tooltip" defaultLanguage="dart">
 ```dart
+import 'package:flutter/material.dart';
+import 'package:naked_ui/naked_ui.dart';
+
 class IconButtonExample extends StatefulWidget {
   const IconButtonExample({super.key});
 
@@ -181,6 +167,9 @@ class _IconButtonExampleState extends State<IconButtonExample> {
 
 <CodeGroup title="Loading Button" defaultLanguage="dart">
 ```dart
+import 'package:flutter/material.dart';
+import 'package:naked_ui/naked_ui.dart';
+
 class LoadingButtonExample extends StatefulWidget {
   const LoadingButtonExample({super.key});
 

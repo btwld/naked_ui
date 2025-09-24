@@ -4,15 +4,25 @@ description: Headless anchored popover with focus management, outside-tap dismis
 keywords: [flutter, popover, overlay, anchored, headless, focus]
 ---
 
-`NakedPopover` turns any widget into an anchored overlay trigger. You keep full control of trigger visuals and popover content while the component handles positioning, focus return, Esc/outside dismissal, and lifecycle callbacks.
+Headless popover component. Handles positioning, focus management, outside dismissal, and lifecycle. Use builder pattern for custom styling.
+
+## When to use this
+
+- **Additional information**: Show details or help text on demand
+- **Form fields**: Display validation errors or input help
+- **Action confirmations**: "Are you sure?" confirmations for buttons
+- **Content previews**: Preview links, images, or documents
 
 <Info>
   Explore the sample in [`example/lib/api/naked_popover.0.dart`](https://github.com/btwld/naked_ui/blob/main/example/lib/api/naked_popover.0.dart).
 </Info>
 
-## Quick Start
+## Basic implementation
 
 ```dart
+import 'package:flutter/material.dart';
+import 'package:naked_ui/naked_ui.dart';
+
 class PopoverExample extends StatelessWidget {
   const PopoverExample({super.key});
 
@@ -69,6 +79,9 @@ class PopoverExample extends StatelessWidget {
 ## Animated Popover with Lifecycle Hooks
 
 ```dart
+import 'package:flutter/material.dart';
+import 'package:naked_ui/naked_ui.dart';
+
 class AnimatedPopover extends StatefulWidget {
   const AnimatedPopover({super.key});
 
@@ -108,7 +121,7 @@ class _AnimatedPopoverState extends State<AnimatedPopover>
                 borderRadius: BorderRadius.circular(12),
               ),
               child: const Padding(
-                padding: EdgeInsets.all(16),
+                padding: const EdgeInsets.all(16),
                 child: Text(
                   'Animated popover content',
                   style: TextStyle(color: Colors.white),

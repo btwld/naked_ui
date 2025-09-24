@@ -4,15 +4,25 @@ description: Headless checkbox primitive with tristate support and typed state s
 keywords: [flutter, checkbox, tristate, headless, accessibility]
 ---
 
-`NakedCheckbox` handles toggle semantics, keyboard activation, focus, and accessibility while leaving visuals entirely to you. Use the callbacks for simple state-driven styling or the typed builder to access the current value and interaction states.
+Headless checkbox component. Handles toggle behavior, keyboard activation, and accessibility. Use builder pattern for custom styling.
+
+## When to use this
+
+- **Form selections**: Multiple choice options in forms
+- **Settings toggles**: Enable/disable features or preferences  
+- **List selections**: Select multiple items from a list
+- **Agreement confirmations**: Terms of service, privacy policies
 
 <Info>
-  Browse the runnable sample at [`example/lib/api/naked_checkbox.0.dart`](https://github.com/btwld/naked_ui/blob/main/example/lib/api/naked_checkbox.0.dart).
+  See complete examples in our [GitHub repository](https://github.com/btwld/naked_ui/blob/main/example/lib/api/naked_checkbox.0.dart).
 </Info>
 
-## Quick Start
+## Basic implementation
 
 ```dart
+import 'package:flutter/material.dart';
+import 'package:naked_ui/naked_ui.dart';
+
 class CheckboxExample extends StatefulWidget {
   const CheckboxExample({super.key});
 
@@ -27,50 +37,27 @@ class _CheckboxExampleState extends State<CheckboxExample> {
   Widget build(BuildContext context) {
     return NakedCheckbox(
       value: _isChecked,
-      onChanged: (next) => setState(() => _isChecked = next!),
-      builder: (context, checkboxState, _) {
-        final bool isChecked = checkboxState.isChecked == true;
-        final bool isHovered = checkboxState.isHovered;
-        final bool isFocused = checkboxState.isFocused;
+      onChanged: (next) => setState(() => _isChecked = next ?? false),
+      builder: (context, state, _) {
+        final bool isChecked = state.isChecked == true;
 
         return Row(
           mainAxisSize: MainAxisSize.min,
-          spacing: 8,
           children: [
-            AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              height: 20,
+            Container(
               width: 20,
+              height: 20,
               decoration: BoxDecoration(
-                border: Border.all(
-                  color: isChecked
-                      ? const Color(0xFF3D3D3D)
-                      : isFocused
-                          ? const Color(0xFF3D3D3D).withValues(alpha: 0.8)
-                          : isHovered
-                              ? const Color(0xFF3D3D3D).withValues(alpha: 0.6)
-                              : const Color(0xFF3D3D3D).withValues(alpha: 0.4),
-                  width: 2,
-                ),
-                borderRadius: BorderRadius.circular(6),
-                color: isChecked ? const Color(0xFF3D3D3D) : Colors.transparent,
+                color: isChecked ? Colors.blue : Colors.transparent,
+                border: Border.all(color: Colors.blue, width: 2),
+                borderRadius: BorderRadius.circular(4),
               ),
               child: isChecked
-                  ? const Icon(
-                      Icons.check,
-                      size: 16,
-                      color: Colors.white,
-                    )
+                  ? const Icon(Icons.check, size: 14, color: Colors.white)
                   : null,
             ),
-            const Text(
-              'Label',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: Color(0xFF3D3D3D),
-              ),
-            ),
+            const SizedBox(width: 8),
+            const Text('Label'),
           ],
         );
       },

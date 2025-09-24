@@ -9,7 +9,7 @@ This guide provides documentation for the Naked component library, focusing on u
 
 ## About Naked Components
 
-Naked components are unstyled, headless UI components for Flutter that provide behavior without visual styling. They give you complete control over appearance while handling complex interaction patterns, accessibility, and state management.
+Naked components are unstyled, headless UI components for Flutter that provide behavior without visual styling. Components handle interaction patterns, accessibility, and state management.
 
 Key features:
 - **Builder pattern** for direct state access (recommended)
@@ -53,7 +53,7 @@ class MyButton extends StatelessWidget {
         );
 
         return Container(
-          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           decoration: BoxDecoration(
             color: color,
             borderRadius: BorderRadius.circular(4),
@@ -96,7 +96,7 @@ class _MyLegacyButtonState extends State<MyLegacyButton> {
       onPressChange: (isPressed) => setState(() => _isPressed = isPressed),
       onFocusChange: (isFocused) => setState(() => _isFocused = isFocused),
       child: Container(
-        padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
           color: _isPressed
             ? Colors.blue.shade700
