@@ -60,6 +60,12 @@ class _TestWidgetWithStatesMixinState extends State<TestWidgetWithStatesMixin>
     updateSelectedState(selected, widget.onSelectedChange);
   }
 
+  // Public wrapper methods for protected state-modifying methods
+  bool testUpdateState(WidgetState state, bool value) => updateState(state, value);
+  bool testUpdateDisabledState(bool value) => updateDisabledState(value);
+  void testSyncWidgetStates() => syncWidgetStates();
+
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -219,7 +225,7 @@ void main() {
         expect(state.isFocused, isFalse);
 
         // Update state
-        final changed = state.updateState(WidgetState.focused, true);
+        final changed = state.testUpdateState(WidgetState.focused, true);
         expect(changed, isTrue);
         expect(state.isFocused, isTrue);
 
@@ -247,7 +253,7 @@ void main() {
         expect(state.isHovered, isTrue);
 
         // Try to set the same value
-        final changed = state.updateState(WidgetState.hovered, true);
+        final changed = state.testUpdateState(WidgetState.hovered, true);
         expect(changed, isFalse);
         expect(state.isHovered, isTrue);
       });
@@ -269,7 +275,7 @@ void main() {
         expect(state.isHovered, isTrue);
 
         // Remove state
-        final changed = state.updateState(WidgetState.hovered, false);
+        final changed = state.testUpdateState(WidgetState.hovered, false);
         expect(changed, isTrue);
         expect(state.isHovered, isFalse);
       });
@@ -452,7 +458,7 @@ void main() {
         expect(state.isDisabled, isFalse);
 
         // Enable disabled state
-        final changed = state.updateDisabledState(true);
+        final changed = state.testUpdateDisabledState(true);
         expect(changed, isTrue);
         expect(state.isDisabled, isTrue);
         expect(state.isEnabled, isFalse);
@@ -602,7 +608,7 @@ void main() {
 
       // Call updateState on unmounted widget - should not call setState
       expect(
-        () => state.updateState(WidgetState.hovered, true),
+        () => state.testUpdateState(WidgetState.hovered, true),
         returnsNormally,
       );
     });
@@ -619,7 +625,7 @@ void main() {
       );
 
       // Call syncWidgetStates - should execute without error
-      expect(() => state.syncWidgetStates(), returnsNormally);
+      expect(() => state.testSyncWidgetStates(), returnsNormally);
     });
   });
 }

@@ -99,8 +99,6 @@ void main() {
       testWidgets('handles focus in directional navigation mode', (
         tester,
       ) async {
-        bool focusChanged = false;
-
         await tester.pumpWidget(
           MaterialApp(
             home: MediaQuery(
@@ -110,7 +108,6 @@ void main() {
               child: NakedFocusableDetector(
                 enabled: false,
                 canRequestFocus: true,
-                onFocusChange: (focused) => focusChanged = focused,
                 child: Container(width: 100, height: 100),
               ),
             ),
@@ -349,11 +346,9 @@ void main() {
       testWidgets('only creates MouseRegion when onHoverChange provided', (
         tester,
       ) async {
-        Widget widget1, widget2;
-
         // Without onHoverChange
         await tester.pumpWidget(
-          widget1 = MaterialApp(
+          MaterialApp(
             home: NakedFocusableDetector(
               child: Container(width: 100, height: 100),
             ),
@@ -376,7 +371,7 @@ void main() {
 
         // With onHoverChange
         await tester.pumpWidget(
-          widget2 = MaterialApp(
+          MaterialApp(
             home: NakedFocusableDetector(
               onHoverChange: (_) {},
               child: Container(width: 100, height: 100),
