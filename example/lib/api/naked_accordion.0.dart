@@ -10,11 +10,29 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
+    return MaterialApp(
       home: Scaffold(
-        backgroundColor: Colors.white,
-        body: Center(
-          child: AccordionExample(),
+        backgroundColor: Colors.grey.shade50,
+        body: const Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'Simple Accordion',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(height: 8),
+              Text(
+                'Interact with the accordion to see sections expand and collapse',
+                style: TextStyle(color: Colors.grey),
+              ),
+              SizedBox(height: 24),
+              AccordionExample(),
+            ],
+          ),
         ),
       ),
     );
@@ -77,7 +95,7 @@ class AccordionItem extends StatefulWidget {
 class _AccordionItemState extends State<AccordionItem> {
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return DecoratedBox(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(12),
         color: Colors.grey.shade100,
@@ -133,11 +151,14 @@ class _AccordionItemState extends State<AccordionItem> {
         transitionBuilder: (child) => AnimatedSwitcher(
           duration: const Duration(milliseconds: 200),
           transitionBuilder: (child, animation) {
-            return SizeTransition(
-              axis: Axis.vertical,
-              sizeFactor: animation,
-              axisAlignment: 1,
-              child: child,
+            return FadeTransition(
+              opacity: animation.drive(CurveTween(curve: Curves.easeIn)),
+              child: SizeTransition(
+                axis: Axis.vertical,
+                sizeFactor: animation,
+                axisAlignment: 1,
+                child: child,
+              ),
             );
           },
           child: child,

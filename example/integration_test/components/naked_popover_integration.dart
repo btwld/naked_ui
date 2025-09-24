@@ -13,7 +13,7 @@ void main() {
     testWidgets('popover opens and closes correctly', (tester) async {
       // Use the actual example app
       await tester.pumpWidget(const MaterialApp(
-        home: popover_example.BasicPopoverExample(),
+        home: popover_example.PopoverExample(),
       ));
       await tester.pumpAndSettle();
 
@@ -41,7 +41,7 @@ void main() {
 
     testWidgets('popover responds to hover interactions', (tester) async {
       await tester.pumpWidget(const MaterialApp(
-        home: popover_example.BasicPopoverExample(),
+        home: popover_example.PopoverExample(),
       ));
       await tester.pumpAndSettle();
 
@@ -84,7 +84,7 @@ void main() {
 
     testWidgets('popover positioning works correctly', (tester) async {
       await tester.pumpWidget(const MaterialApp(
-        home: popover_example.BasicPopoverExample(),
+        home: popover_example.PopoverExample(),
       ));
       await tester.pumpAndSettle();
 
@@ -107,7 +107,7 @@ void main() {
 
     testWidgets('popover handles focus management', (tester) async {
       await tester.pumpWidget(const MaterialApp(
-        home: popover_example.BasicPopoverExample(),
+        home: popover_example.PopoverExample(),
       ));
       await tester.pumpAndSettle();
 

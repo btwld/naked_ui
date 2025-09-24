@@ -17,8 +17,8 @@ import 'api/naked_popover.0.dart' as popover_example;
 import 'api/naked_radio.0.dart' as radio_basic_example;
 // Select
 import 'api/naked_select.0.dart' as select_example;
-import 'api/naked_select.1.dart' as select_checkmark_example;
-import 'api/naked_select.2.dart' as select_cyberpunk_example;
+import 'api/naked_select.2.dart' as select_checkmark_example;
+import 'api/naked_select.1.dart' as select_cyberpunk_example;
 // Slider
 import 'api/naked_slider.0.dart' as slider_example;
 // Tabs
@@ -180,7 +180,7 @@ class DemoRegistry {
       id: 'popover-basic',
       title: 'Popover – Basic',
       category: 'Popover',
-      builder: (_) => const popover_example.BasicPopoverExample(),
+      builder: (_) => const popover_example.PopoverExample(),
       sourceUrl:
           'https://github.com/btwld/naked_ui/blob/main/example/lib/api/naked_popover.0.dart',
       tags: ['popover'],

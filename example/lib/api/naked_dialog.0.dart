@@ -10,11 +10,29 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
+    return MaterialApp(
       home: Scaffold(
-        backgroundColor: Colors.white,
-        body: Center(
-          child: DialogExample(),
+        backgroundColor: Colors.grey.shade50,
+        body: const Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'Simple Dialog',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(height: 8),
+              Text(
+                'Click the buttons to present a dialog',
+                style: TextStyle(color: Colors.grey),
+              ),
+              SizedBox(height: 24),
+              DialogExample(),
+            ],
+          ),
         ),
       ),
     );
@@ -29,10 +47,8 @@ class DialogExample extends StatefulWidget {
 }
 
 class _DialogExampleState extends State<DialogExample> {
-  String? _lastDialogResult;
-
   void _showBasicDialog() async {
-    final result = await showNakedDialog<String>(
+    await showNakedDialog<String>(
       context: context,
       barrierColor: Colors.black54,
       builder: (context) => Center(
@@ -97,16 +113,10 @@ class _DialogExampleState extends State<DialogExample> {
         ),
       ),
     );
-
-    if (result != null && mounted) {
-      setState(() {
-        _lastDialogResult = result;
-      });
-    }
   }
 
   void _showCustomDialog() async {
-    final result = await showNakedDialog<String>(
+    await showNakedDialog<String>(
       context: context,
       barrierColor: const Color(0x80E3F2FD),
       barrierDismissible: true,
@@ -169,12 +179,6 @@ class _DialogExampleState extends State<DialogExample> {
         ),
       ),
     );
-
-    if (result != null && mounted) {
-      setState(() {
-        _lastDialogResult = result;
-      });
-    }
   }
 
   @override
@@ -193,24 +197,6 @@ class _DialogExampleState extends State<DialogExample> {
           text: 'Show Custom Dialog',
           description: 'Top-aligned dialog with gradient background',
         ),
-        if (_lastDialogResult != null)
-          Container(
-            margin: const EdgeInsets.only(top: 24),
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.grey.shade50,
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: Colors.grey.shade300),
-            ),
-            child: Text(
-              'Last dialog result: $_lastDialogResult',
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey.shade700,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ),
       ],
     );
   }

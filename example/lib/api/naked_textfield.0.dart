@@ -10,11 +10,29 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
+    return MaterialApp(
       home: Scaffold(
-        backgroundColor: Colors.white,
-        body: Center(
-          child: TextFieldExample(),
+        backgroundColor: Colors.grey.shade50,
+        body: const Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'Simple TextField',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(height: 8),
+              Text(
+                'Interact with the textfield to see its states',
+                style: TextStyle(color: Colors.grey),
+              ),
+              SizedBox(height: 24),
+              TextFieldExample(),
+            ],
+          ),
         ),
       ),
     );
@@ -63,8 +81,9 @@ class _TextFieldExampleState extends State<TextFieldExample> {
                   boxShadow: [
                     if (state.isFocused)
                       BoxShadow(
-                        color: Colors.grey.shade100,
+                        color: Colors.grey.shade200,
                         spreadRadius: 3,
+                        blurStyle: BlurStyle.outer,
                         offset: const Offset(0, 0),
                       ),
                   ],
