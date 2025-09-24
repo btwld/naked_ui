@@ -134,8 +134,8 @@ abstract class NakedState {
   /// Checks widget states in priority order and returns the first
   /// matching value. If no states match, returns [orElse].
   ///
-  /// Priority order: selected → hovered → focused → pressed → disabled
-  /// → dragged → error → scrolledUnder → [orElse].
+  /// Priority order: disabled → pressed → dragged → selected → hovered
+  /// → focused → error → scrolledUnder → [orElse].
   T when<T>({
     T? selected,
     T? hovered,
@@ -147,12 +147,12 @@ abstract class NakedState {
     T? scrolledUnder,
     required T orElse,
   }) {
+    if (disabled != null && isDisabled) return disabled;
+    if (pressed != null && isPressed) return pressed;
+    if (dragged != null && isDragged) return dragged;
     if (selected != null && isSelected) return selected;
     if (hovered != null && isHovered) return hovered;
     if (focused != null && isFocused) return focused;
-    if (pressed != null && isPressed) return pressed;
-    if (disabled != null && isDisabled) return disabled;
-    if (dragged != null && isDragged) return dragged;
     if (error != null && isError) return error;
     if (scrolledUnder != null && isScrolledUnder) return scrolledUnder;
 
@@ -188,4 +188,3 @@ abstract class NakedState {
     );
   }
 }
-

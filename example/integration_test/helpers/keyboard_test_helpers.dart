@@ -18,6 +18,7 @@ extension KeyboardTestHelpers on WidgetTester {
     // Clear any pending timers or animations
     await pump(const Duration(milliseconds: 100));
   }
+
   /// Test tab navigation order through a list of widgets without relying on raw key events.
   /// Uses Focus traversal directly to avoid platform keyboard flakiness in integration runs.
   Future<void> verifyTabOrder(List<Finder> expectedOrder) async {

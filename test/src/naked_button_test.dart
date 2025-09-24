@@ -240,7 +240,6 @@ void main() {
       expect(wasLongPressed, isFalse);
     });
 
-
     testWidgets('calls onLongPress when only long-press provided', (
       WidgetTester tester,
     ) async {

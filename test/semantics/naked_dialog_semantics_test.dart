@@ -12,7 +12,6 @@ void main() {
     );
   }
 
-
   Future<void> _showNakedDialog(
     WidgetTester tester, {
     required String title,
@@ -53,12 +52,14 @@ void main() {
                         const SizedBox(height: 24),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.end,
-                          children: actions ?? [
-                            TextButton(
-                              onPressed: () => Navigator.of(context).pop(),
-                              child: const Text('OK'),
-                            ),
-                          ],
+                          children:
+                              actions ??
+                              [
+                                TextButton(
+                                  onPressed: () => Navigator.of(context).pop(),
+                                  child: const Text('OK'),
+                                ),
+                              ],
                         ),
                       ],
                     ),
@@ -103,14 +104,8 @@ void main() {
         title: 'Focus Test',
         content: 'Test content',
         actions: [
-          TextButton(
-            onPressed: () {},
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () {},
-            child: const Text('OK'),
-          ),
+          TextButton(onPressed: () {}, child: const Text('Cancel')),
+          TextButton(onPressed: () {}, child: const Text('OK')),
         ],
       );
 
@@ -162,7 +157,10 @@ void main() {
       // Test that dialog has proper barrier semantics by checking
       // that it prevents interaction with background content
       // (The actual barrier dismissal behavior is more complex to test reliably)
-      expect(find.text('Show Dialog'), findsOneWidget); // Button should still be there but not accessible
+      expect(
+        find.text('Show Dialog'),
+        findsOneWidget,
+      ); // Button should still be there but not accessible
 
       handle.dispose();
     });
@@ -198,9 +196,7 @@ void main() {
               width: 200,
               height: 100,
               color: Colors.white,
-              child: const Center(
-                child: Text('Non-modal content'),
-              ),
+              child: const Center(child: Text('Non-modal content')),
             ),
           ),
         ),
@@ -218,9 +214,7 @@ void main() {
               width: 200,
               height: 100,
               color: Colors.white,
-              child: const Center(
-                child: Text('Modal content'),
-              ),
+              child: const Center(child: Text('Modal content')),
             ),
           ),
         ),
@@ -239,19 +233,16 @@ void main() {
         title: 'Action Test',
         content: 'Dialog with multiple actions',
         actions: [
-          TextButton(
-            onPressed: () {},
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () {},
-            child: const Text('Confirm'),
-          ),
+          TextButton(onPressed: () {}, child: const Text('Cancel')),
+          ElevatedButton(onPressed: () {}, child: const Text('Confirm')),
         ],
       );
 
       // Verify action buttons have proper semantics
-      final cancelButton = summarizeMergedFromRoot(tester, control: ControlType.button);
+      final cancelButton = summarizeMergedFromRoot(
+        tester,
+        control: ControlType.button,
+      );
       expect(cancelButton.actions.contains('tap'), isTrue);
       expect(cancelButton.flags.contains('isButton'), isTrue);
 

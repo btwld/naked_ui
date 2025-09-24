@@ -1,5 +1,15 @@
 
 
+## 0.2.0-beta.2
+
+### Bug Fixes
+
+- Fixed `.when` method priority order to prioritize active interaction states (dragged) before selection states
+
+### Improvements
+
+- Added comprehensive test coverage for mixins and utilities
+
 ## 0.2.0-beta.1
 
 - Added: Popover; Toggle

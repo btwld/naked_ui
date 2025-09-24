@@ -238,9 +238,7 @@ void main() {
             builder: (context, state, child) {
               return Container(
                 key: const Key('trigger'),
-                color: state.isHovered
-                    ? Colors.grey[200]
-                    : null,
+                color: state.isHovered ? Colors.grey[200] : null,
                 child: const Text('Select option'),
               );
             },
@@ -277,9 +275,7 @@ void main() {
             builder: (context, state, child) {
               return Container(
                 key: const Key('trigger'),
-                color: state.isPressed
-                    ? Colors.grey[400]
-                    : null,
+                color: state.isPressed ? Colors.grey[400] : null,
                 child: const Text('Select option'),
               );
             },
@@ -297,7 +293,8 @@ void main() {
       final gesture = await tester.startGesture(
         tester.getCenter(find.text('Select option')),
       );
-      await tester.pump();
+      // Allow time for gesture recognition to complete
+      await tester.pump(const Duration(milliseconds: 100));
 
       // Verify pressed state is reflected in the UI
       final container = tester.widget<Container>(
@@ -366,9 +363,7 @@ void main() {
                   builder: (context, state, child) {
                     return Container(
                       key: const Key('apple-option'),
-                      color: state.isHovered
-                          ? const Color(0xFFE0E0E0)
-                          : null,
+                      color: state.isHovered ? const Color(0xFFE0E0E0) : null,
                       child: child,
                     );
                   },

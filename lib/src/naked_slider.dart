@@ -69,7 +69,6 @@ class NakedSliderState extends NakedState {
       Object.hash(states, value, min, max, divisions, isDragging);
 }
 
-
 /// A headless slider without visuals.
 ///
 /// Controlled by [value] in the range
@@ -464,4 +463,3 @@ class _NakedSliderState extends State<NakedSlider>
     );
   }
 }
-

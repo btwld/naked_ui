@@ -21,16 +21,18 @@ void main() {
 
     group('state getters', () {
       test('return correct state for each WidgetState', () {
-        final nakedState = TestNakedState(states: {
-          WidgetState.hovered,
-          WidgetState.focused,
-          WidgetState.pressed,
-          WidgetState.dragged,
-          WidgetState.selected,
-          WidgetState.disabled,
-          WidgetState.error,
-          WidgetState.scrolledUnder,
-        });
+        final nakedState = TestNakedState(
+          states: {
+            WidgetState.hovered,
+            WidgetState.focused,
+            WidgetState.pressed,
+            WidgetState.dragged,
+            WidgetState.selected,
+            WidgetState.disabled,
+            WidgetState.error,
+            WidgetState.scrolledUnder,
+          },
+        );
 
         expect(nakedState.isHovered, isTrue);
         expect(nakedState.isFocused, isTrue);
@@ -52,32 +54,49 @@ void main() {
 
     group('matches', () {
       test('returns true when all states match', () {
-        final nakedState = TestNakedState(states: {
-          WidgetState.hovered,
-          WidgetState.focused,
-          WidgetState.pressed,
-        });
+        final nakedState = TestNakedState(
+          states: {
+            WidgetState.hovered,
+            WidgetState.focused,
+            WidgetState.pressed,
+          },
+        );
 
         expect(nakedState.matches({WidgetState.hovered}), isTrue);
-        expect(nakedState.matches({WidgetState.hovered, WidgetState.focused}), isTrue);
-        expect(nakedState.matches({WidgetState.hovered, WidgetState.focused, WidgetState.pressed}), isTrue);
+        expect(
+          nakedState.matches({WidgetState.hovered, WidgetState.focused}),
+          isTrue,
+        );
+        expect(
+          nakedState.matches({
+            WidgetState.hovered,
+            WidgetState.focused,
+            WidgetState.pressed,
+          }),
+          isTrue,
+        );
       });
 
       test('returns false when not all states match', () {
         final nakedState = TestNakedState(states: {WidgetState.hovered});
 
         expect(nakedState.matches({WidgetState.focused}), isFalse);
-        expect(nakedState.matches({WidgetState.hovered, WidgetState.focused}), isFalse);
+        expect(
+          nakedState.matches({WidgetState.hovered, WidgetState.focused}),
+          isFalse,
+        );
       });
     });
 
     group('when', () {
       test('returns first matching state in priority order', () {
-        final nakedState = TestNakedState(states: {
-          WidgetState.hovered,
-          WidgetState.focused,
-          WidgetState.selected,
-        });
+        final nakedState = TestNakedState(
+          states: {
+            WidgetState.hovered,
+            WidgetState.focused,
+            WidgetState.selected,
+          },
+        );
 
         // Selected has highest priority
         final result = nakedState.when(
@@ -91,10 +110,9 @@ void main() {
       });
 
       test('returns hovered when selected is not provided', () {
-        final nakedState = TestNakedState(states: {
-          WidgetState.hovered,
-          WidgetState.focused,
-        });
+        final nakedState = TestNakedState(
+          states: {WidgetState.hovered, WidgetState.focused},
+        );
 
         final result = nakedState.when(
           hovered: 'hovered',
@@ -253,7 +271,9 @@ void main() {
         );
       });
 
-      testWidgets('controllerOf() returns controller from context', (tester) async {
+      testWidgets('controllerOf() returns controller from context', (
+        tester,
+      ) async {
         final testState = TestNakedState(states: {WidgetState.hovered});
 
         await tester.pumpWidget(
@@ -273,7 +293,9 @@ void main() {
         );
       });
 
-      testWidgets('maybeControllerOf() returns controller from context', (tester) async {
+      testWidgets('maybeControllerOf() returns controller from context', (
+        tester,
+      ) async {
         final testState = TestNakedState(states: {WidgetState.hovered});
 
         await tester.pumpWidget(
@@ -293,7 +315,9 @@ void main() {
         );
       });
 
-      testWidgets('maybeControllerOf() returns null when no controller found', (tester) async {
+      testWidgets('maybeControllerOf() returns null when no controller found', (
+        tester,
+      ) async {
         await tester.pumpWidget(
           MaterialApp(
             home: Builder(

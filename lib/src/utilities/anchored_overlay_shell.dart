@@ -76,7 +76,8 @@ class AnchoredOverlayShell extends StatelessWidget {
                   actions: NakedIntentActions.menu.actions(
                     onDismiss: () => controller.close(),
                     onNextFocus: () => FocusScope.of(context).nextFocus(),
-                    onPreviousFocus: () => FocusScope.of(context).previousFocus(),
+                    onPreviousFocus: () =>
+                        FocusScope.of(context).previousFocus(),
                   ),
                   child: Focus(
                     autofocus: true,
@@ -130,7 +131,6 @@ class AnchoredOverlayShell extends StatelessWidget {
 
   /// Optional custom positioner for overlay content.
   final OverlayPositioner? positioner;
-
 
   @override
   Widget build(BuildContext context) {

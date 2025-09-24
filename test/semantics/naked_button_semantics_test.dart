@@ -266,58 +266,55 @@ void main() {
       handle.dispose();
     });
 
-    testWidgets(
-      'event callbacks: tap and longPress parity',
-      (tester) async {
-        final handle = tester.ensureSemantics();
+    testWidgets('event callbacks: tap and longPress parity', (tester) async {
+      final handle = tester.ensureSemantics();
 
-        bool materialTapped = false;
-        bool materialLongPressed = false;
-        await tester.pumpWidget(
-          _buildTestApp(
-            ElevatedButton(
-              onPressed: () {
-                materialTapped = true;
-              },
-              onLongPress: () {
-                materialLongPressed = true;
-              },
-              child: const Text('Evt M'),
-            ),
+      bool materialTapped = false;
+      bool materialLongPressed = false;
+      await tester.pumpWidget(
+        _buildTestApp(
+          ElevatedButton(
+            onPressed: () {
+              materialTapped = true;
+            },
+            onLongPress: () {
+              materialLongPressed = true;
+            },
+            child: const Text('Evt M'),
           ),
-        );
-        await tester.tap(find.byType(ElevatedButton));
-        await tester.pump();
-        expect(materialTapped, isTrue);
-        await tester.longPress(find.byType(ElevatedButton));
-        await tester.pump();
-        expect(materialLongPressed, isTrue);
+        ),
+      );
+      await tester.tap(find.byType(ElevatedButton));
+      await tester.pump();
+      expect(materialTapped, isTrue);
+      await tester.longPress(find.byType(ElevatedButton));
+      await tester.pump();
+      expect(materialLongPressed, isTrue);
 
-        bool nakedTapped = false;
-        bool nakedLongPressed = false;
-        await tester.pumpWidget(
-          _buildTestApp(
-            NakedButton(
-              onPressed: () {
-                nakedTapped = true;
-              },
-              onLongPress: () {
-                nakedLongPressed = true;
-              },
-              child: const Text('Evt N'),
-            ),
+      bool nakedTapped = false;
+      bool nakedLongPressed = false;
+      await tester.pumpWidget(
+        _buildTestApp(
+          NakedButton(
+            onPressed: () {
+              nakedTapped = true;
+            },
+            onLongPress: () {
+              nakedLongPressed = true;
+            },
+            child: const Text('Evt N'),
           ),
-        );
-        await tester.tap(find.byType(NakedButton));
-        await tester.pump();
-        expect(nakedTapped, isTrue);
-        await tester.longPress(find.byType(NakedButton));
-        await tester.pump();
-        expect(nakedLongPressed, isTrue);
+        ),
+      );
+      await tester.tap(find.byType(NakedButton));
+      await tester.pump();
+      expect(nakedTapped, isTrue);
+      await tester.longPress(find.byType(NakedButton));
+      await tester.pump();
+      expect(nakedLongPressed, isTrue);
 
-        handle.dispose();
-      },
-    );
+      handle.dispose();
+    });
 
     testWidgets('parity with MaterialButton (disabled)', (tester) async {
       final handle = tester.ensureSemantics();
