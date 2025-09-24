@@ -154,7 +154,6 @@ class _CheckmarkSelectExampleState extends State<CheckmarkSelectExample> {
       child: NakedSelect<String>(
         value: _selectedValue,
         onOpenRequested: (_, show) {
-          print('onOpenRequested');
           show();
         },
         onChanged: (value) => setState(() => _selectedValue = value),
