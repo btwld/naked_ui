@@ -263,9 +263,7 @@ void main() {
                         ? Colors.blue.shade100
                         : Colors.grey.shade100,
                     border: Border.all(
-                      color: state.isPressed
-                          ? Colors.blue
-                          : Colors.grey,
+                      color: state.isPressed ? Colors.blue : Colors.grey,
                       width: 2,
                     ),
                     borderRadius: BorderRadius.circular(8),

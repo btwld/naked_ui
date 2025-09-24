@@ -1,13 +1,12 @@
 # naked_ui
 
-The Naked UI library provides headless components that handle functionality, interaction, and accessibility without imposing any visual styling. This approach gives you full control over your design system while ensuring components work correctly and meet accessibility standards.
+A Flutter UI library for headless widgets. No styling, just behavior. Build custom UIs with full semantics and observable states like hovered, focused, pressed, dragged, and others.
 
-## Key Features
-
-- Zero‑styling: behavior only — you own presentation
-- Accessible: correct semantics and keyboard navigation
-- Observable state: hover, focus, press, drag, select
-- Composable: small, predictable APIs
+## Features
+- No styling: Completely naked components for total design control.
+- Full semantics: Built-in accessibility for screen readers and assistive tools.
+- Observable states: Track hover, focus, drag, and more.
+- Builder APIs: Composable widgets for custom UI logic.
 
 ## Documentation
 
@@ -40,54 +39,103 @@ The complete documentation covers detailed component APIs and examples, guides a
 2. **Wrap with Naked behavior**: Wrap your design with the appropriate Naked component
 3. **Handle state changes**: Use the builder pattern to access component state and update your visual design accordingly
 
-## Example: Creating a Custom Button
+## Examples
+
+Below are examples of using `NakedButton`, `NakedCheckbox`, and `NakedMenu`. Each shows how to wrap custom visuals with headless behavior and handle states using the builder pattern. See the [full documentation](https://docs.page/btwld/naked_ui) for all components.
+
+### Custom Button
+Create a button with custom styling that responds to interaction states.
 
 ```dart
-class MyCustomButton extends StatelessWidget {
-  final String text;
-  final VoidCallback onPressed;
+NakedButton(
+  onPressed: () => print('Clicked'),
+  builder: (context, state, child) => Container(
+    padding: const EdgeInsets.all(12),
+    color: state.when(
+      pressed: Colors.blue.shade900,
+      hovered: Colors.blue.shade700,
+      focused: Colors.blue.shade600,
+      orElse: Colors.blue,
+    ),
+    child: const Text('Click Me', style: TextStyle(color: Colors.white)),
+  ),
+)
+```
 
-  const MyCustomButton({
-    Key? key,
-    required this.text,
-    required this.onPressed,
-  }) : super(key: key);
+### Custom Checkbox
+Build a checkbox with custom visuals while maintaining proper state management.
+
+```dart
+class SimpleCheckbox extends StatefulWidget {
+  const SimpleCheckbox({super.key});
+
+  @override
+  State<SimpleCheckbox> createState() => _SimpleCheckboxState();
+}
+
+class _SimpleCheckboxState extends State<SimpleCheckbox> {
+  bool checked = false;
 
   @override
   Widget build(BuildContext context) {
-    return NakedButton(
-      onPressed: onPressed,
+    return NakedCheckbox(
+      value: checked,
+      onChanged: (value) => setState(() => checked = value!),
       builder: (context, state, child) => Container(
-        padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-        decoration: BoxDecoration(
-          color: state.when(
-            pressed: Colors.blue.shade800,    // Darker when pressed
-            hovered: Colors.blue.shade600,    // Slightly darker when hovered
-            orElse: Colors.blue.shade500,     // Default color
-          ),
-          borderRadius: BorderRadius.circular(4),
-          border: Border.all(
-            color: state.isFocused ? Colors.white : Colors.transparent,
-            width: 2,
-          ),
+        width: 24,
+        height: 24,
+        color: state.when(
+          hovered: Colors.grey.shade300,
+          focused: Colors.blue.shade100,
+          orElse: state.isChecked ? Colors.blue : Colors.grey.shade200,
         ),
-        child: Text(
-          text,
-          style: TextStyle(color: Colors.white),
-        ),
+        child: state.isChecked ? const Icon(Icons.check, size: 16) : null,
       ),
-      const SizedBox(height: 12),
-      NakedTabView(
-        tabId: 'preview',
-        child: const Text('Preview content'),
-      ),
-      NakedTabView(
-        tabId: 'code',
-        child: const Text('Source code'),
-      ),
-    ],
+    );
+  }
+}
+```
+
+### Custom Menu
+Create a dropdown menu with custom styling and menu items.
+
+```dart
+NakedMenu<String>(
+  onSelected: (value) => print('Selected: $value'),
+  builder: (context, state, child) => Container(
+    padding: const EdgeInsets.all(8),
+    color: state.when(
+      hovered: Colors.grey.shade300,
+      pressed: Colors.grey.shade400,
+      orElse: state.isOpen ? Colors.grey.shade200 : Colors.white,
+    ),
+    child: Text(state.isOpen ? 'Close' : 'Menu'),
   ),
-);
+  overlayBuilder: (context, info) => Container(
+    color: Colors.white,
+    child: Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        NakedMenuItem(
+          value: 'edit',
+          builder: (context, state, child) => Container(
+            padding: const EdgeInsets.all(8),
+            color: state.isHovered ? Colors.blue.shade100 : Colors.white,
+            child: const Text('Edit'),
+          ),
+        ),
+        NakedMenuItem(
+          value: 'delete',
+          builder: (context, state, child) => Container(
+            padding: const EdgeInsets.all(8),
+            color: state.isHovered ? Colors.red.shade100 : Colors.white,
+            child: const Text('Delete'),
+          ),
+        ),
+      ],
+    ),
+  ),
+)
 ```
 
 ## Builder Pattern

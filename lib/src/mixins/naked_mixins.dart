@@ -41,31 +41,24 @@ mixin WidgetStatesMixin<T extends StatefulWidget> on State<T> {
   Set<WidgetState> _widgetStates = <WidgetState>{};
 
   /// Current widget states (copy) for use in builders and semantics.
-  @protected
   Set<WidgetState> get widgetStates => {..._widgetStates};
 
   /// Whether the widget currently has keyboard focus.
-  @protected
   bool get isFocused => _widgetStates.contains(WidgetState.focused);
 
   /// Whether the widget is currently being hovered over by a mouse cursor.
-  @protected
   bool get isHovered => _widgetStates.contains(WidgetState.hovered);
 
   /// Whether the widget is currently being pressed.
-  @protected
   bool get isPressed => _widgetStates.contains(WidgetState.pressed);
 
   /// Whether the widget is disabled and cannot be interacted with.
-  @protected
   bool get isDisabled => _widgetStates.contains(WidgetState.disabled);
 
   /// Whether the widget is currently selected.
-  @protected
   bool get isSelected => _widgetStates.contains(WidgetState.selected);
 
   /// Whether the widget is enabled (not disabled).
-  @protected
   bool get isEnabled => !isDisabled;
 
   /// Hook for widgets to initialize states based on widget properties.
@@ -197,7 +190,6 @@ mixin FocusNodeMixin<T extends StatefulWidget> on State<T> {
   FocusNode? _internalFocusNode;
   FocusNode? _lastExternalNode;
 
-  @protected
   FocusNode get effectiveFocusNode => widgetProvidedNode ?? _internalFocusNode!;
 
   void _notifyFocusChanged() {

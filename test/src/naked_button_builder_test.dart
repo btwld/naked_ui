@@ -365,7 +365,8 @@ void main() {
       final gesture = await tester.startGesture(
         tester.getCenter(find.byType(NakedButton)),
       );
-      await tester.pump();
+      // Allow time for gesture recognition to complete
+      await tester.pump(const Duration(milliseconds: 100));
 
       expect(isPressed, isTrue);
       expect(isFocused, isTrue); // Still focused

@@ -4,6 +4,7 @@ import 'package:flutter/widgets.dart';
 import 'api/naked_accordion.0.dart' as accordion_example;
 // Button
 import 'api/naked_button.0.dart' as button_basic_example;
+import 'api/naked_button.1.dart' as button_builder_example;
 // Checkbox
 import 'api/naked_checkbox.0.dart' as checkbox_basic_example;
 // Dialog
@@ -59,6 +60,15 @@ class DemoRegistry {
       tags: ['button'],
     ),
     Demo(
+      id: 'button-builder',
+      title: 'Button – Simple Builder',
+      category: 'Button',
+      builder: (_) => const button_builder_example.SimpleBuilderExample(),
+      sourceUrl:
+          'https://github.com/btwld/naked_ui/blob/main/example/lib/api/naked_button.1.dart',
+      tags: ['button', 'builder'],
+    ),
+    Demo(
       id: 'checkbox-basic',
       title: 'Checkbox – Basic',
       category: 'Checkbox',
@@ -98,8 +108,7 @@ class DemoRegistry {
       id: 'select-cyberpunk',
       title: 'Select – Cyberpunk',
       category: 'Select',
-      builder: (_) =>
-          const select_cyberpunk_example.CyberpunkSelectExample(),
+      builder: (_) => const select_cyberpunk_example.CyberpunkSelectExample(),
       sourceUrl:
           'https://github.com/btwld/naked_ui/blob/main/example/lib/api/naked_select.2.dart',
       tags: ['select', 'cyberpunk', 'glow'],

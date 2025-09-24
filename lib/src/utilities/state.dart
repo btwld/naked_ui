@@ -147,11 +147,11 @@ abstract class NakedState {
     T? scrolledUnder,
     required T orElse,
   }) {
+    if (disabled != null && isDisabled) return disabled;
+    if (pressed != null && isPressed) return pressed;
     if (selected != null && isSelected) return selected;
     if (hovered != null && isHovered) return hovered;
     if (focused != null && isFocused) return focused;
-    if (pressed != null && isPressed) return pressed;
-    if (disabled != null && isDisabled) return disabled;
     if (dragged != null && isDragged) return dragged;
     if (error != null && isError) return error;
     if (scrolledUnder != null && isScrolledUnder) return scrolledUnder;
@@ -188,4 +188,3 @@ abstract class NakedState {
     );
   }
 }
-

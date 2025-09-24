@@ -46,7 +46,8 @@ class _TextFieldExampleState extends State<TextFieldExample> {
               final state = NakedTextFieldState.of(context);
               return AnimatedContainer(
                 duration: const Duration(milliseconds: 200),
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(10),
                   color: state.when(
