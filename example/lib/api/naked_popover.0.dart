@@ -98,7 +98,7 @@ class _PopoverExampleState extends State<PopoverExample> {
           borderRadius: BorderRadius.circular(8),
         ),
         child: const Text(
-          'Button',
+          'Show Popover',
           style: TextStyle(
             color: Colors.white,
             fontSize: 14,
