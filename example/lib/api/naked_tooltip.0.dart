@@ -10,11 +10,29 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
+    return MaterialApp(
       home: Scaffold(
-        backgroundColor: Colors.white,
-        body: Center(
-          child: TooltipExample(),
+        backgroundColor: Colors.grey.shade50,
+        body: const Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'Simple Tooltip',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(height: 8),
+              Text(
+                'Hover the button to see the tooltip',
+                style: TextStyle(color: Colors.grey),
+              ),
+              SizedBox(height: 24),
+              TooltipExample(),
+            ],
+          ),
         ),
       ),
     );
@@ -51,39 +69,25 @@ class _TooltipExampleState extends State<TooltipExample>
       ),
       waitDuration: const Duration(seconds: 0),
       showDuration: const Duration(seconds: 0),
-      onOpen: () => _animationController.forward(),
-      onClose: () => _animationController.reverse(),
-      overlayBuilder: (context, info) => SlideTransition(
-        position: _animationController.drive(Tween<Offset>(
-          begin: const Offset(0, 0.1),
-          end: const Offset(0, 0),
-        )),
-        child: FadeTransition(
-          opacity: _animationController,
-          child: Container(
-            // Add gap between tooltip and trigger, since follower is aligned on its bottom.
-            margin: const EdgeInsets.only(bottom: 8),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              constraints: const BoxConstraints(maxWidth: 260),
-              decoration: BoxDecoration(
-                color: Colors.grey[800],
-                borderRadius: BorderRadius.circular(10),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.2),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
+      // onOpen: () => _animationController.forward(),
+      // onClose: () => _animationController.reverse(),
+      overlayBuilder: (context, info) => Align(
+        child: Container(
+          height: 100,
+          width: 100,
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          decoration: BoxDecoration(
+            color: Colors.grey.shade800,
+            borderRadius: BorderRadius.circular(10),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.2),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
               ),
-              child: const DefaultTextStyle(
-                style: TextStyle(color: Colors.white, fontSize: 13),
-                textAlign: TextAlign.center,
-                child: Text('This is a tooltip'),
-              ),
-            ),
+            ],
           ),
+          child: const Text('This is a tooltip'),
         ),
       ),
       child: Container(

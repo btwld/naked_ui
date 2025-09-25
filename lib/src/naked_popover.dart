@@ -76,6 +76,7 @@ class NakedPopover extends StatefulWidget {
     this.onClose,
     this.onOpenRequested,
     this.onCloseRequested,
+    this.controller,
   }) : assert(
          child != null || builder != null,
          'Either child or builder must be provided',
@@ -111,6 +112,8 @@ class NakedPopover extends StatefulWidget {
   /// Called when the popover closes.
   final VoidCallback? onClose;
 
+  final MenuController? controller;
+
   /// Called when a request is made to open the popover.
   ///
   /// This callback allows you to customize the opening behavior, such as
@@ -129,7 +132,7 @@ class NakedPopover extends StatefulWidget {
 
 class _NakedPopoverState extends State<NakedPopover> {
   // ignore: dispose-fields
-  final _menuController = MenuController();
+  late final _menuController = widget.controller ?? MenuController();
   late final _statesController = WidgetStatesController();
 
   // Internal node used when the child does not already provide a Focus.

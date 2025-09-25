@@ -28,36 +28,36 @@ void main() {
       expect(systemTab, findsOneWidget);
 
       // Verify initial state - Light tab content should be visible
-      expect(find.text('Content for Tab 1'), findsOneWidget);
-      expect(find.text('Content for Tab 2'), findsNothing);
-      expect(find.text('Content for Tab 3'), findsNothing);
+      expect(find.text('Tab Content Light'), findsOneWidget);
+      expect(find.text('Tab Content Dark'), findsNothing);
+      expect(find.text('Tab Content System'), findsNothing);
 
       // Click Dark tab
       await tester.tap(darkTab);
       await tester.pumpAndSettle();
 
       // Verify Dark tab content is now visible
-      expect(find.text('Content for Tab 1'), findsNothing);
-      expect(find.text('Content for Tab 2'), findsOneWidget);
-      expect(find.text('Content for Tab 3'), findsNothing);
+      expect(find.text('Tab Content Light'), findsNothing);
+      expect(find.text('Tab Content Dark'), findsOneWidget);
+      expect(find.text('Tab Content System'), findsNothing);
 
       // Click System tab
       await tester.tap(systemTab);
       await tester.pumpAndSettle();
 
       // Verify System tab content is now visible
-      expect(find.text('Content for Tab 1'), findsNothing);
-      expect(find.text('Content for Tab 2'), findsNothing);
-      expect(find.text('Content for Tab 3'), findsOneWidget);
+      expect(find.text('Tab Content Light'), findsNothing);
+      expect(find.text('Tab Content Dark'), findsNothing);
+      expect(find.text('Tab Content System'), findsOneWidget);
 
       // Click Light tab again
       await tester.tap(lightTab);
       await tester.pumpAndSettle();
 
       // Verify Light tab content is visible again
-      expect(find.text('Content for Tab 1'), findsOneWidget);
-      expect(find.text('Content for Tab 2'), findsNothing);
-      expect(find.text('Content for Tab 3'), findsNothing);
+      expect(find.text('Tab Content Light'), findsOneWidget);
+      expect(find.text('Tab Content Dark'), findsNothing);
+      expect(find.text('Tab Content System'), findsNothing);
     });
 
     testWidgets('tabs respond to keyboard navigation', (tester) async {
@@ -222,9 +222,9 @@ void main() {
       // Test interaction with styled tabs
       final tabs = ['Light', 'Dark', 'System'];
       final expectedContents = [
-        'Content for Tab 1',
-        'Content for Tab 2',
-        'Content for Tab 3'
+        'Tab Content Light',
+        'Tab Content Dark',
+        'Tab Content System'
       ];
 
       for (int i = 0; i < tabs.length; i++) {

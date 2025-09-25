@@ -10,11 +10,29 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
+    return MaterialApp(
       home: Scaffold(
-        backgroundColor: Colors.white,
-        body: Center(
-          child: TabsExample(),
+        backgroundColor: Colors.grey.shade50,
+        body: const Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'Simple Tabs',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(height: 8),
+              Text(
+                'Interact with the tabs to see their states',
+                style: TextStyle(color: Colors.grey),
+              ),
+              SizedBox(height: 24),
+              TabsExample(),
+            ],
+          ),
         ),
       ),
     );
@@ -38,6 +56,7 @@ class _TabsExampleState extends State<TabsExample> {
       onChanged: (tabId) => setState(() => _selectedTabId = tabId),
       child: Column(
         mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
             width: 300,
@@ -80,29 +99,17 @@ class _TabsExampleState extends State<TabsExample> {
           const SizedBox(
             height: 8,
           ),
-          NakedTabView(
+          const NakedTabView(
             tabId: 'light',
-            child: Container(
-              padding: const EdgeInsets.all(16),
-              color: Colors.blue.shade50,
-              child: const Text('Content for Tab 1'),
-            ),
+            child: Text('Tab Content Light'),
           ),
-          NakedTabView(
+          const NakedTabView(
             tabId: 'dark',
-            child: Container(
-              padding: const EdgeInsets.all(16),
-              color: Colors.green.shade50,
-              child: const Text('Content for Tab 2'),
-            ),
+            child: Text('Tab Content Dark'),
           ),
-          NakedTabView(
+          const NakedTabView(
             tabId: 'system',
-            child: Container(
-              padding: const EdgeInsets.all(16),
-              color: Colors.orange.shade50,
-              child: const Text('Content for Tab 3'),
-            ),
+            child: Text('Tab Content System'),
           ),
         ],
       ),
@@ -146,16 +153,16 @@ class _TabItemState extends State<TabItem> {
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
           decoration: BoxDecoration(
             color: backgroundColor,
-            borderRadius: const BorderRadius.only(
-              topLeft: Radius.circular(4),
-              topRight: Radius.circular(4),
+            borderRadius: const BorderRadius.all(
+              Radius.circular(4),
             ),
           ),
           child: AnimatedDefaultTextStyle(
             duration: const Duration(milliseconds: 150),
             style: TextStyle(
               color: textColor,
-              fontWeight: FontWeight.bold,
+              fontWeight:
+                  state.isSelected ? FontWeight.w500 : FontWeight.normal,
             ),
             child: Text(
               widget.label,
