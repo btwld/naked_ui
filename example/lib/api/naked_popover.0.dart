@@ -26,7 +26,7 @@ class MyApp extends StatelessWidget {
               ),
               SizedBox(height: 8),
               Text(
-                'Click the button to open the popover',
+                'Click the button to show the popover',
                 style: TextStyle(color: Colors.grey),
               ),
               SizedBox(height: 24),
@@ -98,7 +98,7 @@ class _PopoverExampleState extends State<PopoverExample> {
           borderRadius: BorderRadius.circular(8),
         ),
         child: const Text(
-          'Popover',
+          'Button',
           style: TextStyle(
             color: Colors.white,
             fontSize: 14,
