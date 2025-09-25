@@ -48,26 +48,26 @@ class _ToggleButtonExampleState extends State<ToggleButtonExample> {
       onChanged: onChanged,
       semanticLabel: tooltip,
       builder: (context, state, child) {
-        final isSelected = state.isToggled;
-        final isHovered = state.isHovered;
-        final isFocused = state.isFocused;
-        final isPressed = state.isPressed;
+        final backgroundColor = state.when(
+          toggled: Colors.blue.shade600,
+          hovered: Colors.grey.shade200,
+          orElse: Colors.transparent,
+        );
+
+        final border = state.when(
+          focused: Border.all(color: Colors.blue, width: 2),
+          orElse: Border.all(color: Colors.grey.shade300),
+        );
 
         return AnimatedContainer(
           duration: const Duration(milliseconds: 150),
           width: 40,
           height: 40,
           decoration: BoxDecoration(
-            color: isSelected
-                ? Colors.blue.shade600
-                : isHovered
-                    ? Colors.grey.shade200
-                    : Colors.transparent,
+            color: backgroundColor,
             borderRadius: BorderRadius.circular(6),
-            border: isFocused
-                ? Border.all(color: Colors.blue, width: 2)
-                : Border.all(color: Colors.grey.shade300),
-            boxShadow: isPressed
+            border: border,
+            boxShadow: state.isPressed
                 ? [
                     BoxShadow(
                       color: Colors.black.withValues(alpha: 0.1),
@@ -206,16 +206,16 @@ class ToggleGroupExample extends StatelessWidget {
         children: [
           NakedToggleOption<String>(
             value: 'grid',
-            builder: (context, optionState, _) {
-              final isCurrent = optionState.isSelected;
+            builder: (context, state, _) {
+              final isCurrent = state.isSelected;
               return _SegmentChip(label: 'Grid', selected: isCurrent);
             },
           ),
           const SizedBox(width: 8),
           NakedToggleOption<String>(
             value: 'list',
-            builder: (context, optionState, _) {
-              final isCurrent = optionState.isSelected;
+            builder: (context, state, _) {
+              final isCurrent = state.isSelected;
               return _SegmentChip(label: 'List', selected: isCurrent);
             },
           ),
@@ -240,7 +240,7 @@ class _SegmentChip extends StatelessWidget {
         borderRadius: BorderRadius.circular(8),
         color: selected ? Colors.blue.shade600 : Colors.grey.shade200,
       ),
-      child: Text(
+      child: const Text(
         label,
         style: TextStyle(
           color: selected ? Colors.white : Colors.grey.shade800,

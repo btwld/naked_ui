@@ -129,18 +129,18 @@ class _MenuItem extends StatelessWidget {
     return NakedMenuItem<String>(
       value: value,
       builder: (context, itemState, _) {
-        final bool hovered = itemState.isHovered;
+        final bool isHovered = itemState.isHovered;
         final bool selected = selectedValue == value;
 
         return Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-          color: hovered ? Colors.grey.shade100 : null,
+          color: isHovered ? Colors.grey.shade100 : null,
           child: Row(
             children: [
               Icon(icon, size: 16,
                   color: selected ? Colors.blue : Colors.grey.shade700),
               const SizedBox(width: 12),
-              Expanded(child: Text(label)),
+              Expanded(child: const Text(label)),
               if (selected)
                 const Icon(Icons.check, size: 16, color: Colors.blue),
             ],

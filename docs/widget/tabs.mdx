@@ -104,35 +104,38 @@ class _TabChip extends StatelessWidget {
   Widget build(BuildContext context) {
     return NakedTab(
       tabId: tabId,
-      builder: (context, tabState, _) {
-        final bool isActive = tabState.isSelected;
-        final bool isHovered = tabState.isHovered;
-        final bool isFocused = tabState.isFocused;
+      builder: (context, state, _) {
+        final bool isFocused = state.isFocused;
+
+        final backgroundColor = state.when(
+          selected: Colors.white,
+          hovered: Colors.grey.shade200,
+          orElse: Colors.transparent,
+        );
 
         return AnimatedContainer(
           duration: const Duration(milliseconds: 140),
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(8),
-            color: isActive
-                ? Colors.white
-                : isHovered
-                    ? Colors.grey.shade200
-                    : Colors.transparent,
+            color: backgroundColor,
             border: Border.all(
-              color: isActive
-                  ? Colors.blue
-                  : isFocused
-                      ? Colors.blue.shade300
-                      : Colors.grey.shade300,
+              color: state.when(
+                selected: Colors.blue,
+                focused: Colors.blue.shade300,
+                orElse: Colors.grey.shade300,
+              ),
               width: isFocused ? 2 : 1,
             ),
           ),
-          child: Text(
+          child: const Text(
             label,
             style: TextStyle(
               fontWeight: FontWeight.w600,
-              color: isActive ? Colors.blue.shade800 : Colors.grey.shade700,
+              color: state.when(
+                selected: Colors.blue.shade800,
+                orElse: Colors.grey.shade700,
+              ),
             ),
           ),
         );
@@ -156,7 +159,7 @@ class _PanelBox extends StatelessWidget {
         color: color,
         borderRadius: BorderRadius.circular(12),
       ),
-      child: Text(text),
+      child: const Text(text),
     );
   }
 }

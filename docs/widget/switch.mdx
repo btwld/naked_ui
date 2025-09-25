@@ -41,8 +41,14 @@ class _SettingsSwitchState extends State<SettingsSwitch> {
       semanticLabel: 'Email notifications',
       onChanged: (next) => setState(() => _notificationsEnabled = next),
       builder: (context, state, _) {
-        final bool isOn = state.isToggled;
+        final bool isToggled = state.isToggled;
         final bool isDisabled = state.isDisabled;
+
+        final backgroundColor = state.when(
+          disabled: Colors.grey.shade300,
+          toggled: Colors.green.shade500,
+          orElse: Colors.grey.shade400,
+        );
 
         return AnimatedContainer(
           duration: const Duration(milliseconds: 180),
@@ -50,15 +56,11 @@ class _SettingsSwitchState extends State<SettingsSwitch> {
           height: 28,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(14),
-            color: isDisabled
-                ? Colors.grey.shade300
-                : isOn
-                    ? Colors.green.shade500
-                    : Colors.grey.shade400,
+            color: backgroundColor,
           ),
           child: AnimatedAlign(
             duration: const Duration(milliseconds: 180),
-            alignment: isOn ? Alignment.centerRight : Alignment.centerLeft,
+            alignment: isToggled ? Alignment.centerRight : Alignment.centerLeft,
             child: Container(
               margin: const EdgeInsets.all(2),
               width: 24,

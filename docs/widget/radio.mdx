@@ -63,22 +63,25 @@ class _RadioChip extends StatelessWidget {
     return NakedRadio<RadioOption>(
       value: value,
       builder: (context, state, _) {
-        final bool isSelected = state.isSelected;
-        final bool isHovered = state.isHovered;
         final bool isFocused = state.isFocused;
+
+        final backgroundColor = state.when(
+          selected: Colors.blue.shade600,
+          hovered: Colors.grey.shade200,
+          orElse: Colors.white,
+        );
 
         return AnimatedContainer(
           duration: const Duration(milliseconds: 150),
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(20),
-            color: isSelected
-                ? Colors.blue.shade600
-                : isHovered
-                    ? Colors.grey.shade200
-                    : Colors.white,
+            color: backgroundColor,
             border: Border.all(
-              color: isFocused ? Colors.blue : Colors.grey.shade300,
+              color: state.when(
+                focused: Colors.blue,
+                orElse: Colors.grey.shade300,
+              ),
               width: isFocused ? 2 : 1,
             ),
           ),
@@ -88,11 +91,11 @@ class _RadioChip extends StatelessWidget {
               Text(
                 label,
                 style: TextStyle(
-                  color: isSelected ? Colors.white : Colors.grey.shade800,
+                  color: state.isSelected ? Colors.white : Colors.grey.shade800,
                   fontWeight: FontWeight.w600,
                 ),
               ),
-              if (isSelected) ...[
+              if (state.isSelected) ...[
                 const SizedBox(width: 6),
                 const Icon(Icons.check, size: 16, color: Colors.white),
               ],
@@ -165,5 +168,5 @@ Key notes:
 
 - Ensure each radio exposes a label (e.g. text within the builder)
 - Default keyboard support: arrow keys move between radios, Space selects
-- Keep your focus/hover styles visible using `state.isFocused` / `isHovered`
+- Keep your focus/hover styles visible using `state.isFocused` / `state.isHovered`
 - For more advanced layouts, wrap radio groups in `FocusTraversalGroup` to control traversal order

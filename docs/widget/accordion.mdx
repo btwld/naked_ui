@@ -98,7 +98,7 @@ class _AccordionSectionState extends State<_AccordionSection> {
           child: Row(
             children: [
               Expanded(
-                child: Text(
+                child: const Text(
                   widget.title,
                   style: const TextStyle(fontWeight: FontWeight.w600),
                 ),
@@ -123,7 +123,7 @@ class _AccordionSectionState extends State<_AccordionSection> {
       ),
       child: Padding(
         padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-        child: Text(widget.body),
+        child: const Text(widget.body),
       ),
     );
   }

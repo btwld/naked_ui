@@ -25,7 +25,7 @@ Most UI libraries give you components that look like this:
 // Standard UI library approach
 ElevatedButton(
   onPressed: () {},
-  child: Text('Click me'), // Fixed appearance
+  child: const Text('Click me'), // Fixed appearance
 )
 ```
 
@@ -46,7 +46,7 @@ NakedButton(
         borderRadius: BorderRadius.circular(8),
         // Customize any aspect of design
       ),
-      child: Text('Click me'),
+      child: const Text('Click me'),
     );
   },
 )
@@ -56,25 +56,25 @@ Components handle behavior. Builders define appearance.
 
 ## Key Features
 
-- Zero‑styling: behavior only — you own presentation
+- Zero-styling: behavior only - you own presentation
 - Accessible: correct semantics and keyboard navigation
 - Observable state: hover, focus, press, drag, select
 - Composable: small, predictable APIs
 
 ## Components
 
-- NakedButton — button interactions (hover, press, focus)
-- NakedCheckbox — toggle behavior and semantics
-- NakedRadio — single‑select radio with group management
-- NakedSelect — dropdown/select with keyboard navigation
-- NakedSlider — value slider with drag + keys
-- NakedToggle — toggle button or switch behavior
-- NakedTabs — tablist + roving focus
-- NakedAccordion — expandable/collapsible sections
-- NakedMenu — anchored overlay menu
-- NakedDialog — modal dialog behavior + focus trap
-- NakedTooltip — anchored tooltip with lifecycle
-- NakedPopover — anchored, dismissible popover overlay
+- NakedButton - button interactions (hover, press, focus)
+- NakedCheckbox - toggle behavior and semantics
+- NakedRadio - single-select radio with group management
+- NakedSelect - dropdown/select with keyboard navigation
+- NakedSlider - value slider with drag + keys
+- NakedToggle - toggle button or switch behavior
+- NakedTabs - tablist + roving focus
+- NakedAccordion - expandable/collapsible sections
+- NakedMenu - anchored overlay menu
+- NakedDialog - modal dialog behavior + focus trap
+- NakedTooltip - anchored tooltip with lifecycle
+- NakedPopover - anchored, dismissible popover overlay
 
 ## Getting Started
 
@@ -127,7 +127,9 @@ The color changes when pressed due to the `state.isPressed` condition.
 ### Enhanced patterns
 
 **Multiple states**: Use `state.when()` to handle pressed, hovered, and focused states
-**Animations**: Wrap containers in AnimatedContainer for smooth transitions  
+
+**Animations**: Wrap containers in AnimatedContainer for smooth transitions
+
 **Advanced styling**: Add borders, shadows, gradients, or any visual elements
 
 Check out our [Button documentation](/widget/button) for advanced examples and patterns.
@@ -188,7 +190,7 @@ NakedButton(
   onPressed: () {
     myFocusNode.requestFocus();  // Focus programmatically
   },
-  builder: (context, state, child) => /* your design */,
+  builder: (context, state, child) => YourCustomWidget(),
 )
 ```
 
@@ -219,6 +221,6 @@ All components follow the same builder pattern. Choose based on interaction requ
 
 ### Getting started
 
-**Recommended approach**: Begin with Button—the simplest component for learning the core patterns. Other components use the same builder-based approach.
+**Recommended approach**: Begin with Button - the simplest component for learning the core patterns. Other components use the same builder-based approach.
 
 **Next steps**: Review component-specific documentation for detailed implementation examples and API references.
