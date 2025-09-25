@@ -1,3 +1,4 @@
+// ignore_for_file: deprecated_member_use
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -26,7 +27,7 @@ void main() {
         ),
       );
 
-      final root = tester.binding.pipelineOwner.semanticsOwner!.rootSemanticsNode!;
+      final root = tester.getSemantics(find.byType(Scaffold));
       final buttonNode = findSemanticsNode(root, (node) => 
           node.getSemanticsData().hasFlag(SemanticsFlag.isButton));
 
@@ -47,7 +48,7 @@ void main() {
         ),
       );
 
-      final root = tester.binding.pipelineOwner.semanticsOwner!.rootSemanticsNode!;
+      final root = tester.getSemantics(find.byType(Scaffold));
       final buttonNode = findSemanticsNode(root, (node) => 
           node.getSemanticsData().hasFlag(SemanticsFlag.isButton));
 
@@ -69,7 +70,7 @@ void main() {
         ),
       );
 
-      final root = tester.binding.pipelineOwner.semanticsOwner!.rootSemanticsNode!;
+      final root = tester.getSemantics(find.byType(Scaffold));
       final checkboxNode = findSemanticsNode(root, (node) => 
           node.getSemanticsData().hasFlag(SemanticsFlag.hasCheckedState));
 
@@ -99,7 +100,7 @@ void main() {
         ),
       );
 
-      final root1 = tester.binding.pipelineOwner.semanticsOwner!.rootSemanticsNode!;
+      final root1 = tester.getSemantics(find.byType(Scaffold));
       final radioTrueNode = findSemanticsNode(root1, (node) => 
           node.getSemanticsData().label == 'Radio True');
 
@@ -118,7 +119,7 @@ void main() {
         ),
       );
 
-      final root2 = tester.binding.pipelineOwner.semanticsOwner!.rootSemanticsNode!;
+      final root2 = tester.getSemantics(find.byType(Scaffold));
       final radioFalseNode = findSemanticsNode(root2, (node) => 
           node.getSemanticsData().label == 'Radio False');
 
@@ -145,7 +146,7 @@ void main() {
         ),
       );
 
-      final root = tester.binding.pipelineOwner.semanticsOwner!.rootSemanticsNode!;
+      final root = tester.getSemantics(find.byType(Scaffold));
       final toggleNode = findSemanticsNode(root, (node) => 
           node.getSemanticsData().hasFlag(SemanticsFlag.hasToggledState));
 
@@ -167,7 +168,7 @@ void main() {
         ),
       );
 
-      final root = tester.binding.pipelineOwner.semanticsOwner!.rootSemanticsNode!;
+      final root = tester.getSemantics(find.byType(Scaffold));
       final sliderNode = findSemanticsNode(root, (node) => 
           node.getSemanticsData().hasFlag(SemanticsFlag.isSlider));
 
@@ -187,7 +188,7 @@ void main() {
         ),
       );
 
-      final root = tester.binding.pipelineOwner.semanticsOwner!.rootSemanticsNode!;
+      final root = tester.getSemantics(find.byType(Scaffold));
       final buttonNode = findSemanticsNode(root, (node) => 
           node.getSemanticsData().hasFlag(SemanticsFlag.isButton));
 
