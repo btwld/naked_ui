@@ -75,38 +75,34 @@ class AnchoredOverlayShell extends StatelessWidget {
       overlayBuilder: (context, info) {
         final overlayChild = overlayBuilder(context, info);
 
-        return Stack(
-          children: [
-            OverlayPositioner(
-              targetRect: info.anchorRect,
-              alignment: positioning.alignment,
-              offset: positioning.offset,
-              child: TapRegion(
-                onTapOutside: closeOnClickOutside
-                    ? (event) => controller.close()
-                    : null,
-                groupId: info.tapRegionGroupId,
-                child: FocusTraversalGroup(
-                  child: Shortcuts(
-                    shortcuts: NakedIntentActions.menu.shortcuts,
-                    child: Actions(
-                      actions: NakedIntentActions.menu.actions(
-                        onDismiss: () => controller.close(),
-                        onNextFocus: () => FocusScope.of(context).nextFocus(),
-                        onPreviousFocus: () =>
-                            FocusScope.of(context).previousFocus(),
-                      ),
-                      child: Focus(
-                        autofocus: true,
-                        canRequestFocus: true,
-                        child: overlayChild,
-                      ),
-                    ),
+        return OverlayPositioner(
+          targetRect: info.anchorRect,
+          alignment: positioning.alignment,
+          offset: positioning.offset,
+          child: TapRegion(
+            onTapOutside: closeOnClickOutside
+                ? (event) => controller.close()
+                : null,
+            groupId: info.tapRegionGroupId,
+            child: FocusTraversalGroup(
+              child: Shortcuts(
+                shortcuts: NakedIntentActions.menu.shortcuts,
+                child: Actions(
+                  actions: NakedIntentActions.menu.actions(
+                    onDismiss: () => controller.close(),
+                    onNextFocus: () => FocusScope.of(context).nextFocus(),
+                    onPreviousFocus: () =>
+                        FocusScope.of(context).previousFocus(),
+                  ),
+                  child: Focus(
+                    autofocus: true,
+                    canRequestFocus: true,
+                    child: overlayChild,
                   ),
                 ),
               ),
             ),
-          ],
+          ),
         );
       },
       child: child,

@@ -227,31 +227,27 @@ class _NakedPopoverState extends State<NakedPopover> {
       useRootOverlay: widget.useRootOverlay,
       controller: _menuController,
       overlayBuilder: (context, info) {
-        return Stack(
-          children: [
-            OverlayPositioner(
-              targetRect: info.anchorRect,
-              offset: widget.positioning.offset,
-              child: TapRegion(
-                onTapOutside: (event) => _menuController.close(),
-                groupId: info.tapRegionGroupId,
-                child: FocusTraversalGroup(
-                  child: Shortcuts(
-                    shortcuts: NakedIntentActions.menu.shortcuts,
-                    child: Actions(
-                      actions: NakedIntentActions.menu.actions(
-                        onDismiss: () => _menuController.close(),
-                        onNextFocus: () => FocusScope.of(context).nextFocus(),
-                        onPreviousFocus: () =>
-                            FocusScope.of(context).previousFocus(),
-                      ),
-                      child: widget.popoverBuilder(context, info),
-                    ),
+        return OverlayPositioner(
+          targetRect: info.anchorRect,
+          offset: widget.positioning.offset,
+          child: TapRegion(
+            onTapOutside: (event) => _menuController.close(),
+            groupId: info.tapRegionGroupId,
+            child: FocusTraversalGroup(
+              child: Shortcuts(
+                shortcuts: NakedIntentActions.menu.shortcuts,
+                child: Actions(
+                  actions: NakedIntentActions.menu.actions(
+                    onDismiss: () => _menuController.close(),
+                    onNextFocus: () => FocusScope.of(context).nextFocus(),
+                    onPreviousFocus: () =>
+                        FocusScope.of(context).previousFocus(),
                   ),
+                  child: widget.popoverBuilder(context, info),
                 ),
               ),
             ),
-          ],
+          ),
         );
       },
 
