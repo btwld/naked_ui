@@ -113,6 +113,7 @@ class NakedToggle extends StatefulWidget {
     this.builder,
     this.semanticLabel,
     this.asSwitch = false,
+    this.excludeSemantics = false,
   }) : assert(
          child != null || builder != null,
          'Either child or builder must be provided',
@@ -159,6 +160,9 @@ class NakedToggle extends StatefulWidget {
 
   /// Whether to use switch semantics instead of button semantics.
   final bool asSwitch;
+
+  /// Whether to exclude this widget from the semantic tree.
+  final bool excludeSemantics;
 
   bool get _effectiveEnabled => enabled && onChanged != null;
 
@@ -230,6 +234,36 @@ class _NakedToggleState extends State<NakedToggle>
 
   @override
   Widget build(BuildContext context) {
+    // Step 1: Build core gesture detector
+    Widget child = GestureDetector(
+      onTapDown: widget._effectiveEnabled
+          ? (_) => updatePressState(true, widget.onPressChange)
+          : null,
+      onTapUp: widget._effectiveEnabled
+          ? (_) => updatePressState(false, widget.onPressChange)
+          : null,
+      onTap: widget._effectiveEnabled ? _activate : null,
+      onTapCancel: widget._effectiveEnabled
+          ? () => updatePressState(false, widget.onPressChange)
+          : null,
+      behavior: HitTestBehavior.opaque,
+      excludeFromSemantics: true,
+      child: _buildContent(context),
+    );
+
+    // Step 2: Conditionally wrap with semantics
+    if (!widget.excludeSemantics) {
+      child = Semantics(
+        enabled: widget._effectiveEnabled,
+        toggled: widget.value,
+        button: !widget.asSwitch,
+        label: widget.semanticLabel,
+        onTap: widget._effectiveEnabled ? _activate : null,
+        child: child,
+      );
+    }
+
+    // Step 3: Wrap with focusable detector
     return NakedFocusableDetector(
       enabled: widget._effectiveEnabled,
       autofocus: widget.autofocus,
@@ -245,28 +279,7 @@ class _NakedToggleState extends State<NakedToggle>
           }
         },
       ),
-      child: Semantics(
-        enabled: widget._effectiveEnabled,
-        toggled: widget.value,
-        button: !widget.asSwitch,
-        label: widget.semanticLabel,
-        onTap: widget._effectiveEnabled ? _activate : null,
-        child: GestureDetector(
-          onTapDown: widget._effectiveEnabled
-              ? (_) => updatePressState(true, widget.onPressChange)
-              : null,
-          onTapUp: widget._effectiveEnabled
-              ? (_) => updatePressState(false, widget.onPressChange)
-              : null,
-          onTap: widget._effectiveEnabled ? _activate : null,
-          onTapCancel: widget._effectiveEnabled
-              ? () => updatePressState(false, widget.onPressChange)
-              : null,
-          behavior: HitTestBehavior.opaque,
-          excludeFromSemantics: true,
-          child: _buildContent(context),
-        ),
-      ),
+      child: child,
     );
   }
 }

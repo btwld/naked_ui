@@ -174,6 +174,7 @@ class NakedTextField extends StatefulWidget {
     this.ignorePointers,
     this.semanticLabel,
     this.semanticHint,
+    this.excludeSemantics = false,
   }) : assert(obscuringCharacter.length == 1),
        smartDashesType =
            smartDashesType ??
@@ -350,6 +351,7 @@ class NakedTextField extends StatefulWidget {
   /// Semantics
   final String? semanticLabel;
   final String? semanticHint;
+  final bool excludeSemantics;
 
   @override
   State<NakedTextField> createState() => _NakedTextFieldState();
@@ -799,8 +801,23 @@ class _NakedTextFieldState extends State<NakedTextField>
       }
     }
 
-    Widget withSemantics(Widget child) {
-      return Semantics(
+    // Create the text field state
+    final textFieldState = NakedTextFieldState(
+      states: widgetStates,
+      text: controller.text,
+      isFocused: focusNode.hasFocus,
+      hasText: controller.text.isNotEmpty,
+      isReadOnly: widget.readOnly,
+      isEnabled: widget.enabled,
+    );
+
+    // Step 1: Build content using the builder
+    final Widget content = widget.builder!(context, editable);
+
+    // Step 2: Conditionally wrap with semantics
+    Widget child = content;
+    if (!widget.excludeSemantics) {
+      child = Semantics(
         container: true,
         enabled: widget.enabled,
         textField: true,
@@ -815,27 +832,14 @@ class _NakedTextFieldState extends State<NakedTextField>
         value: widget.obscureText ? null : controller.text,
         hint: widget.semanticHint,
         onTap: (widget.enabled && !widget.readOnly) ? _semanticTap : null,
-        child: child,
+        child: content,
       );
     }
 
-    // Create the text field state
-    final textFieldState = NakedTextFieldState(
-      states: widgetStates,
-      text: controller.text,
-      isFocused: focusNode.hasFocus,
-      hasText: controller.text.isNotEmpty,
-      isReadOnly: widget.readOnly,
-      isEnabled: widget.enabled,
-    );
-
-    // Build content using the builder and always provide state via scope
-    final Widget content = widget.builder!(context, editable);
-
-    final Widget composed = withSemantics(content);
+    // Step 3: Wrap with state scope
     final Widget wrappedContent = NakedStateScope(
       value: textFieldState,
-      child: composed,
+      child: child,
     );
 
     // Ensure a focus action is exposed in semantics parity with Material.

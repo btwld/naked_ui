@@ -51,6 +51,7 @@ class NakedButton extends StatefulWidget {
     this.focusOnPress = false,
     this.tooltip,
     this.semanticLabel,
+    this.excludeSemantics = false,
   }) : assert(
          child != null || builder != null,
          'Either child or builder must be provided',
@@ -71,6 +72,7 @@ class NakedButton extends StatefulWidget {
   final bool focusOnPress;
   final String? tooltip;
   final String? semanticLabel;
+  final bool excludeSemantics;
 
   @override
   State<NakedButton> createState() => _NakedButtonState();
@@ -189,6 +191,56 @@ class _NakedButtonState extends State<NakedButton>
           : widget.child!,
     );
 
+    // Step 1: Build core gesture detector
+    Widget child = GestureDetector(
+      // GESTURE LIFECYCLE (based on Flutter's documented behavior):
+      //
+      // Quick tap: onTapDown → onTapUp → onTap
+      // Long hold: onTapDown → onTapCancel → onLongPressStart → onLongPress → onLongPressEnd
+      // Drag away: onTapDown → onTapCancel
+      //
+      // The key issue: onTapCancel fires when tap times out (~400ms) even though
+      // finger is still down. onLongPressStart then fires immediately after to
+      // indicate long press has begun. We use this to re-establish pressed state.
+
+      // Initial press
+      onTapDown: _isInteractive ? _onPressStart : null,
+
+      // Tap completion or cancellation
+      onTapUp: _isInteractive ? (_) => _onPressEnd() : null,
+      onTap: _isInteractive ? _handleTap : null,
+
+      onTapCancel: _isInteractive ? _onPressEnd : null,
+      // Always provide onLongPress when interactive to ensure Flutter creates
+      // LongPressGestureRecognizer, which enables onLongPressStart/End lifecycle
+      onLongPress: _isInteractive ? _handleLongPress : null,
+      // Long press sequence - onLongPressStart is CRITICAL
+      // It re-establishes pressed=true after onTapCancel clears it
+      onLongPressStart: _isInteractive
+          ? (details) => updatePressState(true, widget.onPressChange)
+          : null,
+      onLongPressEnd: _isInteractive ? (_) => _onPressEnd() : null,
+
+      behavior: HitTestBehavior.opaque,
+      excludeFromSemantics: true,
+      child: content,
+    );
+
+    // Step 2: Conditionally wrap with semantics
+    if (!widget.excludeSemantics) {
+      child = Semantics(
+        enabled: _isInteractive,
+        button: true,
+        label: widget.semanticLabel,
+        tooltip: widget.tooltip,
+        // Semantics check internally if needed
+        onTap: widget.onPressed != null ? _handleTap : null,
+        onLongPress: widget.onLongPress != null ? _handleLongPress : null,
+        child: child,
+      );
+    }
+
+    // Step 3: Wrap with focusable detector
     return NakedFocusableDetector(
       enabled: _isInteractive,
       autofocus: widget.autofocus,
@@ -206,48 +258,7 @@ class _NakedButtonState extends State<NakedButton>
       actions: NakedIntentActions.button.actions(
         onPressed: _handleKeyboardActivation,
       ),
-      child: Semantics(
-        enabled: _isInteractive,
-        button: true,
-        label: widget.semanticLabel,
-        tooltip: widget.tooltip,
-        // Semantics check internally if needed
-        onTap: widget.onPressed != null ? _handleTap : null,
-        onLongPress: widget.onLongPress != null ? _handleLongPress : null,
-        child: GestureDetector(
-          // GESTURE LIFECYCLE (based on Flutter's documented behavior):
-          //
-          // Quick tap: onTapDown → onTapUp → onTap
-          // Long hold: onTapDown → onTapCancel → onLongPressStart → onLongPress → onLongPressEnd
-          // Drag away: onTapDown → onTapCancel
-          //
-          // The key issue: onTapCancel fires when tap times out (~400ms) even though
-          // finger is still down. onLongPressStart then fires immediately after to
-          // indicate long press has begun. We use this to re-establish pressed state.
-
-          // Initial press
-          onTapDown: _isInteractive ? _onPressStart : null,
-
-          // Tap completion or cancellation
-          onTapUp: _isInteractive ? (_) => _onPressEnd() : null,
-          onTap: _isInteractive ? _handleTap : null,
-
-          onTapCancel: _isInteractive ? _onPressEnd : null,
-          // Always provide onLongPress when interactive to ensure Flutter creates
-          // LongPressGestureRecognizer, which enables onLongPressStart/End lifecycle
-          onLongPress: _isInteractive ? _handleLongPress : null,
-          // Long press sequence - onLongPressStart is CRITICAL
-          // It re-establishes pressed=true after onTapCancel clears it
-          onLongPressStart: _isInteractive
-              ? (details) => updatePressState(true, widget.onPressChange)
-              : null,
-          onLongPressEnd: _isInteractive ? (_) => _onPressEnd() : null,
-
-          behavior: HitTestBehavior.opaque,
-          excludeFromSemantics: true,
-          child: content,
-        ),
-      ),
+      child: child,
     );
   }
 }

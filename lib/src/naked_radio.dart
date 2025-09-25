@@ -68,6 +68,7 @@ class NakedRadio<T> extends StatefulWidget {
     this.onPressChange,
     this.builder,
     this.groupRegistry,
+    this.excludeSemantics = false,
   }) : assert(
          child != null || builder != null,
          'Either child or builder must be provided',
@@ -111,6 +112,9 @@ class NakedRadio<T> extends StatefulWidget {
   /// When null, the nearest [RadioGroup] ancestor is used.
   final RadioGroupRegistry<T>? groupRegistry;
 
+  /// Whether to exclude this widget from the semantic tree.
+  final bool excludeSemantics;
+
   @override
   State<NakedRadio<T>> createState() => _NakedRadioState<T>();
 }
@@ -152,7 +156,7 @@ class _NakedRadioState<T> extends State<NakedRadio<T>>
         widget.mouseCursor ??
         (widget.enabled ? SystemMouseCursors.click : SystemMouseCursors.basic);
 
-    return RawRadio<T>(
+    final rawRadio = RawRadio<T>(
       value: widget.value,
       mouseCursor: WidgetStateMouseCursor.resolveWith((_) => effectiveCursor),
       toggleable: widget.toggleable,
@@ -224,5 +228,11 @@ class _NakedRadioState<T> extends State<NakedRadio<T>>
         );
       },
     );
+
+    if (widget.excludeSemantics) {
+      return ExcludeSemantics(child: rawRadio);
+    }
+
+    return rawRadio;
   }
 }
