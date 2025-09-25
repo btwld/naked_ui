@@ -83,16 +83,19 @@ class _OverlayPositionerDelegate extends SingleChildLayoutDelegate {
     final targetAnchorOffset = alignment.target.alongSize(targetSize);
     final followerAnchorOffset = alignment.follower.alongSize(childSize);
 
-    final prefferedPosition =
+    final preferedPosition =
         targetPosition + targetAnchorOffset - followerAnchorOffset + offset;
 
-    return _clampToBounds(prefferedPosition, childSize, size, offset);
+    return _clampToBounds(preferedPosition, childSize, size);
   }
 
   @override
   bool shouldRelayout(_OverlayPositionerDelegate oldDelegate) {
     return targetPosition != oldDelegate.targetPosition ||
-        targetSize != oldDelegate.targetSize;
+        targetSize != oldDelegate.targetSize ||
+        alignment.target != oldDelegate.alignment.target ||
+        alignment.follower != oldDelegate.alignment.follower ||
+        offset != oldDelegate.offset;
   }
 }
 
@@ -100,16 +103,9 @@ Offset _clampToBounds(
   Offset overlayTopLeft,
   Size overlaySize,
   Size screenSize,
-  Offset offset,
 ) {
   return Offset(
-    overlayTopLeft.dx.clamp(
-      0.0,
-      screenSize.width - overlaySize.width - offset.dx,
-    ),
-    overlayTopLeft.dy.clamp(
-      0.0,
-      screenSize.height - overlaySize.height - offset.dy,
-    ),
+    overlayTopLeft.dx.clamp(0.0, screenSize.width - overlaySize.width),
+    overlayTopLeft.dy.clamp(0.0, screenSize.height - overlaySize.height),
   );
 }
