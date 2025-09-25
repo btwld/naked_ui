@@ -104,10 +104,7 @@ class _SimpleMenuExampleState extends State<SimpleMenuExample>
         return FadeInAnimation(
           controller: _animationController,
           child: Container(
-            constraints: BoxConstraints(
-              minWidth: info.anchorRect.width,
-              maxWidth: 200,
-            ),
+            width: 200,
             margin: const EdgeInsets.only(top: 4),
             padding: const EdgeInsets.symmetric(vertical: 6),
             decoration: BoxDecoration(
