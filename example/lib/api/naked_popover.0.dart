@@ -88,8 +88,6 @@ class _PopoverExampleState extends State<PopoverExample> {
       controller: _controller,
       consumeOutsideTaps: false,
       positioning: const OverlayPositionConfig(
-        // alignment: Alignment.bottomCenter,
-        // fallbackAlignment: Alignment.topCenter,
         offset: Offset(0, 8),
       ),
       popoverBuilder: (context, info) => PopoverMenu(controller: _controller),
