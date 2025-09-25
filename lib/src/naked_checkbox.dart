@@ -88,6 +88,7 @@ class NakedCheckbox extends StatefulWidget {
     this.onPressChange,
     this.builder,
     this.semanticLabel,
+    this.excludeSemantics = false,
   }) : assert(
          (tristate || value != null),
          'Non-tristate checkbox must have a non-null value',
@@ -143,6 +144,9 @@ class NakedCheckbox extends StatefulWidget {
 
   /// Semantic label for accessibility.
   final String? semanticLabel;
+
+  /// Whether to exclude this widget from the semantic tree.
+  final bool excludeSemantics;
 
   bool get _effectiveEnabled => enabled && onChanged != null;
 
@@ -221,54 +225,68 @@ class _NakedCheckboxState extends State<NakedCheckbox>
 
   @override
   Widget build(BuildContext context) {
-    return MergeSemantics(
-      child: NakedFocusableDetector(
-        // Keyboard and focus handling
-        enabled: widget._effectiveEnabled,
-        autofocus: widget.autofocus,
-        onFocusChange: (focused) {
-          updateFocusState(focused, widget.onFocusChange);
-        },
-        onHoverChange: (hovered) {
-          updateHoverState(hovered, widget.onHoverChange);
-        },
-        focusNode: widget.focusNode,
-        mouseCursor: _effectiveCursor,
-        // Use default includeFocusSemantics: true to let it handle focus semantics automatically
-        shortcuts: NakedIntentActions.checkbox.shortcuts,
-        actions: NakedIntentActions.checkbox.actions(
-          onToggle: () => _handleKeyboardActivation(),
-        ),
-        child: Semantics(
-          container: true,
-          enabled: widget._effectiveEnabled,
-          checked: widget.value == true,
-          mixed: widget.tristate && widget.value == null,
-          label: widget.semanticLabel,
-          onTap: _semanticsTapHandler,
-          child: GestureDetector(
-            onTapDown: widget._effectiveEnabled
-                ? (details) {
-                    updatePressState(true, widget.onPressChange);
-                  }
-                : null,
-            onTapUp: widget._effectiveEnabled
-                ? (details) {
-                    updatePressState(false, widget.onPressChange);
-                  }
-                : null,
-            onTap: widget._effectiveEnabled ? _handleActivation : null,
-            onTapCancel: widget._effectiveEnabled
-                ? () {
-                    updatePressState(false, widget.onPressChange);
-                  }
-                : null,
-            behavior: HitTestBehavior.opaque,
-            excludeFromSemantics: true,
-            child: _buildContent(context),
-          ),
-        ),
-      ),
+    // Step 1: Build core gesture detector
+    Widget child = GestureDetector(
+      onTapDown: widget._effectiveEnabled
+          ? (details) {
+              updatePressState(true, widget.onPressChange);
+            }
+          : null,
+      onTapUp: widget._effectiveEnabled
+          ? (details) {
+              updatePressState(false, widget.onPressChange);
+            }
+          : null,
+      onTap: widget._effectiveEnabled ? _handleActivation : null,
+      onTapCancel: widget._effectiveEnabled
+          ? () {
+              updatePressState(false, widget.onPressChange);
+            }
+          : null,
+      behavior: HitTestBehavior.opaque,
+      excludeFromSemantics: true,
+      child: _buildContent(context),
     );
+
+    // Step 2: Conditionally wrap with inner semantics
+    if (!widget.excludeSemantics) {
+      child = Semantics(
+        container: true,
+        enabled: widget._effectiveEnabled,
+        checked: widget.value == true,
+        mixed: widget.tristate && widget.value == null,
+        label: widget.semanticLabel,
+        onTap: _semanticsTapHandler,
+        child: child,
+      );
+    }
+
+    // Step 3: Wrap with focusable detector
+    child = NakedFocusableDetector(
+      // Keyboard and focus handling
+      enabled: widget._effectiveEnabled,
+      autofocus: widget.autofocus,
+      onFocusChange: (focused) {
+        updateFocusState(focused, widget.onFocusChange);
+      },
+      onHoverChange: (hovered) {
+        updateHoverState(hovered, widget.onHoverChange);
+      },
+      focusNode: widget.focusNode,
+      mouseCursor: _effectiveCursor,
+      // Use default includeFocusSemantics: true to let it handle focus semantics automatically
+      shortcuts: NakedIntentActions.checkbox.shortcuts,
+      actions: NakedIntentActions.checkbox.actions(
+        onToggle: () => _handleKeyboardActivation(),
+      ),
+      child: child,
+    );
+
+    // Step 4: Conditionally wrap with merge semantics
+    if (!widget.excludeSemantics) {
+      child = MergeSemantics(child: child);
+    }
+
+    return child;
   }
 }

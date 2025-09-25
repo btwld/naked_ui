@@ -117,6 +117,7 @@ class NakedSlider extends StatefulWidget {
     this.keyboardStep = 0.01,
     this.largeKeyboardStep = 0.1,
     this.semanticLabel,
+    this.excludeSemantics = false,
   }) : assert(min < max, 'min must be less than max'),
        assert(
          child != null || builder != null,
@@ -185,6 +186,9 @@ class NakedSlider extends StatefulWidget {
 
   /// Semantic label for assistive technologies.
   final String? semanticLabel;
+
+  /// Whether to exclude this widget from the semantic tree.
+  final bool excludeSemantics;
 
   @override
   State<NakedSlider> createState() => _NakedSliderState();
@@ -385,6 +389,7 @@ class _NakedSliderState extends State<NakedSlider>
         ? widget.builder!(context, sliderState, widget.child)
         : widget.child!;
 
+    // Step 1: Build core gesture detector
     final childGesture = GestureDetector(
       onVerticalDragStart: widget.direction == Axis.vertical && _isEnabled
           ? _handleDragStart
@@ -412,27 +417,20 @@ class _NakedSliderState extends State<NakedSlider>
           ? _handleDragCancel
           : null,
       behavior: HitTestBehavior.opaque,
-      excludeFromSemantics: true, // semantics provided by the wrapper below
+      excludeFromSemantics: true,
       child: content,
     );
 
+    // Step 2: Wrap with state scope
     final wrappedContent = NakedStateScope(
       value: sliderState,
       child: childGesture,
     );
 
-    return NakedFocusableDetector(
-      enabled: _isEnabled,
-      autofocus: widget.autofocus,
-      descendantsAreTraversable: false, // no focus into the visual child
-      onFocusChange: (focused) =>
-          updateFocusState(focused, widget.onFocusChange),
-      onHoverChange: (hover) => updateHoverState(hover, widget.onHoverChange),
-      focusNode: effectiveFocusNode,
-      mouseCursor: _cursor,
-      shortcuts: _shortcuts,
-      actions: _actions,
-      child: Semantics(
+    // Step 3: Conditionally wrap with semantics
+    Widget child = wrappedContent;
+    if (!widget.excludeSemantics) {
+      child = Semantics(
         container: true,
         enabled: _isEnabled,
         slider: true,
@@ -459,7 +457,22 @@ class _NakedSliderState extends State<NakedSlider>
               }
             : null,
         child: wrappedContent,
-      ),
+      );
+    }
+
+    // Step 4: Wrap with focusable detector
+    return NakedFocusableDetector(
+      enabled: _isEnabled,
+      autofocus: widget.autofocus,
+      descendantsAreTraversable: false, // no focus into the visual child
+      onFocusChange: (focused) =>
+          updateFocusState(focused, widget.onFocusChange),
+      onHoverChange: (hover) => updateHoverState(hover, widget.onHoverChange),
+      focusNode: effectiveFocusNode,
+      mouseCursor: _cursor,
+      shortcuts: _shortcuts,
+      actions: _actions,
+      child: child,
     );
   }
 }

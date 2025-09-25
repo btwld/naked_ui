@@ -202,6 +202,7 @@ class NakedSelect<T> extends StatefulWidget {
     this.enabled = true,
     this.triggerFocusNode,
     this.semanticLabel,
+    this.excludeSemantics = false,
     this.positioning = const OverlayPositionConfig(
       alignment: Alignment.bottomLeft,
       fallbackAlignment: Alignment.topLeft,
@@ -250,6 +251,9 @@ class NakedSelect<T> extends StatefulWidget {
 
   /// Optional semantics label for the trigger.
   final String? semanticLabel;
+
+  /// Whether to exclude this widget from the semantic tree.
+  final bool excludeSemantics;
 
   /// Overlay positioning configuration.
   final OverlayPositionConfig positioning;
@@ -335,16 +339,9 @@ class _NakedSelectState<T> extends State<NakedSelect<T>>
           onDismiss: () => _menuController.close(),
           onOpenOverlay: () => _menuController.open(),
         ),
-        child: Semantics(
-          container: true,
-          enabled: widget.enabled,
-          button: true,
-          focusable: true,
-          expanded: _isOpen,
-          label: widget.semanticLabel,
-          value: semanticsValue,
-          onTap: widget.enabled ? _toggle : null,
-          child: AnchoredOverlayShell(
+        child: () {
+          // Step 1: Build core anchored overlay
+          final anchoredOverlay = AnchoredOverlayShell(
             controller: _menuController,
             overlayBuilder: (context, info) {
               return _NakedSelectScope<T>(
@@ -371,6 +368,7 @@ class _NakedSelectState<T> extends State<NakedSelect<T>>
               onPressed: widget.enabled ? _toggle : null,
               enabled: widget.enabled,
               focusNode: widget.triggerFocusNode,
+              excludeSemantics: widget.excludeSemantics,
               child: widget.child,
               builder: (context, buttonState, child) {
                 final selectState = NakedSelectState(
@@ -385,8 +383,26 @@ class _NakedSelectState<T> extends State<NakedSelect<T>>
                 return NakedStateScope(value: selectState, child: content);
               },
             ),
-          ),
-        ),
+          );
+
+          // Step 2: Conditionally wrap with semantics
+          Widget child = anchoredOverlay;
+          if (!widget.excludeSemantics) {
+            child = Semantics(
+              container: true,
+              enabled: widget.enabled,
+              button: true,
+              focusable: true,
+              expanded: _isOpen,
+              label: widget.semanticLabel,
+              value: semanticsValue,
+              onTap: widget.enabled ? _toggle : null,
+              child: anchoredOverlay,
+            );
+          }
+
+          return child;
+        }(),
       ),
     );
   }

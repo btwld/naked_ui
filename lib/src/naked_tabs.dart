@@ -279,6 +279,7 @@ class NakedTab extends StatefulWidget {
     this.onPressChange,
     this.builder,
     this.semanticLabel,
+    this.excludeSemantics = false,
   }) : assert(
          child != null || builder != null,
          'Either child or builder must be provided',
@@ -304,6 +305,9 @@ class NakedTab extends StatefulWidget {
 
   /// Semantic label for the trigger.
   final String? semanticLabel;
+
+  /// Whether to exclude this widget from the semantic tree.
+  final bool excludeSemantics;
 
   /// Whether the tab is enabled.
   final bool enabled;
@@ -428,6 +432,37 @@ class _NakedTabState extends State<NakedTab>
 
     final wrappedContent = NakedStateScope(value: tabState, child: content);
 
+    // Step 1: Build core gesture detector
+    Widget child = GestureDetector(
+      onTapDown: _isEnabled
+          ? (_) => updatePressState(true, widget.onPressChange)
+          : null,
+      onTapUp: _isEnabled
+          ? (_) => updatePressState(false, widget.onPressChange)
+          : null,
+      onTap: _isEnabled ? _handleTap : null,
+      onTapCancel: _isEnabled
+          ? () => updatePressState(false, widget.onPressChange)
+          : null,
+      behavior: HitTestBehavior.opaque,
+      excludeFromSemantics: true,
+      child: wrappedContent,
+    );
+
+    // Step 2: Conditionally wrap with semantics
+    if (!widget.excludeSemantics) {
+      child = Semantics(
+        container: true,
+        enabled: _isEnabled,
+        selected: isSelected,
+        button: true,
+        label: widget.semanticLabel,
+        onTap: _isEnabled ? _handleTap : null,
+        child: child,
+      );
+    }
+
+    // Step 3: Wrap with focusable detector
     return NakedFocusableDetector(
       enabled: _isEnabled,
       autofocus: widget.autofocus,
@@ -449,30 +484,7 @@ class _NakedTabState extends State<NakedTab>
         onFirstFocus: () => _focusFirstTab(),
         onLastFocus: () => _focusLastTab(),
       ),
-      child: Semantics(
-        container: true,
-        enabled: _isEnabled,
-        selected: isSelected,
-        button: true,
-        label: widget.semanticLabel,
-        onTap: _isEnabled ? _handleTap : null,
-        child: GestureDetector(
-          // semantics provided above
-          onTapDown: _isEnabled
-              ? (_) => updatePressState(true, widget.onPressChange)
-              : null,
-          onTapUp: _isEnabled
-              ? (_) => updatePressState(false, widget.onPressChange)
-              : null,
-          onTap: _isEnabled ? _handleTap : null,
-          onTapCancel: _isEnabled
-              ? () => updatePressState(false, widget.onPressChange)
-              : null,
-          behavior: HitTestBehavior.opaque,
-          excludeFromSemantics: true,
-          child: wrappedContent,
-        ),
-      ),
+      child: child,
     );
   }
 }

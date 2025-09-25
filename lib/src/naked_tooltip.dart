@@ -126,6 +126,7 @@ class NakedTooltip extends StatefulWidget {
     this.onOpenRequested,
     this.onCloseRequested,
     this.semanticsLabel,
+    this.excludeSemantics = false,
   }) : assert(
          child != null || builder != null,
          'Either child or builder must be provided',
@@ -145,6 +146,9 @@ class NakedTooltip extends StatefulWidget {
 
   /// The semantic label for screen readers.
   final String? semanticsLabel;
+
+  /// Whether to exclude this widget from the semantic tree.
+  final bool excludeSemantics;
 
   /// Positioning configuration for the overlay.
   final OverlayPositionConfig positioning;
@@ -228,7 +232,8 @@ class _NakedTooltipState extends State<NakedTooltip>
 
     final wrappedContent = NakedStateScope(value: tooltipState, child: content);
 
-    return RawMenuAnchor(
+    // Step 1: Build core anchor with mouse region
+    Widget child = RawMenuAnchor(
       consumeOutsideTaps: false, // Do not consume taps for tooltips
       onOpen: _handleOpen,
       onClose: _handleClose,
@@ -249,15 +254,22 @@ class _NakedTooltipState extends State<NakedTooltip>
           child: widget.overlayBuilder(context, info),
         );
       },
-      child: Semantics(
-        container: true,
-        tooltip: widget.semanticsLabel,
-        child: MouseRegion(
-          onEnter: _handleMouseEnter,
-          onExit: _handleMouseExit,
-          child: wrappedContent,
-        ),
+      child: MouseRegion(
+        onEnter: _handleMouseEnter,
+        onExit: _handleMouseExit,
+        child: wrappedContent,
       ),
     );
+
+    // Step 2: Conditionally wrap with semantics
+    if (!widget.excludeSemantics) {
+      child = Semantics(
+        container: true,
+        tooltip: widget.semanticsLabel,
+        child: child,
+      );
+    }
+
+    return child;
   }
 }

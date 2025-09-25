@@ -79,6 +79,7 @@ abstract class OverlayItem<T, S extends NakedState> extends StatelessWidget {
     this.semanticLabel,
     this.child,
     this.builder,
+    this.excludeSemantics = false,
   }) : assert(
          child != null || builder != null,
          'Either child or builder must be provided',
@@ -92,6 +93,9 @@ abstract class OverlayItem<T, S extends NakedState> extends StatelessWidget {
 
   /// Optional semantic label for accessibility.
   final String? semanticLabel;
+
+  /// Whether to exclude this widget from the semantic tree.
+  final bool excludeSemantics;
 
   /// Optional child widget to display.
   final Widget? child;
@@ -114,6 +118,7 @@ abstract class OverlayItem<T, S extends NakedState> extends StatelessWidget {
       onPressed: onPressed,
       enabled: effectiveEnabled,
       semanticLabel: semanticLabel,
+      excludeSemantics: excludeSemantics,
       child: child,
       builder: builder == null
           ? null

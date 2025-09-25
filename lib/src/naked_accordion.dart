@@ -413,6 +413,7 @@ class NakedAccordion<T> extends StatefulWidget {
     this.onHoverChange,
     this.onPressChange,
     this.semanticLabel,
+    this.excludeSemantics = false,
   });
 
   /// Builds the header or trigger for the item.
@@ -439,6 +440,9 @@ class NakedAccordion<T> extends StatefulWidget {
   /// Semantic label announced for the header.
   final String? semanticLabel;
 
+  /// Whether to exclude this widget from the semantic tree.
+  final bool excludeSemantics;
+
   /// Whether the header is interactive.
   final bool enabled;
 
@@ -462,6 +466,31 @@ class _NakedAccordionState<T> extends State<NakedAccordion<T>>
     with WidgetStatesMixin<NakedAccordion<T>> {
   void _toggle(NakedAccordionController<T> controller) =>
       controller.toggle(widget.value);
+
+  Widget _buildAccordionContent(
+    BuildContext context,
+    bool isExpanded,
+    NakedAccordionController<T> controller,
+  ) {
+    final canCollapse =
+        isExpanded && (controller.values.length > controller.min);
+    final canExpand =
+        !isExpanded &&
+        (controller.max == null || controller.values.length < controller.max!);
+
+    final accordionState = NakedAccordionItemState<T>(
+      states: widgetStates,
+      value: widget.value,
+      isExpanded: isExpanded,
+      canCollapse: canCollapse,
+      canExpand: canExpand,
+    );
+
+    return NakedStateScope(
+      value: accordionState,
+      child: widget.builder(context, accordionState),
+    );
+  }
 
   @override
   void initializeWidgetStates() {
@@ -497,66 +526,65 @@ class _NakedAccordionState<T> extends State<NakedAccordion<T>>
           _toggle(controller);
         }
 
+        // Step 1: Build accordion content
+        final accordionContent = _buildAccordionContent(
+          context,
+          isExpanded,
+          controller,
+        );
+
+        // Step 2: Conditionally wrap with exclude semantics for inner content
+        Widget innerContent = accordionContent;
+        if (!widget.excludeSemantics) {
+          innerContent = ExcludeSemantics(child: accordionContent);
+        }
+
+        // Step 3: Build core gesture detector
+        Widget child = GestureDetector(
+          onTapDown: (widget.enabled && widget.onPressChange != null)
+              ? (_) => updatePressState(true, widget.onPressChange)
+              : null,
+          onTapUp: (widget.enabled && widget.onPressChange != null)
+              ? (_) => updatePressState(false, widget.onPressChange)
+              : null,
+          onTap: widget.enabled ? onTap : null,
+          onTapCancel: (widget.enabled && widget.onPressChange != null)
+              ? () => updatePressState(false, widget.onPressChange)
+              : null,
+          behavior: HitTestBehavior.opaque,
+          excludeFromSemantics: true,
+          child: innerContent,
+        );
+
+        // Step 4: Conditionally wrap with semantics
+        if (!widget.excludeSemantics) {
+          child = Semantics(
+            enabled: widget.enabled,
+            label: widget.semanticLabel,
+            onTap: widget.enabled ? onTap : null,
+            child: child,
+          );
+        }
+
+        // Step 5: Wrap with focusable detector
+        child = NakedFocusableDetector(
+          enabled: widget.enabled,
+          autofocus: widget.autofocus,
+          onFocusChange: (f) => updateFocusState(f, widget.onFocusChange),
+          onHoverChange: (h) => updateHoverState(h, widget.onHoverChange),
+          focusNode: widget.focusNode,
+          mouseCursor: widget.enabled
+              ? widget.mouseCursor
+              : SystemMouseCursors.basic,
+          shortcuts: NakedIntentActions.accordion.shortcuts,
+          actions: NakedIntentActions.accordion.actions(onToggle: onTap),
+          child: child,
+        );
+
         return Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            NakedFocusableDetector(
-              enabled: widget.enabled,
-              autofocus: widget.autofocus,
-              onFocusChange: (f) => updateFocusState(f, widget.onFocusChange),
-              onHoverChange: (h) => updateHoverState(h, widget.onHoverChange),
-              focusNode: widget.focusNode,
-              mouseCursor: widget.enabled
-                  ? widget.mouseCursor
-                  : SystemMouseCursors.basic,
-              shortcuts: NakedIntentActions.accordion.shortcuts,
-              actions: NakedIntentActions.accordion.actions(onToggle: onTap),
-              child: Semantics(
-                enabled: widget.enabled,
-                label: widget.semanticLabel,
-                onTap: widget.enabled ? onTap : null,
-                child: GestureDetector(
-                  onTapDown: (widget.enabled && widget.onPressChange != null)
-                      ? (_) => updatePressState(true, widget.onPressChange)
-                      : null,
-                  onTapUp: (widget.enabled && widget.onPressChange != null)
-                      ? (_) => updatePressState(false, widget.onPressChange)
-                      : null,
-                  onTap: widget.enabled ? onTap : null,
-                  onTapCancel: (widget.enabled && widget.onPressChange != null)
-                      ? () => updatePressState(false, widget.onPressChange)
-                      : null,
-                  behavior: HitTestBehavior.opaque,
-                  excludeFromSemantics: true,
-                  child: ExcludeSemantics(
-                    child: Builder(
-                      builder: (context) {
-                        final canCollapse =
-                            isExpanded &&
-                            (controller.values.length > controller.min);
-
-                        final canExpand =
-                            !isExpanded &&
-                            (controller.max == null ||
-                                controller.values.length < controller.max!);
-                        final accordionState = NakedAccordionItemState<T>(
-                          states: widgetStates,
-                          value: widget.value,
-                          isExpanded: isExpanded,
-                          canCollapse: canCollapse,
-                          canExpand: canExpand,
-                        );
-
-                        return NakedStateScope(
-                          value: accordionState,
-                          child: widget.builder(context, accordionState),
-                        );
-                      },
-                    ),
-                  ),
-                ),
-              ),
-            ),
+            child,
             widget.transitionBuilder != null
                 ? widget.transitionBuilder!(panel)
                 : panel,
