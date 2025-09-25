@@ -3,8 +3,6 @@ import 'package:flutter/widgets.dart';
 import 'intents.dart';
 import 'positioning.dart';
 
-/// Signature for a function that positions overlay content.
-
 /// Shared overlay shell used by NakedMenu and NakedSelect.
 ///
 /// Wraps a target child with RawMenuAnchor and renders the overlay content
