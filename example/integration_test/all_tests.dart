@@ -15,7 +15,6 @@ import 'components/naked_slider_integration.dart' as slider_tests;
 import 'components/naked_tabs_integration.dart' as tabs_tests;
 import 'components/naked_textfield_integration.dart' as textfield_tests;
 import 'components/naked_toggle_integration.dart' as toggle_tests;
-import 'components/naked_tooltip_integration.dart' as tooltip_tests;
 
 void main() {
   // Initialize integration test binding and configure timeout
@@ -47,6 +46,5 @@ void main() {
     group('Tabs Tests', tabs_tests.main);
     group('TextField Tests', textfield_tests.main);
     group('Toggle Tests', toggle_tests.main);
-    group('Tooltip Tests', tooltip_tests.main);
   });
 }

@@ -215,9 +215,6 @@ void main() {
       await tester.pumpWidget(
         _buildTestApp(
           NakedPopover(
-            positioning: const OverlayPositionConfig(
-              alignment: Alignment.bottomLeft,
-            ),
             popoverBuilder: (context, info) => Container(
               width: 150,
               height: 100,

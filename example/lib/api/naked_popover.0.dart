@@ -26,11 +26,44 @@ class MyApp extends StatelessWidget {
               ),
               SizedBox(height: 8),
               Text(
-                'Click the button to open the popover',
+                'Click the button to show the popover',
                 style: TextStyle(color: Colors.grey),
               ),
               SizedBox(height: 24),
-              PopoverExample(),
+              Expanded(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Column(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      mainAxisSize: MainAxisSize.max,
+                      children: [
+                        PopoverExample(),
+                        PopoverExample(),
+                        PopoverExample(),
+                      ],
+                    ),
+                    Column(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      mainAxisSize: MainAxisSize.max,
+                      children: [
+                        PopoverExample(),
+                        PopoverExample(),
+                        PopoverExample(),
+                      ],
+                    ),
+                    Column(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      mainAxisSize: MainAxisSize.max,
+                      children: [
+                        PopoverExample(),
+                        PopoverExample(),
+                        PopoverExample(),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
             ],
           ),
         ),
@@ -55,11 +88,9 @@ class _PopoverExampleState extends State<PopoverExample> {
       controller: _controller,
       consumeOutsideTaps: false,
       positioning: const OverlayPositionConfig(
-        alignment: Alignment.bottomCenter,
-        fallbackAlignment: Alignment.topCenter,
         offset: Offset(0, 8),
       ),
-      popoverBuilder: (context, info) => const PopoverMenu(),
+      popoverBuilder: (context, info) => PopoverMenu(controller: _controller),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
@@ -81,7 +112,10 @@ class _PopoverExampleState extends State<PopoverExample> {
 class PopoverMenu extends StatelessWidget {
   const PopoverMenu({
     super.key,
+    required this.controller,
   });
+
+  final MenuController controller;
 
   @override
   Widget build(BuildContext context) {
@@ -103,17 +137,23 @@ class PopoverMenu extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Row(
+          Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
+              const Text(
                 'Popover Content',
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w500,
                 ),
               ),
-              Icon(Icons.close, size: 16),
+              GestureDetector(
+                onTap: controller.close,
+                child: const Icon(
+                  Icons.close,
+                  size: 16,
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 4),
@@ -127,16 +167,20 @@ class PopoverMenu extends StatelessWidget {
           const SizedBox(height: 4),
           Align(
             alignment: Alignment.centerRight,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              decoration: BoxDecoration(
-                color: Colors.grey.shade200,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Text(
-                'Next',
-                style: TextStyle(
-                  color: Colors.grey.shade600,
+            child: GestureDetector(
+              onTap: controller.close,
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade200,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  'Next',
+                  style: TextStyle(
+                    color: Colors.grey.shade600,
+                  ),
                 ),
               ),
             ),

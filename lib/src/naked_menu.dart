@@ -329,7 +329,7 @@ class _NakedMenuState<T> extends State<NakedMenu<T>>
       useRootOverlay: widget.useRootOverlay,
       closeOnClickOutside: widget.closeOnClickOutside,
       triggerFocusNode: widget.triggerFocusNode,
-      offset: widget.positioning.offset,
+      positioning: widget.positioning,
       child: Semantics(
         toggled: _isOpen,
         child: NakedButton(
