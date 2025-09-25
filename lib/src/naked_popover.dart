@@ -227,19 +227,11 @@ class _NakedPopoverState extends State<NakedPopover> {
       useRootOverlay: widget.useRootOverlay,
       controller: _menuController,
       overlayBuilder: (context, info) {
-        // Center horizontally on the trigger; place the popover's top at the
-        // trigger's bottom. This avoids needing the child's size by using a
-        // FractionalTranslation of -0.5 on X to center the child around the
-        // computed anchor X coordinate.
-        final anchor = info.anchorRect;
-        final left = anchor.center.dx + widget.positioning.offset.dx;
-        final top = anchor.bottom + widget.positioning.offset.dy;
-
         return Stack(
           children: [
-            Positioned(
-              left: left,
-              top: top,
+            OverlayPositioner(
+              targetRect: info.anchorRect,
+              offset: widget.positioning.offset,
               child: TapRegion(
                 onTapOutside: (event) => _menuController.close(),
                 groupId: info.tapRegionGroupId,
@@ -253,10 +245,7 @@ class _NakedPopoverState extends State<NakedPopover> {
                         onPreviousFocus: () =>
                             FocusScope.of(context).previousFocus(),
                       ),
-                      child: FractionalTranslation(
-                        translation: const Offset(-0.5, 0.0),
-                        child: widget.popoverBuilder(context, info),
-                      ),
+                      child: widget.popoverBuilder(context, info),
                     ),
                   ),
                 ),

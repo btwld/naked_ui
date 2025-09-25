@@ -102,10 +102,6 @@ void main() {
           Center(
             child: NakedMenu<String>(
               controller: controller,
-              positioning: const OverlayPositionConfig(
-                alignment: Alignment.bottomCenter,
-                fallbackAlignment: Alignment.topCenter,
-              ),
               builder: (context, state, child) => Container(
                 key: trigger,
                 width: 100,

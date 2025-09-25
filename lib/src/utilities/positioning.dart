@@ -1,141 +1,115 @@
+import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+
+typedef AlignmentPair = ({Alignment target, Alignment follower});
 
 /// Configuration for overlay positioning.
 class OverlayPositionConfig {
   /// Primary alignment for positioning the overlay relative to the anchor.
-  final Alignment alignment;
-
-  /// Fallback alignment when the primary alignment doesn't fit.
-  final Alignment? fallbackAlignment;
+  final AlignmentPair alignment;
 
   /// Additional offset to apply after alignment positioning.
   final Offset offset;
 
-  /// Whether to match the anchor's width.
-  final bool matchWidth;
-
-  /// Minimum width constraint for the overlay.
-  final double? minWidth;
-
-  /// Maximum width constraint for the overlay.
-  final double? maxWidth;
-
-  /// Maximum height constraint for the overlay.
-  final double? maxHeight;
-
   const OverlayPositionConfig({
-    this.alignment = Alignment.bottomCenter,
-    this.fallbackAlignment,
+    this.alignment = (
+      target: Alignment.bottomLeft,
+      follower: Alignment.topLeft,
+    ),
     this.offset = Offset.zero,
-    this.matchWidth = false,
-    this.minWidth,
-    this.maxWidth,
-    this.maxHeight,
   });
 }
 
-/// Calculates the overlay position using alignment-based positioning.
-///
-/// Returns a [Rect] that can be used with [Positioned.fromRect].
-Rect calculateOverlayPosition({
-  required Rect anchorRect,
-  required Size overlaySize,
-  required Size childSize,
-  required OverlayPositionConfig config,
-  Offset? pointerPosition,
-}) {
-  // If pointer position is provided (context menu), position relative to that
-  if (pointerPosition != null) {
-    final followerAnchor = config.alignment.alongSize(childSize);
-    final desired = pointerPosition - followerAnchor + config.offset;
+class OverlayPositioner extends StatelessWidget {
+  const OverlayPositioner({
+    super.key,
+    required this.targetRect,
+    this.alignment = (
+      target: Alignment.bottomCenter,
+      follower: Alignment.topCenter,
+    ),
+    this.offset = Offset.zero,
+    required this.child,
+  });
 
-    return _clampToBounds(
-      Rect.fromLTWH(desired.dx, desired.dy, childSize.width, childSize.height),
-      overlaySize,
+  final Rect targetRect;
+  final AlignmentPair alignment;
+
+  final Offset offset;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return CustomSingleChildLayout(
+      delegate: _OverlayPositionerDelegate(
+        targetPosition: targetRect.topLeft,
+        targetSize: targetRect.size,
+        alignment: alignment,
+
+        offset: offset,
+      ),
+      child: child,
     );
   }
-
-  // Try the primary alignment first.
-  final primaryRect = _calculateAlignedRect(
-    anchorRect,
-    childSize,
-    config.alignment,
-    config.offset,
-    config.matchWidth,
-  );
-
-  if (_fitsInBounds(primaryRect, overlaySize)) {
-    return _applyConstraints(primaryRect, config);
-  }
-
-  // Try the fallback alignment when the primary doesn't fit.
-  if (config.fallbackAlignment != null) {
-    final fallbackRect = _calculateAlignedRect(
-      anchorRect,
-      childSize,
-      config.fallbackAlignment!,
-      config.offset,
-      config.matchWidth,
-    );
-
-    if (_fitsInBounds(fallbackRect, overlaySize)) {
-      return _applyConstraints(fallbackRect, config);
-    }
-  }
-
-  // If nothing fits, clamp the primary to bounds.
-  final clampedRect = _clampToBounds(primaryRect, overlaySize);
-
-  return _applyConstraints(clampedRect, config);
 }
 
-/// Calculates the positioned rect for a given alignment.
-Rect _calculateAlignedRect(
-  Rect anchorRect,
-  Size childSize,
-  Alignment alignment,
+class _OverlayPositionerDelegate extends SingleChildLayoutDelegate {
+  /// The offset of the target the tooltip is positioned near in the global
+  /// coordinate system.
+  final Offset targetPosition;
+
+  /// The amount of vertical distance between the target and the displayed
+  /// tooltip.
+  final Size targetSize;
+
+  final AlignmentPair alignment;
+
+  final Offset offset;
+
+  /// Creates a delegate for computing the layout of a tooltip.
+  const _OverlayPositionerDelegate({
+    required this.targetPosition,
+    required this.targetSize,
+    required this.alignment,
+    required this.offset,
+  });
+
+  @override
+  BoxConstraints getConstraintsForChild(BoxConstraints constraints) =>
+      constraints.loosen();
+
+  @override
+  Offset getPositionForChild(Size size, Size childSize) {
+    final targetAnchorOffset = alignment.target.alongSize(targetSize);
+    final followerAnchorOffset = alignment.follower.alongSize(childSize);
+
+    final prefferedPosition =
+        targetPosition + targetAnchorOffset - followerAnchorOffset + offset;
+
+    return _clampToBounds(prefferedPosition, childSize, size, offset);
+  }
+
+  @override
+  bool shouldRelayout(_OverlayPositionerDelegate oldDelegate) {
+    return targetPosition != oldDelegate.targetPosition ||
+        targetSize != oldDelegate.targetSize;
+  }
+}
+
+Offset _clampToBounds(
+  Offset overlayTopLeft,
+  Size overlaySize,
+  Size screenSize,
   Offset offset,
-  bool matchWidth,
 ) {
-  final targetPoint = alignment.alongSize(anchorRect.size);
-  final anchorPoint = (-alignment).alongSize(childSize);
-  final position = anchorRect.topLeft + targetPoint + anchorPoint + offset;
-
-  final width = matchWidth ? anchorRect.width : childSize.width;
-
-  return Rect.fromLTWH(position.dx, position.dy, width, childSize.height);
-}
-
-/// Checks whether a rect fits within the overlay bounds.
-bool _fitsInBounds(Rect rect, Size overlaySize) {
-  return rect.left >= 0 &&
-      rect.top >= 0 &&
-      rect.right <= overlaySize.width &&
-      rect.bottom <= overlaySize.height;
-}
-
-/// Clamps a rect to the overlay bounds.
-Rect _clampToBounds(Rect rect, Size overlaySize) {
-  final left = rect.left.clamp(0.0, overlaySize.width - rect.width);
-  final top = rect.top.clamp(0.0, overlaySize.height - rect.height);
-
-  return Rect.fromLTWH(left, top, rect.width, rect.height);
-}
-
-/// Applies width and height constraints to a rect.
-Rect _applyConstraints(Rect rect, OverlayPositionConfig config) {
-  double width = rect.width;
-  double height = rect.height;
-
-  if (config.minWidth != null) {
-    width = width.clamp(config.minWidth!, double.infinity);
-  }
-  if (config.maxWidth != null) {
-    width = width.clamp(0.0, config.maxWidth!);
-  }
-  if (config.maxHeight != null) {
-    height = height.clamp(0.0, config.maxHeight!);
-  }
-
-  return Rect.fromLTWH(rect.left, rect.top, width, height);
+  return Offset(
+    overlayTopLeft.dx.clamp(
+      0.0,
+      screenSize.width - overlaySize.width - offset.dx,
+    ),
+    overlayTopLeft.dy.clamp(
+      0.0,
+      screenSize.height - overlaySize.height - offset.dy,
+    ),
+  );
 }
