@@ -381,7 +381,7 @@ class _NakedSelectState<T> extends State<NakedSelect<T>>
 
                 return NakedStateScopeBuilder(
                   value: selectState,
-                  child: widget.child,
+                  child: child,
                   builder: widget.builder,
                 );
               },
