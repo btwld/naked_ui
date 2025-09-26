@@ -7,23 +7,20 @@ void main() {
     testWidgets('creates with default parameters', (tester) async {
       const config = OverlayPositionConfig();
 
-      expect(
-        config.alignment,
-        equals((target: Alignment.bottomLeft, follower: Alignment.topLeft)),
-      );
+      expect(config.targetAnchor, equals(Alignment.bottomLeft));
+      expect(config.followerAnchor, equals(Alignment.topLeft));
       expect(config.offset, equals(Offset.zero));
     });
 
     testWidgets('creates with custom parameters', (tester) async {
       const config = OverlayPositionConfig(
-        alignment: (target: Alignment.topLeft, follower: Alignment.bottomRight),
+        targetAnchor: Alignment.topLeft,
+        followerAnchor: Alignment.bottomRight,
         offset: Offset(10, 20),
       );
 
-      expect(
-        config.alignment,
-        equals((target: Alignment.topLeft, follower: Alignment.bottomRight)),
-      );
+      expect(config.targetAnchor, equals(Alignment.topLeft));
+      expect(config.followerAnchor, equals(Alignment.bottomRight));
       expect(config.offset, equals(const Offset(10, 20)));
     });
   });
@@ -33,12 +30,12 @@ void main() {
     const childKey = Key('child');
 
     Widget buildTestWidget({
-      Rect targetRect = const Rect.fromLTWH(100, 100, 50, 30),
-      AlignmentPair alignment = (
-        target: Alignment.bottomCenter,
-        follower: Alignment.topCenter,
+      OverlayPositionConfig positioning = const OverlayPositionConfig(
+        targetAnchor: Alignment.bottomCenter,
+        followerAnchor: Alignment.topCenter,
+        offset: Offset.zero,
       ),
-      Offset offset = Offset.zero,
+      Rect targetRect = const Rect.fromLTWH(100, 100, 50, 30),
       Widget? child,
     }) {
       return MaterialApp(
@@ -49,8 +46,7 @@ void main() {
             child: OverlayPositioner(
               key: overlayKey,
               targetRect: targetRect,
-              alignment: alignment,
-              offset: offset,
+              positioning: positioning,
               child:
                   child ??
                   Container(
@@ -83,9 +79,9 @@ void main() {
         await tester.pumpWidget(
           buildTestWidget(
             targetRect: targetRect,
-            alignment: (
-              target: Alignment.bottomCenter,
-              follower: Alignment.topCenter,
+            positioning: const OverlayPositionConfig(
+              targetAnchor: Alignment.bottomCenter,
+              followerAnchor: Alignment.topCenter,
             ),
           ),
         );
@@ -110,9 +106,9 @@ void main() {
         await tester.pumpWidget(
           buildTestWidget(
             targetRect: targetRect,
-            alignment: (
-              target: Alignment.topCenter,
-              follower: Alignment.bottomCenter,
+            positioning: const OverlayPositionConfig(
+              targetAnchor: Alignment.topCenter,
+              followerAnchor: Alignment.bottomCenter,
             ),
           ),
         );
@@ -137,9 +133,9 @@ void main() {
         await tester.pumpWidget(
           buildTestWidget(
             targetRect: targetRect,
-            alignment: (
-              target: Alignment.centerRight,
-              follower: Alignment.centerLeft,
+            positioning: const OverlayPositionConfig(
+              targetAnchor: Alignment.centerRight,
+              followerAnchor: Alignment.centerLeft,
             ),
           ),
         );
@@ -163,11 +159,11 @@ void main() {
       await tester.pumpWidget(
         buildTestWidget(
           targetRect: targetRect,
-          alignment: (
-            target: Alignment.bottomCenter,
-            follower: Alignment.topCenter,
+          positioning: const OverlayPositionConfig(
+            targetAnchor: Alignment.bottomCenter,
+            followerAnchor: Alignment.topCenter,
+            offset: offset,
           ),
-          offset: offset,
         ),
       );
 
@@ -191,9 +187,9 @@ void main() {
         await tester.pumpWidget(
           buildTestWidget(
             targetRect: targetRect,
-            alignment: (
-              target: Alignment.centerRight,
-              follower: Alignment.centerLeft,
+            positioning: const OverlayPositionConfig(
+              targetAnchor: Alignment.centerRight,
+              followerAnchor: Alignment.centerLeft,
             ),
           ),
         );
@@ -214,9 +210,9 @@ void main() {
         await tester.pumpWidget(
           buildTestWidget(
             targetRect: targetRect,
-            alignment: (
-              target: Alignment.bottomCenter,
-              follower: Alignment.topCenter,
+            positioning: const OverlayPositionConfig(
+              targetAnchor: Alignment.bottomCenter,
+              followerAnchor: Alignment.topCenter,
             ),
           ),
         );
@@ -237,9 +233,9 @@ void main() {
       await tester.pumpWidget(
         buildTestWidget(
           targetRect: targetRect,
-          alignment: (
-            target: Alignment.centerLeft,
-            follower: Alignment.centerRight,
+          positioning: const OverlayPositionConfig(
+            targetAnchor: Alignment.centerLeft,
+            followerAnchor: Alignment.centerRight,
           ),
         ),
       );
@@ -259,9 +255,9 @@ void main() {
       await tester.pumpWidget(
         buildTestWidget(
           targetRect: targetRect,
-          alignment: (
-            target: Alignment.topCenter,
-            follower: Alignment.bottomCenter,
+          positioning: const OverlayPositionConfig(
+            targetAnchor: Alignment.topCenter,
+            followerAnchor: Alignment.bottomCenter,
           ),
         ),
       );
@@ -278,9 +274,9 @@ void main() {
       await tester.pumpWidget(
         buildTestWidget(
           targetRect: targetRect,
-          alignment: (
-            target: Alignment.bottomRight,
-            follower: Alignment.topLeft,
+          positioning: const OverlayPositionConfig(
+            targetAnchor: Alignment.bottomRight,
+            followerAnchor: Alignment.topLeft,
           ),
         ),
       );
@@ -381,9 +377,9 @@ void main() {
           home: Scaffold(
             body: OverlayPositioner(
               targetRect: rect,
-              alignment: (
-                target: Alignment.bottomCenter,
-                follower: Alignment.topCenter,
+              positioning: const OverlayPositionConfig(
+                targetAnchor: Alignment.bottomCenter,
+                followerAnchor: Alignment.topCenter,
               ),
               child: Container(
                 key: const Key('child'),
@@ -419,9 +415,9 @@ void main() {
               height: 600,
               child: OverlayPositioner(
                 targetRect: targetRect,
-                alignment: (
-                  target: Alignment.center,
-                  follower: Alignment.center,
+                positioning: const OverlayPositionConfig(
+                  targetAnchor: Alignment.center,
+                  followerAnchor: Alignment.center,
                 ),
                 child: Container(
                   key: const Key('child'),
@@ -457,7 +453,7 @@ void main() {
               height: 600,
               child: OverlayPositioner(
                 targetRect: targetRect,
-                offset: offset,
+                positioning: OverlayPositionConfig(offset: offset),
                 child: Container(
                   key: const Key('child'),
                   width: 100,
@@ -489,7 +485,7 @@ void main() {
               height: 600,
               child: OverlayPositioner(
                 targetRect: targetRect,
-                offset: offset,
+                positioning: OverlayPositionConfig(offset: offset),
                 child: Container(
                   key: const Key('child'),
                   width: 100,

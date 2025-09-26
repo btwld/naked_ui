@@ -203,7 +203,8 @@ class NakedSelect<T> extends StatefulWidget {
     this.triggerFocusNode,
     this.semanticLabel,
     this.positioning = const OverlayPositionConfig(
-      alignment: (target: Alignment.bottomCenter, follower: Alignment.topCenter),
+      targetAnchor: Alignment.bottomCenter,
+      followerAnchor: Alignment.topCenter,
     ),
     this.onOpen,
     this.onClose,

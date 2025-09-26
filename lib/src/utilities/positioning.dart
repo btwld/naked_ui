@@ -1,21 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 
-typedef AlignmentPair = ({Alignment target, Alignment follower});
-
 /// Configuration for overlay positioning.
 class OverlayPositionConfig {
   /// Primary alignment for positioning the overlay relative to the anchor.
-  final AlignmentPair alignment;
+  final Alignment targetAnchor;
+  final Alignment followerAnchor;
 
   /// Additional offset to apply after alignment positioning.
   final Offset offset;
 
   const OverlayPositionConfig({
-    this.alignment = (
-      target: Alignment.bottomLeft,
-      follower: Alignment.topLeft,
-    ),
+    this.targetAnchor = Alignment.bottomLeft,
+    this.followerAnchor = Alignment.topLeft,
     this.offset = Offset.zero,
   });
 }
@@ -24,18 +21,13 @@ class OverlayPositioner extends StatelessWidget {
   const OverlayPositioner({
     super.key,
     required this.targetRect,
-    this.alignment = (
-      target: Alignment.bottomCenter,
-      follower: Alignment.topCenter,
-    ),
-    this.offset = Offset.zero,
+    this.positioning = const OverlayPositionConfig(),
     required this.child,
   });
 
   final Rect targetRect;
-  final AlignmentPair alignment;
 
-  final Offset offset;
+  final OverlayPositionConfig positioning;
   final Widget child;
 
   @override
@@ -44,9 +36,9 @@ class OverlayPositioner extends StatelessWidget {
       delegate: _OverlayPositionerDelegate(
         targetPosition: targetRect.topLeft,
         targetSize: targetRect.size,
-        alignment: alignment,
-
-        offset: offset,
+        targetAnchor: positioning.targetAnchor,
+        followerAnchor: positioning.followerAnchor,
+        offset: positioning.offset,
       ),
       child: child,
     );
@@ -62,7 +54,8 @@ class _OverlayPositionerDelegate extends SingleChildLayoutDelegate {
   /// tooltip.
   final Size targetSize;
 
-  final AlignmentPair alignment;
+  final Alignment targetAnchor;
+  final Alignment followerAnchor;
 
   final Offset offset;
 
@@ -70,7 +63,8 @@ class _OverlayPositionerDelegate extends SingleChildLayoutDelegate {
   const _OverlayPositionerDelegate({
     required this.targetPosition,
     required this.targetSize,
-    required this.alignment,
+    required this.targetAnchor,
+    required this.followerAnchor,
     required this.offset,
   });
 
@@ -80,8 +74,8 @@ class _OverlayPositionerDelegate extends SingleChildLayoutDelegate {
 
   @override
   Offset getPositionForChild(Size size, Size childSize) {
-    final targetAnchorOffset = alignment.target.alongSize(targetSize);
-    final followerAnchorOffset = alignment.follower.alongSize(childSize);
+    final targetAnchorOffset = targetAnchor.alongSize(targetSize);
+    final followerAnchorOffset = followerAnchor.alongSize(childSize);
 
     final preferedPosition =
         targetPosition + targetAnchorOffset - followerAnchorOffset + offset;
@@ -93,8 +87,8 @@ class _OverlayPositionerDelegate extends SingleChildLayoutDelegate {
   bool shouldRelayout(_OverlayPositionerDelegate oldDelegate) {
     return targetPosition != oldDelegate.targetPosition ||
         targetSize != oldDelegate.targetSize ||
-        alignment.target != oldDelegate.alignment.target ||
-        alignment.follower != oldDelegate.alignment.follower ||
+        targetAnchor != oldDelegate.targetAnchor ||
+        followerAnchor != oldDelegate.followerAnchor ||
         offset != oldDelegate.offset;
   }
 }
