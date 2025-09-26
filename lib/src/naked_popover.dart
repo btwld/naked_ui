@@ -229,7 +229,7 @@ class _NakedPopoverState extends State<NakedPopover> {
       overlayBuilder: (context, info) {
         return OverlayPositioner(
           targetRect: info.anchorRect,
-          offset: widget.positioning.offset,
+          positioning: widget.positioning,
           child: TapRegion(
             onTapOutside: (event) => _menuController.close(),
             groupId: info.tapRegionGroupId,

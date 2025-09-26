@@ -419,10 +419,8 @@ void main() {
               padding: const EdgeInsets.only(bottom: 4),
               child: NakedSelect<String>(
                 positioning: const OverlayPositionConfig(
-                  alignment: (
-                    target: Alignment.bottomLeft,
-                    follower: Alignment.topLeft,
-                  ),
+                  targetAnchor: Alignment.bottomLeft,
+                  followerAnchor: Alignment.topLeft,
                 ),
                 builder: (context, state, child) => const Text('Select option'),
                 overlayBuilder: (context, info) => Container(

@@ -143,10 +143,8 @@ void main() {
         Center(
           child: NakedPopover(
             positioning: const OverlayPositionConfig(
-              alignment: (
-                target: Alignment.bottomCenter,
-                follower: Alignment.topCenter,
-              ),
+              targetAnchor: Alignment.bottomCenter,
+              followerAnchor: Alignment.topCenter,
             ),
             popoverBuilder: (context, info) => const SizedBox(
               key: popoverKey,

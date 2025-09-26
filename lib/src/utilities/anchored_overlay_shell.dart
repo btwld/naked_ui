@@ -77,8 +77,7 @@ class AnchoredOverlayShell extends StatelessWidget {
 
         return OverlayPositioner(
           targetRect: info.anchorRect,
-          alignment: positioning.alignment,
-          offset: positioning.offset,
+          positioning: positioning,
           child: TapRegion(
             onTapOutside: closeOnClickOutside
                 ? (event) => controller.close()
