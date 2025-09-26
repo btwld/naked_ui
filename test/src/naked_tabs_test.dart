@@ -5,6 +5,8 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:naked_ui/naked_ui.dart';
 
+import 'helpers/builder_state_scope.dart';
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
@@ -321,5 +323,20 @@ void main() {
     await tester.pump();
 
     expect(esc, isTrue);
+  });
+
+  group('Builder Tests', () {
+    testStateScopeBuilder<NakedTabState>(
+      'builder\'s context contains NakedStateScope',
+      (builder) => NakedTabs(
+        selectedTabId: 'tab1',
+        onChanged: (value) {},
+        child: NakedTabBar(
+          child: Row(
+            children: [NakedTab(tabId: 'tab1', builder: builder)],
+          ),
+        ),
+      ),
+    );
   });
 }

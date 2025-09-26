@@ -21,8 +21,8 @@ import 'utilities/naked_focusable_detector.dart';
 import 'utilities/naked_state_scope.dart';
 import 'utilities/state.dart';
 
-typedef NakedTextFieldBuilder =
-    Widget Function(BuildContext context, Widget editableText);
+typedef NakedTextFieldBuilder<T extends NakedState> =
+    Widget Function(BuildContext context, T value, Widget editableText);
 
 /// Immutable view passed to [NakedTextField.builder].
 class NakedTextFieldState extends NakedState {
@@ -829,20 +829,18 @@ class _NakedTextFieldState extends State<NakedTextField>
       isEnabled: widget.enabled,
     );
 
-    // Build content using the builder and always provide state via scope
-    final Widget content = widget.builder!(context, editable);
-
-    final Widget composed = withSemantics(content);
-    final Widget wrappedContent = NakedStateScope(
+    final Widget content = NakedStateScopeBuilder(
       value: textFieldState,
-      child: composed,
+      child: editable,
+      builder: (context, value, child) =>
+          withSemantics(widget.builder!(context, value, child!)),
     );
 
     // Ensure a focus action is exposed in semantics parity with Material.
     final Widget composedWithFocusSemantics = NakedFocusableDetector(
       enabled: widget.enabled,
       includeSemantics: true,
-      child: wrappedContent,
+      child: content,
     );
 
     // Selection/gesture plumbing

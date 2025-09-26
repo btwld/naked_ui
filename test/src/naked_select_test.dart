@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:naked_ui/naked_ui.dart';
 
 import '../test_helpers.dart';
+import 'helpers/builder_state_scope.dart';
 
 void main() {
   const kMenuKey = Key('menu');
@@ -132,6 +133,16 @@ void main() {
         expect(find.text('Apple'), findsNothing);
       },
       timeout: const Timeout(Duration(seconds: 10)),
+    );
+
+    testStateScopeBuilder<NakedSelectState>(
+      'builder\'s context contains NakedStateScope',
+      (builder) => NakedSelect(
+        builder: builder,
+        overlayBuilder: (context, info) =>
+            const SizedBox(child: Text('Select option')),
+        child: const Text('Select option'),
+      ),
     );
   });
 

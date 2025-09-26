@@ -547,9 +547,10 @@ class _NakedAccordionState<T> extends State<NakedAccordion<T>>
                           canExpand: canExpand,
                         );
 
-                        return NakedStateScope(
+                        return NakedStateScopeBuilder(
                           value: accordionState,
-                          child: widget.builder(context, accordionState),
+                          builder: (context, accordionState, child) =>
+                              widget.builder(context, accordionState),
                         );
                       },
                     ),

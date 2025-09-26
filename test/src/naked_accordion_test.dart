@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:naked_ui/naked_ui.dart';
 
 import '../test_helpers.dart';
+import 'helpers/builder_state_scope.dart';
 
 Widget builder(bool isExpanded, {required String text}) {
   return isExpanded ? Text(text) : const SizedBox.shrink();
@@ -54,6 +55,27 @@ void main() {
       expect(find.text('Trigger 2'), findsOneWidget);
       expect(find.text('Content 2'), findsNothing);
     });
+
+    testStateScopeBuilder<NakedAccordionItemState>(
+      'builder\'s context contains NakedStateScope',
+      (builder) {
+        final controller = NakedAccordionController<String>();
+
+        addTearDown(() {
+          controller.dispose();
+        });
+
+        return NakedAccordionScope(
+          controller: controller,
+          child: NakedAccordion(
+            value: 'item1',
+            builder: (context, itemState) =>
+                builder(context, itemState, SizedBox()),
+            child: SizedBox(),
+          ),
+        );
+      },
+    );
   });
 
   group('Focus State', () {

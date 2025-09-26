@@ -382,7 +382,11 @@ class _NakedSliderState extends State<NakedSlider>
     );
 
     final content = widget.builder != null
-        ? widget.builder!(context, sliderState, widget.child)
+        ? Builder(
+            builder: (context) {
+              return widget.builder!(context, sliderState, widget.child);
+            },
+          )
         : widget.child!;
 
     final childGesture = GestureDetector(

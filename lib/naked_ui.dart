@@ -1,4 +1,4 @@
 // Components
 export 'src/naked_widgets.dart';
 // Utilities
-export 'src/utilities/utilities.dart';
+export 'src/utilities/utilities.dart' hide NakedStateScopeBuilder;
