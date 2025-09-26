@@ -36,9 +36,6 @@ void main() {
         offset: Offset.zero,
       ),
       Rect targetRect = const Rect.fromLTWH(100, 100, 50, 30),
-      Alignment targetAnchor = Alignment.bottomCenter,
-      Alignment followerAnchor = Alignment.topCenter,
-      Offset offset = Offset.zero,
       Widget? child,
     }) {
       return MaterialApp(
@@ -82,8 +79,10 @@ void main() {
         await tester.pumpWidget(
           buildTestWidget(
             targetRect: targetRect,
-            targetAnchor: Alignment.bottomCenter,
-            followerAnchor: Alignment.topCenter,
+            positioning: const OverlayPositionConfig(
+              targetAnchor: Alignment.bottomCenter,
+              followerAnchor: Alignment.topCenter,
+            ),
           ),
         );
 
@@ -107,8 +106,10 @@ void main() {
         await tester.pumpWidget(
           buildTestWidget(
             targetRect: targetRect,
-            targetAnchor: Alignment.topCenter,
-            followerAnchor: Alignment.bottomCenter,
+            positioning: const OverlayPositionConfig(
+              targetAnchor: Alignment.topCenter,
+              followerAnchor: Alignment.bottomCenter,
+            ),
           ),
         );
 
@@ -132,8 +133,10 @@ void main() {
         await tester.pumpWidget(
           buildTestWidget(
             targetRect: targetRect,
-            targetAnchor: Alignment.centerRight,
-            followerAnchor: Alignment.centerLeft,
+            positioning: const OverlayPositionConfig(
+              targetAnchor: Alignment.centerRight,
+              followerAnchor: Alignment.centerLeft,
+            ),
           ),
         );
 
@@ -156,9 +159,11 @@ void main() {
       await tester.pumpWidget(
         buildTestWidget(
           targetRect: targetRect,
-          targetAnchor: Alignment.bottomCenter,
-          followerAnchor: Alignment.topCenter,
-          offset: offset,
+          positioning: const OverlayPositionConfig(
+            targetAnchor: Alignment.bottomCenter,
+            followerAnchor: Alignment.topCenter,
+            offset: offset,
+          ),
         ),
       );
 
@@ -182,8 +187,10 @@ void main() {
         await tester.pumpWidget(
           buildTestWidget(
             targetRect: targetRect,
-            targetAnchor: Alignment.centerRight,
-            followerAnchor: Alignment.centerLeft,
+            positioning: const OverlayPositionConfig(
+              targetAnchor: Alignment.centerRight,
+              followerAnchor: Alignment.centerLeft,
+            ),
           ),
         );
 
@@ -203,8 +210,10 @@ void main() {
         await tester.pumpWidget(
           buildTestWidget(
             targetRect: targetRect,
-            targetAnchor: Alignment.bottomCenter,
-            followerAnchor: Alignment.topCenter,
+            positioning: const OverlayPositionConfig(
+              targetAnchor: Alignment.bottomCenter,
+              followerAnchor: Alignment.topCenter,
+            ),
           ),
         );
 
@@ -224,8 +233,10 @@ void main() {
       await tester.pumpWidget(
         buildTestWidget(
           targetRect: targetRect,
-          targetAnchor: Alignment.centerLeft,
-          followerAnchor: Alignment.centerRight,
+          positioning: const OverlayPositionConfig(
+            targetAnchor: Alignment.centerLeft,
+            followerAnchor: Alignment.centerRight,
+          ),
         ),
       );
 
@@ -244,8 +255,10 @@ void main() {
       await tester.pumpWidget(
         buildTestWidget(
           targetRect: targetRect,
-          targetAnchor: Alignment.topCenter,
-          followerAnchor: Alignment.bottomCenter,
+          positioning: const OverlayPositionConfig(
+            targetAnchor: Alignment.topCenter,
+            followerAnchor: Alignment.bottomCenter,
+          ),
         ),
       );
 
@@ -261,8 +274,10 @@ void main() {
       await tester.pumpWidget(
         buildTestWidget(
           targetRect: targetRect,
-          targetAnchor: Alignment.bottomRight,
-          followerAnchor: Alignment.topLeft,
+          positioning: const OverlayPositionConfig(
+            targetAnchor: Alignment.bottomRight,
+            followerAnchor: Alignment.topLeft,
+          ),
         ),
       );
 
