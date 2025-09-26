@@ -227,10 +227,7 @@ class NakedMenu<T> extends StatefulWidget {
     this.closeOnClickOutside = true,
     this.triggerFocusNode,
     this.positioning = const OverlayPositionConfig(),
-  }) : assert(
-         child != null || builder != null,
-         'Either child or builder must be provided',
-       );
+  });
 
   /// Type alias for [NakedMenuItem] for cleaner API access.
   static final Item = NakedMenuItem.new;
@@ -341,11 +338,12 @@ class _NakedMenuState<T> extends State<NakedMenu<T>>
               states: buttonState.states,
               isOpen: _isOpen,
             );
-            final content = widget.builder != null
-                ? widget.builder!(context, menuState, child)
-                : child!;
 
-            return NakedStateScope(value: menuState, child: content);
+            return NakedStateScopeBuilder(
+              value: menuState,
+              child: widget.child,
+              builder: widget.builder,
+            );
           },
         ),
       ),

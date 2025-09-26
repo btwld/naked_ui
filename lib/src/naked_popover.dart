@@ -164,17 +164,17 @@ class _NakedPopoverState extends State<NakedPopover> {
     return null;
   }
 
-  Widget _buildTrigger(BuildContext context, FocusNode returnNode) {
+  Widget _buildTrigger(FocusNode returnNode) {
     final popoverState = NakedPopoverState(
       states: _statesController.value,
       isOpen: _menuController.isOpen,
     );
 
-    final content = widget.builder != null
-        ? widget.builder!(context, popoverState, widget.child)
-        : (widget.child ?? const SizedBox.shrink());
-
-    final child = NakedStateScope(value: popoverState, child: content);
+    final child = NakedStateScopeBuilder(
+      value: popoverState,
+      child: widget.child ?? const SizedBox.shrink(),
+      builder: widget.builder,
+    );
 
     // Case A: We own the focus node (no Focus provided by the child).
     if (identical(returnNode, _internalTriggerNode)) {
@@ -251,7 +251,7 @@ class _NakedPopoverState extends State<NakedPopover> {
         );
       },
 
-      child: _buildTrigger(context, returnNode),
+      child: _buildTrigger(returnNode),
     );
   }
 }

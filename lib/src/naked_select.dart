@@ -378,11 +378,12 @@ class _NakedSelectState<T> extends State<NakedSelect<T>>
                   isOpen: _isOpen,
                   value: _effectiveValue,
                 );
-                final content = widget.builder != null
-                    ? widget.builder!(context, selectState, child)
-                    : child!;
 
-                return NakedStateScope(value: selectState, child: content);
+                return NakedStateScopeBuilder(
+                  value: selectState,
+                  child: widget.child,
+                  builder: widget.builder,
+                );
               },
             ),
           ),

@@ -175,3 +175,30 @@ class _NakedStateScopeState<T extends NakedState>
     );
   }
 }
+
+@internal
+class NakedStateScopeBuilder<T extends NakedState> extends StatelessWidget {
+  const NakedStateScopeBuilder({
+    super.key,
+    required this.value,
+    this.child,
+    this.builder,
+  }) : assert(
+         child != null || builder != null,
+         'Either child or builder must be provided',
+       );
+
+  final T value;
+  final Widget? child;
+  final ValueWidgetBuilder<T>? builder;
+
+  @override
+  Widget build(BuildContext context) {
+    return NakedStateScope(
+      value: value,
+      child: builder != null
+          ? Builder(builder: (context) => builder!(context, value, child))
+          : child!,
+    );
+  }
+}
