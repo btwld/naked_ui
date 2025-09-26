@@ -174,6 +174,7 @@ class NakedTextField extends StatefulWidget {
     this.ignorePointers,
     this.semanticLabel,
     this.semanticHint,
+    this.strutStyle,
   }) : assert(obscuringCharacter.length == 1),
        smartDashesType =
            smartDashesType ??
@@ -340,6 +341,9 @@ class NakedTextField extends StatefulWidget {
 
   /// Text style override (else derives from [DefaultTextStyle]).
   final TextStyle? style;
+
+  /// Defines the strut
+  final StrutStyle? strutStyle;
 
   /// Whether to ignore pointers.
   final bool? ignorePointers;
@@ -723,6 +727,7 @@ class _NakedTextFieldState extends State<NakedTextField>
       smartQuotesType: widget.smartQuotesType,
       enableSuggestions: widget.enableSuggestions,
       style: baseStyle,
+      strutStyle: widget.strutStyle,
       cursorColor: p.cursorColor,
       backgroundCursorColor: _neutralBgCursor,
       textAlign: widget.textAlign,
