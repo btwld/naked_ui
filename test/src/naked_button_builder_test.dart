@@ -62,6 +62,7 @@ void main() {
                   child: NakedButton(
                     onPressed: () {},
                     builder: (context, state, child) {
+                      NakedStateScope.controllerOf(context).value;
                       builderBuildCount++;
                       return Container(
                         width: 100,
