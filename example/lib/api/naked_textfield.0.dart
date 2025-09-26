@@ -58,39 +58,33 @@ class _TextFieldExampleState extends State<TextFieldExample> {
           fontSize: 14,
           fontWeight: FontWeight.w400,
         ),
-        builder: (context, editableText) {
-          return Builder(
-            builder: (context) {
-              final state = NakedTextFieldState.of(context);
-              return AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(10),
-                  color: state.when(
-                    pressed: Colors.white,
-                    focused: Colors.white,
-                    hovered: Colors.grey.shade200,
-                    orElse: Colors.white,
+        builder: (context, state, editableText) {
+          return AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(10),
+              color: state.when(
+                pressed: Colors.white,
+                focused: Colors.white,
+                hovered: Colors.grey.shade200,
+                orElse: Colors.white,
+              ),
+              border: Border.all(
+                color: Colors.grey.shade300,
+                width: 1,
+              ),
+              boxShadow: [
+                if (state.isFocused)
+                  BoxShadow(
+                    color: Colors.grey.shade200,
+                    spreadRadius: 3,
+                    blurStyle: BlurStyle.outer,
+                    offset: const Offset(0, 0),
                   ),
-                  border: Border.all(
-                    color: Colors.grey.shade300,
-                    width: 1,
-                  ),
-                  boxShadow: [
-                    if (state.isFocused)
-                      BoxShadow(
-                        color: Colors.grey.shade200,
-                        spreadRadius: 3,
-                        blurStyle: BlurStyle.outer,
-                        offset: const Offset(0, 0),
-                      ),
-                  ],
-                ),
-                child: editableText,
-              );
-            },
+              ],
+            ),
+            child: editableText,
           );
         },
       ),

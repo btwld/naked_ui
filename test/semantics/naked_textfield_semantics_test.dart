@@ -26,7 +26,7 @@ void main() {
         naked: _buildTestApp(
           NakedTextField(
             enabled: true,
-            builder: (context, editable) => editable,
+            builder: (context, state, editable) => editable,
           ),
         ),
         control: ControlType.textField,
@@ -43,7 +43,7 @@ void main() {
         naked: _buildTestApp(
           NakedTextField(
             enabled: false,
-            builder: (context, editable) => editable,
+            builder: (context, state, editable) => editable,
           ),
         ),
         control: ControlType.textField,
@@ -73,7 +73,7 @@ void main() {
         _buildTestApp(
           NakedTextField(
             focusNode: fn,
-            builder: (context, editable) => editable,
+            builder: (context, state, editable) => editable,
           ),
         ),
       );
@@ -115,7 +115,7 @@ void main() {
           NakedTextField(
             maxLines: 3,
             readOnly: true,
-            builder: (context, editable) => editable,
+            builder: (context, state, editable) => editable,
           ),
         ),
       );
