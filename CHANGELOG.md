@@ -1,4 +1,10 @@
+## 0.2.0-beta.3
 
+- feat: expose StrutStyle to NakedTextField
+- fix: state scope not in the Context
+- feat: recreate NakedTooltip widget
+- refactor: Overlay Rendering
+- docs: Improve the usage examples
 
 ## 0.2.0-beta.2
 
