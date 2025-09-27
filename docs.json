@@ -1,6 +1,41 @@
 {
   "name": "naked",
-  "description": "A widget library providing unstyled, behavior-focused components for Flutter.",
+  "description": "Headless Flutter components with behavior and accessibility, no styling. Complete design freedom.",
+  "theme": {
+    "primaryColor": "#3D3D3D",
+    "accentColor": "#2563EB",
+    "backgroundColor": "#FFFFFF"
+  },
+  "navigation": {
+    "github": "https://github.com/btwld/naked_ui"
+  },
+  "search": {
+    "enabled": true
+  },
+  "social": {
+    "github": "btwld/naked_ui"
+  },
+  "meta": {
+    "author": "Bitwild",
+    "keywords": ["flutter", "headless", "components", "ui", "widgets", "unstyled", "accessibility"]
+  },
+  "footer": {
+    "links": [
+      {
+        "title": "Documentation",
+        "url": "/"
+      },
+      {
+        "title": "GitHub",
+        "url": "https://github.com/btwld/naked_ui"
+      },
+      {
+        "title": "pub.dev",
+        "url": "https://pub.dev/packages/naked_ui"
+      }
+    ],
+    "copyright": "© 2024 Bitwild. MIT License."
+  },
   "sidebar": [
     {
       "group": "Introduction",
@@ -27,8 +62,16 @@
           "href": "/widget/checkbox"
         },
         {
+          "title": "NakedDialog",
+          "href": "/widget/dialog"
+        },
+        {
           "title": "NakedMenu",
           "href": "/widget/menu"
+        },
+        {
+          "title": "NakedPopover",
+          "href": "/widget/popover"
         },
         {
           "title": "NakedRadio",
@@ -55,20 +98,12 @@
           "href": "/widget/textfield"
         },
         {
-          "title": "NakedDialog",
-          "href": "/widget/dialog"
-        },
-        {
-          "title": "NakedTooltip",
-          "href": "/widget/tooltip"
-        },
-        {
           "title": "NakedToggle",
           "href": "/widget/toggle"
         },
         {
-          "title": "NakedPopover",
-          "href": "/widget/popover"
+          "title": "NakedTooltip",
+          "href": "/widget/tooltip"
         }
       ]
     }

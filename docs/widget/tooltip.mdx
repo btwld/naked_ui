@@ -4,15 +4,25 @@ description: Hover/focus triggered tooltip overlay with positioning and lifecycl
 keywords: [flutter, tooltip, hover, overlay, headless]
 ---
 
-`NakedTooltip` wires up a popover that appears on hover/focus and hides after a delay. Provide the trigger child (and optional trigger builder) plus an overlay builder for the tooltip content; the widget manages timers, positioning, and focus dismissal.
+Headless tooltip component. Handles hover/focus triggers, positioning, timers, and dismissal. Use builder pattern for custom styling.
+
+## When to use this
+
+- **Help text**: Explain UI elements or provide additional context
+- **Icon explanations**: Clarify what icon buttons do
+- **Form field hints**: Show validation rules or input examples
+- **Feature descriptions**: Brief explanations of complex features
 
 <Info>
   Working example: [`example/lib/api/naked_tooltip.0.dart`](https://github.com/btwld/naked_ui/blob/main/example/lib/api/naked_tooltip.0.dart).
 </Info>
 
-## Quick Start
+## Basic implementation
 
 ```dart
+import 'package:flutter/material.dart';
+import 'package:naked_ui/naked_ui.dart';
+
 class TooltipExample extends StatefulWidget {
   const TooltipExample({super.key});
 
