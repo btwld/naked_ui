@@ -76,6 +76,7 @@ class NakedPopover extends StatefulWidget {
     this.onClose,
     this.onOpenRequested,
     this.onCloseRequested,
+    this.controller,
   }) : assert(
          child != null || builder != null,
          'Either child or builder must be provided',
@@ -111,6 +112,8 @@ class NakedPopover extends StatefulWidget {
   /// Called when the popover closes.
   final VoidCallback? onClose;
 
+  final MenuController? controller;
+
   /// Called when a request is made to open the popover.
   ///
   /// This callback allows you to customize the opening behavior, such as
@@ -129,7 +132,7 @@ class NakedPopover extends StatefulWidget {
 
 class _NakedPopoverState extends State<NakedPopover> {
   // ignore: dispose-fields
-  final _menuController = MenuController();
+  late final _menuController = widget.controller ?? MenuController();
   late final _statesController = WidgetStatesController();
 
   // Internal node used when the child does not already provide a Focus.
@@ -161,17 +164,17 @@ class _NakedPopoverState extends State<NakedPopover> {
     return null;
   }
 
-  Widget _buildTrigger(BuildContext context, FocusNode returnNode) {
+  Widget _buildTrigger(FocusNode returnNode) {
     final popoverState = NakedPopoverState(
       states: _statesController.value,
       isOpen: _menuController.isOpen,
     );
 
-    final content = widget.builder != null
-        ? widget.builder!(context, popoverState, widget.child)
-        : (widget.child ?? const SizedBox.shrink());
-
-    final child = NakedStateScope(value: popoverState, child: content);
+    final child = NakedStateScopeBuilder(
+      value: popoverState,
+      child: widget.child ?? const SizedBox.shrink(),
+      builder: widget.builder,
+    );
 
     // Case A: We own the focus node (no Focus provided by the child).
     if (identical(returnNode, _internalTriggerNode)) {
@@ -224,46 +227,31 @@ class _NakedPopoverState extends State<NakedPopover> {
       useRootOverlay: widget.useRootOverlay,
       controller: _menuController,
       overlayBuilder: (context, info) {
-        // Center horizontally on the trigger; place the popover's top at the
-        // trigger's bottom. This avoids needing the child's size by using a
-        // FractionalTranslation of -0.5 on X to center the child around the
-        // computed anchor X coordinate.
-        final anchor = info.anchorRect;
-        final left = anchor.center.dx + widget.positioning.offset.dx;
-        final top = anchor.bottom + widget.positioning.offset.dy;
-
-        return Stack(
-          children: [
-            Positioned(
-              left: left,
-              top: top,
-              child: TapRegion(
-                onTapOutside: (event) => _menuController.close(),
-                groupId: info.tapRegionGroupId,
-                child: FocusTraversalGroup(
-                  child: Shortcuts(
-                    shortcuts: NakedIntentActions.menu.shortcuts,
-                    child: Actions(
-                      actions: NakedIntentActions.menu.actions(
-                        onDismiss: () => _menuController.close(),
-                        onNextFocus: () => FocusScope.of(context).nextFocus(),
-                        onPreviousFocus: () =>
-                            FocusScope.of(context).previousFocus(),
-                      ),
-                      child: FractionalTranslation(
-                        translation: const Offset(-0.5, 0.0),
-                        child: widget.popoverBuilder(context, info),
-                      ),
-                    ),
+        return OverlayPositioner(
+          targetRect: info.anchorRect,
+          positioning: widget.positioning,
+          child: TapRegion(
+            onTapOutside: (event) => _menuController.close(),
+            groupId: info.tapRegionGroupId,
+            child: FocusTraversalGroup(
+              child: Shortcuts(
+                shortcuts: NakedIntentActions.menu.shortcuts,
+                child: Actions(
+                  actions: NakedIntentActions.menu.actions(
+                    onDismiss: () => _menuController.close(),
+                    onNextFocus: () => FocusScope.of(context).nextFocus(),
+                    onPreviousFocus: () =>
+                        FocusScope.of(context).previousFocus(),
                   ),
+                  child: widget.popoverBuilder(context, info),
                 ),
               ),
             ),
-          ],
+          ),
         );
       },
 
-      child: _buildTrigger(context, returnNode),
+      child: _buildTrigger(returnNode),
     );
   }
 }

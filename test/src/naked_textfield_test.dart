@@ -12,6 +12,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:naked_ui/naked_ui.dart';
 
+import 'helpers/builder_state_scope.dart';
+
 Future<void> _pumpApp(
   WidgetTester tester, {
   required Widget child,
@@ -32,7 +34,7 @@ Future<void> _pumpApp(
 }
 
 NakedTextFieldBuilder _builder({EdgeInsets padding = EdgeInsets.zero}) {
-  return (context, editable) => Padding(
+  return (context, state, editable) => Padding(
     padding: padding,
     child: DecoratedBox(decoration: const BoxDecoration(), child: editable),
   );
@@ -56,7 +58,7 @@ void main() {
       await _pumpApp(
         tester,
         child: NakedTextField(
-          builder: (context, editable) {
+          builder: (context, state, editable) {
             built = editable;
             return editable;
           },
@@ -575,5 +577,25 @@ void main() {
       expect(data, isNotNull);
       expect(data!['foo'], 'bar');
     });
+  });
+
+  group('Builder Tests', () {
+    testStateScopeBuilder<NakedTextFieldState>(
+      'builder\'s context contains NakedStateScope',
+      (builder) => NakedTextField(
+        builder: (context, state, editable) => builder(
+          context,
+          NakedTextFieldState(
+            states: {},
+            text: '',
+            isFocused: false,
+            hasText: false,
+            isReadOnly: false,
+            isEnabled: false,
+          ),
+          editable,
+        ),
+      ),
+    );
   });
 }

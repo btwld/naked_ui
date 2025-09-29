@@ -168,8 +168,8 @@ void main() {
           body: Center(
             child: NakedTooltip(
               positioning: const OverlayPositionConfig(
-                alignment: Alignment.bottomCenter,
-                fallbackAlignment: Alignment.topCenter,
+                targetAnchor: Alignment.bottomCenter,
+                followerAnchor: Alignment.topCenter,
               ),
               waitDuration: Duration.zero,
               showDuration: Duration.zero,

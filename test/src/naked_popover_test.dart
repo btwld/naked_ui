@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:naked_ui/naked_ui.dart';
 
 import '../test_helpers.dart';
+import 'helpers/builder_state_scope.dart';
 
 Matcher _closeTo(double v, [double eps = 0.5]) =>
     moreOrLessEquals(v, epsilon: eps);
@@ -143,7 +144,8 @@ void main() {
         Center(
           child: NakedPopover(
             positioning: const OverlayPositionConfig(
-              alignment: Alignment.bottomCenter,
+              targetAnchor: Alignment.bottomCenter,
+              followerAnchor: Alignment.topCenter,
             ),
             popoverBuilder: (context, info) => const SizedBox(
               key: popoverKey,
@@ -260,5 +262,15 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('Popover Content'), findsNothing);
     });
+
+    testStateScopeBuilder<NakedPopoverState>(
+      'builder\'s context contains NakedStateScope',
+      (builder) => NakedPopover(
+        popoverBuilder: (context, info) =>
+            const SizedBox(child: Text('Popover Content')),
+        builder: builder,
+        child: const Text('Trigger'),
+      ),
+    );
   });
 }

@@ -51,10 +51,7 @@ class NakedButton extends StatefulWidget {
     this.focusOnPress = false,
     this.tooltip,
     this.semanticLabel,
-  }) : assert(
-         child != null || builder != null,
-         'Either child or builder must be provided',
-       );
+  });
 
   final Widget? child;
   final VoidCallback? onPressed;
@@ -182,13 +179,6 @@ class _NakedButtonState extends State<NakedButton>
   Widget build(BuildContext context) {
     final buttonState = NakedButtonState(states: widgetStates);
 
-    final content = NakedStateScope(
-      value: buttonState,
-      child: widget.builder != null
-          ? widget.builder!(context, buttonState, widget.child)
-          : widget.child!,
-    );
-
     return NakedFocusableDetector(
       enabled: _isInteractive,
       autofocus: widget.autofocus,
@@ -245,7 +235,11 @@ class _NakedButtonState extends State<NakedButton>
 
           behavior: HitTestBehavior.opaque,
           excludeFromSemantics: true,
-          child: content,
+          child: NakedStateScopeBuilder(
+            value: buttonState,
+            child: widget.child,
+            builder: widget.builder,
+          ),
         ),
       ),
     );

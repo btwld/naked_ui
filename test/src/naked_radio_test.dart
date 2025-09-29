@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:naked_ui/naked_ui.dart';
 
 import '../test_helpers.dart';
+import 'helpers/builder_state_scope.dart';
 
 const _key = Key('radioButton');
 
@@ -358,6 +359,19 @@ void main() {
   });
 
   group('Builder Tests', () {
+    testStateScopeBuilder<NakedRadioState>(
+      'builder\'s context contains NakedStateScope',
+      (builder) => RadioGroup<String>(
+        groupValue: 'test',
+        onChanged: (_) {},
+        child: NakedRadio(
+          value: 'test',
+          builder: builder,
+          child: const SizedBox(width: 24, height: 24),
+        ),
+      ),
+    );
+
     testWidgets('builder receives NakedRadioState snapshot', (
       WidgetTester tester,
     ) async {

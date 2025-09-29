@@ -10,11 +10,29 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
+    return MaterialApp(
       home: Scaffold(
-        backgroundColor: Colors.white,
-        body: Center(
-          child: ButtonExample(),
+        backgroundColor: Colors.grey.shade50,
+        body: const Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'Simple Button',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(height: 8),
+              Text(
+                'Interact with the button to see its states',
+                style: TextStyle(color: Colors.grey),
+              ),
+              SizedBox(height: 24),
+              ButtonExample(),
+            ],
+          ),
         ),
       ),
     );
@@ -28,7 +46,11 @@ class ButtonExample extends StatelessWidget {
   Widget build(BuildContext context) {
     return NakedButton(
       onPressed: () {
-        debugPrint('Button pressed!');
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Button pressed!'),
+          ),
+        );
       },
       builder: (context, buttonState, child) {
         const baseColor = Color(0xFF3D3D3D);
@@ -41,8 +63,7 @@ class ButtonExample extends StatelessWidget {
 
         final scale = buttonState.isPressed ? 0.95 : 1.0;
 
-        return Container(
-          padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 2),
+        return DecoratedBox(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(14),
             border: Border.all(

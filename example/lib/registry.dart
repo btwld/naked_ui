@@ -17,8 +17,8 @@ import 'api/naked_popover.0.dart' as popover_example;
 import 'api/naked_radio.0.dart' as radio_basic_example;
 // Select
 import 'api/naked_select.0.dart' as select_example;
-import 'api/naked_select.1.dart' as select_checkmark_example;
-import 'api/naked_select.2.dart' as select_cyberpunk_example;
+import 'api/naked_select.2.dart' as select_checkmark_example;
+import 'api/naked_select.1.dart' as select_cyberpunk_example;
 // Slider
 import 'api/naked_slider.0.dart' as slider_example;
 // Tabs
@@ -27,8 +27,6 @@ import 'api/naked_tabs.0.dart' as tabs_example;
 import 'api/naked_textfield.0.dart' as textfield_example;
 // Toggle
 import 'api/naked_toggle.0.dart' as toggle_example;
-// Tooltip
-import 'api/naked_tooltip.0.dart' as tooltip_example;
 
 class Demo {
   final String id; // slug used in routes
@@ -159,15 +157,6 @@ class DemoRegistry {
       tags: ['accordion'],
     ),
     Demo(
-      id: 'tooltip-basic',
-      title: 'Tooltip – Basic',
-      category: 'Tooltip',
-      builder: (_) => const tooltip_example.TooltipExample(),
-      sourceUrl:
-          'https://github.com/btwld/naked_ui/blob/main/example/lib/api/naked_tooltip.0.dart',
-      tags: ['tooltip'],
-    ),
-    Demo(
       id: 'dialog-basic',
       title: 'Dialog – Basic',
       category: 'Dialog',
@@ -180,7 +169,7 @@ class DemoRegistry {
       id: 'popover-basic',
       title: 'Popover – Basic',
       category: 'Popover',
-      builder: (_) => const popover_example.BasicPopoverExample(),
+      builder: (_) => const popover_example.PopoverExample(),
       sourceUrl:
           'https://github.com/btwld/naked_ui/blob/main/example/lib/api/naked_popover.0.dart',
       tags: ['popover'],

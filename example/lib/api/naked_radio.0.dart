@@ -10,11 +10,29 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
+    return MaterialApp(
       home: Scaffold(
-        backgroundColor: Colors.white,
-        body: Center(
-          child: RadioExample(),
+        backgroundColor: Colors.grey.shade50,
+        body: const Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'Simple Radio Group',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(height: 8),
+              Text(
+                'Interact with the radio to see its states',
+                style: TextStyle(color: Colors.grey),
+              ),
+              SizedBox(height: 24),
+              RadioExample(),
+            ],
+          ),
         ),
       ),
     );
@@ -43,12 +61,13 @@ class _RadioExampleState extends State<RadioExample> {
       onChanged: (value) {
         setState(() => _selectedValue = value!);
       },
-      child: const Row(
+      child: const Column(
         mainAxisSize: MainAxisSize.min,
         spacing: 8,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          RadioButton(value: RadioOption.banana),
-          RadioButton(value: RadioOption.apple),
+          RadioButton(value: RadioOption.banana, label: 'Banana'),
+          RadioButton(value: RadioOption.apple, label: 'Apple'),
         ],
       ),
     );
@@ -59,9 +78,11 @@ class RadioButton extends StatefulWidget {
   const RadioButton({
     super.key,
     required this.value,
+    required this.label,
   });
 
   final RadioOption value;
+  final String label;
 
   @override
   State<RadioButton> createState() => _RadioButtonState();
@@ -83,17 +104,31 @@ class _RadioButtonState extends State<RadioButton> {
           orElse: baseColor.withValues(alpha: 0.2),
         );
 
-        return AnimatedContainer(
-          duration: const Duration(milliseconds: 100),
-          width: 20,
-          height: 20,
-          decoration: BoxDecoration(
-            border: Border.all(
-              color: borderColor,
-              width: state.isSelected ? 6 : 2,
+        return Row(
+          spacing: 4,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 100),
+              width: 20,
+              height: 20,
+              decoration: BoxDecoration(
+                border: Border.all(
+                  color: borderColor,
+                  width: state.isSelected ? 6 : 2,
+                ),
+                borderRadius: BorderRadius.circular(10),
+              ),
             ),
-            borderRadius: BorderRadius.circular(10),
-          ),
+            Text(
+              widget.label,
+              style: const TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w400,
+                color: baseColor,
+              ),
+            ),
+          ],
         );
       },
     );

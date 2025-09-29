@@ -91,10 +91,6 @@ class NakedCheckbox extends StatefulWidget {
   }) : assert(
          (tristate || value != null),
          'Non-tristate checkbox must have a non-null value',
-       ),
-       assert(
-         child != null || builder != null,
-         'Either child or builder must be provided',
        );
 
   /// The visual representation of the checkbox.
@@ -182,18 +178,18 @@ class _NakedCheckboxState extends State<NakedCheckbox>
     widget.onChanged!(nextValue);
   }
 
-  Widget _buildContent(BuildContext context) {
+  Widget _buildContent() {
     final checkboxState = NakedCheckboxState(
       states: widgetStates,
       isChecked: widget.value,
       tristate: widget.tristate,
     );
 
-    final content = widget.builder != null
-        ? widget.builder!(context, checkboxState, widget.child)
-        : widget.child!;
-
-    return NakedStateScope(value: checkboxState, child: content);
+    return NakedStateScopeBuilder(
+      value: checkboxState,
+      child: widget.child,
+      builder: widget.builder,
+    );
   }
 
   MouseCursor get _effectiveCursor => widget._effectiveEnabled
@@ -265,7 +261,7 @@ class _NakedCheckboxState extends State<NakedCheckbox>
                 : null,
             behavior: HitTestBehavior.opaque,
             excludeFromSemantics: true,
-            child: _buildContent(context),
+            child: _buildContent(),
           ),
         ),
       ),

@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:naked_ui/naked_ui.dart';
 
 import '../test_helpers.dart';
+import 'helpers/builder_state_scope.dart';
 
 void main() {
   group('Basic Functionality', () {
@@ -63,6 +64,12 @@ void main() {
       await tester.tap(find.byType(NakedCheckbox));
       // No error should occur
     });
+
+    testStateScopeBuilder<NakedCheckboxState>(
+      'builder\'s context contains NakedStateScope',
+      (builder) =>
+          NakedCheckbox(value: false, onChanged: (_) {}, builder: builder),
+    );
   });
 
   group('State Callbacks', () {

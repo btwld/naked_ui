@@ -10,11 +10,29 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
+    return MaterialApp(
       home: Scaffold(
-        backgroundColor: Colors.white,
-        body: Center(
-          child: CheckboxExample(),
+        backgroundColor: Colors.grey.shade50,
+        body: const Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'Simple Checkbox',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(height: 8),
+              Text(
+                'Interact with the checkbox to see its states',
+                style: TextStyle(color: Colors.grey),
+              ),
+              SizedBox(height: 24),
+              CheckboxExample(),
+            ],
+          ),
         ),
       ),
     );
@@ -61,7 +79,7 @@ class _CheckboxExampleState extends State<CheckboxExample> {
               decoration: BoxDecoration(
                 border: Border.all(
                   color: borderColor,
-                  width: 2,
+                  width: 1.5,
                 ),
                 borderRadius: BorderRadius.circular(6),
                 color: state.isChecked == true ? baseColor : Colors.transparent,
@@ -78,7 +96,7 @@ class _CheckboxExampleState extends State<CheckboxExample> {
               'Label',
               style: TextStyle(
                 fontSize: 16,
-                fontWeight: FontWeight.bold,
+                fontWeight: FontWeight.w500,
                 color: baseColor,
               ),
             ),
