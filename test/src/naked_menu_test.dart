@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:naked_ui/naked_ui.dart';
 
 import '../test_helpers.dart';
+import 'helpers/builder_state_scope.dart';
 
 extension _NakedMenuTester on WidgetTester {
   Future<void> pressEsc() async {
@@ -102,10 +103,6 @@ void main() {
           Center(
             child: NakedMenu<String>(
               controller: controller,
-              positioning: const OverlayPositionConfig(
-                alignment: Alignment.bottomCenter,
-                fallbackAlignment: Alignment.topCenter,
-              ),
               builder: (context, state, child) => Container(
                 key: trigger,
                 width: 100,
@@ -150,6 +147,16 @@ void main() {
         // Menu should be left-aligned with trigger (current behavior)
         expect(menuLeft.dx, triggerLeft.dx);
       });
+
+      testStateScopeBuilder<NakedMenuState>(
+        'builder\'s context contains NakedStateScope',
+        (builder) => NakedMenu<String>(
+          controller: MenuController(),
+          builder: builder,
+          overlayBuilder: (BuildContext context, RawMenuOverlayInfo info) =>
+              SizedBox(),
+        ),
+      );
     });
 
     group('State Management', () {

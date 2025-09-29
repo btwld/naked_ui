@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:naked_ui/naked_ui.dart';
 
 import '../test_helpers.dart';
+import 'helpers/builder_state_scope.dart';
 
 void main() {
   group('NakedToggle', () {
@@ -226,6 +227,13 @@ void main() {
       await tester.pump();
       expect(selected, 'b');
     });
+
+    testStateScopeBuilder<NakedToggleState>(
+      'builder\'s context contains NakedStateScope',
+      (builder) =>
+          NakedToggle(builder: builder, value: false, child: const SizedBox()),
+    );
+
     group('asSwitch parameter', () {
       testWidgets('behaves as toggle button by default', (tester) async {
         bool value = false;

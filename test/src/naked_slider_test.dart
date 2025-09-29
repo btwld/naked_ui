@@ -4,6 +4,7 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:naked_ui/naked_ui.dart';
 import '../test_helpers.dart';
+import 'helpers/builder_state_scope.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -527,5 +528,13 @@ void main() {
       expect(dragStates.last, isFalse);
       expect(endValue, 50); // last emitted or current value when no move
     });
+  });
+
+  group('Builder Tests', () {
+    testStateScopeBuilder<NakedSliderState>(
+      'builder\'s context contains NakedStateScope',
+      (builder) =>
+          NakedSlider(builder: builder, value: 0, child: const SizedBox()),
+    );
   });
 }

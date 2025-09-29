@@ -41,7 +41,7 @@ void main() {
             child: NakedTextField(
               key: textFieldKey,
               controller: controller,
-              builder: (context, editableText) {
+              builder: (context, state, editableText) {
                 return Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
@@ -77,7 +77,7 @@ void main() {
             child: NakedTextField(
               key: textFieldKey,
               controller: controller,
-              builder: (context, editableText) {
+              builder: (context, state, editableText) {
                 return Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
@@ -120,7 +120,7 @@ void main() {
             child: NakedTextField(
               key: textFieldKey,
               onHoverChange: (hovered) => isHovered = hovered,
-              builder: (context, editableText) {
+              builder: (context, state, editableText) {
                 return Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
@@ -157,7 +157,7 @@ void main() {
               key: textFieldKey,
               focusNode: focusNode,
               onFocusChange: (focused) => focusTransitions.add(focused),
-              builder: (context, editableText) {
+              builder: (context, state, editableText) {
                 return Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
@@ -207,7 +207,7 @@ void main() {
               onHoverChange: (hovered) => hoverChanged = true,
               onFocusChange: (focused) {},
               onPressChange: (pressed) {},
-              builder: (context, editableText) {
+              builder: (context, state, editableText) {
                 return Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
@@ -254,7 +254,7 @@ void main() {
               key: textFieldKey,
               controller: controller,
               readOnly: true,
-              builder: (context, editableText) {
+              builder: (context, state, editableText) {
                 return Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(

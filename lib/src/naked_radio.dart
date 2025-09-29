@@ -187,32 +187,6 @@ class _NakedRadioState<T> extends State<NakedRadio<T>>
           });
         }
 
-        if (widget.builder != null) {
-          final isSelected = registry.groupValue == widget.value;
-          final statesWithSelection = {
-            ...states,
-            if (isSelected) WidgetState.selected,
-          };
-          final radioStateTyped = NakedRadioState<T>(
-            states: statesWithSelection,
-            value: widget.value,
-          );
-
-          final content = widget.builder!(
-            context,
-            radioStateTyped,
-            widget.child,
-          );
-
-          // Ensure the area is hit-testable so RawRadio's GestureDetector
-          // can receive taps even if the built widget has no gesture handlers.
-          return HitTestableContainer(
-            child: NakedStateScope(value: radioStateTyped, child: content),
-          );
-        }
-
-        // Ensure the child area is hit-testable for taps.
-        // Even without builder, provide state to descendants
         final isSelected = registry.groupValue == widget.value;
         final statesWithSelection = {
           ...states,
@@ -223,8 +197,14 @@ class _NakedRadioState<T> extends State<NakedRadio<T>>
           value: widget.value,
         );
 
+        // Ensure the area is hit-testable so RawRadio's GestureDetector
+        // can receive taps even if the built widget has no gesture handlers.
         return HitTestableContainer(
-          child: NakedStateScope(value: radioStateTyped, child: widget.child!),
+          child: NakedStateScopeBuilder(
+            value: radioStateTyped,
+            child: widget.child,
+            builder: widget.builder,
+          ),
         );
       },
     );

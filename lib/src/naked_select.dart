@@ -204,8 +204,8 @@ class NakedSelect<T> extends StatefulWidget {
     this.semanticLabel,
     this.excludeSemantics = false,
     this.positioning = const OverlayPositionConfig(
-      alignment: Alignment.bottomLeft,
-      fallbackAlignment: Alignment.topLeft,
+      targetAnchor: Alignment.bottomCenter,
+      followerAnchor: Alignment.topCenter,
     ),
     this.onOpen,
     this.onClose,
@@ -363,7 +363,7 @@ class _NakedSelectState<T> extends State<NakedSelect<T>>
             useRootOverlay: widget.useRootOverlay,
             closeOnClickOutside: widget.closeOnClickOutside,
             triggerFocusNode: widget.triggerFocusNode,
-            offset: widget.positioning.offset,
+            positioning: widget.positioning,
             child: NakedButton(
               onPressed: widget.enabled ? _toggle : null,
               enabled: widget.enabled,
@@ -376,11 +376,12 @@ class _NakedSelectState<T> extends State<NakedSelect<T>>
                   isOpen: _isOpen,
                   value: _effectiveValue,
                 );
-                final content = widget.builder != null
-                    ? widget.builder!(context, selectState, child)
-                    : child!;
 
-                return NakedStateScope(value: selectState, child: content);
+                return NakedStateScopeBuilder(
+                  value: selectState,
+                  child: child,
+                  builder: widget.builder,
+                );
               },
             ),
           );

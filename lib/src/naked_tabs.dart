@@ -426,11 +426,12 @@ class _NakedTabState extends State<NakedTab>
 
     final tabState = NakedTabState(states: widgetStates, tabId: widget.tabId);
 
-    final content = widget.builder != null
-        ? widget.builder!(context, tabState, widget.child)
-        : widget.child!;
-
-    final wrappedContent = NakedStateScope(value: tabState, child: content);
+    final wrappedContent = NakedStateScope(
+      value: tabState,
+      child: widget.builder != null
+          ? widget.builder!(context, tabState, widget.child)
+          : widget.child!,
+    );
 
     // Step 1: Build core gesture detector
     Widget child = GestureDetector(

@@ -64,30 +64,31 @@ class _TooltipExampleState extends State<TooltipExample>
     return NakedTooltip(
       semanticsLabel: 'This is a tooltip',
       positioning: const OverlayPositionConfig(
-        alignment: Alignment.topCenter,
-        fallbackAlignment: Alignment.bottomCenter,
+        targetAnchor: Alignment.bottomCenter,
+        followerAnchor: Alignment.topCenter,
+        offset: Offset(0, 4),
       ),
       waitDuration: const Duration(seconds: 0),
-      showDuration: const Duration(seconds: 0),
-      // onOpen: () => _animationController.forward(),
-      // onClose: () => _animationController.reverse(),
-      overlayBuilder: (context, info) => Align(
+      showDuration: const Duration(seconds: 1),
+      onOpenRequested: (_, show) {
+        show();
+        _animationController.forward();
+      },
+      onCloseRequested: (hide) {
+        _animationController.reverse().then((value) {
+          hide();
+        });
+      },
+      overlayBuilder: (context, info) => FadeTransition(
+        opacity: _animationController,
         child: Container(
-          height: 100,
-          width: 100,
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           decoration: BoxDecoration(
-            color: Colors.grey.shade800,
-            borderRadius: BorderRadius.circular(10),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.2),
-                blurRadius: 10,
-                offset: const Offset(0, 4),
-              ),
-            ],
+            color: Colors.black54,
+            borderRadius: BorderRadius.circular(4),
           ),
-          child: const Text('This is a tooltip'),
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          child: const Text('This is a tooltip',
+              style: TextStyle(color: Colors.white)),
         ),
       ),
       child: Container(

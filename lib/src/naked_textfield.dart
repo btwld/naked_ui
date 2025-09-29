@@ -21,8 +21,8 @@ import 'utilities/naked_focusable_detector.dart';
 import 'utilities/naked_state_scope.dart';
 import 'utilities/state.dart';
 
-typedef NakedTextFieldBuilder =
-    Widget Function(BuildContext context, Widget editableText);
+typedef NakedTextFieldBuilder<T extends NakedState> =
+    Widget Function(BuildContext context, T value, Widget editableText);
 
 /// Immutable view passed to [NakedTextField.builder].
 class NakedTextFieldState extends NakedState {
@@ -175,6 +175,7 @@ class NakedTextField extends StatefulWidget {
     this.semanticLabel,
     this.semanticHint,
     this.excludeSemantics = false,
+    this.strutStyle,
   }) : assert(obscuringCharacter.length == 1),
        smartDashesType =
            smartDashesType ??
@@ -341,6 +342,9 @@ class NakedTextField extends StatefulWidget {
 
   /// Text style override (else derives from [DefaultTextStyle]).
   final TextStyle? style;
+
+  /// Defines the strut
+  final StrutStyle? strutStyle;
 
   /// Whether to ignore pointers.
   final bool? ignorePointers;
@@ -725,6 +729,7 @@ class _NakedTextFieldState extends State<NakedTextField>
       smartQuotesType: widget.smartQuotesType,
       enableSuggestions: widget.enableSuggestions,
       style: baseStyle,
+      strutStyle: widget.strutStyle,
       cursorColor: p.cursorColor,
       backgroundCursorColor: _neutralBgCursor,
       textAlign: widget.textAlign,
@@ -812,12 +817,12 @@ class _NakedTextFieldState extends State<NakedTextField>
     );
 
     // Step 1: Build content using the builder
-    final Widget content = widget.builder!(context, editable);
+    final Widget builtContent = widget.builder!(context, textFieldState, editable);
 
     // Step 2: Conditionally wrap with semantics
-    Widget child = content;
+    Widget content = builtContent;
     if (!widget.excludeSemantics) {
-      child = Semantics(
+      content = Semantics(
         container: true,
         enabled: widget.enabled,
         textField: true,
@@ -832,14 +837,14 @@ class _NakedTextFieldState extends State<NakedTextField>
         value: widget.obscureText ? null : controller.text,
         hint: widget.semanticHint,
         onTap: (widget.enabled && !widget.readOnly) ? _semanticTap : null,
-        child: content,
+        child: builtContent,
       );
     }
 
     // Step 3: Wrap with state scope
     final Widget wrappedContent = NakedStateScope(
       value: textFieldState,
-      child: child,
+      child: content,
     );
 
     // Ensure a focus action is exposed in semantics parity with Material.

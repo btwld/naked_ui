@@ -1,48 +1,11 @@
 import 'dart:async';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/widgets.dart';
 
 import 'mixins/naked_mixins.dart';
-import 'utilities/naked_state_scope.dart';
+import 'naked_widgets.dart';
 import 'utilities/positioning.dart';
-import 'utilities/state.dart';
-
-/// Immutable view passed to [NakedTooltip.builder].
-class NakedTooltipState extends NakedState {
-  /// Whether the tooltip is currently open.
-  final bool isOpen;
-
-  NakedTooltipState({required super.states, required this.isOpen});
-
-  /// Returns the nearest [NakedTooltipState] provided by [NakedStateScope].
-  static NakedTooltipState of(BuildContext context) => NakedState.of(context);
-
-  /// Returns the nearest [NakedTooltipState] if one is available.
-  static NakedTooltipState? maybeOf(BuildContext context) =>
-      NakedState.maybeOf(context);
-
-  /// Returns the [WidgetStatesController] from the nearest scope.
-  static WidgetStatesController controllerOf(BuildContext context) =>
-      NakedState.controllerOf(context);
-
-  /// Returns the [WidgetStatesController] from the nearest scope, if any.
-  static WidgetStatesController? maybeControllerOf(BuildContext context) =>
-      NakedState.maybeControllerOf(context);
-
-  @override
-  bool operator ==(Object other) {
-    if (identical(this, other)) return true;
-
-    return other is NakedTooltipState &&
-        setEquals(other.states, states) &&
-        other.isOpen == isOpen;
-  }
-
-  @override
-  int get hashCode => Object.hash(states, isOpen);
-}
 
 /// Provides tooltip behavior without visual styling.
 ///
@@ -52,58 +15,70 @@ class NakedTooltipState extends NakedState {
 /// Example:
 /// ```dart
 /// class TooltipExample extends StatefulWidget {
-///   const TooltipExample({super.key});
+///  const TooltipExample({super.key});
+///
 ///   @override
 ///   State<TooltipExample> createState() => _TooltipExampleState();
 /// }
 ///
 /// class _TooltipExampleState extends State<TooltipExample>
 ///     with SingleTickerProviderStateMixin {
-///   late final _controller = AnimationController(
+///   late final _animationController = AnimationController(
 ///     duration: const Duration(milliseconds: 300),
 ///     vsync: this,
 ///   );
 ///
 ///   @override
 ///   void dispose() {
-///     _controller.dispose();
+///     _animationController.dispose();
 ///     super.dispose();
 ///   }
 ///
 ///   @override
 ///   Widget build(BuildContext context) {
 ///     return NakedTooltip(
+///       semanticsLabel: 'This is a tooltip',
 ///       positioning: const OverlayPositionConfig(
-///         alignment: Alignment.topCenter,
-///         fallbackAlignment: Alignment.bottomCenter,
+///         targetAnchor: Alignment.bottomCenter,
+///         followerAnchor: Alignment.topCenter,
+///         offset: Offset(0, 4),
 ///       ),
-///       onOpen: () => _controller.forward(),
-///       onClose: () => _controller.reverse(),
-///       child: NakedButton(
-///         onPressed: () {},
-///         child: const Text('Show Tooltip'),
-///       ),
-///       overlayBuilder: (context, info) {
-///         return AnimatedBuilder(
-///           animation: _controller,
-///           overlayBuilder: (context, child) {
-///             return Opacity(
-///               opacity: _controller.value,
-///               child: Container(
-///                 decoration: BoxDecoration(
-///                   color: Colors.black,
-///                   borderRadius: BorderRadius.circular(8),
-///                 ),
-///                 padding: const EdgeInsets.all(12),
-///                 child: const Text(
-///                   'This is a tooltip!',
-///                   style: TextStyle(color: Colors.white),
-///                 ),
-///               ),
-///             );
-///           },
-///         );
+///       waitDuration: const Duration(seconds: 0),
+///       showDuration: const Duration(seconds: 1),
+///       onOpenRequested: (_, show) {
+///         show();
+///         _animationController.forward();
 ///       },
+///       onCloseRequested: (hide) {
+///         _animationController.reverse().then((value) {
+///           hide();
+///         });
+///       },
+///       overlayBuilder: (context, info) => FadeTransition(
+///         opacity: _animationController,
+///         child: Container(
+///           decoration: BoxDecoration(
+///             color: Colors.black54,
+///             borderRadius: BorderRadius.circular(4),
+///           ),
+///           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+///           child: const Text('This is a tooltip',
+///               style: TextStyle(color: Colors.white)),
+///         ),
+///       ),
+///       child: Container(
+///         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+///         decoration: BoxDecoration(
+///           color: const Color(0xFF3D3D3D),
+///           borderRadius: BorderRadius.circular(10),
+///         ),
+///         child: const Text(
+///           'Hover me',
+///           style: TextStyle(
+///             color: Colors.white,
+///           ),
+///         ),
+///       ),
 ///     );
 ///   }
 /// }
@@ -112,14 +87,13 @@ class NakedTooltip extends StatefulWidget {
   /// Creates a headless tooltip.
   const NakedTooltip({
     super.key,
-    this.child,
-    this.builder,
+    required this.child,
     required this.overlayBuilder,
     this.showDuration = const Duration(seconds: 2),
     this.waitDuration = const Duration(seconds: 1),
     this.positioning = const OverlayPositionConfig(
-      alignment: Alignment.topCenter,
-      fallbackAlignment: Alignment.bottomCenter,
+      targetAnchor: Alignment.topCenter,
+      followerAnchor: Alignment.bottomCenter,
     ),
     this.onOpen,
     this.onClose,
@@ -127,19 +101,13 @@ class NakedTooltip extends StatefulWidget {
     this.onCloseRequested,
     this.semanticsLabel,
     this.excludeSemantics = false,
-  }) : assert(
-         child != null || builder != null,
-         'Either child or builder must be provided',
-       );
+  });
 
   /// See also:
   /// - [NakedPopover], for anchored, click-triggered overlays.
 
   /// The widget that triggers the tooltip.
-  final Widget? child;
-
-  /// Builds the tooltip trigger using the current [NakedTooltipState].
-  final ValueWidgetBuilder<NakedTooltipState>? builder;
+  final Widget child;
 
   /// The tooltip content overlayBuilder.
   final RawMenuAnchorOverlayBuilder overlayBuilder;
@@ -221,17 +189,6 @@ class _NakedTooltipState extends State<NakedTooltip>
 
   @override
   Widget build(BuildContext context) {
-    final tooltipState = NakedTooltipState(
-      states: widgetStates,
-      isOpen: _menuController.isOpen,
-    );
-
-    final content = widget.builder != null
-        ? widget.builder!(context, tooltipState, widget.child)
-        : widget.child!;
-
-    final wrappedContent = NakedStateScope(value: tooltipState, child: content);
-
     // Step 1: Build core anchor with mouse region
     Widget child = RawMenuAnchor(
       consumeOutsideTaps: false, // Do not consume taps for tooltips
@@ -240,24 +197,15 @@ class _NakedTooltipState extends State<NakedTooltip>
       onOpenRequested: widget.onOpenRequested ?? (_, show) => show(),
       onCloseRequested: widget.onCloseRequested ?? (hide) => hide(),
       controller: _menuController,
-      overlayBuilder: (context, info) {
-        final overlayRect = calculateOverlayPosition(
-          anchorRect: info.anchorRect,
-          overlaySize: info.overlaySize,
-          childSize: info.overlaySize, // Will be constrained by content
-          config: widget.positioning,
-          pointerPosition: info.position,
-        );
-
-        return Positioned.fromRect(
-          rect: overlayRect,
-          child: widget.overlayBuilder(context, info),
-        );
-      },
+      overlayBuilder: (context, info) => OverlayPositioner(
+        targetRect: info.anchorRect,
+        positioning: widget.positioning,
+        child: widget.overlayBuilder(context, info),
+      ),
       child: MouseRegion(
         onEnter: _handleMouseEnter,
         onExit: _handleMouseExit,
-        child: wrappedContent,
+        child: widget.child,
       ),
     );
 

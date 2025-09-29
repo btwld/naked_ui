@@ -189,17 +189,18 @@ class _NakedToggleState extends State<NakedToggle>
     widget.onChanged?.call(!widget.value);
   }
 
-  Widget _buildContent(BuildContext context) {
+  Widget _buildContent() {
     final toggleState = NakedToggleState(
       states: widgetStates,
       isToggled: widget.value,
     );
 
-    final content = widget.builder != null
-        ? widget.builder!(context, toggleState, widget.child)
-        : widget.child!;
-
-    return NakedStateScope(value: toggleState, child: content);
+    return NakedStateScope(
+      value: toggleState,
+      child: widget.builder != null
+          ? widget.builder!(context, toggleState, widget.child)
+          : widget.child!,
+    );
   }
 
   MouseCursor get _effectiveCursor => widget._effectiveEnabled
