@@ -300,6 +300,28 @@ class _NakedMenuState<T> extends State<NakedMenu<T>>
 
   @override
   Widget build(BuildContext context) {
+    Widget button = NakedButton(
+      onPressed: _toggle,
+      focusNode: widget.triggerFocusNode,
+      child: widget.child,
+      builder: (context, buttonState, child) {
+        final menuState = NakedMenuState(
+          states: buttonState.states,
+          isOpen: _isOpen,
+        );
+
+        return NakedStateScopeBuilder(
+          value: menuState,
+          child: widget.child,
+          builder: widget.builder,
+        );
+      },
+    );
+
+    Widget menuChild = widget.excludeSemantics
+        ? button
+        : Semantics(toggled: _isOpen, child: button);
+
     return AnchoredOverlayShell(
       controller: widget.controller,
       overlayBuilder: (context, info) {
@@ -320,29 +342,7 @@ class _NakedMenuState<T> extends State<NakedMenu<T>>
       closeOnClickOutside: widget.closeOnClickOutside,
       triggerFocusNode: widget.triggerFocusNode,
       positioning: widget.positioning,
-      child: () {
-        Widget button = NakedButton(
-          onPressed: _toggle,
-          focusNode: widget.triggerFocusNode,
-          child: widget.child,
-          builder: (context, buttonState, child) {
-            final menuState = NakedMenuState(
-              states: buttonState.states,
-              isOpen: _isOpen,
-            );
-
-            return NakedStateScopeBuilder(
-              value: menuState,
-              child: widget.child,
-              builder: widget.builder,
-            );
-          },
-        );
-
-        return widget.excludeSemantics
-            ? button
-            : Semantics(toggled: _isOpen, child: button);
-      }(),
+      child: menuChild,
     );
   }
 }

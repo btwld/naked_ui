@@ -451,6 +451,34 @@ class _NakedToggleOptionState<T> extends State<NakedToggleOption<T>>
         ? (widget.mouseCursor ?? SystemMouseCursors.click)
         : SystemMouseCursors.basic;
 
+    Widget gestureDetector = GestureDetector(
+      onTapDown: isEnabled
+          ? (_) => updatePressState(true, widget.onPressChange)
+          : null,
+      onTapUp: isEnabled
+          ? (_) => updatePressState(false, widget.onPressChange)
+          : null,
+      onTap: isEnabled ? () => _activate(scope) : null,
+      onTapCancel: isEnabled
+          ? () => updatePressState(false, widget.onPressChange)
+          : null,
+      behavior: HitTestBehavior.opaque,
+      excludeFromSemantics: true,
+      child: wrappedContent,
+    );
+
+    Widget optionChild = widget.excludeSemantics
+        ? gestureDetector
+        : Semantics(
+            container: true,
+            enabled: isEnabled,
+            selected: isSelected,
+            button: true,
+            label: widget.semanticLabel,
+            onTap: isEnabled ? () => _activate(scope) : null,
+            child: gestureDetector,
+          );
+
     return NakedFocusableDetector(
       enabled: isEnabled,
       autofocus: widget.autofocus,
@@ -462,35 +490,7 @@ class _NakedToggleOptionState<T> extends State<NakedToggleOption<T>>
       actions: NakedIntentActions.toggle.actions(
         onToggle: () => _activate(scope),
       ),
-      child: () {
-        Widget gestureDetector = GestureDetector(
-          onTapDown: isEnabled
-              ? (_) => updatePressState(true, widget.onPressChange)
-              : null,
-          onTapUp: isEnabled
-              ? (_) => updatePressState(false, widget.onPressChange)
-              : null,
-          onTap: isEnabled ? () => _activate(scope) : null,
-          onTapCancel: isEnabled
-              ? () => updatePressState(false, widget.onPressChange)
-              : null,
-          behavior: HitTestBehavior.opaque,
-          excludeFromSemantics: true,
-          child: wrappedContent,
-        );
-
-        return widget.excludeSemantics
-            ? gestureDetector
-            : Semantics(
-                container: true,
-                enabled: isEnabled,
-                selected: isSelected,
-                button: true,
-                label: widget.semanticLabel,
-                onTap: isEnabled ? () => _activate(scope) : null,
-                child: gestureDetector,
-              );
-      }(),
+      child: optionChild,
     );
   }
 }

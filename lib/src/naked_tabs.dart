@@ -426,6 +426,34 @@ class _NakedTabState extends State<NakedTab>
       builder: widget.builder,
     );
 
+    Widget gestureDetector = GestureDetector(
+      onTapDown: _isEnabled
+          ? (_) => updatePressState(true, widget.onPressChange)
+          : null,
+      onTapUp: _isEnabled
+          ? (_) => updatePressState(false, widget.onPressChange)
+          : null,
+      onTap: _isEnabled ? _handleTap : null,
+      onTapCancel: _isEnabled
+          ? () => updatePressState(false, widget.onPressChange)
+          : null,
+      behavior: HitTestBehavior.opaque,
+      excludeFromSemantics: true,
+      child: wrappedContent,
+    );
+
+    Widget tabChild = widget.excludeSemantics
+        ? gestureDetector
+        : Semantics(
+            container: true,
+            enabled: _isEnabled,
+            selected: isSelected,
+            button: true,
+            label: widget.semanticLabel,
+            onTap: _isEnabled ? _handleTap : null,
+            child: gestureDetector,
+          );
+
     return NakedFocusableDetector(
       enabled: _isEnabled,
       autofocus: widget.autofocus,
@@ -446,35 +474,7 @@ class _NakedTabState extends State<NakedTab>
         onFirstFocus: () => _focusFirstTab(),
         onLastFocus: () => _focusLastTab(),
       ),
-      child: () {
-        Widget gestureDetector = GestureDetector(
-          onTapDown: _isEnabled
-              ? (_) => updatePressState(true, widget.onPressChange)
-              : null,
-          onTapUp: _isEnabled
-              ? (_) => updatePressState(false, widget.onPressChange)
-              : null,
-          onTap: _isEnabled ? _handleTap : null,
-          onTapCancel: _isEnabled
-              ? () => updatePressState(false, widget.onPressChange)
-              : null,
-          behavior: HitTestBehavior.opaque,
-          excludeFromSemantics: true,
-          child: wrappedContent,
-        );
-
-        return widget.excludeSemantics
-            ? gestureDetector
-            : Semantics(
-                container: true,
-                enabled: _isEnabled,
-                selected: isSelected,
-                button: true,
-                label: widget.semanticLabel,
-                onTap: _isEnabled ? _handleTap : null,
-                child: gestureDetector,
-              );
-      }(),
+      child: tabChild,
     );
   }
 }

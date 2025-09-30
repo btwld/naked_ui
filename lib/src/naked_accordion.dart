@@ -503,6 +503,57 @@ class _NakedAccordionState<T> extends State<NakedAccordion<T>>
           _toggle(controller);
         }
 
+        Widget triggerContent = GestureDetector(
+          onTapDown: (widget.enabled && widget.onPressChange != null)
+              ? (_) => updatePressState(true, widget.onPressChange)
+              : null,
+          onTapUp: (widget.enabled && widget.onPressChange != null)
+              ? (_) => updatePressState(false, widget.onPressChange)
+              : null,
+          onTap: widget.enabled ? onTap : null,
+          onTapCancel: (widget.enabled && widget.onPressChange != null)
+              ? () => updatePressState(false, widget.onPressChange)
+              : null,
+          behavior: HitTestBehavior.opaque,
+          excludeFromSemantics: true,
+          child: ExcludeSemantics(
+            child: Builder(
+              builder: (context) {
+                final canCollapse =
+                    isExpanded &&
+                    (controller.values.length > controller.min);
+
+                final canExpand =
+                    !isExpanded &&
+                    (controller.max == null ||
+                        controller.values.length < controller.max!);
+                final accordionState = NakedAccordionItemState<T>(
+                  states: widgetStates,
+                  value: widget.value,
+                  isExpanded: isExpanded,
+                  canCollapse: canCollapse,
+                  canExpand: canExpand,
+                );
+
+                return NakedStateScopeBuilder(
+                  value: accordionState,
+                  builder: (context, accordionState, child) =>
+                      widget.builder(context, accordionState),
+                );
+              },
+            ),
+          ),
+        );
+
+        Widget accordionChild = widget.excludeSemantics
+            ? triggerContent
+            : Semantics(
+                enabled: widget.enabled,
+                label: widget.semanticLabel,
+                onTap: widget.enabled ? onTap : null,
+                child: triggerContent,
+              );
+
         return Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -517,58 +568,7 @@ class _NakedAccordionState<T> extends State<NakedAccordion<T>>
                   : SystemMouseCursors.basic,
               shortcuts: NakedIntentActions.accordion.shortcuts,
               actions: NakedIntentActions.accordion.actions(onToggle: onTap),
-              child: () {
-                Widget triggerContent = GestureDetector(
-                  onTapDown: (widget.enabled && widget.onPressChange != null)
-                      ? (_) => updatePressState(true, widget.onPressChange)
-                      : null,
-                  onTapUp: (widget.enabled && widget.onPressChange != null)
-                      ? (_) => updatePressState(false, widget.onPressChange)
-                      : null,
-                  onTap: widget.enabled ? onTap : null,
-                  onTapCancel: (widget.enabled && widget.onPressChange != null)
-                      ? () => updatePressState(false, widget.onPressChange)
-                      : null,
-                  behavior: HitTestBehavior.opaque,
-                  excludeFromSemantics: true,
-                  child: ExcludeSemantics(
-                    child: Builder(
-                      builder: (context) {
-                        final canCollapse =
-                            isExpanded &&
-                            (controller.values.length > controller.min);
-
-                        final canExpand =
-                            !isExpanded &&
-                            (controller.max == null ||
-                                controller.values.length < controller.max!);
-                        final accordionState = NakedAccordionItemState<T>(
-                          states: widgetStates,
-                          value: widget.value,
-                          isExpanded: isExpanded,
-                          canCollapse: canCollapse,
-                          canExpand: canExpand,
-                        );
-
-                        return NakedStateScopeBuilder(
-                          value: accordionState,
-                          builder: (context, accordionState, child) =>
-                              widget.builder(context, accordionState),
-                        );
-                      },
-                    ),
-                  ),
-                );
-
-                return widget.excludeSemantics
-                    ? triggerContent
-                    : Semantics(
-                        enabled: widget.enabled,
-                        label: widget.semanticLabel,
-                        onTap: widget.enabled ? onTap : null,
-                        child: triggerContent,
-                      );
-              }(),
+              child: accordionChild,
             ),
             widget.transitionBuilder != null
                 ? widget.transitionBuilder!(panel)

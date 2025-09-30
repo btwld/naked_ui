@@ -191,6 +191,20 @@ class _NakedTooltipState extends State<NakedTooltip>
 
   @override
   Widget build(BuildContext context) {
+    Widget tooltipContent = MouseRegion(
+      onEnter: _handleMouseEnter,
+      onExit: _handleMouseExit,
+      child: widget.child,
+    );
+
+    Widget tooltipChild = widget.excludeSemantics
+        ? tooltipContent
+        : Semantics(
+            container: true,
+            tooltip: widget.semanticsLabel,
+            child: tooltipContent,
+          );
+
     return RawMenuAnchor(
       consumeOutsideTaps: false,
       onOpen: _handleOpen,
@@ -203,21 +217,7 @@ class _NakedTooltipState extends State<NakedTooltip>
         positioning: widget.positioning,
         child: widget.overlayBuilder(context, info),
       ),
-      child: () {
-        Widget tooltipContent = MouseRegion(
-          onEnter: _handleMouseEnter,
-          onExit: _handleMouseExit,
-          child: widget.child,
-        );
-
-        return widget.excludeSemantics
-            ? tooltipContent
-            : Semantics(
-                container: true,
-                tooltip: widget.semanticsLabel,
-                child: tooltipContent,
-              );
-      }(),
+      child: tooltipChild,
     );
   }
 }
