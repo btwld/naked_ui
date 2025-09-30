@@ -113,6 +113,7 @@ class NakedToggle extends StatefulWidget {
     this.builder,
     this.semanticLabel,
     this.asSwitch = false,
+    this.excludeSemantics = false,
   }) : assert(
          child != null || builder != null,
          'Either child or builder must be provided',
@@ -160,6 +161,11 @@ class NakedToggle extends StatefulWidget {
   /// Whether to use switch semantics instead of button semantics.
   final bool asSwitch;
 
+  /// Whether to exclude this widget from the semantic tree.
+  ///
+  /// When true, the widget and its children are hidden from accessibility services.
+  final bool excludeSemantics;
+
   bool get _effectiveEnabled => enabled && onChanged != null;
 
   @override
@@ -168,12 +174,9 @@ class NakedToggle extends StatefulWidget {
 
 class _NakedToggleState extends State<NakedToggle>
     with WidgetStatesMixin<NakedToggle> {
-  // Keyboard activation is handled inline in actions.onInvoke.
-
   void _activate() {
     if (!widget._effectiveEnabled) return;
 
-    // Use appropriate feedback based on widget type
     if (widget.enableFeedback) {
       if (widget.asSwitch) {
         HapticFeedback.selectionClick();
@@ -198,6 +201,35 @@ class _NakedToggleState extends State<NakedToggle>
     );
   }
 
+  Widget _buildToggle() {
+    Widget gestureDetector = GestureDetector(
+      onTapDown: widget._effectiveEnabled
+          ? (_) => updatePressState(true, widget.onPressChange)
+          : null,
+      onTapUp: widget._effectiveEnabled
+          ? (_) => updatePressState(false, widget.onPressChange)
+          : null,
+      onTap: widget._effectiveEnabled ? _activate : null,
+      onTapCancel: widget._effectiveEnabled
+          ? () => updatePressState(false, widget.onPressChange)
+          : null,
+      behavior: HitTestBehavior.opaque,
+      excludeFromSemantics: true,
+      child: _buildContent(),
+    );
+
+    return widget.excludeSemantics
+        ? gestureDetector
+        : Semantics(
+            enabled: widget._effectiveEnabled,
+            toggled: widget.value,
+            button: !widget.asSwitch,
+            label: widget.semanticLabel,
+            onTap: widget._effectiveEnabled ? _activate : null,
+            child: gestureDetector,
+          );
+  }
+
   MouseCursor get _effectiveCursor => widget._effectiveEnabled
       ? (widget.mouseCursor ?? SystemMouseCursors.click)
       : SystemMouseCursors.basic;
@@ -216,7 +248,6 @@ class _NakedToggleState extends State<NakedToggle>
       final nowDisabled = !widget._effectiveEnabled;
       updateDisabledState(nowDisabled);
       if (nowDisabled) {
-        // Maintain state set consistency when disabling the toggle.
         updateState(WidgetState.hovered, false);
         updateState(WidgetState.pressed, false);
         updateState(WidgetState.focused, false);
@@ -245,28 +276,7 @@ class _NakedToggleState extends State<NakedToggle>
           }
         },
       ),
-      child: Semantics(
-        enabled: widget._effectiveEnabled,
-        toggled: widget.value,
-        button: !widget.asSwitch,
-        label: widget.semanticLabel,
-        onTap: widget._effectiveEnabled ? _activate : null,
-        child: GestureDetector(
-          onTapDown: widget._effectiveEnabled
-              ? (_) => updatePressState(true, widget.onPressChange)
-              : null,
-          onTapUp: widget._effectiveEnabled
-              ? (_) => updatePressState(false, widget.onPressChange)
-              : null,
-          onTap: widget._effectiveEnabled ? _activate : null,
-          onTapCancel: widget._effectiveEnabled
-              ? () => updatePressState(false, widget.onPressChange)
-              : null,
-          behavior: HitTestBehavior.opaque,
-          excludeFromSemantics: true,
-          child: _buildContent(),
-        ),
-      ),
+      child: _buildToggle(),
     );
   }
 }
@@ -334,7 +344,6 @@ class _ToggleScope<T> extends InheritedWidget {
   final ValueChanged<T?>? onChanged;
   final bool enabled;
 
-  // Use the class generic T, not a new type parameter.
   bool isSelected(T value) => selectedValue == value;
 
   @override
@@ -361,6 +370,7 @@ class NakedToggleOption<T> extends StatefulWidget {
     this.onPressChange,
     this.builder,
     this.semanticLabel,
+    this.excludeSemantics = false,
   }) : assert(
          child != null || builder != null,
          'Either child or builder must be provided',
@@ -378,6 +388,11 @@ class NakedToggleOption<T> extends StatefulWidget {
   final ValueChanged<bool>? onPressChange;
   final ValueWidgetBuilder<NakedToggleOptionState<T>>? builder;
   final String? semanticLabel;
+
+  /// Whether to exclude this widget from the semantic tree.
+  ///
+  /// When true, the widget and its children are hidden from accessibility services.
+  final bool excludeSemantics;
 
   @override
   State<NakedToggleOption<T>> createState() => _NakedToggleOptionState<T>();
@@ -413,8 +428,6 @@ class _NakedToggleOptionState<T> extends State<NakedToggleOption<T>>
     if (widget.value != oldWidget.value) {
       updateSelectedState(scope.selectedValue == widget.value, null);
     }
-    // When the group's selectedValue changes, didChangeDependencies() will run
-    // because _ToggleScope<T>.updateShouldNotify returned true.
   }
 
   @override
@@ -449,14 +462,8 @@ class _NakedToggleOptionState<T> extends State<NakedToggleOption<T>>
       actions: NakedIntentActions.toggle.actions(
         onToggle: () => _activate(scope),
       ),
-      child: Semantics(
-        container: true,
-        enabled: isEnabled,
-        selected: isSelected,
-        button: true,
-        label: widget.semanticLabel,
-        onTap: isEnabled ? () => _activate(scope) : null,
-        child: GestureDetector(
+      child: () {
+        Widget gestureDetector = GestureDetector(
           onTapDown: isEnabled
               ? (_) => updatePressState(true, widget.onPressChange)
               : null,
@@ -470,8 +477,20 @@ class _NakedToggleOptionState<T> extends State<NakedToggleOption<T>>
           behavior: HitTestBehavior.opaque,
           excludeFromSemantics: true,
           child: wrappedContent,
-        ),
-      ),
+        );
+
+        return widget.excludeSemantics
+            ? gestureDetector
+            : Semantics(
+                container: true,
+                enabled: isEnabled,
+                selected: isSelected,
+                button: true,
+                label: widget.semanticLabel,
+                onTap: isEnabled ? () => _activate(scope) : null,
+                child: gestureDetector,
+              );
+      }(),
     );
   }
 }

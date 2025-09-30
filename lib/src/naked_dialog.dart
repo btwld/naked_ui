@@ -5,8 +5,8 @@ import 'utilities/intents.dart';
 /// Displays a headless dialog without default styling.
 ///
 /// Unlike [showDialog], imposes no visuals—appearance is fully controlled by
-/// [builder]. The [barrierColor] is required and controls both visual scrim and
-/// barrier hit testing.
+/// [builder]. The [barrierColor] is required and controls both visual scrim
+/// and barrier hit testing.
 ///
 /// Returns a [Future] with the value passed to [Navigator.pop], or null if dismissed.
 ///
@@ -22,6 +22,9 @@ import 'utilities/intents.dart';
 ///   ),
 /// );
 /// ```
+///
+/// See also:
+/// - [showDialog], the Material-styled dialog for typical apps.
 Future<T?> showNakedDialog<T>({
   required BuildContext context,
   required WidgetBuilder builder,
@@ -50,15 +53,9 @@ Future<T?> showNakedDialog<T>({
             Animation<double> animation,
             Animation<double> secondaryAnimation,
           ) {
-            // Headless content provided by the caller.
             final Widget content = builder(routeContext);
-
-            // Trap traversal within the dialog subtree. This is resilient even if
-            // the content contains its own traversal groups (nested forms, lists, etc.).
             Widget wrapped = FocusTraversalGroup(child: content);
 
-            // Close on Escape only if barrier is dismissible.
-            // This mirrors barrier tap policy and keeps behavior predictable.
             if (barrierDismissible) {
               wrapped = Shortcuts(
                 shortcuts: NakedIntentActions.dialog.shortcuts,
@@ -75,7 +72,7 @@ Future<T?> showNakedDialog<T>({
           },
       barrierDismissible: barrierDismissible,
       barrierColor: barrierColor,
-      barrierLabel: barrierLabel, // strongly recommended to pass a label
+      barrierLabel: barrierLabel,
       transitionDuration: transitionDuration,
       transitionBuilder: transitionBuilder,
       settings: routeSettings,
@@ -91,12 +88,16 @@ Future<T?> showNakedDialog<T>({
 ///
 /// When [modal] is true, blocks background content interaction and
 /// configures screen reader route semantics.
+///
+/// See also:
+/// - [showNakedDialog], the function that displays dialogs.
 class NakedDialog extends StatelessWidget {
   const NakedDialog({
     super.key,
     required this.child,
     this.modal = true,
     this.semanticLabel,
+    this.excludeSemantics = false,
   });
 
   /// The dialog content.
@@ -108,19 +109,25 @@ class NakedDialog extends StatelessWidget {
   /// Semantic label for accessibility.
   final String? semanticLabel;
 
+  /// Whether to exclude this widget from the semantic tree.
+  ///
+  /// When true, the widget and its children are hidden from accessibility services.
+  final bool excludeSemantics;
+
   @override
   Widget build(BuildContext context) {
-    Widget dialog = Semantics(
-      container: true,
-      explicitChildNodes: true,
-      scopesRoute: modal,
-      namesRoute: modal,
-      label: semanticLabel,
-      child: child,
-    );
+    Widget dialog = excludeSemantics
+        ? child
+        : Semantics(
+            container: true,
+            explicitChildNodes: true,
+            scopesRoute: modal,
+            namesRoute: modal,
+            label: semanticLabel,
+            child: child,
+          );
 
-    // Prevent reading/interaction with background content when modal.
-    if (modal) {
+    if (modal && !excludeSemantics) {
       dialog = BlockSemantics(child: dialog);
     }
 

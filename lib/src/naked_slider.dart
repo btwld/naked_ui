@@ -117,6 +117,7 @@ class NakedSlider extends StatefulWidget {
     this.keyboardStep = 0.01,
     this.largeKeyboardStep = 0.1,
     this.semanticLabel,
+    this.excludeSemantics = false,
   }) : assert(min < max, 'min must be less than max'),
        assert(
          child != null || builder != null,
@@ -186,6 +187,11 @@ class NakedSlider extends StatefulWidget {
   /// Semantic label for assistive technologies.
   final String? semanticLabel;
 
+  /// Whether to exclude this widget from the semantic tree.
+  ///
+  /// When true, the widget and its children are hidden from accessibility services.
+  final bool excludeSemantics;
+
   @override
   State<NakedSlider> createState() => _NakedSliderState();
 }
@@ -247,8 +253,6 @@ class _NakedSliderState extends State<NakedSlider>
     return '$pct%';
   }
 
-  // (no absolute-position jump; drag uses relative deltas for expected behavior)
-
   void _handleDragStart(DragStartDetails details) {
     if (!_isEnabled) return;
 
@@ -260,7 +264,6 @@ class _NakedSliderState extends State<NakedSlider>
     widget.onDragChange?.call(true);
     widget.onDragStart?.call();
 
-    // Ensure subsequent keyboard nudges apply here.
     if (effectiveFocusNode.canRequestFocus) effectiveFocusNode.requestFocus();
   }
 
@@ -324,7 +327,6 @@ class _NakedSliderState extends State<NakedSlider>
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    // Maintain focus traversal flags aligned with enablement.
     final node = effectiveFocusNode;
     node
       ..canRequestFocus = _isEnabled
@@ -335,22 +337,18 @@ class _NakedSliderState extends State<NakedSlider>
   void didUpdateWidget(covariant NakedSlider oldWidget) {
     super.didUpdateWidget(oldWidget);
 
-    // Maintain state flags in sync (handles enabled and onChanged changes).
     syncWidgetStates();
 
-    // Clear transient states when disabled.
     if (!_isEnabled) {
       updateState(WidgetState.hovered, false);
       updateState(WidgetState.pressed, false);
     }
 
-    // Maintain traversal flags under prop changes.
     final node2 = effectiveFocusNode;
     node2
       ..canRequestFocus = _isEnabled
       ..skipTraversal = !_isEnabled;
 
-    // Maintain last value in step with controller updates.
     _lastEmittedValue = widget.value;
   }
 
@@ -416,7 +414,7 @@ class _NakedSliderState extends State<NakedSlider>
           ? _handleDragCancel
           : null,
       behavior: HitTestBehavior.opaque,
-      excludeFromSemantics: true, // semantics provided by the wrapper below
+      excludeFromSemantics: true,
       child: content,
     );
 
@@ -428,7 +426,7 @@ class _NakedSliderState extends State<NakedSlider>
     return NakedFocusableDetector(
       enabled: _isEnabled,
       autofocus: widget.autofocus,
-      descendantsAreTraversable: false, // no focus into the visual child
+      descendantsAreTraversable: false,
       onFocusChange: (focused) =>
           updateFocusState(focused, widget.onFocusChange),
       onHoverChange: (hover) => updateHoverState(hover, widget.onHoverChange),
@@ -436,34 +434,36 @@ class _NakedSliderState extends State<NakedSlider>
       mouseCursor: _cursor,
       shortcuts: _shortcuts,
       actions: _actions,
-      child: Semantics(
-        container: true,
-        enabled: _isEnabled,
-        slider: true,
-        focusable: _isEnabled,
-        focused: isFocused,
-        label: widget.semanticLabel,
-        value: _percentString(widget.value),
-        increasedValue: _percentString(
-          _normalizeValue(widget.value + _calculateStep(false)),
-        ),
-        decreasedValue: _percentString(
-          _normalizeValue(widget.value - _calculateStep(false)),
-        ),
-        onIncrease: _isEnabled
-            ? () {
-                final step = _calculateStep(false);
-                _callOnChangeIfNeeded(_normalizeValue(widget.value + step));
-              }
-            : null,
-        onDecrease: _isEnabled
-            ? () {
-                final step = _calculateStep(false);
-                _callOnChangeIfNeeded(_normalizeValue(widget.value - step));
-              }
-            : null,
-        child: wrappedContent,
-      ),
+      child: widget.excludeSemantics
+          ? wrappedContent
+          : Semantics(
+              container: true,
+              enabled: _isEnabled,
+              slider: true,
+              focusable: _isEnabled,
+              focused: isFocused,
+              label: widget.semanticLabel,
+              value: _percentString(widget.value),
+              increasedValue: _percentString(
+                _normalizeValue(widget.value + _calculateStep(false)),
+              ),
+              decreasedValue: _percentString(
+                _normalizeValue(widget.value - _calculateStep(false)),
+              ),
+              onIncrease: _isEnabled
+                  ? () {
+                      final step = _calculateStep(false);
+                      _callOnChangeIfNeeded(_normalizeValue(widget.value + step));
+                    }
+                  : null,
+              onDecrease: _isEnabled
+                  ? () {
+                      final step = _calculateStep(false);
+                      _callOnChangeIfNeeded(_normalizeValue(widget.value - step));
+                    }
+                  : null,
+              child: wrappedContent,
+            ),
     );
   }
 }

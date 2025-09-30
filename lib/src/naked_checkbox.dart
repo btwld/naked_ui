@@ -56,8 +56,8 @@ class NakedCheckboxState extends NakedState {
 
 /// A headless checkbox without visuals.
 ///
-/// The builder receives a [NakedCheckboxState] with the checked value, whether tristate is enabled,
-/// and interaction states for custom styling.
+/// The [builder] receives a [NakedCheckboxState] with the checked value,
+/// tristate mode, and interaction states for custom styling.
 ///
 /// ```dart
 /// NakedCheckbox(
@@ -88,6 +88,7 @@ class NakedCheckbox extends StatefulWidget {
     this.onPressChange,
     this.builder,
     this.semanticLabel,
+    this.excludeSemantics = false,
   }) : assert(
          (tristate || value != null),
          'Non-tristate checkbox must have a non-null value',
@@ -139,6 +140,11 @@ class NakedCheckbox extends StatefulWidget {
 
   /// Semantic label for accessibility.
   final String? semanticLabel;
+
+  /// Whether to exclude this widget from the semantic tree.
+  ///
+  /// When true, the widget and its children are hidden from accessibility services.
+  final bool excludeSemantics;
 
   bool get _effectiveEnabled => enabled && onChanged != null;
 
@@ -192,6 +198,42 @@ class _NakedCheckboxState extends State<NakedCheckbox>
     );
   }
 
+  Widget _buildCheckbox() {
+    Widget gestureDetector = GestureDetector(
+      onTapDown: widget._effectiveEnabled
+          ? (details) {
+              updatePressState(true, widget.onPressChange);
+            }
+          : null,
+      onTapUp: widget._effectiveEnabled
+          ? (details) {
+              updatePressState(false, widget.onPressChange);
+            }
+          : null,
+      onTap: widget._effectiveEnabled ? _handleActivation : null,
+      onTapCancel: widget._effectiveEnabled
+          ? () {
+              updatePressState(false, widget.onPressChange);
+            }
+          : null,
+      behavior: HitTestBehavior.opaque,
+      excludeFromSemantics: true,
+      child: _buildContent(),
+    );
+
+    return widget.excludeSemantics
+        ? gestureDetector
+        : Semantics(
+            container: true,
+            enabled: widget._effectiveEnabled,
+            checked: widget.value == true,
+            mixed: widget.tristate && widget.value == null,
+            label: widget.semanticLabel,
+            onTap: _semanticsTapHandler,
+            child: gestureDetector,
+          );
+  }
+
   MouseCursor get _effectiveCursor => widget._effectiveEnabled
       ? (widget.mouseCursor ?? SystemMouseCursors.click)
       : SystemMouseCursors.basic;
@@ -202,7 +244,6 @@ class _NakedCheckboxState extends State<NakedCheckbox>
   @override
   void initializeWidgetStates() {
     updateDisabledState(!widget.enabled);
-    // Reflect current value into selected state for builder consumers.
     updateSelectedState(widget.value == true, null);
   }
 
@@ -219,7 +260,6 @@ class _NakedCheckboxState extends State<NakedCheckbox>
   Widget build(BuildContext context) {
     return MergeSemantics(
       child: NakedFocusableDetector(
-        // Keyboard and focus handling
         enabled: widget._effectiveEnabled,
         autofocus: widget.autofocus,
         onFocusChange: (focused) {
@@ -230,40 +270,11 @@ class _NakedCheckboxState extends State<NakedCheckbox>
         },
         focusNode: widget.focusNode,
         mouseCursor: _effectiveCursor,
-        // Use default includeFocusSemantics: true to let it handle focus semantics automatically
         shortcuts: NakedIntentActions.checkbox.shortcuts,
         actions: NakedIntentActions.checkbox.actions(
           onToggle: () => _handleKeyboardActivation(),
         ),
-        child: Semantics(
-          container: true,
-          enabled: widget._effectiveEnabled,
-          checked: widget.value == true,
-          mixed: widget.tristate && widget.value == null,
-          label: widget.semanticLabel,
-          onTap: _semanticsTapHandler,
-          child: GestureDetector(
-            onTapDown: widget._effectiveEnabled
-                ? (details) {
-                    updatePressState(true, widget.onPressChange);
-                  }
-                : null,
-            onTapUp: widget._effectiveEnabled
-                ? (details) {
-                    updatePressState(false, widget.onPressChange);
-                  }
-                : null,
-            onTap: widget._effectiveEnabled ? _handleActivation : null,
-            onTapCancel: widget._effectiveEnabled
-                ? () {
-                    updatePressState(false, widget.onPressChange);
-                  }
-                : null,
-            behavior: HitTestBehavior.opaque,
-            excludeFromSemantics: true,
-            child: _buildContent(),
-          ),
-        ),
+        child: _buildCheckbox(),
       ),
     );
   }

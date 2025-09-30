@@ -33,6 +33,11 @@ class NakedButtonState extends NakedState {
 }
 
 /// A headless button without visuals that provides interaction states.
+///
+/// The [builder] receives a [NakedButtonState] with interaction states.
+///
+/// See also:
+/// - [GestureDetector], for direct gesture handling without button semantics.
 class NakedButton extends StatefulWidget {
   const NakedButton({
     super.key,
@@ -51,23 +56,58 @@ class NakedButton extends StatefulWidget {
     this.focusOnPress = false,
     this.tooltip,
     this.semanticLabel,
+    this.excludeSemantics = false,
   });
 
+  /// The button content.
   final Widget? child;
+
+  /// Called when the button is tapped.
   final VoidCallback? onPressed;
+
+  /// Called when the button is long-pressed.
   final VoidCallback? onLongPress;
+
+  /// Called when focus changes.
   final ValueChanged<bool>? onFocusChange;
+
+  /// Called when hover changes.
   final ValueChanged<bool>? onHoverChange;
+
+  /// Called when the pressed state changes.
   final ValueChanged<bool>? onPressChange;
+
+  /// Builds the button using the current [NakedButtonState].
   final ValueWidgetBuilder<NakedButtonState>? builder;
+
+  /// Whether the button is interactive.
   final bool enabled;
+
+  /// The mouse cursor when enabled.
   final MouseCursor mouseCursor;
+
+  /// Whether to provide haptic feedback on interactions.
   final bool enableFeedback;
+
+  /// The focus node for the button.
   final FocusNode? focusNode;
+
+  /// Whether to autofocus.
   final bool autofocus;
+
+  /// Whether to request focus when pressed.
   final bool focusOnPress;
+
+  /// Tooltip text for accessibility.
   final String? tooltip;
+
+  /// Semantic label for the button.
   final String? semanticLabel;
+
+  /// Whether to exclude this widget from the semantic tree.
+  ///
+  /// When true, the widget and its children are hidden from accessibility services.
+  final bool excludeSemantics;
 
   @override
   State<NakedButton> createState() => _NakedButtonState();
@@ -179,6 +219,37 @@ class _NakedButtonState extends State<NakedButton>
   Widget build(BuildContext context) {
     final buttonState = NakedButtonState(states: widgetStates);
 
+    Widget gestureDetector = GestureDetector(
+          onTapDown: _isInteractive ? _onPressStart : null,
+          onTapUp: _isInteractive ? (_) => _onPressEnd() : null,
+          onTap: _isInteractive ? _handleTap : null,
+          onTapCancel: _isInteractive ? _onPressEnd : null,
+          onLongPress: _isInteractive ? _handleLongPress : null,
+          onLongPressStart: _isInteractive
+              ? (details) => updatePressState(true, widget.onPressChange)
+              : null,
+          onLongPressEnd: _isInteractive ? (_) => _onPressEnd() : null,
+          behavior: HitTestBehavior.opaque,
+      excludeFromSemantics: true,
+      child: NakedStateScopeBuilder(
+        value: buttonState,
+        child: widget.child,
+        builder: widget.builder,
+      ),
+    );
+
+    Widget result = widget.excludeSemantics
+        ? gestureDetector
+        : Semantics(
+            enabled: _isInteractive,
+            button: true,
+            label: widget.semanticLabel,
+            tooltip: widget.tooltip,
+            onTap: widget.onPressed != null ? _handleTap : null,
+            onLongPress: widget.onLongPress != null ? _handleLongPress : null,
+            child: gestureDetector,
+          );
+
     return NakedFocusableDetector(
       enabled: _isInteractive,
       autofocus: widget.autofocus,
@@ -196,52 +267,7 @@ class _NakedButtonState extends State<NakedButton>
       actions: NakedIntentActions.button.actions(
         onPressed: _handleKeyboardActivation,
       ),
-      child: Semantics(
-        enabled: _isInteractive,
-        button: true,
-        label: widget.semanticLabel,
-        tooltip: widget.tooltip,
-        // Semantics check internally if needed
-        onTap: widget.onPressed != null ? _handleTap : null,
-        onLongPress: widget.onLongPress != null ? _handleLongPress : null,
-        child: GestureDetector(
-          // GESTURE LIFECYCLE (based on Flutter's documented behavior):
-          //
-          // Quick tap: onTapDown → onTapUp → onTap
-          // Long hold: onTapDown → onTapCancel → onLongPressStart → onLongPress → onLongPressEnd
-          // Drag away: onTapDown → onTapCancel
-          //
-          // The key issue: onTapCancel fires when tap times out (~400ms) even though
-          // finger is still down. onLongPressStart then fires immediately after to
-          // indicate long press has begun. We use this to re-establish pressed state.
-
-          // Initial press
-          onTapDown: _isInteractive ? _onPressStart : null,
-
-          // Tap completion or cancellation
-          onTapUp: _isInteractive ? (_) => _onPressEnd() : null,
-          onTap: _isInteractive ? _handleTap : null,
-
-          onTapCancel: _isInteractive ? _onPressEnd : null,
-          // Always provide onLongPress when interactive to ensure Flutter creates
-          // LongPressGestureRecognizer, which enables onLongPressStart/End lifecycle
-          onLongPress: _isInteractive ? _handleLongPress : null,
-          // Long press sequence - onLongPressStart is CRITICAL
-          // It re-establishes pressed=true after onTapCancel clears it
-          onLongPressStart: _isInteractive
-              ? (details) => updatePressState(true, widget.onPressChange)
-              : null,
-          onLongPressEnd: _isInteractive ? (_) => _onPressEnd() : null,
-
-          behavior: HitTestBehavior.opaque,
-          excludeFromSemantics: true,
-          child: NakedStateScopeBuilder(
-            value: buttonState,
-            child: widget.child,
-            builder: widget.builder,
-          ),
-        ),
-      ),
+      child: result,
     );
   }
 }

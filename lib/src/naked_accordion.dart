@@ -413,6 +413,7 @@ class NakedAccordion<T> extends StatefulWidget {
     this.onHoverChange,
     this.onPressChange,
     this.semanticLabel,
+    this.excludeSemantics = false,
   });
 
   /// Builds the header or trigger for the item.
@@ -453,6 +454,11 @@ class NakedAccordion<T> extends StatefulWidget {
 
   /// Focus node associated with the header.
   final FocusNode? focusNode;
+
+  /// Whether to exclude this widget from the semantic tree.
+  ///
+  /// When true, the widget and its children are hidden from accessibility services.
+  final bool excludeSemantics;
 
   @override
   State<NakedAccordion<T>> createState() => _NakedAccordionState<T>();
@@ -511,11 +517,8 @@ class _NakedAccordionState<T> extends State<NakedAccordion<T>>
                   : SystemMouseCursors.basic,
               shortcuts: NakedIntentActions.accordion.shortcuts,
               actions: NakedIntentActions.accordion.actions(onToggle: onTap),
-              child: Semantics(
-                enabled: widget.enabled,
-                label: widget.semanticLabel,
-                onTap: widget.enabled ? onTap : null,
-                child: GestureDetector(
+              child: () {
+                Widget triggerContent = GestureDetector(
                   onTapDown: (widget.enabled && widget.onPressChange != null)
                       ? (_) => updatePressState(true, widget.onPressChange)
                       : null,
@@ -555,8 +558,17 @@ class _NakedAccordionState<T> extends State<NakedAccordion<T>>
                       },
                     ),
                   ),
-                ),
-              ),
+                );
+
+                return widget.excludeSemantics
+                    ? triggerContent
+                    : Semantics(
+                        enabled: widget.enabled,
+                        label: widget.semanticLabel,
+                        onTap: widget.enabled ? onTap : null,
+                        child: triggerContent,
+                      );
+              }(),
             ),
             widget.transitionBuilder != null
                 ? widget.transitionBuilder!(panel)
