@@ -47,8 +47,8 @@ class _TooltipExampleState extends State<TooltipExample>
   Widget build(BuildContext context) {
     return NakedTooltip(
       positioning: const OverlayPositionConfig(
-        alignment: Alignment.topCenter,
-        fallbackAlignment: Alignment.bottomCenter,
+        targetAnchor: Alignment.topCenter,
+        followerAnchor: Alignment.bottomCenter,
       ),
       waitDuration: const Duration(milliseconds: 400),
       showDuration: const Duration(seconds: 2),
@@ -86,14 +86,13 @@ class _TooltipExampleState extends State<TooltipExample>
 ```dart
 const NakedTooltip({
   Key? key,
-  this.child,
-  this.builder,
+  required this.child,
   required this.overlayBuilder,
   this.showDuration = const Duration(seconds: 2),
   this.waitDuration = const Duration(seconds: 1),
   this.positioning = const OverlayPositionConfig(
-    alignment: Alignment.topCenter,
-    fallbackAlignment: Alignment.bottomCenter,
+    targetAnchor: Alignment.topCenter,
+    followerAnchor: Alignment.bottomCenter,
   ),
   this.onOpen,
   this.onClose,
@@ -105,7 +104,7 @@ const NakedTooltip({
 
 ### Key Parameters
 
-- `child` / `builder` → trigger content or a `ValueWidgetBuilder<NakedTooltipState>` for dynamic styling
+- `child` → trigger widget that displays the tooltip on hover/focus
 - `overlayBuilder` → `(BuildContext, RawMenuAnchorOverlayInfo)` that returns the tooltip body each time it shows
 - `showDuration` → how long the tooltip stays visible before hiding automatically
 - `waitDuration` → delay before showing once hover/focus occurs
@@ -123,12 +122,12 @@ const NakedTooltip({
 
 ## Positioning Tips
 
-Use `OverlayPositionConfig.offset` to nudge the tooltip, and provide a `fallbackAlignment` to handle cramped layouts:
+Use `OverlayPositionConfig.offset` to nudge the tooltip position:
 
 ```dart
 const OverlayPositionConfig(
-  alignment: Alignment.topCenter,
-  fallbackAlignment: Alignment.bottomCenter,
+  targetAnchor: Alignment.topCenter,
+  followerAnchor: Alignment.bottomCenter,
   offset: Offset(0, -8),
 );
 ```

@@ -154,6 +154,7 @@ const NakedPopover({
   this.onClose,
   this.onOpenRequested,
   this.onCloseRequested,
+  this.controller,
 })
 ```
 
@@ -181,8 +182,8 @@ Use `OverlayPositionConfig` to adjust anchor placement:
 
 ```dart
 const OverlayPositionConfig(
-  alignment: Alignment.bottomCenter,
-  fallbackAlignment: Alignment.topCenter,
+  targetAnchor: Alignment.bottomCenter,
+  followerAnchor: Alignment.topCenter,
   offset: Offset(0, 8),
 );
 ```
