@@ -185,7 +185,7 @@ void main() {
             body: NakedTextField(
               controller: controller,
               semanticLabel: 'Test TextField',
-              builder: (context, state, child) => child!,
+              builder: (context, state, child) => child,
             ),
           ),
         ),
@@ -201,7 +201,7 @@ void main() {
               controller: controller,
               semanticLabel: 'Test TextField',
               excludeSemantics: true,
-              builder: (context, state, child) => child!,
+              builder: (context, state, child) => child,
             ),
           ),
         ),

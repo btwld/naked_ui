@@ -153,6 +153,7 @@ class NakedTooltip extends StatefulWidget {
 
 class _NakedTooltipState extends State<NakedTooltip>
     with WidgetStatesMixin<NakedTooltip> {
+  // ignore: dispose-fields
   final _menuController = MenuController();
   Timer? _showTimer;
   Timer? _waitTimer;
