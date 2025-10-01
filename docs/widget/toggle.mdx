@@ -1,19 +1,29 @@
 ---
 title: NakedToggle
-description: Versatile headless toggle control that can expose button or switch semantics while you keep full visual control
+description: Headless toggle component with configurable semantics and state management
 keywords: [flutter, toggle, switch, button, headless, accessibility, widgetstate]
 ---
 
-NakedToggle exposes binary toggle behaviour (on/off) without shipping any visual opinion. Flip the `asSwitch` flag to change accessibility semantics between a toggle button and a settings switch, then render whatever visuals you need in the builder.
+Headless toggle component. Handles binary state management and accessibility with configurable semantics. Use builder pattern for custom styling.
+
+## When to use this
+
+- **Toolbar toggles**: Bold, italic, underline buttons in editors
+- **View toggles**: Switch between list/grid views
+- **Feature toggles**: Turn features on/off with button-like appearance
+- **Multi-state controls**: When you need both button and switch semantics
 
 <Info>
   Complete runnable examples live in [`example/lib/api/naked_toggle.0.dart`](https://github.com/btwld/naked_ui/blob/main/example/lib/api/naked_toggle.0.dart).
 </Info>
 
-## Quick Start
+## Basic implementation
 
 <CodeGroup title="Toggle Button" defaultLanguage="dart">
 ```dart
+import 'package:flutter/material.dart';
+import 'package:naked_ui/naked_ui.dart';
+
 class ToggleButtonExample extends StatefulWidget {
   const ToggleButtonExample({super.key});
 
@@ -37,27 +47,27 @@ class _ToggleButtonExampleState extends State<ToggleButtonExample> {
       asSwitch: false, // Toggle button semantics
       onChanged: onChanged,
       semanticLabel: tooltip,
-      builder: (context, toggleState, child) {
-        final isSelected = toggleState.isToggled;
-        final isHovered = toggleState.isHovered;
-        final isFocused = toggleState.isFocused;
-        final isPressed = toggleState.isPressed;
+      builder: (context, state, child) {
+        final backgroundColor = state.when(
+          toggled: Colors.blue.shade600,
+          hovered: Colors.grey.shade200,
+          orElse: Colors.transparent,
+        );
+
+        final border = state.when(
+          focused: Border.all(color: Colors.blue, width: 2),
+          orElse: Border.all(color: Colors.grey.shade300),
+        );
 
         return AnimatedContainer(
           duration: const Duration(milliseconds: 150),
           width: 40,
           height: 40,
           decoration: BoxDecoration(
-            color: isSelected
-                ? Colors.blue.shade600
-                : isHovered
-                    ? Colors.grey.shade200
-                    : Colors.transparent,
+            color: backgroundColor,
             borderRadius: BorderRadius.circular(6),
-            border: isFocused
-                ? Border.all(color: Colors.blue, width: 2)
-                : Border.all(color: Colors.grey.shade300),
-            boxShadow: isPressed
+            border: border,
+            boxShadow: state.isPressed
                 ? [
                     BoxShadow(
                       color: Colors.black.withValues(alpha: 0.1),
@@ -150,10 +160,10 @@ const NakedToggle({
   this.enableFeedback = true,
   this.focusNode,
   this.autofocus = false,
-  this.onFocusChange,    // Legacy - prefer builder
-  this.onHoverChange,    // Legacy - prefer builder
-  this.onPressChange,    // Legacy - prefer builder
-  this.builder,          // Recommended approach
+  this.onFocusChange,
+  this.onHoverChange,
+  this.onPressChange,
+  this.builder,
   this.semanticLabel,
   this.asSwitch = false,
 })
@@ -170,7 +180,7 @@ const NakedToggle({
 - `mouseCursor` → override the hover cursor when the toggle is enabled
 - `enableFeedback` → `bool`: haptic/audio feedback on activation (default `true`)
 - `focusNode`, `autofocus`: focus management options
-- Legacy interaction callbacks: `onFocusChange`, `onHoverChange`, `onPressChange` (prefer `builder` pattern)
+- interaction callbacks: `onFocusChange`, `onHoverChange`, `onPressChange`
 - `semanticLabel` → `String?`: accessibility label, especially important when no text label is visible
 
 ## Toggle Groups & Segmented Controls
@@ -178,6 +188,9 @@ const NakedToggle({
 Combine `NakedToggleGroup` and `NakedToggleOption` for radio-like segmented controls:
 
 ```dart
+import 'package:flutter/material.dart';
+import 'package:naked_ui/naked_ui.dart';
+
 class ToggleGroupExample extends StatelessWidget {
   const ToggleGroupExample({super.key, required this.value, required this.onChanged});
 
@@ -193,16 +206,16 @@ class ToggleGroupExample extends StatelessWidget {
         children: [
           NakedToggleOption<String>(
             value: 'grid',
-            builder: (context, optionState, _) {
-              final isCurrent = optionState.isSelected;
+            builder: (context, state, _) {
+              final isCurrent = state.isSelected;
               return _SegmentChip(label: 'Grid', selected: isCurrent);
             },
           ),
           const SizedBox(width: 8),
           NakedToggleOption<String>(
             value: 'list',
-            builder: (context, optionState, _) {
-              final isCurrent = optionState.isSelected;
+            builder: (context, state, _) {
+              final isCurrent = state.isSelected;
               return _SegmentChip(label: 'List', selected: isCurrent);
             },
           ),
@@ -227,7 +240,7 @@ class _SegmentChip extends StatelessWidget {
         borderRadius: BorderRadius.circular(8),
         color: selected ? Colors.blue.shade600 : Colors.grey.shade200,
       ),
-      child: Text(
+      child: const Text(
         label,
         style: TextStyle(
           color: selected ? Colors.white : Colors.grey.shade800,
@@ -267,9 +280,9 @@ const NakedToggleOption({
   bool enableFeedback = true,
   FocusNode? focusNode,
   bool autofocus = false,
-  ValueChanged<bool>? onFocusChange,    // Legacy - prefer builder
-  ValueChanged<bool>? onHoverChange,    // Legacy - prefer builder
-  ValueChanged<bool>? onPressChange,    // Legacy - prefer builder
+  ValueChanged<bool>? onFocusChange,
+  ValueChanged<bool>? onHoverChange,
+  ValueChanged<bool>? onPressChange,
   String? semanticLabel,
 })
 ```
@@ -293,6 +306,6 @@ const NakedToggleOption({
 - Keyboard: Space/Enter toggles, arrow keys move between options inside a `NakedToggleGroup`
 - Screen readers: provide `semanticLabel` (and `asSwitch` when acting as a settings switch)
 - Focus management: supply your own `FocusNode` when integrating with larger focus scopes
-- Visual feedback: use `toggleState.isFocused` / `isPressed` to surface strong focus & press affordances
+- Visual feedback: use `state.isFocused` / `isPressed` to surface strong focus & press affordances
 
 Need more patterns? Review the full sample app under `example/lib/api` for end-to-end scenarios.

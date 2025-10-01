@@ -4,15 +4,25 @@ description: Headless single-select dropdown with typed trigger and option build
 keywords: [flutter, select, dropdown, listbox, headless, overlay]
 ---
 
-`NakedSelect` mirrors a native select/dropdown experience—keyboard navigation, focus trapping, semantics—while leaving visuals entirely up to you. Provide a trigger builder (or child), render an overlay, and compose options with `NakedSelect.Option`.
+Headless select dropdown component. Handles keyboard navigation, focus management, and accessibility. Use builder pattern for custom trigger and option styling.
+
+## When to use this
+
+- **Form fields**: Choose from a list of options (country, category, etc.)
+- **Filters**: Select filter criteria from predefined options
+- **Settings**: Choose preferences from dropdown lists
+- **Data selection**: Pick items from large sets with search/grouping
 
 <Info>
   Working samples are in [`example/lib/api/naked_select.0.dart`](https://github.com/btwld/naked_ui/blob/main/example/lib/api/naked_select.0.dart) (plus `.1`/`.2` for searchable and grouped variants).
 </Info>
 
-## Quick Start
+## Basic implementation
 
 ```dart
+import 'package:flutter/material.dart';
+import 'package:naked_ui/naked_ui.dart';
+
 class BasicSelectExample extends StatefulWidget {
   const BasicSelectExample({super.key});
 
@@ -28,10 +38,10 @@ class _BasicSelectExampleState extends State<BasicSelectExample> {
     return NakedSelect<String>(
       value: _value,
       onChanged: (next) => setState(() => _value = next),
-      builder: (context, selectState, _) {
-        final bool isOpen = selectState.isOpen;
-        final bool hovered = selectState.isHovered;
-        final bool focused = selectState.isFocused;
+      builder: (context, state, _) {
+        final bool isOpen = state.isOpen;
+        final bool hovered = state.isHovered;
+        final bool focused = state.isFocused;
 
         return Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
@@ -46,7 +56,7 @@ class _BasicSelectExampleState extends State<BasicSelectExample> {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(selectState.value ?? 'Select fruit'),
+              Text(state.value ?? 'Select fruit'),
               const SizedBox(width: 12),
               Icon(isOpen ? Icons.expand_less : Icons.expand_more, size: 18),
             ],
@@ -146,8 +156,8 @@ const NakedSelect({
   this.triggerFocusNode,
   this.semanticLabel,
   this.positioning = const OverlayPositionConfig(
-    alignment: Alignment.bottomLeft,
-    fallbackAlignment: Alignment.topLeft,
+    targetAnchor: Alignment.bottomCenter,
+    followerAnchor: Alignment.topCenter,
   ),
   this.onOpen,
   this.onClose,

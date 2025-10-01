@@ -4,15 +4,25 @@ description: Headless on/off control built on top of NakedToggle with switch sem
 keywords: [flutter, switch, toggle, settings, accessibility, headless]
 ---
 
-`NakedSwitch` is just `NakedToggle` with `asSwitch: true`. You get the same interaction callbacks and builder API, but assistive technologies announce the control as a switch with on/off state.
+Headless switch component. Handles toggle behavior and accessibility with switch semantics. Use builder pattern for custom styling.
+
+## When to use this
+
+- **Settings controls**: Enable/disable features (notifications, dark mode)
+- **Preferences**: Binary choices in configuration panels
+- **Feature toggles**: Turn functionality on or off
+- **Status controls**: Active/inactive, enabled/disabled states
 
 <Info>
   See the runnable sample in [`example/lib/api/naked_toggle.0.dart`](https://github.com/btwld/naked_ui/blob/main/example/lib/api/naked_toggle.0.dart) under the "Switch" section.
 </Info>
 
-## Quick Start
+## Basic implementation
 
 ```dart
+import 'package:flutter/material.dart';
+import 'package:naked_ui/naked_ui.dart';
+
 class SettingsSwitch extends StatefulWidget {
   const SettingsSwitch({super.key});
 
@@ -30,9 +40,15 @@ class _SettingsSwitchState extends State<SettingsSwitch> {
       asSwitch: true,
       semanticLabel: 'Email notifications',
       onChanged: (next) => setState(() => _notificationsEnabled = next),
-      builder: (context, toggleState, _) {
-        final bool isOn = toggleState.isToggled;
-        final bool isDisabled = toggleState.isDisabled;
+      builder: (context, state, _) {
+        final bool isToggled = state.isToggled;
+        final bool isDisabled = state.isDisabled;
+
+        final backgroundColor = state.when(
+          disabled: Colors.grey.shade300,
+          toggled: Colors.green.shade500,
+          orElse: Colors.grey.shade400,
+        );
 
         return AnimatedContainer(
           duration: const Duration(milliseconds: 180),
@@ -40,15 +56,11 @@ class _SettingsSwitchState extends State<SettingsSwitch> {
           height: 28,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(14),
-            color: isDisabled
-                ? Colors.grey.shade300
-                : isOn
-                    ? Colors.green.shade500
-                    : Colors.grey.shade400,
+            color: backgroundColor,
           ),
           child: AnimatedAlign(
             duration: const Duration(milliseconds: 180),
-            alignment: isOn ? Alignment.centerRight : Alignment.centerLeft,
+            alignment: isToggled ? Alignment.centerRight : Alignment.centerLeft,
             child: Container(
               margin: const EdgeInsets.all(2),
               width: 24,

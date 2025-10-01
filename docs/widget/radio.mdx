@@ -4,15 +4,25 @@ description: Headless radio button primitives backed by RadioGroup for exclusive
 keywords: [flutter, radio, radiogroup, headless, accessibility, widgetstate]
 ---
 
-Combine `RadioGroup` with `NakedRadio` to build completely custom radio buttons. The group coordinates arrow-key navigation, focus, and selection while each `NakedRadio` exposes a typed state snapshot for styling.
+Headless radio button component. RadioGroup coordinates keyboard navigation and exclusive selection. NakedRadio provides state for custom styling.
+
+## When to use this
+
+- **Single selection**: Choose one option from multiple choices
+- **Settings**: Select one preference from a group (theme, language, etc.)
+- **Forms**: Required single-choice fields
+- **Filters**: Select one filter option from a category
 
 <Info>
   Full examples are available in [`example/lib/api/naked_radio.0.dart`](https://github.com/btwld/naked_ui/blob/main/example/lib/api/naked_radio.0.dart).
 </Info>
 
-## Quick Start
+## Basic implementation
 
 ```dart
+import 'package:flutter/material.dart';
+import 'package:naked_ui/naked_ui.dart';
+
 enum RadioOption { banana, apple }
 
 class RadioExample extends StatefulWidget {
@@ -52,23 +62,26 @@ class _RadioChip extends StatelessWidget {
   Widget build(BuildContext context) {
     return NakedRadio<RadioOption>(
       value: value,
-      builder: (context, radioState, _) {
-        final bool isSelected = radioState.isSelected;
-        final bool isHovered = radioState.isHovered;
-        final bool isFocused = radioState.isFocused;
+      builder: (context, state, _) {
+        final bool isFocused = state.isFocused;
+
+        final backgroundColor = state.when(
+          selected: Colors.blue.shade600,
+          hovered: Colors.grey.shade200,
+          orElse: Colors.white,
+        );
 
         return AnimatedContainer(
           duration: const Duration(milliseconds: 150),
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(20),
-            color: isSelected
-                ? Colors.blue.shade600
-                : isHovered
-                    ? Colors.grey.shade200
-                    : Colors.white,
+            color: backgroundColor,
             border: Border.all(
-              color: isFocused ? Colors.blue : Colors.grey.shade300,
+              color: state.when(
+                focused: Colors.blue,
+                orElse: Colors.grey.shade300,
+              ),
               width: isFocused ? 2 : 1,
             ),
           ),
@@ -78,11 +91,11 @@ class _RadioChip extends StatelessWidget {
               Text(
                 label,
                 style: TextStyle(
-                  color: isSelected ? Colors.white : Colors.grey.shade800,
+                  color: state.isSelected ? Colors.white : Colors.grey.shade800,
                   fontWeight: FontWeight.w600,
                 ),
               ),
-              if (isSelected) ...[
+              if (state.isSelected) ...[
                 const SizedBox(width: 6),
                 const Icon(Icons.check, size: 16, color: Colors.white),
               ],
@@ -135,10 +148,10 @@ const NakedRadio<T>({
   this.focusNode,
   this.autofocus = false,
   this.toggleable = false,
-  this.onFocusChange,    // Legacy - prefer builder
-  this.onHoverChange,    // Legacy - prefer builder
-  this.onPressChange,    // Legacy - prefer builder
-  this.builder,          // Recommended approach
+  this.onFocusChange,
+  this.onHoverChange,
+  this.onPressChange,
+  this.builder,
   this.groupRegistry,
 })
 ```
@@ -149,11 +162,11 @@ Key notes:
 - `builder` → `ValueWidgetBuilder<NakedRadioState<T>>?`
 - `toggleable` lets the selected radio clear the group when activated again
 - Pass `focusNode` to integrate with external focus management
-- Legacy interaction callbacks: `onPressChange`/`onHoverChange`/`onFocusChange` (prefer `builder` pattern)
+- interaction callbacks: `onPressChange`/`onHoverChange`/`onFocusChange` (prefer `builder` pattern)
 
 ## Accessibility Tips
 
 - Ensure each radio exposes a label (e.g. text within the builder)
 - Default keyboard support: arrow keys move between radios, Space selects
-- Keep your focus/hover styles visible using `radioState.isFocused` / `isHovered`
+- Keep your focus/hover styles visible using `state.isFocused` / `state.isHovered`
 - For more advanced layouts, wrap radio groups in `FocusTraversalGroup` to control traversal order

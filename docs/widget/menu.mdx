@@ -1,18 +1,28 @@
 ---
 title: NakedMenu
-description: Anchored overlay menu with typed trigger and item builders for complete visual control
+description: Headless menu component with keyboard navigation and accessibility
 keywords: [flutter, menu, dropdown, context-menu, overlay, headless]
 ---
 
-`NakedMenu` anchors an overlay to any widget and handles focus, keyboard navigation, outside-click dismissal, and accessibility without shipping visuals. Supply a trigger builder (or child), render whatever overlay you need, and use the typed state structures to style active or hovered items.
+Headless menu component. Handles focus, keyboard navigation, outside-click dismissal, and accessibility. Use builder pattern for custom styling.
+
+## When to use this
+
+- **Context menus**: Right-click or long-press menus with actions
+- **Dropdown actions**: Button that reveals multiple action options
+- **Navigation menus**: Mobile-style slide-out or dropdown navigation
+- **Custom overlays**: Any triggered overlay that needs menu-like behavior
 
 <Info>
   Browse the full sample at [`example/lib/api/naked_menu.0.dart`](https://github.com/btwld/naked_ui/blob/main/example/lib/api/naked_menu.0.dart).
 </Info>
 
-## Quick Start
+## Basic implementation
 
 ```dart
+import 'package:flutter/material.dart';
+import 'package:naked_ui/naked_ui.dart';
+
 class MenuExample extends StatefulWidget {
   const MenuExample({super.key});
 
@@ -28,9 +38,9 @@ class _MenuExampleState extends State<MenuExample> {
   Widget build(BuildContext context) {
     return NakedMenu<String>(
       controller: controller,
-      builder: (context, menuState, _) {
-        final bool isOpen = menuState.isOpen;
-        final bool isHovered = menuState.isHovered;
+      builder: (context, state, _) {
+        final bool isOpen = state.isOpen;
+        final bool isHovered = state.isHovered;
 
         return Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
@@ -119,18 +129,18 @@ class _MenuItem extends StatelessWidget {
     return NakedMenuItem<String>(
       value: value,
       builder: (context, itemState, _) {
-        final bool hovered = itemState.isHovered;
+        final bool isHovered = itemState.isHovered;
         final bool selected = selectedValue == value;
 
         return Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-          color: hovered ? Colors.grey.shade100 : null,
+          color: isHovered ? Colors.grey.shade100 : null,
           child: Row(
             children: [
               Icon(icon, size: 16,
                   color: selected ? Colors.blue : Colors.grey.shade700),
               const SizedBox(width: 12),
-              Expanded(child: Text(label)),
+              Expanded(child: const Text(label)),
               if (selected)
                 const Icon(Icons.check, size: 16, color: Colors.blue),
             ],
@@ -146,7 +156,7 @@ class _MenuItem extends StatelessWidget {
 
 ### Trigger – `NakedMenuState`
 - `isOpen` → whether the overlay is visible
-- `widgetStates` → hover/focus/pressed/disabled states exposed in the builder (`menuState.isHovered`, `menuState.isPressed`, etc.)
+- `widgetStates` → hover/focus/pressed/disabled states exposed in the builder (`state.isHovered`, `state.isPressed`, etc.)
 
 ### Items – `NakedMenuItemState<T>`
 - `value` → the item's value for comparisons with your own selection model
