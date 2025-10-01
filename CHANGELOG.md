@@ -1,3 +1,9 @@
+## 0.2.0-beta.4
+
+- docs: refine documentation for developer clarity
+- refactor: Simplify NakedTextFieldBuilder signature
+- feat: add excludeSemantics parameter to all widgets
+
 ## 0.2.0-beta.3
 
 - feat: expose StrutStyle to NakedTextField
