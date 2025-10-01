@@ -213,6 +213,7 @@ class NakedSelect<T> extends StatefulWidget {
     this.onCloseRequested,
     this.consumeOutsideTaps = true,
     this.useRootOverlay = false,
+    this.excludeSemantics = false,
   }) : assert(
          child != null || builder != null,
          'Either child or builder must be provided',
@@ -271,6 +272,11 @@ class NakedSelect<T> extends StatefulWidget {
   /// Whether to target the root overlay instead of the nearest ancestor.
   final bool useRootOverlay;
 
+  /// Whether to exclude this widget from the semantic tree.
+  ///
+  /// When true, the widget and its children are hidden from accessibility services.
+  final bool excludeSemantics;
+
   @override
   State<NakedSelect<T>> createState() => _NakedSelectState<T>();
 }
@@ -316,7 +322,6 @@ class _NakedSelectState<T> extends State<NakedSelect<T>>
   @override
   void didUpdateWidget(covariant NakedSelect<T> oldWidget) {
     super.didUpdateWidget(oldWidget);
-    // Sync internal value when widget value changes
     if (widget.value != oldWidget.value) {
       _internalValue = widget.value;
     }
@@ -328,23 +333,7 @@ class _NakedSelectState<T> extends State<NakedSelect<T>>
   Widget build(BuildContext context) {
     final semanticsValue = _effectiveValue?.toString();
 
-    return Shortcuts(
-      shortcuts: NakedIntentActions.select.shortcuts,
-      child: Actions(
-        actions: NakedIntentActions.select.actions(
-          onDismiss: () => _menuController.close(),
-          onOpenOverlay: () => _menuController.open(),
-        ),
-        child: Semantics(
-          container: true,
-          enabled: widget.enabled,
-          button: true,
-          focusable: true,
-          expanded: _isOpen,
-          label: widget.semanticLabel,
-          value: semanticsValue,
-          onTap: widget.enabled ? _toggle : null,
-          child: AnchoredOverlayShell(
+    Widget selectWidget = AnchoredOverlayShell(
             controller: _menuController,
             overlayBuilder: (context, info) {
               return _NakedSelectScope<T>(
@@ -386,8 +375,30 @@ class _NakedSelectState<T> extends State<NakedSelect<T>>
                 );
               },
             ),
-          ),
+          );
+
+    Widget result = widget.excludeSemantics
+        ? selectWidget
+        : Semantics(
+            container: true,
+            enabled: widget.enabled,
+            button: true,
+            focusable: true,
+            expanded: _isOpen,
+            label: widget.semanticLabel,
+            value: semanticsValue,
+            onTap: widget.enabled ? _toggle : null,
+            child: selectWidget,
+          );
+
+    return Shortcuts(
+      shortcuts: NakedIntentActions.select.shortcuts,
+      child: Actions(
+        actions: NakedIntentActions.select.actions(
+          onDismiss: () => _menuController.close(),
+          onOpenOverlay: () => _menuController.open(),
         ),
+        child: result,
       ),
     );
   }

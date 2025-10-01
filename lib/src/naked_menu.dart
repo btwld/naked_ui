@@ -129,12 +129,6 @@ class NakedMenuItem<T> extends OverlayItem<T, NakedMenuItemState<T>> {
   /// the menu contains interactive content.
   final bool closeOnActivate;
 
-  /// Handles activation of this menu item.
-  ///
-  /// Gracefully handles missing scope using null-safe operators.
-  /// This allows NakedMenuItem to function as a basic button
-  /// even when not used within a NakedMenu context, following
-  /// Material's MenuItemButton pattern of graceful degradation.
   void _handleActivation(_NakedMenuScope<T>? menu) {
     menu?.onSelected?.call(value);
     if (closeOnActivate) menu?.controller.close();
@@ -142,21 +136,14 @@ class NakedMenuItem<T> extends OverlayItem<T, NakedMenuItemState<T>> {
 
   @override
   Widget build(BuildContext context) {
-    // Use maybeOf instead of of to handle InheritedWidget timing gracefully.
-    // This follows Material's MenuItemButton pattern where scope may not be
-    // available during the same build phase when it's being created.
-    // The scope is created in overlayBuilder and may not be fully established
-    // in the widget tree when NakedMenuItem builds in the same cycle.
     final scope = _NakedMenuScope.maybeOf<T>(context);
 
-    final VoidCallback? onPressed = enabled
-        ? () => _handleActivation(scope)
-        : null;
+    final VoidCallback? onPressed =
+        enabled ? () => _handleActivation(scope) : null;
 
     return buildButton(
       onPressed: onPressed,
       effectiveEnabled: enabled,
-
       mapStates: (states) =>
           NakedMenuItemState<T>(states: states, value: value),
     );
@@ -227,6 +214,7 @@ class NakedMenu<T> extends StatefulWidget {
     this.closeOnClickOutside = true,
     this.triggerFocusNode,
     this.positioning = const OverlayPositionConfig(),
+    this.excludeSemantics = false,
   });
 
   /// Type alias for [NakedMenuItem] for cleaner API access.
@@ -276,6 +264,11 @@ class NakedMenu<T> extends StatefulWidget {
   /// Overlay positioning configuration.
   final OverlayPositionConfig positioning;
 
+  /// Whether to exclude this widget from the semantic tree.
+  ///
+  /// When true, the widget and its children are hidden from accessibility services.
+  final bool excludeSemantics;
+
   @override
   State<NakedMenu<T>> createState() => _NakedMenuState<T>();
 }
@@ -307,6 +300,28 @@ class _NakedMenuState<T> extends State<NakedMenu<T>>
 
   @override
   Widget build(BuildContext context) {
+    Widget button = NakedButton(
+      onPressed: _toggle,
+      focusNode: widget.triggerFocusNode,
+      child: widget.child,
+      builder: (context, buttonState, child) {
+        final menuState = NakedMenuState(
+          states: buttonState.states,
+          isOpen: _isOpen,
+        );
+
+        return NakedStateScopeBuilder(
+          value: menuState,
+          child: widget.child,
+          builder: widget.builder,
+        );
+      },
+    );
+
+    Widget menuChild = widget.excludeSemantics
+        ? button
+        : Semantics(toggled: _isOpen, child: button);
+
     return AnchoredOverlayShell(
       controller: widget.controller,
       overlayBuilder: (context, info) {
@@ -327,26 +342,7 @@ class _NakedMenuState<T> extends State<NakedMenu<T>>
       closeOnClickOutside: widget.closeOnClickOutside,
       triggerFocusNode: widget.triggerFocusNode,
       positioning: widget.positioning,
-      child: Semantics(
-        toggled: _isOpen,
-        child: NakedButton(
-          onPressed: _toggle,
-          focusNode: widget.triggerFocusNode,
-          child: widget.child,
-          builder: (context, buttonState, child) {
-            final menuState = NakedMenuState(
-              states: buttonState.states,
-              isOpen: _isOpen,
-            );
-
-            return NakedStateScopeBuilder(
-              value: menuState,
-              child: widget.child,
-              builder: widget.builder,
-            );
-          },
-        ),
-      ),
+      child: menuChild,
     );
   }
 }
