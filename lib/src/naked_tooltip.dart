@@ -100,6 +100,7 @@ class NakedTooltip extends StatefulWidget {
     this.onOpenRequested,
     this.onCloseRequested,
     this.semanticsLabel,
+    this.excludeSemantics = false,
   });
 
   /// See also:
@@ -131,15 +132,20 @@ class NakedTooltip extends StatefulWidget {
 
   /// Called when a request is made to open the tooltip.
   ///
-  /// This callback allows you to customize the opening behavior, such as
-  /// adding animations or delays. Call `showOverlay` to actually show the tooltip.
+  /// Allows customizing opening behavior with animations or delays.
+  /// Call the provided callback to show the tooltip.
   final RawMenuAnchorOpenRequestedCallback? onOpenRequested;
 
   /// Called when a request is made to close the tooltip.
   ///
-  /// This callback allows you to customize the closing behavior, such as
-  /// adding animations or delays. Call `hideOverlay` to actually hide the tooltip.
+  /// Allows customizing closing behavior with animations or delays.
+  /// Call the provided callback to hide the tooltip.
   final RawMenuAnchorCloseRequestedCallback? onCloseRequested;
+
+  /// Whether to exclude this widget from the semantic tree.
+  ///
+  /// When true, the widget and its children are hidden from accessibility services.
+  final bool excludeSemantics;
 
   @override
   State<NakedTooltip> createState() => _NakedTooltipState();
@@ -185,8 +191,22 @@ class _NakedTooltipState extends State<NakedTooltip>
 
   @override
   Widget build(BuildContext context) {
+    Widget tooltipContent = MouseRegion(
+      onEnter: _handleMouseEnter,
+      onExit: _handleMouseExit,
+      child: widget.child,
+    );
+
+    Widget tooltipChild = widget.excludeSemantics
+        ? tooltipContent
+        : Semantics(
+            container: true,
+            tooltip: widget.semanticsLabel,
+            child: tooltipContent,
+          );
+
     return RawMenuAnchor(
-      consumeOutsideTaps: false, // Do not consume taps for tooltips
+      consumeOutsideTaps: false,
       onOpen: _handleOpen,
       onClose: _handleClose,
       onOpenRequested: widget.onOpenRequested ?? (_, show) => show(),
@@ -197,15 +217,7 @@ class _NakedTooltipState extends State<NakedTooltip>
         positioning: widget.positioning,
         child: widget.overlayBuilder(context, info),
       ),
-      child: Semantics(
-        container: true,
-        tooltip: widget.semanticsLabel,
-        child: MouseRegion(
-          onEnter: _handleMouseEnter,
-          onExit: _handleMouseExit,
-          child: widget.child,
-        ),
-      ),
+      child: tooltipChild,
     );
   }
 }

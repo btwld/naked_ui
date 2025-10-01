@@ -170,7 +170,6 @@ class NakedTabs extends StatelessWidget {
   Widget build(BuildContext context) {
     assert(_effectiveSelectedTabId.isNotEmpty, 'selectedTabId cannot be empty');
 
-    // Headless group-level ESC handling using default ESC -> DismissIntent mapping.
     return Actions(
       actions: {
         DismissIntent: CallbackAction<DismissIntent>(
@@ -279,6 +278,7 @@ class NakedTab extends StatefulWidget {
     this.onPressChange,
     this.builder,
     this.semanticLabel,
+    this.excludeSemantics = false,
   });
 
   /// The tab trigger content when not using [builder].
@@ -317,6 +317,11 @@ class NakedTab extends StatefulWidget {
   /// Whether to autofocus.
   final bool autofocus;
 
+  /// Whether to exclude this widget from the semantic tree.
+  ///
+  /// When true, the widget and its children are hidden from accessibility services.
+  final bool excludeSemantics;
+
   @override
   State<NakedTab> createState() => _NakedTabState();
 }
@@ -339,7 +344,6 @@ class _NakedTabState extends State<NakedTab>
   void _handleTap() {
     if (!_isEnabled) return;
     if (widget.enableFeedback) HapticFeedback.selectionClick();
-    // Selection follows focus anyway; tap still ensures we're focused.
     if (effectiveFocusNode.canRequestFocus) {
       effectiveFocusNode.requestFocus();
     }
@@ -393,8 +397,6 @@ class _NakedTabState extends State<NakedTab>
     super.didChangeDependencies();
     _scope = NakedTabsScope.of(context);
     _isEnabled = widget.enabled && _scope.enabled;
-
-    // Disabled tabs shouldn’t be focusable or in traversal.
     _applyFocusability();
   }
 
@@ -413,7 +415,6 @@ class _NakedTabState extends State<NakedTab>
     assert(widget.tabId.isNotEmpty, 'tabId cannot be empty');
 
     final isSelected = _scope.isTabSelected(widget.tabId);
-    // Maintain states synced for builder consumers.
     updateDisabledState(!_isEnabled);
     updateSelectedState(isSelected, null);
 
@@ -425,20 +426,47 @@ class _NakedTabState extends State<NakedTab>
       builder: widget.builder,
     );
 
+    Widget gestureDetector = GestureDetector(
+      onTapDown: _isEnabled
+          ? (_) => updatePressState(true, widget.onPressChange)
+          : null,
+      onTapUp: _isEnabled
+          ? (_) => updatePressState(false, widget.onPressChange)
+          : null,
+      onTap: _isEnabled ? _handleTap : null,
+      onTapCancel: _isEnabled
+          ? () => updatePressState(false, widget.onPressChange)
+          : null,
+      behavior: HitTestBehavior.opaque,
+      excludeFromSemantics: true,
+      child: wrappedContent,
+    );
+
+    Widget tabChild = widget.excludeSemantics
+        ? gestureDetector
+        : Semantics(
+            container: true,
+            enabled: _isEnabled,
+            selected: isSelected,
+            button: true,
+            label: widget.semanticLabel,
+            onTap: _isEnabled ? _handleTap : null,
+            child: gestureDetector,
+          );
+
     return NakedFocusableDetector(
       enabled: _isEnabled,
       autofocus: widget.autofocus,
       onFocusChange: (f) {
         updateFocusState(f, widget.onFocusChange);
         if (f && _isEnabled) {
-          _scope.selectTab(widget.tabId); // selection follows focus
+          _scope.selectTab(widget.tabId);
         }
-        setState(() {}); // update focused state for builder
+        setState(() {});
       },
       onHoverChange: (h) => updateHoverState(h, widget.onHoverChange),
       focusNode: effectiveFocusNode,
       mouseCursor: _isEnabled ? widget.mouseCursor : SystemMouseCursors.basic,
-      // Enter/Space still activate; focus change selects too (below).
       shortcuts: NakedIntentActions.tab.shortcuts,
       actions: NakedIntentActions.tab.actions(
         onActivate: () => _handleTap(),
@@ -446,30 +474,7 @@ class _NakedTabState extends State<NakedTab>
         onFirstFocus: () => _focusFirstTab(),
         onLastFocus: () => _focusLastTab(),
       ),
-      child: Semantics(
-        container: true,
-        enabled: _isEnabled,
-        selected: isSelected,
-        button: true,
-        label: widget.semanticLabel,
-        onTap: _isEnabled ? _handleTap : null,
-        child: GestureDetector(
-          // semantics provided above
-          onTapDown: _isEnabled
-              ? (_) => updatePressState(true, widget.onPressChange)
-              : null,
-          onTapUp: _isEnabled
-              ? (_) => updatePressState(false, widget.onPressChange)
-              : null,
-          onTap: _isEnabled ? _handleTap : null,
-          onTapCancel: _isEnabled
-              ? () => updatePressState(false, widget.onPressChange)
-              : null,
-          behavior: HitTestBehavior.opaque,
-          excludeFromSemantics: true,
-          child: wrappedContent,
-        ),
-      ),
+      child: tabChild,
     );
   }
 }
@@ -508,7 +513,6 @@ class NakedTabView extends StatelessWidget {
       return const SizedBox.shrink();
     }
 
-    // When hidden: remove from traversal; keep subtree alive if maintainState=true.
     return ExcludeFocus(
       excluding: !isSelected,
       child: Visibility(
