@@ -21,8 +21,12 @@ import 'utilities/naked_focusable_detector.dart';
 import 'utilities/naked_state_scope.dart';
 import 'utilities/state.dart';
 
-typedef NakedTextFieldBuilder<T extends NakedState> =
-    Widget Function(BuildContext context, T value, Widget editableText);
+typedef NakedTextFieldBuilder =
+    Widget Function(
+      BuildContext context,
+      NakedTextFieldState value,
+      Widget editableText,
+    );
 
 /// Immutable view passed to [NakedTextField.builder].
 class NakedTextFieldState extends NakedState {
