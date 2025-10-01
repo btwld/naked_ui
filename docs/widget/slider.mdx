@@ -178,16 +178,16 @@ For complex designs, you can use CustomPaint for pixel-perfect control. Check ou
 const NakedSlider({
   Key? key,
   this.child,
-  this.builder,              // Recommended approach
+  this.builder,
   required this.value,
   this.min = 0.0,
   this.max = 1.0,
   this.onChanged,
   this.onDragStart,
   this.onDragEnd,
-  this.onHoverChange,        // Legacy - prefer builder
+  this.onHoverChange,
   this.onDragChange,
-  this.onFocusChange,        // Legacy - prefer builder
+  this.onFocusChange,
   this.enabled = true,
   this.mouseCursor = SystemMouseCursors.click,
   this.enableFeedback = true,
@@ -227,19 +227,17 @@ Called when the user starts dragging the slider.
 #### onDragEnd → `ValueChanged<double>?`
 Called when the user ends dragging the slider.
 
-#### onHoverChange → `ValueChanged<bool>?` (Legacy)
-Called when hover state changes. Provides the current hover state (true when hovered, false otherwise). **Note**: This is legacy - prefer using the `builder` pattern to access `state.isHovered`.
+#### onHoverChange → `ValueChanged<bool>?`
+Called when hover state changes. Provides the current hover state (true when hovered, false otherwise).
 
 #### onDragChange → `ValueChanged<bool>?`
 Called when dragging state changes. Provides the current dragging state (true when dragging, false otherwise).
 
-#### onFocusChange → `ValueChanged<bool>?` (Legacy)
-Called when focus state changes. Provides the current focus state (true when focused, false otherwise). **Note**: This is legacy - prefer using the `builder` pattern to access `state.isFocused`.
+#### onFocusChange → `ValueChanged<bool>?`
+Called when focus state changes. Provides the current focus state (true when focused, false otherwise).
 
 #### enabled → `bool`
 Whether the slider is enabled. When true, the slider will respond to user interaction. Defaults to true.
-
-
 
 #### focusNode → `FocusNode?`
 Optional focus node to control focus behavior.

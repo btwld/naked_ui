@@ -213,10 +213,10 @@ const NakedTab({
   this.enableFeedback = true,
   this.focusNode,
   this.autofocus = false,
-  this.onFocusChange,    // Legacy - prefer builder
-  this.onHoverChange,    // Legacy - prefer builder
-  this.onPressChange,    // Legacy - prefer builder
-  this.builder,          // Recommended approach
+  this.onFocusChange,
+  this.onHoverChange,
+  this.onPressChange,
+  this.builder,
   this.semanticLabel,
 })
 ```
@@ -224,7 +224,7 @@ const NakedTab({
 - Provide either `child` or `builder`
 - `builder` → `ValueWidgetBuilder<NakedTabState>?`
 - `semanticLabel` → override accessible name
-- Legacy interaction callbacks: `onFocusChange`, `onHoverChange`, `onPressChange` (prefer `builder` pattern)
+- interaction callbacks: `onFocusChange`, `onHoverChange`, `onPressChange`
 
 ### NakedTabView
 

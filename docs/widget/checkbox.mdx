@@ -100,10 +100,10 @@ const NakedCheckbox({
   this.enableFeedback = true,
   this.focusNode,
   this.autofocus = false,
-  this.onFocusChange,    // Legacy - prefer builder
-  this.onHoverChange,    // Legacy - prefer builder
-  this.onPressChange,    // Legacy - prefer builder
-  this.builder,          // Recommended approach
+  this.onFocusChange,
+  this.onHoverChange,
+  this.onPressChange,
+  this.builder,
   this.semanticLabel,
 })
 ```
@@ -115,7 +115,7 @@ const NakedCheckbox({
 - `onChanged` → receive the next value; omit to render a disabled checkbox
 - `builder` → `ValueWidgetBuilder<NakedCheckboxState>?` for dynamic visuals
 - `child` → static child when you do not need the builder
-- Legacy interaction callbacks: `onFocusChange`, `onHoverChange`, `onPressChange` (prefer `builder` pattern)
+- interaction callbacks: `onFocusChange`, `onHoverChange`, `onPressChange`
 - `semanticLabel` → accessible name announced by screen readers
 
 ## Accessibility Notes

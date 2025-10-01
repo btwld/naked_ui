@@ -148,10 +148,10 @@ const NakedRadio<T>({
   this.focusNode,
   this.autofocus = false,
   this.toggleable = false,
-  this.onFocusChange,    // Legacy - prefer builder
-  this.onHoverChange,    // Legacy - prefer builder
-  this.onPressChange,    // Legacy - prefer builder
-  this.builder,          // Recommended approach
+  this.onFocusChange,
+  this.onHoverChange,
+  this.onPressChange,
+  this.builder,
   this.groupRegistry,
 })
 ```
@@ -162,7 +162,7 @@ Key notes:
 - `builder` → `ValueWidgetBuilder<NakedRadioState<T>>?`
 - `toggleable` lets the selected radio clear the group when activated again
 - Pass `focusNode` to integrate with external focus management
-- Legacy interaction callbacks: `onPressChange`/`onHoverChange`/`onFocusChange` (prefer `builder` pattern)
+- interaction callbacks: `onPressChange`/`onHoverChange`/`onFocusChange` (prefer `builder` pattern)
 
 ## Accessibility Tips
 

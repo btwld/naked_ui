@@ -198,9 +198,9 @@ const NakedAccordion({
   this.enableFeedback = true,
   this.autofocus = false,
   this.focusNode,
-  this.onFocusChange,           // Legacy - prefer builder
-  this.onHoverChange,           // Legacy - prefer builder
-  this.onPressChange,           // Legacy - prefer builder
+  this.onFocusChange,
+  this.onHoverChange,
+  this.onPressChange,
   this.semanticLabel,
 })
 ```
@@ -208,7 +208,7 @@ const NakedAccordion({
 - `builder` → `NakedAccordionTriggerBuilder<T>` receiving `NakedAccordionItemState<T>`
 - `child` → panel content displayed when expanded
 - `value` → unique identifier tracked by the controller
-- Legacy interaction callbacks: `onFocusChange`, `onHoverChange`, `onPressChange` (prefer `builder` pattern to access `state.isHovered`, etc.)
+- interaction callbacks: `onFocusChange`, `onHoverChange`, `onPressChange`
 - `transitionBuilder` lets you wrap the panel with your own show/hide animation
 - `enabled` / `mouseCursor` / `enableFeedback` provide interaction affordance hooks
 

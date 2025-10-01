@@ -160,10 +160,10 @@ const NakedToggle({
   this.enableFeedback = true,
   this.focusNode,
   this.autofocus = false,
-  this.onFocusChange,    // Legacy - prefer builder
-  this.onHoverChange,    // Legacy - prefer builder
-  this.onPressChange,    // Legacy - prefer builder
-  this.builder,          // Recommended approach
+  this.onFocusChange,
+  this.onHoverChange,
+  this.onPressChange,
+  this.builder,
   this.semanticLabel,
   this.asSwitch = false,
 })
@@ -180,7 +180,7 @@ const NakedToggle({
 - `mouseCursor` → override the hover cursor when the toggle is enabled
 - `enableFeedback` → `bool`: haptic/audio feedback on activation (default `true`)
 - `focusNode`, `autofocus`: focus management options
-- Legacy interaction callbacks: `onFocusChange`, `onHoverChange`, `onPressChange` (prefer `builder` pattern)
+- interaction callbacks: `onFocusChange`, `onHoverChange`, `onPressChange`
 - `semanticLabel` → `String?`: accessibility label, especially important when no text label is visible
 
 ## Toggle Groups & Segmented Controls
@@ -280,9 +280,9 @@ const NakedToggleOption({
   bool enableFeedback = true,
   FocusNode? focusNode,
   bool autofocus = false,
-  ValueChanged<bool>? onFocusChange,    // Legacy - prefer builder
-  ValueChanged<bool>? onHoverChange,    // Legacy - prefer builder
-  ValueChanged<bool>? onPressChange,    // Legacy - prefer builder
+  ValueChanged<bool>? onFocusChange,
+  ValueChanged<bool>? onHoverChange,
+  ValueChanged<bool>? onPressChange,
   String? semanticLabel,
 })
 ```

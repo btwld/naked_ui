@@ -157,9 +157,9 @@ const NakedTextField({
   this.canRequestFocus = true,
   this.spellCheckConfiguration,
   this.magnifierConfiguration,
-  this.onHoverChange,        // Legacy - prefer builder
-  this.onFocusChange,        // Legacy - prefer builder
-  this.onPressChange,        // Legacy - prefer builder
+  this.onHoverChange,
+  this.onFocusChange,
+  this.onPressChange,
   this.style,
   required this.builder,
   this.ignorePointers,
@@ -179,9 +179,9 @@ const NakedTextField({
 
 ## Event Hooks
 
-- `onHoverChange`, `onFocusChange`, `onPressChange` → legacy interaction callbacks (prefer `builder` pattern to access `state.isHovered`, `state.isFocused`, etc.)
 - `onTap`, `onTapChange`, `onTapOutside`, `onTapUpOutside` → fine-grained gesture hooks
 - `onChanged`, `onSubmitted`, `onEditingComplete` → forward the underlying `EditableText` callbacks
+- `onHoverChange`, `onFocusChange`, `onPressChange` → interaction callbacks
 
 ## Accessibility & Semantics
 

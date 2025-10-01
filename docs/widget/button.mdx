@@ -49,82 +49,6 @@ class ButtonExample extends StatelessWidget {
 ```
 </CodeGroup>
 
-<CodeGroup title="Callback Pattern (Legacy)" defaultLanguage="dart">
-```dart
-import 'package:flutter/material.dart';
-import 'package:naked_ui/naked_ui.dart';
-
-class ButtonExample extends StatefulWidget {
-  const ButtonExample({super.key});
-
-  @override
-  State<ButtonExample> createState() => _ButtonExampleState();
-}
-
-class _ButtonExampleState extends State<ButtonExample> {
-  bool _isHovered = false;
-  bool _isPressed = false;
-  bool _isFocused = false;
-
-  Color get backgroundColor {
-    const baseColor = Color(0xFF3D3D3D);
-    if (_isPressed) {
-      return baseColor.withValues(alpha: 0.8);
-    }
-    if (_isHovered) {
-      return baseColor.withValues(alpha: 0.9);
-    }
-    return baseColor;
-  }
-
-  double get scale {
-    if (_isPressed) {
-      return 0.95;
-    }
-    return 1;
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return NakedButton(
-      onPressed: () {
-        debugPrint('Button pressed!');
-      },
-      onHoverChange: (isHovered) => setState(() => _isHovered = isHovered),
-      onPressChange: (isPressed) => setState(() => _isPressed = isPressed),
-      onFocusChange: (isFocused) => setState(() => _isFocused = isFocused),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 2),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(
-            color: _isFocused ? Colors.black : Colors.transparent,
-            width: 1,
-          ),
-        ),
-        child: AnimatedScale(
-          scale: scale,
-          duration: const Duration(milliseconds: 200),
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-            decoration: BoxDecoration(
-              color: backgroundColor,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: const Text(
-              'Button',
-              style: TextStyle(color: Colors.white),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-```
-</CodeGroup>
-
 <CodeGroup title="Icon Button with Tooltip" defaultLanguage="dart">
 ```dart
 import 'package:flutter/material.dart';
@@ -239,10 +163,10 @@ const NakedButton({
   this.enableFeedback = true,
   this.focusNode,
   this.autofocus = false,
-  this.onFocusChange,    // Legacy - prefer builder
-  this.onHoverChange,    // Legacy - prefer builder
-  this.onPressChange,    // Legacy - prefer builder
-  this.builder,          // Recommended approach
+  this.onFocusChange,
+  this.onHoverChange,
+  this.onPressChange,
+  this.builder,
   this.focusOnPress = false,
   this.tooltip,
   this.semanticLabel,
@@ -260,20 +184,17 @@ Called when the button is tapped or activated via keyboard. If null, the button 
 #### onLongPress → `VoidCallback?`
 Called when the button is long pressed.
 
-#### onHoverChange → `ValueChanged<bool>?` (Legacy)
+#### onHoverChange → `ValueChanged<bool>?`
 Called when hover state changes. Provides the current hover state (true when hovered, false otherwise). **Note**: This is legacy - prefer using the `builder` pattern to access `state.isHovered`.
 
-#### onPressChange → `ValueChanged<bool>?` (Legacy)
+#### onPressChange → `ValueChanged<bool>?`
 Called when pressed state changes. Provides the current pressed state (true when pressed, false otherwise). **Note**: This is legacy - prefer using the `builder` pattern to access `state.isPressed`.
 
-#### onFocusChange → `ValueChanged<bool>?` (Legacy)
+#### onFocusChange → `ValueChanged<bool>?`
 Called when focus state changes. Provides the current focus state (true when focused, false otherwise). **Note**: This is legacy - prefer using the `builder` pattern to access `state.isFocused`.
-
 
 #### enabled → `bool`
 Whether the button is enabled. Defaults to true.
-
-
 
 #### mouseCursor → `MouseCursor`
 The cursor to show when hovering over the button. Defaults to SystemMouseCursors.click.
