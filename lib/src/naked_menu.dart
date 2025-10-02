@@ -8,8 +8,6 @@ import 'utilities/naked_state_scope.dart';
 import 'utilities/positioning.dart';
 import 'utilities/state.dart';
 
-typedef NakedMenuController = MenuController;
-
 /// Immutable view passed to [NakedMenu.builder].
 class NakedMenuState extends NakedState {
   /// Whether the overlay is currently open.
@@ -179,7 +177,7 @@ class NakedMenuItem<T> extends OverlayItem<T, NakedMenuItemState<T>> {
 ///
 /// ### Example Usage
 /// ```dart
-/// final menuController = NakedMenuController<String>();
+/// final menuController = MenuController();
 /// NakedMenu<String>(
 ///   controller: menuController,
 ///   builder: (context, state) => Text('Menu'),
@@ -230,7 +228,7 @@ class NakedMenu<T> extends StatefulWidget {
   final RawMenuAnchorOverlayBuilder overlayBuilder;
 
   /// Controls show/hide of the underlying [RawMenuAnchor] and manages selection state.
-  final NakedMenuController controller;
+  final MenuController controller;
 
   /// Called when an item is selected.
   ///
