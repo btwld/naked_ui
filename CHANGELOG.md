@@ -1,3 +1,8 @@
+## 0.2.0-beta.5
+
+- fix: NakedAccordionItemState scope on content
+- refactor: remove NakedMenuController typedef
+
 ## 0.2.0-beta.4
 
 - docs: refine documentation for developer clarity
