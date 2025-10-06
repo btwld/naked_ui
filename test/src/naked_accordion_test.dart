@@ -15,18 +15,20 @@ void main() {
       return NakedAccordionGroup<String>(
         controller: NakedAccordionController(),
         initialExpandedValues: initialExpandedValues,
-        children: [
-          NakedAccordion<String>(
-            value: 'item1',
-            builder: (_, itemState) => const Text('Trigger 1'),
-            child: const Text('Content 1'),
-          ),
-          NakedAccordion<String>(
-            value: 'item2',
-            builder: (_, itemState) => const Text('Trigger 2'),
-            child: const Text('Content 2'),
-          ),
-        ],
+        child: Column(
+          children: [
+            NakedAccordion<String>(
+              value: 'item1',
+              builder: (_, itemState) => const Text('Trigger 1'),
+              child: const Text('Content 1'),
+            ),
+            NakedAccordion<String>(
+              value: 'item2',
+              builder: (_, itemState) => const Text('Trigger 2'),
+              child: const Text('Content 2'),
+            ),
+          ],
+        ),
       );
     }
 
@@ -90,18 +92,20 @@ void main() {
       await tester.pumpMaterialWidget(
         NakedAccordionGroup<String>(
           controller: controller,
-          children: [
-            NakedAccordion<String>(
-              value: 'item1',
-              builder: (_, __) => const Text('Trigger 1'),
-              child: Builder(
-                builder: (context) {
-                  capturedState = NakedAccordionItemState.of(context);
-                  return const Text('Content 1');
-                },
+          child: Column(
+            children: [
+              NakedAccordion<String>(
+                value: 'item1',
+                builder: (_, __) => const Text('Trigger 1'),
+                child: Builder(
+                  builder: (context) {
+                    capturedState = NakedAccordionItemState.of(context);
+                    return const Text('Content 1');
+                  },
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       );
       controller.open('item1');
@@ -122,16 +126,18 @@ void main() {
     }) {
       return NakedAccordionGroup<String>(
         controller: NakedAccordionController<String>(),
-        children: [
-          NakedAccordion<String>(
-            value: 'item1',
-            builder: (_, itemState) => const Text('Trigger 1'),
-            onFocusChange: (focused) => focusState = focused,
-            autofocus: autofocus,
-            focusNode: focusNode,
-            child: const Text('Content 1'),
-          ),
-        ],
+        child: Column(
+          children: [
+            NakedAccordion<String>(
+              value: 'item1',
+              builder: (_, itemState) => const Text('Trigger 1'),
+              onFocusChange: (focused) => focusState = focused,
+              autofocus: autofocus,
+              focusNode: focusNode,
+              child: const Text('Content 1'),
+            ),
+          ],
+        ),
       );
     }
 
@@ -161,15 +167,17 @@ void main() {
       await tester.pumpMaterialWidget(
         NakedAccordionGroup<String>(
           controller: NakedAccordionController<String>(),
-          children: [
-            NakedAccordion<String>(
-              value: 'item1',
-              builder: (_, itemState) => const Text('Trigger 1'),
-              onFocusChange: (focused) => focusState = focused,
-              autofocus: true,
-              child: const Text('Content 1'),
-            ),
-          ],
+          child: Column(
+            children: [
+              NakedAccordion<String>(
+                value: 'item1',
+                builder: (_, itemState) => const Text('Trigger 1'),
+                onFocusChange: (focused) => focusState = focused,
+                autofocus: true,
+                child: const Text('Content 1'),
+              ),
+            ],
+          ),
         ),
       );
 
@@ -188,28 +196,30 @@ void main() {
     Widget buildControlledAccordion() {
       return NakedAccordionGroup<String>(
         controller: controller,
-        children: [
-          NakedAccordion<String>(
-            value: 'item1',
-            builder: (context, itemState) {
-              return GestureDetector(
-                onTap: () {},
-                child: Text(itemState.isExpanded ? 'Close 1' : 'Open 1'),
-              );
-            },
-            child: const Text('Content 1'),
-          ),
-          NakedAccordion<String>(
-            value: 'item2',
-            builder: (context, itemState) {
-              return GestureDetector(
-                onTap: () {},
-                child: Text(itemState.isExpanded ? 'Close 2' : 'Open 2'),
-              );
-            },
-            child: const Text('Content 2'),
-          ),
-        ],
+        child: Column(
+          children: [
+            NakedAccordion<String>(
+              value: 'item1',
+              builder: (context, itemState) {
+                return GestureDetector(
+                  onTap: () {},
+                  child: Text(itemState.isExpanded ? 'Close 1' : 'Open 1'),
+                );
+              },
+              child: const Text('Content 1'),
+            ),
+            NakedAccordion<String>(
+              value: 'item2',
+              builder: (context, itemState) {
+                return GestureDetector(
+                  onTap: () {},
+                  child: Text(itemState.isExpanded ? 'Close 2' : 'Open 2'),
+                );
+              },
+              child: const Text('Content 2'),
+            ),
+          ],
+        ),
       );
     }
 
@@ -396,20 +406,22 @@ void main() {
     Widget buildTriggeredAccordion() {
       return NakedAccordionGroup<String>(
         controller: controller,
-        children: [
-          NakedAccordion<String>(
-            value: 'item1',
-            builder: (context, itemState) =>
-                Text(itemState.isExpanded ? 'Close 1' : 'Open 1'),
-            child: const Text('Content 1'),
-          ),
-          NakedAccordion<String>(
-            value: 'item2',
-            builder: (context, itemState) =>
-                Text(itemState.isExpanded ? 'Close 2' : 'Open 2'),
-            child: const Text('Content 2'),
-          ),
-        ],
+        child: Column(
+          children: [
+            NakedAccordion<String>(
+              value: 'item1',
+              builder: (context, itemState) =>
+                  Text(itemState.isExpanded ? 'Close 1' : 'Open 1'),
+              child: const Text('Content 1'),
+            ),
+            NakedAccordion<String>(
+              value: 'item2',
+              builder: (context, itemState) =>
+                  Text(itemState.isExpanded ? 'Close 2' : 'Open 2'),
+              child: const Text('Content 2'),
+            ),
+          ],
+        ),
       );
     }
 

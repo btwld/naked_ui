@@ -315,13 +315,13 @@ class NakedAccordionScope<T> extends InheritedWidget {
 class NakedAccordionGroup<T> extends StatefulWidget {
   const NakedAccordionGroup({
     super.key,
-    required this.children,
+    required this.child,
     required this.controller,
     this.initialExpandedValues = const [],
   });
 
   /// Accordion items to render.
-  final List<Widget> children;
+  final Widget child;
 
   /// Controller that manages expanded values.
   final NakedAccordionController<T> controller;
@@ -374,12 +374,7 @@ class _NakedAccordionGroupState<T> extends State<NakedAccordionGroup<T>> {
           ),
           child: NakedAccordionScope<T>(
             controller: _controller,
-            child: FocusTraversalGroup(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: widget.children,
-              ),
-            ),
+            child: FocusTraversalGroup(child: widget.child),
           ),
         );
       },
