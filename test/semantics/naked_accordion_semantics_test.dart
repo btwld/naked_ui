@@ -38,14 +38,16 @@ void main() {
         _buildTestApp(
           NakedAccordionGroup<String>(
             controller: NakedAccordionController<String>(),
-            children: [
-              NakedAccordion<String>(
-                value: 'item',
-                semanticLabel: 'Header',
-                builder: (context, itemState) => const Text('Header'),
-                child: const Text('Body'),
-              ),
-            ],
+            child: Column(
+              children: [
+                NakedAccordion<String>(
+                  value: 'item',
+                  semanticLabel: 'Header',
+                  builder: (context, itemState) => const Text('Header'),
+                  child: const Text('Body'),
+                ),
+              ],
+            ),
           ),
         ),
       );
@@ -66,14 +68,16 @@ void main() {
           NakedAccordionGroup<String>(
             controller: NakedAccordionController<String>(),
             initialExpandedValues: const ['item'],
-            children: [
-              NakedAccordion<String>(
-                value: 'item',
-                semanticLabel: 'Header',
-                builder: (context, itemState) => const Text('Header'),
-                child: const Text('Body'),
-              ),
-            ],
+            child: Column(
+              children: [
+                NakedAccordion<String>(
+                  value: 'item',
+                  semanticLabel: 'Header',
+                  builder: (context, itemState) => const Text('Header'),
+                  child: const Text('Body'),
+                ),
+              ],
+            ),
           ),
         ),
       );

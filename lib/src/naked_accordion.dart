@@ -118,11 +118,11 @@ class NakedAccordionItemState<T> extends NakedState {
 
   /// Returns the nearest [NakedAccordionItemState] of the requested type.
   static NakedAccordionItemState<S> of<S>(BuildContext context) =>
-      NakedState.of(context);
+      NakedState.of<NakedAccordionItemState<S>>(context);
 
   /// Returns the nearest [NakedAccordionItemState] if available.
   static NakedAccordionItemState<S>? maybeOf<S>(BuildContext context) =>
-      NakedState.maybeOf(context);
+      NakedState.maybeOf<NakedAccordionItemState<S>>(context);
 
   /// Returns the [WidgetStatesController] from the nearest scope.
   static WidgetStatesController controllerOf(BuildContext context) =>
@@ -315,13 +315,13 @@ class NakedAccordionScope<T> extends InheritedWidget {
 class NakedAccordionGroup<T> extends StatefulWidget {
   const NakedAccordionGroup({
     super.key,
-    required this.children,
+    required this.child,
     required this.controller,
     this.initialExpandedValues = const [],
   });
 
   /// Accordion items to render.
-  final List<Widget> children;
+  final Widget child;
 
   /// Controller that manages expanded values.
   final NakedAccordionController<T> controller;
@@ -374,12 +374,7 @@ class _NakedAccordionGroupState<T> extends State<NakedAccordionGroup<T>> {
           ),
           child: NakedAccordionScope<T>(
             controller: _controller,
-            child: FocusTraversalGroup(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: widget.children,
-              ),
-            ),
+            child: FocusTraversalGroup(child: widget.child),
           ),
         );
       },
@@ -503,6 +498,22 @@ class _NakedAccordionState<T> extends State<NakedAccordion<T>>
           _toggle(controller);
         }
 
+        final canCollapse =
+            isExpanded && (controller.values.length > controller.min);
+
+        final canExpand =
+            !isExpanded &&
+            (controller.max == null ||
+                controller.values.length < controller.max!);
+
+        final accordionState = NakedAccordionItemState<T>(
+          states: widgetStates,
+          value: widget.value,
+          isExpanded: isExpanded,
+          canCollapse: canCollapse,
+          canExpand: canExpand,
+        );
+
         Widget triggerContent = GestureDetector(
           onTapDown: (widget.enabled && widget.onPressChange != null)
               ? (_) => updatePressState(true, widget.onPressChange)
@@ -517,30 +528,10 @@ class _NakedAccordionState<T> extends State<NakedAccordion<T>>
           behavior: HitTestBehavior.opaque,
           excludeFromSemantics: true,
           child: ExcludeSemantics(
-            child: Builder(
-              builder: (context) {
-                final canCollapse =
-                    isExpanded &&
-                    (controller.values.length > controller.min);
-
-                final canExpand =
-                    !isExpanded &&
-                    (controller.max == null ||
-                        controller.values.length < controller.max!);
-                final accordionState = NakedAccordionItemState<T>(
-                  states: widgetStates,
-                  value: widget.value,
-                  isExpanded: isExpanded,
-                  canCollapse: canCollapse,
-                  canExpand: canExpand,
-                );
-
-                return NakedStateScopeBuilder(
-                  value: accordionState,
-                  builder: (context, accordionState, child) =>
-                      widget.builder(context, accordionState),
-                );
-              },
+            child: NakedStateScopeBuilder(
+              value: accordionState,
+              builder: (context, accordionState, child) =>
+                  widget.builder(context, accordionState),
             ),
           ),
         );
@@ -570,9 +561,13 @@ class _NakedAccordionState<T> extends State<NakedAccordion<T>>
               actions: NakedIntentActions.accordion.actions(onToggle: onTap),
               child: accordionChild,
             ),
-            widget.transitionBuilder != null
-                ? widget.transitionBuilder!(panel)
-                : panel,
+            NakedStateScopeBuilder(
+              value: accordionState,
+              builder: (context, accordionState, child) =>
+                  widget.transitionBuilder != null
+                  ? widget.transitionBuilder!(panel)
+                  : panel,
+            ),
           ],
         );
       },
