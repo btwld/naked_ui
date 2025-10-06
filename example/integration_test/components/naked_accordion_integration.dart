@@ -67,7 +67,7 @@ void main() {
           body: Center(
             child: NakedAccordionGroup<String>(
               controller: controller,
-              children: [
+              child: Column(children: [
                 NakedAccordion<String>(
                   value: 'item1',
                   builder: (context, itemState) => GestureDetector(
@@ -108,7 +108,7 @@ void main() {
                     child: Text('Content 2'),
                   ),
                 ),
-              ],
+              ]),
             ),
           ),
         ),
@@ -147,7 +147,7 @@ void main() {
             child: NakedAccordionGroup<String>(
               controller: controller,
               initialExpandedValues: const ['item1'], // Start with one expanded
-              children: [
+              child: Column(children: [
                 NakedAccordion<String>(
                   value: 'item1',
                   builder: (context, itemState) => GestureDetector(
@@ -170,7 +170,7 @@ void main() {
                   ),
                   child: const Text('Content 2'),
                 ),
-              ],
+              ]),
             ),
           ),
         ),
@@ -207,7 +207,7 @@ void main() {
           body: Center(
             child: NakedAccordionGroup<String>(
               controller: controller,
-              children: [
+              child: Column(children: [
                 NakedAccordion<String>(
                   key: itemKey,
                   value: 'test',
@@ -220,7 +220,7 @@ void main() {
                   ),
                   child: const Text('Test Content'),
                 ),
-              ],
+              ]),
             ),
           ),
         ),
@@ -247,7 +247,7 @@ void main() {
           body: Center(
             child: NakedAccordionGroup<String>(
               controller: controller,
-              children: [
+              child: Column(children: [
                 NakedAccordion<String>(
                   key: itemKey,
                   value: 'keyboard',
@@ -257,7 +257,7 @@ void main() {
                   ),
                   child: const Text('Keyboard Content'),
                 ),
-              ],
+              ]),
             ),
           ),
         ),
@@ -285,19 +285,21 @@ void main() {
           body: Center(
             child: NakedAccordionGroup<String>(
               controller: controller,
-              children: [
-                NakedAccordion<String>(
-                  key: itemKey,
-                  value: 'disabled',
-                  enabled: false,
-                  onHoverChange: (hovered) => hoverChanged = true,
-                  builder: (context, itemState) => Container(
-                    padding: const EdgeInsets.all(12),
-                    child: const Text('Disabled Item'),
+              child: Column(
+                children: [
+                  NakedAccordion<String>(
+                    key: itemKey,
+                    value: 'disabled',
+                    enabled: false,
+                    onHoverChange: (hovered) => hoverChanged = true,
+                    builder: (context, itemState) => Container(
+                      padding: const EdgeInsets.all(12),
+                      child: const Text('Disabled Item'),
+                    ),
+                    child: const Text('Disabled Content'),
                   ),
-                  child: const Text('Disabled Content'),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),

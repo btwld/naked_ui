@@ -56,21 +56,23 @@ class _AccordionExampleState extends State<AccordionExample> {
       child: NakedAccordionGroup<String>(
         controller: _controller,
         initialExpandedValues: const ['1'],
-        children: const [
-          AccordionItem(
-            value: '1',
-            title: 'Section 1',
-            content:
-                'This is the content for section 1. You can put anything here!',
-          ),
-          SizedBox(height: 8),
-          AccordionItem(
-            value: '2',
-            title: 'Section 2',
-            content:
-                'This is the content for section 2. You can put anything here!',
-          ),
-        ],
+        child: const Column(
+          children: [
+            AccordionItem(
+              value: '1',
+              title: 'Section 1',
+              content:
+                  'This is the content for section 1. You can put anything here!',
+            ),
+            SizedBox(height: 8),
+            AccordionItem(
+              value: '2',
+              title: 'Section 2',
+              content:
+                  'This is the content for section 2. You can put anything here!',
+            ),
+          ],
+        ),
       ),
     );
   }
