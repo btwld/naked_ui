@@ -76,6 +76,41 @@ void main() {
         );
       },
     );
+
+    testWidgets('can get NakedAccordionItemState from NakedAccordion.child', (
+      WidgetTester tester,
+    ) async {
+      NakedAccordionItemState<String>? capturedState;
+      final controller = NakedAccordionController<String>();
+      addTearDown(() {
+        controller.dispose();
+      });
+
+      // Expand the item so the child is built
+      await tester.pumpMaterialWidget(
+        NakedAccordionGroup<String>(
+          controller: controller,
+          children: [
+            NakedAccordion<String>(
+              value: 'item1',
+              builder: (_, __) => const Text('Trigger 1'),
+              child: Builder(
+                builder: (context) {
+                  capturedState = NakedAccordionItemState.of(context);
+                  return const Text('Content 1');
+                },
+              ),
+            ),
+          ],
+        ),
+      );
+      controller.open('item1');
+      await tester.pump();
+
+      // Now the child should be built and capturedState should be set
+      expect(capturedState, isNotNull);
+      expect(capturedState!.isExpanded, isTrue);
+    });
   });
 
   group('Focus State', () {
