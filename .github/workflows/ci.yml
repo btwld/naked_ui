@@ -22,21 +22,11 @@ concurrency:
 
 jobs:
   test:
-    name: Run Tests
-    runs-on: ubuntu-latest
-    permissions:
-      pull-requests: write
-    strategy:
-      # Keep running other jobs in the matrix even if one fails.
-      fail-fast: false
-
-    steps:
-      - name: Checkout repository
-        uses: btwld/dart-actions/.github/workflows/ci.yml@main
-        with:
-          min_coverage: 80
-        secrets:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    uses: btwld/dart-actions/.github/workflows/ci.yml@main
+    with:
+      min_coverage: 80
+    secrets:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   integration-tests:
     name: Integration Tests
