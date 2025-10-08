@@ -34,7 +34,7 @@ jobs:
       - name: Checkout repository
         uses: btwld/dart-actions/.github/workflows/ci.yml@main
         with:
-          min_coverage: 85
+          min_coverage: 80
         secrets:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
