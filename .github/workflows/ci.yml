@@ -39,6 +39,7 @@ jobs:
         with:
           channel: 'stable'
           cache: true
+          
 
       - name: Enable macOS desktop
         run: flutter config --enable-macos-desktop
