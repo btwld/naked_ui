@@ -36,6 +36,7 @@ import 'utilities/positioning.dart';
 ///
 ///   @override
 ///   Widget build(BuildContext context) {
+///
 ///     return NakedTooltip(
 ///       semanticsLabel: 'This is a tooltip',
 ///       positioning: const OverlayPositionConfig(
