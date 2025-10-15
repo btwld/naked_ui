@@ -33,9 +33,6 @@ class NakedTextFieldState extends NakedState {
   /// The current text value.
   final String text;
 
-  /// Whether the text field is currently focused.
-  final bool isFocused;
-
   /// Whether the text field has text content.
   final bool hasText;
 
@@ -45,7 +42,6 @@ class NakedTextFieldState extends NakedState {
   NakedTextFieldState({
     required super.states,
     required this.text,
-    required this.isFocused,
     required this.hasText,
     required this.isReadOnly,
   });
@@ -799,9 +795,8 @@ class _NakedTextFieldState extends State<NakedTextField>
     }
 
     final textFieldState = NakedTextFieldState(
-      states: widgetStates,
+      states: {...widgetStates, if (focusNode.hasFocus) WidgetState.focused},
       text: controller.text,
-      isFocused: focusNode.hasFocus,
       hasText: controller.text.isNotEmpty,
       isReadOnly: widget.readOnly,
     );
