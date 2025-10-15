@@ -277,7 +277,7 @@ class NakedTextField extends StatefulWidget {
   /// Whether the field is enabled.
   final bool enabled;
 
-  /// Whether the field is error.
+  /// Whether the field has an error.
   final bool error;
 
   /// Cursor visuals
