@@ -137,6 +137,7 @@ class NakedTextField extends StatefulWidget {
     this.onAppPrivateCommand,
     this.inputFormatters,
     this.enabled = true,
+    this.error = false,
     this.cursorWidth = 2.0,
     this.cursorHeight,
     this.cursorRadius,
@@ -279,6 +280,9 @@ class NakedTextField extends StatefulWidget {
 
   /// Whether the field is enabled.
   final bool enabled;
+
+  /// Whether the field is error.
+  final bool error;
 
   /// Cursor visuals
   final double cursorWidth;
@@ -515,6 +519,7 @@ class _NakedTextFieldState extends State<NakedTextField>
   @override
   void initializeWidgetStates() {
     updateDisabledState(!widget.enabled);
+    updateErrorState(widget.error);
   }
 
   @override
@@ -529,6 +534,7 @@ class _NakedTextFieldState extends State<NakedTextField>
     super.didUpdateWidget(oldWidget);
 
     updateDisabledState(!widget.enabled);
+    updateErrorState(widget.error);
 
     if (widget.controller == null && oldWidget.controller != null) {
       _createLocalController(oldWidget.controller!.value);
