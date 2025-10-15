@@ -152,51 +152,51 @@ void main() {
       expect(capturedState!.states.contains(WidgetState.disabled), isFalse);
     });
 
-  testWidgets('error state tracks error prop', (tester) async {
-    NakedTextFieldState? capturedState;
+    testWidgets('error state tracks error prop', (tester) async {
+      NakedTextFieldState? capturedState;
 
-    // Start with error=false (default)
-    await _pumpApp(
-      tester,
-      child: NakedTextField(
-        builder: (context, state, editable) {
-          capturedState = state;
-          return editable;
-        },
-      ),
-    );
+      // Start with error=false (default)
+      await _pumpApp(
+        tester,
+        child: NakedTextField(
+          builder: (context, state, editable) {
+            capturedState = state;
+            return editable;
+          },
+        ),
+      );
 
-    expect(capturedState, isNotNull);
-    expect(capturedState!.states.contains(WidgetState.error), isFalse);
+      expect(capturedState, isNotNull);
+      expect(capturedState!.states.contains(WidgetState.error), isFalse);
 
-    // Update to error=true
-    await _pumpApp(
-      tester,
-      child: NakedTextField(
-        error: true,
-        builder: (context, state, editable) {
-          capturedState = state;
-          return editable;
-        },
-      ),
-    );
+      // Update to error=true
+      await _pumpApp(
+        tester,
+        child: NakedTextField(
+          error: true,
+          builder: (context, state, editable) {
+            capturedState = state;
+            return editable;
+          },
+        ),
+      );
 
-    expect(capturedState!.states.contains(WidgetState.error), isTrue);
+      expect(capturedState!.states.contains(WidgetState.error), isTrue);
 
-    // Update back to error=false
-    await _pumpApp(
-      tester,
-      child: NakedTextField(
-        error: false,
-        builder: (context, state, editable) {
-          capturedState = state;
-          return editable;
-        },
-      ),
-    );
+      // Update back to error=false
+      await _pumpApp(
+        tester,
+        child: NakedTextField(
+          error: false,
+          builder: (context, state, editable) {
+            capturedState = state;
+            return editable;
+          },
+        ),
+      );
 
-    expect(capturedState!.states.contains(WidgetState.error), isFalse);
-  });
+      expect(capturedState!.states.contains(WidgetState.error), isFalse);
+    });
   });
 
   group('Editing & callbacks', () {
@@ -685,7 +685,6 @@ void main() {
           NakedTextFieldState(
             states: {},
             text: '',
-            isFocused: false,
             hasText: false,
             isReadOnly: false,
           ),
