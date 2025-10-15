@@ -42,16 +42,12 @@ class NakedTextFieldState extends NakedState {
   /// Whether the text field is read-only.
   final bool isReadOnly;
 
-  /// Whether the text field is enabled.
-  final bool isEnabled;
-
   NakedTextFieldState({
     required super.states,
     required this.text,
     required this.isFocused,
     required this.hasText,
     required this.isReadOnly,
-    required this.isEnabled,
   });
 
   /// Returns the nearest [NakedTextFieldState] provided by [NakedStateScope].
@@ -532,6 +528,8 @@ class _NakedTextFieldState extends State<NakedTextField>
   void didUpdateWidget(NakedTextField oldWidget) {
     super.didUpdateWidget(oldWidget);
 
+    updateDisabledState(!widget.enabled);
+
     if (widget.controller == null && oldWidget.controller != null) {
       _createLocalController(oldWidget.controller!.value);
     } else if (widget.controller != null && oldWidget.controller == null) {
@@ -800,7 +798,6 @@ class _NakedTextFieldState extends State<NakedTextField>
       isFocused: focusNode.hasFocus,
       hasText: controller.text.isNotEmpty,
       isReadOnly: widget.readOnly,
-      isEnabled: widget.enabled,
     );
 
     final Widget content = NakedStateScopeBuilder(
