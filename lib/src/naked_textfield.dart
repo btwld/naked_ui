@@ -33,25 +33,17 @@ class NakedTextFieldState extends NakedState {
   /// The current text value.
   final String text;
 
-  /// Whether the text field is currently focused.
-  final bool isFocused;
-
   /// Whether the text field has text content.
   final bool hasText;
 
   /// Whether the text field is read-only.
   final bool isReadOnly;
 
-  /// Whether the text field is enabled.
-  final bool isEnabled;
-
   NakedTextFieldState({
     required super.states,
     required this.text,
-    required this.isFocused,
     required this.hasText,
     required this.isReadOnly,
-    required this.isEnabled,
   });
 
   /// Returns the nearest [NakedTextFieldState] provided by [NakedStateScope].
@@ -141,6 +133,7 @@ class NakedTextField extends StatefulWidget {
     this.onAppPrivateCommand,
     this.inputFormatters,
     this.enabled = true,
+    this.error = false,
     this.cursorWidth = 2.0,
     this.cursorHeight,
     this.cursorRadius,
@@ -283,6 +276,9 @@ class NakedTextField extends StatefulWidget {
 
   /// Whether the field is enabled.
   final bool enabled;
+
+  /// Whether the field has an error.
+  final bool error;
 
   /// Cursor visuals
   final double cursorWidth;
@@ -519,6 +515,7 @@ class _NakedTextFieldState extends State<NakedTextField>
   @override
   void initializeWidgetStates() {
     updateDisabledState(!widget.enabled);
+    updateErrorState(widget.error);
   }
 
   @override
@@ -531,6 +528,9 @@ class _NakedTextFieldState extends State<NakedTextField>
   @override
   void didUpdateWidget(NakedTextField oldWidget) {
     super.didUpdateWidget(oldWidget);
+
+    updateDisabledState(!widget.enabled);
+    updateErrorState(widget.error);
 
     if (widget.controller == null && oldWidget.controller != null) {
       _createLocalController(oldWidget.controller!.value);
@@ -795,12 +795,10 @@ class _NakedTextFieldState extends State<NakedTextField>
     }
 
     final textFieldState = NakedTextFieldState(
-      states: widgetStates,
+      states: {...widgetStates, if (focusNode.hasFocus) WidgetState.focused},
       text: controller.text,
-      isFocused: focusNode.hasFocus,
       hasText: controller.text.isNotEmpty,
       isReadOnly: widget.readOnly,
-      isEnabled: widget.enabled,
     );
 
     final Widget content = NakedStateScopeBuilder(

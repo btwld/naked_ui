@@ -145,6 +145,12 @@ mixin WidgetStatesMixin<T extends StatefulWidget> on State<T> {
     return updateState(WidgetState.disabled, value);
   }
 
+  /// Update error state. Returns true if the state actually changed.
+  @protected
+  bool updateErrorState(bool value) {
+    return updateState(WidgetState.error, value);
+  }
+
   /// Update selected state and fire callback only if the state actually changed.
   @protected
   bool updateSelectedState(bool value, ValueChanged<bool>? onSelectedChange) {
