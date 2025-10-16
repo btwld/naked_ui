@@ -1,0 +1,10 @@
+# .github/workflows/pr-title-check.yml.yml
+name: "Pull Request Title Check"
+
+on:
+  pull_request_target:
+    types: [opened, edited, synchronize]
+
+jobs:
+  check-title:
+    uses: btwld/dart-actions/.github/workflows/pr-title-check.yml@main

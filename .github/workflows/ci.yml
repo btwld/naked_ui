@@ -22,54 +22,9 @@ concurrency:
 
 jobs:
   test:
-    name: Run Tests
-    runs-on: ubuntu-latest
-    permissions:
-      pull-requests: write
-    strategy:
-      # Keep running other jobs in the matrix even if one fails.
-      fail-fast: false
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Set up Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          channel: 'stable'
-          cache: true
-
-      - name: Install root dependencies
-        run: flutter pub get
-
-      - name: Analyze root project
-        run: flutter analyze
-
-      - name: Install DCM
-        uses: CQLabs/setup-dcm@v2
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Run DCM
-        run: dcm analyze .
-        shell: bash
-
-      - name: Run root tests
-        run: flutter test --coverage
-
-      - name: Setup LCOV
-        uses: hrishikesh-kadam/setup-lcov@v1
-        with:
-          ref: v2.3
-
-      - name: Report Code Coverage
-        uses: zgosalvez/github-actions-report-lcov@v4
-        with:
-          coverage-files: coverage/lcov.info
-          minimum-coverage: 80
-          artifact-name: code-coverage-report
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+    uses: btwld/dart-actions/.github/workflows/ci.yml@main
+    with:
+      min_coverage: 80
 
   integration-tests:
     name: Integration Tests
@@ -84,6 +39,7 @@ jobs:
         with:
           channel: 'stable'
           cache: true
+          
 
       - name: Enable macOS desktop
         run: flutter config --enable-macos-desktop
