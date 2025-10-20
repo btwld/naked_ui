@@ -368,8 +368,6 @@ class NakedTextField extends StatefulWidget {
 class _NakedTextFieldState extends State<NakedTextField>
     with RestorationMixin, WidgetStatesMixin<NakedTextField>
     implements TextSelectionGestureDetectorBuilderDelegate, AutofillClient {
-  static const Color _defaultTextColor = Color(0xFF000000);
-  static const Color _defaultDisabledColor = Color(0xFF9E9E9E);
   static const Color _neutralBgCursor = Color(0xFFBDBDBD);
   static const int _iOSHorizontalOffset = -2;
 
@@ -645,11 +643,6 @@ class _NakedTextFieldState extends State<NakedTextField>
   Widget build(BuildContext context) {
     assert(debugCheckHasDirectionality(context));
 
-    final TextStyle baseStyle =
-        (widget.style ?? DefaultTextStyle.of(context).style).copyWith(
-          color: widget.enabled ? _defaultTextColor : _defaultDisabledColor,
-        );
-
     final Brightness keyboardAppearance =
         widget.keyboardAppearance ?? Brightness.light;
 
@@ -685,71 +678,78 @@ class _NakedTextFieldState extends State<NakedTextField>
         widget.magnifierConfiguration ??
         TextMagnifier.adaptiveMagnifierConfiguration;
 
-    Widget editable = EditableText(
-      key: editableTextKey,
-      controller: controller,
-      focusNode: focusNode,
-      readOnly: widget.readOnly || !widget.enabled,
-      obscuringCharacter: widget.obscuringCharacter,
-      obscureText: widget.obscureText,
-      autocorrect: widget.autocorrect,
-      smartDashesType: widget.smartDashesType,
-      smartQuotesType: widget.smartQuotesType,
-      enableSuggestions: widget.enableSuggestions,
-      style: baseStyle,
-      strutStyle: widget.strutStyle,
-      cursorColor: p.cursorColor,
-      backgroundCursorColor: _neutralBgCursor,
-      textAlign: widget.textAlign,
-      textDirection: widget.textDirection,
-      maxLines: widget.maxLines,
-      minLines: widget.minLines,
-      expands: widget.expands,
-      autofocus: widget.autofocus,
-      showCursor: widget.showCursor,
-      showSelectionHandles: _showSelectionHandles,
-      selectionColor: focusNode.hasFocus ? p.selectionColor : null,
-      selectionControls: controls,
-      keyboardType: widget.keyboardType,
-      textInputAction: widget.textInputAction,
-      textCapitalization: widget.textCapitalization,
-      onChanged: widget.onChanged,
-      onEditingComplete: widget.onEditingComplete,
-      onSubmitted: widget.onSubmitted,
-      onAppPrivateCommand: widget.onAppPrivateCommand,
-      onSelectionChanged: _handleSelectionChanged,
-      onSelectionHandleTapped: _handleSelectionHandleTapped,
-      groupId: widget.groupId,
-      onTapOutside: widget.onTapOutside,
-      onTapUpOutside: widget.onTapUpOutside,
-      inputFormatters: formatters,
-      rendererIgnoresPointer: true,
-      cursorWidth: widget.cursorWidth,
-      cursorHeight: widget.cursorHeight,
-      cursorRadius: p.cursorRadius,
-      cursorOpacityAnimates: p.cursorOpacityAnimates,
-      cursorOffset: p.cursorOffset,
-      paintCursorAboveText: p.paintCursorAboveText,
-      selectionHeightStyle: widget.selectionHeightStyle,
-      selectionWidthStyle: widget.selectionWidthStyle,
-      scrollPadding: widget.scrollPadding,
-      keyboardAppearance: keyboardAppearance,
-      dragStartBehavior: widget.dragStartBehavior,
-      enableInteractiveSelection: widget.enableInteractiveSelection,
-      scrollController: widget.scrollController,
-      scrollPhysics: widget.scrollPhysics,
-      autofillClient: this,
-      clipBehavior: widget.clipBehavior,
-      restorationId: widget.restorationId == null
-          ? null
-          : '${widget.restorationId!}.editable',
-      stylusHandwritingEnabled: widget.stylusHandwritingEnabled,
-      enableIMEPersonalizedLearning: widget.enableIMEPersonalizedLearning,
-      contentInsertionConfiguration: widget.contentInsertionConfiguration,
-      contextMenuBuilder: widget.contextMenuBuilder,
-      spellCheckConfiguration: effectiveSpellCheck,
-      magnifierConfiguration: magnifier,
-      undoController: widget.undoController,
+    Widget editable = Builder(
+      builder: (context) {
+        final TextStyle textStyle =
+            widget.style ?? DefaultTextStyle.of(context).style;
+
+        return EditableText(
+          key: editableTextKey,
+          controller: controller,
+          focusNode: focusNode,
+          readOnly: widget.readOnly || !widget.enabled,
+          obscuringCharacter: widget.obscuringCharacter,
+          obscureText: widget.obscureText,
+          autocorrect: widget.autocorrect,
+          smartDashesType: widget.smartDashesType,
+          smartQuotesType: widget.smartQuotesType,
+          enableSuggestions: widget.enableSuggestions,
+          style: textStyle,
+          strutStyle: widget.strutStyle,
+          cursorColor: p.cursorColor,
+          backgroundCursorColor: _neutralBgCursor,
+          textAlign: widget.textAlign,
+          textDirection: widget.textDirection,
+          maxLines: widget.maxLines,
+          minLines: widget.minLines,
+          expands: widget.expands,
+          autofocus: widget.autofocus,
+          showCursor: widget.showCursor,
+          showSelectionHandles: _showSelectionHandles,
+          selectionColor: focusNode.hasFocus ? p.selectionColor : null,
+          selectionControls: controls,
+          keyboardType: widget.keyboardType,
+          textInputAction: widget.textInputAction,
+          textCapitalization: widget.textCapitalization,
+          onChanged: widget.onChanged,
+          onEditingComplete: widget.onEditingComplete,
+          onSubmitted: widget.onSubmitted,
+          onAppPrivateCommand: widget.onAppPrivateCommand,
+          onSelectionChanged: _handleSelectionChanged,
+          onSelectionHandleTapped: _handleSelectionHandleTapped,
+          groupId: widget.groupId,
+          onTapOutside: widget.onTapOutside,
+          onTapUpOutside: widget.onTapUpOutside,
+          inputFormatters: formatters,
+          rendererIgnoresPointer: true,
+          cursorWidth: widget.cursorWidth,
+          cursorHeight: widget.cursorHeight,
+          cursorRadius: p.cursorRadius,
+          cursorOpacityAnimates: p.cursorOpacityAnimates,
+          cursorOffset: p.cursorOffset,
+          paintCursorAboveText: p.paintCursorAboveText,
+          selectionHeightStyle: widget.selectionHeightStyle,
+          selectionWidthStyle: widget.selectionWidthStyle,
+          scrollPadding: widget.scrollPadding,
+          keyboardAppearance: keyboardAppearance,
+          dragStartBehavior: widget.dragStartBehavior,
+          enableInteractiveSelection: widget.enableInteractiveSelection,
+          scrollController: widget.scrollController,
+          scrollPhysics: widget.scrollPhysics,
+          autofillClient: this,
+          clipBehavior: widget.clipBehavior,
+          restorationId: widget.restorationId == null
+              ? null
+              : '${widget.restorationId!}.editable',
+          stylusHandwritingEnabled: widget.stylusHandwritingEnabled,
+          enableIMEPersonalizedLearning: widget.enableIMEPersonalizedLearning,
+          contentInsertionConfiguration: widget.contentInsertionConfiguration,
+          contextMenuBuilder: widget.contextMenuBuilder,
+          spellCheckConfiguration: effectiveSpellCheck,
+          magnifierConfiguration: magnifier,
+          undoController: widget.undoController,
+        );
+      },
     );
 
     editable = TextFieldTapRegion(
