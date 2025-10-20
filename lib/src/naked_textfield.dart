@@ -1,3 +1,5 @@
+// ignore_for_file: avoid-missing-enum-constant-in-map
+
 import 'dart:ui' as ui show BoxHeightStyle, BoxWidthStyle;
 
 import 'package:flutter/cupertino.dart'
@@ -375,8 +377,8 @@ class _NakedTextFieldState extends State<NakedTextField>
 
   final WidgetStateProperty<TextStyle> _defaultTextStyle =
       WidgetStateProperty.fromMap({
-        WidgetState.disabled: TextStyle(color: _defaultDisabledColor),
-        WidgetState.any: TextStyle(color: _defaultTextColor),
+        WidgetState.disabled: const TextStyle(color: _defaultDisabledColor),
+        WidgetState.any: const TextStyle(color: _defaultTextColor),
       });
 
   @override
