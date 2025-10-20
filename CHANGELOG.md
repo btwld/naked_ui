@@ -1,3 +1,7 @@
+## 0.2.0-beta.6
+
+- fix: disabled and error state support for NakedTextField
+
 ## 0.2.0-beta.5
 
 - fix: NakedAccordionItemState scope on content
