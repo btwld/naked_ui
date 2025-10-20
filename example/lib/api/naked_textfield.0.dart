@@ -54,7 +54,7 @@ class _TextFieldExampleState extends State<TextFieldExample> {
       child: NakedTextField(
         cursorColor: Colors.grey.shade700,
         textStyle: WidgetStateProperty.fromMap({
-          WidgetState.focused: TextStyle(color: Colors.red),
+          WidgetState.focused: const TextStyle(color: Colors.red),
           WidgetState.any: TextStyle(color: Colors.grey.shade400),
         }),
         builder: (context, state, editableText) {

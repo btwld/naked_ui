@@ -713,7 +713,7 @@ void main() {
     });
 
     testWidgets('uses custom textStyleBuilder when provided', (tester) async {
-      final textStyle = TextStyle(
+      const textStyle = TextStyle(
         fontSize: 24,
         fontWeight: FontWeight.bold,
         color: Color(0xFFFF0000),
