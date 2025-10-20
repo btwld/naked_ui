@@ -53,11 +53,10 @@ class _TextFieldExampleState extends State<TextFieldExample> {
       width: 300,
       child: NakedTextField(
         cursorColor: Colors.grey.shade700,
-        style: TextStyle(
-          color: Colors.grey.shade700,
-          fontSize: 14,
-          fontWeight: FontWeight.w400,
-        ),
+        textStyle: WidgetStateProperty.fromMap({
+          WidgetState.focused: TextStyle(color: Colors.red),
+          WidgetState.any: TextStyle(color: Colors.grey.shade400),
+        }),
         builder: (context, state, editableText) {
           return AnimatedContainer(
             duration: const Duration(milliseconds: 200),

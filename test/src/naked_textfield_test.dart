@@ -693,4 +693,133 @@ void main() {
       ),
     );
   });
+
+  group('textStyleBuilder', () {
+    testWidgets('uses default textStyleBuilder when not provided', (
+      tester,
+    ) async {
+      await _pumpApp(
+        tester,
+        child: DefaultTextStyle(
+          style: const TextStyle(fontSize: 20, color: Color(0xFF111111)),
+          child: NakedTextField(builder: _builder()),
+        ),
+      );
+
+      final et = _getEditableText(tester);
+      // Default builder should derive from DefaultTextStyle and set enabled color
+      expect(et.style.fontSize, 20);
+      expect(et.style.color, const Color(0xFF000000)); // default enabled color
+    });
+
+    testWidgets('uses custom textStyleBuilder when provided', (tester) async {
+      final textStyle = TextStyle(
+        fontSize: 24,
+        fontWeight: FontWeight.bold,
+        color: Color(0xFFFF0000),
+      );
+
+      await _pumpApp(
+        tester,
+        child: NakedTextField(
+          textStyle: WidgetStateProperty.all<TextStyle>(textStyle),
+          builder: _builder(),
+        ),
+      );
+
+      final et = _getEditableText(tester);
+      expect(et.style.fontSize, 24);
+      expect(et.style.fontWeight, FontWeight.bold);
+      expect(et.style.color, const Color(0xFFFF0000));
+    });
+
+    testWidgets('textStyleBuilder reacts to enabled state changes', (
+      tester,
+    ) async {
+      final textStyle = WidgetStateProperty.fromMap({
+        WidgetState.disabled: TextStyle(fontSize: 18, color: Color(0xFF888888)),
+        WidgetState.any: TextStyle(fontSize: 18, color: Color(0xFF00FF00)),
+      });
+
+      // Start with enabled=true
+      await _pumpApp(
+        tester,
+        child: NakedTextField(
+          enabled: true,
+          textStyle: textStyle,
+          builder: _builder(),
+        ),
+      );
+
+      var et = _getEditableText(tester);
+      expect(et.style.color, const Color(0xFF00FF00));
+
+      // Change to enabled=false
+      await _pumpApp(
+        tester,
+        child: NakedTextField(
+          enabled: false,
+          textStyle: textStyle,
+          builder: _builder(),
+        ),
+      );
+
+      et = _getEditableText(tester);
+      expect(et.style.color, const Color(0xFF888888));
+    });
+
+    testWidgets('textStyleBuilder receives focused state', (tester) async {
+      final focusNode = FocusNode();
+      FocusManager.instance.highlightStrategy =
+          FocusHighlightStrategy.alwaysTraditional;
+
+      final textStyle = WidgetStateProperty.fromMap({
+        WidgetState.focused: TextStyle(fontSize: 18, color: Color(0xFF0000FF)),
+        WidgetState.any: TextStyle(fontSize: 18, color: Color(0xFF000000)),
+      });
+
+      await _pumpApp(
+        tester,
+        child: NakedTextField(
+          focusNode: focusNode,
+          textStyle: textStyle,
+          builder: _builder(),
+        ),
+      );
+
+      // Initially unfocused
+      var et = _getEditableText(tester);
+      expect(et.style.color, const Color(0xFF000000));
+
+      // Focus the field
+      focusNode.requestFocus();
+      await tester.pumpAndSettle();
+
+      et = _getEditableText(tester);
+      expect(et.style.color, const Color(0xFF0000FF));
+
+      // Unfocus
+      focusNode.unfocus();
+      await tester.pumpAndSettle();
+
+      et = _getEditableText(tester);
+      expect(et.style.color, const Color(0xFF000000));
+    });
+
+    testWidgets('default textStyleBuilder applies disabled color', (
+      tester,
+    ) async {
+      await _pumpApp(
+        tester,
+        child: DefaultTextStyle(
+          style: const TextStyle(fontSize: 16),
+          child: NakedTextField(enabled: false, builder: _builder()),
+        ),
+      );
+
+      final et = _getEditableText(tester);
+      // Default builder should apply disabled color
+      expect(et.style.color, const Color(0xFF9E9E9E));
+    });
+  });
 }
