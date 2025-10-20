@@ -1,3 +1,7 @@
+## 0.2.0-beta.7
+
+- fix: text style handling in NakedTextField
+
 ## 0.2.0-beta.6
 
 - fix: disabled and error state support for NakedTextField
