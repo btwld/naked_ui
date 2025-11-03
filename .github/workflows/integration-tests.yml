@@ -1,0 +1,51 @@
+name: Integration Tests
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths-ignore:
+      - docs/**
+      - docs.json
+
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - docs/**
+      - docs.json
+
+# Cancel any in-progress runs of the same workflow for the same PR/branch.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  integration-tests:
+    name: Integration Tests
+    runs-on: macos-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+
+      - name: Enable macOS desktop
+        run: flutter config --enable-macos-desktop
+
+      - name: Install root dependencies
+        run: flutter pub get
+        working-directory: packages/example
+
+      - name: Install example dependencies
+        run: flutter pub get
+        working-directory: packages/example
+
+      - name: Run all integration tests
+        working-directory: packages/example
+        run: flutter test -r compact -d flutter-tester integration_test/all_tests.dart
+

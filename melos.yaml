@@ -1,58 +1,9 @@
 name: naked_ui
 
 packages:
-  - .
-  - example
+  - packages/*
 
-scripts:
-  # Test commands
-  test:
-    description: Run all unit tests
-    run: dart tool/test.dart
 
-  test:integration:
-    description: Run integration tests
-    run: dart tool/test.dart --integration
-
-  test:all:
-    description: Run all tests (unit + integration)
-    run: dart tool/test.dart --all
-
-  test:component:
-    description: Run specific component integration test
-    run: dart tool/test.dart --component=$MELOS_COMPONENT
-
-  # Development commands
-  get:
-    description: Get dependencies for all packages
-    run: flutter pub get
-
-  analyze:
-    description: Run static analysis
-    run: flutter analyze
-
-  format:
-    description: Format all Dart code
-    run: dart format .
-
-  format:check:
-    description: Check if all Dart code is formatted
-    run: dart format --set-exit-if-changed .
-
-  # Build commands
-  build:example:
-    description: Build example app for macOS
-    run: flutter build macos
-    packageFilters:
-      dirExists: example
-
-  # CI/CD commands
-  ci:
-    description: Run CI checks (format, analyze, test)
-    run: |
-      melos format:check &&
-      melos analyze &&
-      melos test:all
 
 # IDE settings
 ide:
