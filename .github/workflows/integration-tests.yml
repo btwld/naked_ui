@@ -31,14 +31,12 @@ jobs:
 
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
-        working-directory: packages/example
         with:
           channel: 'stable'
           cache: true
 
       - name: Enable macOS desktop
         run: flutter config --enable-macos-desktop
-        working-directory: packages/example
 
       - name: Install root dependencies
         run: flutter pub get
