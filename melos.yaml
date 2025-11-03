@@ -1,26 +1,7 @@
 name: naked_ui
 
 packages:
-  - .
-  - example
-
-scripts:
-  # Test commands
-  test:
-    description: Run all unit tests
-    run: dart tool/test.dart
-
-  test:integration:
-    description: Run integration tests
-    run: dart tool/test.dart --integration
-
-  test:all:
-    description: Run all tests (unit + integration)
-    run: dart tool/test.dart --all
-
-  test:component:
-    description: Run specific component integration test
-    run: dart tool/test.dart --component=$MELOS_COMPONENT
+  - packages/*
 
   # Development commands
   get:
@@ -38,6 +19,12 @@ scripts:
   format:check:
     description: Check if all Dart code is formatted
     run: dart format --set-exit-if-changed .
+  
+  test:ci
+    run: melos exec -- flutter test 
+    description: Run flutter test
+    packageFilters:
+      dirExists: test
 
   # Build commands
   build:example:

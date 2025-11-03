@@ -1,0 +1,28 @@
+name: example
+description: "Demonstrates headless_widgets."
+publish_to: 'none'
+version: 1.0.0+1
+resolution: workspace
+
+environment:
+  sdk: ">=3.8.0 <4.0.0"
+  flutter: ">=3.27.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  naked_ui:
+    path: ../naked_ui
+  cupertino_icons: ^1.0.6
+  go_router: ^13.1.0
+  flutter_svg: ^2.0.10
+  google_fonts: ^6.1.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  integration_test:
+    sdk: flutter
+
+flutter:
+  uses-material-design: true
