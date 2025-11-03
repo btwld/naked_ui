@@ -13,9 +13,7 @@ class MyApp extends StatelessWidget {
     return const MaterialApp(
       home: Scaffold(
         backgroundColor: Colors.white,
-        body: Center(
-          child: SimpleBuilderExample(),
-        ),
+        body: Center(child: SimpleBuilderExample()),
       ),
     );
   }
@@ -35,10 +33,7 @@ class SimpleBuilderExample extends StatelessWidget {
           hovered: Colors.yellow,
           orElse: Colors.green,
         );
-        return Container(
-          color: color,
-          child: const Text('Custom Button'),
-        );
+        return Container(color: color, child: const Text('Custom Button'));
       },
     );
   }

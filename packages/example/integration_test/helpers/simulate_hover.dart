@@ -6,11 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 extension WidgetTesterExtension on WidgetTester {
   Future<void> pumpMaterialWidget(Widget widget) async {
-    await pumpWidget(
-      MaterialApp(
-        home: Scaffold(body: widget),
-      ),
-    );
+    await pumpWidget(MaterialApp(home: Scaffold(body: widget)));
   }
 
   /// Simulates hover more robustly by moving a mouse pointer to the center of
@@ -82,9 +78,11 @@ extension WidgetTesterExtension on WidgetTester {
   }
 
   void expectCursor(SystemMouseCursor cursor, {required Key on}) async {
-    final region = widget<MouseRegion>(find
-        .descendant(of: find.byKey(on), matching: find.byType(MouseRegion))
-        .first);
+    final region = widget<MouseRegion>(
+      find
+          .descendant(of: find.byKey(on), matching: find.byType(MouseRegion))
+          .first,
+    );
 
     expect(region.cursor, cursor);
   }

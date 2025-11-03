@@ -62,17 +62,19 @@ void main() {
     testWidgets('dialog responds to keyboard activation', (tester) async {
       final dialogKey = UniqueKey();
 
-      await tester.pumpWidget(MaterialApp(
-        home: Scaffold(
-          body: Center(
-            child: NakedButton(
-              key: dialogKey,
-              onPressed: () {},
-              child: const Text('Test Button'),
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: Center(
+              child: NakedButton(
+                key: dialogKey,
+                onPressed: () {},
+                child: const Text('Test Button'),
+              ),
             ),
           ),
         ),
-      ));
+      );
       await tester.pumpAndSettle();
 
       // Test keyboard activation

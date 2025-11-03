@@ -20,99 +20,117 @@ void main() {
 
       // Initially Section 1 should be expanded (from initialExpandedValues)
       expect(
-          find.text(
-              'This is the content for section 1. You can put anything here!'),
-          findsOneWidget);
+        find.text(
+          'This is the content for section 1. You can put anything here!',
+        ),
+        findsOneWidget,
+      );
       expect(
-          find.text(
-              'This is the content for section 2. You can put anything here!'),
-          findsNothing);
+        find.text(
+          'This is the content for section 2. You can put anything here!',
+        ),
+        findsNothing,
+      );
 
       // Tap Section 2 header to expand it
       await tester.tap(find.text('Section 2'));
-      await tester
-          .pump(const Duration(milliseconds: 250)); // Wait for animation
+      await tester.pump(
+        const Duration(milliseconds: 250),
+      ); // Wait for animation
 
       // Section 1 should close (max: 1), Section 2 should open
       expect(
-          find.text(
-              'This is the content for section 1. You can put anything here!'),
-          findsNothing);
+        find.text(
+          'This is the content for section 1. You can put anything here!',
+        ),
+        findsNothing,
+      );
       expect(
-          find.text(
-              'This is the content for section 2. You can put anything here!'),
-          findsOneWidget);
+        find.text(
+          'This is the content for section 2. You can put anything here!',
+        ),
+        findsOneWidget,
+      );
 
       // Tap Section 1 header to expand it again
       await tester.tap(find.text('Section 1'));
-      await tester
-          .pump(const Duration(milliseconds: 250)); // Wait for animation
+      await tester.pump(
+        const Duration(milliseconds: 250),
+      ); // Wait for animation
 
       // Section 2 should close, Section 1 should open
       expect(
-          find.text(
-              'This is the content for section 1. You can put anything here!'),
-          findsOneWidget);
+        find.text(
+          'This is the content for section 1. You can put anything here!',
+        ),
+        findsOneWidget,
+      );
       expect(
-          find.text(
-              'This is the content for section 2. You can put anything here!'),
-          findsNothing);
+        find.text(
+          'This is the content for section 2. You can put anything here!',
+        ),
+        findsNothing,
+      );
     });
 
     testWidgets('accordion controller manages state correctly', (tester) async {
       final controller = NakedAccordionController<String>();
 
-      await tester.pumpWidget(MaterialApp(
-        home: Scaffold(
-          body: Center(
-            child: NakedAccordionGroup<String>(
-              controller: controller,
-              child: Column(children: [
-                NakedAccordion<String>(
-                  value: 'item1',
-                  builder: (context, itemState) => GestureDetector(
-                    onTap: () => controller.toggle('item1'),
-                    child: Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: itemState.isExpanded
-                            ? Colors.blue.shade100
-                            : Colors.grey.shade100,
-                        border: Border.all(color: Colors.grey),
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: Center(
+              child: NakedAccordionGroup<String>(
+                controller: controller,
+                child: Column(
+                  children: [
+                    NakedAccordion<String>(
+                      value: 'item1',
+                      builder: (context, itemState) => GestureDetector(
+                        onTap: () => controller.toggle('item1'),
+                        child: Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: itemState.isExpanded
+                                ? Colors.blue.shade100
+                                : Colors.grey.shade100,
+                            border: Border.all(color: Colors.grey),
+                          ),
+                          child: const Text('Item 1'),
+                        ),
                       ),
-                      child: const Text('Item 1'),
-                    ),
-                  ),
-                  child: const Padding(
-                    padding: EdgeInsets.all(16),
-                    child: Text('Content 1'),
-                  ),
-                ),
-                NakedAccordion<String>(
-                  value: 'item2',
-                  builder: (context, itemState) => GestureDetector(
-                    onTap: () => controller.toggle('item2'),
-                    child: Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: itemState.isExpanded
-                            ? Colors.blue.shade100
-                            : Colors.grey.shade100,
-                        border: Border.all(color: Colors.grey),
+                      child: const Padding(
+                        padding: EdgeInsets.all(16),
+                        child: Text('Content 1'),
                       ),
-                      child: const Text('Item 2'),
                     ),
-                  ),
-                  child: const Padding(
-                    padding: EdgeInsets.all(16),
-                    child: Text('Content 2'),
-                  ),
+                    NakedAccordion<String>(
+                      value: 'item2',
+                      builder: (context, itemState) => GestureDetector(
+                        onTap: () => controller.toggle('item2'),
+                        child: Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: itemState.isExpanded
+                                ? Colors.blue.shade100
+                                : Colors.grey.shade100,
+                            border: Border.all(color: Colors.grey),
+                          ),
+                          child: const Text('Item 2'),
+                        ),
+                      ),
+                      child: const Padding(
+                        padding: EdgeInsets.all(16),
+                        child: Text('Content 2'),
+                      ),
+                    ),
+                  ],
                 ),
-              ]),
+              ),
             ),
           ),
         ),
-      ));
+      );
       await tester.pumpAndSettle();
 
       // Initially no items expanded
@@ -141,40 +159,46 @@ void main() {
     testWidgets('accordion respects min/max constraints', (tester) async {
       final controller = NakedAccordionController<String>(min: 1, max: 1);
 
-      await tester.pumpWidget(MaterialApp(
-        home: Scaffold(
-          body: Center(
-            child: NakedAccordionGroup<String>(
-              controller: controller,
-              initialExpandedValues: const ['item1'], // Start with one expanded
-              child: Column(children: [
-                NakedAccordion<String>(
-                  value: 'item1',
-                  builder: (context, itemState) => GestureDetector(
-                    onTap: () => controller.toggle('item1'),
-                    child: Container(
-                      padding: const EdgeInsets.all(12),
-                      child: const Text('Item 1'),
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: Center(
+              child: NakedAccordionGroup<String>(
+                controller: controller,
+                initialExpandedValues: const [
+                  'item1',
+                ], // Start with one expanded
+                child: Column(
+                  children: [
+                    NakedAccordion<String>(
+                      value: 'item1',
+                      builder: (context, itemState) => GestureDetector(
+                        onTap: () => controller.toggle('item1'),
+                        child: Container(
+                          padding: const EdgeInsets.all(12),
+                          child: const Text('Item 1'),
+                        ),
+                      ),
+                      child: const Text('Content 1'),
                     ),
-                  ),
-                  child: const Text('Content 1'),
-                ),
-                NakedAccordion<String>(
-                  value: 'item2',
-                  builder: (context, itemState) => GestureDetector(
-                    onTap: () => controller.toggle('item2'),
-                    child: Container(
-                      padding: const EdgeInsets.all(12),
-                      child: const Text('Item 2'),
+                    NakedAccordion<String>(
+                      value: 'item2',
+                      builder: (context, itemState) => GestureDetector(
+                        onTap: () => controller.toggle('item2'),
+                        child: Container(
+                          padding: const EdgeInsets.all(12),
+                          child: const Text('Item 2'),
+                        ),
+                      ),
+                      child: const Text('Content 2'),
                     ),
-                  ),
-                  child: const Text('Content 2'),
+                  ],
                 ),
-              ]),
+              ),
             ),
           ),
         ),
-      ));
+      );
       await tester.pumpAndSettle();
 
       // Initially item1 expanded (from initialExpandedValues)
@@ -195,73 +219,88 @@ void main() {
       expect(controller.values.length, 1); // Max constraint enforced
     });
 
-    testWidgets('accordion item state callbacks work correctly',
-        (tester) async {
+    testWidgets('accordion item state callbacks work correctly', (
+      tester,
+    ) async {
       final controller = NakedAccordionController<String>();
       final itemKey = UniqueKey();
       bool isHovered = false;
       bool isPressed = false;
 
-      await tester.pumpWidget(MaterialApp(
-        home: Scaffold(
-          body: Center(
-            child: NakedAccordionGroup<String>(
-              controller: controller,
-              child: Column(children: [
-                NakedAccordion<String>(
-                  key: itemKey,
-                  value: 'test',
-                  onHoverChange: (hovered) => isHovered = hovered,
-                  onPressChange: (pressed) => isPressed = pressed,
-                  onFocusChange: (focused) {},
-                  builder: (context, itemState) => Container(
-                    padding: const EdgeInsets.all(12),
-                    child: const Text('Test Item'),
-                  ),
-                  child: const Text('Test Content'),
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: Center(
+              child: NakedAccordionGroup<String>(
+                controller: controller,
+                child: Column(
+                  children: [
+                    NakedAccordion<String>(
+                      key: itemKey,
+                      value: 'test',
+                      onHoverChange: (hovered) => isHovered = hovered,
+                      onPressChange: (pressed) => isPressed = pressed,
+                      onFocusChange: (focused) {},
+                      builder: (context, itemState) => Container(
+                        padding: const EdgeInsets.all(12),
+                        child: const Text('Test Item'),
+                      ),
+                      child: const Text('Test Content'),
+                    ),
+                  ],
                 ),
-              ]),
+              ),
             ),
           ),
         ),
-      ));
+      );
       await tester.pumpAndSettle();
 
       // Test hover state
-      await tester.simulateHover(itemKey, onHover: () {
-        expect(isHovered, isTrue);
-      });
+      await tester.simulateHover(
+        itemKey,
+        onHover: () {
+          expect(isHovered, isTrue);
+        },
+      );
 
       // Test press state
-      await tester.simulatePress(itemKey, onPressed: () {
-        expect(isPressed, isTrue);
-      });
+      await tester.simulatePress(
+        itemKey,
+        onPressed: () {
+          expect(isPressed, isTrue);
+        },
+      );
     });
 
     testWidgets('accordion keyboard navigation works', (tester) async {
       final controller = NakedAccordionController<String>();
       final itemKey = UniqueKey();
 
-      await tester.pumpWidget(MaterialApp(
-        home: Scaffold(
-          body: Center(
-            child: NakedAccordionGroup<String>(
-              controller: controller,
-              child: Column(children: [
-                NakedAccordion<String>(
-                  key: itemKey,
-                  value: 'keyboard',
-                  builder: (context, itemState) => Container(
-                    padding: const EdgeInsets.all(12),
-                    child: const Text('Keyboard Item'),
-                  ),
-                  child: const Text('Keyboard Content'),
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: Center(
+              child: NakedAccordionGroup<String>(
+                controller: controller,
+                child: Column(
+                  children: [
+                    NakedAccordion<String>(
+                      key: itemKey,
+                      value: 'keyboard',
+                      builder: (context, itemState) => Container(
+                        padding: const EdgeInsets.all(12),
+                        child: const Text('Keyboard Item'),
+                      ),
+                      child: const Text('Keyboard Content'),
+                    ),
+                  ],
                 ),
-              ]),
+              ),
             ),
           ),
         ),
-      ));
+      );
       await tester.pumpAndSettle();
 
       // Initially collapsed
@@ -280,30 +319,32 @@ void main() {
       final itemKey = UniqueKey();
       bool hoverChanged = false;
 
-      await tester.pumpWidget(MaterialApp(
-        home: Scaffold(
-          body: Center(
-            child: NakedAccordionGroup<String>(
-              controller: controller,
-              child: Column(
-                children: [
-                  NakedAccordion<String>(
-                    key: itemKey,
-                    value: 'disabled',
-                    enabled: false,
-                    onHoverChange: (hovered) => hoverChanged = true,
-                    builder: (context, itemState) => Container(
-                      padding: const EdgeInsets.all(12),
-                      child: const Text('Disabled Item'),
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: Center(
+              child: NakedAccordionGroup<String>(
+                controller: controller,
+                child: Column(
+                  children: [
+                    NakedAccordion<String>(
+                      key: itemKey,
+                      value: 'disabled',
+                      enabled: false,
+                      onHoverChange: (hovered) => hoverChanged = true,
+                      builder: (context, itemState) => Container(
+                        padding: const EdgeInsets.all(12),
+                        child: const Text('Disabled Item'),
+                      ),
+                      child: const Text('Disabled Content'),
                     ),
-                    child: const Text('Disabled Content'),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
         ),
-      ));
+      );
       await tester.pumpAndSettle();
 
       // Initially collapsed
@@ -342,9 +383,11 @@ void main() {
       // After animation completes
       await tester.pump(const Duration(milliseconds: 150));
       expect(
-          find.text(
-              'This is the content for section 2. You can put anything here!'),
-          findsOneWidget);
+        find.text(
+          'This is the content for section 2. You can put anything here!',
+        ),
+        findsOneWidget,
+      );
     });
   });
 }

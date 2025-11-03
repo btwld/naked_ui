@@ -21,10 +21,7 @@ class MyApp extends StatelessWidget {
             children: [
               Text(
                 'Toggle Button Example',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
               ),
               SizedBox(height: 8),
               Text(
@@ -80,8 +77,8 @@ class _ToggleButtonExampleState extends State<ToggleButtonExample> {
             color: isSelected
                 ? Colors.grey.shade800
                 : isHovered
-                    ? Colors.grey.shade200
-                    : Colors.white,
+                ? Colors.grey.shade200
+                : Colors.white,
             borderRadius: BorderRadius.circular(6),
             border: isFocused
                 ? Border.all(color: Colors.grey.shade400, width: 2)

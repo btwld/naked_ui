@@ -19,10 +19,7 @@ class MyApp extends StatelessWidget {
             children: [
               Text(
                 'Simple Radio Group',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
               ),
               SizedBox(height: 8),
               Text(
@@ -39,10 +36,7 @@ class MyApp extends StatelessWidget {
   }
 }
 
-enum RadioOption {
-  banana,
-  apple,
-}
+enum RadioOption { banana, apple }
 
 class RadioExample extends StatefulWidget {
   const RadioExample({super.key});
@@ -75,11 +69,7 @@ class _RadioExampleState extends State<RadioExample> {
 }
 
 class RadioButton extends StatefulWidget {
-  const RadioButton({
-    super.key,
-    required this.value,
-    required this.label,
-  });
+  const RadioButton({super.key, required this.value, required this.label});
 
   final RadioOption value;
   final String label;

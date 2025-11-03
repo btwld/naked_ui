@@ -14,10 +14,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Naked Kitchen Sink',
-      theme: ThemeData(
-        colorSchemeSeed: Colors.blue,
-        useMaterial3: true,
-      ),
+      theme: ThemeData(colorSchemeSeed: Colors.blue, useMaterial3: true),
       onGenerateRoute: (settings) {
         final name = settings.name ?? '/';
         // Expecting hash URLs on web (/#/component/<id>)
@@ -25,9 +22,7 @@ class MyApp extends StatelessWidget {
         final parts = path.split('/').where((p) => p.isNotEmpty).toList();
 
         if (parts.isEmpty) {
-          return MaterialPageRoute(
-            builder: (_) => const KitchenShell(),
-          );
+          return MaterialPageRoute(builder: (_) => const KitchenShell());
         }
 
         if (parts.length >= 2 &&
@@ -36,18 +31,14 @@ class MyApp extends StatelessWidget {
           final demo = DemoRegistry.find(id);
           if (demo != null) {
             return MaterialPageRoute(
-              builder: (_) => KitchenShell(
-                initialDemoId: id,
-                embed: parts[0] == 'embed',
-              ),
+              builder: (_) =>
+                  KitchenShell(initialDemoId: id, embed: parts[0] == 'embed'),
             );
           }
         }
 
         // Fallback to index shell
-        return MaterialPageRoute(
-          builder: (_) => const KitchenShell(),
-        );
+        return MaterialPageRoute(builder: (_) => const KitchenShell());
       },
       home: const KitchenShell(),
     );

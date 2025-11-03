@@ -19,10 +19,7 @@ class MyApp extends StatelessWidget {
             children: [
               Text(
                 'Simple Accordion',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
               ),
               SizedBox(height: 8),
               Text(

@@ -19,10 +19,7 @@ class MyApp extends StatelessWidget {
             children: [
               Text(
                 'Simple Popover',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
               ),
               SizedBox(height: 8),
               Text(
@@ -101,10 +98,7 @@ class _PopoverExampleState extends State<PopoverExample> {
         ),
         child: const Text(
           'Show Popover',
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 14,
-          ),
+          style: TextStyle(color: Colors.white, fontSize: 14),
         ),
       ),
     );
@@ -112,10 +106,7 @@ class _PopoverExampleState extends State<PopoverExample> {
 }
 
 class PopoverMenu extends StatelessWidget {
-  const PopoverMenu({
-    super.key,
-    required this.controller,
-  });
+  const PopoverMenu({super.key, required this.controller});
 
   final MenuController controller;
 
@@ -144,17 +135,11 @@ class PopoverMenu extends StatelessWidget {
             children: [
               const Text(
                 'Popover Content',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w500,
-                ),
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
               ),
               GestureDetector(
                 onTap: controller.close,
-                child: const Icon(
-                  Icons.close,
-                  size: 16,
-                ),
+                child: const Icon(Icons.close, size: 16),
               ),
             ],
           ),
@@ -162,9 +147,7 @@ class PopoverMenu extends StatelessWidget {
           Text(
             'This is the content inside the popover. You can put any widget here.',
             textAlign: TextAlign.left,
-            style: TextStyle(
-              color: Colors.grey.shade600,
-            ),
+            style: TextStyle(color: Colors.grey.shade600),
           ),
           const SizedBox(height: 4),
           Align(
@@ -172,17 +155,17 @@ class PopoverMenu extends StatelessWidget {
             child: GestureDetector(
               onTap: controller.close,
               child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.grey.shade200,
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
                   'Next',
-                  style: TextStyle(
-                    color: Colors.grey.shade600,
-                  ),
+                  style: TextStyle(color: Colors.grey.shade600),
                 ),
               ),
             ),

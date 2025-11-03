@@ -19,8 +19,9 @@ import 'components/naked_toggle_integration.dart' as toggle_tests;
 void main() {
   // Initialize integration test binding and configure timeout
   final binding = IntegrationTestWidgetsFlutterBinding.ensureInitialized();
-  binding.defaultTestTimeout =
-      const Timeout(Duration(minutes: 30)); // Long timeout for all tests
+  binding.defaultTestTimeout = const Timeout(
+    Duration(minutes: 30),
+  ); // Long timeout for all tests
   // Ensure hover highlights are enabled across all integration tests
   FocusManager.instance.highlightStrategy =
       FocusHighlightStrategy.alwaysTraditional;

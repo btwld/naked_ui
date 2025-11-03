@@ -19,10 +19,7 @@ class MyApp extends StatelessWidget {
             children: [
               Text(
                 'Simple Button',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
               ),
               SizedBox(height: 8),
               Text(
@@ -46,11 +43,9 @@ class ButtonExample extends StatelessWidget {
   Widget build(BuildContext context) {
     return NakedButton(
       onPressed: () {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Button pressed!'),
-          ),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Button pressed!')));
       },
       builder: (context, buttonState, child) {
         const baseColor = Color(0xFF3D3D3D);

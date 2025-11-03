@@ -63,10 +63,12 @@ class _KitchenShellState extends State<KitchenShell> {
                         _CategoryList(
                           title: entry.key,
                           demos: entry.value
-                              .where((d) =>
-                                  _filter.isEmpty ||
-                                  d.title.toLowerCase().contains(_filter) ||
-                                  d.tags.any((t) => t.contains(_filter)))
+                              .where(
+                                (d) =>
+                                    _filter.isEmpty ||
+                                    d.title.toLowerCase().contains(_filter) ||
+                                    d.tags.any((t) => t.contains(_filter)),
+                              )
                               .toList(),
                           onTap: (demo) {
                             setState(() => _selected = demo);
@@ -144,9 +146,7 @@ class _DemoScaffold extends StatelessWidget {
                   tooltip: 'Open fullscreen',
                   icon: const Icon(Icons.open_in_full),
                   onPressed: () {
-                    final uri = Uri(
-                      path: '/#/${'component'}/${demo.id}',
-                    );
+                    final uri = Uri(path: '/#/${'component'}/${demo.id}');
                     // On the web this opens the gh-pages URL; locally it’s fine.
                     // ignore: deprecated_member_use
                     // Navigator logic not used here; rely on copy for now.

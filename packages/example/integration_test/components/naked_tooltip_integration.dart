@@ -36,7 +36,8 @@ void main() {
       // Simulate hover exit
       await gesture.moveTo(const Offset(0, 0));
       await tester.pump(
-          const Duration(milliseconds: 350)); // Wait for animation + removal
+        const Duration(milliseconds: 350),
+      ); // Wait for animation + removal
 
       // Tooltip should be hidden now
       expect(find.text('This is a tooltip'), findsNothing);
@@ -45,37 +46,43 @@ void main() {
     testWidgets('tooltip respects wait duration', (tester) async {
       bool tooltipOpened = false;
 
-      await tester.pumpWidget(MaterialApp(
-        home: Scaffold(
-          body: Center(
-            child: NakedTooltip(
-              waitDuration: const Duration(milliseconds: 500),
-              showDuration: Duration.zero,
-              onOpen: () {
-                tooltipOpened = true;
-              },
-              overlayBuilder: (context, info) => Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: Colors.black,
-                  borderRadius: BorderRadius.circular(4),
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: Center(
+              child: NakedTooltip(
+                waitDuration: const Duration(milliseconds: 500),
+                showDuration: Duration.zero,
+                onOpen: () {
+                  tooltipOpened = true;
+                },
+                overlayBuilder: (context, info) => Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.black,
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: const Text(
+                    'Tooltip',
+                    style: TextStyle(color: Colors.white),
+                  ),
                 ),
-                child: const Text('Tooltip',
-                    style: TextStyle(color: Colors.white)),
-              ),
-              child: Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.blue,
-                  borderRadius: BorderRadius.circular(8),
+                child: Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.blue,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Text(
+                    'Hover me',
+                    style: TextStyle(color: Colors.white),
+                  ),
                 ),
-                child: const Text('Hover me',
-                    style: TextStyle(color: Colors.white)),
               ),
             ),
           ),
         ),
-      ));
+      );
 
       final triggerFinder = find.text('Hover me');
       expect(triggerFinder, findsOneWidget);
@@ -105,36 +112,42 @@ void main() {
       bool tooltipOpened = false;
       bool tooltipClosed = false;
 
-      await tester.pumpWidget(MaterialApp(
-        home: Scaffold(
-          body: Center(
-            child: NakedTooltip(
-              waitDuration: Duration.zero,
-              showDuration: Duration.zero,
-              onOpen: () => tooltipOpened = true,
-              onClose: () => tooltipClosed = true,
-              overlayBuilder: (context, info) => Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: Colors.black,
-                  borderRadius: BorderRadius.circular(4),
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: Center(
+              child: NakedTooltip(
+                waitDuration: Duration.zero,
+                showDuration: Duration.zero,
+                onOpen: () => tooltipOpened = true,
+                onClose: () => tooltipClosed = true,
+                overlayBuilder: (context, info) => Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.black,
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: const Text(
+                    'Tooltip',
+                    style: TextStyle(color: Colors.white),
+                  ),
                 ),
-                child: const Text('Tooltip',
-                    style: TextStyle(color: Colors.white)),
-              ),
-              child: Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.blue,
-                  borderRadius: BorderRadius.circular(8),
+                child: Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.blue,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Text(
+                    'Hover me',
+                    style: TextStyle(color: Colors.white),
+                  ),
                 ),
-                child: const Text('Hover me',
-                    style: TextStyle(color: Colors.white)),
               ),
             ),
           ),
         ),
-      ));
+      );
 
       final triggerFinder = find.text('Hover me');
       expect(triggerFinder, findsOneWidget);
@@ -163,42 +176,48 @@ void main() {
     });
 
     testWidgets('tooltip positioning works correctly', (tester) async {
-      await tester.pumpWidget(MaterialApp(
-        home: Scaffold(
-          body: Center(
-            child: NakedTooltip(
-              positioning: const OverlayPositionConfig(
-                targetAnchor: Alignment.bottomCenter,
-                followerAnchor: Alignment.topCenter,
-              ),
-              waitDuration: Duration.zero,
-              showDuration: Duration.zero,
-              overlayBuilder: (context, info) => Container(
-                width: 100,
-                height: 50,
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: Colors.black,
-                  borderRadius: BorderRadius.circular(4),
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: Center(
+              child: NakedTooltip(
+                positioning: const OverlayPositionConfig(
+                  targetAnchor: Alignment.bottomCenter,
+                  followerAnchor: Alignment.topCenter,
                 ),
-                child: const Text('Positioned Tooltip',
-                    style: TextStyle(color: Colors.white, fontSize: 10)),
-              ),
-              child: Container(
-                width: 80,
-                height: 40,
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.blue,
-                  borderRadius: BorderRadius.circular(8),
+                waitDuration: Duration.zero,
+                showDuration: Duration.zero,
+                overlayBuilder: (context, info) => Container(
+                  width: 100,
+                  height: 50,
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.black,
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: const Text(
+                    'Positioned Tooltip',
+                    style: TextStyle(color: Colors.white, fontSize: 10),
+                  ),
                 ),
-                child: const Text('Trigger',
-                    style: TextStyle(color: Colors.white, fontSize: 12)),
+                child: Container(
+                  width: 80,
+                  height: 40,
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.blue,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Text(
+                    'Trigger',
+                    style: TextStyle(color: Colors.white, fontSize: 12),
+                  ),
+                ),
               ),
             ),
           ),
         ),
-      ));
+      );
 
       // Use the tooltip widget itself as the hover target for reliability
       final triggerFinder = find.byType(NakedTooltip);

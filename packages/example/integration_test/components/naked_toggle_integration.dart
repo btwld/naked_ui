@@ -12,9 +12,9 @@ void main() {
   group('NakedToggle Integration Tests', () {
     testWidgets('toggle switches state correctly', (tester) async {
       // Use the actual example app
-      await tester.pumpWidget(const MaterialApp(
-        home: toggle_example.ToggleButtonExample(),
-      ));
+      await tester.pumpWidget(
+        const MaterialApp(home: toggle_example.ToggleButtonExample()),
+      );
       await tester.pumpAndSettle();
 
       final toggleFinder = find.byType(NakedToggle);
@@ -42,18 +42,20 @@ void main() {
       final toggleKey = UniqueKey();
       bool toggleValue = false;
 
-      await tester.pumpWidget(MaterialApp(
-        home: Scaffold(
-          body: Center(
-            child: NakedToggle(
-              key: toggleKey,
-              value: toggleValue,
-              onChanged: (value) => toggleValue = value,
-              child: const Text('Toggle Button'),
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: Center(
+              child: NakedToggle(
+                key: toggleKey,
+                value: toggleValue,
+                onChanged: (value) => toggleValue = value,
+                child: const Text('Toggle Button'),
+              ),
             ),
           ),
         ),
-      ));
+      );
       await tester.pumpAndSettle();
 
       // Test keyboard activation
@@ -65,9 +67,9 @@ void main() {
     });
 
     testWidgets('toggle handles focus management correctly', (tester) async {
-      await tester.pumpWidget(const MaterialApp(
-        home: toggle_example.ToggleButtonExample(),
-      ));
+      await tester.pumpWidget(
+        const MaterialApp(home: toggle_example.ToggleButtonExample()),
+      );
       await tester.pumpAndSettle();
 
       final toggleFinder = find.byType(NakedToggle).first;
@@ -84,18 +86,20 @@ void main() {
       final toggleKey = UniqueKey();
       bool toggleValue = false;
 
-      await tester.pumpWidget(MaterialApp(
-        home: Scaffold(
-          body: Center(
-            child: NakedToggle(
-              key: toggleKey,
-              value: toggleValue,
-              onChanged: (value) => toggleValue = value,
-              child: const Text('Hover Toggle'),
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: Center(
+              child: NakedToggle(
+                key: toggleKey,
+                value: toggleValue,
+                onChanged: (value) => toggleValue = value,
+                child: const Text('Hover Toggle'),
+              ),
             ),
           ),
         ),
-      ));
+      );
       await tester.pumpAndSettle();
 
       // Simulate hover
@@ -107,9 +111,9 @@ void main() {
     });
 
     testWidgets('toggle works with different visual states', (tester) async {
-      await tester.pumpWidget(const MaterialApp(
-        home: toggle_example.ToggleButtonExample(),
-      ));
+      await tester.pumpWidget(
+        const MaterialApp(home: toggle_example.ToggleButtonExample()),
+      );
       await tester.pumpAndSettle();
 
       // Find all toggles in the example
@@ -129,22 +133,25 @@ void main() {
       }
     });
 
-    testWidgets('disabled toggle does not respond to interactions',
-        (tester) async {
+    testWidgets('disabled toggle does not respond to interactions', (
+      tester,
+    ) async {
       final toggleKey = UniqueKey();
 
-      await tester.pumpWidget(MaterialApp(
-        home: Scaffold(
-          body: Center(
-            child: NakedToggle(
-              key: toggleKey,
-              value: false,
-              onChanged: null, // Disabled
-              child: const Text('Disabled Toggle'),
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: Center(
+              child: NakedToggle(
+                key: toggleKey,
+                value: false,
+                onChanged: null, // Disabled
+                child: const Text('Disabled Toggle'),
+              ),
             ),
           ),
         ),
-      ));
+      );
       await tester.pumpAndSettle();
 
       // Try to tap disabled toggle

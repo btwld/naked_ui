@@ -10,14 +10,16 @@ void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
   group('NakedRadio Integration Tests', () {
-    testWidgets('radio group handles single selection correctly',
-        (tester) async {
+    testWidgets('radio group handles single selection correctly', (
+      tester,
+    ) async {
       // Use the actual example app
       await tester.pumpWidget(const radio_example.MyApp());
       await tester.pumpAndSettle();
 
-      final radioGroupFinder =
-          find.byType(RadioGroup<radio_example.RadioOption>);
+      final radioGroupFinder = find.byType(
+        RadioGroup<radio_example.RadioOption>,
+      );
       expect(radioGroupFinder, findsOneWidget);
 
       // The example renders purely visual radios without text labels.
@@ -42,21 +44,23 @@ void main() {
       radio_example.RadioOption selectedValue =
           radio_example.RadioOption.banana;
 
-      await tester.pumpWidget(MaterialApp(
-        home: Scaffold(
-          body: Center(
-            child: RadioGroup<radio_example.RadioOption>(
-              groupValue: selectedValue,
-              onChanged: (value) => selectedValue = value!,
-              child: NakedRadio<radio_example.RadioOption>(
-                key: radioKey,
-                value: radio_example.RadioOption.apple,
-                child: const Text('Apple'),
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: Center(
+              child: RadioGroup<radio_example.RadioOption>(
+                groupValue: selectedValue,
+                onChanged: (value) => selectedValue = value!,
+                child: NakedRadio<radio_example.RadioOption>(
+                  key: radioKey,
+                  value: radio_example.RadioOption.apple,
+                  child: const Text('Apple'),
+                ),
               ),
             ),
           ),
         ),
-      ));
+      );
       await tester.pumpAndSettle();
 
       // Test keyboard activation
@@ -71,48 +75,57 @@ void main() {
       radio_example.RadioOption selectedValue =
           radio_example.RadioOption.banana;
 
-      await tester.pumpWidget(MaterialApp(
-        home: Scaffold(
-          body: Center(
-            child: RadioGroup<radio_example.RadioOption>(
-              groupValue: selectedValue,
-              onChanged: (value) => selectedValue = value!,
-              child: NakedRadio<radio_example.RadioOption>(
-                key: radioKey,
-                value: radio_example.RadioOption.apple,
-                onHoverChange: (hovered) => isHovered = hovered,
-                onPressChange: (pressed) => isPressed = pressed,
-                onFocusChange: (focused) {},
-                builder: (context, radioState, child) {
-                  return Container(
-                    width: 20,
-                    height: 20,
-                    decoration: BoxDecoration(
-                      border: Border.all(
-                        color:
-                            radioState.isSelected ? Colors.blue : Colors.grey,
-                        width: radioState.isSelected ? 4 : 2,
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: Center(
+              child: RadioGroup<radio_example.RadioOption>(
+                groupValue: selectedValue,
+                onChanged: (value) => selectedValue = value!,
+                child: NakedRadio<radio_example.RadioOption>(
+                  key: radioKey,
+                  value: radio_example.RadioOption.apple,
+                  onHoverChange: (hovered) => isHovered = hovered,
+                  onPressChange: (pressed) => isPressed = pressed,
+                  onFocusChange: (focused) {},
+                  builder: (context, radioState, child) {
+                    return Container(
+                      width: 20,
+                      height: 20,
+                      decoration: BoxDecoration(
+                        border: Border.all(
+                          color: radioState.isSelected
+                              ? Colors.blue
+                              : Colors.grey,
+                          width: radioState.isSelected ? 4 : 2,
+                        ),
+                        borderRadius: BorderRadius.circular(10),
                       ),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  );
-                },
+                    );
+                  },
+                ),
               ),
             ),
           ),
         ),
-      ));
+      );
       await tester.pumpAndSettle();
 
       // Test hover state
-      await tester.simulateHover(radioKey, onHover: () {
-        expect(isHovered, isTrue);
-      });
+      await tester.simulateHover(
+        radioKey,
+        onHover: () {
+          expect(isHovered, isTrue);
+        },
+      );
 
       // Test press state
-      await tester.simulatePress(radioKey, onPressed: () {
-        expect(isPressed, isTrue);
-      });
+      await tester.simulatePress(
+        radioKey,
+        onPressed: () {
+          expect(isPressed, isTrue);
+        },
+      );
     });
 
     testWidgets('radio handles focus management correctly', (tester) async {
@@ -122,23 +135,25 @@ void main() {
       radio_example.RadioOption selectedValue =
           radio_example.RadioOption.banana;
 
-      await tester.pumpWidget(MaterialApp(
-        home: Scaffold(
-          body: Center(
-            child: RadioGroup<radio_example.RadioOption>(
-              groupValue: selectedValue,
-              onChanged: (value) => selectedValue = value!,
-              child: NakedRadio<radio_example.RadioOption>(
-                key: radioKey,
-                value: radio_example.RadioOption.apple,
-                focusNode: focusNode,
-                onFocusChange: (focused) => focusChanged = focused,
-                child: const Text('Focus Test Radio'),
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: Center(
+              child: RadioGroup<radio_example.RadioOption>(
+                groupValue: selectedValue,
+                onChanged: (value) => selectedValue = value!,
+                child: NakedRadio<radio_example.RadioOption>(
+                  key: radioKey,
+                  value: radio_example.RadioOption.apple,
+                  focusNode: focusNode,
+                  onFocusChange: (focused) => focusChanged = focused,
+                  child: const Text('Focus Test Radio'),
+                ),
               ),
             ),
           ),
         ),
-      ));
+      );
       await tester.pumpAndSettle();
 
       // Test focus acquisition
@@ -161,30 +176,34 @@ void main() {
       radio_example.RadioOption selectedValue =
           radio_example.RadioOption.banana;
 
-      await tester.pumpWidget(MaterialApp(
-        home: Scaffold(
-          body: Center(
-            child: RadioGroup<radio_example.RadioOption>(
-              groupValue: selectedValue,
-              onChanged: (value) => selectedValue = value!,
-              child: NakedRadio<radio_example.RadioOption>(
-                key: radioKey,
-                value: radio_example.RadioOption.apple,
-                enabled: false,
-                onHoverChange: (hovered) => hoverChanged = true,
-                child: const Text('Disabled Radio'),
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: Center(
+              child: RadioGroup<radio_example.RadioOption>(
+                groupValue: selectedValue,
+                onChanged: (value) => selectedValue = value!,
+                child: NakedRadio<radio_example.RadioOption>(
+                  key: radioKey,
+                  value: radio_example.RadioOption.apple,
+                  enabled: false,
+                  onHoverChange: (hovered) => hoverChanged = true,
+                  child: const Text('Disabled Radio'),
+                ),
               ),
             ),
           ),
         ),
-      ));
+      );
       await tester.pumpAndSettle();
 
       // Test that disabled radio doesn't respond to tap
       await tester.tap(find.byKey(radioKey));
       await tester.pump();
       expect(
-          selectedValue, radio_example.RadioOption.banana); // Should not change
+        selectedValue,
+        radio_example.RadioOption.banana,
+      ); // Should not change
 
       // Test that hover callbacks aren't triggered when disabled
       await tester.simulateHover(radioKey);
@@ -193,7 +212,9 @@ void main() {
       // Test that disabled radio doesn't respond to keyboard
       await tester.testKeyboardActivation(find.byKey(radioKey));
       expect(
-          selectedValue, radio_example.RadioOption.banana); // Should not change
+        selectedValue,
+        radio_example.RadioOption.banana,
+      ); // Should not change
     });
 
     testWidgets('radio group enforces single selection', (tester) async {
@@ -202,58 +223,60 @@ void main() {
       final radio1Key = UniqueKey();
       final radio2Key = UniqueKey();
 
-      await tester.pumpWidget(MaterialApp(
-        home: Scaffold(
-          body: Center(
-            child: RadioGroup<radio_example.RadioOption>(
-              groupValue: selectedValue,
-              onChanged: (value) => selectedValue = value!,
-              child: Column(
-                children: [
-                  NakedRadio<radio_example.RadioOption>(
-                    key: radio1Key,
-                    value: radio_example.RadioOption.apple,
-                    builder: (context, radioState, child) {
-                      return Container(
-                        width: 20,
-                        height: 20,
-                        decoration: BoxDecoration(
-                          border: Border.all(
-                            color: radioState.isSelected
-                                ? Colors.blue
-                                : Colors.grey,
-                            width: radioState.isSelected ? 4 : 2,
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: Center(
+              child: RadioGroup<radio_example.RadioOption>(
+                groupValue: selectedValue,
+                onChanged: (value) => selectedValue = value!,
+                child: Column(
+                  children: [
+                    NakedRadio<radio_example.RadioOption>(
+                      key: radio1Key,
+                      value: radio_example.RadioOption.apple,
+                      builder: (context, radioState, child) {
+                        return Container(
+                          width: 20,
+                          height: 20,
+                          decoration: BoxDecoration(
+                            border: Border.all(
+                              color: radioState.isSelected
+                                  ? Colors.blue
+                                  : Colors.grey,
+                              width: radioState.isSelected ? 4 : 2,
+                            ),
+                            borderRadius: BorderRadius.circular(10),
                           ),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                      );
-                    },
-                  ),
-                  NakedRadio<radio_example.RadioOption>(
-                    key: radio2Key,
-                    value: radio_example.RadioOption.banana,
-                    builder: (context, radioState, child) {
-                      return Container(
-                        width: 20,
-                        height: 20,
-                        decoration: BoxDecoration(
-                          border: Border.all(
-                            color: radioState.isSelected
-                                ? Colors.blue
-                                : Colors.grey,
-                            width: radioState.isSelected ? 4 : 2,
+                        );
+                      },
+                    ),
+                    NakedRadio<radio_example.RadioOption>(
+                      key: radio2Key,
+                      value: radio_example.RadioOption.banana,
+                      builder: (context, radioState, child) {
+                        return Container(
+                          width: 20,
+                          height: 20,
+                          decoration: BoxDecoration(
+                            border: Border.all(
+                              color: radioState.isSelected
+                                  ? Colors.blue
+                                  : Colors.grey,
+                              width: radioState.isSelected ? 4 : 2,
+                            ),
+                            borderRadius: BorderRadius.circular(10),
                           ),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                      );
-                    },
-                  ),
-                ],
+                        );
+                      },
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
         ),
-      ));
+      );
       await tester.pumpAndSettle();
 
       // Initially banana is selected
@@ -279,50 +302,52 @@ void main() {
       bool isSelected = false;
       bool isHovered = false;
 
-      await tester.pumpWidget(MaterialApp(
-        home: Scaffold(
-          body: Center(
-            child: StatefulBuilder(
-              builder: (context, setState) {
-                return RadioGroup<radio_example.RadioOption>(
-                  groupValue: groupValue,
-                  onChanged: (value) => setState(() => groupValue = value),
-                  child: NakedRadio<radio_example.RadioOption>(
-                    key: radioKey,
-                    value: radio_example.RadioOption.apple,
-                    onHoverChange: (hovered) => isHovered = hovered,
-                    builder: (context, radioState, child) {
-                      isSelected = radioState.isSelected;
-                      return Container(
-                        width: 24,
-                        height: 24,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: isSelected ? Colors.blue : Colors.white,
-                          border: Border.all(
-                            color: radioState.isHovered
-                                ? Colors.blue.shade400
-                                : Colors.grey,
-                            width: radioState.isPressed ? 3 : 2,
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: Center(
+              child: StatefulBuilder(
+                builder: (context, setState) {
+                  return RadioGroup<radio_example.RadioOption>(
+                    groupValue: groupValue,
+                    onChanged: (value) => setState(() => groupValue = value),
+                    child: NakedRadio<radio_example.RadioOption>(
+                      key: radioKey,
+                      value: radio_example.RadioOption.apple,
+                      onHoverChange: (hovered) => isHovered = hovered,
+                      builder: (context, radioState, child) {
+                        isSelected = radioState.isSelected;
+                        return Container(
+                          width: 24,
+                          height: 24,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: isSelected ? Colors.blue : Colors.white,
+                            border: Border.all(
+                              color: radioState.isHovered
+                                  ? Colors.blue.shade400
+                                  : Colors.grey,
+                              width: radioState.isPressed ? 3 : 2,
+                            ),
                           ),
-                        ),
-                        child: isSelected
-                            ? const Icon(
-                                Icons.circle,
-                                color: Colors.white,
-                                size: 12,
-                              )
-                            : null,
-                      );
-                    },
-                    child: const Text('Builder Radio'),
-                  ),
-                );
-              },
+                          child: isSelected
+                              ? const Icon(
+                                  Icons.circle,
+                                  color: Colors.white,
+                                  size: 12,
+                                )
+                              : null,
+                        );
+                      },
+                      child: const Text('Builder Radio'),
+                    ),
+                  );
+                },
+              ),
             ),
           ),
         ),
-      ));
+      );
       await tester.pumpAndSettle();
 
       final radioFinder = find.byKey(radioKey);
@@ -332,9 +357,12 @@ void main() {
       expect(isSelected, isFalse);
 
       // Test hover state updates builder
-      await tester.simulateHover(radioKey, onHover: () {
-        expect(isHovered, isTrue);
-      });
+      await tester.simulateHover(
+        radioKey,
+        onHover: () {
+          expect(isHovered, isTrue);
+        },
+      );
 
       // Tap to select - builder should update
       await tester.tap(radioFinder);

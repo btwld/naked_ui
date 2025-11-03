@@ -41,18 +41,20 @@ void main() {
       final checkboxKey = UniqueKey();
       bool checkboxValue = false;
 
-      await tester.pumpWidget(MaterialApp(
-        home: Scaffold(
-          body: Center(
-            child: NakedCheckbox(
-              key: checkboxKey,
-              value: checkboxValue,
-              onChanged: (value) => checkboxValue = value!,
-              child: const Text('Test Checkbox'),
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: Center(
+              child: NakedCheckbox(
+                key: checkboxKey,
+                value: checkboxValue,
+                onChanged: (value) => checkboxValue = value!,
+                child: const Text('Test Checkbox'),
+              ),
             ),
           ),
         ),
-      ));
+      );
       await tester.pumpAndSettle();
 
       // Test keyboard activation
@@ -66,32 +68,40 @@ void main() {
       bool isPressed = false;
       bool checkboxValue = false;
 
-      await tester.pumpWidget(MaterialApp(
-        home: Scaffold(
-          body: Center(
-            child: NakedCheckbox(
-              key: checkboxKey,
-              value: checkboxValue,
-              onChanged: (value) => checkboxValue = value!,
-              onHoverChange: (hovered) => isHovered = hovered,
-              onPressChange: (pressed) => isPressed = pressed,
-              onFocusChange: (focused) {},
-              child: const Text('Test Checkbox'),
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: Center(
+              child: NakedCheckbox(
+                key: checkboxKey,
+                value: checkboxValue,
+                onChanged: (value) => checkboxValue = value!,
+                onHoverChange: (hovered) => isHovered = hovered,
+                onPressChange: (pressed) => isPressed = pressed,
+                onFocusChange: (focused) {},
+                child: const Text('Test Checkbox'),
+              ),
             ),
           ),
         ),
-      ));
+      );
       await tester.pumpAndSettle();
 
       // Test hover state
-      await tester.simulateHover(checkboxKey, onHover: () {
-        expect(isHovered, isTrue);
-      });
+      await tester.simulateHover(
+        checkboxKey,
+        onHover: () {
+          expect(isHovered, isTrue);
+        },
+      );
 
       // Test press state
-      await tester.simulatePress(checkboxKey, onPressed: () {
-        expect(isPressed, isTrue);
-      });
+      await tester.simulatePress(
+        checkboxKey,
+        onPressed: () {
+          expect(isPressed, isTrue);
+        },
+      );
     });
 
     testWidgets('checkbox handles focus management correctly', (tester) async {
@@ -100,20 +110,22 @@ void main() {
       bool focusChanged = false;
       bool checkboxValue = false;
 
-      await tester.pumpWidget(MaterialApp(
-        home: Scaffold(
-          body: Center(
-            child: NakedCheckbox(
-              key: checkboxKey,
-              value: checkboxValue,
-              onChanged: (value) => checkboxValue = value!,
-              focusNode: focusNode,
-              onFocusChange: (focused) => focusChanged = focused,
-              child: const Text('Test Checkbox'),
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: Center(
+              child: NakedCheckbox(
+                key: checkboxKey,
+                value: checkboxValue,
+                onChanged: (value) => checkboxValue = value!,
+                focusNode: focusNode,
+                onFocusChange: (focused) => focusChanged = focused,
+                child: const Text('Test Checkbox'),
+              ),
             ),
           ),
         ),
-      ));
+      );
       await tester.pumpAndSettle();
 
       // Test focus acquisition
@@ -136,21 +148,23 @@ void main() {
       bool hoverChanged = false;
       bool checkboxValue = false;
 
-      await tester.pumpWidget(MaterialApp(
-        home: Scaffold(
-          body: Center(
-            child: NakedCheckbox(
-              key: checkboxKey,
-              value: checkboxValue,
-              onChanged: (value) => wasChanged = true,
-              enabled: false,
-              onHoverChange: (hovered) => hoverChanged = true,
-              onFocusChange: (focused) {},
-              child: const Text('Disabled Checkbox'),
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: Center(
+              child: NakedCheckbox(
+                key: checkboxKey,
+                value: checkboxValue,
+                onChanged: (value) => wasChanged = true,
+                enabled: false,
+                onHoverChange: (hovered) => hoverChanged = true,
+                onFocusChange: (focused) {},
+                child: const Text('Disabled Checkbox'),
+              ),
             ),
           ),
         ),
-      ));
+      );
       await tester.pumpAndSettle();
 
       // Test that disabled checkbox doesn't respond to tap
@@ -167,25 +181,28 @@ void main() {
       expect(hoverChanged, isFalse);
     });
 
-    testWidgets('tap toggles value and does not request focus by default',
-        (tester) async {
+    testWidgets('tap toggles value and does not request focus by default', (
+      tester,
+    ) async {
       final checkboxKey = UniqueKey();
       final focusNode = tester.createManagedFocusNode();
       bool checkboxValue = false;
 
-      await tester.pumpWidget(MaterialApp(
-        home: Scaffold(
-          body: Center(
-            child: NakedCheckbox(
-              key: checkboxKey,
-              focusNode: focusNode,
-              value: checkboxValue,
-              onChanged: (value) => checkboxValue = value!,
-              child: const Text('Focus Test Checkbox'),
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: Center(
+              child: NakedCheckbox(
+                key: checkboxKey,
+                focusNode: focusNode,
+                value: checkboxValue,
+                onChanged: (value) => checkboxValue = value!,
+                child: const Text('Focus Test Checkbox'),
+              ),
             ),
           ),
         ),
-      ));
+      );
       await tester.pumpAndSettle();
 
       // Initially not focused
@@ -200,25 +217,28 @@ void main() {
       expect(checkboxValue, isTrue);
     });
 
-    testWidgets('tap does not request focus (explicit focusNode present)',
-        (tester) async {
+    testWidgets('tap does not request focus (explicit focusNode present)', (
+      tester,
+    ) async {
       final checkboxKey = UniqueKey();
       final focusNode = tester.createManagedFocusNode();
       bool checkboxValue = false;
 
-      await tester.pumpWidget(MaterialApp(
-        home: Scaffold(
-          body: Center(
-            child: NakedCheckbox(
-              key: checkboxKey,
-              focusNode: focusNode,
-              value: checkboxValue,
-              onChanged: (value) => checkboxValue = value!,
-              child: const Text('No Focus Test Checkbox'),
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: Center(
+              child: NakedCheckbox(
+                key: checkboxKey,
+                focusNode: focusNode,
+                value: checkboxValue,
+                onChanged: (value) => checkboxValue = value!,
+                child: const Text('No Focus Test Checkbox'),
+              ),
             ),
           ),
         ),
-      ));
+      );
       await tester.pumpAndSettle();
 
       // Initially not focused
@@ -238,55 +258,58 @@ void main() {
       bool checkboxValue = false;
       bool isHovered = false;
 
-      await tester.pumpWidget(MaterialApp(
-        home: Scaffold(
-          body: Center(
-            child: StatefulBuilder(
-              builder: (context, setState) {
-                return NakedCheckbox(
-                  key: checkboxKey,
-                  value: checkboxValue,
-                  onChanged: (value) => setState(() => checkboxValue = value!),
-                  builder: (context, checkboxState, child) {
-                    final bool isChecked = checkboxState.isChecked == true;
-                    final box = Container(
-                      width: 24,
-                      height: 24,
-                      decoration: BoxDecoration(
-                        color: isChecked ? Colors.blue : Colors.white,
-                        border: Border.all(
-                          color: checkboxState.isHovered
-                              ? Colors.blue.shade400
-                              : Colors.grey,
-                          width: checkboxState.isPressed ? 3 : 2,
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: Center(
+              child: StatefulBuilder(
+                builder: (context, setState) {
+                  return NakedCheckbox(
+                    key: checkboxKey,
+                    value: checkboxValue,
+                    onChanged: (value) =>
+                        setState(() => checkboxValue = value!),
+                    builder: (context, checkboxState, child) {
+                      final bool isChecked = checkboxState.isChecked == true;
+                      final box = Container(
+                        width: 24,
+                        height: 24,
+                        decoration: BoxDecoration(
+                          color: isChecked ? Colors.blue : Colors.white,
+                          border: Border.all(
+                            color: checkboxState.isHovered
+                                ? Colors.blue.shade400
+                                : Colors.grey,
+                            width: checkboxState.isPressed ? 3 : 2,
+                          ),
+                          borderRadius: BorderRadius.circular(4),
                         ),
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: isChecked
-                          ? const Icon(
-                              Icons.check,
-                              color: Colors.white,
-                              size: 18,
-                            )
-                          : null,
-                    );
-                    return Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        box,
-                        const SizedBox(height: 8),
-                        if (child != null) child,
-                      ],
-                    );
-                  },
-                  onHoverChange: (hovered) => isHovered = hovered,
-                  child: const Text('Builder Checkbox'),
-                );
-              },
+                        child: isChecked
+                            ? const Icon(
+                                Icons.check,
+                                color: Colors.white,
+                                size: 18,
+                              )
+                            : null,
+                      );
+                      return Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          box,
+                          const SizedBox(height: 8),
+                          if (child != null) child,
+                        ],
+                      );
+                    },
+                    onHoverChange: (hovered) => isHovered = hovered,
+                    child: const Text('Builder Checkbox'),
+                  );
+                },
+              ),
             ),
           ),
         ),
-      ));
+      );
       await tester.pumpAndSettle();
 
       final checkboxFinder = find.byKey(checkboxKey);
@@ -297,9 +320,12 @@ void main() {
       expect(find.byIcon(Icons.check), findsNothing);
 
       // Test hover state updates builder
-      await tester.simulateHover(checkboxKey, onHover: () {
-        expect(isHovered, isTrue);
-      });
+      await tester.simulateHover(
+        checkboxKey,
+        onHover: () {
+          expect(isHovered, isTrue);
+        },
+      );
 
       // Tap to check - builder should update
       await tester.tap(checkboxFinder);
@@ -312,23 +338,25 @@ void main() {
       final checkboxKey = UniqueKey();
       bool? checkboxValue; // null for indeterminate state
 
-      await tester.pumpWidget(MaterialApp(
-        home: Scaffold(
-          body: Center(
-            child: StatefulBuilder(
-              builder: (context, setState) {
-                return NakedCheckbox(
-                  key: checkboxKey,
-                  value: checkboxValue,
-                  tristate: true,
-                  onChanged: (value) => setState(() => checkboxValue = value),
-                  child: const Text('Tristate Checkbox'),
-                );
-              },
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: Center(
+              child: StatefulBuilder(
+                builder: (context, setState) {
+                  return NakedCheckbox(
+                    key: checkboxKey,
+                    value: checkboxValue,
+                    tristate: true,
+                    onChanged: (value) => setState(() => checkboxValue = value),
+                    child: const Text('Tristate Checkbox'),
+                  );
+                },
+              ),
             ),
           ),
         ),
-      ));
+      );
       await tester.pumpAndSettle();
 
       final checkboxFinder = find.byKey(checkboxKey);

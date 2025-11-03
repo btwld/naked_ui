@@ -34,26 +34,28 @@ void main() {
       final focusNode = tester.createManagedFocusNode();
       double currentValue = 0.5;
 
-      await tester.pumpWidget(MaterialApp(
-        home: Scaffold(
-          body: Center(
-            child: NakedSlider(
-              key: sliderKey,
-              value: currentValue,
-              focusNode: focusNode,
-              onChanged: (value) => currentValue = value,
-              child: Container(
-                width: 200,
-                height: 20,
-                decoration: BoxDecoration(
-                  color: Colors.grey,
-                  borderRadius: BorderRadius.circular(10),
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: Center(
+              child: NakedSlider(
+                key: sliderKey,
+                value: currentValue,
+                focusNode: focusNode,
+                onChanged: (value) => currentValue = value,
+                child: Container(
+                  width: 200,
+                  height: 20,
+                  decoration: BoxDecoration(
+                    color: Colors.grey,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
                 ),
               ),
             ),
           ),
         ),
-      ));
+      );
       await tester.pumpAndSettle();
 
       // Focus the slider
@@ -85,34 +87,36 @@ void main() {
       bool dragEnded = false;
       bool valueChanged = false;
 
-      await tester.pumpWidget(MaterialApp(
-        home: Scaffold(
-          body: Center(
-            child: NakedSlider(
-              key: sliderKey,
-              value: currentValue,
-              onChanged: (value) {
-                currentValue = value;
-                valueChanged = true;
-              },
-              onDragStart: () {
-                dragStarted = true;
-              },
-              onDragEnd: (value) {
-                dragEnded = true;
-              },
-              child: Container(
-                width: 200,
-                height: 20,
-                decoration: BoxDecoration(
-                  color: Colors.grey,
-                  borderRadius: BorderRadius.circular(10),
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: Center(
+              child: NakedSlider(
+                key: sliderKey,
+                value: currentValue,
+                onChanged: (value) {
+                  currentValue = value;
+                  valueChanged = true;
+                },
+                onDragStart: () {
+                  dragStarted = true;
+                },
+                onDragEnd: (value) {
+                  dragEnded = true;
+                },
+                child: Container(
+                  width: 200,
+                  height: 20,
+                  decoration: BoxDecoration(
+                    color: Colors.grey,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
                 ),
               ),
             ),
           ),
         ),
-      ));
+      );
       await tester.pumpAndSettle();
 
       // Perform drag gesture
@@ -141,34 +145,39 @@ void main() {
       bool isFocused = false;
       double currentValue = 0.5;
 
-      await tester.pumpWidget(MaterialApp(
-        home: Scaffold(
-          body: Center(
-            child: NakedSlider(
-              key: sliderKey,
-              value: currentValue,
-              focusNode: focusNode,
-              onChanged: (value) => currentValue = value,
-              onHoverChange: (hovered) => isHovered = hovered,
-              onFocusChange: (focused) => isFocused = focused,
-              child: Container(
-                width: 200,
-                height: 20,
-                decoration: BoxDecoration(
-                  color: Colors.grey,
-                  borderRadius: BorderRadius.circular(10),
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: Center(
+              child: NakedSlider(
+                key: sliderKey,
+                value: currentValue,
+                focusNode: focusNode,
+                onChanged: (value) => currentValue = value,
+                onHoverChange: (hovered) => isHovered = hovered,
+                onFocusChange: (focused) => isFocused = focused,
+                child: Container(
+                  width: 200,
+                  height: 20,
+                  decoration: BoxDecoration(
+                    color: Colors.grey,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
                 ),
               ),
             ),
           ),
         ),
-      ));
+      );
       await tester.pumpAndSettle();
 
       // Test hover state
-      await tester.simulateHover(sliderKey, onHover: () {
-        expect(isHovered, isTrue);
-      });
+      await tester.simulateHover(
+        sliderKey,
+        onHover: () {
+          expect(isHovered, isTrue);
+        },
+      );
 
       // Test focus state
       focusNode.requestFocus();
@@ -182,27 +191,29 @@ void main() {
       bool valueChanged = false;
       bool hoverChanged = false;
 
-      await tester.pumpWidget(MaterialApp(
-        home: Scaffold(
-          body: Center(
-            child: NakedSlider(
-              key: sliderKey,
-              value: currentValue,
-              enabled: false,
-              onChanged: (value) => valueChanged = true,
-              onHoverChange: (hovered) => hoverChanged = true,
-              child: Container(
-                width: 200,
-                height: 20,
-                decoration: BoxDecoration(
-                  color: Colors.grey,
-                  borderRadius: BorderRadius.circular(10),
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: Center(
+              child: NakedSlider(
+                key: sliderKey,
+                value: currentValue,
+                enabled: false,
+                onChanged: (value) => valueChanged = true,
+                onHoverChange: (hovered) => hoverChanged = true,
+                child: Container(
+                  width: 200,
+                  height: 20,
+                  decoration: BoxDecoration(
+                    color: Colors.grey,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
                 ),
               ),
             ),
           ),
         ),
-      ));
+      );
       await tester.pumpAndSettle();
 
       // Try to drag - should not work
@@ -218,27 +229,29 @@ void main() {
       final sliderKey = UniqueKey();
       double currentValue = 10.0;
 
-      await tester.pumpWidget(MaterialApp(
-        home: Scaffold(
-          body: Center(
-            child: NakedSlider(
-              key: sliderKey,
-              value: currentValue,
-              min: 5.0,
-              max: 15.0,
-              onChanged: (value) => currentValue = value,
-              child: Container(
-                width: 200,
-                height: 20,
-                decoration: BoxDecoration(
-                  color: Colors.grey,
-                  borderRadius: BorderRadius.circular(10),
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: Center(
+              child: NakedSlider(
+                key: sliderKey,
+                value: currentValue,
+                min: 5.0,
+                max: 15.0,
+                onChanged: (value) => currentValue = value,
+                child: Container(
+                  width: 200,
+                  height: 20,
+                  decoration: BoxDecoration(
+                    color: Colors.grey,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
                 ),
               ),
             ),
           ),
         ),
-      ));
+      );
       await tester.pumpAndSettle();
 
       // Drag far to the left (should clamp to min)
@@ -259,33 +272,36 @@ void main() {
       expect(currentValue, lessThanOrEqualTo(15.0));
     });
 
-    testWidgets('slider works with divisions for discrete values',
-        (tester) async {
+    testWidgets('slider works with divisions for discrete values', (
+      tester,
+    ) async {
       final sliderKey = UniqueKey();
       double currentValue = 0.5;
 
-      await tester.pumpWidget(MaterialApp(
-        home: Scaffold(
-          body: Center(
-            child: NakedSlider(
-              key: sliderKey,
-              value: currentValue,
-              min: 0.0,
-              max: 1.0,
-              divisions: 4, // 0.0, 0.25, 0.5, 0.75, 1.0
-              onChanged: (value) => currentValue = value,
-              child: Container(
-                width: 200,
-                height: 20,
-                decoration: BoxDecoration(
-                  color: Colors.grey,
-                  borderRadius: BorderRadius.circular(10),
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: Center(
+              child: NakedSlider(
+                key: sliderKey,
+                value: currentValue,
+                min: 0.0,
+                max: 1.0,
+                divisions: 4, // 0.0, 0.25, 0.5, 0.75, 1.0
+                onChanged: (value) => currentValue = value,
+                child: Container(
+                  width: 200,
+                  height: 20,
+                  decoration: BoxDecoration(
+                    color: Colors.grey,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
                 ),
               ),
             ),
           ),
         ),
-      ));
+      );
       await tester.pumpAndSettle();
 
       // Drag to approximately 0.3 - should snap to 0.25
@@ -308,8 +324,10 @@ void main() {
         of: sliderFinder,
         matching: find.byType(CustomPaint),
       );
-      expect(customPaintFinder,
-          findsOneWidget); // Single CustomPaint with both track and thumb painters
+      expect(
+        customPaintFinder,
+        findsOneWidget,
+      ); // Single CustomPaint with both track and thumb painters
 
       // Test interaction with styled slider
       await tester.dragSlider(sliderFinder, 0.2);

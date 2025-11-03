@@ -65,17 +65,19 @@ void main() {
       final darkTabKey = UniqueKey();
       final systemTabKey = UniqueKey();
 
-      await tester.pumpWidget(MaterialApp(
-        home: Scaffold(
-          body: Center(
-            child: _StatefulTabsWidget(
-              lightTabKey: lightTabKey,
-              darkTabKey: darkTabKey,
-              systemTabKey: systemTabKey,
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: Center(
+              child: _StatefulTabsWidget(
+                lightTabKey: lightTabKey,
+                darkTabKey: darkTabKey,
+                systemTabKey: systemTabKey,
+              ),
             ),
           ),
         ),
-      ));
+      );
       await tester.pumpAndSettle();
 
       // Test keyboard activation on tabs
@@ -97,29 +99,34 @@ void main() {
       bool isFocused = false;
       bool isPressed = false;
 
-      await tester.pumpWidget(MaterialApp(
-        home: Scaffold(
-          body: Center(
-            child: _StatefulTabsWidget(
-              customTab: NakedTab(
-                key: tabKey,
-                tabId: 'test',
-                focusNode: focusNode,
-                onHoverChange: (hovered) => isHovered = hovered,
-                onFocusChange: (focused) => isFocused = focused,
-                onPressChange: (pressed) => isPressed = pressed,
-                child: const Text('Test Tab'),
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: Center(
+              child: _StatefulTabsWidget(
+                customTab: NakedTab(
+                  key: tabKey,
+                  tabId: 'test',
+                  focusNode: focusNode,
+                  onHoverChange: (hovered) => isHovered = hovered,
+                  onFocusChange: (focused) => isFocused = focused,
+                  onPressChange: (pressed) => isPressed = pressed,
+                  child: const Text('Test Tab'),
+                ),
               ),
             ),
           ),
         ),
-      ));
+      );
       await tester.pumpAndSettle();
 
       // Test hover state
-      await tester.simulateHover(tabKey, onHover: () {
-        expect(isHovered, isTrue);
-      });
+      await tester.simulateHover(
+        tabKey,
+        onHover: () {
+          expect(isHovered, isTrue);
+        },
+      );
 
       // Test focus state
       focusNode.requestFocus();
@@ -127,47 +134,54 @@ void main() {
       expect(isFocused, isTrue);
 
       // Test press state
-      await tester.simulatePress(tabKey, onPressed: () {
-        expect(isPressed, isTrue);
-      });
+      await tester.simulatePress(
+        tabKey,
+        onPressed: () {
+          expect(isPressed, isTrue);
+        },
+      );
     });
 
     testWidgets('tab builder method works with states', (tester) async {
       final tabKey = UniqueKey();
       bool isSelected = false;
 
-      await tester.pumpWidget(MaterialApp(
-        home: Scaffold(
-          body: Center(
-            child: _StatefulTabsWidget(
-              customTab: NakedTab(
-                key: tabKey,
-                tabId: 'test',
-                builder: (context, tabState, child) {
-                  isSelected = tabState.isSelected;
-                  return Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: tabState.isSelected ? Colors.blue : Colors.grey,
-                      border: Border.all(
-                        color: tabState.isHovered ? Colors.red : Colors.black,
-                        width: tabState.isPressed ? 4 : 2,
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: Center(
+              child: _StatefulTabsWidget(
+                customTab: NakedTab(
+                  key: tabKey,
+                  tabId: 'test',
+                  builder: (context, tabState, child) {
+                    isSelected = tabState.isSelected;
+                    return Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: tabState.isSelected ? Colors.blue : Colors.grey,
+                        border: Border.all(
+                          color: tabState.isHovered ? Colors.red : Colors.black,
+                          width: tabState.isPressed ? 4 : 2,
+                        ),
                       ),
-                    ),
-                    child: child,
-                  );
-                },
-                child: const Text('Builder Tab'),
+                      child: child,
+                    );
+                  },
+                  child: const Text('Builder Tab'),
+                ),
               ),
             ),
           ),
         ),
-      ));
+      );
       await tester.pumpAndSettle();
 
       // Test that builder receives states correctly
-      expect(isSelected,
-          isTrue); // Tab should be selected by default in our helper
+      expect(
+        isSelected,
+        isTrue,
+      ); // Tab should be selected by default in our helper
 
       // Test hover state changes styling
       await tester.simulateHover(tabKey);
@@ -182,13 +196,11 @@ void main() {
     });
 
     testWidgets('tab views show/hide based on selection', (tester) async {
-      await tester.pumpWidget(const MaterialApp(
-        home: Scaffold(
-          body: Center(
-            child: _StatefulTabsWidget(),
-          ),
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(body: Center(child: _StatefulTabsWidget())),
         ),
-      ));
+      );
       await tester.pumpAndSettle();
 
       // Initially tab1 should be selected
@@ -224,7 +236,7 @@ void main() {
       final expectedContents = [
         'Tab Content Light',
         'Tab Content Dark',
-        'Tab Content System'
+        'Tab Content System',
       ];
 
       for (int i = 0; i < tabs.length; i++) {
@@ -313,18 +325,9 @@ class _StatefulTabsWidgetState extends State<_StatefulTabsWidget> {
               ],
             ),
           ),
-          const NakedTabView(
-            tabId: 'light',
-            child: Text('Light Content'),
-          ),
-          const NakedTabView(
-            tabId: 'dark',
-            child: Text('Dark Content'),
-          ),
-          const NakedTabView(
-            tabId: 'system',
-            child: Text('System Content'),
-          ),
+          const NakedTabView(tabId: 'light', child: Text('Light Content')),
+          const NakedTabView(tabId: 'dark', child: Text('Dark Content')),
+          const NakedTabView(tabId: 'system', child: Text('System Content')),
         ],
       ),
     );

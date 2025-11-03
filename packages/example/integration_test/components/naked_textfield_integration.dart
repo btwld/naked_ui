@@ -23,7 +23,9 @@ void main() {
       await tester.pump();
       // Prefer targeting the inner EditableText to avoid ambiguity
       final editable = find.descendant(
-          of: textFieldFinder, matching: find.byType(EditableText));
+        of: textFieldFinder,
+        matching: find.byType(EditableText),
+      );
       await tester.enterText(editable, 'Hello World');
       await tester.pump();
 
@@ -35,25 +37,27 @@ void main() {
       final textFieldKey = UniqueKey();
       final controller = TextEditingController(text: 'Initial text');
 
-      await tester.pumpWidget(MaterialApp(
-        home: Scaffold(
-          body: Center(
-            child: NakedTextField(
-              key: textFieldKey,
-              controller: controller,
-              builder: (context, state, editableText) {
-                return Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    border: Border.all(color: Colors.grey),
-                  ),
-                  child: editableText,
-                );
-              },
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: Center(
+              child: NakedTextField(
+                key: textFieldKey,
+                controller: controller,
+                builder: (context, state, editableText) {
+                  return Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.grey),
+                    ),
+                    child: editableText,
+                  );
+                },
+              ),
             ),
           ),
         ),
-      ));
+      );
       await tester.pumpAndSettle();
 
       // Verify initial text
@@ -71,25 +75,27 @@ void main() {
       final textFieldKey = UniqueKey();
       final controller = TextEditingController();
 
-      await tester.pumpWidget(MaterialApp(
-        home: Scaffold(
-          body: Center(
-            child: NakedTextField(
-              key: textFieldKey,
-              controller: controller,
-              builder: (context, state, editableText) {
-                return Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    border: Border.all(color: Colors.grey),
-                  ),
-                  child: editableText,
-                );
-              },
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: Center(
+              child: NakedTextField(
+                key: textFieldKey,
+                controller: controller,
+                builder: (context, state, editableText) {
+                  return Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.grey),
+                    ),
+                    child: editableText,
+                  );
+                },
+              ),
             ),
           ),
         ),
-      ));
+      );
       await tester.pumpAndSettle();
 
       // Initially empty
@@ -107,38 +113,45 @@ void main() {
 
       // Verify field shows updated text
       tester.expectTextValue(
-          find.byKey(textFieldKey), 'Updated programmatically');
+        find.byKey(textFieldKey),
+        'Updated programmatically',
+      );
     });
 
     testWidgets('focus and hover callbacks work correctly', (tester) async {
       final textFieldKey = UniqueKey();
       bool isHovered = false;
 
-      await tester.pumpWidget(MaterialApp(
-        home: Scaffold(
-          body: Center(
-            child: NakedTextField(
-              key: textFieldKey,
-              onHoverChange: (hovered) => isHovered = hovered,
-              builder: (context, state, editableText) {
-                return Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    border: Border.all(color: Colors.grey),
-                  ),
-                  child: editableText,
-                );
-              },
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: Center(
+              child: NakedTextField(
+                key: textFieldKey,
+                onHoverChange: (hovered) => isHovered = hovered,
+                builder: (context, state, editableText) {
+                  return Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.grey),
+                    ),
+                    child: editableText,
+                  );
+                },
+              ),
             ),
           ),
         ),
-      ));
+      );
       await tester.pumpAndSettle();
 
       // Test hover state
-      await tester.simulateHover(textFieldKey, onHover: () {
-        expect(isHovered, isTrue);
-      });
+      await tester.simulateHover(
+        textFieldKey,
+        onHover: () {
+          expect(isHovered, isTrue);
+        },
+      );
 
       // Test basic tap interaction works
       await tester.tap(find.byKey(textFieldKey));
@@ -150,26 +163,28 @@ void main() {
       final focusNode = tester.createManagedFocusNode();
       var focusTransitions = <bool>[];
 
-      await tester.pumpWidget(MaterialApp(
-        home: Scaffold(
-          body: Center(
-            child: NakedTextField(
-              key: textFieldKey,
-              focusNode: focusNode,
-              onFocusChange: (focused) => focusTransitions.add(focused),
-              builder: (context, state, editableText) {
-                return Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    border: Border.all(color: Colors.grey),
-                  ),
-                  child: editableText,
-                );
-              },
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: Center(
+              child: NakedTextField(
+                key: textFieldKey,
+                focusNode: focusNode,
+                onFocusChange: (focused) => focusTransitions.add(focused),
+                builder: (context, state, editableText) {
+                  return Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.grey),
+                    ),
+                    child: editableText,
+                  );
+                },
+              ),
             ),
           ),
         ),
-      ));
+      );
       await tester.pumpAndSettle();
 
       // Initially not focused
@@ -197,36 +212,40 @@ void main() {
       // Note: We don't test focus/press change callbacks for disabled fields
       // as the framework behavior can vary
 
-      await tester.pumpWidget(MaterialApp(
-        home: Scaffold(
-          body: Center(
-            child: NakedTextField(
-              key: textFieldKey,
-              controller: controller,
-              enabled: false,
-              onHoverChange: (hovered) => hoverChanged = true,
-              onFocusChange: (focused) {},
-              onPressChange: (pressed) {},
-              builder: (context, state, editableText) {
-                return Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    border: Border.all(color: Colors.grey),
-                  ),
-                  child: editableText,
-                );
-              },
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: Center(
+              child: NakedTextField(
+                key: textFieldKey,
+                controller: controller,
+                enabled: false,
+                onHoverChange: (hovered) => hoverChanged = true,
+                onFocusChange: (focused) {},
+                onPressChange: (pressed) {},
+                builder: (context, state, editableText) {
+                  return Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.grey),
+                    ),
+                    child: editableText,
+                  );
+                },
+              ),
             ),
           ),
         ),
-      ));
+      );
       await tester.pumpAndSettle();
 
       // Attempt to type - should not work
       await tester.tap(find.byKey(textFieldKey));
       await tester.pump();
       final editable = find.descendant(
-          of: find.byKey(textFieldKey), matching: find.byType(EditableText));
+        of: find.byKey(textFieldKey),
+        matching: find.byType(EditableText),
+      );
       await tester.enterText(editable, 'Should not work');
       await tester.pump();
 
@@ -247,26 +266,28 @@ void main() {
       final textFieldKey = UniqueKey();
       final controller = TextEditingController(text: 'Read only text');
 
-      await tester.pumpWidget(MaterialApp(
-        home: Scaffold(
-          body: Center(
-            child: NakedTextField(
-              key: textFieldKey,
-              controller: controller,
-              readOnly: true,
-              builder: (context, state, editableText) {
-                return Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    border: Border.all(color: Colors.grey),
-                  ),
-                  child: editableText,
-                );
-              },
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: Center(
+              child: NakedTextField(
+                key: textFieldKey,
+                controller: controller,
+                readOnly: true,
+                builder: (context, state, editableText) {
+                  return Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.grey),
+                    ),
+                    child: editableText,
+                  );
+                },
+              ),
             ),
           ),
         ),
-      ));
+      );
       await tester.pumpAndSettle();
 
       // Tap to focus
@@ -275,7 +296,9 @@ void main() {
 
       // Try to type - should not modify text
       final editable = find.descendant(
-          of: find.byKey(textFieldKey), matching: find.byType(EditableText));
+        of: find.byKey(textFieldKey),
+        matching: find.byType(EditableText),
+      );
       await tester.enterText(editable, 'Should not work');
       await tester.pump();
 
@@ -286,8 +309,9 @@ void main() {
     testWidgets('works with example app basic interaction', (tester) async {
       // Test the example app with simplified interaction to avoid animation timeouts
       await tester.pumpWidget(const textfield_example.MyApp());
-      await tester.pump(const Duration(
-          milliseconds: 100)); // Fixed duration instead of pumpAndSettle
+      await tester.pump(
+        const Duration(milliseconds: 100),
+      ); // Fixed duration instead of pumpAndSettle
 
       final textFieldFinder = find.byType(NakedTextField);
       expect(textFieldFinder, findsOneWidget);
@@ -296,7 +320,9 @@ void main() {
       await tester.tap(textFieldFinder);
       await tester.pump();
       final editable = find.descendant(
-          of: textFieldFinder, matching: find.byType(EditableText));
+        of: textFieldFinder,
+        matching: find.byType(EditableText),
+      );
       await tester.enterText(editable, 'Testing');
       await tester.pump();
 

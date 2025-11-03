@@ -19,10 +19,7 @@ class MyApp extends StatelessWidget {
             children: [
               Text(
                 'Simple Tabs',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
               ),
               SizedBox(height: 8),
               Text(
@@ -96,17 +93,9 @@ class _TabsExampleState extends State<TabsExample> {
               ),
             ),
           ),
-          const SizedBox(
-            height: 8,
-          ),
-          const NakedTabView(
-            tabId: 'light',
-            child: Text('Tab Content Light'),
-          ),
-          const NakedTabView(
-            tabId: 'dark',
-            child: Text('Tab Content Dark'),
-          ),
+          const SizedBox(height: 8),
+          const NakedTabView(tabId: 'light', child: Text('Tab Content Light')),
+          const NakedTabView(tabId: 'dark', child: Text('Tab Content Dark')),
           const NakedTabView(
             tabId: 'system',
             child: Text('Tab Content System'),
@@ -153,20 +142,17 @@ class _TabItemState extends State<TabItem> {
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
           decoration: BoxDecoration(
             color: backgroundColor,
-            borderRadius: const BorderRadius.all(
-              Radius.circular(4),
-            ),
+            borderRadius: const BorderRadius.all(Radius.circular(4)),
           ),
           child: AnimatedDefaultTextStyle(
             duration: const Duration(milliseconds: 150),
             style: TextStyle(
               color: textColor,
-              fontWeight:
-                  state.isSelected ? FontWeight.w500 : FontWeight.normal,
+              fontWeight: state.isSelected
+                  ? FontWeight.w500
+                  : FontWeight.normal,
             ),
-            child: Text(
-              widget.label,
-            ),
+            child: Text(widget.label),
           ),
         );
       },

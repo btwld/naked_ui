@@ -220,16 +220,16 @@ class _NakedButtonState extends State<NakedButton>
     final buttonState = NakedButtonState(states: widgetStates);
 
     Widget gestureDetector = GestureDetector(
-          onTapDown: _isInteractive ? _onPressStart : null,
-          onTapUp: _isInteractive ? (_) => _onPressEnd() : null,
-          onTap: _isInteractive ? _handleTap : null,
-          onTapCancel: _isInteractive ? _onPressEnd : null,
-          onLongPress: _isInteractive ? _handleLongPress : null,
-          onLongPressStart: _isInteractive
-              ? (details) => updatePressState(true, widget.onPressChange)
-              : null,
-          onLongPressEnd: _isInteractive ? (_) => _onPressEnd() : null,
-          behavior: HitTestBehavior.opaque,
+      onTapDown: _isInteractive ? _onPressStart : null,
+      onTapUp: _isInteractive ? (_) => _onPressEnd() : null,
+      onTap: _isInteractive ? _handleTap : null,
+      onTapCancel: _isInteractive ? _onPressEnd : null,
+      onLongPress: _isInteractive ? _handleLongPress : null,
+      onLongPressStart: _isInteractive
+          ? (details) => updatePressState(true, widget.onPressChange)
+          : null,
+      onLongPressEnd: _isInteractive ? (_) => _onPressEnd() : null,
+      behavior: HitTestBehavior.opaque,
       excludeFromSemantics: true,
       child: NakedStateScopeBuilder(
         value: buttonState,

@@ -19,10 +19,7 @@ class MyApp extends StatelessWidget {
             children: [
               Text(
                 'Simple Dialog',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
               ),
               SizedBox(height: 8),
               Text(
@@ -144,11 +141,7 @@ class _DialogExampleState extends State<DialogExample> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(
-                Icons.star,
-                size: 48,
-                color: Colors.white,
-              ),
+              const Icon(Icons.star, size: 48, color: Colors.white),
               const SizedBox(height: 16),
               const Text(
                 'Success!',
@@ -161,10 +154,7 @@ class _DialogExampleState extends State<DialogExample> {
               const SizedBox(height: 8),
               const Text(
                 'Your action was completed successfully.',
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Colors.white70,
-                ),
+                style: TextStyle(fontSize: 14, color: Colors.white70),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 20),

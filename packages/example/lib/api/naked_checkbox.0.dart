@@ -19,10 +19,7 @@ class MyApp extends StatelessWidget {
             children: [
               Text(
                 'Simple Checkbox',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
               ),
               SizedBox(height: 8),
               Text(
@@ -77,19 +74,12 @@ class _CheckboxExampleState extends State<CheckboxExample> {
               height: 20,
               width: 20,
               decoration: BoxDecoration(
-                border: Border.all(
-                  color: borderColor,
-                  width: 1.5,
-                ),
+                border: Border.all(color: borderColor, width: 1.5),
                 borderRadius: BorderRadius.circular(6),
                 color: state.isChecked == true ? baseColor : Colors.transparent,
               ),
               child: state.isChecked == true
-                  ? const Icon(
-                      Icons.check,
-                      size: 16,
-                      color: Colors.white,
-                    )
+                  ? const Icon(Icons.check, size: 16, color: Colors.white)
                   : null,
             ),
             const Text(

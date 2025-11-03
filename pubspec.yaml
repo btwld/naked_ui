@@ -2,7 +2,7 @@ name: naked_ui_workspace
 environment:
   sdk: ">=3.8.0 <4.0.0"
   flutter: ">=3.27.0"
-  
+
 dependencies:
   dart_code_metrics_presets: ^2.26.1
   flutter_lints: ^6.0.0
@@ -13,4 +13,42 @@ dev_dependencies:
 workspace:
   - packages/example
   - packages/naked_ui
+  
 melos: 
+  scripts:
+    get:
+      description: Get dependencies for all packages
+      run: flutter pub get
+
+    analyze:
+      description: Run static analysis
+      run: flutter analyze
+
+    format:
+      description: Format all Dart code
+      run: dart format .
+
+    format:check:
+      description: Check if all Dart code is formatted
+      run: dart format --set-exit-if-changed .
+    
+    test:all:
+      run: melos exec -- flutter test 
+      description: Run flutter test
+      packageFilters:
+        dirExists: test
+
+    # Build commands
+    build:example:
+      description: Build example app for macOS
+      run: flutter build macos
+      packageFilters:
+        dirExists: example
+
+    # CI/CD commands
+    ci:
+      description: Run CI checks (format, analyze, test)
+      run: |
+        melos format:check &&
+        melos analyze &&
+        melos test:all

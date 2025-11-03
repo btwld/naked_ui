@@ -13,14 +13,18 @@ extension SliderTestHelpers on WidgetTester {
     // Calculate current position based on current value
     final currentNormalizedValue =
         (slider.value - slider.min) / (slider.max - slider.min);
-    final currentOffset =
-        Offset(rect.left + (box.width * currentNormalizedValue), center.dy);
+    final currentOffset = Offset(
+      rect.left + (box.width * currentNormalizedValue),
+      center.dy,
+    );
 
     // Calculate target position based on target value
     final normalizedValue =
         (targetValue - slider.min) / (slider.max - slider.min);
-    final targetOffset =
-        Offset(rect.left + (box.width * normalizedValue), center.dy);
+    final targetOffset = Offset(
+      rect.left + (box.width * normalizedValue),
+      center.dy,
+    );
 
     // Start drag from current value position to target
     final gesture = await startGesture(currentOffset);
@@ -32,8 +36,11 @@ extension SliderTestHelpers on WidgetTester {
   }
 
   /// Verify slider value matches expected value
-  void expectSliderValue(Finder finder, double expected,
-      {double tolerance = 0.01}) {
+  void expectSliderValue(
+    Finder finder,
+    double expected, {
+    double tolerance = 0.01,
+  }) {
     final slider = widget<NakedSlider>(finder);
     expect(slider.value, closeTo(expected, tolerance));
   }

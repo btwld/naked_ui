@@ -106,7 +106,7 @@ void main() {
         ),
       );
 
-      expect(find.bySemanticsLabel(RegExp(r'Test Toggle')),findsOneWidget);
+      expect(find.bySemanticsLabel(RegExp(r'Test Toggle')), findsOneWidget);
 
       // Test with excludeSemantics: true
       await tester.pumpWidget(
@@ -125,7 +125,7 @@ void main() {
         ),
       );
 
-      expect(find.bySemanticsLabel(RegExp(r'Test Toggle')),findsNothing);
+      expect(find.bySemanticsLabel(RegExp(r'Test Toggle')), findsNothing);
 
       semanticsHandle.dispose();
     });
@@ -150,7 +150,7 @@ void main() {
         ),
       );
 
-      expect(find.bySemanticsLabel(RegExp(r'Test Slider')),findsOneWidget);
+      expect(find.bySemanticsLabel(RegExp(r'Test Slider')), findsOneWidget);
 
       // Test with excludeSemantics: true
       await tester.pumpWidget(
@@ -169,7 +169,7 @@ void main() {
         ),
       );
 
-      expect(find.bySemanticsLabel(RegExp(r'Test Slider')),findsNothing);
+      expect(find.bySemanticsLabel(RegExp(r'Test Slider')), findsNothing);
 
       semanticsHandle.dispose();
     });
@@ -191,7 +191,7 @@ void main() {
         ),
       );
 
-      expect(find.bySemanticsLabel(RegExp(r'Test TextField')),findsOneWidget);
+      expect(find.bySemanticsLabel(RegExp(r'Test TextField')), findsOneWidget);
 
       // Test with excludeSemantics: true
       await tester.pumpWidget(
@@ -207,7 +207,7 @@ void main() {
         ),
       );
 
-      expect(find.bySemanticsLabel(RegExp(r'Test TextField')),findsNothing);
+      expect(find.bySemanticsLabel(RegExp(r'Test TextField')), findsNothing);
 
       controller.dispose();
       semanticsHandle.dispose();
@@ -228,7 +228,7 @@ void main() {
         ),
       );
 
-      expect(find.bySemanticsLabel(RegExp(r'Test Dialog')),findsOneWidget);
+      expect(find.bySemanticsLabel(RegExp(r'Test Dialog')), findsOneWidget);
 
       // Test with excludeSemantics: true
       await tester.pumpWidget(
@@ -243,7 +243,7 @@ void main() {
         ),
       );
 
-      expect(find.bySemanticsLabel(RegExp(r'Test Dialog')),findsNothing);
+      expect(find.bySemanticsLabel(RegExp(r'Test Dialog')), findsNothing);
 
       semanticsHandle.dispose();
     });

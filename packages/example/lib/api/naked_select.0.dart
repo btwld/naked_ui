@@ -3,11 +3,7 @@ import 'package:naked_ui/naked_ui.dart';
 
 // Simple fruit data class for type safety
 class Fruit {
-  const Fruit({
-    required this.value,
-    required this.label,
-    required this.emoji,
-  });
+  const Fruit({required this.value, required this.label, required this.emoji});
 
   final String value;
   final String label;
@@ -33,10 +29,7 @@ class MyApp extends StatelessWidget {
             children: [
               Text(
                 'Simple Select',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
               ),
               SizedBox(height: 8),
               Text(
@@ -98,10 +91,7 @@ class _SimpleSelectExampleState extends State<SimpleSelectExample> {
             spacing: 8,
             children: [
               Text(fruit.emoji),
-              Text(
-                fruit.label,
-                style: textStyle,
-              ),
+              Text(fruit.label, style: textStyle),
             ],
           ),
         );
@@ -141,8 +131,9 @@ class _SimpleSelectExampleState extends State<SimpleSelectExample> {
                   child: Text(
                     _selectedLabel ?? 'Choose fruit...',
                     style: TextStyle(
-                      color:
-                          _selectedValue != null ? Colors.black : Colors.grey,
+                      color: _selectedValue != null
+                          ? Colors.black
+                          : Colors.grey,
                     ),
                   ),
                 ),

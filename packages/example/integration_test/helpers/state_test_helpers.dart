@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 extension StateTestHelpers on WidgetTester {
-  /// Helper to verify widget interaction states for Set<WidgetState> snapshots.
+  /// Helper to verify widget interaction states for Set\<WidgetState> snapshots.
   void expectWidgetStates(
     Set<WidgetState> actualStates, {
     bool? expectHovered,

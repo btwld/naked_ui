@@ -28,17 +28,19 @@ void main() {
 
       // Test hover simulation (on platforms that support it)
       final buttonKey = UniqueKey();
-      await tester.pumpWidget(MaterialApp(
-        home: Scaffold(
-          body: Center(
-            child: NakedButton(
-              key: buttonKey,
-              onPressed: () {},
-              child: const Text('Test Button'),
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: Center(
+              child: NakedButton(
+                key: buttonKey,
+                onPressed: () {},
+                child: const Text('Test Button'),
+              ),
             ),
           ),
         ),
-      ));
+      );
       await tester.pumpAndSettle();
 
       await tester.simulateHover(buttonKey);
@@ -50,19 +52,21 @@ void main() {
       final focusNode = tester.createManagedFocusNode();
       bool focusChanged = false;
 
-      await tester.pumpWidget(MaterialApp(
-        home: Scaffold(
-          body: Center(
-            child: NakedButton(
-              key: buttonKey,
-              focusNode: focusNode,
-              onPressed: () {},
-              onFocusChange: (focused) => focusChanged = focused,
-              child: const Text('Test Button'),
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: Center(
+              child: NakedButton(
+                key: buttonKey,
+                focusNode: focusNode,
+                onPressed: () {},
+                onFocusChange: (focused) => focusChanged = focused,
+                child: const Text('Test Button'),
+              ),
             ),
           ),
         ),
-      ));
+      );
       await tester.pumpAndSettle();
 
       // Test focus acquisition
@@ -79,37 +83,46 @@ void main() {
       expect(focusChanged, isFalse);
     });
 
-    testWidgets('button state callbacks work in real app context',
-        (tester) async {
+    testWidgets('button state callbacks work in real app context', (
+      tester,
+    ) async {
       final buttonKey = UniqueKey();
       bool isHovered = false;
       bool isPressed = false;
 
-      await tester.pumpWidget(MaterialApp(
-        home: Scaffold(
-          body: Center(
-            child: NakedButton(
-              key: buttonKey,
-              onPressed: () {},
-              onHoverChange: (hovered) => isHovered = hovered,
-              onPressChange: (pressed) => isPressed = pressed,
-              onFocusChange: (focused) {},
-              child: const Text('Test Button'),
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: Center(
+              child: NakedButton(
+                key: buttonKey,
+                onPressed: () {},
+                onHoverChange: (hovered) => isHovered = hovered,
+                onPressChange: (pressed) => isPressed = pressed,
+                onFocusChange: (focused) {},
+                child: const Text('Test Button'),
+              ),
             ),
           ),
         ),
-      ));
+      );
       await tester.pumpAndSettle();
 
       // Test hover state
-      await tester.simulateHover(buttonKey, onHover: () {
-        expect(isHovered, isTrue);
-      });
+      await tester.simulateHover(
+        buttonKey,
+        onHover: () {
+          expect(isHovered, isTrue);
+        },
+      );
 
       // Test press state
-      await tester.simulatePress(buttonKey, onPressed: () {
-        expect(isPressed, isTrue);
-      });
+      await tester.simulatePress(
+        buttonKey,
+        onPressed: () {
+          expect(isPressed, isTrue);
+        },
+      );
     });
 
     testWidgets('button keyboard navigation works correctly', (tester) async {
@@ -117,26 +130,28 @@ void main() {
       final button1Key = UniqueKey();
       final button2Key = UniqueKey();
 
-      await tester.pumpWidget(MaterialApp(
-        home: Scaffold(
-          body: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              NakedButton(
-                key: button1Key,
-                onPressed: () {},
-                child: const Text('Button 1'),
-              ),
-              const SizedBox(height: 20),
-              NakedButton(
-                key: button2Key,
-                onPressed: () {},
-                child: const Text('Button 2'),
-              ),
-            ],
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                NakedButton(
+                  key: button1Key,
+                  onPressed: () {},
+                  child: const Text('Button 1'),
+                ),
+                const SizedBox(height: 20),
+                NakedButton(
+                  key: button2Key,
+                  onPressed: () {},
+                  child: const Text('Button 2'),
+                ),
+              ],
+            ),
           ),
         ),
-      ));
+      );
       await tester.pumpAndSettle();
 
       // Test tab navigation order
@@ -151,20 +166,22 @@ void main() {
       bool wasPressed = false;
       bool hoverChanged = false;
 
-      await tester.pumpWidget(MaterialApp(
-        home: Scaffold(
-          body: Center(
-            child: NakedButton(
-              key: buttonKey,
-              onPressed: () => wasPressed = true,
-              enabled: false,
-              onHoverChange: (hovered) => hoverChanged = true,
-              onFocusChange: (focused) {},
-              child: const Text('Disabled Button'),
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: Center(
+              child: NakedButton(
+                key: buttonKey,
+                onPressed: () => wasPressed = true,
+                enabled: false,
+                onHoverChange: (hovered) => hoverChanged = true,
+                onFocusChange: (focused) {},
+                child: const Text('Disabled Button'),
+              ),
             ),
           ),
         ),
-      ));
+      );
       await tester.pumpAndSettle();
 
       // Test that disabled button doesn't respond to tap
@@ -186,19 +203,21 @@ void main() {
       final focusNode = tester.createManagedFocusNode();
       bool wasPressed = false;
 
-      await tester.pumpWidget(MaterialApp(
-        home: Scaffold(
-          body: Center(
-            child: NakedButton(
-              key: buttonKey,
-              focusNode: focusNode,
-              focusOnPress: true,
-              onPressed: () => wasPressed = true,
-              child: const Text('Focus Test Button'),
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: Center(
+              child: NakedButton(
+                key: buttonKey,
+                focusNode: focusNode,
+                focusOnPress: true,
+                onPressed: () => wasPressed = true,
+                child: const Text('Focus Test Button'),
+              ),
             ),
           ),
         ),
-      ));
+      );
       await tester.pumpAndSettle();
 
       // Initially not focused
@@ -218,18 +237,20 @@ void main() {
       final focusNode = tester.createManagedFocusNode();
       bool wasPressed = false;
 
-      await tester.pumpWidget(MaterialApp(
-        home: Scaffold(
-          body: Center(
-            child: NakedButton(
-              key: buttonKey,
-              focusNode: focusNode,
-              onPressed: () => wasPressed = true,
-              child: const Text('No Focus Test Button'),
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: Center(
+              child: NakedButton(
+                key: buttonKey,
+                focusNode: focusNode,
+                onPressed: () => wasPressed = true,
+                child: const Text('No Focus Test Button'),
+              ),
             ),
           ),
         ),
-      ));
+      );
       await tester.pumpAndSettle();
 
       // Initially not focused
@@ -249,35 +270,37 @@ void main() {
       bool isHovered = false;
       bool isPressed = false;
 
-      await tester.pumpWidget(MaterialApp(
-        home: Scaffold(
-          body: Center(
-            child: NakedButton(
-              key: buttonKey,
-              onPressed: () {},
-              builder: (context, state, child) {
-                return Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: state.isHovered
-                        ? Colors.blue.shade100
-                        : Colors.grey.shade100,
-                    border: Border.all(
-                      color: state.isPressed ? Colors.blue : Colors.grey,
-                      width: 2,
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: Center(
+              child: NakedButton(
+                key: buttonKey,
+                onPressed: () {},
+                builder: (context, state, child) {
+                  return Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: state.isHovered
+                          ? Colors.blue.shade100
+                          : Colors.grey.shade100,
+                      border: Border.all(
+                        color: state.isPressed ? Colors.blue : Colors.grey,
+                        width: 2,
+                      ),
+                      borderRadius: BorderRadius.circular(8),
                     ),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: child,
-                );
-              },
-              onHoverChange: (hovered) => isHovered = hovered,
-              onPressChange: (pressed) => isPressed = pressed,
-              child: const Text('Builder Button'),
+                    child: child,
+                  );
+                },
+                onHoverChange: (hovered) => isHovered = hovered,
+                onPressChange: (pressed) => isPressed = pressed,
+                child: const Text('Builder Button'),
+              ),
             ),
           ),
         ),
-      ));
+      );
       await tester.pumpAndSettle();
 
       final buttonFinder = find.byKey(buttonKey);
@@ -285,31 +308,39 @@ void main() {
       expect(find.text('Builder Button'), findsOneWidget);
 
       // Test that builder updates with state changes
-      await tester.simulateHover(buttonKey, onHover: () {
-        expect(isHovered, isTrue);
-      });
+      await tester.simulateHover(
+        buttonKey,
+        onHover: () {
+          expect(isHovered, isTrue);
+        },
+      );
 
-      await tester.simulatePress(buttonKey, onPressed: () {
-        expect(isPressed, isTrue);
-      });
+      await tester.simulatePress(
+        buttonKey,
+        onPressed: () {
+          expect(isPressed, isTrue);
+        },
+      );
     });
 
     testWidgets('button onLongPress works correctly', (tester) async {
       final buttonKey = UniqueKey();
       bool wasLongPressed = false;
 
-      await tester.pumpWidget(MaterialApp(
-        home: Scaffold(
-          body: Center(
-            child: NakedButton(
-              key: buttonKey,
-              onPressed: () {},
-              onLongPress: () => wasLongPressed = true,
-              child: const Text('Long Press Button'),
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: Center(
+              child: NakedButton(
+                key: buttonKey,
+                onPressed: () {},
+                onLongPress: () => wasLongPressed = true,
+                child: const Text('Long Press Button'),
+              ),
             ),
           ),
         ),
-      ));
+      );
       await tester.pumpAndSettle();
 
       // Long press the button
@@ -320,23 +351,26 @@ void main() {
       expect(wasLongPressed, isTrue);
     });
 
-    testWidgets('button onLongPress works when only long-press is provided',
-        (tester) async {
+    testWidgets('button onLongPress works when only long-press is provided', (
+      tester,
+    ) async {
       final buttonKey = UniqueKey();
       bool wasLongPressed = false;
 
-      await tester.pumpWidget(MaterialApp(
-        home: Scaffold(
-          body: Center(
-            child: NakedButton(
-              key: buttonKey,
-              onPressed: null,
-              onLongPress: () => wasLongPressed = true,
-              child: const Text('Long Press Only Button'),
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: Center(
+              child: NakedButton(
+                key: buttonKey,
+                onPressed: null,
+                onLongPress: () => wasLongPressed = true,
+                child: const Text('Long Press Only Button'),
+              ),
             ),
           ),
         ),
-      ));
+      );
       await tester.pumpAndSettle();
 
       // Long press the button
@@ -365,16 +399,18 @@ void main() {
 
     testWidgets('button works with different child widgets', (tester) async {
       // Test with Icon child
-      await tester.pumpWidget(MaterialApp(
-        home: Scaffold(
-          body: Center(
-            child: NakedButton(
-              onPressed: () {},
-              child: const Icon(Icons.star),
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: Center(
+              child: NakedButton(
+                onPressed: () {},
+                child: const Icon(Icons.star),
+              ),
             ),
           ),
         ),
-      ));
+      );
       await tester.pumpAndSettle();
 
       final iconButton = find.byType(NakedButton);
@@ -385,23 +421,25 @@ void main() {
       await tester.pumpAndSettle();
 
       // Test with complex child widget
-      await tester.pumpWidget(MaterialApp(
-        home: Scaffold(
-          body: Center(
-            child: NakedButton(
-              onPressed: () {},
-              child: const Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.play_arrow),
-                  SizedBox(width: 8),
-                  Text('Play'),
-                ],
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: Center(
+              child: NakedButton(
+                onPressed: () {},
+                child: const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.play_arrow),
+                    SizedBox(width: 8),
+                    Text('Play'),
+                  ],
+                ),
               ),
             ),
           ),
         ),
-      ));
+      );
       await tester.pumpAndSettle();
 
       final complexButton = find.byType(NakedButton);

@@ -12,9 +12,11 @@ void main() {
   group('NakedPopover Integration Tests', () {
     testWidgets('popover opens and closes correctly', (tester) async {
       // Use the actual example app
-      await tester.pumpWidget(const MaterialApp(
-        home: Scaffold(body: popover_example.PopoverExample()),
-      ));
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(body: popover_example.PopoverExample()),
+        ),
+      );
       await tester.pumpAndSettle();
 
       // Find the trigger for the popover (text inside the trigger container)
@@ -40,9 +42,11 @@ void main() {
     });
 
     testWidgets('popover responds to hover interactions', (tester) async {
-      await tester.pumpWidget(const MaterialApp(
-        home: Scaffold(body: popover_example.PopoverExample()),
-      ));
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(body: popover_example.PopoverExample()),
+        ),
+      );
       await tester.pumpAndSettle();
 
       // Find the popover trigger
@@ -58,20 +62,23 @@ void main() {
     testWidgets('popover handles keyboard activation', (tester) async {
       final popoverKey = UniqueKey();
 
-      await tester.pumpWidget(MaterialApp(
-        home: Scaffold(
-          body: Center(
-            child: NakedPopover(
-              key: popoverKey,
-              popoverBuilder: (context, info) => const Text('Popover Content'),
-              child: NakedButton(
-                onPressed: () {},
-                child: const Text('Trigger'),
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: Center(
+              child: NakedPopover(
+                key: popoverKey,
+                popoverBuilder: (context, info) =>
+                    const Text('Popover Content'),
+                child: NakedButton(
+                  onPressed: () {},
+                  child: const Text('Trigger'),
+                ),
               ),
             ),
           ),
         ),
-      ));
+      );
       await tester.pumpAndSettle();
 
       // Test keyboard activation
@@ -83,9 +90,11 @@ void main() {
     });
 
     testWidgets('popover positioning works correctly', (tester) async {
-      await tester.pumpWidget(const MaterialApp(
-        home: Scaffold(body: popover_example.PopoverExample()),
-      ));
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(body: popover_example.PopoverExample()),
+        ),
+      );
       await tester.pumpAndSettle();
 
       // Find the popover trigger
@@ -106,9 +115,11 @@ void main() {
     });
 
     testWidgets('popover handles focus management', (tester) async {
-      await tester.pumpWidget(const MaterialApp(
-        home: Scaffold(body: popover_example.PopoverExample()),
-      ));
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(body: popover_example.PopoverExample()),
+        ),
+      );
       await tester.pumpAndSettle();
 
       // Open popover

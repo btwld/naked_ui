@@ -19,10 +19,7 @@ class MyApp extends StatelessWidget {
             children: [
               Text(
                 'Simple Tooltip',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
               ),
               SizedBox(height: 8),
               Text(
@@ -87,8 +84,10 @@ class _TooltipExampleState extends State<TooltipExample>
             borderRadius: BorderRadius.circular(4),
           ),
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-          child: const Text('This is a tooltip',
-              style: TextStyle(color: Colors.white)),
+          child: const Text(
+            'This is a tooltip',
+            style: TextStyle(color: Colors.white),
+          ),
         ),
       ),
       child: Container(
@@ -97,12 +96,7 @@ class _TooltipExampleState extends State<TooltipExample>
           color: const Color(0xFF3D3D3D),
           borderRadius: BorderRadius.circular(10),
         ),
-        child: const Text(
-          'Hover me',
-          style: TextStyle(
-            color: Colors.white,
-          ),
-        ),
+        child: const Text('Hover me', style: TextStyle(color: Colors.white)),
       ),
     );
   }

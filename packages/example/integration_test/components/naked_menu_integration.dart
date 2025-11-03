@@ -35,36 +35,42 @@ void main() {
       final menuController = MenuController();
       String selectedItem = '';
 
-      await tester.pumpWidget(MaterialApp(
-        home: Scaffold(
-          body: Center(
-            child: NakedMenu<String>(
-              controller: menuController,
-              builder: (context, state, _) => const Text('Open Menu'),
-              overlayBuilder: (context, info) => Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  border: Border.all(color: Colors.grey),
-                  borderRadius: BorderRadius.circular(8),
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: Center(
+              child: NakedMenu<String>(
+                controller: menuController,
+                builder: (context, state, _) => const Text('Open Menu'),
+                overlayBuilder: (context, info) => Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    border: Border.all(color: Colors.grey),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      NakedMenuItem<String>(
+                        value: 'Item 1',
+                        child: Text('Item 1'),
+                      ),
+                      NakedMenuItem<String>(
+                        value: 'Item 2',
+                        child: Text('Item 2'),
+                      ),
+                    ],
+                  ),
                 ),
-                child: const Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    NakedMenuItem<String>(
-                        value: 'Item 1', child: Text('Item 1')),
-                    NakedMenuItem<String>(
-                        value: 'Item 2', child: Text('Item 2')),
-                  ],
-                ),
+                onSelected: (value) {
+                  selectedItem = value;
+                },
               ),
-              onSelected: (value) {
-                selectedItem = value;
-              },
             ),
           ),
         ),
-      ));
+      );
       await tester.pumpAndSettle();
 
       // Open menu
@@ -86,33 +92,35 @@ void main() {
       final menuController = MenuController();
       bool menuClosed = false;
 
-      await tester.pumpWidget(MaterialApp(
-        home: Scaffold(
-          body: Center(
-            child: NakedMenu<String>(
-              controller: menuController,
-              onClose: () => menuClosed = true,
-              builder: (context, state, _) => const Text('Open Menu'),
-              overlayBuilder: (context, info) => Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  border: Border.all(color: Colors.grey),
-                ),
-                child: const Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    NakedMenuItem<String>(
-                      value: 'content',
-                      child: Text('Menu Content'),
-                    ),
-                  ],
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: Center(
+              child: NakedMenu<String>(
+                controller: menuController,
+                onClose: () => menuClosed = true,
+                builder: (context, state, _) => const Text('Open Menu'),
+                overlayBuilder: (context, info) => Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    border: Border.all(color: Colors.grey),
+                  ),
+                  child: const Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      NakedMenuItem<String>(
+                        value: 'content',
+                        child: Text('Menu Content'),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
           ),
         ),
-      ));
+      );
       await tester.pumpAndSettle();
 
       // Open menu
@@ -133,33 +141,35 @@ void main() {
       final menuController = MenuController();
       final menuKey = UniqueKey();
 
-      await tester.pumpWidget(MaterialApp(
-        home: Scaffold(
-          body: Center(
-            child: NakedMenu<String>(
-              key: menuKey,
-              controller: menuController,
-              builder: (context, state, _) => const Text('Open Menu'),
-              overlayBuilder: (context, info) => Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  border: Border.all(color: Colors.grey),
-                ),
-                child: const Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    NakedMenuItem<String>(
-                      value: 'content',
-                      child: Text('Menu Content'),
-                    ),
-                  ],
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: Center(
+              child: NakedMenu<String>(
+                key: menuKey,
+                controller: menuController,
+                builder: (context, state, _) => const Text('Open Menu'),
+                overlayBuilder: (context, info) => Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    border: Border.all(color: Colors.grey),
+                  ),
+                  child: const Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      NakedMenuItem<String>(
+                        value: 'content',
+                        child: Text('Menu Content'),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
           ),
         ),
-      ));
+      );
       await tester.pumpAndSettle();
 
       // Open menu
@@ -178,39 +188,41 @@ void main() {
     testWidgets('menu closes on outside tap when enabled', (tester) async {
       final menuController = MenuController();
 
-      await tester.pumpWidget(MaterialApp(
-        home: Scaffold(
-          body: Center(
-            child: Column(
-              children: [
-                NakedMenu<String>(
-                  controller: menuController,
-                  consumeOutsideTaps: true,
-                  builder: (context, state, _) => const Text('Open Menu'),
-                  overlayBuilder: (context, info) => Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      border: Border.all(color: Colors.grey),
-                    ),
-                    child: const Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        NakedMenuItem<String>(
-                          value: 'content',
-                          child: Text('Menu Content'),
-                        ),
-                      ],
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: Center(
+              child: Column(
+                children: [
+                  NakedMenu<String>(
+                    controller: menuController,
+                    consumeOutsideTaps: true,
+                    builder: (context, state, _) => const Text('Open Menu'),
+                    overlayBuilder: (context, info) => Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        border: Border.all(color: Colors.grey),
+                      ),
+                      child: const Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          NakedMenuItem<String>(
+                            value: 'content',
+                            child: Text('Menu Content'),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
-                ),
-                const SizedBox(height: 100),
-                const Text('Outside Area'),
-              ],
+                  const SizedBox(height: 100),
+                  const Text('Outside Area'),
+                ],
+              ),
             ),
           ),
         ),
-      ));
+      );
       await tester.pumpAndSettle();
 
       // Open menu

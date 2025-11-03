@@ -32,53 +32,55 @@ void main() {
     testWidgets('single selection mode works correctly', (tester) async {
       String? selectedValue;
 
-      await tester.pumpWidget(MaterialApp(
-        home: Scaffold(
-          body: Center(
-            child: StatefulBuilder(
-              builder: (context, setState) {
-                return NakedSelect<String>(
-                  value: selectedValue,
-                  onChanged: (value) => setState(() => selectedValue = value),
-                  overlayBuilder: (context, info) {
-                    return Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        border: Border.all(color: Colors.grey),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: const Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          NakedSelectOption<String>(
-                            value: 'Apple',
-                            child: Text('Apple'),
-                          ),
-                          NakedSelectOption<String>(
-                            value: 'Banana',
-                            child: Text('Banana'),
-                          ),
-                        ],
-                      ),
-                    );
-                  },
-                  builder: (context, state, child) {
-                    return Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        border: Border.all(color: Colors.grey),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Text(selectedValue ?? 'Select an option'),
-                    );
-                  },
-                );
-              },
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: Center(
+              child: StatefulBuilder(
+                builder: (context, setState) {
+                  return NakedSelect<String>(
+                    value: selectedValue,
+                    onChanged: (value) => setState(() => selectedValue = value),
+                    overlayBuilder: (context, info) {
+                      return Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          border: Border.all(color: Colors.grey),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            NakedSelectOption<String>(
+                              value: 'Apple',
+                              child: Text('Apple'),
+                            ),
+                            NakedSelectOption<String>(
+                              value: 'Banana',
+                              child: Text('Banana'),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                    builder: (context, state, child) {
+                      return Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.grey),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(selectedValue ?? 'Select an option'),
+                      );
+                    },
+                  );
+                },
+              ),
             ),
           ),
         ),
-      ));
+      );
       await tester.pumpAndSettle();
 
       // Open dropdown
@@ -101,38 +103,40 @@ void main() {
       String? lastSelectedValue;
       int callbackCount = 0;
 
-      await tester.pumpWidget(MaterialApp(
-        home: Scaffold(
-          body: Center(
-            child: NakedSelect<String>(
-              value: null,
-              onChanged: (value) {
-                lastSelectedValue = value;
-                callbackCount++;
-              },
-              overlayBuilder: (context, info) {
-                return Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    border: Border.all(color: Colors.grey),
-                  ),
-                  child: const Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      NakedSelectOption<String>(
-                        value: 'Test Value',
-                        child: Text('Test Value'),
-                      ),
-                    ],
-                  ),
-                );
-              },
-              builder: (context, state, _) => const Text('Select'),
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: Center(
+              child: NakedSelect<String>(
+                value: null,
+                onChanged: (value) {
+                  lastSelectedValue = value;
+                  callbackCount++;
+                },
+                overlayBuilder: (context, info) {
+                  return Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      border: Border.all(color: Colors.grey),
+                    ),
+                    child: const Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        NakedSelectOption<String>(
+                          value: 'Test Value',
+                          child: Text('Test Value'),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+                builder: (context, state, _) => const Text('Select'),
+              ),
             ),
           ),
         ),
-      ));
+      );
       await tester.pumpAndSettle();
 
       // Open and select
@@ -147,40 +151,42 @@ void main() {
     });
 
     testWidgets('closeOnSelect behavior works correctly', (tester) async {
-      await tester.pumpWidget(MaterialApp(
-        home: Scaffold(
-          body: Center(
-            child: NakedSelect<String>(
-              value: null,
-              closeOnSelect: true,
-              onChanged: (value) {},
-              overlayBuilder: (context, info) {
-                return Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    border: Border.all(color: Colors.grey),
-                  ),
-                  child: const Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      NakedSelectOption<String>(
-                        value: 'Option 1',
-                        child: Text('Option 1'),
-                      ),
-                      NakedSelectOption<String>(
-                        value: 'Option 2',
-                        child: Text('Option 2'),
-                      ),
-                    ],
-                  ),
-                );
-              },
-              builder: (context, state, _) => const Text('Select'),
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: Center(
+              child: NakedSelect<String>(
+                value: null,
+                closeOnSelect: true,
+                onChanged: (value) {},
+                overlayBuilder: (context, info) {
+                  return Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      border: Border.all(color: Colors.grey),
+                    ),
+                    child: const Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        NakedSelectOption<String>(
+                          value: 'Option 1',
+                          child: Text('Option 1'),
+                        ),
+                        NakedSelectOption<String>(
+                          value: 'Option 2',
+                          child: Text('Option 2'),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+                builder: (context, state, _) => const Text('Select'),
+              ),
             ),
           ),
         ),
-      ));
+      );
       await tester.pumpAndSettle();
 
       // Open dropdown
@@ -200,32 +206,34 @@ void main() {
     testWidgets('disabled select blocks interactions', (tester) async {
       bool wasCallbackCalled = false;
 
-      await tester.pumpWidget(MaterialApp(
-        home: Scaffold(
-          body: Center(
-            child: NakedSelect<String>(
-              value: null,
-              enabled: false,
-              onChanged: (value) => wasCallbackCalled = true,
-              overlayBuilder: (context, info) {
-                return Container(
-                  padding: const EdgeInsets.all(8),
-                  child: const Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      NakedSelectOption<String>(
-                        value: 'dummy',
-                        child: Text('Menu Content'),
-                      ),
-                    ],
-                  ),
-                );
-              },
-              builder: (context, state, _) => const Text('Disabled Select'),
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: Center(
+              child: NakedSelect<String>(
+                value: null,
+                enabled: false,
+                onChanged: (value) => wasCallbackCalled = true,
+                overlayBuilder: (context, info) {
+                  return Container(
+                    padding: const EdgeInsets.all(8),
+                    child: const Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        NakedSelectOption<String>(
+                          value: 'dummy',
+                          child: Text('Menu Content'),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+                builder: (context, state, _) => const Text('Disabled Select'),
+              ),
             ),
           ),
         ),
-      ));
+      );
       await tester.pumpAndSettle();
 
       // Try to tap - should not open
@@ -261,20 +269,26 @@ void main() {
 
       // Should see all options again (scope to menu items to avoid trigger label)
       expect(
-          find.descendant(
-              of: find.byType(NakedSelectOption<String>),
-              matching: find.text('Apple')),
-          findsOneWidget);
+        find.descendant(
+          of: find.byType(NakedSelectOption<String>),
+          matching: find.text('Apple'),
+        ),
+        findsOneWidget,
+      );
       expect(
-          find.descendant(
-              of: find.byType(NakedSelectOption<String>),
-              matching: find.text('Banana')),
-          findsOneWidget);
+        find.descendant(
+          of: find.byType(NakedSelectOption<String>),
+          matching: find.text('Banana'),
+        ),
+        findsOneWidget,
+      );
       expect(
-          find.descendant(
-              of: find.byType(NakedSelectOption<String>),
-              matching: find.text('Orange')),
-          findsOneWidget);
+        find.descendant(
+          of: find.byType(NakedSelectOption<String>),
+          matching: find.text('Orange'),
+        ),
+        findsOneWidget,
+      );
     });
   });
 }

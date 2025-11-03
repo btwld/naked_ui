@@ -19,10 +19,7 @@ class MyApp extends StatelessWidget {
             children: [
               Text(
                 'Simple TextField',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
               ),
               SizedBox(height: 8),
               Text(
@@ -70,10 +67,7 @@ class _TextFieldExampleState extends State<TextFieldExample> {
                 hovered: Colors.grey.shade200,
                 orElse: Colors.white,
               ),
-              border: Border.all(
-                color: Colors.grey.shade300,
-                width: 1,
-              ),
+              border: Border.all(color: Colors.grey.shade300, width: 1),
               boxShadow: [
                 if (state.isFocused)
                   BoxShadow(

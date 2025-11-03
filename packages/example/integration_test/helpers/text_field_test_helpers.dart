@@ -13,8 +13,10 @@ extension TextFieldTestHelpers on WidgetTester {
     await tap(field);
     await pump();
     // Prefer targeting the inner EditableText to avoid ambiguity.
-    final editable =
-        find.descendant(of: field, matching: find.byType(EditableText));
+    final editable = find.descendant(
+      of: field,
+      matching: find.byType(EditableText),
+    );
     await enterText(editable.evaluate().isNotEmpty ? editable : field, text);
     await pump();
   }
@@ -24,15 +26,19 @@ extension TextFieldTestHelpers on WidgetTester {
   void expectTextValue(Finder field, String expected) {
     // Try to read a Naked-style public controller if this is used with such a widget.
     // Otherwise, read EditableText controller directly.
-    final editable =
-        find.descendant(of: field, matching: find.byType(EditableText));
+    final editable = find.descendant(
+      of: field,
+      matching: find.byType(EditableText),
+    );
     final editableWidget = widget<EditableText>(editable);
     expect(editableWidget.controller.text, expected);
   }
 
   /// Send a chord like Cmd/Ctrl + Key (widget tests only).
   Future<void> sendShortcut(
-      LogicalKeyboardKey modifier, LogicalKeyboardKey key) async {
+    LogicalKeyboardKey modifier,
+    LogicalKeyboardKey key,
+  ) async {
     await sendKeyDownEvent(modifier);
     await sendKeyEvent(key);
     await sendKeyUpEvent(modifier);
@@ -47,13 +53,17 @@ extension TextFieldTestHelpers on WidgetTester {
     await pump();
 
     // Try Actions-based clear (widget tests).
-    final editable =
-        find.descendant(of: field, matching: find.byType(EditableText));
+    final editable = find.descendant(
+      of: field,
+      matching: find.byType(EditableText),
+    );
     if (editable.evaluate().isNotEmpty) {
       final ctx = element(editable);
       // SelectAll via Intent is stable across platforms.
       final didSelectAll = Actions.maybeInvoke(
-          ctx, const SelectAllTextIntent(SelectionChangedCause.keyboard));
+        ctx,
+        const SelectAllTextIntent(SelectionChangedCause.keyboard),
+      );
       await pump();
 
       if (didSelectAll == true) {
@@ -70,10 +80,14 @@ extension TextFieldTestHelpers on WidgetTester {
   }
 
   /// Desktop-style text selection: click-drag with a mouse pointer.
-  Future<void> selectWithMouseDrag(Finder field,
-      {Offset delta = const Offset(120, 0)}) async {
-    final target =
-        find.descendant(of: field, matching: find.byType(EditableText));
+  Future<void> selectWithMouseDrag(
+    Finder field, {
+    Offset delta = const Offset(120, 0),
+  }) async {
+    final target = find.descendant(
+      of: field,
+      matching: find.byType(EditableText),
+    );
     final start = getCenter(target.evaluate().isNotEmpty ? target : field);
 
     final g = await startGesture(
@@ -90,8 +104,10 @@ extension TextFieldTestHelpers on WidgetTester {
   Future<void> ensureFocused(Finder field) async {
     await tap(field);
     await pump();
-    final editable =
-        find.descendant(of: field, matching: find.byType(EditableText));
+    final editable = find.descendant(
+      of: field,
+      matching: find.byType(EditableText),
+    );
     if (editable.evaluate().isNotEmpty) {
       await showKeyboard(editable);
       await pump();
@@ -103,20 +119,28 @@ extension TextFieldTestHelpers on WidgetTester {
 
   /// Trigger framework-level Undo/Redo via Intents (preferred over controller calls).
   Future<void> undoViaIntent(Finder field) async {
-    final editable =
-        find.descendant(of: field, matching: find.byType(EditableText));
+    final editable = find.descendant(
+      of: field,
+      matching: find.byType(EditableText),
+    );
     final ctx = element(editable);
     Actions.maybeInvoke(
-        ctx, const UndoTextIntent(SelectionChangedCause.keyboard));
+      ctx,
+      const UndoTextIntent(SelectionChangedCause.keyboard),
+    );
     await pump();
   }
 
   Future<void> redoViaIntent(Finder field) async {
-    final editable =
-        find.descendant(of: field, matching: find.byType(EditableText));
+    final editable = find.descendant(
+      of: field,
+      matching: find.byType(EditableText),
+    );
     final ctx = element(editable);
     Actions.maybeInvoke(
-        ctx, const RedoTextIntent(SelectionChangedCause.keyboard));
+      ctx,
+      const RedoTextIntent(SelectionChangedCause.keyboard),
+    );
     await pump();
   }
 }

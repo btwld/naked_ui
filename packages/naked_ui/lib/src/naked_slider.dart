@@ -453,13 +453,17 @@ class _NakedSliderState extends State<NakedSlider>
               onIncrease: _isEnabled
                   ? () {
                       final step = _calculateStep(false);
-                      _callOnChangeIfNeeded(_normalizeValue(widget.value + step));
+                      _callOnChangeIfNeeded(
+                        _normalizeValue(widget.value + step),
+                      );
                     }
                   : null,
               onDecrease: _isEnabled
                   ? () {
                       final step = _calculateStep(false);
-                      _callOnChangeIfNeeded(_normalizeValue(widget.value - step));
+                      _callOnChangeIfNeeded(
+                        _normalizeValue(widget.value - step),
+                      );
                     }
                   : null,
               child: wrappedContent,

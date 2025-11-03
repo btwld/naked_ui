@@ -136,8 +136,9 @@ class NakedMenuItem<T> extends OverlayItem<T, NakedMenuItemState<T>> {
   Widget build(BuildContext context) {
     final scope = _NakedMenuScope.maybeOf<T>(context);
 
-    final VoidCallback? onPressed =
-        enabled ? () => _handleActivation(scope) : null;
+    final VoidCallback? onPressed = enabled
+        ? () => _handleActivation(scope)
+        : null;
 
     return buildButton(
       onPressed: onPressed,

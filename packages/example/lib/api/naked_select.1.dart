@@ -3,11 +3,7 @@ import 'package:naked_ui/naked_ui.dart';
 
 // Simple fruit data class for type safety
 class Fruit {
-  const Fruit({
-    required this.value,
-    required this.label,
-    required this.emoji,
-  });
+  const Fruit({required this.value, required this.label, required this.emoji});
 
   final String value;
   final String label;
@@ -152,12 +148,7 @@ class _CyberpunkSelectExampleState extends State<CyberpunkSelectExample> {
                     ),
                   ),
                 ),
-                Expanded(
-                  child: Text(
-                    fruit.label,
-                    style: textStyle,
-                  ),
-                ),
+                Expanded(child: Text(fruit.label, style: textStyle)),
                 if (state.isSelected)
                   const Icon(
                     Icons.keyboard_arrow_right,
@@ -207,8 +198,9 @@ class _CyberpunkSelectExampleState extends State<CyberpunkSelectExample> {
                 boxShadow: [
                   if (focused || hovered)
                     BoxShadow(
-                      color: const Color(0xFF00FF41)
-                          .withValues(alpha: focused ? 0.4 : 0.2),
+                      color: const Color(
+                        0xFF00FF41,
+                      ).withValues(alpha: focused ? 0.4 : 0.2),
                       blurRadius: focused ? 12 : 8,
                       spreadRadius: focused ? 2 : 1,
                     ),
@@ -234,10 +226,7 @@ class _CyberpunkSelectExampleState extends State<CyberpunkSelectExample> {
                         style: const TextStyle(
                           fontSize: 16,
                           shadows: [
-                            Shadow(
-                              color: Color(0xFF00FF41),
-                              blurRadius: 4,
-                            ),
+                            Shadow(color: Color(0xFF00FF41), blurRadius: 4),
                           ],
                         ),
                       ),
@@ -288,10 +277,7 @@ class _CyberpunkSelectExampleState extends State<CyberpunkSelectExample> {
                     bottomLeft: Radius.circular(0),
                     bottomRight: Radius.circular(8),
                   ),
-                  border: Border.all(
-                    color: const Color(0xFF00FF41),
-                    width: 2,
-                  ),
+                  border: Border.all(color: const Color(0xFF00FF41), width: 2),
                   boxShadow: [
                     BoxShadow(
                       color: const Color(0xFF00FF41).withValues(alpha: 0.3),

@@ -20,10 +20,7 @@ class MyApp extends StatelessWidget {
             children: [
               Text(
                 'Simple Menu',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
               ),
               SizedBox(height: 8),
               Text(
@@ -77,9 +74,9 @@ class _SimpleMenuExampleState extends State<SimpleMenuExample>
         });
       },
       onSelected: (item) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Selected: $item')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Selected: $item')));
       },
       builder: (context, state, _) {
         final isPressed = state.isPressed;
@@ -129,7 +126,9 @@ class _SimpleMenuExampleState extends State<SimpleMenuExample>
                     final hovered = state.isHovered;
                     return Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 8),
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
                       color: hovered ? Colors.grey.shade100 : null,
                       child: const Row(
                         children: [
@@ -147,7 +146,9 @@ class _SimpleMenuExampleState extends State<SimpleMenuExample>
                     final hovered = state.isHovered;
                     return Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 8),
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
                       color: hovered ? Colors.grey.shade100 : null,
                       child: const Row(
                         children: [
@@ -155,9 +156,10 @@ class _SimpleMenuExampleState extends State<SimpleMenuExample>
                           SizedBox(width: 8),
                           Text('Copy'),
                           Spacer(),
-                          Text('⌘C',
-                              style:
-                                  TextStyle(color: Colors.grey, fontSize: 12)),
+                          Text(
+                            '⌘C',
+                            style: TextStyle(color: Colors.grey, fontSize: 12),
+                          ),
                         ],
                       ),
                     );
@@ -170,7 +172,9 @@ class _SimpleMenuExampleState extends State<SimpleMenuExample>
                     final hovered = state.isHovered;
                     return Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 8),
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
                       color: hovered ? Colors.red.shade50 : null,
                       child: const Row(
                         children: [
@@ -225,10 +229,7 @@ class _FadeInAnimationState extends State<FadeInAnimation> {
     return ScaleTransition(
       alignment: Alignment.topLeft,
       scale: _animation.drive(Tween<double>(begin: 0.9, end: 1.0)),
-      child: FadeTransition(
-        opacity: _animation,
-        child: widget.child,
-      ),
+      child: FadeTransition(opacity: _animation, child: widget.child),
     );
   }
 }

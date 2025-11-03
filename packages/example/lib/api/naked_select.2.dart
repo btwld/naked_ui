@@ -3,11 +3,7 @@ import 'package:naked_ui/naked_ui.dart';
 
 // Simple fruit data class for type safety
 class Fruit {
-  const Fruit({
-    required this.value,
-    required this.label,
-    required this.emoji,
-  });
+  const Fruit({required this.value, required this.label, required this.emoji});
 
   final String value;
   final String label;
@@ -35,10 +31,7 @@ class MyApp extends StatelessWidget {
               children: [
                 Text(
                   'Select with Checkmarks',
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                 ),
                 SizedBox(height: 8),
                 Text(
@@ -107,18 +100,16 @@ class _CheckmarkSelectExampleState extends State<CheckmarkSelectExample> {
           ),
           child: Row(
             children: [
-              Text(
-                fruit.emoji,
-                style: const TextStyle(fontSize: 20),
-              ),
+              Text(fruit.emoji, style: const TextStyle(fontSize: 20)),
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
                   fruit.label,
                   style: TextStyle(
                     color: textColor,
-                    fontWeight:
-                        state.isSelected ? FontWeight.w600 : FontWeight.w500,
+                    fontWeight: state.isSelected
+                        ? FontWeight.w600
+                        : FontWeight.w500,
                     fontSize: 14,
                   ),
                 ),
@@ -133,11 +124,7 @@ class _CheckmarkSelectExampleState extends State<CheckmarkSelectExample> {
                     color: Colors.blue,
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(
-                    Icons.check,
-                    size: 14,
-                    color: Colors.white,
-                  ),
+                  child: const Icon(Icons.check, size: 14, color: Colors.white),
                 ),
               ),
             ],
@@ -193,18 +180,15 @@ class _CheckmarkSelectExampleState extends State<CheckmarkSelectExample> {
                   child: Text(
                     _selectedFruit?.label ?? 'Choose your favorite fruit...',
                     style: TextStyle(
-                      color:
-                          _selectedFruit != null ? Colors.black : Colors.grey,
+                      color: _selectedFruit != null
+                          ? Colors.black
+                          : Colors.grey,
                       fontSize: 14,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
                 ),
-                const Icon(
-                  Icons.expand_more,
-                  size: 20,
-                  color: Colors.grey,
-                ),
+                const Icon(Icons.expand_more, size: 20, color: Colors.grey),
               ],
             ),
           );

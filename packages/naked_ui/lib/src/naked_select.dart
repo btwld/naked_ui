@@ -334,48 +334,48 @@ class _NakedSelectState<T> extends State<NakedSelect<T>>
     final semanticsValue = _effectiveValue?.toString();
 
     Widget selectWidget = AnchoredOverlayShell(
-            controller: _menuController,
-            overlayBuilder: (context, info) {
-              return _NakedSelectScope<T>(
-                controller: _menuController,
-                closeOnSelect: widget.closeOnSelect,
-                enabled: widget.enabled,
-                onChanged: _handleSelection,
-                value: _effectiveValue,
-                child: Builder(
-                  builder: (context) => widget.overlayBuilder(context, info),
-                ),
-              );
-            },
-            onOpen: _handleOpen,
-            onClose: _handleClose,
-            onOpenRequested: widget.onOpenRequested,
-            onCloseRequested: widget.onCloseRequested,
-            consumeOutsideTaps: widget.consumeOutsideTaps,
-            useRootOverlay: widget.useRootOverlay,
-            closeOnClickOutside: widget.closeOnClickOutside,
-            triggerFocusNode: widget.triggerFocusNode,
-            positioning: widget.positioning,
-            child: NakedButton(
-              onPressed: widget.enabled ? _toggle : null,
-              enabled: widget.enabled,
-              focusNode: widget.triggerFocusNode,
-              child: widget.child,
-              builder: (context, buttonState, child) {
-                final selectState = NakedSelectState(
-                  states: buttonState.states,
-                  isOpen: _isOpen,
-                  value: _effectiveValue,
-                );
-
-                return NakedStateScopeBuilder(
-                  value: selectState,
-                  child: child,
-                  builder: widget.builder,
-                );
-              },
-            ),
+      controller: _menuController,
+      overlayBuilder: (context, info) {
+        return _NakedSelectScope<T>(
+          controller: _menuController,
+          closeOnSelect: widget.closeOnSelect,
+          enabled: widget.enabled,
+          onChanged: _handleSelection,
+          value: _effectiveValue,
+          child: Builder(
+            builder: (context) => widget.overlayBuilder(context, info),
+          ),
+        );
+      },
+      onOpen: _handleOpen,
+      onClose: _handleClose,
+      onOpenRequested: widget.onOpenRequested,
+      onCloseRequested: widget.onCloseRequested,
+      consumeOutsideTaps: widget.consumeOutsideTaps,
+      useRootOverlay: widget.useRootOverlay,
+      closeOnClickOutside: widget.closeOnClickOutside,
+      triggerFocusNode: widget.triggerFocusNode,
+      positioning: widget.positioning,
+      child: NakedButton(
+        onPressed: widget.enabled ? _toggle : null,
+        enabled: widget.enabled,
+        focusNode: widget.triggerFocusNode,
+        child: widget.child,
+        builder: (context, buttonState, child) {
+          final selectState = NakedSelectState(
+            states: buttonState.states,
+            isOpen: _isOpen,
+            value: _effectiveValue,
           );
+
+          return NakedStateScopeBuilder(
+            value: selectState,
+            child: child,
+            builder: widget.builder,
+          );
+        },
+      ),
+    );
 
     Widget result = widget.excludeSemantics
         ? selectWidget
