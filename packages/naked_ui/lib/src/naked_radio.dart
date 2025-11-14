@@ -1,5 +1,13 @@
 import 'package:flutter/material.dart';
 
+// KNOWN LIMITATION: NakedRadio currently depends on Material's RadioGroup
+// for group coordination (RadioGroup.maybeOf<T> used at line 144). This is
+// an architectural compromise to avoid maintaining a custom RadioGroup
+// implementation. Users must import 'package:flutter/material.dart' to use
+// NakedRadio. A headless RadioGroup implementation is planned for v1.0.
+//
+// For more context: see AUDIT_FINDINGS.md, Issue 1.2
+
 import 'mixins/naked_mixins.dart';
 import 'utilities/hit_testable_container.dart';
 import 'utilities/naked_state_scope.dart';

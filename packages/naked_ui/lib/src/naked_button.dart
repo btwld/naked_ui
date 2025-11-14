@@ -142,11 +142,10 @@ class _NakedButtonState extends State<NakedButton>
     // Visual feedback for keyboard activation
     updatePressState(true, widget.onPressChange);
 
-    _cleanupKeyboardTimer();
+    _keyboardPressTimer?.cancel();
     _keyboardPressTimer = Timer(const Duration(milliseconds: 100), () {
-      if (mounted) {
-        updatePressState(false, widget.onPressChange);
-      }
+      if (!mounted) return;
+      updatePressState(false, widget.onPressChange);
       _keyboardPressTimer = null;
     });
   }

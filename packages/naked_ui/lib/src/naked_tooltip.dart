@@ -160,17 +160,25 @@ class _NakedTooltipState extends State<NakedTooltip>
 
   void _handleMouseEnter(PointerEnterEvent _) {
     _showTimer?.cancel();
+    _showTimer = null;
     _waitTimer?.cancel();
+
     _waitTimer = Timer(widget.waitDuration, () {
+      if (!mounted) return;
       _menuController.open();
+      _waitTimer = null;
     });
   }
 
   void _handleMouseExit(PointerExitEvent _) {
-    _showTimer?.cancel();
     _waitTimer?.cancel();
+    _waitTimer = null;
+    _showTimer?.cancel();
+
     _showTimer = Timer(widget.showDuration, () {
+      if (!mounted) return;
       _menuController.close();
+      _showTimer = null;
     });
   }
 

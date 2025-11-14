@@ -169,3 +169,21 @@ NakedButton(
 )
 ```
 See each component's documentation for details on all available configuration options.
+
+## Known Limitations
+
+### NakedRadio Material Dependency
+
+Currently, `NakedRadio` requires a Material import for `RadioGroup` coordination:
+
+```dart
+import 'package:flutter/material.dart'; // Required for RadioGroup
+import 'package:naked_ui/naked_ui.dart';
+```
+
+This violates our "headless" design philosophy and adds ~200KB to bundle size
+for radio button users. A fully headless `RadioGroup` implementation is planned
+for v1.0.
+
+**Workaround:** If bundle size is critical, consider using individual radio
+buttons without a group, or wait for v1.0.

@@ -373,23 +373,33 @@ class _NakedTabState extends State<NakedTab>
   }
 
   void _focusFirstTab() {
-    // Find the first tab in the current tab group
     final scope = FocusScope.of(context);
-    scope.focusInDirection(TraversalDirection.left);
-    // Move left until we cannot go further (reaching the first tab).
-    while (scope.focusInDirection(TraversalDirection.left)) {
-      // Continue until we reach the first tab.
+    int attempts = 0;
+    const maxAttempts = 100; // Safety limit for circular traversal
+
+    while (scope.focusInDirection(TraversalDirection.left) && attempts < maxAttempts) {
+      attempts++;
     }
+
+    assert(
+      attempts < maxAttempts,
+      'Focus traversal exceeded safety limit. This may indicate circular focus configuration.',
+    );
   }
 
   void _focusLastTab() {
-    // Find the last tab in the current tab group
     final scope = FocusScope.of(context);
-    scope.focusInDirection(TraversalDirection.right);
-    // Move right until we cannot go further (reaching the last tab).
-    while (scope.focusInDirection(TraversalDirection.right)) {
-      // Continue until we reach the last tab.
+    int attempts = 0;
+    const maxAttempts = 100; // Safety limit for circular traversal
+
+    while (scope.focusInDirection(TraversalDirection.right) && attempts < maxAttempts) {
+      attempts++;
     }
+
+    assert(
+      attempts < maxAttempts,
+      'Focus traversal exceeded safety limit. This may indicate circular focus configuration.',
+    );
   }
 
   @override
@@ -462,7 +472,15 @@ class _NakedTabState extends State<NakedTab>
         if (f && _isEnabled) {
           _scope.selectTab(widget.tabId);
         }
-        setState(() {});
+
+        // Defer setState to next frame to avoid "setState during build" errors
+        if (mounted) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) {
+              setState(() {});
+            }
+          });
+        }
       },
       onHoverChange: (h) => updateHoverState(h, widget.onHoverChange),
       focusNode: effectiveFocusNode,
