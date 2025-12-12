@@ -66,7 +66,7 @@ class NakedSliderState extends NakedState {
 
   @override
   int get hashCode =>
-      Object.hash(states, value, min, max, divisions, isDragging);
+      Object.hash(Object.hashAllUnordered(states), value, min, max, divisions, isDragging);
 }
 
 /// A headless slider without visuals.

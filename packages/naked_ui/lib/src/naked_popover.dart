@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 
 import 'utilities/intents.dart';
@@ -23,7 +24,7 @@ class NakedPopoverState extends NakedState {
   }
 
   @override
-  int get hashCode => Object.hash(states, isOpen);
+  int get hashCode => Object.hash(Object.hashAllUnordered(states), isOpen);
 
   /// Returns the nearest [NakedPopoverState] provided by [NakedStateScope].
   static NakedPopoverState of(BuildContext context) => NakedState.of(context);

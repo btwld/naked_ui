@@ -79,7 +79,7 @@ class NakedTextFieldState extends NakedState {
 
   @override
   int get hashCode =>
-      Object.hash(states, text, isFocused, hasText, isReadOnly, isEnabled);
+      Object.hash(Object.hashAllUnordered(states), text, isFocused, hasText, isReadOnly, isEnabled);
 }
 
 /// Headless, builder-first text input built on [EditableText].

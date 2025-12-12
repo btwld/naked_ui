@@ -29,7 +29,7 @@ class NakedButtonState extends NakedState {
   }
 
   @override
-  int get hashCode => states.hashCode;
+  int get hashCode => Object.hashAllUnordered(states);
 }
 
 /// A headless button without visuals that provides interaction states.

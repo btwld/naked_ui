@@ -75,7 +75,7 @@ class NakedTabState extends NakedState {
   }
 
   @override
-  int get hashCode => Object.hash(states, tabId);
+  int get hashCode => Object.hash(Object.hashAllUnordered(states), tabId);
 }
 
 /// A headless tab group without visuals.

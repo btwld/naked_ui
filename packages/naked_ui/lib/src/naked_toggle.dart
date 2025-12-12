@@ -40,7 +40,7 @@ class NakedToggleState extends NakedState {
   }
 
   @override
-  int get hashCode => Object.hash(states, isToggled);
+  int get hashCode => Object.hash(Object.hashAllUnordered(states), isToggled);
 }
 
 /// Immutable view passed to [NakedToggleOption.builder].
@@ -76,7 +76,7 @@ class NakedToggleOptionState<T> extends NakedState {
   }
 
   @override
-  int get hashCode => Object.hash(states, value);
+  int get hashCode => Object.hash(Object.hashAllUnordered(states), value);
 }
 
 /// A headless binary toggle control without visuals.

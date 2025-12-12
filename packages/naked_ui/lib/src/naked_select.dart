@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 
 import 'base/overlay_base.dart';
@@ -33,7 +34,7 @@ class NakedSelectState<T> extends NakedState {
   }
 
   @override
-  int get hashCode => Object.hash(states, isOpen, value);
+  int get hashCode => Object.hash(Object.hashAllUnordered(states), isOpen, value);
 
   /// Returns the nearest [NakedSelectState] of the requested type.
   static NakedSelectState<S> of<S>(BuildContext context) =>
@@ -72,7 +73,7 @@ class NakedSelectOptionState<T> extends NakedState {
   }
 
   @override
-  int get hashCode => Object.hash(states, value);
+  int get hashCode => Object.hash(Object.hashAllUnordered(states), value);
 
   /// Returns the nearest [NakedSelectOptionState] of the requested type.
   static NakedSelectOptionState<S> of<S>(BuildContext context) =>

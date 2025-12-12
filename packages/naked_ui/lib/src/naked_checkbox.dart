@@ -51,7 +51,7 @@ class NakedCheckboxState extends NakedState {
   }
 
   @override
-  int get hashCode => Object.hash(states, isChecked, tristate);
+  int get hashCode => Object.hash(Object.hashAllUnordered(states), isChecked, tristate);
 }
 
 /// A headless checkbox without visuals.

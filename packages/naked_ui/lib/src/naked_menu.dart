@@ -40,7 +40,7 @@ class NakedMenuState extends NakedState {
   }
 
   @override
-  int get hashCode => Object.hash(states, isOpen);
+  int get hashCode => Object.hash(Object.hashAllUnordered(states), isOpen);
 }
 
 /// Immutable view passed to [NakedMenuItem] builders.
@@ -76,7 +76,7 @@ class NakedMenuItemState<T> extends NakedState {
   }
 
   @override
-  int get hashCode => Object.hash(states, value);
+  int get hashCode => Object.hash(Object.hashAllUnordered(states), value);
 }
 
 /// Internal scope provided by [NakedMenu] to its overlay subtree.

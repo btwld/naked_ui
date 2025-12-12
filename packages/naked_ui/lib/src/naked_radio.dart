@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import 'mixins/naked_mixins.dart';
@@ -22,7 +23,7 @@ class NakedRadioState<T> extends NakedState {
   }
 
   @override
-  int get hashCode => Object.hash(states, value);
+  int get hashCode => Object.hash(Object.hashAllUnordered(states), value);
 
   /// Returns the nearest [NakedRadioState] of the requested type.
   static NakedRadioState<S> of<S>(BuildContext context) =>
