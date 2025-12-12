@@ -77,10 +77,10 @@ class _OverlayPositionerDelegate extends SingleChildLayoutDelegate {
     final targetAnchorOffset = targetAnchor.alongSize(targetSize);
     final followerAnchorOffset = followerAnchor.alongSize(childSize);
 
-    final preferedPosition =
+    final preferredPosition =
         targetPosition + targetAnchorOffset - followerAnchorOffset + offset;
 
-    return _clampToBounds(preferedPosition, childSize, size);
+    return _clampToBounds(preferredPosition, childSize, size);
   }
 
   @override

@@ -13,6 +13,18 @@ class NakedPopoverState extends NakedState {
 
   NakedPopoverState({required super.states, required this.isOpen});
 
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+
+    return other is NakedPopoverState &&
+        setEquals(other.states, states) &&
+        other.isOpen == isOpen;
+  }
+
+  @override
+  int get hashCode => Object.hash(states, isOpen);
+
   /// Returns the nearest [NakedPopoverState] provided by [NakedStateScope].
   static NakedPopoverState of(BuildContext context) => NakedState.of(context);
 

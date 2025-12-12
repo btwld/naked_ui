@@ -293,7 +293,7 @@ class _NakedSliderState extends State<NakedSlider>
     }
   }
 
-  void _handleDragEnd(DragEndDetails details) {
+  void _finishDrag() {
     if (!_isDragging) return;
 
     _isDragging = false;
@@ -307,17 +307,9 @@ class _NakedSliderState extends State<NakedSlider>
     widget.onDragEnd?.call(v);
   }
 
-  void _handleDragCancel() {
-    if (!_isDragging) return;
-    _isDragging = false;
-    _dragStartPosition = null;
-    _dragStartValue = null;
-    updateState(WidgetState.pressed, false);
-    widget.onDragChange?.call(false);
+  void _handleDragEnd(DragEndDetails details) => _finishDrag();
 
-    final v = _lastEmittedValue ?? widget.value;
-    widget.onDragEnd?.call(v);
-  }
+  void _handleDragCancel() => _finishDrag();
 
   @override
   void initializeWidgetStates() {
@@ -344,8 +336,8 @@ class _NakedSliderState extends State<NakedSlider>
       updateState(WidgetState.pressed, false);
     }
 
-    final node2 = effectiveFocusNode;
-    node2
+    final focusNode = effectiveFocusNode;
+    focusNode
       ..canRequestFocus = _isEnabled
       ..skipTraversal = !_isEnabled;
 

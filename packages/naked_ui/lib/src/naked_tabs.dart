@@ -41,11 +41,6 @@ class NakedTabController extends ChangeNotifier {
       selectTab(_previousTabId!);
     }
   }
-
-  @override
-  void dispose() {
-    super.dispose();
-  }
 }
 
 /// Immutable view passed to [NakedTab.builder].
