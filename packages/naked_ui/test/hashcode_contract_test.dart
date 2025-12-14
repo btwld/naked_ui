@@ -121,6 +121,114 @@ void main() {
       expect(state1.hashCode == state2.hashCode, isTrue);
     });
 
+    test('NakedTextFieldState honors contract', () {
+      final states1 = {WidgetState.focused, WidgetState.hovered};
+      final states2 = {WidgetState.hovered, WidgetState.focused};
+
+      final state1 = NakedTextFieldState(
+        states: states1,
+        text: 'hello',
+        hasText: true,
+        isReadOnly: false,
+      );
+      final state2 = NakedTextFieldState(
+        states: states2,
+        text: 'hello',
+        hasText: true,
+        isReadOnly: false,
+      );
+
+      expect(state1 == state2, isTrue);
+      expect(state1.hashCode == state2.hashCode, isTrue);
+    });
+
+    test('NakedRadioState honors contract', () {
+      final states1 = {WidgetState.selected, WidgetState.focused};
+      final states2 = {WidgetState.focused, WidgetState.selected};
+
+      final state1 = NakedRadioState<String>(states: states1, value: 'option1');
+      final state2 = NakedRadioState<String>(states: states2, value: 'option1');
+
+      expect(state1 == state2, isTrue);
+      expect(state1.hashCode == state2.hashCode, isTrue);
+    });
+
+    test('NakedSelectState honors contract', () {
+      final states1 = {WidgetState.focused, WidgetState.hovered};
+      final states2 = {WidgetState.hovered, WidgetState.focused};
+
+      final state1 = NakedSelectState<String>(
+        states: states1,
+        isOpen: true,
+        value: 'selected',
+      );
+      final state2 = NakedSelectState<String>(
+        states: states2,
+        isOpen: true,
+        value: 'selected',
+      );
+
+      expect(state1 == state2, isTrue);
+      expect(state1.hashCode == state2.hashCode, isTrue);
+    });
+
+    test('NakedSelectOptionState honors contract', () {
+      final states1 = {WidgetState.selected, WidgetState.hovered};
+      final states2 = {WidgetState.hovered, WidgetState.selected};
+
+      final state1 =
+          NakedSelectOptionState<String>(states: states1, value: 'opt1');
+      final state2 =
+          NakedSelectOptionState<String>(states: states2, value: 'opt1');
+
+      expect(state1 == state2, isTrue);
+      expect(state1.hashCode == state2.hashCode, isTrue);
+    });
+
+    test('NakedAccordionGroupState honors contract', () {
+      final states1 = {WidgetState.focused, WidgetState.hovered};
+      final states2 = {WidgetState.hovered, WidgetState.focused};
+
+      final state1 = NakedAccordionGroupState(
+        states: states1,
+        expandedCount: 1,
+        minExpanded: 0,
+        maxExpanded: 3,
+      );
+      final state2 = NakedAccordionGroupState(
+        states: states2,
+        expandedCount: 1,
+        minExpanded: 0,
+        maxExpanded: 3,
+      );
+
+      expect(state1 == state2, isTrue);
+      expect(state1.hashCode == state2.hashCode, isTrue);
+    });
+
+    test('NakedAccordionItemState honors contract', () {
+      final states1 = {WidgetState.selected, WidgetState.focused};
+      final states2 = {WidgetState.focused, WidgetState.selected};
+
+      final state1 = NakedAccordionItemState<String>(
+        states: states1,
+        value: 'item1',
+        isExpanded: true,
+        canCollapse: true,
+        canExpand: false,
+      );
+      final state2 = NakedAccordionItemState<String>(
+        states: states2,
+        value: 'item1',
+        isExpanded: true,
+        canCollapse: true,
+        canExpand: false,
+      );
+
+      expect(state1 == state2, isTrue);
+      expect(state1.hashCode == state2.hashCode, isTrue);
+    });
+
     test('Different states have different equality', () {
       final state1 = NakedButtonState(states: {WidgetState.hovered});
       final state2 = NakedButtonState(states: {WidgetState.focused});

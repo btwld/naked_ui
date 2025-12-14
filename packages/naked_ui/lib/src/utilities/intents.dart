@@ -150,8 +150,6 @@ class _SelectIntentActions {
   Map<Type, Action<Intent>> actions({
     required VoidCallback onDismiss,
     VoidCallback? onOpenOverlay,
-    VoidCallback? onPageUp,
-    VoidCallback? onPageDown,
   }) {
     final map = <Type, Action<Intent>>{
       DismissIntent: CallbackAction<DismissIntent>(
@@ -162,18 +160,6 @@ class _SelectIntentActions {
     if (onOpenOverlay != null) {
       map[_OpenOverlayIntent] = CallbackAction<_OpenOverlayIntent>(
         onInvoke: (_) => onOpenOverlay(),
-      );
-    }
-
-    if (onPageUp != null) {
-      map[_PageUpIntent] = CallbackAction<_PageUpIntent>(
-        onInvoke: (_) => onPageUp(),
-      );
-    }
-
-    if (onPageDown != null) {
-      map[_PageDownIntent] = CallbackAction<_PageDownIntent>(
-        onInvoke: (_) => onPageDown(),
       );
     }
 
@@ -303,8 +289,6 @@ const Map<ShortcutActivator, Intent> _selectShortcuts =
       SingleActivator(LogicalKeyboardKey.arrowUp): PreviousFocusIntent(),
       SingleActivator(LogicalKeyboardKey.home): _FirstFocusIntent(),
       SingleActivator(LogicalKeyboardKey.end): _LastFocusIntent(),
-      SingleActivator(LogicalKeyboardKey.pageUp): _PageUpIntent(),
-      SingleActivator(LogicalKeyboardKey.pageDown): _PageDownIntent(),
       SingleActivator(LogicalKeyboardKey.arrowDown, alt: true):
           _OpenOverlayIntent(),
       SingleActivator(LogicalKeyboardKey.arrowUp, alt: true): DismissIntent(),
@@ -390,16 +374,6 @@ class _FirstFocusIntent extends Intent {
 /// Intent: Move focus to last item in a collection.
 class _LastFocusIntent extends Intent {
   const _LastFocusIntent();
-}
-
-/// Intent: Move focus by page up (large jump backward).
-class _PageUpIntent extends Intent {
-  const _PageUpIntent();
-}
-
-/// Intent: Move focus by page down (large jump forward).
-class _PageDownIntent extends Intent {
-  const _PageDownIntent();
 }
 
 /// Intent: Open overlay/dropdown.
