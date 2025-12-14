@@ -76,6 +76,23 @@ void main() {
       expect(state1.hashCode == state2.hashCode, isTrue);
     });
 
+    test('NakedToggleOptionState honors contract', () {
+      final states1 = {WidgetState.selected, WidgetState.focused};
+      final states2 = {WidgetState.focused, WidgetState.selected};
+
+      final state1 = NakedToggleOptionState<String>(
+        states: states1,
+        value: 'opt1',
+      );
+      final state2 = NakedToggleOptionState<String>(
+        states: states2,
+        value: 'opt1',
+      );
+
+      expect(state1 == state2, isTrue);
+      expect(state1.hashCode == state2.hashCode, isTrue);
+    });
+
     test('NakedSliderState honors contract', () {
       final states1 = {WidgetState.pressed, WidgetState.focused};
       final states2 = {WidgetState.focused, WidgetState.pressed};
@@ -105,6 +122,23 @@ void main() {
 
       final state1 = NakedMenuState(states: states1, isOpen: false);
       final state2 = NakedMenuState(states: states2, isOpen: false);
+
+      expect(state1 == state2, isTrue);
+      expect(state1.hashCode == state2.hashCode, isTrue);
+    });
+
+    test('NakedMenuItemState honors contract', () {
+      final states1 = {WidgetState.hovered, WidgetState.selected};
+      final states2 = {WidgetState.selected, WidgetState.hovered};
+
+      final state1 = NakedMenuItemState<String>(
+        states: states1,
+        value: 'item1',
+      );
+      final state2 = NakedMenuItemState<String>(
+        states: states2,
+        value: 'item1',
+      );
 
       expect(state1 == state2, isTrue);
       expect(state1.hashCode == state2.hashCode, isTrue);
@@ -176,10 +210,14 @@ void main() {
       final states1 = {WidgetState.selected, WidgetState.hovered};
       final states2 = {WidgetState.hovered, WidgetState.selected};
 
-      final state1 =
-          NakedSelectOptionState<String>(states: states1, value: 'opt1');
-      final state2 =
-          NakedSelectOptionState<String>(states: states2, value: 'opt1');
+      final state1 = NakedSelectOptionState<String>(
+        states: states1,
+        value: 'opt1',
+      );
+      final state2 = NakedSelectOptionState<String>(
+        states: states2,
+        value: 'opt1',
+      );
 
       expect(state1 == state2, isTrue);
       expect(state1.hashCode == state2.hashCode, isTrue);
