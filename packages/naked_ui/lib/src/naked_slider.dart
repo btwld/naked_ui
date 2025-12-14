@@ -432,7 +432,7 @@ class _NakedSliderState extends State<NakedSlider>
               enabled: _isEnabled,
               slider: true,
               focusable: _isEnabled,
-              focused: isFocused,
+              focused: _isEnabled ? isFocused : null,
               label: widget.semanticLabel,
               value: _percentString(widget.value),
               increasedValue: _percentString(

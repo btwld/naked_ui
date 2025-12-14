@@ -1,3 +1,5 @@
+import 'dart:ui' show Tristate;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -89,9 +91,9 @@ void main() {
       // Core semantic properties should match Material patterns
       expect(headerData.hasAction(SemanticsAction.tap), isTrue);
       expect(headerData.hasAction(SemanticsAction.focus), isTrue);
-      expect(headerData.flagsCollection.isFocusable, isTrue);
-      expect(headerData.flagsCollection.hasEnabledState, isTrue);
-      expect(headerData.flagsCollection.isEnabled, isTrue);
+      expect(headerData.flagsCollection.isFocused != Tristate.none, isTrue);
+      expect(headerData.flagsCollection.isEnabled != Tristate.none, isTrue);
+      expect(headerData.flagsCollection.isEnabled == Tristate.isTrue, isTrue);
       expect(
         headerData.label,
         'Header',

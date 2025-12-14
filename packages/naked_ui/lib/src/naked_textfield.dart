@@ -787,7 +787,7 @@ class _NakedTextFieldState extends State<NakedTextField>
               textField: true,
               readOnly: widget.readOnly || !widget.enabled,
               focusable: widget.enabled,
-              focused: focusNode.hasFocus,
+              focused: widget.enabled ? focusNode.hasFocus : null,
               obscured: widget.obscureText,
               multiline: (widget.maxLines ?? 1) > 1,
               maxValueLength: widget.maxLength,

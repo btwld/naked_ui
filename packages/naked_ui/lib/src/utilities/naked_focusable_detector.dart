@@ -117,15 +117,15 @@ class _NakedFocusableDetectorState extends State<NakedFocusableDetector>
 
   @override
   Widget build(BuildContext context) {
-    // Check navigation mode to determine focus behavior
+    // Check navigation mode to determine focus behavior.
     final navigationMode =
         MediaQuery.maybeNavigationModeOf(context) ?? NavigationMode.traditional;
     final effectiveCanRequestFocus =
         navigationMode == NavigationMode.directional
-        ? widget
-              .canRequestFocus // Directional: disabled widgets stay traversable
-        : widget.enabled &&
-              widget.canRequestFocus; // Traditional: disabled = unfocusable
+        // Directional: disabled widgets stay traversable.
+        ? widget.canRequestFocus
+        // Traditional: disabled = unfocusable.
+        : widget.enabled && widget.canRequestFocus;
 
     // Start with Focus wrapping the child
     Widget result = Focus(

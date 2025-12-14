@@ -1,3 +1,5 @@
+import 'dart:ui' show Tristate;
+
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart';
@@ -166,7 +168,7 @@ void main() {
       );
       expect(
         triggerSemantics.getSemanticsData().flagsCollection.isFocused,
-        isTrue,
+        Tristate.isTrue,
       );
 
       // Open with keyboard
