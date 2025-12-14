@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 
 import 'base/overlay_base.dart';
@@ -35,12 +34,12 @@ class NakedMenuState extends NakedState {
     if (identical(this, other)) return true;
 
     return other is NakedMenuState &&
-        setEquals(other.states, states) &&
+        statesEqual(other) &&
         other.isOpen == isOpen;
   }
 
   @override
-  int get hashCode => Object.hash(Object.hashAllUnordered(states), isOpen);
+  int get hashCode => Object.hash(statesHashCode, isOpen);
 }
 
 /// Immutable view passed to [NakedMenuItem] builders.
@@ -71,12 +70,12 @@ class NakedMenuItemState<T> extends NakedState {
     if (identical(this, other)) return true;
 
     return other is NakedMenuItemState<T> &&
-        setEquals(other.states, states) &&
+        statesEqual(other) &&
         other.value == value;
   }
 
   @override
-  int get hashCode => Object.hash(Object.hashAllUnordered(states), value);
+  int get hashCode => Object.hash(statesHashCode, value);
 }
 
 /// Internal scope provided by [NakedMenu] to its overlay subtree.

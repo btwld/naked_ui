@@ -1,6 +1,5 @@
 // ignore_for_file: no-empty-block
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
@@ -69,13 +68,11 @@ class NakedTabState extends NakedState {
   bool operator ==(Object other) {
     if (identical(this, other)) return true;
 
-    return other is NakedTabState &&
-        setEquals(other.states, states) &&
-        other.tabId == tabId;
+    return other is NakedTabState && statesEqual(other) && other.tabId == tabId;
   }
 
   @override
-  int get hashCode => Object.hash(Object.hashAllUnordered(states), tabId);
+  int get hashCode => Object.hash(statesHashCode, tabId);
 }
 
 /// A headless tab group without visuals.

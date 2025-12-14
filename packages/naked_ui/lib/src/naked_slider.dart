@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 
 import 'mixins/naked_mixins.dart';
@@ -56,7 +55,7 @@ class NakedSliderState extends NakedState {
     if (identical(this, other)) return true;
 
     return other is NakedSliderState &&
-        setEquals(other.states, states) &&
+        statesEqual(other) &&
         other.value == value &&
         other.min == min &&
         other.max == max &&
@@ -66,7 +65,7 @@ class NakedSliderState extends NakedState {
 
   @override
   int get hashCode =>
-      Object.hash(Object.hashAllUnordered(states), value, min, max, divisions, isDragging);
+      Object.hash(statesHashCode, value, min, max, divisions, isDragging);
 }
 
 /// A headless slider without visuals.

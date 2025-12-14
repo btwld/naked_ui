@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import 'mixins/naked_mixins.dart';
@@ -18,12 +17,12 @@ class NakedRadioState<T> extends NakedState {
     if (identical(this, other)) return true;
 
     return other is NakedRadioState<T> &&
-        setEquals(other.states, states) &&
+        statesEqual(other) &&
         other.value == value;
   }
 
   @override
-  int get hashCode => Object.hash(Object.hashAllUnordered(states), value);
+  int get hashCode => Object.hash(statesHashCode, value);
 
   /// Returns the nearest [NakedRadioState] of the requested type.
   static NakedRadioState<S> of<S>(BuildContext context) =>
