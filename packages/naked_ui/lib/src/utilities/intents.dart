@@ -289,6 +289,8 @@ const Map<ShortcutActivator, Intent> _selectShortcuts =
       SingleActivator(LogicalKeyboardKey.arrowUp): PreviousFocusIntent(),
       SingleActivator(LogicalKeyboardKey.home): _FirstFocusIntent(),
       SingleActivator(LogicalKeyboardKey.end): _LastFocusIntent(),
+      SingleActivator(LogicalKeyboardKey.pageUp): _PageUpIntent(),
+      SingleActivator(LogicalKeyboardKey.pageDown): _PageDownIntent(),
       SingleActivator(LogicalKeyboardKey.arrowDown, alt: true):
           _OpenOverlayIntent(),
       SingleActivator(LogicalKeyboardKey.arrowUp, alt: true): DismissIntent(),
@@ -374,6 +376,16 @@ class _FirstFocusIntent extends Intent {
 /// Intent: Move focus to last item in a collection.
 class _LastFocusIntent extends Intent {
   const _LastFocusIntent();
+}
+
+/// Intent: Move focus by page up (large jump backward).
+class _PageUpIntent extends Intent {
+  const _PageUpIntent();
+}
+
+/// Intent: Move focus by page down (large jump forward).
+class _PageDownIntent extends Intent {
+  const _PageDownIntent();
 }
 
 /// Intent: Open overlay/dropdown.
