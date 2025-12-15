@@ -4,6 +4,20 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:naked_ui/naked_ui.dart';
 
+typedef _StateFactory = NakedState Function(Set<WidgetState> states);
+
+class _ContractCase {
+  const _ContractCase({
+    required this.description,
+    required this.orderedStates,
+    required this.create,
+  });
+
+  final String description;
+  final List<WidgetState> orderedStates;
+  final _StateFactory create;
+}
+
 /// Verification test to ensure hashCode/equals contract is honored.
 ///
 /// The contract states: if a == b, then a.hashCode == b.hashCode
@@ -12,260 +26,143 @@ import 'package:naked_ui/naked_ui.dart';
 /// potentially different Set instances/ordering) have matching hashCodes.
 void main() {
   group('hashCode/equals contract verification', () {
-    test('NakedButtonState honors contract', () {
-      // Create two sets with same content but different insertion order
-      final states1 = {WidgetState.hovered, WidgetState.focused};
-      final states2 = {WidgetState.focused, WidgetState.hovered};
+    Set<WidgetState> orderedStateSet(Iterable<WidgetState> states) =>
+        <WidgetState>{...states};
 
-      final state1 = NakedButtonState(states: states1);
-      final state2 = NakedButtonState(states: states2);
+    void expectHashCodeContract({
+      required _StateFactory create,
+      required List<WidgetState> orderedStates,
+    }) {
+      final states1 = orderedStateSet(orderedStates);
+      final states2 = orderedStateSet(orderedStates.reversed);
 
-      // These should be equal (setEquals compares content)
-      expect(
-        state1 == state2,
-        isTrue,
-        reason: 'States with same content should be equal',
-      );
-
-      // If equal, hashCodes MUST be equal (the contract)
-      expect(
-        state1.hashCode == state2.hashCode,
-        isTrue,
-        reason: 'Equal states must have equal hashCodes',
-      );
-    });
-
-    test('NakedPopoverState honors contract', () {
-      final states1 = {WidgetState.hovered, WidgetState.pressed};
-      final states2 = {WidgetState.pressed, WidgetState.hovered};
-
-      final state1 = NakedPopoverState(states: states1, isOpen: true);
-      final state2 = NakedPopoverState(states: states2, isOpen: true);
+      final state1 = create(states1);
+      final state2 = create(states2);
 
       expect(state1 == state2, isTrue);
-      expect(state1.hashCode == state2.hashCode, isTrue);
-    });
+      expect(state1.hashCode, equals(state2.hashCode));
+    }
 
-    test('NakedCheckboxState honors contract', () {
-      final states1 = {WidgetState.focused, WidgetState.hovered};
-      final states2 = {WidgetState.hovered, WidgetState.focused};
+    final cases = <_ContractCase>[
+      _ContractCase(
+        description: 'NakedButtonState',
+        orderedStates: [WidgetState.hovered, WidgetState.focused],
+        create: (states) => NakedButtonState(states: states),
+      ),
+      _ContractCase(
+        description: 'NakedPopoverState',
+        orderedStates: [WidgetState.hovered, WidgetState.pressed],
+        create: (states) => NakedPopoverState(states: states, isOpen: true),
+      ),
+      _ContractCase(
+        description: 'NakedCheckboxState',
+        orderedStates: [WidgetState.focused, WidgetState.hovered],
+        create: (states) => NakedCheckboxState(
+          states: states,
+          isChecked: true,
+          tristate: false,
+        ),
+      ),
+      _ContractCase(
+        description: 'NakedToggleState',
+        orderedStates: [WidgetState.disabled, WidgetState.focused],
+        create: (states) => NakedToggleState(states: states, isToggled: true),
+      ),
+      _ContractCase(
+        description: 'NakedToggleOptionState',
+        orderedStates: [WidgetState.selected, WidgetState.focused],
+        create: (states) =>
+            NakedToggleOptionState<String>(states: states, value: 'opt1'),
+      ),
+      _ContractCase(
+        description: 'NakedSliderState',
+        orderedStates: [WidgetState.pressed, WidgetState.focused],
+        create: (states) => NakedSliderState(
+          states: states,
+          value: 0.5,
+          min: 0.0,
+          max: 1.0,
+          isDragging: false,
+        ),
+      ),
+      _ContractCase(
+        description: 'NakedMenuState',
+        orderedStates: [WidgetState.hovered, WidgetState.selected],
+        create: (states) => NakedMenuState(states: states, isOpen: false),
+      ),
+      _ContractCase(
+        description: 'NakedMenuItemState',
+        orderedStates: [WidgetState.hovered, WidgetState.selected],
+        create: (states) =>
+            NakedMenuItemState<String>(states: states, value: 'item1'),
+      ),
+      _ContractCase(
+        description: 'NakedTabState',
+        orderedStates: [WidgetState.selected, WidgetState.focused],
+        create: (states) => NakedTabState(states: states, tabId: 'tab1'),
+      ),
+      _ContractCase(
+        description: 'NakedTextFieldState',
+        orderedStates: [WidgetState.focused, WidgetState.hovered],
+        create: (states) => NakedTextFieldState(
+          states: states,
+          text: 'hello',
+          hasText: true,
+          isReadOnly: false,
+        ),
+      ),
+      _ContractCase(
+        description: 'NakedRadioState',
+        orderedStates: [WidgetState.selected, WidgetState.focused],
+        create: (states) =>
+            NakedRadioState<String>(states: states, value: 'option1'),
+      ),
+      _ContractCase(
+        description: 'NakedSelectState',
+        orderedStates: [WidgetState.focused, WidgetState.hovered],
+        create: (states) => NakedSelectState<String>(
+          states: states,
+          isOpen: true,
+          value: 'selected',
+        ),
+      ),
+      _ContractCase(
+        description: 'NakedSelectOptionState',
+        orderedStates: [WidgetState.selected, WidgetState.hovered],
+        create: (states) =>
+            NakedSelectOptionState<String>(states: states, value: 'opt1'),
+      ),
+      _ContractCase(
+        description: 'NakedAccordionGroupState',
+        orderedStates: [WidgetState.focused, WidgetState.hovered],
+        create: (states) => NakedAccordionGroupState(
+          states: states,
+          expandedCount: 1,
+          minExpanded: 0,
+          maxExpanded: 3,
+        ),
+      ),
+      _ContractCase(
+        description: 'NakedAccordionItemState',
+        orderedStates: [WidgetState.selected, WidgetState.focused],
+        create: (states) => NakedAccordionItemState<String>(
+          states: states,
+          value: 'item1',
+          isExpanded: true,
+          canCollapse: true,
+          canExpand: false,
+        ),
+      ),
+    ];
 
-      final state1 = NakedCheckboxState(
-        states: states1,
-        isChecked: true,
-        tristate: false,
-      );
-      final state2 = NakedCheckboxState(
-        states: states2,
-        isChecked: true,
-        tristate: false,
-      );
-
-      expect(state1 == state2, isTrue);
-      expect(state1.hashCode == state2.hashCode, isTrue);
-    });
-
-    test('NakedToggleState honors contract', () {
-      final states1 = {WidgetState.disabled, WidgetState.focused};
-      final states2 = {WidgetState.focused, WidgetState.disabled};
-
-      final state1 = NakedToggleState(states: states1, isToggled: true);
-      final state2 = NakedToggleState(states: states2, isToggled: true);
-
-      expect(state1 == state2, isTrue);
-      expect(state1.hashCode == state2.hashCode, isTrue);
-    });
-
-    test('NakedToggleOptionState honors contract', () {
-      final states1 = {WidgetState.selected, WidgetState.focused};
-      final states2 = {WidgetState.focused, WidgetState.selected};
-
-      final state1 = NakedToggleOptionState<String>(
-        states: states1,
-        value: 'opt1',
-      );
-      final state2 = NakedToggleOptionState<String>(
-        states: states2,
-        value: 'opt1',
-      );
-
-      expect(state1 == state2, isTrue);
-      expect(state1.hashCode == state2.hashCode, isTrue);
-    });
-
-    test('NakedSliderState honors contract', () {
-      final states1 = {WidgetState.pressed, WidgetState.focused};
-      final states2 = {WidgetState.focused, WidgetState.pressed};
-
-      final state1 = NakedSliderState(
-        states: states1,
-        value: 0.5,
-        min: 0.0,
-        max: 1.0,
-        isDragging: false,
-      );
-      final state2 = NakedSliderState(
-        states: states2,
-        value: 0.5,
-        min: 0.0,
-        max: 1.0,
-        isDragging: false,
-      );
-
-      expect(state1 == state2, isTrue);
-      expect(state1.hashCode == state2.hashCode, isTrue);
-    });
-
-    test('NakedMenuState honors contract', () {
-      final states1 = {WidgetState.hovered, WidgetState.selected};
-      final states2 = {WidgetState.selected, WidgetState.hovered};
-
-      final state1 = NakedMenuState(states: states1, isOpen: false);
-      final state2 = NakedMenuState(states: states2, isOpen: false);
-
-      expect(state1 == state2, isTrue);
-      expect(state1.hashCode == state2.hashCode, isTrue);
-    });
-
-    test('NakedMenuItemState honors contract', () {
-      final states1 = {WidgetState.hovered, WidgetState.selected};
-      final states2 = {WidgetState.selected, WidgetState.hovered};
-
-      final state1 = NakedMenuItemState<String>(
-        states: states1,
-        value: 'item1',
-      );
-      final state2 = NakedMenuItemState<String>(
-        states: states2,
-        value: 'item1',
-      );
-
-      expect(state1 == state2, isTrue);
-      expect(state1.hashCode == state2.hashCode, isTrue);
-    });
-
-    test('NakedTabState honors contract', () {
-      final states1 = {WidgetState.selected, WidgetState.focused};
-      final states2 = {WidgetState.focused, WidgetState.selected};
-
-      final state1 = NakedTabState(states: states1, tabId: 'tab1');
-      final state2 = NakedTabState(states: states2, tabId: 'tab1');
-
-      expect(state1 == state2, isTrue);
-      expect(state1.hashCode == state2.hashCode, isTrue);
-    });
-
-    test('NakedTextFieldState honors contract', () {
-      final states1 = {WidgetState.focused, WidgetState.hovered};
-      final states2 = {WidgetState.hovered, WidgetState.focused};
-
-      final state1 = NakedTextFieldState(
-        states: states1,
-        text: 'hello',
-        hasText: true,
-        isReadOnly: false,
-      );
-      final state2 = NakedTextFieldState(
-        states: states2,
-        text: 'hello',
-        hasText: true,
-        isReadOnly: false,
-      );
-
-      expect(state1 == state2, isTrue);
-      expect(state1.hashCode == state2.hashCode, isTrue);
-    });
-
-    test('NakedRadioState honors contract', () {
-      final states1 = {WidgetState.selected, WidgetState.focused};
-      final states2 = {WidgetState.focused, WidgetState.selected};
-
-      final state1 = NakedRadioState<String>(states: states1, value: 'option1');
-      final state2 = NakedRadioState<String>(states: states2, value: 'option1');
-
-      expect(state1 == state2, isTrue);
-      expect(state1.hashCode == state2.hashCode, isTrue);
-    });
-
-    test('NakedSelectState honors contract', () {
-      final states1 = {WidgetState.focused, WidgetState.hovered};
-      final states2 = {WidgetState.hovered, WidgetState.focused};
-
-      final state1 = NakedSelectState<String>(
-        states: states1,
-        isOpen: true,
-        value: 'selected',
-      );
-      final state2 = NakedSelectState<String>(
-        states: states2,
-        isOpen: true,
-        value: 'selected',
-      );
-
-      expect(state1 == state2, isTrue);
-      expect(state1.hashCode == state2.hashCode, isTrue);
-    });
-
-    test('NakedSelectOptionState honors contract', () {
-      final states1 = {WidgetState.selected, WidgetState.hovered};
-      final states2 = {WidgetState.hovered, WidgetState.selected};
-
-      final state1 = NakedSelectOptionState<String>(
-        states: states1,
-        value: 'opt1',
-      );
-      final state2 = NakedSelectOptionState<String>(
-        states: states2,
-        value: 'opt1',
-      );
-
-      expect(state1 == state2, isTrue);
-      expect(state1.hashCode == state2.hashCode, isTrue);
-    });
-
-    test('NakedAccordionGroupState honors contract', () {
-      final states1 = {WidgetState.focused, WidgetState.hovered};
-      final states2 = {WidgetState.hovered, WidgetState.focused};
-
-      final state1 = NakedAccordionGroupState(
-        states: states1,
-        expandedCount: 1,
-        minExpanded: 0,
-        maxExpanded: 3,
-      );
-      final state2 = NakedAccordionGroupState(
-        states: states2,
-        expandedCount: 1,
-        minExpanded: 0,
-        maxExpanded: 3,
-      );
-
-      expect(state1 == state2, isTrue);
-      expect(state1.hashCode == state2.hashCode, isTrue);
-    });
-
-    test('NakedAccordionItemState honors contract', () {
-      final states1 = {WidgetState.selected, WidgetState.focused};
-      final states2 = {WidgetState.focused, WidgetState.selected};
-
-      final state1 = NakedAccordionItemState<String>(
-        states: states1,
-        value: 'item1',
-        isExpanded: true,
-        canCollapse: true,
-        canExpand: false,
-      );
-      final state2 = NakedAccordionItemState<String>(
-        states: states2,
-        value: 'item1',
-        isExpanded: true,
-        canCollapse: true,
-        canExpand: false,
-      );
-
-      expect(state1 == state2, isTrue);
-      expect(state1.hashCode == state2.hashCode, isTrue);
-    });
+    for (final c in cases) {
+      test('${c.description} honors contract', () {
+        expectHashCodeContract(
+          create: c.create,
+          orderedStates: c.orderedStates,
+        );
+      });
+    }
 
     test('Different states have different equality', () {
       final state1 = NakedButtonState(states: {WidgetState.hovered});
