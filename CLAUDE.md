@@ -6,6 +6,8 @@
 
 - **Docs**: https://docs.page/btwld/naked_ui
 - **Version**: 0.2.0-beta.7
+- **Flutter**: 3.27.0+ (FVM: 3.32.0)
+- **Dart**: 3.8.0+
 
 ## Repository Structure
 
@@ -96,6 +98,14 @@ Follow [Conventional Commits](https://www.conventionalcommits.org/) (enforced by
 4. Add tests: `test/src/`, `test/semantics/`, `example/integration_test/components/`
 5. Add example in `example/lib/api/`
 6. Add docs in `docs/widget/`
+
+## Do Not
+
+- **DO NOT** modify semantics patterns without reading `.claude/semantics_reference.md`
+- **DO NOT** remove `excludeFromSemantics: true` from GestureDetector without understanding why it's there
+- **DO NOT** skip semantics tests when modifying components
+- **DO NOT** change public API signatures without considering backward compatibility
+- **DO NOT** add dependencies to `packages/naked_ui` - it should remain dependency-free (only Flutter SDK)
 
 ## Key Files
 
