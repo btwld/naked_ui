@@ -1,5 +1,4 @@
-import 'dart:collection';
-
+import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 
 import 'naked_state_scope.dart';
@@ -8,14 +7,17 @@ import 'naked_state_scope.dart';
 ///
 /// Use subclasses to expose component-specific metadata while retaining
 /// access to the underlying [WidgetState] set for custom styling.
+@immutable
 abstract class NakedState {
-  final UnmodifiableSetView<WidgetState> _states;
+  final Set<WidgetState> _states;
+  final int _statesHashCode;
 
   /// Creates a [NakedState] snapshot from the given [states] set.
   ///
   /// The [states] parameter contains the widget states to track.
   NakedState({required Set<WidgetState> states})
-    : _states = UnmodifiableSetView(states);
+    : _states = Set<WidgetState>.unmodifiable(states),
+      _statesHashCode = Object.hashAllUnordered(states);
 
   /// Gets the state of type [T] from the nearest [NakedStateScope].
   ///
@@ -113,6 +115,12 @@ abstract class NakedState {
   ///
   /// Remains useful for custom logic not covered by convenience getters.
   Set<WidgetState> get states => _states;
+
+  @protected
+  bool statesEqual(NakedState other) => setEquals(other._states, _states);
+
+  @protected
+  int get statesHashCode => _statesHashCode;
   bool get isHovered => _states.contains(WidgetState.hovered);
   bool get isFocused => _states.contains(WidgetState.focused);
   bool get isPressed => _states.contains(WidgetState.pressed);
@@ -125,8 +133,8 @@ abstract class NakedState {
 
   bool get isEnabled => !isDisabled;
 
-  bool matches(Set<WidgetState> states) {
-    return _states.containsAll(states);
+  bool matches(Set<WidgetState> requiredStates) {
+    return _states.containsAll(requiredStates);
   }
 
   /// Resolves to the first matching branch in priority order.

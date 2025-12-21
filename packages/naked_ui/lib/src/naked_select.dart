@@ -22,6 +22,19 @@ class NakedSelectState<T> extends NakedState {
     required this.value,
   });
 
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+
+    return other is NakedSelectState<T> &&
+        statesEqual(other) &&
+        other.isOpen == isOpen &&
+        other.value == value;
+  }
+
+  @override
+  int get hashCode => Object.hash(statesHashCode, isOpen, value);
+
   /// Returns the nearest [NakedSelectState] of the requested type.
   static NakedSelectState<S> of<S>(BuildContext context) =>
       NakedState.of(context);
@@ -48,6 +61,18 @@ class NakedSelectOptionState<T> extends NakedState {
   final T value;
 
   NakedSelectOptionState({required super.states, required this.value});
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+
+    return other is NakedSelectOptionState<T> &&
+        statesEqual(other) &&
+        other.value == value;
+  }
+
+  @override
+  int get hashCode => Object.hash(statesHashCode, value);
 
   /// Returns the nearest [NakedSelectOptionState] of the requested type.
   static NakedSelectOptionState<S> of<S>(BuildContext context) =>

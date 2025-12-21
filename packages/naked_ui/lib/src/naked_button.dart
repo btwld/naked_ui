@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 
 import 'mixins/naked_mixins.dart';
@@ -25,11 +24,11 @@ class NakedButtonState extends NakedState {
   bool operator ==(Object other) {
     if (identical(this, other)) return true;
 
-    return other is NakedButtonState && setEquals(other.states, states);
+    return other is NakedButtonState && statesEqual(other);
   }
 
   @override
-  int get hashCode => states.hashCode;
+  int get hashCode => statesHashCode;
 }
 
 /// A headless button without visuals that provides interaction states.

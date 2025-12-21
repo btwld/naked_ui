@@ -1,4 +1,6 @@
 // ignore_for_file: deprecated_member_use
+import 'dart:ui' show CheckedState, Tristate;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -78,19 +80,25 @@ SemanticsSummary summarizeNode(SemanticsNode node) {
   final data = node.getSemanticsData();
 
   final Set<String> flags = <String>{};
-  void addFlag(String name, bool? value) {
-    if (value == true) flags.add(name);
+  void addFlag(String name, bool value) {
+    if (value) flags.add(name);
   }
 
   addFlag('isButton', data.flagsCollection.isButton);
-  addFlag('isEnabled', data.flagsCollection.isEnabled);
-  addFlag('hasEnabledState', data.flagsCollection.hasEnabledState);
-  addFlag('isFocusable', data.flagsCollection.isFocusable);
-  addFlag('isFocused', data.flagsCollection.isFocused);
-  addFlag('hasCheckedState', data.flagsCollection.hasCheckedState);
-  addFlag('isChecked', data.flagsCollection.isChecked);
-  addFlag('isCheckStateMixed', data.flagsCollection.isCheckStateMixed);
-  addFlag('isSelected', data.flagsCollection.isSelected);
+  addFlag('hasEnabledState', data.flagsCollection.isEnabled != Tristate.none);
+  addFlag('isEnabled', data.flagsCollection.isEnabled == Tristate.isTrue);
+  addFlag('isFocusable', data.flagsCollection.isFocused != Tristate.none);
+  addFlag('isFocused', data.flagsCollection.isFocused == Tristate.isTrue);
+  addFlag(
+    'hasCheckedState',
+    data.flagsCollection.isChecked != CheckedState.none,
+  );
+  addFlag('isChecked', data.flagsCollection.isChecked == CheckedState.isTrue);
+  addFlag(
+    'isCheckStateMixed',
+    data.flagsCollection.isChecked == CheckedState.mixed,
+  );
+  addFlag('isSelected', data.flagsCollection.isSelected == Tristate.isTrue);
   addFlag('isSlider', data.flagsCollection.isSlider);
   addFlag('isTextField', data.flagsCollection.isTextField);
   addFlag('isReadOnly', data.flagsCollection.isReadOnly);
@@ -99,8 +107,8 @@ SemanticsSummary summarizeNode(SemanticsNode node) {
     'isInMutuallyExclusiveGroup',
     data.flagsCollection.isInMutuallyExclusiveGroup,
   );
-  addFlag('hasToggledState', data.flagsCollection.hasToggledState);
-  addFlag('isToggled', data.flagsCollection.isToggled);
+  addFlag('hasToggledState', data.flagsCollection.isToggled != Tristate.none);
+  addFlag('isToggled', data.flagsCollection.isToggled == Tristate.isTrue);
 
   final Set<String> actions = <String>{};
   void addAction(String name, SemanticsAction action) {
@@ -141,8 +149,8 @@ SemanticsSummary summarizeMergedButtonFromRoot(WidgetTester tester) {
 
   bool dfs(SemanticsNode node) {
     final data = node.getSemanticsData();
-    final bool isFocusable = data.flagsCollection.isFocusable;
-    final bool isFocused = data.flagsCollection.isFocused;
+    final bool isFocusable = data.flagsCollection.isFocused != Tristate.none;
+    final bool isFocused = data.flagsCollection.isFocused == Tristate.isTrue;
     final bool hasFocusAction = data.hasAction(SemanticsAction.focus);
     focusableStack.add(isFocusable);
     focusedStack.add(isFocused);
@@ -198,8 +206,8 @@ SemanticsSummary summarizeMergedFromRoot(
 
   bool dfs(SemanticsNode node) {
     final data = node.getSemanticsData();
-    final bool isFocusable = data.flagsCollection.isFocusable;
-    final bool isFocused = data.flagsCollection.isFocused;
+    final bool isFocusable = data.flagsCollection.isFocused != Tristate.none;
+    final bool isFocused = data.flagsCollection.isFocused == Tristate.isTrue;
     final bool hasFocusAction = data.hasAction(SemanticsAction.focus);
     focusableStack.add(isFocusable);
     focusedStack.add(isFocused);
@@ -248,10 +256,10 @@ bool _isControlNode(SemanticsData data, ControlType control) {
       return data.flagsCollection.isButton ||
           data.hasAction(SemanticsAction.tap);
     case ControlType.checkbox:
-      return data.flagsCollection.hasCheckedState;
+      return data.flagsCollection.isChecked != CheckedState.none;
     case ControlType.toggle:
-      return data.flagsCollection.hasToggledState ||
-          data.flagsCollection.hasCheckedState;
+      return data.flagsCollection.isToggled != Tristate.none ||
+          data.flagsCollection.isChecked != CheckedState.none;
     case ControlType.radio:
       return data.flagsCollection.isInMutuallyExclusiveGroup;
     case ControlType.slider:

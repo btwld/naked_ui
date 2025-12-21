@@ -75,7 +75,7 @@ class NakedAccordionGroupState extends NakedState {
     if (identical(this, other)) return true;
 
     return other is NakedAccordionGroupState &&
-        setEquals(other.states, states) &&
+        statesEqual(other) &&
         other.expandedCount == expandedCount &&
         other.canExpandMore == canExpandMore &&
         other.canCollapseMore == canCollapseMore &&
@@ -85,7 +85,7 @@ class NakedAccordionGroupState extends NakedState {
 
   @override
   int get hashCode => Object.hash(
-    states,
+    statesHashCode,
     expandedCount,
     canExpandMore,
     canCollapseMore,
@@ -137,7 +137,7 @@ class NakedAccordionItemState<T> extends NakedState {
     if (identical(this, other)) return true;
 
     return other is NakedAccordionItemState<T> &&
-        setEquals(other.states, states) &&
+        statesEqual(other) &&
         other.value == value &&
         other.isExpanded == isExpanded &&
         other.canCollapse == canCollapse &&
@@ -146,7 +146,7 @@ class NakedAccordionItemState<T> extends NakedState {
 
   @override
   int get hashCode =>
-      Object.hash(states, value, isExpanded, canCollapse, canExpand);
+      Object.hash(statesHashCode, value, isExpanded, canCollapse, canExpand);
 }
 
 /// Maintains accordion expansion state without imposing visuals.
