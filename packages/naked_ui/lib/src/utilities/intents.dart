@@ -150,6 +150,8 @@ class _SelectIntentActions {
   Map<Type, Action<Intent>> actions({
     required VoidCallback onDismiss,
     VoidCallback? onOpenOverlay,
+    VoidCallback? onPageUp,
+    VoidCallback? onPageDown,
   }) {
     final map = <Type, Action<Intent>>{
       DismissIntent: CallbackAction<DismissIntent>(
@@ -160,6 +162,18 @@ class _SelectIntentActions {
     if (onOpenOverlay != null) {
       map[_OpenOverlayIntent] = CallbackAction<_OpenOverlayIntent>(
         onInvoke: (_) => onOpenOverlay(),
+      );
+    }
+
+    if (onPageUp != null) {
+      map[_PageUpIntent] = CallbackAction<_PageUpIntent>(
+        onInvoke: (_) => onPageUp(),
+      );
+    }
+
+    if (onPageDown != null) {
+      map[_PageDownIntent] = CallbackAction<_PageDownIntent>(
+        onInvoke: (_) => onPageDown(),
       );
     }
 
