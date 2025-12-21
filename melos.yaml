@@ -3,7 +3,7 @@ name: naked_ui
 packages:
   - packages/*
 
-sdkPath: .fvm/flutter_sdk
+
 
 # IDE settings
 ide:
