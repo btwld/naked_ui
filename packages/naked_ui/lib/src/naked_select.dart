@@ -287,6 +287,9 @@ class _NakedSelectState<T> extends State<NakedSelect<T>>
   late final MenuController _menuController;
   T? _internalValue;
 
+  /// Number of items to jump when pressing PageUp/PageDown.
+  static const int _pageJumpSize = 10;
+
   @override
   void initState() {
     super.initState();
@@ -317,6 +320,26 @@ class _NakedSelectState<T> extends State<NakedSelect<T>>
       _internalValue = value;
     });
     widget.onChanged?.call(value);
+  }
+
+  void _handlePageUp() {
+    if (!_menuController.isOpen) return;
+    final primaryFocus = FocusManager.instance.primaryFocus;
+    if (primaryFocus?.context == null) return;
+    final focusScope = FocusScope.of(primaryFocus!.context!);
+    for (var i = 0; i < _pageJumpSize; i++) {
+      focusScope.previousFocus();
+    }
+  }
+
+  void _handlePageDown() {
+    if (!_menuController.isOpen) return;
+    final primaryFocus = FocusManager.instance.primaryFocus;
+    if (primaryFocus?.context == null) return;
+    final focusScope = FocusScope.of(primaryFocus!.context!);
+    for (var i = 0; i < _pageJumpSize; i++) {
+      focusScope.nextFocus();
+    }
   }
 
   @override
@@ -397,6 +420,8 @@ class _NakedSelectState<T> extends State<NakedSelect<T>>
         actions: NakedIntentActions.select.actions(
           onDismiss: () => _menuController.close(),
           onOpenOverlay: () => _menuController.open(),
+          onPageUp: _handlePageUp,
+          onPageDown: _handlePageDown,
         ),
         child: result,
       ),
