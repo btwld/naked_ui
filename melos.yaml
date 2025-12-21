@@ -14,4 +14,3 @@ command:
   version:
     linkToCommits: true
     workspaceChangelog: true
-sdkPath: .fvm/flutter_sdk
