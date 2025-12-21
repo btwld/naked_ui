@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
@@ -35,12 +34,12 @@ class NakedToggleState extends NakedState {
     if (identical(this, other)) return true;
 
     return other is NakedToggleState &&
-        setEquals(other.states, states) &&
+        statesEqual(other) &&
         other.isToggled == isToggled;
   }
 
   @override
-  int get hashCode => Object.hash(states, isToggled);
+  int get hashCode => Object.hash(statesHashCode, isToggled);
 }
 
 /// Immutable view passed to [NakedToggleOption.builder].
@@ -71,12 +70,12 @@ class NakedToggleOptionState<T> extends NakedState {
     if (identical(this, other)) return true;
 
     return other is NakedToggleOptionState<T> &&
-        setEquals(other.states, states) &&
+        statesEqual(other) &&
         other.value == value;
   }
 
   @override
-  int get hashCode => Object.hash(states, value);
+  int get hashCode => Object.hash(statesHashCode, value);
 }
 
 /// A headless binary toggle control without visuals.

@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 
 import 'mixins/naked_mixins.dart';
@@ -56,7 +55,7 @@ class NakedSliderState extends NakedState {
     if (identical(this, other)) return true;
 
     return other is NakedSliderState &&
-        setEquals(other.states, states) &&
+        statesEqual(other) &&
         other.value == value &&
         other.min == min &&
         other.max == max &&
@@ -66,7 +65,7 @@ class NakedSliderState extends NakedState {
 
   @override
   int get hashCode =>
-      Object.hash(states, value, min, max, divisions, isDragging);
+      Object.hash(statesHashCode, value, min, max, divisions, isDragging);
 }
 
 /// A headless slider without visuals.
@@ -293,7 +292,7 @@ class _NakedSliderState extends State<NakedSlider>
     }
   }
 
-  void _handleDragEnd(DragEndDetails details) {
+  void _finishDrag() {
     if (!_isDragging) return;
 
     _isDragging = false;
@@ -307,17 +306,9 @@ class _NakedSliderState extends State<NakedSlider>
     widget.onDragEnd?.call(v);
   }
 
-  void _handleDragCancel() {
-    if (!_isDragging) return;
-    _isDragging = false;
-    _dragStartPosition = null;
-    _dragStartValue = null;
-    updateState(WidgetState.pressed, false);
-    widget.onDragChange?.call(false);
+  void _handleDragEnd(DragEndDetails details) => _finishDrag();
 
-    final v = _lastEmittedValue ?? widget.value;
-    widget.onDragEnd?.call(v);
-  }
+  void _handleDragCancel() => _finishDrag();
 
   @override
   void initializeWidgetStates() {
@@ -344,8 +335,8 @@ class _NakedSliderState extends State<NakedSlider>
       updateState(WidgetState.pressed, false);
     }
 
-    final node2 = effectiveFocusNode;
-    node2
+    final focusNode = effectiveFocusNode;
+    focusNode
       ..canRequestFocus = _isEnabled
       ..skipTraversal = !_isEnabled;
 
@@ -441,7 +432,7 @@ class _NakedSliderState extends State<NakedSlider>
               enabled: _isEnabled,
               slider: true,
               focusable: _isEnabled,
-              focused: isFocused,
+              focused: _isEnabled ? isFocused : null,
               label: widget.semanticLabel,
               value: _percentString(widget.value),
               increasedValue: _percentString(

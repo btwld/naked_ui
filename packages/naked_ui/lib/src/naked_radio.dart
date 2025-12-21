@@ -12,6 +12,18 @@ class NakedRadioState<T> extends NakedState {
 
   NakedRadioState({required super.states, required this.value});
 
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+
+    return other is NakedRadioState<T> &&
+        statesEqual(other) &&
+        other.value == value;
+  }
+
+  @override
+  int get hashCode => Object.hash(statesHashCode, value);
+
   /// Returns the nearest [NakedRadioState] of the requested type.
   static NakedRadioState<S> of<S>(BuildContext context) =>
       NakedState.of(context);

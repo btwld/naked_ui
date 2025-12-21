@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/widgets.dart';
 
-import 'mixins/naked_mixins.dart';
 import 'naked_widgets.dart';
 import 'utilities/positioning.dart';
 
@@ -151,8 +150,7 @@ class NakedTooltip extends StatefulWidget {
   State<NakedTooltip> createState() => _NakedTooltipState();
 }
 
-class _NakedTooltipState extends State<NakedTooltip>
-    with WidgetStatesMixin<NakedTooltip> {
+class _NakedTooltipState extends State<NakedTooltip> {
   // ignore: dispose-fields
   final _menuController = MenuController();
   Timer? _showTimer;
