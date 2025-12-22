@@ -118,6 +118,9 @@ void main() {
     });
 
     testWidgets('NakedTabs disables when onChanged is null', (tester) async {
+      bool tab1Selected = false;
+      bool tab2Selected = false;
+
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
@@ -126,12 +129,24 @@ void main() {
               enabled: true,
               // No onChanged callback
               child: Column(
-                children: const [
+                children: [
                   NakedTabBar(
                     child: Row(
                       children: [
-                        NakedTab(tabId: 'tab1', child: Text('Tab 1')),
-                        NakedTab(tabId: 'tab2', child: Text('Tab 2')),
+                        NakedTab(
+                          tabId: 'tab1',
+                          builder: (context, state, _) {
+                            tab1Selected = state.isSelected;
+                            return const Text('Tab 1');
+                          },
+                        ),
+                        NakedTab(
+                          tabId: 'tab2',
+                          builder: (context, state, _) {
+                            tab2Selected = state.isSelected;
+                            return const Text('Tab 2');
+                          },
+                        ),
                       ],
                     ),
                   ),
@@ -142,13 +157,29 @@ void main() {
         ),
       );
 
+      // Verify initial selection state
+      expect(
+        tab1Selected,
+        isTrue,
+        reason: 'Tab 1 should be initially selected',
+      );
+      expect(tab2Selected, isFalse, reason: 'Tab 2 should not be selected');
+
       // Try to tap Tab 2 - it should not change selection since no callback
       await tester.tap(find.text('Tab 2'));
       await tester.pump();
 
-      // The tab should still show Tab 1 as selected (this test assumes visual indication)
-      // Since we don't have visual state to check, we just verify the widget renders
-      expect(find.text('Tab 2'), findsOneWidget);
+      // Verify Tab 1 is still selected (selection did not change)
+      expect(
+        tab1Selected,
+        isTrue,
+        reason: 'Tab 1 should remain selected when onChanged is null',
+      );
+      expect(
+        tab2Selected,
+        isFalse,
+        reason: 'Tab 2 should not become selected when onChanged is null',
+      );
     });
   });
 }

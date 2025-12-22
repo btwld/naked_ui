@@ -16,7 +16,9 @@ testStateScopeBuilder<T extends NakedState>(
       Directionality(
         textDirection: TextDirection.ltr,
         child: builder((context, state, _) {
-          NakedStateScope.controllerOf(context).value;
+          // Verify that the scope provides a working controller
+          final controller = NakedStateScope.controllerOf(context);
+          expect(controller.value, isA<Set<WidgetState>>());
           return SizedBox();
         }),
       ),

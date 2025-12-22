@@ -14,7 +14,19 @@ workspace:
   - packages/example
   - packages/naked_ui
   
-melos: 
+melos:
+  # IDE settings (migrated from melos.yaml for Melos 7.x)
+  ide:
+    intellij:
+      enabled: false
+
+  # Version settings (migrated from melos.yaml for Melos 7.x)
+  repository: https://github.com/btwld/naked_ui
+  command:
+    version:
+      linkToCommits: true
+      workspaceChangelog: true
+
   scripts:
     get:
       description: Get dependencies for all packages

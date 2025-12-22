@@ -39,7 +39,11 @@ extension WidgetTesterExtension on WidgetTester {
     addTearDown(() async {
       try {
         await gesture.up();
-      } catch (_) {}
+      } on AssertionError {
+        // gesture.up() asserts _pointer._isDown, so calling it twice throws
+        // AssertionError. This is expected when the test completed normally.
+        // We catch to prevent teardown failures from masking actual test failures.
+      }
     });
 
     // Give UI plenty of time to reflect pressed state in integration env.
@@ -51,7 +55,7 @@ extension WidgetTesterExtension on WidgetTester {
     await pump();
   }
 
-  void expectCursor(SystemMouseCursor cursor, {required Key on}) async {
+  void expectCursor(SystemMouseCursor cursor, {required Key on}) {
     final region = widget<MouseRegion>(
       find
           .descendant(of: find.byKey(on), matching: find.byType(MouseRegion))
