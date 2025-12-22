@@ -211,34 +211,38 @@ class _SliderIntentActions {
     required bool enableFeedback,
   }) {
     return {
-      _SliderIncrementIntent: _SliderIncrementAction(
+      _SliderIncrementIntent: _SliderStepAction(
         onChanged: onChanged,
         calculateStep: calculateStep,
         normalizeValue: normalizeValue,
         getCurrentValue: () => currentValue,
         enableFeedback: enableFeedback,
+        direction: 1,
       ),
-      _SliderDecrementIntent: _SliderDecrementAction(
+      _SliderDecrementIntent: _SliderStepAction(
         onChanged: onChanged,
         calculateStep: calculateStep,
         normalizeValue: normalizeValue,
         getCurrentValue: () => currentValue,
         enableFeedback: enableFeedback,
+        direction: -1,
       ),
-      _SliderShiftIncrementIntent: _SliderIncrementAction(
+      _SliderShiftIncrementIntent: _SliderStepAction(
         onChanged: onChanged,
         calculateStep: calculateStep,
         normalizeValue: normalizeValue,
         getCurrentValue: () => currentValue,
         enableFeedback: enableFeedback,
+        direction: 1,
         isShiftPressed: true,
       ),
-      _SliderShiftDecrementIntent: _SliderDecrementAction(
+      _SliderShiftDecrementIntent: _SliderStepAction(
         onChanged: onChanged,
         calculateStep: calculateStep,
         normalizeValue: normalizeValue,
         getCurrentValue: () => currentValue,
         enableFeedback: enableFeedback,
+        direction: -1,
         isShiftPressed: true,
       ),
       _SliderSetToMinIntent: _SliderSetToMinAction(
@@ -437,59 +441,35 @@ class _SliderSetToMaxIntent extends Intent {
   const _SliderSetToMaxIntent();
 }
 
-/// Action: handles keyboard increment intent.
-class _SliderIncrementAction extends Action<_SliderIncrementIntent> {
+/// Action: handles keyboard step (increment/decrement) intents.
+///
+/// Consolidates increment and decrement logic with a [direction] parameter:
+/// - `direction = 1` for increment
+/// - `direction = -1` for decrement
+class _SliderStepAction extends Action<Intent> {
   final ValueChanged<double> onChanged;
   final double Function(bool isShift) calculateStep;
   final double Function(double value) normalizeValue;
   final double Function() getCurrentValue;
   final bool enableFeedback;
   final bool isShiftPressed;
+  final int direction;
 
-  _SliderIncrementAction({
+  _SliderStepAction({
     required this.onChanged,
     required this.calculateStep,
     required this.normalizeValue,
     required this.getCurrentValue,
     required this.enableFeedback,
+    required this.direction,
     this.isShiftPressed = false,
   });
 
   @override
-  void invoke(_SliderIncrementIntent intent) {
+  void invoke(Intent intent) {
     final step = calculateStep(isShiftPressed);
     final currentValue = getCurrentValue();
-    final newValue = normalizeValue(currentValue + step);
-    if (enableFeedback && newValue != currentValue) {
-      HapticFeedback.selectionClick();
-    }
-    onChanged(newValue);
-  }
-}
-
-/// Action: handles keyboard decrement intent.
-class _SliderDecrementAction extends Action<_SliderDecrementIntent> {
-  final ValueChanged<double> onChanged;
-  final double Function(bool isShift) calculateStep;
-  final double Function(double value) normalizeValue;
-  final double Function() getCurrentValue;
-  final bool enableFeedback;
-  final bool isShiftPressed;
-
-  _SliderDecrementAction({
-    required this.onChanged,
-    required this.calculateStep,
-    required this.normalizeValue,
-    required this.getCurrentValue,
-    required this.enableFeedback,
-    this.isShiftPressed = false,
-  });
-
-  @override
-  void invoke(_SliderDecrementIntent intent) {
-    final step = calculateStep(isShiftPressed);
-    final currentValue = getCurrentValue();
-    final newValue = normalizeValue(currentValue - step);
+    final newValue = normalizeValue(currentValue + (direction * step));
     if (enableFeedback && newValue != currentValue) {
       HapticFeedback.selectionClick();
     }
