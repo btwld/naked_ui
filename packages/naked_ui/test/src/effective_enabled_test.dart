@@ -158,7 +158,11 @@ void main() {
       );
 
       // Verify initial selection state
-      expect(tab1Selected, isTrue, reason: 'Tab 1 should be initially selected');
+      expect(
+        tab1Selected,
+        isTrue,
+        reason: 'Tab 1 should be initially selected',
+      );
       expect(tab2Selected, isFalse, reason: 'Tab 2 should not be selected');
 
       // Try to tap Tab 2 - it should not change selection since no callback
