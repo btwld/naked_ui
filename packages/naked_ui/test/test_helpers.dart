@@ -39,7 +39,10 @@ extension WidgetTesterExtension on WidgetTester {
     addTearDown(() async {
       try {
         await gesture.up();
-      } catch (_) {}
+      } catch (_) {
+        // Gesture may already be released if test completed normally via gesture.up() below.
+        // Safe to ignore since this is just cleanup.
+      }
     });
 
     // Give UI plenty of time to reflect pressed state in integration env.
@@ -51,7 +54,7 @@ extension WidgetTesterExtension on WidgetTester {
     await pump();
   }
 
-  void expectCursor(SystemMouseCursor cursor, {required Key on}) async {
+  void expectCursor(SystemMouseCursor cursor, {required Key on}) {
     final region = widget<MouseRegion>(
       find
           .descendant(of: find.byKey(on), matching: find.byType(MouseRegion))

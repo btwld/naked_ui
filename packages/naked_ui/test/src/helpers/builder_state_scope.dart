@@ -12,14 +12,23 @@ testStateScopeBuilder<T extends NakedState>(
   StateScopeWidgetBuilder<T> builder,
 ) {
   return testWidgets(description, (tester) async {
+    bool scopeVerified = false;
     await tester.pumpWidget(
       Directionality(
         textDirection: TextDirection.ltr,
         child: builder((context, state, _) {
-          NakedStateScope.controllerOf(context).value;
+          // Verify that NakedStateScope provides both state and controller
+          expect(state, isNotNull, reason: 'State should be provided via scope');
+          expect(
+            NakedStateScope.controllerOf(context),
+            isNotNull,
+            reason: 'Controller should be accessible via scope',
+          );
+          scopeVerified = true;
           return SizedBox();
         }),
       ),
     );
+    expect(scopeVerified, isTrue, reason: 'Builder should have been called');
   });
 }
