@@ -39,10 +39,10 @@ extension WidgetTesterExtension on WidgetTester {
     addTearDown(() async {
       try {
         await gesture.up();
-      } catch (_) {
-        // Ignore: gesture.up() may already be called if the test completed
-        // normally (see below). Calling it twice throws, but we don't want
-        // teardown failures to mask actual test failures.
+      } on AssertionError {
+        // gesture.up() asserts _pointer._isDown, so calling it twice throws
+        // AssertionError. This is expected when the test completed normally.
+        // We catch to prevent teardown failures from masking actual test failures.
       }
     });
 
