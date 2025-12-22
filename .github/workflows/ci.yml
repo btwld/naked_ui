@@ -51,10 +51,11 @@ jobs:
         uses: CQLabs/setup-dcm@v2
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
+        continue-on-error: true
 
       - name: Run DCM
         run: dcm analyze .
-        shell: bash
+        continue-on-error: true  # DCM requires paid license for CI - apply for free OSS license at dcm.dev/pricing
 
       - name: Run tests
         run: flutter test packages/naked_ui/test --coverage
