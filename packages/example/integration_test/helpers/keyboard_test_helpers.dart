@@ -41,7 +41,10 @@ extension KeyboardTestHelpers on WidgetTester {
 
   /// Simulates keyboard activation using raw key down events (Enter/Space).
   /// Uses full press (down+up) via sendKeyEvent to keep pressed set consistent.
-  Future<void> testKeyboardActivation(
+  ///
+  /// Returns true if keyboard activation succeeded, false if it failed.
+  /// Callers can decide whether to fail the test or continue based on this.
+  Future<bool> testKeyboardActivation(
     Finder target, {
     bool testSpace = true,
     bool testEnter = true,
@@ -59,10 +62,12 @@ extension KeyboardTestHelpers on WidgetTester {
         await sendKeyEvent(LogicalKeyboardKey.space);
         await pumpAndSettle();
       }
+      return true;
     } catch (e) {
-      // If keyboard events fail in integration test environment, just continue
+      // If keyboard events fail in integration test environment, log and return false
       // This is a known issue with keyboard simulation in Flutter integration tests
       debugPrint('Keyboard activation test skipped due to: $e');
+      return false;
     }
   }
 }

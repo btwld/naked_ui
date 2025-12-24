@@ -30,8 +30,8 @@ class PopoverExample extends StatelessWidget {
   Widget build(BuildContext context) {
     return NakedPopover(
       positioning: const OverlayPositionConfig(
-        alignment: Alignment.bottomCenter,
-        fallbackAlignment: Alignment.topCenter,
+        targetAnchor: Alignment.bottomCenter,
+        followerAnchor: Alignment.topCenter,
       ),
       popoverBuilder: (context, info) {
         return Material(
