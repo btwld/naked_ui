@@ -19,7 +19,9 @@ void main() {
         expect(find.text('Hover me'), findsOneWidget);
       });
 
-      testWidgets('does not show tooltip initially', (WidgetTester tester) async {
+      testWidgets('does not show tooltip initially', (
+        WidgetTester tester,
+      ) async {
         await tester.pumpMaterialWidget(
           NakedTooltip(
             overlayBuilder: (context, info) => const Text('Tooltip'),
@@ -46,7 +48,9 @@ void main() {
         );
 
         // Create mouse pointer and hover
-        final gesture = await tester.createGesture(kind: PointerDeviceKind.mouse);
+        final gesture = await tester.createGesture(
+          kind: PointerDeviceKind.mouse,
+        );
         await gesture.addPointer();
 
         final center = tester.getCenter(find.byKey(testKey));
@@ -83,7 +87,9 @@ void main() {
         );
 
         // Create mouse pointer and hover
-        final gesture = await tester.createGesture(kind: PointerDeviceKind.mouse);
+        final gesture = await tester.createGesture(
+          kind: PointerDeviceKind.mouse,
+        );
         await gesture.addPointer();
 
         final center = tester.getCenter(find.byKey(testKey));
@@ -129,7 +135,9 @@ void main() {
         expect(onOpenCalled, isFalse);
 
         // Create mouse pointer and hover
-        final gesture = await tester.createGesture(kind: PointerDeviceKind.mouse);
+        final gesture = await tester.createGesture(
+          kind: PointerDeviceKind.mouse,
+        );
         await gesture.addPointer();
 
         final center = tester.getCenter(find.byKey(testKey));
@@ -161,7 +169,9 @@ void main() {
         );
 
         // Create mouse pointer and hover
-        final gesture = await tester.createGesture(kind: PointerDeviceKind.mouse);
+        final gesture = await tester.createGesture(
+          kind: PointerDeviceKind.mouse,
+        );
         await gesture.addPointer();
 
         final center = tester.getCenter(find.byKey(testKey));
@@ -198,7 +208,9 @@ void main() {
         );
 
         // Create mouse pointer and hover
-        final gesture = await tester.createGesture(kind: PointerDeviceKind.mouse);
+        final gesture = await tester.createGesture(
+          kind: PointerDeviceKind.mouse,
+        );
         await gesture.addPointer();
 
         final center = tester.getCenter(find.byKey(testKey));
@@ -237,7 +249,9 @@ void main() {
         );
 
         // Create mouse pointer and hover
-        final gesture = await tester.createGesture(kind: PointerDeviceKind.mouse);
+        final gesture = await tester.createGesture(
+          kind: PointerDeviceKind.mouse,
+        );
         await gesture.addPointer();
 
         final center = tester.getCenter(find.byKey(testKey));
@@ -279,7 +293,9 @@ void main() {
         );
 
         // Create mouse pointer
-        final gesture = await tester.createGesture(kind: PointerDeviceKind.mouse);
+        final gesture = await tester.createGesture(
+          kind: PointerDeviceKind.mouse,
+        );
         await gesture.addPointer();
 
         final center = tester.getCenter(find.byKey(testKey));
@@ -313,7 +329,9 @@ void main() {
         );
 
         // Create mouse pointer
-        final gesture = await tester.createGesture(kind: PointerDeviceKind.mouse);
+        final gesture = await tester.createGesture(
+          kind: PointerDeviceKind.mouse,
+        );
         await gesture.addPointer();
 
         final center = tester.getCenter(find.byKey(testKey));
@@ -359,7 +377,9 @@ void main() {
         );
 
         // Create mouse pointer and hover
-        final gesture = await tester.createGesture(kind: PointerDeviceKind.mouse);
+        final gesture = await tester.createGesture(
+          kind: PointerDeviceKind.mouse,
+        );
         await gesture.addPointer();
 
         final center = tester.getCenter(find.byKey(testKey));
@@ -439,7 +459,9 @@ void main() {
         );
 
         // Create mouse pointer and hover
-        final gesture = await tester.createGesture(kind: PointerDeviceKind.mouse);
+        final gesture = await tester.createGesture(
+          kind: PointerDeviceKind.mouse,
+        );
         await gesture.addPointer();
 
         final center = tester.getCenter(find.byKey(testKey));
