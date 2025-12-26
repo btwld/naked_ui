@@ -188,8 +188,8 @@ class DemoRegistry {
   static Demo? find(String id) {
     try {
       return demos.firstWhere((d) => d.id == id);
-    } catch (_) {
-      return null;
+    } on StateError {
+      return null; // Not found - expected case
     }
   }
 

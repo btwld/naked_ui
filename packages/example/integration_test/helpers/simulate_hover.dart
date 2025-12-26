@@ -41,8 +41,9 @@ extension WidgetTesterExtension on WidgetTester {
       // Ensure gesture cleanup even if something fails
       try {
         await gesture.removePointer();
-      } catch (_) {
-        // Ignore cleanup errors to prevent masking the original issue
+      } catch (e) {
+        // Cleanup may fail if gesture already released - log for debugging
+        debugPrint('Gesture cleanup (expected if already released): $e');
       }
     }
   }
@@ -71,8 +72,9 @@ extension WidgetTesterExtension on WidgetTester {
       // Ensure gesture cleanup even if something fails
       try {
         await gesture.up();
-      } catch (_) {
-        // Ignore cleanup errors to prevent masking the original issue
+      } catch (e) {
+        // Cleanup may fail if gesture already released - log for debugging
+        debugPrint('Gesture cleanup (expected if already released): $e');
       }
     }
   }

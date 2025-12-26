@@ -239,6 +239,192 @@ void main() {
       expect(selectedValue, 'apple');
       expect(find.text('Apple'), findsNothing);
     });
+
+    testWidgets('PageDown moves focus forward by multiple items', (
+      WidgetTester tester,
+    ) async {
+      final focusStates = List<bool>.filled(15, false);
+
+      // Build a select with many options to test PageDown
+      await tester.pumpMaterialWidget(
+        Center(
+          child: NakedSelect<String>(
+            builder: (context, state, child) => const Text('Select option'),
+            overlayBuilder: (context, info) => Column(
+              mainAxisSize: MainAxisSize.min,
+              children: List.generate(
+                15,
+                (index) => NakedSelectOption<String>(
+                  value: 'option$index',
+                  builder: (context, state, child) {
+                    focusStates[index] = state.isFocused;
+                    return child!;
+                  },
+                  child: Text('Option $index'),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+
+      // Open the select menu
+      await tester.tap(find.text('Select option'));
+      await tester.pumpAndSettle();
+
+      // Focus the first option
+      await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
+      await tester.pumpAndSettle();
+      expect(focusStates.indexWhere((focused) => focused), 0);
+
+      // Press PageDown to jump forward
+      await tester.sendKeyEvent(LogicalKeyboardKey.pageDown);
+      await tester.pumpAndSettle();
+
+      // PageDown should move focus by the page size (10)
+      expect(focusStates.indexWhere((focused) => focused), 10);
+
+      // Close menu
+      await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+      await tester.pumpAndSettle();
+    });
+
+    testWidgets('PageUp moves focus backward by multiple items', (
+      WidgetTester tester,
+    ) async {
+      final focusStates = List<bool>.filled(15, false);
+
+      // Build a select with many options to test PageUp
+      await tester.pumpMaterialWidget(
+        Center(
+          child: NakedSelect<String>(
+            builder: (context, state, child) => const Text('Select option'),
+            overlayBuilder: (context, info) => Column(
+              mainAxisSize: MainAxisSize.min,
+              children: List.generate(
+                15,
+                (index) => NakedSelectOption<String>(
+                  value: 'option$index',
+                  builder: (context, state, child) {
+                    focusStates[index] = state.isFocused;
+                    return child!;
+                  },
+                  child: Text('Option $index'),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+
+      // Open the select menu
+      await tester.tap(find.text('Select option'));
+      await tester.pumpAndSettle();
+
+      // Navigate to a later option using multiple arrow downs
+      for (int i = 0; i < 12; i++) {
+        await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
+        await tester.pumpAndSettle();
+      }
+      expect(focusStates.indexWhere((focused) => focused), 11);
+
+      // Press PageUp to jump backward
+      await tester.sendKeyEvent(LogicalKeyboardKey.pageUp);
+      await tester.pumpAndSettle();
+
+      // PageUp should move focus back by the page size (10)
+      expect(focusStates.indexWhere((focused) => focused), 1);
+
+      // Close menu
+      await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+      await tester.pumpAndSettle();
+    });
+
+    testWidgets('PageUp/PageDown do nothing when menu is closed', (
+      WidgetTester tester,
+    ) async {
+      await tester.pumpMaterialWidget(buildSelect<String>());
+
+      // Menu is closed
+      expect(find.text('Apple'), findsNothing);
+
+      // Press PageDown - should not open menu
+      await tester.sendKeyEvent(LogicalKeyboardKey.pageDown);
+      await tester.pumpAndSettle();
+      expect(find.text('Apple'), findsNothing);
+
+      // Press PageUp - should not open menu
+      await tester.sendKeyEvent(LogicalKeyboardKey.pageUp);
+      await tester.pumpAndSettle();
+      expect(find.text('Apple'), findsNothing);
+    });
+
+    testWidgets('PageDown with fewer items selects the focused item', (
+      WidgetTester tester,
+    ) async {
+      String? selectedValue;
+      final focusStates = List<bool>.filled(3, false);
+
+      await tester.pumpMaterialWidget(
+        Center(
+          child: NakedSelect<String>(
+            onChanged: (value) => selectedValue = value,
+            builder: (context, state, child) => const Text('Select option'),
+            overlayBuilder: (context, info) => Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                NakedSelectOption<String>(
+                  value: 'a',
+                  builder: (context, state, child) {
+                    focusStates[0] = state.isFocused;
+                    return child!;
+                  },
+                  child: const Text('A'),
+                ),
+                NakedSelectOption<String>(
+                  value: 'b',
+                  builder: (context, state, child) {
+                    focusStates[1] = state.isFocused;
+                    return child!;
+                  },
+                  child: const Text('B'),
+                ),
+                NakedSelectOption<String>(
+                  value: 'c',
+                  builder: (context, state, child) {
+                    focusStates[2] = state.isFocused;
+                    return child!;
+                  },
+                  child: const Text('C'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+
+      // Open the select menu
+      await tester.tap(find.text('Select option'));
+      await tester.pumpAndSettle();
+
+      // Focus first option
+      await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
+      await tester.pumpAndSettle();
+
+      // Press PageDown (should go to last option since fewer than 10 items)
+      await tester.sendKeyEvent(LogicalKeyboardKey.pageDown);
+      await tester.pumpAndSettle();
+
+      final focusedIndex = focusStates.indexWhere((focused) => focused);
+      expect(focusedIndex, greaterThanOrEqualTo(0));
+
+      // Press Enter to select current focused item
+      await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+      await tester.pumpAndSettle();
+
+      const values = ['a', 'b', 'c'];
+      expect(selectedValue, values[focusedIndex]);
+    });
   });
 
   group('Interaction States', () {

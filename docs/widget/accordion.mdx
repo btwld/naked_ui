@@ -174,13 +174,13 @@ Use these values to adjust affordances (e.g. disable icons when the controller p
 ```dart
 const NakedAccordionGroup({
   Key? key,
-  required this.children,
+  required this.child,
   required this.controller,
   this.initialExpandedValues = const [],
 })
 ```
 
-- `children` → list of Widgets; mix `NakedAccordion` with any spacing widgets you need
+- `child` → Widget containing `NakedAccordion` items; mix with any spacing widgets you need
 - `controller` → required state holder
 - `initialExpandedValues` → values to open on first build when the controller is empty
 

@@ -49,7 +49,7 @@ class _ToggleButtonExampleState extends State<ToggleButtonExample> {
       semanticLabel: tooltip,
       builder: (context, state, child) {
         final backgroundColor = state.when(
-          toggled: Colors.blue.shade600,
+          selected: Colors.blue.shade600,
           hovered: Colors.grey.shade200,
           orElse: Colors.transparent,
         );

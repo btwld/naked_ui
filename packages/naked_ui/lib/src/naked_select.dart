@@ -185,6 +185,7 @@ class NakedSelectOption<T> extends OverlayItem<T, NakedSelectOptionState<T>> {
 /// - **Arrow Up/Down**: Navigate between focusable items in the overlay
 /// - **Enter/Space on item**: Selects the focused item
 /// - **Tab**: Moves focus through items in traversal order
+/// - **PageUp/PageDown**: Move focus by ~10 traversal steps (policy-driven)
 ///
 /// ### Focus Management
 /// When the overlay opens, focus transfers to the overlay container but does NOT
