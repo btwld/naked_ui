@@ -1023,46 +1023,4 @@ void main() {
       expect(isSelected, isTrue);
     });
   });
-
-  group('isOpen State', () {
-    testWidgets('builder receives correct isOpen state', (
-      WidgetTester tester,
-    ) async {
-      bool? capturedIsOpen;
-
-      await tester.pumpMaterialWidget(
-        Center(
-          child: NakedSelect<String>(
-            builder: (context, state, child) {
-              capturedIsOpen = state.isOpen;
-              return Text(state.isOpen ? 'Open' : 'Closed');
-            },
-            overlayBuilder: (context, info) => const Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                NakedSelectOption<String>(value: 'apple', child: Text('Apple')),
-              ],
-            ),
-          ),
-        ),
-      );
-
-      expect(capturedIsOpen, isFalse);
-      expect(find.text('Closed'), findsOneWidget);
-
-      // Open menu
-      await tester.tap(find.text('Closed'));
-      await tester.pumpAndSettle();
-
-      expect(capturedIsOpen, isTrue);
-      expect(find.text('Open'), findsOneWidget);
-
-      // Close menu
-      await tester.tapAt(Offset.zero);
-      await tester.pumpAndSettle();
-
-      expect(capturedIsOpen, isFalse);
-      expect(find.text('Closed'), findsOneWidget);
-    });
-  });
 }

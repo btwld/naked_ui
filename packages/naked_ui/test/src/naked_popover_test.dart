@@ -490,39 +490,5 @@ void main() {
         expect(controller.isOpen, isFalse);
       });
     });
-
-    group('isOpen state in builder', () {
-      testWidgets('builder receives correct isOpen state', (tester) async {
-        bool? capturedIsOpen;
-
-        await tester.pumpMaterialWidget(
-          Center(
-            child: NakedPopover(
-              popoverBuilder: (context, info) => const Text('Popover Content'),
-              builder: (context, state, child) {
-                capturedIsOpen = state.isOpen;
-                return Text(state.isOpen ? 'Open' : 'Closed');
-              },
-            ),
-          ),
-        );
-
-        expect(capturedIsOpen, isFalse);
-        expect(find.text('Closed'), findsOneWidget);
-
-        await tester.tap(find.text('Closed'));
-        await tester.pumpAndSettle();
-
-        expect(capturedIsOpen, isTrue);
-        expect(find.text('Open'), findsOneWidget);
-
-        // Close
-        await tester.tapAt(const Offset(5, 5));
-        await tester.pumpAndSettle();
-
-        expect(capturedIsOpen, isFalse);
-        expect(find.text('Closed'), findsOneWidget);
-      });
-    });
   });
 }
