@@ -403,6 +403,8 @@ void main() {
       testWidgets('includes semantics label when provided', (
         WidgetTester tester,
       ) async {
+        final handle = tester.ensureSemantics();
+
         await tester.pumpMaterialWidget(
           NakedTooltip(
             semanticsLabel: 'Help text',
@@ -413,11 +415,14 @@ void main() {
 
         final semantics = tester.getSemantics(find.text('Hover me'));
         expect(semantics.tooltip, 'Help text');
+        handle.dispose();
       });
 
       testWidgets('excludeSemantics hides tooltip from accessibility', (
         WidgetTester tester,
       ) async {
+        final handle = tester.ensureSemantics();
+
         await tester.pumpMaterialWidget(
           NakedTooltip(
             semanticsLabel: 'Help text',
@@ -430,6 +435,7 @@ void main() {
         final semantics = tester.getSemantics(find.text('Hover me'));
         // When excludeSemantics is true, tooltip should be empty or null
         expect(semantics.tooltip, anyOf(isNull, isEmpty));
+        handle.dispose();
       });
     });
 

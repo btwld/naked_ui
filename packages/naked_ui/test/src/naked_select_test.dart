@@ -243,6 +243,8 @@ void main() {
     testWidgets('PageDown moves focus forward by multiple items', (
       WidgetTester tester,
     ) async {
+      final focusStates = List<bool>.filled(15, false);
+
       // Build a select with many options to test PageDown
       await tester.pumpMaterialWidget(
         Center(
@@ -254,6 +256,10 @@ void main() {
                 15,
                 (index) => NakedSelectOption<String>(
                   value: 'option$index',
+                  builder: (context, state, child) {
+                    focusStates[index] = state.isFocused;
+                    return child!;
+                  },
                   child: Text('Option $index'),
                 ),
               ),
@@ -269,14 +275,14 @@ void main() {
       // Focus the first option
       await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
       await tester.pumpAndSettle();
+      expect(focusStates.indexWhere((focused) => focused), 0);
 
       // Press PageDown to jump forward
       await tester.sendKeyEvent(LogicalKeyboardKey.pageDown);
       await tester.pumpAndSettle();
 
-      // The focus should have moved forward (exact position depends on implementation)
-      // We just verify the menu is still open and responding to keyboard
-      expect(find.text('Option 0'), findsOneWidget);
+      // PageDown should move focus by the page size (10)
+      expect(focusStates.indexWhere((focused) => focused), 10);
 
       // Close menu
       await tester.sendKeyEvent(LogicalKeyboardKey.escape);
@@ -286,6 +292,8 @@ void main() {
     testWidgets('PageUp moves focus backward by multiple items', (
       WidgetTester tester,
     ) async {
+      final focusStates = List<bool>.filled(15, false);
+
       // Build a select with many options to test PageUp
       await tester.pumpMaterialWidget(
         Center(
@@ -297,6 +305,10 @@ void main() {
                 15,
                 (index) => NakedSelectOption<String>(
                   value: 'option$index',
+                  builder: (context, state, child) {
+                    focusStates[index] = state.isFocused;
+                    return child!;
+                  },
                   child: Text('Option $index'),
                 ),
               ),
@@ -314,14 +326,14 @@ void main() {
         await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
         await tester.pumpAndSettle();
       }
+      expect(focusStates.indexWhere((focused) => focused), 11);
 
       // Press PageUp to jump backward
       await tester.sendKeyEvent(LogicalKeyboardKey.pageUp);
       await tester.pumpAndSettle();
 
-      // The focus should have moved backward (exact position depends on implementation)
-      // We just verify the menu is still open and responding to keyboard
-      expect(find.text('Option 0'), findsOneWidget);
+      // PageUp should move focus back by the page size (10)
+      expect(focusStates.indexWhere((focused) => focused), 1);
 
       // Close menu
       await tester.sendKeyEvent(LogicalKeyboardKey.escape);
@@ -347,22 +359,44 @@ void main() {
       expect(find.text('Apple'), findsNothing);
     });
 
-    testWidgets('PageDown with fewer items than page size stops at last item', (
+    testWidgets('PageDown with fewer items selects the focused item', (
       WidgetTester tester,
     ) async {
       String? selectedValue;
+      final focusStates = List<bool>.filled(3, false);
 
       await tester.pumpMaterialWidget(
         Center(
           child: NakedSelect<String>(
             onChanged: (value) => selectedValue = value,
             builder: (context, state, child) => const Text('Select option'),
-            overlayBuilder: (context, info) => const Column(
+            overlayBuilder: (context, info) => Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                NakedSelectOption<String>(value: 'a', child: Text('A')),
-                NakedSelectOption<String>(value: 'b', child: Text('B')),
-                NakedSelectOption<String>(value: 'c', child: Text('C')),
+                NakedSelectOption<String>(
+                  value: 'a',
+                  builder: (context, state, child) {
+                    focusStates[0] = state.isFocused;
+                    return child!;
+                  },
+                  child: const Text('A'),
+                ),
+                NakedSelectOption<String>(
+                  value: 'b',
+                  builder: (context, state, child) {
+                    focusStates[1] = state.isFocused;
+                    return child!;
+                  },
+                  child: const Text('B'),
+                ),
+                NakedSelectOption<String>(
+                  value: 'c',
+                  builder: (context, state, child) {
+                    focusStates[2] = state.isFocused;
+                    return child!;
+                  },
+                  child: const Text('C'),
+                ),
               ],
             ),
           ),
@@ -381,14 +415,15 @@ void main() {
       await tester.sendKeyEvent(LogicalKeyboardKey.pageDown);
       await tester.pumpAndSettle();
 
+      final focusedIndex = focusStates.indexWhere((focused) => focused);
+      expect(focusedIndex, greaterThanOrEqualTo(0));
+
       // Press Enter to select current focused item
       await tester.sendKeyEvent(LogicalKeyboardKey.enter);
       await tester.pumpAndSettle();
 
-      // Should have selected the last item (C) since PageDown went to the end
-      // Note: The actual behavior depends on how many focus jumps fit,
-      // but the menu should still work correctly
-      expect(selectedValue, isNotNull);
+      const values = ['a', 'b', 'c'];
+      expect(selectedValue, values[focusedIndex]);
     });
   });
 
