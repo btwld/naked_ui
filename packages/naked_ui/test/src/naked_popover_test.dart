@@ -272,5 +272,257 @@ void main() {
         child: const Text('Trigger'),
       ),
     );
+
+    group('openOnTap behavior', () {
+      testWidgets('does not open on tap when openOnTap is false', (
+        tester,
+      ) async {
+        await tester.pumpMaterialWidget(
+          Center(
+            child: NakedPopover(
+              openOnTap: false,
+              popoverBuilder: (context, info) => const Text('Popover Content'),
+              child: const Text('Trigger'),
+            ),
+          ),
+        );
+
+        await tester.tap(find.text('Trigger'));
+        await tester.pumpAndSettle();
+
+        expect(
+          find.text('Popover Content'),
+          findsNothing,
+          reason: 'popover should not open when openOnTap is false',
+        );
+      });
+
+      testWidgets(
+        'can still open via controller when openOnTap is false',
+        (tester) async {
+          final controller = MenuController();
+
+          await tester.pumpMaterialWidget(
+            Center(
+              child: NakedPopover(
+                openOnTap: false,
+                controller: controller,
+                popoverBuilder: (context, info) => const Text('Popover Content'),
+                child: const Text('Trigger'),
+              ),
+            ),
+          );
+
+          expect(find.text('Popover Content'), findsNothing);
+
+          controller.open();
+          await tester.pumpAndSettle();
+
+          expect(find.text('Popover Content'), findsOneWidget);
+        },
+      );
+    });
+
+    group('lifecycle callbacks', () {
+      testWidgets('calls onOpen when popover opens', (tester) async {
+        bool onOpenCalled = false;
+
+        await tester.pumpMaterialWidget(
+          Center(
+            child: NakedPopover(
+              onOpen: () => onOpenCalled = true,
+              popoverBuilder: (context, info) => const Text('Popover Content'),
+              child: const Text('Trigger'),
+            ),
+          ),
+        );
+
+        expect(onOpenCalled, isFalse);
+
+        await tester.tap(find.text('Trigger'));
+        await tester.pumpAndSettle();
+
+        expect(onOpenCalled, isTrue);
+      });
+
+      testWidgets('calls onClose when popover closes', (tester) async {
+        bool onCloseCalled = false;
+
+        await tester.pumpMaterialWidget(
+          Center(
+            child: NakedPopover(
+              onClose: () => onCloseCalled = true,
+              popoverBuilder: (context, info) => const Text('Popover Content'),
+              child: const Text('Trigger'),
+            ),
+          ),
+        );
+
+        await tester.tap(find.text('Trigger'));
+        await tester.pumpAndSettle();
+
+        expect(onCloseCalled, isFalse);
+
+        // Close by tapping outside
+        await tester.tapAt(const Offset(5, 5));
+        await tester.pumpAndSettle();
+
+        expect(onCloseCalled, isTrue);
+      });
+    });
+
+    group('custom open/close request handlers', () {
+      testWidgets('onOpenRequested can prevent opening', (tester) async {
+        bool customShowCalled = false;
+
+        await tester.pumpMaterialWidget(
+          Center(
+            child: NakedPopover(
+              onOpenRequested: (info, show) {
+                customShowCalled = true;
+                // Intentionally not calling show() to prevent opening
+              },
+              popoverBuilder: (context, info) => const Text('Popover Content'),
+              child: const Text('Trigger'),
+            ),
+          ),
+        );
+
+        await tester.tap(find.text('Trigger'));
+        await tester.pumpAndSettle();
+
+        expect(customShowCalled, isTrue);
+        expect(
+          find.text('Popover Content'),
+          findsNothing,
+          reason: 'popover should not open when show() is not called',
+        );
+      });
+
+      testWidgets('onCloseRequested can delay closing', (tester) async {
+        bool customHideCalled = false;
+        VoidCallback? storedHide;
+
+        await tester.pumpMaterialWidget(
+          Center(
+            child: NakedPopover(
+              onCloseRequested: (hide) {
+                customHideCalled = true;
+                storedHide = hide;
+                // Intentionally not calling hide() immediately
+              },
+              popoverBuilder: (context, info) => const Text('Popover Content'),
+              child: const Text('Trigger'),
+            ),
+          ),
+        );
+
+        // Open popover
+        await tester.tap(find.text('Trigger'));
+        await tester.pumpAndSettle();
+        expect(find.text('Popover Content'), findsOneWidget);
+
+        // Tap outside to trigger close request
+        await tester.tapAt(const Offset(5, 5));
+        await tester.pumpAndSettle();
+
+        expect(customHideCalled, isTrue);
+        expect(
+          find.text('Popover Content'),
+          findsOneWidget,
+          reason: 'popover should still be open until hide() is called',
+        );
+
+        // Now call hide
+        storedHide?.call();
+        await tester.pumpAndSettle();
+
+        expect(find.text('Popover Content'), findsNothing);
+      });
+    });
+
+    group('controller', () {
+      testWidgets('can open and close via external controller', (tester) async {
+        final controller = MenuController();
+
+        await tester.pumpMaterialWidget(
+          Center(
+            child: NakedPopover(
+              controller: controller,
+              popoverBuilder: (context, info) => const Text('Popover Content'),
+              child: const Text('Trigger'),
+            ),
+          ),
+        );
+
+        expect(find.text('Popover Content'), findsNothing);
+
+        controller.open();
+        await tester.pumpAndSettle();
+        expect(find.text('Popover Content'), findsOneWidget);
+
+        controller.close();
+        await tester.pumpAndSettle();
+        expect(find.text('Popover Content'), findsNothing);
+      });
+
+      testWidgets('controller.isOpen reflects current state', (tester) async {
+        final controller = MenuController();
+
+        await tester.pumpMaterialWidget(
+          Center(
+            child: NakedPopover(
+              controller: controller,
+              popoverBuilder: (context, info) => const Text('Popover Content'),
+              child: const Text('Trigger'),
+            ),
+          ),
+        );
+
+        expect(controller.isOpen, isFalse);
+
+        controller.open();
+        await tester.pumpAndSettle();
+        expect(controller.isOpen, isTrue);
+
+        controller.close();
+        await tester.pumpAndSettle();
+        expect(controller.isOpen, isFalse);
+      });
+    });
+
+    group('isOpen state in builder', () {
+      testWidgets('builder receives correct isOpen state', (tester) async {
+        bool? capturedIsOpen;
+
+        await tester.pumpMaterialWidget(
+          Center(
+            child: NakedPopover(
+              popoverBuilder: (context, info) => const Text('Popover Content'),
+              builder: (context, state, child) {
+                capturedIsOpen = state.isOpen;
+                return Text(state.isOpen ? 'Open' : 'Closed');
+              },
+            ),
+          ),
+        );
+
+        expect(capturedIsOpen, isFalse);
+        expect(find.text('Closed'), findsOneWidget);
+
+        await tester.tap(find.text('Closed'));
+        await tester.pumpAndSettle();
+
+        expect(capturedIsOpen, isTrue);
+        expect(find.text('Open'), findsOneWidget);
+
+        // Close
+        await tester.tapAt(const Offset(5, 5));
+        await tester.pumpAndSettle();
+
+        expect(capturedIsOpen, isFalse);
+        expect(find.text('Closed'), findsOneWidget);
+      });
+    });
   });
 }

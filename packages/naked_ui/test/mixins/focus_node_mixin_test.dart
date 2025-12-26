@@ -300,5 +300,133 @@ void main() {
         externalNode.dispose();
       });
     });
+
+    group('Focus preservation during node swap', () {
+      testWidgets('preserves focus when swapping from internal to external', (
+        tester,
+      ) async {
+        final externalNode = FocusNode(debugLabel: 'External');
+
+        Widget buildWidget(FocusNode? node) {
+          return MaterialApp(home: TestWidgetWithFocusMixin(focusNode: node));
+        }
+
+        // Start with internal node
+        await tester.pumpWidget(buildWidget(null));
+
+        final state = tester.state<_TestWidgetWithFocusMixinState>(
+          find.byType(TestWidgetWithFocusMixin),
+        );
+
+        // Focus the internal node
+        state.requestEffectiveFocus();
+        await tester.pump();
+        expect(state.effectiveFocusNode.hasFocus, isTrue);
+
+        // Swap to external node while focused
+        await tester.pumpWidget(buildWidget(externalNode));
+
+        // Need an extra pump for the post-frame callback to run
+        await tester.pump();
+
+        // Focus should be preserved on the new external node
+        expect(externalNode.hasFocus, isTrue);
+
+        externalNode.dispose();
+      });
+
+      testWidgets('preserves focus when swapping from external to internal', (
+        tester,
+      ) async {
+        final externalNode = FocusNode(debugLabel: 'External');
+
+        Widget buildWidget(FocusNode? node) {
+          return MaterialApp(home: TestWidgetWithFocusMixin(focusNode: node));
+        }
+
+        // Start with external node
+        await tester.pumpWidget(buildWidget(externalNode));
+
+        final state = tester.state<_TestWidgetWithFocusMixinState>(
+          find.byType(TestWidgetWithFocusMixin),
+        );
+
+        // Focus the external node
+        externalNode.requestFocus();
+        await tester.pump();
+        expect(externalNode.hasFocus, isTrue);
+
+        // Swap to internal node while focused
+        await tester.pumpWidget(buildWidget(null));
+
+        // Need an extra pump for the post-frame callback to run
+        await tester.pump();
+
+        // Focus should be preserved on the new internal node
+        expect(state.effectiveFocusNode.hasFocus, isTrue);
+        expect(state.effectiveFocusNode, isNot(equals(externalNode)));
+
+        externalNode.dispose();
+      });
+
+      testWidgets('preserves focus when swapping between external nodes', (
+        tester,
+      ) async {
+        final firstNode = FocusNode(debugLabel: 'First');
+        final secondNode = FocusNode(debugLabel: 'Second');
+
+        Widget buildWidget(FocusNode node) {
+          return MaterialApp(home: TestWidgetWithFocusMixin(focusNode: node));
+        }
+
+        // Start with first node
+        await tester.pumpWidget(buildWidget(firstNode));
+
+        // Focus the first node
+        firstNode.requestFocus();
+        await tester.pump();
+        expect(firstNode.hasFocus, isTrue);
+
+        // Swap to second node while focused
+        await tester.pumpWidget(buildWidget(secondNode));
+
+        // Need an extra pump for the post-frame callback to run
+        await tester.pump();
+
+        // Focus should be preserved on the new node
+        expect(secondNode.hasFocus, isTrue);
+        expect(firstNode.hasFocus, isFalse);
+
+        firstNode.dispose();
+        secondNode.dispose();
+      });
+
+      testWidgets('no focus transfer when not focused during swap', (
+        tester,
+      ) async {
+        final externalNode = FocusNode(debugLabel: 'External');
+
+        Widget buildWidget(FocusNode? node) {
+          return MaterialApp(home: TestWidgetWithFocusMixin(focusNode: node));
+        }
+
+        // Start with internal node (not focused)
+        await tester.pumpWidget(buildWidget(null));
+
+        final state = tester.state<_TestWidgetWithFocusMixinState>(
+          find.byType(TestWidgetWithFocusMixin),
+        );
+        expect(state.effectiveFocusNode.hasFocus, isFalse);
+
+        // Swap to external node (not focused)
+        await tester.pumpWidget(buildWidget(externalNode));
+        await tester.pump();
+
+        // Neither should have focus
+        expect(externalNode.hasFocus, isFalse);
+
+        externalNode.dispose();
+      });
+    });
   });
 }
