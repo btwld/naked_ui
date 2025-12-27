@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import '../../lib/src/mixins/naked_mixins.dart';
+import 'package:naked_ui/src/mixins/naked_mixins.dart';
 
 class TestWidgetWithStatesMixin extends StatefulWidget {
   const TestWidgetWithStatesMixin({

@@ -2,7 +2,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
-import '../../lib/naked_ui.dart';
+import 'package:naked_ui/naked_ui.dart';
 import '../test_helpers.dart';
 import 'helpers/builder_state_scope.dart';
 
@@ -536,5 +536,178 @@ void main() {
       (builder) =>
           NakedSlider(builder: builder, value: 0, child: const SizedBox()),
     );
+  });
+
+  group('Assertions and Edge Cases', () {
+    testWidgets('throws assertion when min >= max', (tester) async {
+      expect(
+        () => NakedSlider(
+          value: 0,
+          min: 100,
+          max: 100, // min == max
+          onChanged: (_) {},
+          child: const SizedBox(),
+        ),
+        throwsAssertionError,
+      );
+
+      expect(
+        () => NakedSlider(
+          value: 0,
+          min: 100,
+          max: 50, // min > max
+          onChanged: (_) {},
+          child: const SizedBox(),
+        ),
+        throwsAssertionError,
+      );
+    });
+
+    testWidgets('value at min boundary is handled correctly', (tester) async {
+      final changes = <double>[];
+      await tester.pumpWidget(
+        _harness(
+          initial: 0, // at min
+          min: 0,
+          max: 100,
+          autofocus: true,
+          onChangedSpy: changes.add,
+          keyboardStep: 10,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Try to decrement below min
+      await tester.sendKeyEvent(LogicalKeyboardKey.arrowLeft);
+      await tester.pump();
+
+      // Value should stay at min (0)
+      expect(changes, isEmpty);
+    });
+
+    testWidgets('value at max boundary is handled correctly', (tester) async {
+      final changes = <double>[];
+      await tester.pumpWidget(
+        _harness(
+          initial: 100, // at max
+          min: 0,
+          max: 100,
+          autofocus: true,
+          onChangedSpy: changes.add,
+          keyboardStep: 10,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Try to increment above max
+      await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
+      await tester.pump();
+
+      // Value should stay at max (no change callback)
+      expect(changes, isEmpty);
+    });
+
+    testWidgets('value clamped when set outside range', (tester) async {
+      final changes = <double>[];
+      await tester.pumpWidget(
+        _harness(
+          initial: 150, // above max
+          min: 0,
+          max: 100,
+          onChangedSpy: changes.add,
+          size: const Size(200, 24),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Drag should clamp the value within range
+      await tester.drag(_findSlider(), const Offset(-50, 0));
+      await tester.pump();
+
+      expect(changes, isNotEmpty);
+      expect(changes.last, lessThanOrEqualTo(100));
+      expect(changes.last, greaterThanOrEqualTo(0));
+    });
+
+    testWidgets('percentage calculation is correct at boundaries', (
+      tester,
+    ) async {
+      NakedSliderState? capturedState;
+
+      await tester.pumpWidget(
+        WidgetsApp(
+          color: const Color(0xFF000000),
+          builder: (context, _) => Directionality(
+            textDirection: TextDirection.ltr,
+            child: Center(
+              child: NakedSlider(
+                value: 50, // middle
+                min: 0,
+                max: 100,
+                onChanged: (_) {},
+                builder: (context, state, child) {
+                  capturedState = state;
+                  return child!;
+                },
+                child: const SizedBox(width: 200, height: 24),
+              ),
+            ),
+          ),
+        ),
+      );
+
+      expect(capturedState, isNotNull);
+      expect(capturedState!.percentage, closeTo(0.5, 0.001));
+
+      // Test at min
+      await tester.pumpWidget(
+        WidgetsApp(
+          color: const Color(0xFF000000),
+          builder: (context, _) => Directionality(
+            textDirection: TextDirection.ltr,
+            child: Center(
+              child: NakedSlider(
+                value: 0, // min
+                min: 0,
+                max: 100,
+                onChanged: (_) {},
+                builder: (context, state, child) {
+                  capturedState = state;
+                  return child!;
+                },
+                child: const SizedBox(width: 200, height: 24),
+              ),
+            ),
+          ),
+        ),
+      );
+
+      expect(capturedState!.percentage, closeTo(0.0, 0.001));
+
+      // Test at max
+      await tester.pumpWidget(
+        WidgetsApp(
+          color: const Color(0xFF000000),
+          builder: (context, _) => Directionality(
+            textDirection: TextDirection.ltr,
+            child: Center(
+              child: NakedSlider(
+                value: 100, // max
+                min: 0,
+                max: 100,
+                onChanged: (_) {},
+                builder: (context, state, child) {
+                  capturedState = state;
+                  return child!;
+                },
+                child: const SizedBox(width: 200, height: 24),
+              ),
+            ),
+          ),
+        ),
+      );
+
+      expect(capturedState!.percentage, closeTo(1.0, 0.001));
+    });
   });
 }

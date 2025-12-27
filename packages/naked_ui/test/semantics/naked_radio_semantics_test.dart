@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 // Material exports widgets; no separate widgets import needed.
 import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
-import '../../lib/naked_ui.dart';
+import 'package:naked_ui/naked_ui.dart';
 
 import 'semantics_test_utils.dart';
 

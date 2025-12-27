@@ -3,7 +3,7 @@ import 'package:flutter/gestures.dart' show kLongPressTimeout;
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
-import '../../lib/naked_ui.dart';
+import 'package:naked_ui/naked_ui.dart';
 
 import '../test_helpers.dart';
 import 'helpers/builder_state_scope.dart';
@@ -335,6 +335,59 @@ void main() {
       await tester.pump();
 
       expect(wasPressed, true);
+    });
+  });
+
+  group('Focus Behavior', () {
+    testWidgets('focusOnPress requests focus when button is pressed', (
+      WidgetTester tester,
+    ) async {
+      final focusNode = FocusNode();
+      final key = UniqueKey();
+
+      await tester.pumpMaterialWidget(
+        NakedButton(
+          key: key,
+          onPressed: () {},
+          focusOnPress: true,
+          focusNode: focusNode,
+          child: const Text('Focus On Press'),
+        ),
+      );
+
+      expect(focusNode.hasFocus, isFalse);
+
+      // Tap the button
+      await tester.tap(find.byKey(key));
+      await tester.pump();
+
+      expect(focusNode.hasFocus, isTrue);
+    });
+
+    testWidgets('focusOnPress false does not request focus on press', (
+      WidgetTester tester,
+    ) async {
+      final focusNode = FocusNode();
+      final key = UniqueKey();
+
+      await tester.pumpMaterialWidget(
+        NakedButton(
+          key: key,
+          onPressed: () {},
+          focusOnPress: false, // default
+          focusNode: focusNode,
+          child: const Text('No Focus On Press'),
+        ),
+      );
+
+      expect(focusNode.hasFocus, isFalse);
+
+      // Tap the button
+      await tester.tap(find.byKey(key));
+      await tester.pump();
+
+      // Focus should not have been requested
+      expect(focusNode.hasFocus, isFalse);
     });
   });
 

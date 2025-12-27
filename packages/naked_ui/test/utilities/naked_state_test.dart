@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import '../../lib/src/utilities/naked_state_scope.dart';
-import '../../lib/src/utilities/state.dart';
+import 'package:naked_ui/src/utilities/naked_state_scope.dart';
+import 'package:naked_ui/src/utilities/state.dart';
 
 class TestNakedState extends NakedState {
   TestNakedState({required Set<WidgetState> states}) : super(states: states);

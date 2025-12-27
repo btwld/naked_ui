@@ -2,7 +2,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import '../../lib/naked_ui.dart';
+import 'package:naked_ui/naked_ui.dart';
 
 import '../test_helpers.dart';
 import 'helpers/builder_state_scope.dart';
@@ -795,6 +795,232 @@ void main() {
       // This test just verifies the widget can handle cursor state
       // The actual cursor rendering is handled by the platform
       expect(find.text('Select option'), findsOneWidget);
+    });
+  });
+
+  group('Callback Behavior', () {
+    testWidgets('calls onCanceled when closing without selection', (
+      WidgetTester tester,
+    ) async {
+      bool onCanceledCalled = false;
+      bool onCloseCalled = false;
+
+      await tester.pumpMaterialWidget(
+        Center(
+          child: NakedSelect<String>(
+            onCanceled: () => onCanceledCalled = true,
+            onClose: () => onCloseCalled = true,
+            builder: (context, state, child) => const Text('Select option'),
+            overlayBuilder: (context, info) => const Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                NakedSelectOption<String>(value: 'apple', child: Text('Apple')),
+              ],
+            ),
+          ),
+        ),
+      );
+
+      // Open menu
+      await tester.tap(find.text('Select option'));
+      await tester.pumpAndSettle();
+      expect(find.text('Apple'), findsOneWidget);
+
+      // Close without selection (outside tap)
+      await tester.tapAt(Offset.zero);
+      await tester.pumpAndSettle();
+
+      expect(onCloseCalled, isTrue);
+      expect(onCanceledCalled, isTrue);
+    });
+
+    testWidgets('does not call onCanceled when closing with selection', (
+      WidgetTester tester,
+    ) async {
+      bool onCanceledCalled = false;
+      String? selectedValue;
+
+      await tester.pumpMaterialWidget(
+        Center(
+          child: NakedSelect<String>(
+            onCanceled: () => onCanceledCalled = true,
+            onChanged: (value) => selectedValue = value,
+            builder: (context, state, child) => const Text('Select option'),
+            overlayBuilder: (context, info) => const Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                NakedSelectOption<String>(value: 'apple', child: Text('Apple')),
+              ],
+            ),
+          ),
+        ),
+      );
+
+      // Open menu
+      await tester.tap(find.text('Select option'));
+      await tester.pumpAndSettle();
+
+      // Select an option
+      await tester.tap(find.text('Apple'));
+      await tester.pumpAndSettle();
+
+      expect(selectedValue, 'apple');
+      expect(onCanceledCalled, isFalse);
+    });
+
+    testWidgets('calls onOpen when menu opens', (WidgetTester tester) async {
+      bool onOpenCalled = false;
+
+      await tester.pumpMaterialWidget(
+        Center(
+          child: NakedSelect<String>(
+            onOpen: () => onOpenCalled = true,
+            builder: (context, state, child) => const Text('Select option'),
+            overlayBuilder: (context, info) => const Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                NakedSelectOption<String>(value: 'apple', child: Text('Apple')),
+              ],
+            ),
+          ),
+        ),
+      );
+
+      expect(onOpenCalled, isFalse);
+
+      await tester.tap(find.text('Select option'));
+      await tester.pumpAndSettle();
+
+      expect(onOpenCalled, isTrue);
+    });
+  });
+
+  group('External Value Changes', () {
+    testWidgets('updates internal value when external value prop changes', (
+      WidgetTester tester,
+    ) async {
+      String? currentValue;
+
+      Widget buildWidget(String? value) {
+        return Center(
+          child: NakedSelect<String>(
+            value: value,
+            builder: (context, state, child) {
+              currentValue = state.value;
+              return Text('Selected: ${state.value ?? 'none'}');
+            },
+            overlayBuilder: (context, info) => const Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                NakedSelectOption<String>(value: 'apple', child: Text('Apple')),
+                NakedSelectOption<String>(
+                  value: 'banana',
+                  child: Text('Banana'),
+                ),
+              ],
+            ),
+          ),
+        );
+      }
+
+      await tester.pumpMaterialWidget(buildWidget(null));
+      expect(currentValue, isNull);
+
+      await tester.pumpMaterialWidget(buildWidget('apple'));
+      expect(currentValue, 'apple');
+
+      await tester.pumpMaterialWidget(buildWidget('banana'));
+      expect(currentValue, 'banana');
+
+      await tester.pumpMaterialWidget(buildWidget(null));
+      expect(currentValue, isNull);
+    });
+  });
+
+  group('NakedSelectOption', () {
+    testWidgets('disabled option does not trigger selection', (
+      WidgetTester tester,
+    ) async {
+      String? selectedValue;
+
+      await tester.pumpMaterialWidget(
+        Center(
+          child: NakedSelect<String>(
+            onChanged: (value) => selectedValue = value,
+            builder: (context, state, child) => const Text('Select option'),
+            overlayBuilder: (context, info) => const Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                NakedSelectOption<String>(
+                  value: 'disabled',
+                  enabled: false,
+                  child: Text('Disabled Option'),
+                ),
+                NakedSelectOption<String>(
+                  value: 'enabled',
+                  child: Text('Enabled Option'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+
+      // Open menu
+      await tester.tap(find.text('Select option'));
+      await tester.pumpAndSettle();
+
+      // Try to tap disabled option
+      await tester.tap(find.text('Disabled Option'));
+      await tester.pumpAndSettle();
+
+      expect(selectedValue, isNull);
+      // Menu should still be open since nothing was selected
+      expect(find.text('Disabled Option'), findsOneWidget);
+
+      // Tap enabled option
+      await tester.tap(find.text('Enabled Option'));
+      await tester.pumpAndSettle();
+
+      expect(selectedValue, 'enabled');
+    });
+
+    testWidgets('option shows selected state for matching value', (
+      WidgetTester tester,
+    ) async {
+      bool? isSelected;
+
+      await tester.pumpMaterialWidget(
+        Center(
+          child: NakedSelect<String>(
+            value: 'apple',
+            builder: (context, state, child) => const Text('Select option'),
+            overlayBuilder: (context, info) => Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                NakedSelectOption<String>(
+                  value: 'apple',
+                  builder: (context, state, child) {
+                    isSelected = state.isSelected;
+                    return child!;
+                  },
+                  child: const Text('Apple'),
+                ),
+                const NakedSelectOption<String>(
+                  value: 'banana',
+                  child: Text('Banana'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+
+      // Open menu
+      await tester.tap(find.text('Select option'));
+      await tester.pumpAndSettle();
+
+      expect(isSelected, isTrue);
     });
   });
 }
