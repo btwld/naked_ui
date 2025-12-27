@@ -161,6 +161,8 @@ void main() {
     });
 
     testWidgets('hover cursor parity (enabled vs disabled)', (tester) async {
+      const materialEnabledKey = Key('material-enabled');
+      const materialDisabledKey = Key('material-disabled');
       const nakedEnabledKey = Key('naked-enabled');
       const nakedDisabledKey = Key('naked-disabled');
 
@@ -168,28 +170,63 @@ void main() {
         Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            NakedCheckbox(
-              key: nakedEnabledKey,
-              value: false,
-              onChanged: (_) {},
-              child: const SizedBox(width: 24, height: 24),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              spacing: 24,
+              children: [
+                Checkbox(
+                  key: materialEnabledKey,
+                  value: false,
+                  onChanged: (_) {},
+                ),
+                NakedCheckbox(
+                  key: nakedEnabledKey,
+                  value: false,
+                  onChanged: (_) {},
+                  child: const SizedBox(width: 24, height: 24),
+                ),
+              ],
             ),
             const SizedBox(height: 16),
-            NakedCheckbox(
-              key: nakedDisabledKey,
-              value: false,
-              enabled: false,
-              onChanged: (_) {},
-              child: const SizedBox(width: 24, height: 24),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              spacing: 24,
+              children: [
+                Checkbox(
+                  key: materialDisabledKey,
+                  value: false,
+                  onChanged: null,
+                ),
+                NakedCheckbox(
+                  key: nakedDisabledKey,
+                  value: false,
+                  enabled: false,
+                  onChanged: (_) {},
+                  child: const SizedBox(width: 24, height: 24),
+                ),
+              ],
             ),
           ],
         ),
       );
 
-      // Enabled NakedCheckbox should use click cursor (like Material Checkbox)
+      tester.expectCursor(SystemMouseCursors.click, on: materialEnabledKey);
       tester.expectCursor(SystemMouseCursors.click, on: nakedEnabledKey);
 
-      // Disabled NakedCheckbox should use basic cursor (like Material Checkbox)
+      final materialDisabledRegion = tester.widget<MouseRegion>(
+        find
+            .descendant(
+              of: find.byKey(materialDisabledKey),
+              matching: find.byType(MouseRegion),
+            )
+            .first,
+      );
+      expect(
+        materialDisabledRegion.cursor == SystemMouseCursors.basic ||
+            materialDisabledRegion.cursor == MouseCursor.defer,
+        isTrue,
+        reason: 'Material disabled cursor should be basic or defer',
+      );
       tester.expectCursor(SystemMouseCursors.basic, on: nakedDisabledKey);
     });
 
