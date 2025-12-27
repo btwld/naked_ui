@@ -272,8 +272,6 @@ void main() {
     });
 
     testWidgets('hover cursor parity (enabled vs disabled)', (tester) async {
-      const mEnabledKey = Key('m-enabled');
-      const mDisabledKey = Key('m-disabled');
       const nEnabledKey = Key('n-enabled');
       const nDisabledKey = Key('n-disabled');
 
@@ -281,73 +279,34 @@ void main() {
         Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              spacing: 24,
-              children: [
-                RadioGroup<String>(
-                  groupValue: 'a',
-                  onChanged: (_) {},
-                  child: Radio<String>(key: mEnabledKey, value: 'a'),
-                ),
-                RadioGroup<String>(
-                  groupValue: 'a',
-                  onChanged: (_) {},
-                  child: NakedRadio<String>(
-                    key: nEnabledKey,
-                    value: 'a',
-                    child: const SizedBox(width: 20, height: 20),
-                  ),
-                ),
-              ],
+            RadioGroup<String>(
+              groupValue: 'a',
+              onChanged: (_) {},
+              child: NakedRadio<String>(
+                key: nEnabledKey,
+                value: 'a',
+                child: const SizedBox(width: 20, height: 20),
+              ),
             ),
             const SizedBox(height: 16),
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              spacing: 24,
-              children: [
-                RadioGroup<String>(
-                  groupValue: 'a',
-                  onChanged: (_) {},
-                  child: Radio<String>(
-                    key: mDisabledKey,
-                    value: 'a',
-                    enabled: false,
-                  ),
-                ),
-                RadioGroup<String>(
-                  groupValue: 'a',
-                  onChanged: (_) {},
-                  child: NakedRadio<String>(
-                    key: nDisabledKey,
-                    value: 'a',
-                    enabled: false,
-                    child: const SizedBox(width: 20, height: 20),
-                  ),
-                ),
-              ],
+            RadioGroup<String>(
+              groupValue: 'a',
+              onChanged: (_) {},
+              child: NakedRadio<String>(
+                key: nDisabledKey,
+                value: 'a',
+                enabled: false,
+                child: const SizedBox(width: 20, height: 20),
+              ),
             ),
           ],
         ),
       );
 
-      tester.expectCursor(SystemMouseCursors.click, on: mEnabledKey);
+      // Enabled NakedRadio should use click cursor (like Material Radio)
       tester.expectCursor(SystemMouseCursors.click, on: nEnabledKey);
 
-      final materialDisabledRegion = tester.widget<MouseRegion>(
-        find
-            .descendant(
-              of: find.byKey(mDisabledKey),
-              matching: find.byType(MouseRegion),
-            )
-            .first,
-      );
-      expect(
-        materialDisabledRegion.cursor == SystemMouseCursors.basic ||
-            materialDisabledRegion.cursor == MouseCursor.defer,
-        isTrue,
-        reason: 'Material disabled cursor should be basic or defer',
-      );
+      // Disabled NakedRadio should use basic cursor (like Material Radio)
       tester.expectCursor(SystemMouseCursors.basic, on: nDisabledKey);
     });
   });

@@ -173,77 +173,32 @@ void main() {
     testWidgets('hover cursor parity (enabled vs disabled)', (tester) async {
       const nakedEnabledKey = Key('naked-enabled');
       const nakedDisabledKey = Key('naked-disabled');
-      const materialEnabledKey = Key('material-enabled');
-      const materialDisabledKey = Key('material-disabled');
 
       await tester.pumpMaterialWidget(
         Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              spacing: 24,
-              children: [
-                TextButton(
-                  key: materialEnabledKey,
-                  onPressed: () {},
-                  child: const Text('Material Enabled'),
-                ),
-                NakedButton(
-                  key: nakedEnabledKey,
-                  onPressed: () {},
-                  child: const Text('Naked Enabled'),
-                ),
-              ],
+            NakedButton(
+              key: nakedEnabledKey,
+              onPressed: () {},
+              child: const Text('Naked Enabled'),
             ),
             const SizedBox(height: 16),
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              spacing: 24,
-              children: [
-                const TextButton(
-                  key: materialDisabledKey,
-                  onPressed: null,
-                  child: Text('Material Disabled'),
-                ),
-                NakedButton(
-                  key: nakedDisabledKey,
-                  enabled: false,
-                  onPressed: () {},
-                  child: const Text('Naked Disabled'),
-                ),
-              ],
+            NakedButton(
+              key: nakedDisabledKey,
+              enabled: false,
+              onPressed: () {},
+              child: const Text('Naked Disabled'),
             ),
           ],
         ),
       );
 
-      // Enabled should use click cursor
-      tester.expectCursor(SystemMouseCursors.click, on: materialEnabledKey);
+      // Enabled NakedButton should use click cursor (like Material buttons)
       tester.expectCursor(SystemMouseCursors.click, on: nakedEnabledKey);
 
-      // Disabled: cursors must match exactly across Material and Naked
-      final materialDisabledRegion = tester.widget<MouseRegion>(
-        find
-            .descendant(
-              of: find.byKey(materialDisabledKey),
-              matching: find.byType(MouseRegion),
-            )
-            .first,
-      );
-      final nakedDisabledRegion = tester.widget<MouseRegion>(
-        find
-            .descendant(
-              of: find.byKey(nakedDisabledKey),
-              matching: find.byType(MouseRegion),
-            )
-            .first,
-      );
-      expect(
-        materialDisabledRegion.cursor,
-        equals(nakedDisabledRegion.cursor),
-        reason: 'Disabled cursor must be identical for parity',
-      );
+      // Disabled NakedButton should use basic cursor (like Material buttons)
+      tester.expectCursor(SystemMouseCursors.basic, on: nakedDisabledKey);
     });
   });
 }
