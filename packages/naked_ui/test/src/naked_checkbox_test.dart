@@ -355,6 +355,78 @@ void main() {
         );
       },
     );
+
+    testWidgets(
+      'isIntermediate returns true only when tristate and value is null',
+      (WidgetTester tester) async {
+        NakedCheckboxState? capturedState;
+
+        // Test: tristate=true, value=null -> isIntermediate=true
+        await tester.pumpMaterialWidget(
+          NakedCheckbox(
+            value: null,
+            tristate: true,
+            onChanged: (_) {},
+            builder: (context, state, child) {
+              capturedState = state;
+              return child ?? const SizedBox();
+            },
+          ),
+        );
+
+        expect(capturedState, isNotNull);
+        expect(capturedState!.isIntermediate, isTrue);
+        expect(capturedState!.isChecked, isNull);
+
+        // Test: tristate=true, value=true -> isIntermediate=false
+        await tester.pumpMaterialWidget(
+          NakedCheckbox(
+            value: true,
+            tristate: true,
+            onChanged: (_) {},
+            builder: (context, state, child) {
+              capturedState = state;
+              return child ?? const SizedBox();
+            },
+          ),
+        );
+
+        expect(capturedState!.isIntermediate, isFalse);
+        expect(capturedState!.isChecked, isTrue);
+
+        // Test: tristate=true, value=false -> isIntermediate=false
+        await tester.pumpMaterialWidget(
+          NakedCheckbox(
+            value: false,
+            tristate: true,
+            onChanged: (_) {},
+            builder: (context, state, child) {
+              capturedState = state;
+              return child ?? const SizedBox();
+            },
+          ),
+        );
+
+        expect(capturedState!.isIntermediate, isFalse);
+        expect(capturedState!.isChecked, isFalse);
+
+        // Test: tristate=false, value=true -> isIntermediate=false
+        await tester.pumpMaterialWidget(
+          NakedCheckbox(
+            value: true,
+            tristate: false,
+            onChanged: (_) {},
+            builder: (context, state, child) {
+              capturedState = state;
+              return child ?? const SizedBox();
+            },
+          ),
+        );
+
+        expect(capturedState!.isIntermediate, isFalse);
+        expect(capturedState!.tristate, isFalse);
+      },
+    );
   });
 
   group('Cursor', () {

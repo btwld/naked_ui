@@ -338,6 +338,59 @@ void main() {
     });
   });
 
+  group('Focus Behavior', () {
+    testWidgets('focusOnPress requests focus when button is pressed', (
+      WidgetTester tester,
+    ) async {
+      final focusNode = FocusNode();
+      final key = UniqueKey();
+
+      await tester.pumpMaterialWidget(
+        NakedButton(
+          key: key,
+          onPressed: () {},
+          focusOnPress: true,
+          focusNode: focusNode,
+          child: const Text('Focus On Press'),
+        ),
+      );
+
+      expect(focusNode.hasFocus, isFalse);
+
+      // Tap the button
+      await tester.tap(find.byKey(key));
+      await tester.pump();
+
+      expect(focusNode.hasFocus, isTrue);
+    });
+
+    testWidgets('focusOnPress false does not request focus on press', (
+      WidgetTester tester,
+    ) async {
+      final focusNode = FocusNode();
+      final key = UniqueKey();
+
+      await tester.pumpMaterialWidget(
+        NakedButton(
+          key: key,
+          onPressed: () {},
+          focusOnPress: false, // default
+          focusNode: focusNode,
+          child: const Text('No Focus On Press'),
+        ),
+      );
+
+      expect(focusNode.hasFocus, isFalse);
+
+      // Tap the button
+      await tester.tap(find.byKey(key));
+      await tester.pump();
+
+      // Focus should not have been requested
+      expect(focusNode.hasFocus, isFalse);
+    });
+  });
+
   group('Cursor', () {
     testWidgets('shows appropriate cursor based on interactive state', (
       WidgetTester tester,
