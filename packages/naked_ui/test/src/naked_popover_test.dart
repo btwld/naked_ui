@@ -297,30 +297,29 @@ void main() {
         );
       });
 
-      testWidgets(
-        'can still open via controller when openOnTap is false',
-        (tester) async {
-          final controller = MenuController();
+      testWidgets('can still open via controller when openOnTap is false', (
+        tester,
+      ) async {
+        final controller = MenuController();
 
-          await tester.pumpMaterialWidget(
-            Center(
-              child: NakedPopover(
-                openOnTap: false,
-                controller: controller,
-                popoverBuilder: (context, info) => const Text('Popover Content'),
-                child: const Text('Trigger'),
-              ),
+        await tester.pumpMaterialWidget(
+          Center(
+            child: NakedPopover(
+              openOnTap: false,
+              controller: controller,
+              popoverBuilder: (context, info) => const Text('Popover Content'),
+              child: const Text('Trigger'),
             ),
-          );
+          ),
+        );
 
-          expect(find.text('Popover Content'), findsNothing);
+        expect(find.text('Popover Content'), findsNothing);
 
-          controller.open();
-          await tester.pumpAndSettle();
+        controller.open();
+        await tester.pumpAndSettle();
 
-          expect(find.text('Popover Content'), findsOneWidget);
-        },
-      );
+        expect(find.text('Popover Content'), findsOneWidget);
+      });
     });
 
     group('lifecycle callbacks', () {

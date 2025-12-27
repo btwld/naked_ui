@@ -130,7 +130,11 @@ void main() {
 
         controller.close('item1');
 
-        expect(controller.contains('item1'), isTrue, reason: 'min floor enforced');
+        expect(
+          controller.contains('item1'),
+          isTrue,
+          reason: 'min floor enforced',
+        );
         expect(notifyCount, 0, reason: 'no notification when nothing changes');
       });
 
@@ -168,7 +172,11 @@ void main() {
         controller.open('item1');
         controller.toggle('item1');
 
-        expect(controller.contains('item1'), isTrue, reason: 'toggle respects min');
+        expect(
+          controller.contains('item1'),
+          isTrue,
+          reason: 'toggle respects min',
+        );
       });
 
       test('respects max when opening (evicts oldest)', () {
