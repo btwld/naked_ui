@@ -3,7 +3,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
-import '../../lib/naked_ui.dart';
+import 'package:naked_ui/naked_ui.dart';
 
 import 'helpers/builder_state_scope.dart';
 

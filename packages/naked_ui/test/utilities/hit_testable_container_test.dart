@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
-import '../../lib/src/utilities/hit_testable_container.dart';
+import 'package:naked_ui/src/utilities/hit_testable_container.dart';
 
 void main() {
   group('HitTestableContainer', () {

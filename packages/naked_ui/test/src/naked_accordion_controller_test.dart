@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import '../../lib/naked_ui.dart';
+import 'package:naked_ui/naked_ui.dart';
 
 void main() {
   group('NakedAccordionController', () {
