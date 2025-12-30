@@ -461,6 +461,14 @@ class NakedAccordion<T> extends StatefulWidget {
 
 class _NakedAccordionState<T> extends State<NakedAccordion<T>>
     with WidgetStatesMixin<NakedAccordion<T>> {
+  // Cache state to enable selective rebuilds.
+  // When controller notifies, we only rebuild the child tree if
+  // this item's derived state has actually changed.
+  bool? _cachedIsExpanded;
+  bool? _cachedCanCollapse;
+  bool? _cachedCanExpand;
+  Widget? _cachedChild;
+
   void _toggle(NakedAccordionController<T> controller) =>
       controller.toggle(widget.value);
 
@@ -475,6 +483,13 @@ class _NakedAccordionState<T> extends State<NakedAccordion<T>>
     if (oldWidget.enabled != widget.enabled) {
       updateDisabledState(!widget.enabled);
     }
+    // Invalidate cache if widget configuration changes.
+    if (oldWidget.value != widget.value ||
+        oldWidget.builder != widget.builder ||
+        oldWidget.child != widget.child ||
+        oldWidget.transitionBuilder != widget.transitionBuilder) {
+      _cachedChild = null;
+    }
   }
 
   @override
@@ -486,6 +501,25 @@ class _NakedAccordionState<T> extends State<NakedAccordion<T>>
       listenable: controller,
       builder: (context, _) {
         final isExpanded = controller.contains(widget.value);
+        final canCollapse =
+            isExpanded && (controller.values.length > controller.min);
+        final canExpand = !isExpanded &&
+            (controller.max == null ||
+                controller.values.length < controller.max!);
+
+        // Skip rebuild if this item's state hasn't changed.
+        // This reduces O(n) rebuilds to O(1) for unchanged items.
+        if (_cachedChild != null &&
+            _cachedIsExpanded == isExpanded &&
+            _cachedCanCollapse == canCollapse &&
+            _cachedCanExpand == canExpand) {
+          return _cachedChild!;
+        }
+
+        // Update cache for next comparison.
+        _cachedIsExpanded = isExpanded;
+        _cachedCanCollapse = canCollapse;
+        _cachedCanExpand = canExpand;
 
         // Build the panel *only* when expanded.
         final Widget panel = isExpanded
@@ -497,14 +531,6 @@ class _NakedAccordionState<T> extends State<NakedAccordion<T>>
           if (widget.enableFeedback) Feedback.forTap(context);
           _toggle(controller);
         }
-
-        final canCollapse =
-            isExpanded && (controller.values.length > controller.min);
-
-        final canExpand =
-            !isExpanded &&
-            (controller.max == null ||
-                controller.values.length < controller.max!);
 
         final accordionState = NakedAccordionItemState<T>(
           states: widgetStates,
@@ -545,7 +571,8 @@ class _NakedAccordionState<T> extends State<NakedAccordion<T>>
                 child: triggerContent,
               );
 
-        return Column(
+        // Build and cache the widget tree.
+        _cachedChild = Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             NakedFocusableDetector(
@@ -565,11 +592,13 @@ class _NakedAccordionState<T> extends State<NakedAccordion<T>>
               value: accordionState,
               builder: (context, accordionState, child) =>
                   widget.transitionBuilder != null
-                  ? widget.transitionBuilder!(panel)
-                  : panel,
+                      ? widget.transitionBuilder!(panel)
+                      : panel,
             ),
           ],
         );
+
+        return _cachedChild!;
       },
     );
   }

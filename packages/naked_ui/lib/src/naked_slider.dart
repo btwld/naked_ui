@@ -48,7 +48,9 @@ class NakedSliderState extends NakedState {
       NakedState.maybeControllerOf(context);
 
   /// The slider value as a percentage (0.0 to 1.0).
-  double get percentage => (value - min) / (max - min);
+  ///
+  /// Returns 0.0 if [min] equals [max] to avoid division by zero.
+  double get percentage => max == min ? 0.0 : (value - min) / (max - min);
 
   @override
   bool operator ==(Object other) {
