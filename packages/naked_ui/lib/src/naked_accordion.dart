@@ -503,7 +503,8 @@ class _NakedAccordionState<T> extends State<NakedAccordion<T>>
         final isExpanded = controller.contains(widget.value);
         final canCollapse =
             isExpanded && (controller.values.length > controller.min);
-        final canExpand = !isExpanded &&
+        final canExpand =
+            !isExpanded &&
             (controller.max == null ||
                 controller.values.length < controller.max!);
 
@@ -592,8 +593,8 @@ class _NakedAccordionState<T> extends State<NakedAccordion<T>>
               value: accordionState,
               builder: (context, accordionState, child) =>
                   widget.transitionBuilder != null
-                      ? widget.transitionBuilder!(panel)
-                      : panel,
+                  ? widget.transitionBuilder!(panel)
+                  : panel,
             ),
           ],
         );
