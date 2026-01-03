@@ -467,6 +467,7 @@ class _NakedAccordionState<T> extends State<NakedAccordion<T>>
   bool? _cachedIsExpanded;
   bool? _cachedCanCollapse;
   bool? _cachedCanExpand;
+  Set<WidgetState>? _cachedWidgetStates;
   Widget? _cachedChild;
 
   void _toggle(NakedAccordionController<T> controller) =>
@@ -487,7 +488,12 @@ class _NakedAccordionState<T> extends State<NakedAccordion<T>>
     if (oldWidget.value != widget.value ||
         oldWidget.builder != widget.builder ||
         oldWidget.child != widget.child ||
-        oldWidget.transitionBuilder != widget.transitionBuilder) {
+        oldWidget.transitionBuilder != widget.transitionBuilder ||
+        oldWidget.enabled != widget.enabled ||
+        oldWidget.mouseCursor != widget.mouseCursor ||
+        oldWidget.enableFeedback != widget.enableFeedback ||
+        oldWidget.semanticLabel != widget.semanticLabel ||
+        oldWidget.excludeSemantics != widget.excludeSemantics) {
       _cachedChild = null;
     }
   }
@@ -513,7 +519,8 @@ class _NakedAccordionState<T> extends State<NakedAccordion<T>>
         if (_cachedChild != null &&
             _cachedIsExpanded == isExpanded &&
             _cachedCanCollapse == canCollapse &&
-            _cachedCanExpand == canExpand) {
+            _cachedCanExpand == canExpand &&
+            setEquals(_cachedWidgetStates, widgetStates)) {
           return _cachedChild!;
         }
 
@@ -521,6 +528,7 @@ class _NakedAccordionState<T> extends State<NakedAccordion<T>>
         _cachedIsExpanded = isExpanded;
         _cachedCanCollapse = canCollapse;
         _cachedCanExpand = canExpand;
+        _cachedWidgetStates = Set<WidgetState>.of(widgetStates);
 
         // Build the panel *only* when expanded.
         final Widget panel = isExpanded
