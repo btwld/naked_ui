@@ -292,9 +292,10 @@ class NakedAccordionScope<T> extends InheritedWidget {
 
   @override
   bool updateShouldNotify(covariant NakedAccordionScope<T> oldWidget) {
-    // Controller identity changes are rare; rebuild all items when state changes.
-    // This matches Flutter's ExpansionPanelList pattern - simple and effective.
-    return true;
+    // Only notify dependents when controller instance changes.
+    // Controller state changes trigger rebuilds via ListenableBuilder,
+    // which marks all StatefulElements dirty through update() calls.
+    return controller != oldWidget.controller;
   }
 }
 
