@@ -259,35 +259,172 @@ class NakedAccordionController<T> with ChangeNotifier {
   }
 }
 
-/// Provides a [NakedAccordionController] to descendant widgets.
-class NakedAccordionScope<T> extends InheritedWidget {
+/// Immutable snapshot of accordion expansion state at a point in time.
+///
+/// Used by [NakedAccordionScope] to enable selective rebuilds via
+/// [InheritedModel]. Each accordion item depends only on its own value
+/// as an "aspect", so only affected items rebuild when state changes.
+@immutable
+class _AccordionSnapshot<T> {
+  const _AccordionSnapshot({
+    required this.expandedValues,
+    required this.controller,
+  });
+
+  /// Set of currently expanded values (immutable snapshot).
+  final Set<T> expandedValues;
+
+  /// The controller (for accessing min/max constraints).
+  final NakedAccordionController<T> controller;
+
+  /// Check if a specific value is expanded.
+  bool isExpanded(T value) => expandedValues.contains(value);
+
+  /// Whether the item can be collapsed (respecting min constraint).
+  bool canCollapse(T value) =>
+      isExpanded(value) && expandedValues.length > controller.min;
+
+  /// Whether the item can be expanded (respecting max constraint).
+  bool canExpand(T value) =>
+      !isExpanded(value) &&
+      (controller.max == null || expandedValues.length < controller.max!);
+}
+
+/// Provides accordion state to descendant widgets with selective rebuilds.
+///
+/// Uses [InheritedModel] pattern (like Flutter's [MediaQuery]) to ensure
+/// each accordion item only rebuilds when its own expansion state changes,
+/// not when other items change. This reduces O(n) rebuilds to O(1).
+///
+/// ## How It Works
+///
+/// Each [NakedAccordion] item specifies its value as an "aspect" when
+/// accessing the scope. The [updateShouldNotifyDependent] method checks
+/// if that specific value's state changed, enabling surgical rebuilds.
+///
+/// ## Example
+///
+/// ```dart
+/// // Internal usage - items use aspectOf for selective dependency
+/// final isExpanded = NakedAccordionScope.isExpandedOf<String>(context, 'section1');
+/// ```
+///
+/// See also:
+/// - [InheritedModel], Flutter's selective rebuild mechanism
+/// - [MediaQuery], which uses the same pattern for size/padding aspects
+class NakedAccordionScope<T> extends InheritedModel<T> {
   const NakedAccordionScope({
     super.key,
-    required this.controller,
+    required this.snapshot,
     required super.child,
   });
 
-  /// Returns the nearest [NakedAccordionScope] without asserting.
+  /// The immutable snapshot of current accordion state.
+  final _AccordionSnapshot<T> snapshot;
+
+  /// Returns the nearest [NakedAccordionScope] without creating a dependency.
+  ///
+  /// Use this when you need the controller but don't want to rebuild
+  /// when expansion state changes.
   static NakedAccordionScope<T>? maybeOf<T>(BuildContext context) {
-    return context.dependOnInheritedWidgetOfExactType();
+    return context.getInheritedWidgetOfExactType<NakedAccordionScope<T>>();
   }
 
   /// Returns the nearest [NakedAccordionScope], throwing when absent.
+  ///
+  /// Use this when you need the controller but don't want to rebuild
+  /// when expansion state changes.
   static NakedAccordionScope<T> of<T>(BuildContext context) {
     final scope = maybeOf<T>(context);
     if (scope == null) {
       throw StateError('NakedAccordionScope<$T> not found in context.');
     }
-
     return scope;
   }
 
-  final NakedAccordionController<T> controller;
+  /// Returns whether [value] is expanded, creating an aspect-based dependency.
+  ///
+  /// The calling widget will only rebuild when this specific value's
+  /// expansion state changes, not when other items change.
+  ///
+  /// This is the primary method for accordion items to check their state.
+  static bool isExpandedOf<T extends Object>(BuildContext context, T value) {
+    final scope = InheritedModel.inheritFrom<NakedAccordionScope<T>>(
+      context,
+      aspect: value,
+    );
+    if (scope == null) {
+      throw StateError('NakedAccordionScope<$T> not found in context.');
+    }
+    return scope.snapshot.isExpanded(value);
+  }
+
+  /// Returns whether [value] can be collapsed, creating an aspect-based dependency.
+  static bool canCollapseOf<T extends Object>(BuildContext context, T value) {
+    final scope = InheritedModel.inheritFrom<NakedAccordionScope<T>>(
+      context,
+      aspect: value,
+    );
+    if (scope == null) {
+      throw StateError('NakedAccordionScope<$T> not found in context.');
+    }
+    return scope.snapshot.canCollapse(value);
+  }
+
+  /// Returns whether [value] can be expanded, creating an aspect-based dependency.
+  static bool canExpandOf<T extends Object>(BuildContext context, T value) {
+    final scope = InheritedModel.inheritFrom<NakedAccordionScope<T>>(
+      context,
+      aspect: value,
+    );
+    if (scope == null) {
+      throw StateError('NakedAccordionScope<$T> not found in context.');
+    }
+    return scope.snapshot.canExpand(value);
+  }
+
+  /// Returns the controller without creating a rebuild dependency.
+  NakedAccordionController<T> get controller => snapshot.controller;
 
   @override
   bool updateShouldNotify(covariant NakedAccordionScope<T> oldWidget) {
-    // Controller identity changes are rare; items listen to controller directly.
-    return oldWidget.controller != controller;
+    // Always check dependents - the fine-grained logic is in updateShouldNotifyDependent.
+    // This returns true if ANY expansion state changed.
+    return !setEquals(
+          snapshot.expandedValues,
+          oldWidget.snapshot.expandedValues,
+        ) ||
+        snapshot.controller != oldWidget.snapshot.controller;
+  }
+
+  @override
+  bool updateShouldNotifyDependent(
+    covariant NakedAccordionScope<T> oldWidget,
+    Set<T> dependencies,
+  ) {
+    // Only notify dependents whose specific aspect (value) changed.
+    // This is the key optimization: O(affected items) instead of O(n).
+    for (final value in dependencies) {
+      final wasExpanded = oldWidget.snapshot.isExpanded(value);
+      final isNowExpanded = snapshot.isExpanded(value);
+      if (wasExpanded != isNowExpanded) {
+        return true;
+      }
+
+      // Also check constraint changes that affect this item.
+      final couldCollapse = oldWidget.snapshot.canCollapse(value);
+      final canNowCollapse = snapshot.canCollapse(value);
+      if (couldCollapse != canNowCollapse) {
+        return true;
+      }
+
+      final couldExpand = oldWidget.snapshot.canExpand(value);
+      final canNowExpand = snapshot.canExpand(value);
+      if (couldExpand != canNowExpand) {
+        return true;
+      }
+    }
+    return false;
   }
 }
 
@@ -361,10 +498,18 @@ class _NakedAccordionGroupState<T> extends State<NakedAccordionGroup<T>> {
 
   @override
   Widget build(BuildContext context) {
-    // Keep traversal predictable without overriding global arrow key handling.
+    // ListenableBuilder triggers rebuild when controller notifies.
+    // NakedAccordionScope (InheritedModel) then provides selective rebuilds
+    // to individual accordion items based on their value aspect.
     return ListenableBuilder(
       listenable: _controller,
       builder: (context, _) {
+        // Create immutable snapshot for InheritedModel comparison.
+        final snapshot = _AccordionSnapshot<T>(
+          expandedValues: Set<T>.of(_controller.values),
+          controller: _controller,
+        );
+
         return NakedStateScope(
           value: NakedAccordionGroupState(
             states: const {},
@@ -373,7 +518,7 @@ class _NakedAccordionGroupState<T> extends State<NakedAccordionGroup<T>> {
             maxExpanded: _controller.max,
           ),
           child: NakedAccordionScope<T>(
-            controller: _controller,
+            snapshot: snapshot,
             child: FocusTraversalGroup(child: widget.child),
           ),
         );
@@ -392,7 +537,7 @@ typedef NakedAccordionTriggerBuilder<T> =
 ///
 /// See also:
 /// - [NakedAccordionGroup], the container that manages accordion items.
-class NakedAccordion<T> extends StatefulWidget {
+class NakedAccordion<T extends Object> extends StatefulWidget {
   const NakedAccordion({
     super.key,
     required this.builder,
@@ -459,16 +604,11 @@ class NakedAccordion<T> extends StatefulWidget {
   State<NakedAccordion<T>> createState() => _NakedAccordionState<T>();
 }
 
-class _NakedAccordionState<T> extends State<NakedAccordion<T>>
+class _NakedAccordionState<T extends Object> extends State<NakedAccordion<T>>
     with WidgetStatesMixin<NakedAccordion<T>> {
-  // Cache state to enable selective rebuilds.
-  // When controller notifies, we only rebuild the child tree if
-  // this item's derived state has actually changed.
-  bool? _cachedIsExpanded;
-  bool? _cachedCanCollapse;
-  bool? _cachedCanExpand;
-  Set<WidgetState>? _cachedWidgetStates;
-  Widget? _cachedChild;
+  // No manual caching needed - InheritedModel handles selective rebuilds.
+  // Each accordion item depends on its value as an "aspect", so only
+  // affected items rebuild when expansion state changes.
 
   void _toggle(NakedAccordionController<T> controller) =>
       controller.toggle(widget.value);
@@ -484,131 +624,100 @@ class _NakedAccordionState<T> extends State<NakedAccordion<T>>
     if (oldWidget.enabled != widget.enabled) {
       updateDisabledState(!widget.enabled);
     }
-    // Invalidate cache if widget configuration changes.
-    if (oldWidget.value != widget.value ||
-        oldWidget.builder != widget.builder ||
-        oldWidget.child != widget.child ||
-        oldWidget.transitionBuilder != widget.transitionBuilder ||
-        oldWidget.enabled != widget.enabled ||
-        oldWidget.mouseCursor != widget.mouseCursor ||
-        oldWidget.enableFeedback != widget.enableFeedback ||
-        oldWidget.semanticLabel != widget.semanticLabel ||
-        oldWidget.excludeSemantics != widget.excludeSemantics) {
-      _cachedChild = null;
-    }
   }
 
   @override
   Widget build(BuildContext context) {
+    // Use aspect-based dependency via InheritedModel.
+    // This widget only rebuilds when THIS item's expansion state changes,
+    // not when other accordion items change. This is the Flutter-idiomatic
+    // pattern used by MediaQuery for selective rebuilds.
+    final isExpanded = NakedAccordionScope.isExpandedOf<T>(
+      context,
+      widget.value,
+    );
+    final canCollapse = NakedAccordionScope.canCollapseOf<T>(
+      context,
+      widget.value,
+    );
+    final canExpand = NakedAccordionScope.canExpandOf<T>(context, widget.value);
+
+    // Get controller without creating a dependency (for toggle action).
     final scope = NakedAccordionScope.of<T>(context);
     final controller = scope.controller;
 
-    return ListenableBuilder(
-      listenable: controller,
-      builder: (context, _) {
-        final isExpanded = controller.contains(widget.value);
-        final canCollapse =
-            isExpanded && (controller.values.length > controller.min);
-        final canExpand =
-            !isExpanded &&
-            (controller.max == null ||
-                controller.values.length < controller.max!);
+    // Build the panel only when expanded.
+    final Widget panel = isExpanded ? widget.child : const SizedBox.shrink();
 
-        // Skip rebuild if this item's state hasn't changed.
-        // This reduces O(n) rebuilds to O(1) for unchanged items.
-        if (_cachedChild != null &&
-            _cachedIsExpanded == isExpanded &&
-            _cachedCanCollapse == canCollapse &&
-            _cachedCanExpand == canExpand &&
-            setEquals(_cachedWidgetStates, widgetStates)) {
-          return _cachedChild!;
-        }
+    void onTap() {
+      if (!widget.enabled) return;
+      if (widget.enableFeedback) Feedback.forTap(context);
+      _toggle(controller);
+    }
 
-        // Update cache for next comparison.
-        _cachedIsExpanded = isExpanded;
-        _cachedCanCollapse = canCollapse;
-        _cachedCanExpand = canExpand;
-        _cachedWidgetStates = Set<WidgetState>.of(widgetStates);
+    final accordionState = NakedAccordionItemState<T>(
+      states: widgetStates,
+      value: widget.value,
+      isExpanded: isExpanded,
+      canCollapse: canCollapse,
+      canExpand: canExpand,
+    );
 
-        // Build the panel *only* when expanded.
-        final Widget panel = isExpanded
-            ? widget.child
-            : const SizedBox.shrink();
+    Widget triggerContent = GestureDetector(
+      onTapDown: (widget.enabled && widget.onPressChange != null)
+          ? (_) => updatePressState(true, widget.onPressChange)
+          : null,
+      onTapUp: (widget.enabled && widget.onPressChange != null)
+          ? (_) => updatePressState(false, widget.onPressChange)
+          : null,
+      onTap: widget.enabled ? onTap : null,
+      onTapCancel: (widget.enabled && widget.onPressChange != null)
+          ? () => updatePressState(false, widget.onPressChange)
+          : null,
+      behavior: HitTestBehavior.opaque,
+      excludeFromSemantics: true,
+      child: ExcludeSemantics(
+        child: NakedStateScopeBuilder(
+          value: accordionState,
+          builder: (context, accordionState, child) =>
+              widget.builder(context, accordionState),
+        ),
+      ),
+    );
 
-        void onTap() {
-          if (!widget.enabled) return;
-          if (widget.enableFeedback) Feedback.forTap(context);
-          _toggle(controller);
-        }
+    Widget accordionChild = widget.excludeSemantics
+        ? triggerContent
+        : Semantics(
+            enabled: widget.enabled,
+            label: widget.semanticLabel,
+            onTap: widget.enabled ? onTap : null,
+            child: triggerContent,
+          );
 
-        final accordionState = NakedAccordionItemState<T>(
-          states: widgetStates,
-          value: widget.value,
-          isExpanded: isExpanded,
-          canCollapse: canCollapse,
-          canExpand: canExpand,
-        );
-
-        Widget triggerContent = GestureDetector(
-          onTapDown: (widget.enabled && widget.onPressChange != null)
-              ? (_) => updatePressState(true, widget.onPressChange)
-              : null,
-          onTapUp: (widget.enabled && widget.onPressChange != null)
-              ? (_) => updatePressState(false, widget.onPressChange)
-              : null,
-          onTap: widget.enabled ? onTap : null,
-          onTapCancel: (widget.enabled && widget.onPressChange != null)
-              ? () => updatePressState(false, widget.onPressChange)
-              : null,
-          behavior: HitTestBehavior.opaque,
-          excludeFromSemantics: true,
-          child: ExcludeSemantics(
-            child: NakedStateScopeBuilder(
-              value: accordionState,
-              builder: (context, accordionState, child) =>
-                  widget.builder(context, accordionState),
-            ),
-          ),
-        );
-
-        Widget accordionChild = widget.excludeSemantics
-            ? triggerContent
-            : Semantics(
-                enabled: widget.enabled,
-                label: widget.semanticLabel,
-                onTap: widget.enabled ? onTap : null,
-                child: triggerContent,
-              );
-
-        // Build and cache the widget tree.
-        _cachedChild = Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            NakedFocusableDetector(
-              enabled: widget.enabled,
-              autofocus: widget.autofocus,
-              onFocusChange: (f) => updateFocusState(f, widget.onFocusChange),
-              onHoverChange: (h) => updateHoverState(h, widget.onHoverChange),
-              focusNode: widget.focusNode,
-              mouseCursor: widget.enabled
-                  ? widget.mouseCursor
-                  : SystemMouseCursors.basic,
-              shortcuts: NakedIntentActions.accordion.shortcuts,
-              actions: NakedIntentActions.accordion.actions(onToggle: onTap),
-              child: accordionChild,
-            ),
-            NakedStateScopeBuilder(
-              value: accordionState,
-              builder: (context, accordionState, child) =>
-                  widget.transitionBuilder != null
-                  ? widget.transitionBuilder!(panel)
-                  : panel,
-            ),
-          ],
-        );
-
-        return _cachedChild!;
-      },
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        NakedFocusableDetector(
+          enabled: widget.enabled,
+          autofocus: widget.autofocus,
+          onFocusChange: (f) => updateFocusState(f, widget.onFocusChange),
+          onHoverChange: (h) => updateHoverState(h, widget.onHoverChange),
+          focusNode: widget.focusNode,
+          mouseCursor: widget.enabled
+              ? widget.mouseCursor
+              : SystemMouseCursors.basic,
+          shortcuts: NakedIntentActions.accordion.shortcuts,
+          actions: NakedIntentActions.accordion.actions(onToggle: onTap),
+          child: accordionChild,
+        ),
+        NakedStateScopeBuilder(
+          value: accordionState,
+          builder: (context, accordionState, child) =>
+              widget.transitionBuilder != null
+              ? widget.transitionBuilder!(panel)
+              : panel,
+        ),
+      ],
     );
   }
 }
