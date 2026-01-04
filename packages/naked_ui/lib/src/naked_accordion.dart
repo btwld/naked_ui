@@ -259,81 +259,29 @@ class NakedAccordionController<T> with ChangeNotifier {
   }
 }
 
-/// Immutable snapshot of accordion expansion state at a point in time.
+/// Provides a [NakedAccordionController] to descendant widgets.
 ///
-/// Used by [NakedAccordionScope] to enable selective rebuilds via
-/// [InheritedModel]. Each accordion item depends only on its own value
-/// as an "aspect", so only affected items rebuild when state changes.
-@immutable
-class _AccordionSnapshot<T> {
-  const _AccordionSnapshot({
-    required this.expandedValues,
-    required this.controller,
-  });
-
-  /// Set of currently expanded values (immutable snapshot).
-  final Set<T> expandedValues;
-
-  /// The controller (for accessing min/max constraints).
-  final NakedAccordionController<T> controller;
-
-  /// Check if a specific value is expanded.
-  bool isExpanded(T value) => expandedValues.contains(value);
-
-  /// Whether the item can be collapsed (respecting min constraint).
-  bool canCollapse(T value) =>
-      isExpanded(value) && expandedValues.length > controller.min;
-
-  /// Whether the item can be expanded (respecting max constraint).
-  bool canExpand(T value) =>
-      !isExpanded(value) &&
-      (controller.max == null || expandedValues.length < controller.max!);
-}
-
-/// Provides accordion state to descendant widgets with selective rebuilds.
-///
-/// Uses [InheritedModel] pattern (like Flutter's [MediaQuery]) to ensure
-/// each accordion item only rebuilds when its own expansion state changes,
-/// not when other items change. This reduces O(n) rebuilds to O(1).
-///
-/// ## How It Works
-///
-/// Each [NakedAccordion] item specifies its value as an "aspect" when
-/// accessing the scope. The [updateShouldNotifyDependent] method checks
-/// if that specific value's state changed, enabling surgical rebuilds.
-///
-/// ## Example
-///
-/// ```dart
-/// // Internal usage - items use aspectOf for selective dependency
-/// final isExpanded = NakedAccordionScope.isExpandedOf<String>(context, 'section1');
-/// ```
-///
-/// See also:
-/// - [InheritedModel], Flutter's selective rebuild mechanism
-/// - [MediaQuery], which uses the same pattern for size/padding aspects
-class NakedAccordionScope<T> extends InheritedModel<T> {
+/// This follows the simple pattern used by Flutter's own [ExpansionPanelList].
+/// All accordion items rebuild when any item changes state - this is intentional
+/// as Flutter's Element reconciliation efficiently handles widget reuse, and
+/// typical accordion usage involves only 2-5 items where optimization overhead
+/// exceeds any benefit.
+class NakedAccordionScope<T> extends InheritedWidget {
   const NakedAccordionScope({
     super.key,
-    required this.snapshot,
+    required this.controller,
     required super.child,
   });
 
-  /// The immutable snapshot of current accordion state.
-  final _AccordionSnapshot<T> snapshot;
+  /// The controller managing accordion expansion state.
+  final NakedAccordionController<T> controller;
 
-  /// Returns the nearest [NakedAccordionScope] without creating a dependency.
-  ///
-  /// Use this when you need the controller but don't want to rebuild
-  /// when expansion state changes.
+  /// Returns the nearest [NakedAccordionScope] without asserting.
   static NakedAccordionScope<T>? maybeOf<T>(BuildContext context) {
-    return context.getInheritedWidgetOfExactType<NakedAccordionScope<T>>();
+    return context.dependOnInheritedWidgetOfExactType<NakedAccordionScope<T>>();
   }
 
   /// Returns the nearest [NakedAccordionScope], throwing when absent.
-  ///
-  /// Use this when you need the controller but don't want to rebuild
-  /// when expansion state changes.
   static NakedAccordionScope<T> of<T>(BuildContext context) {
     final scope = maybeOf<T>(context);
     if (scope == null) {
@@ -342,89 +290,11 @@ class NakedAccordionScope<T> extends InheritedModel<T> {
     return scope;
   }
 
-  /// Returns whether [value] is expanded, creating an aspect-based dependency.
-  ///
-  /// The calling widget will only rebuild when this specific value's
-  /// expansion state changes, not when other items change.
-  ///
-  /// This is the primary method for accordion items to check their state.
-  static bool isExpandedOf<T extends Object>(BuildContext context, T value) {
-    final scope = InheritedModel.inheritFrom<NakedAccordionScope<T>>(
-      context,
-      aspect: value,
-    );
-    if (scope == null) {
-      throw StateError('NakedAccordionScope<$T> not found in context.');
-    }
-    return scope.snapshot.isExpanded(value);
-  }
-
-  /// Returns whether [value] can be collapsed, creating an aspect-based dependency.
-  static bool canCollapseOf<T extends Object>(BuildContext context, T value) {
-    final scope = InheritedModel.inheritFrom<NakedAccordionScope<T>>(
-      context,
-      aspect: value,
-    );
-    if (scope == null) {
-      throw StateError('NakedAccordionScope<$T> not found in context.');
-    }
-    return scope.snapshot.canCollapse(value);
-  }
-
-  /// Returns whether [value] can be expanded, creating an aspect-based dependency.
-  static bool canExpandOf<T extends Object>(BuildContext context, T value) {
-    final scope = InheritedModel.inheritFrom<NakedAccordionScope<T>>(
-      context,
-      aspect: value,
-    );
-    if (scope == null) {
-      throw StateError('NakedAccordionScope<$T> not found in context.');
-    }
-    return scope.snapshot.canExpand(value);
-  }
-
-  /// Returns the controller without creating a rebuild dependency.
-  NakedAccordionController<T> get controller => snapshot.controller;
-
   @override
   bool updateShouldNotify(covariant NakedAccordionScope<T> oldWidget) {
-    // Always check dependents - the fine-grained logic is in updateShouldNotifyDependent.
-    // This returns true if ANY expansion state changed.
-    return !setEquals(
-          snapshot.expandedValues,
-          oldWidget.snapshot.expandedValues,
-        ) ||
-        snapshot.controller != oldWidget.snapshot.controller;
-  }
-
-  @override
-  bool updateShouldNotifyDependent(
-    covariant NakedAccordionScope<T> oldWidget,
-    Set<T> dependencies,
-  ) {
-    // Only notify dependents whose specific aspect (value) changed.
-    // This is the key optimization: O(affected items) instead of O(n).
-    for (final value in dependencies) {
-      final wasExpanded = oldWidget.snapshot.isExpanded(value);
-      final isNowExpanded = snapshot.isExpanded(value);
-      if (wasExpanded != isNowExpanded) {
-        return true;
-      }
-
-      // Also check constraint changes that affect this item.
-      final couldCollapse = oldWidget.snapshot.canCollapse(value);
-      final canNowCollapse = snapshot.canCollapse(value);
-      if (couldCollapse != canNowCollapse) {
-        return true;
-      }
-
-      final couldExpand = oldWidget.snapshot.canExpand(value);
-      final canNowExpand = snapshot.canExpand(value);
-      if (couldExpand != canNowExpand) {
-        return true;
-      }
-    }
-    return false;
+    // Controller identity changes are rare; rebuild all items when state changes.
+    // This matches Flutter's ExpansionPanelList pattern - simple and effective.
+    return true;
   }
 }
 
@@ -499,17 +369,11 @@ class _NakedAccordionGroupState<T> extends State<NakedAccordionGroup<T>> {
   @override
   Widget build(BuildContext context) {
     // ListenableBuilder triggers rebuild when controller notifies.
-    // NakedAccordionScope (InheritedModel) then provides selective rebuilds
-    // to individual accordion items based on their value aspect.
+    // All accordion items rebuild on any change - this is intentional.
+    // Flutter's Element reconciliation handles widget reuse efficiently.
     return ListenableBuilder(
       listenable: _controller,
       builder: (context, _) {
-        // Create immutable snapshot for InheritedModel comparison.
-        final snapshot = _AccordionSnapshot<T>(
-          expandedValues: Set<T>.of(_controller.values),
-          controller: _controller,
-        );
-
         return NakedStateScope(
           value: NakedAccordionGroupState(
             states: const {},
@@ -518,7 +382,7 @@ class _NakedAccordionGroupState<T> extends State<NakedAccordionGroup<T>> {
             maxExpanded: _controller.max,
           ),
           child: NakedAccordionScope<T>(
-            snapshot: snapshot,
+            controller: _controller,
             child: FocusTraversalGroup(child: widget.child),
           ),
         );
@@ -537,7 +401,7 @@ typedef NakedAccordionTriggerBuilder<T> =
 ///
 /// See also:
 /// - [NakedAccordionGroup], the container that manages accordion items.
-class NakedAccordion<T extends Object> extends StatefulWidget {
+class NakedAccordion<T> extends StatefulWidget {
   const NakedAccordion({
     super.key,
     required this.builder,
@@ -604,12 +468,8 @@ class NakedAccordion<T extends Object> extends StatefulWidget {
   State<NakedAccordion<T>> createState() => _NakedAccordionState<T>();
 }
 
-class _NakedAccordionState<T extends Object> extends State<NakedAccordion<T>>
+class _NakedAccordionState<T> extends State<NakedAccordion<T>>
     with WidgetStatesMixin<NakedAccordion<T>> {
-  // No manual caching needed - InheritedModel handles selective rebuilds.
-  // Each accordion item depends on its value as an "aspect", so only
-  // affected items rebuild when expansion state changes.
-
   void _toggle(NakedAccordionController<T> controller) =>
       controller.toggle(widget.value);
 
@@ -628,23 +488,17 @@ class _NakedAccordionState<T extends Object> extends State<NakedAccordion<T>>
 
   @override
   Widget build(BuildContext context) {
-    // Use aspect-based dependency via InheritedModel.
-    // This widget only rebuilds when THIS item's expansion state changes,
-    // not when other accordion items change. This is the Flutter-idiomatic
-    // pattern used by MediaQuery for selective rebuilds.
-    final isExpanded = NakedAccordionScope.isExpandedOf<T>(
-      context,
-      widget.value,
-    );
-    final canCollapse = NakedAccordionScope.canCollapseOf<T>(
-      context,
-      widget.value,
-    );
-    final canExpand = NakedAccordionScope.canExpandOf<T>(context, widget.value);
+    // Simple, direct access to controller - no optimization needed.
+    // This matches Flutter's ExpansionPanelList pattern.
+    final controller = NakedAccordionScope.of<T>(context).controller;
 
-    // Get controller without creating a dependency (for toggle action).
-    final scope = NakedAccordionScope.of<T>(context);
-    final controller = scope.controller;
+    // Derive state directly from controller.
+    final isExpanded = controller.contains(widget.value);
+    final canCollapse =
+        isExpanded && (controller.values.length > controller.min);
+    final canExpand =
+        !isExpanded &&
+        (controller.max == null || controller.values.length < controller.max!);
 
     // Build the panel only when expanded.
     final Widget panel = isExpanded ? widget.child : const SizedBox.shrink();
