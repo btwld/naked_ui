@@ -724,6 +724,7 @@ void main() {
   group('Controller state management', () {
     testWidgets('previousTabId is set when switching tabs', (tester) async {
       final controller = NakedTabController(selectedTabId: 'tab1');
+      addTearDown(controller.dispose);
 
       await tester.pumpWidget(
         WidgetsApp(
@@ -774,6 +775,7 @@ void main() {
 
     testWidgets('selectPrevious returns to previous tab', (tester) async {
       final controller = NakedTabController(selectedTabId: 'tab1');
+      addTearDown(controller.dispose);
 
       await tester.pumpWidget(
         WidgetsApp(
