@@ -489,10 +489,19 @@ class _NakedAccordionState<T> extends State<NakedAccordion<T>>
 
   @override
   Widget build(BuildContext context) {
-    // Simple, direct access to controller - no optimization needed.
-    // This matches Flutter's ExpansionPanelList pattern.
+    // Get the controller from scope (does not create dependency on state changes).
     final controller = NakedAccordionScope.of<T>(context).controller;
 
+    // Each accordion item listens to the controller directly for state changes.
+    // This ensures rebuilds when expansion state changes, regardless of
+    // updateShouldNotify in the InheritedWidget (which only tracks controller identity).
+    return ListenableBuilder(
+      listenable: controller,
+      builder: (context, _) => _buildContent(context, controller),
+    );
+  }
+
+  Widget _buildContent(BuildContext context, NakedAccordionController<T> controller) {
     // Derive state directly from controller.
     final isExpanded = controller.contains(widget.value);
     final canCollapse =
