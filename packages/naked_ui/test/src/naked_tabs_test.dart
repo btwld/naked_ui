@@ -472,7 +472,9 @@ void main() {
   });
 
   group('Focus iteration limits', () {
-    testWidgets('focusFirstTab handles single tab gracefully', (tester) async {
+    testWidgets('Home/End keys on single tab complete without infinite loop', (
+      tester,
+    ) async {
       String selected = 'tab1';
       await tester.pumpWidget(
         WidgetsApp(
