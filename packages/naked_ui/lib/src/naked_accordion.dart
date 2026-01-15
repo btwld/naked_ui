@@ -261,20 +261,26 @@ class NakedAccordionController<T> with ChangeNotifier {
 
 /// Provides a [NakedAccordionController] to descendant widgets.
 ///
-/// This follows the simple pattern used by Flutter's own [ExpansionPanelList].
+/// This extends [InheritedNotifier] to automatically notify dependents when
+/// the controller's state changes, eliminating the need for explicit
+/// [ListenableBuilder] wrappers in accordion items.
+///
 /// All accordion items rebuild when any item changes state - this is intentional
 /// as Flutter's Element reconciliation efficiently handles widget reuse, and
 /// typical accordion usage involves only 2-5 items where optimization overhead
 /// exceeds any benefit.
-class NakedAccordionScope<T> extends InheritedWidget {
+class NakedAccordionScope<T>
+    extends InheritedNotifier<NakedAccordionController<T>> {
   const NakedAccordionScope({
     super.key,
-    required this.controller,
+    required NakedAccordionController<T> controller,
     required super.child,
-  });
+  }) : super(notifier: controller);
 
   /// The controller managing accordion expansion state.
-  final NakedAccordionController<T> controller;
+  ///
+  /// This is guaranteed non-null because the constructor requires it.
+  NakedAccordionController<T> get controller => notifier!;
 
   /// Returns the nearest [NakedAccordionScope] without asserting.
   static NakedAccordionScope<T>? maybeOf<T>(BuildContext context) {
@@ -288,14 +294,6 @@ class NakedAccordionScope<T> extends InheritedWidget {
       throw StateError('NakedAccordionScope<$T> not found in context.');
     }
     return scope;
-  }
-
-  @override
-  bool updateShouldNotify(covariant NakedAccordionScope<T> oldWidget) {
-    // Only notify dependents when controller instance changes.
-    // Controller state changes trigger rebuilds via ListenableBuilder,
-    // which marks all StatefulElements dirty through update() calls.
-    return controller != oldWidget.controller;
   }
 }
 
@@ -369,25 +367,28 @@ class _NakedAccordionGroupState<T> extends State<NakedAccordionGroup<T>> {
 
   @override
   Widget build(BuildContext context) {
-    // ListenableBuilder triggers rebuild when controller notifies.
-    // All accordion items rebuild on any change - this is intentional.
-    // Flutter's Element reconciliation handles widget reuse efficiently.
-    return ListenableBuilder(
-      listenable: _controller,
-      builder: (context, _) {
-        return NakedStateScope(
-          value: NakedAccordionGroupState(
-            states: const {},
-            expandedCount: _controller.values.length,
-            minExpanded: _controller.min,
-            maxExpanded: _controller.max,
-          ),
-          child: NakedAccordionScope<T>(
-            controller: _controller,
+    // NakedAccordionScope (InheritedNotifier) notifies dependents when
+    // controller state changes. The Builder below depends on the scope,
+    // so it rebuilds and updates NakedAccordionGroupState automatically.
+    return NakedAccordionScope<T>(
+      controller: _controller,
+      child: Builder(
+        builder: (context) {
+          // Create dependency on the InheritedNotifier.
+          // When controller notifies, this Builder rebuilds.
+          context.dependOnInheritedWidgetOfExactType<NakedAccordionScope<T>>();
+
+          return NakedStateScope(
+            value: NakedAccordionGroupState(
+              states: const {},
+              expandedCount: _controller.values.length,
+              minExpanded: _controller.min,
+              maxExpanded: _controller.max,
+            ),
             child: FocusTraversalGroup(child: widget.child),
-          ),
-        );
-      },
+          );
+        },
+      ),
     );
   }
 }
@@ -489,16 +490,12 @@ class _NakedAccordionState<T> extends State<NakedAccordion<T>>
 
   @override
   Widget build(BuildContext context) {
-    // Get the controller from scope (does not create dependency on state changes).
+    // Get the controller from scope. This creates a dependency on
+    // NakedAccordionScope (InheritedNotifier), so this widget rebuilds
+    // automatically when controller state changes.
     final controller = NakedAccordionScope.of<T>(context).controller;
 
-    // Each accordion item listens to the controller directly for state changes.
-    // This ensures rebuilds when expansion state changes, regardless of
-    // updateShouldNotify in the InheritedWidget (which only tracks controller identity).
-    return ListenableBuilder(
-      listenable: controller,
-      builder: (context, _) => _buildContent(context, controller),
-    );
+    return _buildContent(context, controller);
   }
 
   Widget _buildContent(BuildContext context, NakedAccordionController<T> controller) {
