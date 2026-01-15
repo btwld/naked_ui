@@ -614,10 +614,22 @@ class _NakedTextFieldState extends State<NakedTextField>
   EditableTextState? get _editableText => editableTextKey.currentState;
 
   @override
-  String get autofillId => _editableText!.autofillId;
+  String get autofillId {
+    // Return empty string if EditableText hasn't built yet.
+    // This can happen during the first frame before the child widget builds.
+    final editableText = _editableText;
+    if (editableText == null) return '';
+    return editableText.autofillId;
+  }
 
   @override
   TextInputConfiguration get textInputConfiguration {
+    final editableText = _editableText;
+    // Return a minimal configuration if EditableText hasn't built yet.
+    if (editableText == null) {
+      return const TextInputConfiguration();
+    }
+
     final List<String>? hints = widget.autofillHints?.toList(growable: false);
     final AutofillConfiguration ac = hints != null
         ? AutofillConfiguration(
@@ -628,7 +640,7 @@ class _NakedTextFieldState extends State<NakedTextField>
           )
         : AutofillConfiguration.disabled;
 
-    return _editableText!.textInputConfiguration.copyWith(
+    return editableText.textInputConfiguration.copyWith(
       autofillConfiguration: ac,
     );
   }

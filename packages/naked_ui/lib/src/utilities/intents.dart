@@ -211,45 +211,51 @@ class _SliderIntentActions {
     required bool enableFeedback,
   }) {
     return {
-      _SliderIncrementIntent: _SliderIncrementAction(
+      _SliderIncrementIntent: _SliderAdjustAction<_SliderIncrementIntent>(
         onChanged: onChanged,
         calculateStep: calculateStep,
         normalizeValue: normalizeValue,
         getCurrentValue: () => currentValue,
         enableFeedback: enableFeedback,
+        stepMultiplier: 1,
       ),
-      _SliderDecrementIntent: _SliderDecrementAction(
+      _SliderDecrementIntent: _SliderAdjustAction<_SliderDecrementIntent>(
         onChanged: onChanged,
         calculateStep: calculateStep,
         normalizeValue: normalizeValue,
         getCurrentValue: () => currentValue,
         enableFeedback: enableFeedback,
+        stepMultiplier: -1,
       ),
-      _SliderShiftIncrementIntent: _SliderIncrementAction(
+      _SliderShiftIncrementIntent:
+          _SliderAdjustAction<_SliderShiftIncrementIntent>(
+            onChanged: onChanged,
+            calculateStep: calculateStep,
+            normalizeValue: normalizeValue,
+            getCurrentValue: () => currentValue,
+            enableFeedback: enableFeedback,
+            stepMultiplier: 1,
+            isShiftPressed: true,
+          ),
+      _SliderShiftDecrementIntent:
+          _SliderAdjustAction<_SliderShiftDecrementIntent>(
+            onChanged: onChanged,
+            calculateStep: calculateStep,
+            normalizeValue: normalizeValue,
+            getCurrentValue: () => currentValue,
+            enableFeedback: enableFeedback,
+            stepMultiplier: -1,
+            isShiftPressed: true,
+          ),
+      _SliderSetToMinIntent: _SliderSetBoundAction<_SliderSetToMinIntent>(
         onChanged: onChanged,
-        calculateStep: calculateStep,
-        normalizeValue: normalizeValue,
+        getTargetValue: () => minValue,
         getCurrentValue: () => currentValue,
         enableFeedback: enableFeedback,
-        isShiftPressed: true,
       ),
-      _SliderShiftDecrementIntent: _SliderDecrementAction(
+      _SliderSetToMaxIntent: _SliderSetBoundAction<_SliderSetToMaxIntent>(
         onChanged: onChanged,
-        calculateStep: calculateStep,
-        normalizeValue: normalizeValue,
-        getCurrentValue: () => currentValue,
-        enableFeedback: enableFeedback,
-        isShiftPressed: true,
-      ),
-      _SliderSetToMinIntent: _SliderSetToMinAction(
-        onChanged: onChanged,
-        getMinValue: () => minValue,
-        getCurrentValue: () => currentValue,
-        enableFeedback: enableFeedback,
-      ),
-      _SliderSetToMaxIntent: _SliderSetToMaxAction(
-        onChanged: onChanged,
-        getMaxValue: () => maxValue,
+        getTargetValue: () => maxValue,
         getCurrentValue: () => currentValue,
         enableFeedback: enableFeedback,
       ),
@@ -437,27 +443,30 @@ class _SliderSetToMaxIntent extends Intent {
   const _SliderSetToMaxIntent();
 }
 
-/// Action: handles keyboard increment intent.
-class _SliderIncrementAction extends Action<_SliderIncrementIntent> {
+/// Action: handles keyboard increment/decrement intents.
+/// Uses [stepMultiplier] to determine direction: 1 for increment, -1 for decrement.
+class _SliderAdjustAction<T extends Intent> extends Action<T> {
   final ValueChanged<double> onChanged;
   final double Function(bool isShift) calculateStep;
   final double Function(double value) normalizeValue;
   final double Function() getCurrentValue;
   final bool enableFeedback;
   final bool isShiftPressed;
+  final int stepMultiplier;
 
-  _SliderIncrementAction({
+  _SliderAdjustAction({
     required this.onChanged,
     required this.calculateStep,
     required this.normalizeValue,
     required this.getCurrentValue,
     required this.enableFeedback,
+    required this.stepMultiplier,
     this.isShiftPressed = false,
   });
 
   @override
-  void invoke(_SliderIncrementIntent intent) {
-    final step = calculateStep(isShiftPressed);
+  void invoke(T intent) {
+    final step = calculateStep(isShiftPressed) * stepMultiplier;
     final currentValue = getCurrentValue();
     final newValue = normalizeValue(currentValue + step);
     if (enableFeedback && newValue != currentValue) {
@@ -467,82 +476,27 @@ class _SliderIncrementAction extends Action<_SliderIncrementIntent> {
   }
 }
 
-/// Action: handles keyboard decrement intent.
-class _SliderDecrementAction extends Action<_SliderDecrementIntent> {
+/// Action: handles keyboard set-to-min/max intents.
+class _SliderSetBoundAction<T extends Intent> extends Action<T> {
   final ValueChanged<double> onChanged;
-  final double Function(bool isShift) calculateStep;
-  final double Function(double value) normalizeValue;
-  final double Function() getCurrentValue;
-  final bool enableFeedback;
-  final bool isShiftPressed;
-
-  _SliderDecrementAction({
-    required this.onChanged,
-    required this.calculateStep,
-    required this.normalizeValue,
-    required this.getCurrentValue,
-    required this.enableFeedback,
-    this.isShiftPressed = false,
-  });
-
-  @override
-  void invoke(_SliderDecrementIntent intent) {
-    final step = calculateStep(isShiftPressed);
-    final currentValue = getCurrentValue();
-    final newValue = normalizeValue(currentValue - step);
-    if (enableFeedback && newValue != currentValue) {
-      HapticFeedback.selectionClick();
-    }
-    onChanged(newValue);
-  }
-}
-
-/// Action: handles keyboard set-to-min intent.
-class _SliderSetToMinAction extends Action<_SliderSetToMinIntent> {
-  final ValueChanged<double> onChanged;
-  final double Function() getMinValue;
+  final double Function() getTargetValue;
   final double Function() getCurrentValue;
   final bool enableFeedback;
 
-  _SliderSetToMinAction({
+  _SliderSetBoundAction({
     required this.onChanged,
-    required this.getMinValue,
+    required this.getTargetValue,
     required this.getCurrentValue,
     required this.enableFeedback,
   });
 
   @override
-  void invoke(_SliderSetToMinIntent intent) {
-    final minValue = getMinValue();
+  void invoke(T intent) {
+    final targetValue = getTargetValue();
     final currentValue = getCurrentValue();
-    if (enableFeedback && currentValue != minValue) {
+    if (enableFeedback && currentValue != targetValue) {
       HapticFeedback.selectionClick();
     }
-    onChanged(minValue);
-  }
-}
-
-/// Action: handles keyboard set-to-max intent.
-class _SliderSetToMaxAction extends Action<_SliderSetToMaxIntent> {
-  final ValueChanged<double> onChanged;
-  final double Function() getMaxValue;
-  final double Function() getCurrentValue;
-  final bool enableFeedback;
-
-  _SliderSetToMaxAction({
-    required this.onChanged,
-    required this.getMaxValue,
-    required this.getCurrentValue,
-    required this.enableFeedback,
-  });
-
-  @override
-  void invoke(_SliderSetToMaxIntent intent) {
-    final maxValue = getMaxValue();
-    final currentValue = getCurrentValue();
-    if (enableFeedback && currentValue != maxValue) {
-      HapticFeedback.selectionClick();
-    }
-    onChanged(maxValue);
+    onChanged(targetValue);
   }
 }
