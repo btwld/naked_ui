@@ -498,7 +498,10 @@ class _NakedAccordionState<T> extends State<NakedAccordion<T>>
     return _buildContent(context, controller);
   }
 
-  Widget _buildContent(BuildContext context, NakedAccordionController<T> controller) {
+  Widget _buildContent(
+    BuildContext context,
+    NakedAccordionController<T> controller,
+  ) {
     // Derive state directly from controller.
     final isExpanded = controller.contains(widget.value);
     final canCollapse =
