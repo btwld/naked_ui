@@ -67,9 +67,10 @@ void main() {
           controller.dispose();
         });
 
-        return NakedAccordionScope(
+        // Use NakedAccordionGroup which provides the scope internally.
+        return NakedAccordionGroup<String>(
           controller: controller,
-          child: NakedAccordion(
+          child: NakedAccordion<String>(
             value: 'item1',
             builder: (context, itemState) =>
                 builder(context, itemState, SizedBox()),

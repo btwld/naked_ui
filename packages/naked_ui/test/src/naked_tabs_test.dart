@@ -339,4 +339,504 @@ void main() {
       ),
     );
   });
+
+  group('Home/End keyboard navigation', () {
+    Widget threeTabHarness({
+      required String initialSelected,
+      Axis orientation = Axis.horizontal,
+      ValueChanged<String>? onChangedSpy,
+      Key? tab1Key,
+      Key? tab2Key,
+      Key? tab3Key,
+    }) {
+      String selected = initialSelected;
+      return WidgetsApp(
+        color: const Color(0xFF000000),
+        builder: (context, child) => child ?? const SizedBox.shrink(),
+        pageRouteBuilder: _defaultPageRouteBuilder,
+        home: Directionality(
+          textDirection: TextDirection.ltr,
+          child: StatefulBuilder(
+            builder: (context, setState) {
+              void handleChanged(String id) {
+                onChangedSpy?.call(id);
+                selected = id;
+                setState(() {});
+              }
+
+              return NakedTabs(
+                selectedTabId: selected,
+                onChanged: handleChanged,
+                orientation: orientation,
+                child: Column(
+                  children: [
+                    NakedTabBar(
+                      child: Row(
+                        children: [
+                          NakedTab(
+                            tabId: 'tab1',
+                            child: SizedBox(
+                              key: tab1Key ?? const Key('tab1'),
+                              width: 100,
+                              height: 40,
+                              child: const Center(child: Text('One')),
+                            ),
+                          ),
+                          NakedTab(
+                            tabId: 'tab2',
+                            child: SizedBox(
+                              key: tab2Key ?? const Key('tab2'),
+                              width: 100,
+                              height: 40,
+                              child: const Center(child: Text('Two')),
+                            ),
+                          ),
+                          NakedTab(
+                            tabId: 'tab3',
+                            child: SizedBox(
+                              key: tab3Key ?? const Key('tab3'),
+                              width: 100,
+                              height: 40,
+                              child: const Center(child: Text('Three')),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+        ),
+      );
+    }
+
+    testWidgets('Home key focuses first tab', (tester) async {
+      final changes = <String>[];
+      final tab1 = UniqueKey();
+      final tab2 = UniqueKey();
+      final tab3 = UniqueKey();
+
+      await tester.pumpWidget(
+        threeTabHarness(
+          initialSelected: 'tab2',
+          onChangedSpy: changes.add,
+          tab1Key: tab1,
+          tab2Key: tab2,
+          tab3Key: tab3,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Focus tab3 by tapping.
+      await tester.tap(find.byKey(tab3));
+      await tester.pump();
+      changes.clear();
+
+      // Press Home to focus first tab.
+      await tester.sendKeyEvent(LogicalKeyboardKey.home);
+      await tester.pump();
+
+      expect(changes.last, 'tab1');
+    });
+
+    testWidgets('End key focuses last tab', (tester) async {
+      final changes = <String>[];
+      final tab1 = UniqueKey();
+      final tab2 = UniqueKey();
+      final tab3 = UniqueKey();
+
+      await tester.pumpWidget(
+        threeTabHarness(
+          initialSelected: 'tab1',
+          onChangedSpy: changes.add,
+          tab1Key: tab1,
+          tab2Key: tab2,
+          tab3Key: tab3,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Focus tab1 by tapping.
+      await tester.tap(find.byKey(tab1));
+      await tester.pump();
+      changes.clear();
+
+      // Press End to focus last tab.
+      await tester.sendKeyEvent(LogicalKeyboardKey.end);
+      await tester.pump();
+
+      expect(changes.last, 'tab3');
+    });
+  });
+
+  group('Focus iteration limits', () {
+    testWidgets('Home/End keys on single tab complete without infinite loop', (
+      tester,
+    ) async {
+      String selected = 'tab1';
+      await tester.pumpWidget(
+        WidgetsApp(
+          color: const Color(0xFF000000),
+          builder: (context, child) => child ?? const SizedBox.shrink(),
+          pageRouteBuilder: _defaultPageRouteBuilder,
+          home: Directionality(
+            textDirection: TextDirection.ltr,
+            child: StatefulBuilder(
+              builder: (context, setState) {
+                return NakedTabs(
+                  selectedTabId: selected,
+                  onChanged: (id) {
+                    selected = id;
+                    setState(() {});
+                  },
+                  child: NakedTabBar(
+                    child: Row(
+                      children: [
+                        NakedTab(
+                          tabId: 'tab1',
+                          child: const SizedBox(
+                            key: Key('tab1'),
+                            width: 100,
+                            height: 40,
+                            child: Center(child: Text('One')),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Focus the single tab.
+      await tester.tap(find.byKey(const Key('tab1')));
+      await tester.pump();
+
+      // Press Home - should complete without hanging.
+      await tester.sendKeyEvent(LogicalKeyboardKey.home);
+      await tester.pump();
+
+      // Press End - should complete without hanging.
+      await tester.sendKeyEvent(LogicalKeyboardKey.end);
+      await tester.pump();
+
+      // If we get here, the test passed (no infinite loop).
+      expect(selected, 'tab1');
+    });
+  });
+
+  group('Directional focus with orientation', () {
+    Widget orientedHarness({
+      required String initialSelected,
+      required Axis orientation,
+      ValueChanged<String>? onChangedSpy,
+      Key? tab1Key,
+      Key? tab2Key,
+    }) {
+      String selected = initialSelected;
+      return WidgetsApp(
+        color: const Color(0xFF000000),
+        builder: (context, child) => child ?? const SizedBox.shrink(),
+        pageRouteBuilder: _defaultPageRouteBuilder,
+        home: Directionality(
+          textDirection: TextDirection.ltr,
+          child: StatefulBuilder(
+            builder: (context, setState) {
+              void handleChanged(String id) {
+                onChangedSpy?.call(id);
+                selected = id;
+                setState(() {});
+              }
+
+              return NakedTabs(
+                selectedTabId: selected,
+                onChanged: handleChanged,
+                orientation: orientation,
+                child: NakedTabBar(
+                  child: orientation == Axis.horizontal
+                      ? Row(
+                          children: [
+                            NakedTab(
+                              tabId: 'tab1',
+                              child: SizedBox(
+                                key: tab1Key ?? const Key('tab1'),
+                                width: 100,
+                                height: 40,
+                                child: const Center(child: Text('One')),
+                              ),
+                            ),
+                            NakedTab(
+                              tabId: 'tab2',
+                              child: SizedBox(
+                                key: tab2Key ?? const Key('tab2'),
+                                width: 100,
+                                height: 40,
+                                child: const Center(child: Text('Two')),
+                              ),
+                            ),
+                          ],
+                        )
+                      : Column(
+                          children: [
+                            NakedTab(
+                              tabId: 'tab1',
+                              child: SizedBox(
+                                key: tab1Key ?? const Key('tab1'),
+                                width: 100,
+                                height: 40,
+                                child: const Center(child: Text('One')),
+                              ),
+                            ),
+                            NakedTab(
+                              tabId: 'tab2',
+                              child: SizedBox(
+                                key: tab2Key ?? const Key('tab2'),
+                                width: 100,
+                                height: 40,
+                                child: const Center(child: Text('Two')),
+                              ),
+                            ),
+                          ],
+                        ),
+                ),
+              );
+            },
+          ),
+        ),
+      );
+    }
+
+    testWidgets('horizontal tabs respond to Left/Right arrows', (tester) async {
+      final changes = <String>[];
+      final tab1 = UniqueKey();
+      final tab2 = UniqueKey();
+
+      await tester.pumpWidget(
+        orientedHarness(
+          initialSelected: 'tab1',
+          orientation: Axis.horizontal,
+          onChangedSpy: changes.add,
+          tab1Key: tab1,
+          tab2Key: tab2,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byKey(tab1));
+      await tester.pump();
+      changes.clear();
+
+      await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
+      await tester.pump();
+
+      expect(changes.last, 'tab2');
+    });
+
+    testWidgets('horizontal tabs ignore Up/Down arrows', (tester) async {
+      final changes = <String>[];
+      final tab1 = UniqueKey();
+      final tab2 = UniqueKey();
+
+      await tester.pumpWidget(
+        orientedHarness(
+          initialSelected: 'tab1',
+          orientation: Axis.horizontal,
+          onChangedSpy: changes.add,
+          tab1Key: tab1,
+          tab2Key: tab2,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byKey(tab1));
+      await tester.pump();
+      changes.clear();
+
+      // Up/Down should not change selection in horizontal mode.
+      await tester.sendKeyEvent(LogicalKeyboardKey.arrowUp);
+      await tester.pump();
+      await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
+      await tester.pump();
+
+      expect(changes, isEmpty);
+    });
+
+    testWidgets('vertical tabs respond to Up/Down arrows', (tester) async {
+      final changes = <String>[];
+      final tab1 = UniqueKey();
+      final tab2 = UniqueKey();
+
+      await tester.pumpWidget(
+        orientedHarness(
+          initialSelected: 'tab1',
+          orientation: Axis.vertical,
+          onChangedSpy: changes.add,
+          tab1Key: tab1,
+          tab2Key: tab2,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byKey(tab1));
+      await tester.pump();
+      changes.clear();
+
+      await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
+      await tester.pump();
+
+      expect(changes.last, 'tab2');
+    });
+
+    testWidgets('vertical tabs ignore Left/Right arrows', (tester) async {
+      final changes = <String>[];
+      final tab1 = UniqueKey();
+      final tab2 = UniqueKey();
+
+      await tester.pumpWidget(
+        orientedHarness(
+          initialSelected: 'tab1',
+          orientation: Axis.vertical,
+          onChangedSpy: changes.add,
+          tab1Key: tab1,
+          tab2Key: tab2,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byKey(tab1));
+      await tester.pump();
+      changes.clear();
+
+      // Left/Right should not change selection in vertical mode.
+      await tester.sendKeyEvent(LogicalKeyboardKey.arrowLeft);
+      await tester.pump();
+      await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
+      await tester.pump();
+
+      expect(changes, isEmpty);
+    });
+  });
+
+  group('Controller state management', () {
+    testWidgets('previousTabId is set when switching tabs', (tester) async {
+      final controller = NakedTabController(selectedTabId: 'tab1');
+      addTearDown(controller.dispose);
+
+      await tester.pumpWidget(
+        WidgetsApp(
+          color: const Color(0xFF000000),
+          builder: (context, child) => child ?? const SizedBox.shrink(),
+          pageRouteBuilder: _defaultPageRouteBuilder,
+          home: Directionality(
+            textDirection: TextDirection.ltr,
+            child: NakedTabs(
+              controller: controller,
+              child: NakedTabBar(
+                child: Row(
+                  children: [
+                    NakedTab(
+                      tabId: 'tab1',
+                      child: const SizedBox(
+                        key: Key('tab1'),
+                        width: 100,
+                        height: 40,
+                      ),
+                    ),
+                    NakedTab(
+                      tabId: 'tab2',
+                      child: const SizedBox(
+                        key: Key('tab2'),
+                        width: 100,
+                        height: 40,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(controller.previousTabId, isNull);
+
+      // Select tab2.
+      await tester.tap(find.byKey(const Key('tab2')));
+      await tester.pump();
+
+      expect(controller.selectedTabId, 'tab2');
+      expect(controller.previousTabId, 'tab1');
+    });
+
+    testWidgets('selectPrevious returns to previous tab', (tester) async {
+      final controller = NakedTabController(selectedTabId: 'tab1');
+      addTearDown(controller.dispose);
+
+      await tester.pumpWidget(
+        WidgetsApp(
+          color: const Color(0xFF000000),
+          builder: (context, child) => child ?? const SizedBox.shrink(),
+          pageRouteBuilder: _defaultPageRouteBuilder,
+          home: Directionality(
+            textDirection: TextDirection.ltr,
+            child: NakedTabs(
+              controller: controller,
+              child: NakedTabBar(
+                child: Row(
+                  children: [
+                    NakedTab(
+                      tabId: 'tab1',
+                      child: const SizedBox(
+                        key: Key('tab1'),
+                        width: 100,
+                        height: 40,
+                      ),
+                    ),
+                    NakedTab(
+                      tabId: 'tab2',
+                      child: const SizedBox(
+                        key: Key('tab2'),
+                        width: 100,
+                        height: 40,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Select tab2.
+      await tester.tap(find.byKey(const Key('tab2')));
+      await tester.pump();
+      expect(controller.selectedTabId, 'tab2');
+
+      // Go back to previous.
+      controller.selectPrevious();
+      expect(controller.selectedTabId, 'tab1');
+    });
+
+    testWidgets('selectPrevious does nothing when no previous tab', (
+      tester,
+    ) async {
+      final controller = NakedTabController(selectedTabId: 'tab1');
+
+      // Call selectPrevious without ever switching tabs.
+      controller.selectPrevious();
+
+      // Should remain on tab1.
+      expect(controller.selectedTabId, 'tab1');
+      expect(controller.previousTabId, isNull);
+    });
+  });
 }
