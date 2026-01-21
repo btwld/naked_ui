@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart' as m;
 import 'package:flutter/gestures.dart' show kLongPressTimeout;
-import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:naked_ui/naked_ui.dart';
@@ -45,27 +44,7 @@ void main() {
       expect(wasPressed, isFalse);
     });
 
-    testWidgets('does not respond to keyboard when disabled', (
-      WidgetTester tester,
-    ) async {
-      bool wasPressed = false;
-      await tester.pumpMaterialWidget(
-        NakedButton(
-          autofocus: true,
-          onPressed: () => wasPressed = true,
-          enabled: false,
-          child: const Text('Test Button'),
-        ),
-      );
-
-      await tester.sendKeyEvent(LogicalKeyboardKey.enter);
-      await tester.pump();
-      expect(wasPressed, isFalse);
-
-      await tester.sendKeyEvent(LogicalKeyboardKey.space);
-      await tester.pump();
-      expect(wasPressed, isFalse);
-    });
+    // Keyboard interaction tests moved to focus/button_focus_test.dart
 
     testWidgets('does not respond when onPressed is null', (
       WidgetTester tester,
@@ -301,95 +280,7 @@ void main() {
     );
   });
 
-  group('Keyboard Interaction', () {
-    testWidgets('activates with Space key', (WidgetTester tester) async {
-      bool wasPressed = false;
-
-      await tester.pumpMaterialWidget(
-        NakedButton(
-          autofocus: true,
-          onPressed: () => wasPressed = true,
-          child: const Text('Test Button'),
-        ),
-      );
-
-      await tester.sendKeyEvent(LogicalKeyboardKey.space);
-      await tester.pump();
-
-      expect(wasPressed, true);
-    });
-
-    testWidgets('activates with Enter key', (WidgetTester tester) async {
-      bool wasPressed = false;
-      await tester.pumpMaterialWidget(
-        NakedButton(
-          onPressed: () => wasPressed = true,
-          child: const Text('Test Button'),
-        ),
-      );
-
-      await tester.tap(find.byType(NakedButton));
-      await tester.pump();
-
-      await tester.sendKeyEvent(LogicalKeyboardKey.enter);
-      await tester.pump();
-
-      expect(wasPressed, true);
-    });
-  });
-
-  group('Focus Behavior', () {
-    testWidgets('focusOnPress requests focus when button is pressed', (
-      WidgetTester tester,
-    ) async {
-      final focusNode = FocusNode();
-      final key = UniqueKey();
-
-      await tester.pumpMaterialWidget(
-        NakedButton(
-          key: key,
-          onPressed: () {},
-          focusOnPress: true,
-          focusNode: focusNode,
-          child: const Text('Focus On Press'),
-        ),
-      );
-
-      expect(focusNode.hasFocus, isFalse);
-
-      // Tap the button
-      await tester.tap(find.byKey(key));
-      await tester.pump();
-
-      expect(focusNode.hasFocus, isTrue);
-    });
-
-    testWidgets('focusOnPress false does not request focus on press', (
-      WidgetTester tester,
-    ) async {
-      final focusNode = FocusNode();
-      final key = UniqueKey();
-
-      await tester.pumpMaterialWidget(
-        NakedButton(
-          key: key,
-          onPressed: () {},
-          focusOnPress: false, // default
-          focusNode: focusNode,
-          child: const Text('No Focus On Press'),
-        ),
-      );
-
-      expect(focusNode.hasFocus, isFalse);
-
-      // Tap the button
-      await tester.tap(find.byKey(key));
-      await tester.pump();
-
-      // Focus should not have been requested
-      expect(focusNode.hasFocus, isFalse);
-    });
-  });
+  // Keyboard Interaction tests moved to focus/button_focus_test.dart
 
   group('Cursor', () {
     testWidgets('shows appropriate cursor based on interactive state', (

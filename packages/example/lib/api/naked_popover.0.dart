@@ -64,6 +64,7 @@ class MyApp extends StatelessWidget {
             ],
           ),
         ),
+        drawerEnableOpenDragGesture: true,
       ),
     );
   }
@@ -78,6 +79,7 @@ class PopoverExample extends StatefulWidget {
 
 class _PopoverExampleState extends State<PopoverExample> {
   final _controller = MenuController();
+  bool isFocused = false;
 
   @override
   Widget build(BuildContext context) {
@@ -93,7 +95,7 @@ class _PopoverExampleState extends State<PopoverExample> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
-          color: const Color(0xFF3D3D3D),
+          color: isFocused ? Colors.red.shade300 : Color(0xFF3D3D3D),
           borderRadius: BorderRadius.circular(8),
         ),
         child: const Text(
@@ -114,7 +116,7 @@ class PopoverMenu extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       constraints: const BoxConstraints(maxWidth: 280),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding: const EdgeInsets.fromLTRB(16, 12, 8, 12),
       decoration: BoxDecoration(
         color: Colors.grey.shade50,
         borderRadius: BorderRadius.circular(8),
@@ -137,9 +139,9 @@ class PopoverMenu extends StatelessWidget {
                 'Popover Content',
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
               ),
-              GestureDetector(
-                onTap: controller.close,
-                child: const Icon(Icons.close, size: 16),
+              IconButton(
+                onPressed: controller.close,
+                icon: const Icon(Icons.close, size: 16),
               ),
             ],
           ),
@@ -152,22 +154,10 @@ class PopoverMenu extends StatelessWidget {
           const SizedBox(height: 4),
           Align(
             alignment: Alignment.centerRight,
-            child: GestureDetector(
-              onTap: controller.close,
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 8,
-                ),
-                decoration: BoxDecoration(
-                  color: Colors.grey.shade200,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text(
-                  'Next',
-                  style: TextStyle(color: Colors.grey.shade600),
-                ),
-              ),
+            child: TextButton(
+              autofocus: true,
+              onPressed: controller.close,
+              child: const Text('Next'),
             ),
           ),
         ],

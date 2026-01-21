@@ -1,3 +1,4 @@
+import 'package:flutter/scheduler.dart';
 import 'package:flutter/widgets.dart';
 
 import 'utilities/intents.dart';
@@ -245,20 +246,7 @@ class _NakedPopoverState extends State<NakedPopover> {
           child: TapRegion(
             onTapOutside: (event) => _menuController.close(),
             groupId: info.tapRegionGroupId,
-            child: FocusTraversalGroup(
-              child: Shortcuts(
-                shortcuts: NakedIntentActions.menu.shortcuts,
-                child: Actions(
-                  actions: NakedIntentActions.menu.actions(
-                    onDismiss: () => _menuController.close(),
-                    onNextFocus: () => FocusScope.of(context).nextFocus(),
-                    onPreviousFocus: () =>
-                        FocusScope.of(context).previousFocus(),
-                  ),
-                  child: widget.popoverBuilder(context, info),
-                ),
-              ),
-            ),
+            child: FocusScope(child: widget.popoverBuilder(context, info)),
           ),
         );
       },

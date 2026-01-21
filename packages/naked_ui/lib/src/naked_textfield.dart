@@ -17,7 +17,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
 import 'mixins/naked_mixins.dart';
-import 'utilities/naked_focusable_detector.dart';
 import 'utilities/naked_state_scope.dart';
 import 'utilities/state.dart';
 
@@ -795,6 +794,11 @@ class _NakedTextFieldState extends State<NakedTextField>
               multiline: (widget.maxLines ?? 1) > 1,
               maxValueLength: widget.maxLength,
               currentValueLength: controller.text.length,
+              onFocus:
+                  defaultTargetPlatform != TargetPlatform.iOS &&
+                      _effectiveFocusNode.canRequestFocus
+                  ? focusNode.requestFocus
+                  : null,
               label: widget.semanticLabel,
               value: widget.obscureText ? null : controller.text,
               hint: widget.semanticHint,
@@ -817,16 +821,10 @@ class _NakedTextFieldState extends State<NakedTextField>
           withSemantics(widget.builder!(context, value, child!)),
     );
 
-    final Widget composedWithFocusSemantics = NakedFocusableDetector(
-      enabled: widget.enabled,
-      includeSemantics: true,
-      child: content,
-    );
-
     final Widget detector = _selectionGestureDetectorBuilder
         .buildGestureDetector(
           behavior: HitTestBehavior.translucent,
-          child: composedWithFocusSemantics,
+          child: content,
         );
 
     final Widget maybeMouseRegion = widget.enabled

@@ -1,3 +1,4 @@
+import 'package:flutter/scheduler.dart';
 import 'package:flutter/widgets.dart';
 
 import 'utilities/intents.dart';
@@ -89,9 +90,12 @@ Future<T?> showNakedDialog<T>({
 /// When [modal] is true, blocks background content interaction and
 /// configures screen reader route semantics.
 ///
+/// Automatically focuses the first focusable descendant when mounted,
+/// following ARIA dialog focus behavior.
+///
 /// See also:
 /// - [showNakedDialog], the function that displays dialogs.
-class NakedDialog extends StatelessWidget {
+class NakedDialog extends StatefulWidget {
   const NakedDialog({
     super.key,
     required this.child,
@@ -115,19 +119,43 @@ class NakedDialog extends StatelessWidget {
   final bool excludeSemantics;
 
   @override
+  State<NakedDialog> createState() => _NakedDialogState();
+}
+
+class _NakedDialogState extends State<NakedDialog> {
+  @override
+  void initState() {
+    super.initState();
+    SchedulerBinding.instance.addPostFrameCallback((_) {
+      _focusFirstFocusable();
+    });
+  }
+
+  void _focusFirstFocusable() {
+    if (!mounted) return;
+
+    final scope = FocusScope.of(context);
+    // Find the first focusable descendant and focus it
+    final firstFocusable = scope.traversalDescendants.firstOrNull;
+    if (firstFocusable != null && firstFocusable.canRequestFocus) {
+      firstFocusable.requestFocus();
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    Widget dialog = excludeSemantics
-        ? child
+    Widget dialog = widget.excludeSemantics
+        ? widget.child
         : Semantics(
             container: true,
             explicitChildNodes: true,
-            scopesRoute: modal,
-            namesRoute: modal,
-            label: semanticLabel,
-            child: child,
+            scopesRoute: widget.modal,
+            namesRoute: widget.modal,
+            label: widget.semanticLabel,
+            child: widget.child,
           );
 
-    if (modal && !excludeSemantics) {
+    if (widget.modal && !widget.excludeSemantics) {
       dialog = BlockSemantics(child: dialog);
     }
 
