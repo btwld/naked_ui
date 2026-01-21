@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart' as m;
-import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:naked_ui/naked_ui.dart';
+
+// Note: Keyboard interaction and focus behavior tests are in focus/checkbox_focus_test.dart
 
 import '../test_helpers.dart';
 import 'helpers/builder_state_scope.dart';
@@ -253,55 +254,6 @@ void main() {
       focusNodeOther.requestFocus();
       await tester.pump();
       expect(isFocused, false);
-    });
-  });
-
-  group('Keyboard Interaction', () {
-    testWidgets('toggles with Space key', (WidgetTester tester) async {
-      bool isChecked = false;
-
-      final focusNode = FocusNode();
-      await tester.pumpMaterialWidget(
-        NakedCheckbox(
-          value: isChecked,
-          autofocus: true,
-          onChanged: (value) => isChecked = value!,
-          focusNode: focusNode,
-          child: const Text('Checkbox Label'),
-        ),
-      );
-
-      // Give time for autofocus to take effect
-      await tester.pump();
-
-      expect(isChecked, false);
-
-      await tester.sendKeyEvent(LogicalKeyboardKey.space);
-      await tester.pump();
-
-      expect(isChecked, true);
-    });
-
-    testWidgets('toggles with Enter key', (WidgetTester tester) async {
-      bool isChecked = false;
-      final focusNode = FocusNode();
-      await tester.pumpMaterialWidget(
-        NakedCheckbox(
-          value: isChecked,
-          onChanged: (value) => isChecked = value!,
-          focusNode: focusNode,
-          autofocus: true,
-          child: const Text('Checkbox Label'),
-        ),
-      );
-
-      // Give time for autofocus to take effect
-      await tester.pump();
-
-      await tester.sendKeyEvent(LogicalKeyboardKey.enter);
-      await tester.pump();
-
-      expect(isChecked, true);
     });
   });
 
