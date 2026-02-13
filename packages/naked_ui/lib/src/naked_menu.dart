@@ -271,8 +271,9 @@ class NakedMenu<T> extends StatefulWidget {
   State<NakedMenu<T>> createState() => _NakedMenuState<T>();
 }
 
-class _NakedMenuState<T> extends State<NakedMenu<T>>
-    with OverlayStateMixin<NakedMenu<T>> {
+class _NakedMenuState<T> extends State<NakedMenu<T>> {
+  bool _selectionMadeDuringSession = false;
+
   bool get _isOpen => widget.controller.isOpen;
 
   void _toggle() => widget.controller.isOpen
@@ -280,19 +281,20 @@ class _NakedMenuState<T> extends State<NakedMenu<T>>
       : widget.controller.open();
 
   void _handleOpen() {
-    handleOpen(widget.onOpen);
+    _selectionMadeDuringSession = false;
+    widget.onOpen?.call();
   }
 
   void _handleClose() {
-    handleClose(
-      onClose: widget.onClose,
-      onCanceled: widget.onCanceled,
-      triggerFocusNode: widget.triggerFocusNode,
-    );
+    if (!_selectionMadeDuringSession) {
+      widget.onCanceled?.call();
+    }
+    widget.onClose?.call();
+    widget.triggerFocusNode?.requestFocus();
   }
 
   void _handleSelection(T value) {
-    markSelectionMade();
+    _selectionMadeDuringSession = true;
     widget.onSelected?.call(value);
   }
 

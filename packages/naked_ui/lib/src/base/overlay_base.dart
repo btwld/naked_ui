@@ -3,7 +3,6 @@
 /// This file provides:
 /// - [OverlayScope]: InheritedWidget pattern for overlay context
 /// - [OverlayItem]: Base class for overlay items (actions/options)
-/// - [OverlayStateMixin]: State management for overlay widgets
 library;
 
 import 'package:flutter/widgets.dart';
@@ -126,57 +125,5 @@ abstract class OverlayItem<T, S extends NakedState> extends StatelessWidget {
               return builder!(context, mapStates(effectiveStates), child);
             },
     );
-  }
-}
-
-// State management utilities for overlay widgets
-
-/// Mixin that provides common state management for overlay widgets.
-///
-/// This mixin handles the shared patterns for tracking selection sessions
-/// and managing overlay lifecycle callbacks.
-mixin OverlayStateMixin<T extends StatefulWidget> on State<T> {
-  /// Tracks whether a selection was made during the current overlay session.
-  ///
-  /// This is used to determine whether to call onCanceled callback when
-  /// the overlay closes.
-  bool _selectionMadeDuringSession = false;
-
-  /// Returns whether a selection was made during the current session.
-  @protected
-  bool get selectionMadeDuringSession => _selectionMadeDuringSession;
-
-  /// Handles overlay opening logic.
-  ///
-  /// Resets the selection tracking and calls the provided [onOpen] callback.
-  @protected
-  void handleOpen(VoidCallback? onOpen) {
-    _selectionMadeDuringSession = false;
-    onOpen?.call();
-  }
-
-  /// Handles overlay closing logic.
-  ///
-  /// If no selection was made during the session, calls [onCanceled].
-  /// Always calls [onClose] and optionally requests focus on [triggerFocusNode].
-  @protected
-  void handleClose({
-    VoidCallback? onClose,
-    VoidCallback? onCanceled,
-    FocusNode? triggerFocusNode,
-  }) {
-    if (!_selectionMadeDuringSession) {
-      onCanceled?.call();
-    }
-    onClose?.call();
-    triggerFocusNode?.requestFocus();
-  }
-
-  /// Marks that a selection was made during the current session.
-  ///
-  /// This prevents the onCanceled callback from being called when the overlay closes.
-  @protected
-  void markSelectionMade() {
-    _selectionMadeDuringSession = true;
   }
 }

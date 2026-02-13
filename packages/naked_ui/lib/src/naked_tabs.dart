@@ -364,8 +364,10 @@ class _NakedTabState extends State<NakedTab>
     }
   }
 
-  /// Maximum iterations for focus traversal to prevent infinite loops.
-  static const int _maxFocusIterations = 100;
+  int _maxFocusIterations(FocusScopeNode scope) {
+    final traversalCount = scope.traversalDescendants.length;
+    return traversalCount > 0 ? traversalCount : 1;
+  }
 
   void _focusFirstTab() {
     // Find the first tab in the current tab group
@@ -375,7 +377,7 @@ class _NakedTabState extends State<NakedTab>
     // Limit iterations to prevent infinite loops in circular focus scenarios.
     for (
       int i = 0;
-      i < _maxFocusIterations &&
+      i < _maxFocusIterations(scope) &&
           scope.focusInDirection(TraversalDirection.left);
       i++
     ) {
@@ -391,7 +393,7 @@ class _NakedTabState extends State<NakedTab>
     // Limit iterations to prevent infinite loops in circular focus scenarios.
     for (
       int i = 0;
-      i < _maxFocusIterations &&
+      i < _maxFocusIterations(scope) &&
           scope.focusInDirection(TraversalDirection.right);
       i++
     ) {

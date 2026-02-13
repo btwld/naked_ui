@@ -181,11 +181,11 @@ class NakedSelectOption<T> extends OverlayItem<T, NakedSelectOptionState<T>> {
 /// - **Escape**: Closes the overlay and returns focus to trigger
 /// - **Click outside**: Closes the overlay (if [closeOnClickOutside] is true)
 ///
-/// ### Navigating Items
-/// - **Arrow Up/Down**: Navigate between focusable items in the overlay
-/// - **Enter/Space on item**: Selects the focused item
-/// - **Tab**: Moves focus through items in traversal order
-/// - **PageUp/PageDown**: Move focus by ~10 traversal steps (policy-driven)
+  /// ### Navigating Items
+  /// - **Arrow Up/Down**: Navigate between focusable items in the overlay
+  /// - **Enter/Space on item**: Selects the focused item
+  /// - **Tab**: Moves focus through items in traversal order
+  /// - **PageUp/PageDown**: Move focus by a configurable jump size
 ///
 /// ### Focus Management
 /// When the overlay opens, focus transfers to the overlay container but does NOT
@@ -225,6 +225,7 @@ class NakedSelect<T> extends StatefulWidget {
     this.onChanged,
     this.closeOnSelect = true,
     this.closeOnClickOutside = true,
+    this.pageJumpSize,
     this.enabled = true,
     this.triggerFocusNode,
     this.semanticLabel,
@@ -243,6 +244,10 @@ class NakedSelect<T> extends StatefulWidget {
   }) : assert(
          child != null || builder != null,
          'Either child or builder must be provided',
+       ),
+       assert(
+         pageJumpSize == null || pageJumpSize > 0,
+         'pageJumpSize must be greater than 0',
        );
 
   /// Type alias for [NakedSelectOption] for cleaner API access.
@@ -268,6 +273,12 @@ class NakedSelect<T> extends StatefulWidget {
 
   /// Whether tapping outside closes the menu.
   final bool closeOnClickOutside;
+
+  /// Number of items to jump for PageUp/PageDown.
+  ///
+  /// When null, the jump size is derived from the number of focusable options
+  /// in the overlay, capped to a reasonable upper bound.
+  final int? pageJumpSize;
 
   /// Whether the select is interactive.
   final bool enabled;
@@ -307,14 +318,16 @@ class NakedSelect<T> extends StatefulWidget {
   State<NakedSelect<T>> createState() => _NakedSelectState<T>();
 }
 
-class _NakedSelectState<T> extends State<NakedSelect<T>>
-    with OverlayStateMixin<NakedSelect<T>> {
+class _NakedSelectState<T> extends State<NakedSelect<T>> {
+  bool _selectionMadeDuringSession = false;
+
   // ignore: dispose-fields
+  // MenuController does not expose dispose; lifecycle is managed by RawMenuAnchor.
   late final MenuController _menuController;
   T? _internalValue;
 
-  /// Number of items to jump when pressing PageUp/PageDown.
-  static const int _pageJumpSize = 10;
+  /// Maximum number of items to jump when no explicit jump size is provided.
+  static const int _defaultPageJumpFallback = 10;
 
   @override
   void initState() {
@@ -329,23 +342,34 @@ class _NakedSelectState<T> extends State<NakedSelect<T>>
       _menuController.isOpen ? _menuController.close() : _menuController.open();
 
   void _handleOpen() {
-    handleOpen(widget.onOpen);
+    _selectionMadeDuringSession = false;
+    widget.onOpen?.call();
   }
 
   void _handleClose() {
-    handleClose(
-      onClose: widget.onClose,
-      onCanceled: widget.onCanceled,
-      triggerFocusNode: widget.triggerFocusNode,
-    );
+    if (!_selectionMadeDuringSession) {
+      widget.onCanceled?.call();
+    }
+    widget.onClose?.call();
+    widget.triggerFocusNode?.requestFocus();
   }
 
   void _handleSelection(T? value) {
-    markSelectionMade();
+    _selectionMadeDuringSession = true;
     setState(() {
       _internalValue = value;
     });
     widget.onChanged?.call(value);
+  }
+
+  int _pageJumpSizeForScope(FocusScopeNode focusScope) {
+    final configured = widget.pageJumpSize;
+    if (configured != null) return configured;
+    final traversalCount = focusScope.traversalDescendants.length;
+    if (traversalCount <= 0) return 1;
+    return traversalCount < _defaultPageJumpFallback
+        ? traversalCount
+        : _defaultPageJumpFallback;
   }
 
   void _handlePageUp() {
@@ -353,7 +377,8 @@ class _NakedSelectState<T> extends State<NakedSelect<T>>
     final primaryFocus = FocusManager.instance.primaryFocus;
     if (primaryFocus?.context == null) return;
     final focusScope = FocusScope.of(primaryFocus!.context!);
-    for (var i = 0; i < _pageJumpSize; i++) {
+    final jumpSize = _pageJumpSizeForScope(focusScope);
+    for (var i = 0; i < jumpSize; i++) {
       focusScope.previousFocus();
     }
   }
@@ -363,7 +388,8 @@ class _NakedSelectState<T> extends State<NakedSelect<T>>
     final primaryFocus = FocusManager.instance.primaryFocus;
     if (primaryFocus?.context == null) return;
     final focusScope = FocusScope.of(primaryFocus!.context!);
-    for (var i = 0; i < _pageJumpSize; i++) {
+    final jumpSize = _pageJumpSizeForScope(focusScope);
+    for (var i = 0; i < jumpSize; i++) {
       focusScope.nextFocus();
     }
   }

@@ -648,6 +648,204 @@ class _NakedTextFieldState extends State<NakedTextField>
   @override
   String? get restorationId => widget.restorationId;
 
+  List<TextInputFormatter> _buildInputFormatters() {
+    return <TextInputFormatter>[
+      ...?widget.inputFormatters,
+      if (widget.maxLength != null)
+        LengthLimitingTextInputFormatter(
+          widget.maxLength,
+          maxLengthEnforcement: _effectiveMaxLengthEnforcement,
+        ),
+    ];
+  }
+
+  Widget _buildEditableText({
+    required TextEditingController controller,
+    required FocusNode focusNode,
+    required List<TextInputFormatter> inputFormatters,
+    required _PlatformDefaults platformDefaults,
+    required TextSelectionControls? selectionControls,
+    required TextMagnifierConfiguration magnifier,
+    required Brightness keyboardAppearance,
+    required SpellCheckConfiguration spellCheck,
+  }) {
+    return Builder(
+      builder: (context) {
+        final TextStyle textStyle =
+            widget.style ?? DefaultTextStyle.of(context).style;
+
+        return EditableText(
+          key: editableTextKey,
+          controller: controller,
+          focusNode: focusNode,
+          readOnly: widget.readOnly || !widget.enabled,
+          obscuringCharacter: widget.obscuringCharacter,
+          obscureText: widget.obscureText,
+          autocorrect: widget.autocorrect,
+          smartDashesType: widget.smartDashesType,
+          smartQuotesType: widget.smartQuotesType,
+          enableSuggestions: widget.enableSuggestions,
+          style: textStyle,
+          strutStyle: widget.strutStyle,
+          cursorColor: platformDefaults.cursorColor,
+          backgroundCursorColor: _neutralBgCursor,
+          textAlign: widget.textAlign,
+          textDirection: widget.textDirection,
+          maxLines: widget.maxLines,
+          minLines: widget.minLines,
+          expands: widget.expands,
+          autofocus: widget.autofocus,
+          showCursor: widget.showCursor,
+          showSelectionHandles: _showSelectionHandles,
+          selectionColor: focusNode.hasFocus ? platformDefaults.selectionColor : null,
+          selectionControls: selectionControls,
+          keyboardType: widget.keyboardType,
+          textInputAction: widget.textInputAction,
+          textCapitalization: widget.textCapitalization,
+          onChanged: widget.onChanged,
+          onEditingComplete: widget.onEditingComplete,
+          onSubmitted: widget.onSubmitted,
+          onAppPrivateCommand: widget.onAppPrivateCommand,
+          onSelectionChanged: _handleSelectionChanged,
+          onSelectionHandleTapped: _handleSelectionHandleTapped,
+          groupId: widget.groupId,
+          onTapOutside: widget.onTapOutside,
+          onTapUpOutside: widget.onTapUpOutside,
+          inputFormatters: inputFormatters,
+          rendererIgnoresPointer: true,
+          cursorWidth: widget.cursorWidth,
+          cursorHeight: widget.cursorHeight,
+          cursorRadius: platformDefaults.cursorRadius,
+          cursorOpacityAnimates: platformDefaults.cursorOpacityAnimates,
+          cursorOffset: platformDefaults.cursorOffset,
+          paintCursorAboveText: platformDefaults.paintCursorAboveText,
+          selectionHeightStyle: widget.selectionHeightStyle,
+          selectionWidthStyle: widget.selectionWidthStyle,
+          scrollPadding: widget.scrollPadding,
+          keyboardAppearance: keyboardAppearance,
+          dragStartBehavior: widget.dragStartBehavior,
+          enableInteractiveSelection: widget.enableInteractiveSelection,
+          scrollController: widget.scrollController,
+          scrollPhysics: widget.scrollPhysics,
+          autofillClient: this,
+          clipBehavior: widget.clipBehavior,
+          restorationId: widget.restorationId == null
+              ? null
+              : '${widget.restorationId!}.editable',
+          stylusHandwritingEnabled: widget.stylusHandwritingEnabled,
+          enableIMEPersonalizedLearning: widget.enableIMEPersonalizedLearning,
+          contentInsertionConfiguration: widget.contentInsertionConfiguration,
+          contextMenuBuilder: widget.contextMenuBuilder,
+          spellCheckConfiguration: spellCheck,
+          magnifierConfiguration: magnifier,
+          undoController: widget.undoController,
+        );
+      },
+    );
+  }
+
+  Widget _wrapEditable(Widget editable) {
+    return TextFieldTapRegion(
+      child: IgnorePointer(
+        ignoring: widget.ignorePointers ?? !widget.enabled,
+        child: RepaintBoundary(
+          child: UnmanagedRestorationScope(bucket: bucket, child: editable),
+        ),
+      ),
+    );
+  }
+
+  void _handleSemanticTap(TextEditingController controller) {
+    widget.onTap?.call();
+    if (!widget.readOnly) {
+      if (!controller.selection.isValid) {
+        controller.selection = TextSelection.collapsed(
+          offset: controller.text.length,
+        );
+      }
+      _requestKeyboard();
+    }
+  }
+
+  Widget _wrapSemantics({
+    required Widget child,
+    required TextEditingController controller,
+    required FocusNode focusNode,
+  }) {
+    return widget.excludeSemantics
+        ? child
+        : Semantics(
+            container: true,
+            enabled: widget.enabled,
+            textField: true,
+            readOnly: widget.readOnly || !widget.enabled,
+            focusable: widget.enabled,
+            focused: widget.enabled ? focusNode.hasFocus : null,
+            obscured: widget.obscureText,
+            multiline: (widget.maxLines ?? 1) > 1,
+            maxValueLength: widget.maxLength,
+            currentValueLength: controller.text.length,
+            label: widget.semanticLabel,
+            value: widget.obscureText ? null : controller.text,
+            hint: widget.semanticHint,
+            onTap: (widget.enabled && !widget.readOnly)
+                ? () => _handleSemanticTap(controller)
+                : null,
+            child: child,
+          );
+  }
+
+  Widget _buildContent({
+    required Widget editable,
+    required TextEditingController controller,
+    required FocusNode focusNode,
+  }) {
+    final textFieldState = NakedTextFieldState(
+      states: {...widgetStates, if (focusNode.hasFocus) WidgetState.focused},
+      text: controller.text,
+      hasText: controller.text.isNotEmpty,
+      isReadOnly: widget.readOnly,
+    );
+
+    return NakedStateScopeBuilder(
+      value: textFieldState,
+      child: editable,
+      builder: (context, value, child) {
+        return _wrapSemantics(
+          child: widget.builder!(context, value, child!),
+          controller: controller,
+          focusNode: focusNode,
+        );
+      },
+    );
+  }
+
+  Widget _wrapFocusSemantics(Widget child) {
+    return NakedFocusableDetector(
+      enabled: widget.enabled,
+      includeSemantics: true,
+      child: child,
+    );
+  }
+
+  Widget _wrapSelectionGestureDetector(Widget child) {
+    return _selectionGestureDetectorBuilder.buildGestureDetector(
+      behavior: HitTestBehavior.translucent,
+      child: child,
+    );
+  }
+
+  Widget _wrapMouseRegion(Widget child) {
+    return widget.enabled
+        ? MouseRegion(
+            onEnter: _handleMouseEnter,
+            onExit: _handleMouseExit,
+            cursor: SystemMouseCursors.text,
+            child: child,
+          )
+        : child;
+  }
+
   @override
   Widget build(BuildContext context) {
     assert(debugCheckHasDirectionality(context));
@@ -658,14 +856,7 @@ class _NakedTextFieldState extends State<NakedTextField>
     final controller = _effectiveController;
     final focusNode = _effectiveFocusNode;
 
-    final formatters = <TextInputFormatter>[
-      ...?widget.inputFormatters,
-      if (widget.maxLength != null)
-        LengthLimitingTextInputFormatter(
-          widget.maxLength,
-          maxLengthEnforcement: _effectiveMaxLengthEnforcement,
-        ),
-    ];
+    final formatters = _buildInputFormatters();
 
     final SpellCheckConfiguration effectiveSpellCheck =
         widget.spellCheckConfiguration ??
@@ -687,158 +878,27 @@ class _NakedTextFieldState extends State<NakedTextField>
         widget.magnifierConfiguration ??
         TextMagnifier.adaptiveMagnifierConfiguration;
 
-    Widget editable = Builder(
-      builder: (context) {
-        final TextStyle textStyle =
-            widget.style ?? DefaultTextStyle.of(context).style;
-
-        return EditableText(
-          key: editableTextKey,
-          controller: controller,
-          focusNode: focusNode,
-          readOnly: widget.readOnly || !widget.enabled,
-          obscuringCharacter: widget.obscuringCharacter,
-          obscureText: widget.obscureText,
-          autocorrect: widget.autocorrect,
-          smartDashesType: widget.smartDashesType,
-          smartQuotesType: widget.smartQuotesType,
-          enableSuggestions: widget.enableSuggestions,
-          style: textStyle,
-          strutStyle: widget.strutStyle,
-          cursorColor: p.cursorColor,
-          backgroundCursorColor: _neutralBgCursor,
-          textAlign: widget.textAlign,
-          textDirection: widget.textDirection,
-          maxLines: widget.maxLines,
-          minLines: widget.minLines,
-          expands: widget.expands,
-          autofocus: widget.autofocus,
-          showCursor: widget.showCursor,
-          showSelectionHandles: _showSelectionHandles,
-          selectionColor: focusNode.hasFocus ? p.selectionColor : null,
-          selectionControls: controls,
-          keyboardType: widget.keyboardType,
-          textInputAction: widget.textInputAction,
-          textCapitalization: widget.textCapitalization,
-          onChanged: widget.onChanged,
-          onEditingComplete: widget.onEditingComplete,
-          onSubmitted: widget.onSubmitted,
-          onAppPrivateCommand: widget.onAppPrivateCommand,
-          onSelectionChanged: _handleSelectionChanged,
-          onSelectionHandleTapped: _handleSelectionHandleTapped,
-          groupId: widget.groupId,
-          onTapOutside: widget.onTapOutside,
-          onTapUpOutside: widget.onTapUpOutside,
-          inputFormatters: formatters,
-          rendererIgnoresPointer: true,
-          cursorWidth: widget.cursorWidth,
-          cursorHeight: widget.cursorHeight,
-          cursorRadius: p.cursorRadius,
-          cursorOpacityAnimates: p.cursorOpacityAnimates,
-          cursorOffset: p.cursorOffset,
-          paintCursorAboveText: p.paintCursorAboveText,
-          selectionHeightStyle: widget.selectionHeightStyle,
-          selectionWidthStyle: widget.selectionWidthStyle,
-          scrollPadding: widget.scrollPadding,
-          keyboardAppearance: keyboardAppearance,
-          dragStartBehavior: widget.dragStartBehavior,
-          enableInteractiveSelection: widget.enableInteractiveSelection,
-          scrollController: widget.scrollController,
-          scrollPhysics: widget.scrollPhysics,
-          autofillClient: this,
-          clipBehavior: widget.clipBehavior,
-          restorationId: widget.restorationId == null
-              ? null
-              : '${widget.restorationId!}.editable',
-          stylusHandwritingEnabled: widget.stylusHandwritingEnabled,
-          enableIMEPersonalizedLearning: widget.enableIMEPersonalizedLearning,
-          contentInsertionConfiguration: widget.contentInsertionConfiguration,
-          contextMenuBuilder: widget.contextMenuBuilder,
-          spellCheckConfiguration: effectiveSpellCheck,
-          magnifierConfiguration: magnifier,
-          undoController: widget.undoController,
-        );
-      },
+    final editable = _buildEditableText(
+      controller: controller,
+      focusNode: focusNode,
+      inputFormatters: formatters,
+      platformDefaults: p,
+      selectionControls: controls,
+      magnifier: magnifier,
+      keyboardAppearance: keyboardAppearance,
+      spellCheck: effectiveSpellCheck,
     );
 
-    editable = TextFieldTapRegion(
-      child: IgnorePointer(
-        ignoring: widget.ignorePointers ?? !widget.enabled,
-        child: RepaintBoundary(
-          child: UnmanagedRestorationScope(bucket: bucket, child: editable),
-        ),
-      ),
+    final wrappedEditable = _wrapEditable(editable);
+    final content = _buildContent(
+      editable: wrappedEditable,
+      controller: controller,
+      focusNode: focusNode,
     );
+    final composedWithFocusSemantics = _wrapFocusSemantics(content);
+    final detector = _wrapSelectionGestureDetector(composedWithFocusSemantics);
 
-    void _semanticTap() {
-      widget.onTap?.call();
-      if (!widget.readOnly) {
-        final c = controller;
-        if (!c.selection.isValid) {
-          c.selection = TextSelection.collapsed(offset: c.text.length);
-        }
-        _requestKeyboard();
-      }
-    }
-
-    Widget withSemantics(Widget child) {
-      return widget.excludeSemantics
-          ? child
-          : Semantics(
-              container: true,
-              enabled: widget.enabled,
-              textField: true,
-              readOnly: widget.readOnly || !widget.enabled,
-              focusable: widget.enabled,
-              focused: widget.enabled ? focusNode.hasFocus : null,
-              obscured: widget.obscureText,
-              multiline: (widget.maxLines ?? 1) > 1,
-              maxValueLength: widget.maxLength,
-              currentValueLength: controller.text.length,
-              label: widget.semanticLabel,
-              value: widget.obscureText ? null : controller.text,
-              hint: widget.semanticHint,
-              onTap: (widget.enabled && !widget.readOnly) ? _semanticTap : null,
-              child: child,
-            );
-    }
-
-    final textFieldState = NakedTextFieldState(
-      states: {...widgetStates, if (focusNode.hasFocus) WidgetState.focused},
-      text: controller.text,
-      hasText: controller.text.isNotEmpty,
-      isReadOnly: widget.readOnly,
-    );
-
-    final Widget content = NakedStateScopeBuilder(
-      value: textFieldState,
-      child: editable,
-      builder: (context, value, child) =>
-          withSemantics(widget.builder!(context, value, child!)),
-    );
-
-    final Widget composedWithFocusSemantics = NakedFocusableDetector(
-      enabled: widget.enabled,
-      includeSemantics: true,
-      child: content,
-    );
-
-    final Widget detector = _selectionGestureDetectorBuilder
-        .buildGestureDetector(
-          behavior: HitTestBehavior.translucent,
-          child: composedWithFocusSemantics,
-        );
-
-    final Widget maybeMouseRegion = widget.enabled
-        ? MouseRegion(
-            onEnter: _handleMouseEnter,
-            onExit: _handleMouseExit,
-            cursor: SystemMouseCursors.text,
-            child: detector,
-          )
-        : detector;
-
-    return maybeMouseRegion;
+    return _wrapMouseRegion(detector);
   }
 }
 
