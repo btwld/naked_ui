@@ -697,7 +697,9 @@ class _NakedTextFieldState extends State<NakedTextField>
           autofocus: widget.autofocus,
           showCursor: widget.showCursor,
           showSelectionHandles: _showSelectionHandles,
-          selectionColor: focusNode.hasFocus ? platformDefaults.selectionColor : null,
+          selectionColor: focusNode.hasFocus
+              ? platformDefaults.selectionColor
+              : null,
           selectionControls: selectionControls,
           keyboardType: widget.keyboardType,
           textInputAction: widget.textInputAction,
@@ -806,9 +808,7 @@ class _NakedTextFieldState extends State<NakedTextField>
       value: textFieldState,
       child: editable,
       builder: (context, value, child) {
-        return _wrapSemantics(
-          child: widget.builder!(context, value, child!),
-        );
+        return _wrapSemantics(child: widget.builder!(context, value, child!));
       },
     );
   }
