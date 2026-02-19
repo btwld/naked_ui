@@ -181,11 +181,11 @@ class NakedSelectOption<T> extends OverlayItem<T, NakedSelectOptionState<T>> {
 /// - **Escape**: Closes the overlay and returns focus to trigger
 /// - **Click outside**: Closes the overlay (if [closeOnClickOutside] is true)
 ///
-  /// ### Navigating Items
-  /// - **Arrow Up/Down**: Navigate between focusable items in the overlay
-  /// - **Enter/Space on item**: Selects the focused item
-  /// - **Tab**: Moves focus through items in traversal order
-  /// - **PageUp/PageDown**: Move focus by a configurable jump size
+/// ### Navigating Items
+/// - **Arrow Up/Down**: Navigate between focusable items in the overlay
+/// - **Enter/Space on item**: Selects the focused item
+/// - **Tab**: Moves focus through items in traversal order
+/// - **PageUp/PageDown**: Move focus by a configurable jump size
 ///
 /// ### Focus Management
 /// When the overlay opens, focus transfers to the overlay container but does NOT
@@ -276,8 +276,9 @@ class NakedSelect<T> extends StatefulWidget {
 
   /// Number of items to jump for PageUp/PageDown.
   ///
-  /// When null, the jump size is derived from the number of focusable options
-  /// in the overlay, capped to a reasonable upper bound.
+  /// When null, the jump size is derived from the number of traversal
+  /// descendants in the overlay's focus scope, capped to a reasonable
+  /// upper bound.
   final int? pageJumpSize;
 
   /// Whether the select is interactive.

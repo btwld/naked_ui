@@ -375,10 +375,10 @@ class _NakedTabState extends State<NakedTab>
     scope.focusInDirection(TraversalDirection.left);
     // Move left until we cannot go further (reaching the first tab).
     // Limit iterations to prevent infinite loops in circular focus scenarios.
+    final maxLeft = _maxFocusIterations(scope);
     for (
       int i = 0;
-      i < _maxFocusIterations(scope) &&
-          scope.focusInDirection(TraversalDirection.left);
+      i < maxLeft && scope.focusInDirection(TraversalDirection.left);
       i++
     ) {
       // Continue until we reach the first tab or hit iteration limit.
@@ -391,10 +391,10 @@ class _NakedTabState extends State<NakedTab>
     scope.focusInDirection(TraversalDirection.right);
     // Move right until we cannot go further (reaching the last tab).
     // Limit iterations to prevent infinite loops in circular focus scenarios.
+    final maxRight = _maxFocusIterations(scope);
     for (
       int i = 0;
-      i < _maxFocusIterations(scope) &&
-          scope.focusInDirection(TraversalDirection.right);
+      i < maxRight && scope.focusInDirection(TraversalDirection.right);
       i++
     ) {
       // Continue until we reach the last tab or hit iteration limit.
