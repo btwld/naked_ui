@@ -328,7 +328,7 @@ class _NakedSelectState<T> extends State<NakedSelect<T>> {
   T? _internalValue;
 
   /// Maximum number of items to jump when no explicit jump size is provided.
-  static const int _defaultPageJumpFallback = 10;
+  static const int _maxPageJumpSize = 10;
 
   @override
   void initState() {
@@ -368,9 +368,9 @@ class _NakedSelectState<T> extends State<NakedSelect<T>> {
     if (configured != null) return configured;
     final traversalCount = focusScope.traversalDescendants.length;
     if (traversalCount <= 0) return 1;
-    return traversalCount < _defaultPageJumpFallback
+    return traversalCount < _maxPageJumpSize
         ? traversalCount
-        : _defaultPageJumpFallback;
+        : _maxPageJumpSize;
   }
 
   void _handlePageUp() {

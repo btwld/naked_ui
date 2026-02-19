@@ -755,23 +755,20 @@ class _NakedTextFieldState extends State<NakedTextField>
     );
   }
 
-  void _handleSemanticTap(TextEditingController controller) {
+  void _handleSemanticTap() {
     widget.onTap?.call();
     if (!widget.readOnly) {
-      if (!controller.selection.isValid) {
-        controller.selection = TextSelection.collapsed(
-          offset: controller.text.length,
-        );
+      final c = _effectiveController;
+      if (!c.selection.isValid) {
+        c.selection = TextSelection.collapsed(offset: c.text.length);
       }
       _requestKeyboard();
     }
   }
 
-  Widget _wrapSemantics({
-    required Widget child,
-    required TextEditingController controller,
-    required FocusNode focusNode,
-  }) {
+  Widget _wrapSemantics({required Widget child}) {
+    final controller = _effectiveController;
+    final focusNode = _effectiveFocusNode;
     return widget.excludeSemantics
         ? child
         : Semantics(
@@ -789,17 +786,15 @@ class _NakedTextFieldState extends State<NakedTextField>
             value: widget.obscureText ? null : controller.text,
             hint: widget.semanticHint,
             onTap: (widget.enabled && !widget.readOnly)
-                ? () => _handleSemanticTap(controller)
+                ? _handleSemanticTap
                 : null,
             child: child,
           );
   }
 
-  Widget _buildContent({
-    required Widget editable,
-    required TextEditingController controller,
-    required FocusNode focusNode,
-  }) {
+  Widget _buildContent({required Widget editable}) {
+    final controller = _effectiveController;
+    final focusNode = _effectiveFocusNode;
     final textFieldState = NakedTextFieldState(
       states: {...widgetStates, if (focusNode.hasFocus) WidgetState.focused},
       text: controller.text,
@@ -813,8 +808,6 @@ class _NakedTextFieldState extends State<NakedTextField>
       builder: (context, value, child) {
         return _wrapSemantics(
           child: widget.builder!(context, value, child!),
-          controller: controller,
-          focusNode: focusNode,
         );
       },
     );
@@ -890,11 +883,7 @@ class _NakedTextFieldState extends State<NakedTextField>
     );
 
     final wrappedEditable = _wrapEditable(editable);
-    final content = _buildContent(
-      editable: wrappedEditable,
-      controller: controller,
-      focusNode: focusNode,
-    );
+    final content = _buildContent(editable: wrappedEditable);
     final composedWithFocusSemantics = _wrapFocusSemantics(content);
     final detector = _wrapSelectionGestureDetector(composedWithFocusSemantics);
 
