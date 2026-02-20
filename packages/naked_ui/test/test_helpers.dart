@@ -1,6 +1,7 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -53,6 +54,32 @@ extension WidgetTesterExtension on WidgetTester {
     onPressed?.call();
     await gesture.up();
     await pump();
+  }
+
+  /// Returns the effective active mouse cursor when hovering a widget.
+  ///
+  /// This probes the cursor from [MouseTracker] rather than relying on a
+  /// particular [MouseRegion] depth/order in the widget tree.
+  Future<SystemMouseCursor> activeCursorOn(Key key) async {
+    const pointer = 1;
+    final gesture = await createGesture(
+      pointer: pointer,
+      kind: PointerDeviceKind.mouse,
+    );
+    await gesture.addPointer();
+    try {
+      await gesture.moveTo(getCenter(find.byKey(key)));
+      await pump();
+      // Give cursor annotations extra time to propagate in CI.
+      await pump(const Duration(milliseconds: 16));
+
+      final activeCursor = RendererBinding.instance.mouseTracker
+          .debugDeviceActiveCursor(pointer);
+      expect(activeCursor, isA<SystemMouseCursor>());
+      return activeCursor! as SystemMouseCursor;
+    } finally {
+      await gesture.removePointer();
+    }
   }
 
   void expectCursor(SystemMouseCursor cursor, {required Key on}) {
