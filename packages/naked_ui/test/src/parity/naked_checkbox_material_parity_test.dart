@@ -1,4 +1,7 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:naked_ui/naked_ui.dart';
@@ -166,6 +169,26 @@ void main() {
       const nakedEnabledKey = Key('naked-enabled');
       const nakedDisabledKey = Key('naked-disabled');
 
+      Future<SystemMouseCursor> cursorOn(Key key) async {
+        const pointer = 1;
+        final gesture = await tester.createGesture(
+          pointer: pointer,
+          kind: PointerDeviceKind.mouse,
+        );
+        await gesture.addPointer();
+        try {
+          await gesture.moveTo(tester.getCenter(find.byKey(key)));
+          await tester.pump();
+
+          final activeCursor = RendererBinding.instance.mouseTracker
+              .debugDeviceActiveCursor(pointer);
+          expect(activeCursor, isA<SystemMouseCursor>());
+          return activeCursor! as SystemMouseCursor;
+        } finally {
+          await gesture.removePointer();
+        }
+      }
+
       await tester.pumpMaterialWidget(
         Column(
           mainAxisSize: MainAxisSize.min,
@@ -210,35 +233,20 @@ void main() {
         ),
       );
 
-      // Enabled: Naked must match whatever cursor Material uses
-      final materialEnabledRegion = tester.widget<MouseRegion>(
-        find
-            .descendant(
-              of: find.byKey(materialEnabledKey),
-              matching: find.byType(MouseRegion),
-            )
-            .first,
-      );
-      tester.expectCursor(
-        materialEnabledRegion.cursor as SystemMouseCursor,
-        on: nakedEnabledKey,
-      );
+      // Compare effective hover cursor rather than internal MouseRegion order.
+      final materialEnabledCursor = await cursorOn(materialEnabledKey);
+      final nakedEnabledCursor = await cursorOn(nakedEnabledKey);
+      expect(nakedEnabledCursor, materialEnabledCursor);
 
-      final materialDisabledRegion = tester.widget<MouseRegion>(
-        find
-            .descendant(
-              of: find.byKey(materialDisabledKey),
-              matching: find.byType(MouseRegion),
-            )
-            .first,
-      );
+      final materialDisabledCursor = await cursorOn(materialDisabledKey);
       expect(
-        materialDisabledRegion.cursor == SystemMouseCursors.basic ||
-            materialDisabledRegion.cursor == MouseCursor.defer,
+        materialDisabledCursor == SystemMouseCursors.basic ||
+            materialDisabledCursor == MouseCursor.defer,
         isTrue,
         reason: 'Material disabled cursor should be basic or defer',
       );
-      tester.expectCursor(SystemMouseCursors.basic, on: nakedDisabledKey);
+      final nakedDisabledCursor = await cursorOn(nakedDisabledKey);
+      expect(nakedDisabledCursor, SystemMouseCursors.basic);
     });
 
     testWidgets(
