@@ -425,6 +425,58 @@ void main() {
       const values = ['a', 'b', 'c'];
       expect(selectedValue, values[focusedIndex]);
     });
+
+    testWidgets('PageUp/PageDown respect custom pageJumpSize', (
+      WidgetTester tester,
+    ) async {
+      final focusStates = List<bool>.filled(20, false);
+
+      await tester.pumpMaterialWidget(
+        Center(
+          child: NakedSelect<String>(
+            pageJumpSize: 5,
+            builder: (context, state, child) => const Text('Select option'),
+            overlayBuilder: (context, info) => Column(
+              mainAxisSize: MainAxisSize.min,
+              children: List.generate(
+                20,
+                (index) => NakedSelectOption<String>(
+                  value: 'option$index',
+                  builder: (context, state, child) {
+                    focusStates[index] = state.isFocused;
+                    return child!;
+                  },
+                  child: Text('Option $index'),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+
+      await tester.tap(find.text('Select option'));
+      await tester.pumpAndSettle();
+
+      await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
+      await tester.pumpAndSettle();
+      expect(focusStates.indexWhere((focused) => focused), 0);
+
+      await tester.sendKeyEvent(LogicalKeyboardKey.pageDown);
+      await tester.pumpAndSettle();
+      expect(focusStates.indexWhere((focused) => focused), 5);
+
+      await tester.sendKeyEvent(LogicalKeyboardKey.pageDown);
+      await tester.pumpAndSettle();
+      expect(focusStates.indexWhere((focused) => focused), 10);
+
+      await tester.sendKeyEvent(LogicalKeyboardKey.pageUp);
+      await tester.pumpAndSettle();
+      expect(focusStates.indexWhere((focused) => focused), 5);
+
+      await tester.sendKeyEvent(LogicalKeyboardKey.pageUp);
+      await tester.pumpAndSettle();
+      expect(focusStates.indexWhere((focused) => focused), 0);
+    });
   });
 
   group('Interaction States', () {
