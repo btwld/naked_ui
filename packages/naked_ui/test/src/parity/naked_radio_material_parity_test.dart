@@ -331,8 +331,19 @@ void main() {
         ),
       );
 
-      tester.expectCursor(SystemMouseCursors.click, on: mEnabledKey);
-      tester.expectCursor(SystemMouseCursors.click, on: nEnabledKey);
+      // Enabled: Naked must match whatever cursor Material uses
+      final materialEnabledRegion = tester.widget<MouseRegion>(
+        find
+            .descendant(
+              of: find.byKey(mEnabledKey),
+              matching: find.byType(MouseRegion),
+            )
+            .first,
+      );
+      tester.expectCursor(
+        materialEnabledRegion.cursor as SystemMouseCursor,
+        on: nEnabledKey,
+      );
 
       final materialDisabledRegion = tester.widget<MouseRegion>(
         find
