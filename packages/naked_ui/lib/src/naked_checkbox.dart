@@ -223,7 +223,6 @@ class _NakedCheckboxState extends State<NakedCheckbox>
     return widget.excludeSemantics
         ? gestureDetector
         : Semantics(
-            container: true,
             enabled: widget._effectiveEnabled,
             checked: widget.value == true,
             mixed: widget.tristate && widget.value == null,

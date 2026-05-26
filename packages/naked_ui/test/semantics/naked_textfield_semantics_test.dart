@@ -1,11 +1,10 @@
-import 'package:flutter/gestures.dart';
+import 'dart:ui' show Tristate;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:naked_ui/naked_ui.dart';
 
 import 'semantics_test_utils.dart';
-
-// Removed unused helper and unneeded rendering import.
 
 void main() {
   Widget _buildTestApp(Widget child) {
@@ -15,59 +14,62 @@ void main() {
   }
 
   group('NakedTextField Semantics', () {
-    testWidgets('parity with Material TextField - enabled empty', (
+    testWidgets('enabled empty field exposes text-field contract', (
       tester,
     ) async {
       final handle = tester.ensureSemantics();
 
-      await expectSemanticsParity(
-        tester: tester,
-        material: _buildTestApp(const TextField()),
-        naked: _buildTestApp(
+      await tester.pumpWidget(
+        _buildTestApp(
           NakedTextField(
             enabled: true,
             builder: (context, state, editable) => editable,
           ),
         ),
+      );
+
+      final summary = summarizeMergedFromRoot(
+        tester,
         control: ControlType.textField,
       );
+      expect(summary.flags, containsAll(['isTextField', 'hasEnabledState']));
+      expect(summary.flags, contains('isEnabled'));
+      expect(summary.flags, contains('isFocusable'));
+      expect(summary.actions, contains('tap'));
+
       handle.dispose();
     });
 
-    testWidgets('parity with Material TextField - disabled', (tester) async {
+    testWidgets('disabled field exposes read-only disabled contract', (
+      tester,
+    ) async {
       final handle = tester.ensureSemantics();
 
-      await expectSemanticsParity(
-        tester: tester,
-        material: _buildTestApp(const TextField(enabled: false)),
-        naked: _buildTestApp(
+      await tester.pumpWidget(
+        _buildTestApp(
           NakedTextField(
             enabled: false,
             builder: (context, state, editable) => editable,
           ),
         ),
-        control: ControlType.textField,
       );
-      handle.dispose();
-    });
 
-    testWidgets('focus and hover parity', (tester) async {
-      final handle = tester.ensureSemantics();
-      final fm = FocusNode();
-      final fn = FocusNode();
-      final mouse = await tester.createGesture(kind: PointerDeviceKind.mouse);
-      await mouse.addPointer();
-      await tester.pump();
-
-      await tester.pumpWidget(_buildTestApp(TextField(focusNode: fm)));
-      fm.requestFocus();
-      await tester.pump();
-      await mouse.moveTo(tester.getCenter(find.byType(TextField)));
-      await tester.pump();
-      var materialFocused = summarizeMergedFromRoot(
+      final summary = summarizeMergedFromRoot(
         tester,
         control: ControlType.textField,
       );
+      expect(summary.flags, contains('isTextField'));
+      expect(summary.flags, contains('hasEnabledState'));
+      expect(summary.flags, isNot(contains('isEnabled')));
+      expect(summary.flags, contains('isReadOnly'));
+      expect(summary.actions, isNot(contains('tap')));
+
+      handle.dispose();
+    });
+
+    testWidgets('focused field exposes focus semantics', (tester) async {
+      final handle = tester.ensureSemantics();
+      final fn = FocusNode();
 
       await tester.pumpWidget(
         _buildTestApp(
@@ -79,36 +81,23 @@ void main() {
       );
       fn.requestFocus();
       await tester.pump();
-      await mouse.moveTo(tester.getCenter(find.byType(NakedTextField)));
-      await tester.pump();
-      var nakedFocused = summarizeMergedFromRoot(
+      final summary = summarizeMergedFromRoot(
         tester,
         control: ControlType.textField,
       );
-      // Normalize focusable flag differences from ancestor placement.
-      SemanticsSummary stripFocusable(SemanticsSummary s) => SemanticsSummary(
-        label: s.label,
-        value: s.value,
-        flags: s.flags.where((f) => f != 'isFocusable').toSet(),
-        actions: s.actions,
-      );
-      materialFocused = stripFocusable(materialFocused);
-      nakedFocused = stripFocusable(nakedFocused);
-      expect(nakedFocused, equals(materialFocused));
+      expect(summary.flags, contains('isTextField'));
+      expect(summary.flags, contains('isFocused'));
+      expect(summary.flags, contains('isFocusable'));
+      expect(summary.actions, contains('focus'));
 
-      await mouse.removePointer();
-      fm.dispose();
       fn.dispose();
       handle.dispose();
     });
 
-    testWidgets('multiline and readOnly parity', (tester) async {
+    testWidgets('read-only multiline field exposes text-field flags', (
+      tester,
+    ) async {
       final handle = tester.ensureSemantics();
-
-      await tester.pumpWidget(
-        _buildTestApp(const TextField(maxLines: 3, readOnly: true)),
-      );
-      var mat = summarizeMergedFromRoot(tester, control: ControlType.textField);
 
       await tester.pumpWidget(
         _buildTestApp(
@@ -119,15 +108,90 @@ void main() {
           ),
         ),
       );
-      var nak = summarizeMergedFromRoot(tester, control: ControlType.textField);
-      // Normalize focusable differences
-      SemanticsSummary stripFocusable(SemanticsSummary s) => SemanticsSummary(
-        label: s.label,
-        value: s.value,
-        flags: s.flags.where((f) => f != 'isFocusable').toSet(),
-        actions: s.actions,
+      final summary = summarizeMergedFromRoot(
+        tester,
+        control: ControlType.textField,
       );
-      expect(stripFocusable(nak), equals(stripFocusable(mat)));
+      expect(summary.flags, contains('isTextField'));
+      expect(summary.flags, contains('isReadOnly'));
+      expect(summary.flags, contains('isMultiline'));
+
+      handle.dispose();
+    });
+
+    testWidgets('error text is associated with a live text field node', (
+      tester,
+    ) async {
+      final handle = tester.ensureSemantics();
+      final controller = TextEditingController(text: 'bad');
+
+      await tester.pumpWidget(
+        _buildTestApp(
+          NakedTextField(
+            controller: controller,
+            error: true,
+            semanticLabel: 'Email',
+            semanticHint: 'Enter your email',
+            semanticErrorText: 'Enter a valid email address',
+            builder: (context, state, editable) => editable,
+          ),
+        ),
+      );
+
+      final root = tester.getSemantics(find.byType(Scaffold));
+      final textFieldNodes = collectSemanticsNodes(
+        root,
+        (node) => node.getSemanticsData().flagsCollection.isTextField,
+      );
+      expect(textFieldNodes, hasLength(1));
+      expectNoNestedSemanticsNodes(
+        root,
+        predicate: (node) =>
+            node.getSemanticsData().flagsCollection.isTextField,
+        debugName: 'text field',
+      );
+
+      final data = textFieldNodes.single.getSemanticsData();
+      expect(data.label, 'Email');
+      expect(data.hint, contains('Enter your email'));
+      expect(data.hint, contains('Enter a valid email address'));
+      expect(data.flagsCollection.isLiveRegion, isTrue);
+      expect(data.flagsCollection.isTextField, isTrue);
+      expect(data.flagsCollection.isFocused, isNot(Tristate.none));
+
+      controller.dispose();
+      handle.dispose();
+    });
+
+    testWidgets('semanticErrorText is silent when error is false', (
+      tester,
+    ) async {
+      final handle = tester.ensureSemantics();
+
+      await tester.pumpWidget(
+        _buildTestApp(
+          NakedTextField(
+            error: false,
+            semanticLabel: 'Email',
+            semanticHint: 'Enter your email',
+            semanticErrorText: 'Enter a valid email address',
+            builder: (context, state, editable) => editable,
+          ),
+        ),
+      );
+
+      final root = tester.getSemantics(find.byType(Scaffold));
+      final node = findSemanticsNode(
+        root,
+        (node) => node.getSemanticsData().flagsCollection.isTextField,
+      );
+
+      expect(node, isNotNull);
+      final data = node!.getSemanticsData();
+      expect(data.label, 'Email');
+      expect(data.hint, 'Enter your email');
+      expect(data.hint, isNot(contains('Enter a valid email address')));
+      expect(data.flagsCollection.isLiveRegion, isFalse);
 
       handle.dispose();
     });

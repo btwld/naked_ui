@@ -1,3 +1,5 @@
+import 'dart:ui' show Tristate;
+
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart';
@@ -63,6 +65,75 @@ void main() {
       expect(summary.flags.contains('isButton'), isTrue);
       expect(summary.flags.contains('isFocusable'), isTrue);
       expect(summary.actions.contains('tap'), isTrue);
+
+      handle.dispose();
+    });
+
+    testWidgets('trigger exposes expanded state instead of toggled', (
+      tester,
+    ) async {
+      final handle = tester.ensureSemantics();
+
+      await tester.pumpWidget(_buildTestApp(_buildNakedMenu()));
+
+      var triggerData = tester
+          .getSemantics(find.text('Show Menu'))
+          .getSemanticsData();
+      expect(triggerData.flagsCollection.isExpanded, Tristate.isFalse);
+      expect(triggerData.flagsCollection.isToggled, Tristate.none);
+
+      await tester.tap(find.text('Show Menu'));
+      await tester.pumpAndSettle();
+
+      triggerData = tester
+          .getSemantics(find.text('Show Menu'))
+          .getSemanticsData();
+      expect(triggerData.flagsCollection.isExpanded, Tristate.isTrue);
+      expect(triggerData.flagsCollection.isToggled, Tristate.none);
+
+      await tester.tap(find.text('Show Menu'));
+      await tester.pumpAndSettle();
+
+      triggerData = tester
+          .getSemantics(find.text('Show Menu'))
+          .getSemanticsData();
+      expect(triggerData.flagsCollection.isExpanded, Tristate.isFalse);
+      expect(triggerData.flagsCollection.isToggled, Tristate.none);
+
+      handle.dispose();
+    });
+
+    testWidgets('trigger semanticLabel overrides visible trigger text', (
+      tester,
+    ) async {
+      final handle = tester.ensureSemantics();
+      final controller = MenuController();
+
+      await tester.pumpWidget(
+        _buildTestApp(
+          NakedMenu<String>(
+            controller: controller,
+            semanticLabel: 'Application menu',
+            builder: (context, state, child) => const Text('File'),
+            overlayBuilder: (context, info) => const SizedBox.shrink(),
+          ),
+        ),
+      );
+
+      expect(
+        tester.getSemantics(find.text('File')),
+        matchesSemantics(
+          label: 'Application menu',
+          isButton: true,
+          hasEnabledState: true,
+          isEnabled: true,
+          isFocusable: true,
+          hasExpandedState: true,
+          isExpanded: false,
+          hasTapAction: true,
+          hasFocusAction: true,
+        ),
+      );
 
       handle.dispose();
     });
@@ -139,13 +210,17 @@ void main() {
       await tester.tap(find.text('Open'));
       await tester.pumpAndSettle();
 
-      // Check enabled item semantics
-      final enabledSummary = summarizeMergedFromRoot(
-        tester,
-        control: ControlType.button,
-      );
-      expect(enabledSummary.flags.contains('isEnabled'), isTrue);
-      expect(enabledSummary.actions.contains('tap'), isTrue);
+      final enabledData = tester
+          .getSemantics(find.text('Enabled Item'))
+          .getSemanticsData();
+      expect(enabledData.flagsCollection.isEnabled, Tristate.isTrue);
+      expect(enabledData.hasAction(SemanticsAction.tap), isTrue);
+
+      final disabledData = tester
+          .getSemantics(find.text('Disabled Item'))
+          .getSemanticsData();
+      expect(disabledData.flagsCollection.isEnabled, Tristate.isFalse);
+      expect(disabledData.hasAction(SemanticsAction.tap), isFalse);
 
       handle.dispose();
     });
@@ -311,8 +386,47 @@ void main() {
       await tester.tap(find.text('Labeled Menu'));
       await tester.pumpAndSettle();
 
-      // Verify semantic label is applied
-      expect(find.text('Save'), findsOneWidget);
+      final saveData = tester
+          .getSemantics(find.text('Save'))
+          .getSemanticsData();
+      expect(saveData.label, contains('Save document'));
+      expect(saveData.hasAction(SemanticsAction.tap), isTrue);
+
+      handle.dispose();
+    });
+
+    testWidgets('controller changes update trigger expanded semantics', (
+      tester,
+    ) async {
+      final handle = tester.ensureSemantics();
+      final controller = MenuController();
+
+      await tester.pumpWidget(
+        _buildTestApp(
+          NakedMenu<String>(
+            controller: controller,
+            builder: (context, state, child) => const Text('Menu trigger'),
+            overlayBuilder: (context, info) => const SizedBox.shrink(),
+          ),
+        ),
+      );
+
+      var data = tester
+          .getSemantics(find.text('Menu trigger'))
+          .getSemanticsData();
+      expect(data.flagsCollection.isExpanded, Tristate.isFalse);
+
+      controller.open();
+      await tester.pumpAndSettle();
+
+      data = tester.getSemantics(find.text('Menu trigger')).getSemanticsData();
+      expect(data.flagsCollection.isExpanded, Tristate.isTrue);
+
+      controller.close();
+      await tester.pumpAndSettle();
+
+      data = tester.getSemantics(find.text('Menu trigger')).getSemanticsData();
+      expect(data.flagsCollection.isExpanded, Tristate.isFalse);
 
       handle.dispose();
     });

@@ -1,37 +1,14 @@
+import 'dart:ui' show Tristate;
+
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/semantics.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:naked_ui/naked_ui.dart';
 
 import 'semantics_test_utils.dart';
 
 void main() {
-  Widget _buildMaterialTabs({required int initialIndex}) {
-    return MaterialApp(
-      home: DefaultTabController(
-        length: 2,
-        initialIndex: initialIndex,
-        child: Scaffold(
-          appBar: AppBar(
-            title: const Text('Tabs'),
-            bottom: const TabBar(
-              tabs: [
-                Tab(text: 'A'),
-                Tab(text: 'B'),
-              ],
-            ),
-          ),
-          body: const TabBarView(
-            children: [
-              Center(child: Text('A body')),
-              Center(child: Text('B body')),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
   Widget _buildNakedTabs({required String selected}) {
     return MaterialApp(
       home: Scaffold(
@@ -64,60 +41,58 @@ void main() {
   }
 
   group('NakedTab Semantics', () {
-    testWidgets('parity when first tab selected', (tester) async {
+    testWidgets('first tab exposes explicit selected button contract', (
+      tester,
+    ) async {
       final handle = tester.ensureSemantics();
-      await expectSemanticsParity(
-        tester: tester,
-        material: _buildMaterialTabs(initialIndex: 0),
-        naked: _buildNakedTabs(selected: 'A'),
-        control: ControlType.tab,
-      );
+
+      await tester.pumpWidget(_buildNakedTabs(selected: 'A'));
+
+      final summary = summarizeMergedFromRoot(tester, control: ControlType.tab);
+      expect(summary.label, 'A');
+      expect(summary.flags, containsAll(['isButton', 'isSelected']));
+      expect(summary.flags, containsAll(['hasEnabledState', 'isEnabled']));
+      expect(summary.actions, contains('tap'));
+
       handle.dispose();
     });
 
-    testWidgets('parity when second tab selected', (tester) async {
+    testWidgets('second tab exposes explicit selected button contract', (
+      tester,
+    ) async {
       final handle = tester.ensureSemantics();
-      await expectSemanticsParity(
-        tester: tester,
-        material: _buildMaterialTabs(initialIndex: 1),
-        naked: _buildNakedTabs(selected: 'B'),
-        control: ControlType.tab,
-      );
+
+      await tester.pumpWidget(_buildNakedTabs(selected: 'B'));
+
+      final tabB = tester.getSemantics(find.text('B'));
+      final data = tabB.getSemanticsData();
+      expect(data.label, 'B');
+      expect(data.flagsCollection.isButton, isTrue);
+      expect(data.flagsCollection.isSelected, Tristate.isTrue);
+      expect(data.flagsCollection.isEnabled, Tristate.isTrue);
+      expect(data.hasAction(SemanticsAction.tap), isTrue);
+
       handle.dispose();
     });
 
-    testWidgets('hover parity on first tab', (tester) async {
+    testWidgets('hovered selected tab keeps selected button contract', (
+      tester,
+    ) async {
       final handle = tester.ensureSemantics();
       final mouse = await tester.createGesture(kind: PointerDeviceKind.mouse);
       await mouse.addPointer();
       await tester.pump();
 
-      // Material hovered
-      await tester.pumpWidget(_buildMaterialTabs(initialIndex: 0));
-      // Hover over first tab labeled 'A'
-      await mouse.moveTo(tester.getCenter(find.text('A').first));
-      await tester.pump();
-      final mat = summarizeMergedFromRoot(tester, control: ControlType.tab);
-
-      // Naked hovered
       await tester.pumpWidget(_buildNakedTabs(selected: 'A'));
       await mouse.moveTo(tester.getCenter(find.text('A').first));
       await tester.pump();
       final nak = summarizeMergedFromRoot(tester, control: ControlType.tab);
 
-      SemanticsSummary normalize(SemanticsSummary s) => SemanticsSummary(
-        label: s.label,
-        value: s.value,
-        flags: s.flags
-            .where(
-              (f) =>
-                  f != 'isButton' && f != 'isEnabled' && f != 'hasEnabledState',
-            )
-            .toSet(),
-        actions: s.actions,
-      );
+      expect(nak.label, 'A');
+      expect(nak.flags, contains('isButton'));
+      expect(nak.flags, contains('isSelected'));
+      expect(nak.actions, contains('tap'));
 
-      expect(normalize(nak), equals(normalize(mat)));
       await mouse.removePointer();
       handle.dispose();
     });

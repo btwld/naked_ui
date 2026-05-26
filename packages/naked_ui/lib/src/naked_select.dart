@@ -409,6 +409,7 @@ class _NakedSelectState<T> extends State<NakedSelect<T>>
         onPressed: widget.enabled ? _toggle : null,
         enabled: widget.enabled,
         focusNode: widget.triggerFocusNode,
+        excludeSemantics: true,
         child: widget.child,
         builder: (context, buttonState, child) {
           final selectState = NakedSelectState(
@@ -426,18 +427,24 @@ class _NakedSelectState<T> extends State<NakedSelect<T>>
       ),
     );
 
-    Widget result = widget.excludeSemantics
+    final Widget semanticsChild = widget.semanticLabel == null
         ? selectWidget
-        : Semantics(
-            container: true,
-            enabled: widget.enabled,
-            button: true,
-            focusable: true,
-            expanded: _isOpen,
-            label: widget.semanticLabel,
-            value: semanticsValue,
-            onTap: widget.enabled ? _toggle : null,
-            child: selectWidget,
+        : ExcludeSemantics(child: selectWidget);
+
+    Widget result = widget.excludeSemantics
+        ? ExcludeSemantics(child: selectWidget)
+        : MergeSemantics(
+            child: Semantics(
+              container: true,
+              enabled: widget.enabled,
+              button: true,
+              focusable: true,
+              expanded: _isOpen,
+              label: widget.semanticLabel,
+              value: semanticsValue,
+              onTap: widget.enabled ? _toggle : null,
+              child: semanticsChild,
+            ),
           );
 
     return Shortcuts(

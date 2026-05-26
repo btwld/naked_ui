@@ -1,6 +1,7 @@
 ## 0.2.0-beta.7
 
 - fix: text style handling in NakedTextField
+- feat: improve 3.27-safe semantics for menu, select, accordion, checkbox, radio, slider, and text field
 
 ## 0.2.0-beta.6
 

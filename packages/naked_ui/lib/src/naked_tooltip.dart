@@ -112,6 +112,9 @@ class NakedTooltip extends StatefulWidget {
   final RawMenuAnchorOverlayBuilder overlayBuilder;
 
   /// The semantic label for screen readers.
+  ///
+  /// When null, the trigger keeps its own accessible name, but no tooltip
+  /// semantic text is exposed.
   final String? semanticsLabel;
 
   /// Positioning configuration for the overlay.

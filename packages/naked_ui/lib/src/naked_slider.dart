@@ -6,6 +6,9 @@ import 'utilities/naked_focusable_detector.dart';
 import 'utilities/naked_state_scope.dart';
 import 'utilities/state.dart';
 
+/// Formats slider values for assistive technologies.
+typedef NakedSliderSemanticFormatterCallback = String Function(double value);
+
 /// Immutable view passed to [NakedSlider.builder].
 class NakedSliderState extends NakedState {
   /// The current slider value.
@@ -118,6 +121,7 @@ class NakedSlider extends StatefulWidget {
     this.keyboardStep = 0.01,
     this.largeKeyboardStep = 0.1,
     this.semanticLabel,
+    this.semanticFormatterCallback,
     this.excludeSemantics = false,
   }) : assert(min < max, 'min must be less than max'),
        assert(
@@ -188,6 +192,9 @@ class NakedSlider extends StatefulWidget {
   /// Semantic label for assistive technologies.
   final String? semanticLabel;
 
+  /// Formats semantic value announcements.
+  final NakedSliderSemanticFormatterCallback? semanticFormatterCallback;
+
   /// Whether to exclude this widget from the semantic tree.
   ///
   /// When true, the widget and its children are hidden from accessibility services.
@@ -252,6 +259,11 @@ class _NakedSliderState extends State<NakedSlider>
     final pct = (((v - widget.min) / total) * 100).round();
 
     return '$pct%';
+  }
+
+  String _semanticValueString(double value) {
+    final formatter = widget.semanticFormatterCallback;
+    return formatter == null ? _percentString(value) : formatter(value);
   }
 
   void _handleDragStart(DragStartDetails details) {
@@ -436,11 +448,11 @@ class _NakedSliderState extends State<NakedSlider>
               focusable: _isEnabled,
               focused: _isEnabled ? isFocused : null,
               label: widget.semanticLabel,
-              value: _percentString(widget.value),
-              increasedValue: _percentString(
+              value: _semanticValueString(widget.value),
+              increasedValue: _semanticValueString(
                 _normalizeValue(widget.value + _calculateStep(false)),
               ),
-              decreasedValue: _percentString(
+              decreasedValue: _semanticValueString(
                 _normalizeValue(widget.value - _calculateStep(false)),
               ),
               onIncrease: _isEnabled

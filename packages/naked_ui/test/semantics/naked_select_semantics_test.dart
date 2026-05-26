@@ -60,6 +60,7 @@ void main() {
         tester,
         control: ControlType.button,
       );
+      expect(summary.label, 'Select Option');
       expect(summary.flags.contains('isButton'), isTrue);
       expect(summary.flags.contains('isFocusable'), isTrue);
       expect(summary.actions.contains('tap'), isTrue);
@@ -160,16 +161,17 @@ void main() {
       focusNode.requestFocus();
       await tester.pump();
 
-      // Verify trigger has keyboard semantics
-      final triggerSemantics = tester.getSemantics(find.text('Select option'));
-      expect(
-        triggerSemantics.getSemanticsData().hasAction(SemanticsAction.tap),
-        isTrue,
-      );
-      expect(
-        triggerSemantics.getSemanticsData().flagsCollection.isFocused,
-        Tristate.isTrue,
-      );
+      // Verify trigger has keyboard semantics.
+      final root = tester.getSemantics(find.byType(Scaffold));
+      final triggerSemantics = findSemanticsNode(root, (node) {
+        final data = node.getSemanticsData();
+        return data.label == 'Select option' &&
+            data.flagsCollection.isExpanded != Tristate.none;
+      });
+      expect(triggerSemantics, isNotNull);
+      final triggerData = triggerSemantics!.getSemanticsData();
+      expect(triggerData.hasAction(SemanticsAction.tap), isTrue);
+      expect(triggerData.flagsCollection.isFocused, Tristate.isTrue);
 
       // Open with keyboard
       await tester.sendKeyEvent(LogicalKeyboardKey.enter);
@@ -277,6 +279,50 @@ void main() {
 
       // Verify select with semantic label
       expect(find.text('Labeled Select'), findsOneWidget);
+
+      handle.dispose();
+    });
+
+    testWidgets('select trigger exposes one semantic control node', (
+      tester,
+    ) async {
+      final handle = tester.ensureSemantics();
+
+      await tester.pumpWidget(
+        _buildTestApp(
+          NakedSelect<String>(
+            value: 'option1',
+            onChanged: (value) {},
+            semanticLabel: 'Choose an option',
+            builder: (context, state, child) => const Text('Labeled Select'),
+            overlayBuilder: (context, info) => const Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                NakedSelectOption(value: 'option1', child: Text('Option 1')),
+              ],
+            ),
+          ),
+        ),
+      );
+
+      bool isTriggerControl(SemanticsNode node) {
+        final data = node.getSemanticsData();
+        return data.flagsCollection.isButton ||
+            data.flagsCollection.isExpanded != Tristate.none ||
+            data.hasAction(SemanticsAction.tap);
+      }
+
+      final root = tester.getSemantics(find.byType(Scaffold));
+      final controls = collectSemanticsNodes(root, isTriggerControl);
+      expect(controls, hasLength(1));
+
+      final data = controls.single.getSemanticsData();
+      expect(data.label, 'Choose an option');
+      expect(data.label, isNot(contains('Labeled Select')));
+      expect(data.value, 'option1');
+      expect(data.flagsCollection.isButton, isTrue);
+      expect(data.flagsCollection.isExpanded, Tristate.isFalse);
+      expect(data.hasAction(SemanticsAction.tap), isTrue);
 
       handle.dispose();
     });

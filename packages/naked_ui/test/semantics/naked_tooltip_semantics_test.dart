@@ -152,13 +152,9 @@ void main() {
         ),
       );
 
-      // Verify the widget renders properly
-      expect(find.text('Help'), findsOneWidget);
-
-      // Check that semantics are properly attached
-      final Element element = find.text('Help').evaluate().first;
-      final Widget widget = element.widget;
-      expect(widget, isA<Text>());
+      final data = tester.getSemantics(find.text('Help')).getSemanticsData();
+      expect(data.label, 'Help');
+      expect(data.tooltip, 'This is a helpful tooltip');
 
       handle.dispose();
     });
@@ -177,6 +173,14 @@ void main() {
 
       // Should still work without explicit semantics label
       expect(find.text('No label'), findsOneWidget);
+      expect(
+        tester.getSemantics(find.text('No label')),
+        matchesSemantics(label: 'No label'),
+      );
+      expect(
+        tester.getSemantics(find.text('No label')).getSemanticsData().tooltip,
+        isEmpty,
+      );
 
       handle.dispose();
     });

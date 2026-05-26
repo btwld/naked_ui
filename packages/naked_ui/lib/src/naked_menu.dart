@@ -212,6 +212,7 @@ class NakedMenu<T> extends StatefulWidget {
     this.closeOnClickOutside = true,
     this.triggerFocusNode,
     this.positioning = const OverlayPositionConfig(),
+    this.semanticLabel,
     this.excludeSemantics = false,
   });
 
@@ -262,6 +263,9 @@ class NakedMenu<T> extends StatefulWidget {
   /// Overlay positioning configuration.
   final OverlayPositionConfig positioning;
 
+  /// Semantic label for the menu trigger.
+  final String? semanticLabel;
+
   /// Whether to exclude this widget from the semantic tree.
   ///
   /// When true, the widget and its children are hidden from accessibility services.
@@ -281,6 +285,7 @@ class _NakedMenuState<T> extends State<NakedMenu<T>>
 
   void _handleOpen() {
     handleOpen(widget.onOpen);
+    if (mounted) setState(() {});
   }
 
   void _handleClose() {
@@ -289,6 +294,7 @@ class _NakedMenuState<T> extends State<NakedMenu<T>>
       onCanceled: widget.onCanceled,
       triggerFocusNode: widget.triggerFocusNode,
     );
+    if (mounted) setState(() {});
   }
 
   void _handleSelection(T value) {
@@ -301,6 +307,7 @@ class _NakedMenuState<T> extends State<NakedMenu<T>>
     Widget button = NakedButton(
       onPressed: _toggle,
       focusNode: widget.triggerFocusNode,
+      semanticLabel: widget.semanticLabel,
       child: widget.child,
       builder: (context, buttonState, child) {
         final menuState = NakedMenuState(
@@ -308,17 +315,21 @@ class _NakedMenuState<T> extends State<NakedMenu<T>>
           isOpen: _isOpen,
         );
 
-        return NakedStateScopeBuilder(
+        final trigger = NakedStateScopeBuilder(
           value: menuState,
           child: widget.child,
           builder: widget.builder,
         );
+
+        return widget.semanticLabel == null
+            ? trigger
+            : ExcludeSemantics(child: trigger);
       },
     );
 
     Widget menuChild = widget.excludeSemantics
-        ? button
-        : Semantics(toggled: _isOpen, child: button);
+        ? ExcludeSemantics(child: button)
+        : Semantics(expanded: _isOpen, child: button);
 
     return AnchoredOverlayShell(
       controller: widget.controller,
