@@ -1,6 +1,7 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -63,6 +64,29 @@ extension WidgetTesterExtension on WidgetTester {
     );
 
     expect(region.cursor, cursor);
+  }
+
+  Future<MouseCursor?> activeCursorFor(Key key) async {
+    FocusManager.instance.highlightStrategy =
+        FocusHighlightStrategy.alwaysTraditional;
+
+    final gesture = await createGesture(kind: PointerDeviceKind.mouse);
+    await gesture.addPointer(location: Offset.zero);
+
+    try {
+      await pump();
+      await gesture.moveTo(getCenter(find.byKey(key)));
+      await pumpAndSettle();
+
+      return RendererBinding.instance.mouseTracker.debugDeviceActiveCursor(1);
+    } finally {
+      await gesture.removePointer();
+      await pump();
+    }
+  }
+
+  Future<void> expectActiveCursor(MouseCursor cursor, {required Key on}) async {
+    expect(await activeCursorFor(on), cursor);
   }
 
   /// Helper to verify widget interaction states for Set<WidgetState> snapshots.

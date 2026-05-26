@@ -218,30 +218,20 @@ void main() {
         ),
       );
 
-      // Enabled should use click cursor
-      tester.expectCursor(SystemMouseCursors.click, on: materialEnabledKey);
-      tester.expectCursor(SystemMouseCursors.click, on: nakedEnabledKey);
-
-      // Disabled: cursors must match exactly across Material and Naked
-      final materialDisabledRegion = tester.widget<MouseRegion>(
-        find
-            .descendant(
-              of: find.byKey(materialDisabledKey),
-              matching: find.byType(MouseRegion),
-            )
-            .first,
+      await tester.expectActiveCursor(
+        SystemMouseCursors.click,
+        on: nakedEnabledKey,
       );
-      final nakedDisabledRegion = tester.widget<MouseRegion>(
-        find
-            .descendant(
-              of: find.byKey(nakedDisabledKey),
-              matching: find.byType(MouseRegion),
-            )
-            .first,
+
+      final materialDisabledCursor = await tester.activeCursorFor(
+        materialDisabledKey,
+      );
+      final nakedDisabledCursor = await tester.activeCursorFor(
+        nakedDisabledKey,
       );
       expect(
-        materialDisabledRegion.cursor,
-        equals(nakedDisabledRegion.cursor),
+        nakedDisabledCursor,
+        equals(materialDisabledCursor),
         reason: 'Disabled cursor must be identical for parity',
       );
     });

@@ -210,24 +210,24 @@ void main() {
         ),
       );
 
-      tester.expectCursor(SystemMouseCursors.click, on: materialEnabledKey);
-      tester.expectCursor(SystemMouseCursors.click, on: nakedEnabledKey);
+      await tester.expectActiveCursor(
+        SystemMouseCursors.click,
+        on: nakedEnabledKey,
+      );
 
-      final materialDisabledRegion = tester.widget<MouseRegion>(
-        find
-            .descendant(
-              of: find.byKey(materialDisabledKey),
-              matching: find.byType(MouseRegion),
-            )
-            .first,
+      final materialDisabledCursor = await tester.activeCursorFor(
+        materialDisabledKey,
       );
       expect(
-        materialDisabledRegion.cursor == SystemMouseCursors.basic ||
-            materialDisabledRegion.cursor == MouseCursor.defer,
+        materialDisabledCursor == SystemMouseCursors.basic ||
+            materialDisabledCursor == MouseCursor.defer,
         isTrue,
         reason: 'Material disabled cursor should be basic or defer',
       );
-      tester.expectCursor(SystemMouseCursors.basic, on: nakedDisabledKey);
+      await tester.expectActiveCursor(
+        SystemMouseCursors.basic,
+        on: nakedDisabledKey,
+      );
     });
 
     testWidgets(
