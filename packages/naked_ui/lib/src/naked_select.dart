@@ -330,6 +330,7 @@ class _NakedSelectState<T> extends State<NakedSelect<T>>
 
   void _handleOpen() {
     handleOpen(widget.onOpen);
+    if (mounted) setState(() {});
   }
 
   void _handleClose() {
@@ -338,6 +339,7 @@ class _NakedSelectState<T> extends State<NakedSelect<T>>
       onCanceled: widget.onCanceled,
       triggerFocusNode: widget.triggerFocusNode,
     );
+    if (mounted) setState(() {});
   }
 
   void _handleSelection(T? value) {

@@ -73,9 +73,22 @@ void main() {
 
       await tester.pumpWidget(_buildTestApp(_buildNakedSelect()));
 
+      Tristate triggerExpanded() {
+        final root = tester.getSemantics(find.byType(Scaffold));
+        final trigger = collectSemanticsNodes(
+          root,
+          (node) =>
+              node.getSemanticsData().flagsCollection.isExpanded !=
+              Tristate.none,
+        ).single;
+
+        return trigger.getSemanticsData().flagsCollection.isExpanded;
+      }
+
       // Initially closed
       expect(find.text('Select Option'), findsOneWidget);
       expect(find.text('Option 1'), findsNothing);
+      expect(triggerExpanded(), Tristate.isFalse);
 
       // Tap to open
       await tester.tap(find.text('Select Option'));
@@ -85,6 +98,8 @@ void main() {
       expect(find.text('Option 1'), findsOneWidget);
       expect(find.text('Option 2'), findsOneWidget);
       expect(find.text('Option 3'), findsOneWidget);
+      // Trigger must report the open state to screen readers.
+      expect(triggerExpanded(), Tristate.isTrue);
 
       // Tap outside to close
       await tester.tapAt(const Offset(10, 10));
@@ -92,6 +107,7 @@ void main() {
 
       // Verify select menu is closed
       expect(find.text('Option 1'), findsNothing);
+      expect(triggerExpanded(), Tristate.isFalse);
 
       handle.dispose();
     });
