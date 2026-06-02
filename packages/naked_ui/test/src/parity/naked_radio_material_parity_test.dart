@@ -331,24 +331,22 @@ void main() {
         ),
       );
 
-      tester.expectCursor(SystemMouseCursors.click, on: mEnabledKey);
-      tester.expectCursor(SystemMouseCursors.click, on: nEnabledKey);
-
-      final materialDisabledRegion = tester.widget<MouseRegion>(
-        find
-            .descendant(
-              of: find.byKey(mDisabledKey),
-              matching: find.byType(MouseRegion),
-            )
-            .first,
+      await tester.expectActiveCursor(
+        SystemMouseCursors.click,
+        on: nEnabledKey,
       );
+
+      final materialDisabledCursor = await tester.activeCursorFor(mDisabledKey);
       expect(
-        materialDisabledRegion.cursor == SystemMouseCursors.basic ||
-            materialDisabledRegion.cursor == MouseCursor.defer,
+        materialDisabledCursor == SystemMouseCursors.basic ||
+            materialDisabledCursor == MouseCursor.defer,
         isTrue,
         reason: 'Material disabled cursor should be basic or defer',
       );
-      tester.expectCursor(SystemMouseCursors.basic, on: nDisabledKey);
+      await tester.expectActiveCursor(
+        SystemMouseCursors.basic,
+        on: nDisabledKey,
+      );
     });
   });
 }

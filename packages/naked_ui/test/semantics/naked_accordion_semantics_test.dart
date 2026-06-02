@@ -15,26 +15,114 @@ void main() {
   }
 
   group('NakedAccordion Semantics', () {
-    testWidgets('collapsed strict parity vs ExpansionTile', (tester) async {
+    testWidgets('header uses visible text when semanticLabel is omitted', (
+      tester,
+    ) async {
       final handle = tester.ensureSemantics();
 
       await tester.pumpWidget(
         _buildTestApp(
-          Material(
-            child: ListView(
-              shrinkWrap: true,
-              children: const [
-                ExpansionTile(title: Text('Header'), children: [Text('Body')]),
-              ],
+          NakedAccordionGroup<String>(
+            controller: NakedAccordionController<String>(),
+            child: NakedAccordion<String>(
+              value: 'item',
+              builder: (context, itemState) => const Text('Visible Header'),
+              child: const Text('Body'),
             ),
           ),
         ),
       );
 
-      final mNode = tester.getSemantics(find.text('Header'));
-      final strict = buildStrictMatcherFromSemanticsData(
-        mNode.getSemanticsData(),
+      expect(
+        tester.getSemantics(find.text('Visible Header')),
+        matchesSemantics(
+          label: 'Visible Header',
+          isButton: true,
+          hasEnabledState: true,
+          isEnabled: true,
+          isFocusable: true,
+          hasExpandedState: true,
+          isExpanded: false,
+          hasTapAction: true,
+          hasFocusAction: true,
+        ),
       );
+
+      handle.dispose();
+    });
+
+    testWidgets('semanticLabel overrides visible header text', (tester) async {
+      final handle = tester.ensureSemantics();
+
+      await tester.pumpWidget(
+        _buildTestApp(
+          NakedAccordionGroup<String>(
+            controller: NakedAccordionController<String>(),
+            child: NakedAccordion<String>(
+              value: 'item',
+              semanticLabel: 'Semantic Header',
+              builder: (context, itemState) => const Text('Visible Header'),
+              child: const Text('Body'),
+            ),
+          ),
+        ),
+      );
+
+      expect(
+        tester.getSemantics(find.text('Visible Header')),
+        matchesSemantics(
+          label: 'Semantic Header',
+          isButton: true,
+          hasEnabledState: true,
+          isEnabled: true,
+          isFocusable: true,
+          hasExpandedState: true,
+          isExpanded: false,
+          hasTapAction: true,
+          hasFocusAction: true,
+        ),
+      );
+
+      handle.dispose();
+    });
+
+    testWidgets('excludeSemantics hides visible header fallback', (
+      tester,
+    ) async {
+      final handle = tester.ensureSemantics();
+
+      await tester.pumpWidget(
+        _buildTestApp(
+          NakedAccordionGroup<String>(
+            controller: NakedAccordionController<String>(),
+            child: NakedAccordion<String>(
+              value: 'item',
+              excludeSemantics: true,
+              builder: (context, itemState) => const Text('Visible Header'),
+              child: const Text('Body'),
+            ),
+          ),
+        ),
+      );
+
+      expect(find.bySemanticsLabel('Visible Header'), findsNothing);
+      final root = tester.getSemantics(find.byType(Scaffold));
+      final leakedTriggerNodes = collectSemanticsNodes(root, (node) {
+        final data = node.getSemanticsData();
+        return data.label.contains('Visible Header') ||
+            data.flagsCollection.isButton ||
+            data.flagsCollection.isExpanded != Tristate.none ||
+            data.hasAction(SemanticsAction.tap);
+      });
+      expect(leakedTriggerNodes, isEmpty);
+
+      handle.dispose();
+    });
+
+    testWidgets('collapsed header exposes explicit disclosure contract', (
+      tester,
+    ) async {
+      final handle = tester.ensureSemantics();
 
       await tester.pumpWidget(
         _buildTestApp(
@@ -54,7 +142,20 @@ void main() {
         ),
       );
       // Use label to target the header semantics node.
-      expect(tester.getSemantics(find.text('Header')), strict);
+      expect(
+        tester.getSemantics(find.text('Header')),
+        matchesSemantics(
+          label: 'Header',
+          isButton: true,
+          hasEnabledState: true,
+          isEnabled: true,
+          isFocusable: true,
+          hasExpandedState: true,
+          isExpanded: false,
+          hasTapAction: true,
+          hasFocusAction: true,
+        ),
+      );
 
       handle.dispose();
     });
@@ -91,6 +192,8 @@ void main() {
       // Core semantic properties should match Material patterns
       expect(headerData.hasAction(SemanticsAction.tap), isTrue);
       expect(headerData.hasAction(SemanticsAction.focus), isTrue);
+      expect(headerData.flagsCollection.isButton, isTrue);
+      expect(headerData.flagsCollection.isExpanded, Tristate.isTrue);
       expect(headerData.flagsCollection.isFocused != Tristate.none, isTrue);
       expect(headerData.flagsCollection.isEnabled != Tristate.none, isTrue);
       expect(headerData.flagsCollection.isEnabled == Tristate.isTrue, isTrue);

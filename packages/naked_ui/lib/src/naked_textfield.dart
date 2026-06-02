@@ -168,6 +168,7 @@ class NakedTextField extends StatefulWidget {
     this.ignorePointers,
     this.semanticLabel,
     this.semanticHint,
+    this.semanticErrorText,
     this.strutStyle,
     this.excludeSemantics = false,
   }) : assert(obscuringCharacter.length == 1),
@@ -352,6 +353,7 @@ class NakedTextField extends StatefulWidget {
   /// Semantics
   final String? semanticLabel;
   final String? semanticHint;
+  final String? semanticErrorText;
 
   /// Whether to exclude this widget from the semantic tree.
   ///
@@ -781,25 +783,40 @@ class _NakedTextFieldState extends State<NakedTextField>
       }
     }
 
+    String? _semanticHint() {
+      final errorText = widget.error ? widget.semanticErrorText : null;
+      if (widget.semanticHint == null || widget.semanticHint!.isEmpty) {
+        return errorText;
+      }
+      if (errorText == null || errorText.isEmpty) {
+        return widget.semanticHint;
+      }
+
+      return '${widget.semanticHint}\n$errorText';
+    }
+
     Widget withSemantics(Widget child) {
       return widget.excludeSemantics
           ? child
-          : Semantics(
-              container: true,
-              enabled: widget.enabled,
-              textField: true,
-              readOnly: widget.readOnly || !widget.enabled,
-              focusable: widget.enabled,
-              focused: widget.enabled ? focusNode.hasFocus : null,
-              obscured: widget.obscureText,
-              multiline: (widget.maxLines ?? 1) > 1,
-              maxValueLength: widget.maxLength,
-              currentValueLength: controller.text.length,
-              label: widget.semanticLabel,
-              value: widget.obscureText ? null : controller.text,
-              hint: widget.semanticHint,
-              onTap: (widget.enabled && !widget.readOnly) ? _semanticTap : null,
-              child: child,
+          : MergeSemantics(
+              child: Semantics(
+                enabled: widget.enabled,
+                liveRegion: widget.error && widget.semanticErrorText != null,
+                readOnly: widget.readOnly || !widget.enabled,
+                focusable: widget.enabled,
+                focused: widget.enabled ? focusNode.hasFocus : null,
+                obscured: widget.obscureText,
+                multiline: (widget.maxLines ?? 1) > 1,
+                maxValueLength: widget.maxLength,
+                currentValueLength: controller.text.length,
+                label: widget.semanticLabel,
+                value: widget.obscureText ? null : controller.text,
+                hint: _semanticHint(),
+                onTap: (widget.enabled && !widget.readOnly)
+                    ? _semanticTap
+                    : null,
+                child: child,
+              ),
             );
     }
 

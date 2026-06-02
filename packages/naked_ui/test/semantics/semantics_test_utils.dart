@@ -14,12 +14,18 @@ class SemanticsSummary {
   SemanticsSummary({
     required this.label,
     required this.value,
+    required this.increasedValue,
+    required this.decreasedValue,
+    required this.identifier,
     required this.flags,
     required this.actions,
   });
 
   final String? label;
   final String? value;
+  final String? increasedValue;
+  final String? decreasedValue;
+  final String? identifier;
   final Set<String> flags;
   final Set<String> actions;
 
@@ -29,6 +35,12 @@ class SemanticsSummary {
         (label ?? '') +
         ', value: ' +
         (value ?? '') +
+        ', increasedValue: ' +
+        (increasedValue ?? '') +
+        ', decreasedValue: ' +
+        (decreasedValue ?? '') +
+        ', identifier: ' +
+        (identifier ?? '') +
         ', flags: ' +
         flags.join(',') +
         ', actions: ' +
@@ -42,6 +54,9 @@ class SemanticsSummary {
     return other is SemanticsSummary &&
         other.label == label &&
         other.value == value &&
+        other.increasedValue == increasedValue &&
+        other.decreasedValue == decreasedValue &&
+        other.identifier == identifier &&
         other.flags.length == flags.length &&
         other.flags.containsAll(flags) &&
         other.actions.length == actions.length &&
@@ -49,7 +64,15 @@ class SemanticsSummary {
   }
 
   @override
-  int get hashCode => Object.hash(label, value, flags.length, actions.length);
+  int get hashCode => Object.hash(
+    label,
+    value,
+    increasedValue,
+    decreasedValue,
+    identifier,
+    flags.length,
+    actions.length,
+  );
 }
 
 /// Traverses semantics tree depth-first and returns the first node
@@ -72,6 +95,75 @@ SemanticsNode? findSemanticsNode(
 
   root.visitChildren(visitor);
   return found;
+}
+
+/// Traverses the semantics tree depth-first and returns every matching node.
+List<SemanticsNode> collectSemanticsNodes(
+  SemanticsNode root,
+  SemanticsPredicate predicate, {
+  bool includeMerged = false,
+}) {
+  final nodes = <SemanticsNode>[];
+
+  bool visitor(SemanticsNode node) {
+    if ((includeMerged || !node.isMergedIntoParent) && predicate(node)) {
+      nodes.add(node);
+    }
+    node.visitChildren(visitor);
+    return true;
+  }
+
+  visitor(root);
+  return nodes;
+}
+
+/// Counts every semantics node matching [predicate].
+int countSemanticsNodes(
+  SemanticsNode root,
+  SemanticsPredicate predicate, {
+  bool includeMerged = false,
+}) {
+  return collectSemanticsNodes(
+    root,
+    predicate,
+    includeMerged: includeMerged,
+  ).length;
+}
+
+/// Asserts that no matching semantics node contains another matching child node.
+void expectNoNestedSemanticsNodes(
+  SemanticsNode root, {
+  required SemanticsPredicate predicate,
+  required String debugName,
+}) {
+  final offendingNodes = <SemanticsNode>[];
+
+  bool containsMatchingDescendant(SemanticsNode node) {
+    var found = false;
+    bool visitor(SemanticsNode child) {
+      if (!child.isMergedIntoParent && predicate(child)) {
+        found = true;
+        return true;
+      }
+      child.visitChildren(visitor);
+      return true;
+    }
+
+    node.visitChildren(visitor);
+    return found;
+  }
+
+  for (final node in collectSemanticsNodes(root, predicate)) {
+    if (containsMatchingDescendant(node)) {
+      offendingNodes.add(node);
+    }
+  }
+
+  expect(
+    offendingNodes,
+    isEmpty,
+    reason: 'Expected no nested $debugName semantics nodes.',
+  );
 }
 
 /// Extracts a concise summary of a semantics node's label, value,
@@ -103,6 +195,11 @@ SemanticsSummary summarizeNode(SemanticsNode node) {
   addFlag('isTextField', data.flagsCollection.isTextField);
   addFlag('isReadOnly', data.flagsCollection.isReadOnly);
   addFlag('isMultiline', data.flagsCollection.isMultiline);
+  addFlag('scopesRoute', data.flagsCollection.scopesRoute);
+  addFlag('namesRoute', data.flagsCollection.namesRoute);
+  addFlag('isLiveRegion', data.flagsCollection.isLiveRegion);
+  addFlag('hasExpandedState', data.flagsCollection.isExpanded != Tristate.none);
+  addFlag('isExpanded', data.flagsCollection.isExpanded == Tristate.isTrue);
   addFlag(
     'isInMutuallyExclusiveGroup',
     data.flagsCollection.isInMutuallyExclusiveGroup,
@@ -124,6 +221,9 @@ SemanticsSummary summarizeNode(SemanticsNode node) {
   return SemanticsSummary(
     label: _normalizeLabel(data.label),
     value: data.value.isEmpty ? null : data.value,
+    increasedValue: data.increasedValue.isEmpty ? null : data.increasedValue,
+    decreasedValue: data.decreasedValue.isEmpty ? null : data.decreasedValue,
+    identifier: data.identifier.isEmpty ? null : data.identifier,
     flags: flags,
     actions: actions,
   );
@@ -170,6 +270,9 @@ SemanticsSummary summarizeMergedButtonFromRoot(WidgetTester tester) {
       found = SemanticsSummary(
         label: summary.label,
         value: summary.value,
+        increasedValue: summary.increasedValue,
+        decreasedValue: summary.decreasedValue,
+        identifier: summary.identifier,
         flags: mergedFlags,
         actions: mergedActions,
       );
@@ -226,6 +329,9 @@ SemanticsSummary summarizeMergedFromRoot(
       found = SemanticsSummary(
         label: summary.label,
         value: summary.value,
+        increasedValue: summary.increasedValue,
+        decreasedValue: summary.decreasedValue,
+        identifier: summary.identifier,
         flags: mergedFlags,
         actions: mergedActions,
       );
@@ -287,36 +393,6 @@ Future<void> expectSemanticsParity({
     control: control,
   );
 
-  // Certain controls (e.g., TextField) can surface focusability either on the
-  // control node or an ancestor. Allow focusable flag parity to vary while
-  // still requiring a focus action.
-  if (control == ControlType.textField) {
-    SemanticsSummary stripFocusable(SemanticsSummary s) => SemanticsSummary(
-      label: s.label,
-      value: s.value,
-      flags: s.flags.where((f) => f != 'isFocusable').toSet(),
-      actions: s.actions,
-    );
-    materialSummary = stripFocusable(materialSummary);
-    nakedSummary = stripFocusable(nakedSummary);
-  }
-
-  // Tabs (Material) may not expose button/enabled flags. Normalize them out.
-  if (control == ControlType.tab) {
-    SemanticsSummary normalizeTab(SemanticsSummary s) => SemanticsSummary(
-      label: s.label,
-      value: s.value,
-      flags: s.flags
-          .where(
-            (f) =>
-                f != 'isButton' && f != 'isEnabled' && f != 'hasEnabledState',
-          )
-          .toSet(),
-      actions: s.actions,
-    );
-    materialSummary = normalizeTab(materialSummary);
-    nakedSummary = normalizeTab(nakedSummary);
-  }
   expect(nakedSummary, equals(materialSummary));
 }
 

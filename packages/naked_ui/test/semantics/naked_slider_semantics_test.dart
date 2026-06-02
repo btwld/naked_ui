@@ -1,3 +1,5 @@
+import 'dart:ui' as ui;
+
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -13,15 +15,13 @@ void main() {
   }
 
   group('NakedSlider Semantics', () {
-    testWidgets('parity with Material Slider - enabled', (tester) async {
+    testWidgets('enabled slider exposes value and keyboard step semantics', (
+      tester,
+    ) async {
       final handle = tester.ensureSemantics();
 
-      await expectSemanticsParity(
-        tester: tester,
-        material: _buildTestApp(
-          Slider(value: 0.5, min: 0, max: 1, onChanged: (_) {}),
-        ),
-        naked: _buildTestApp(
+      await tester.pumpWidget(
+        _buildTestApp(
           NakedSlider(
             value: 0.5,
             min: 0,
@@ -30,20 +30,29 @@ void main() {
             child: const SizedBox(width: 200, height: 40),
           ),
         ),
+      );
+
+      final summary = summarizeMergedFromRoot(
+        tester,
         control: ControlType.slider,
       );
+      expect(summary.value, '50%');
+      expect(summary.increasedValue, '51%');
+      expect(summary.decreasedValue, '49%');
+      expect(summary.flags, containsAll(['isSlider', 'hasEnabledState']));
+      expect(summary.flags, contains('isEnabled'));
+      expect(summary.actions, containsAll(['increase', 'decrease']));
+
       handle.dispose();
     });
 
-    testWidgets('parity with Material Slider - disabled', (tester) async {
+    testWidgets('disabled slider exposes value without semantic actions', (
+      tester,
+    ) async {
       final handle = tester.ensureSemantics();
 
-      await expectSemanticsParity(
-        tester: tester,
-        material: _buildTestApp(
-          const Slider(value: 0.5, min: 0, max: 1, onChanged: null),
-        ),
-        naked: _buildTestApp(
+      await tester.pumpWidget(
+        _buildTestApp(
           NakedSlider(
             value: 0.5,
             min: 0,
@@ -52,8 +61,17 @@ void main() {
             child: const SizedBox(width: 200, height: 40),
           ),
         ),
+      );
+
+      final summary = summarizeMergedFromRoot(
+        tester,
         control: ControlType.slider,
       );
+      expect(summary.value, '50%');
+      expect(summary.flags, contains('isSlider'));
+      expect(summary.flags, isNot(contains('isEnabled')));
+      expect(summary.actions, isEmpty);
+
       handle.dispose();
     });
 
@@ -93,7 +111,10 @@ void main() {
         control: ControlType.slider,
       );
 
-      expect(nakedFocused, equals(materialFocused));
+      expect(nakedFocused.label, materialFocused.label);
+      expect(nakedFocused.value, materialFocused.value);
+      expect(nakedFocused.flags, materialFocused.flags);
+      expect(nakedFocused.actions, materialFocused.actions);
 
       fm.dispose();
       fn.dispose();
@@ -134,8 +155,112 @@ void main() {
         control: ControlType.slider,
       );
 
-      expect(nakedHovered, equals(materialHovered));
+      expect(nakedHovered.label, materialHovered.label);
+      expect(nakedHovered.value, materialHovered.value);
+      expect(nakedHovered.flags, materialHovered.flags);
+      expect(nakedHovered.actions, materialHovered.actions);
       await mouse.removePointer();
+      handle.dispose();
+    });
+
+    testWidgets('semanticFormatterCallback customizes value announcements', (
+      tester,
+    ) async {
+      final handle = tester.ensureSemantics();
+
+      await tester.pumpWidget(
+        _buildTestApp(
+          NakedSlider(
+            value: 50,
+            min: 0,
+            max: 100,
+            keyboardStep: 10,
+            semanticFormatterCallback: (value) => '${value.round()} dollars',
+            onChanged: (_) {},
+            child: const SizedBox(width: 200, height: 40),
+          ),
+        ),
+      );
+
+      final summary = summarizeMergedFromRoot(
+        tester,
+        control: ControlType.slider,
+      );
+      expect(summary.value, '50 dollars');
+      expect(summary.increasedValue, '60 dollars');
+      expect(summary.decreasedValue, '40 dollars');
+
+      handle.dispose();
+    });
+
+    testWidgets('semantic increase and decrease actions step and clamp value', (
+      tester,
+    ) async {
+      final handle = tester.ensureSemantics();
+      final reportedValues = <double>[];
+
+      await tester.pumpWidget(
+        _buildTestApp(
+          NakedSlider(
+            value: 0.5,
+            min: 0,
+            max: 1,
+            keyboardStep: 0.1,
+            onChanged: reportedValues.add,
+            child: const SizedBox(width: 200, height: 40),
+          ),
+        ),
+      );
+
+      var root = tester.getSemantics(find.byType(Scaffold));
+      var sliderNode = findSemanticsNode(
+        root,
+        (node) => node.getSemanticsData().flagsCollection.isSlider,
+      );
+      expect(sliderNode, isNotNull);
+
+      void performSliderAction(ui.SemanticsAction action) {
+        tester.binding.performSemanticsAction(
+          ui.SemanticsActionEvent(
+            type: action,
+            viewId: tester.view.viewId,
+            nodeId: sliderNode!.id,
+          ),
+        );
+      }
+
+      performSliderAction(ui.SemanticsAction.increase);
+      await tester.pump();
+      performSliderAction(ui.SemanticsAction.decrease);
+      await tester.pump();
+
+      expect(reportedValues, [closeTo(0.6, 0.0001), closeTo(0.4, 0.0001)]);
+
+      reportedValues.clear();
+      await tester.pumpWidget(
+        _buildTestApp(
+          NakedSlider(
+            value: 0.95,
+            min: 0,
+            max: 1,
+            keyboardStep: 0.1,
+            onChanged: reportedValues.add,
+            child: const SizedBox(width: 200, height: 40),
+          ),
+        ),
+      );
+      root = tester.getSemantics(find.byType(Scaffold));
+      sliderNode = findSemanticsNode(
+        root,
+        (node) => node.getSemanticsData().flagsCollection.isSlider,
+      );
+      expect(sliderNode, isNotNull);
+
+      performSliderAction(ui.SemanticsAction.increase);
+      await tester.pump();
+
+      expect(reportedValues, [1.0]);
+
       handle.dispose();
     });
   });

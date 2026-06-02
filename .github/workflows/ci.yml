@@ -36,6 +36,7 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           channel: 'stable'
+          flutter-version: '3.41.2'
           cache: true
 
       - name: Install dependencies (workspace)
@@ -59,6 +60,9 @@ jobs:
 
       - name: Run tests
         run: flutter test packages/naked_ui/test --coverage
+
+      - name: Run example tests
+        run: flutter test packages/example/test
 
       - name: Setup LCOV
         uses: hrishikesh-kadam/setup-lcov@v1

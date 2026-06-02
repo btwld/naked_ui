@@ -527,6 +527,15 @@ class _NakedAccordionState<T> extends State<NakedAccordion<T>>
       canExpand: canExpand,
     );
 
+    final Widget trigger = NakedStateScopeBuilder(
+      value: accordionState,
+      builder: (context, accordionState, child) =>
+          widget.builder(context, accordionState),
+    );
+
+    final bool excludeTriggerSemantics =
+        widget.excludeSemantics || widget.semanticLabel != null;
+
     Widget triggerContent = GestureDetector(
       onTapDown: (widget.enabled && widget.onPressChange != null)
           ? (_) => updatePressState(true, widget.onPressChange)
@@ -540,19 +549,17 @@ class _NakedAccordionState<T> extends State<NakedAccordion<T>>
           : null,
       behavior: HitTestBehavior.opaque,
       excludeFromSemantics: true,
-      child: ExcludeSemantics(
-        child: NakedStateScopeBuilder(
-          value: accordionState,
-          builder: (context, accordionState, child) =>
-              widget.builder(context, accordionState),
-        ),
-      ),
+      child: excludeTriggerSemantics
+          ? ExcludeSemantics(child: trigger)
+          : trigger,
     );
 
     Widget accordionChild = widget.excludeSemantics
         ? triggerContent
         : Semantics(
             enabled: widget.enabled,
+            button: true,
+            expanded: isExpanded,
             label: widget.semanticLabel,
             onTap: widget.enabled ? onTap : null,
             child: triggerContent,

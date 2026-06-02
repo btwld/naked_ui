@@ -1,6 +1,11 @@
+import 'dart:ui' show Tristate;
+
 import 'package:flutter/material.dart';
+import 'package:flutter/semantics.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:naked_ui/naked_ui.dart';
+
+import 'semantics/semantics_test_utils.dart';
 
 void main() {
   group('excludeSemantics', () {
@@ -244,6 +249,56 @@ void main() {
       );
 
       expect(find.bySemanticsLabel(RegExp(r'Test Dialog')), findsNothing);
+
+      semanticsHandle.dispose();
+    });
+
+    testWidgets('NakedMenu respects excludeSemantics', (tester) async {
+      final semanticsHandle = tester.ensureSemantics();
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: NakedMenu<String>(
+              controller: MenuController(),
+              semanticLabel: 'Test Menu',
+              builder: (context, state, child) => const Text('Menu'),
+              overlayBuilder: (context, info) => const SizedBox.shrink(),
+            ),
+          ),
+        ),
+      );
+
+      expect(find.bySemanticsLabel(RegExp(r'Test Menu')), findsOneWidget);
+      expect(find.bySemanticsLabel('Menu'), findsNothing);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: NakedMenu<String>(
+              controller: MenuController(),
+              semanticLabel: 'Test Menu',
+              excludeSemantics: true,
+              builder: (context, state, child) => const Text('Menu'),
+              overlayBuilder: (context, info) => const SizedBox.shrink(),
+            ),
+          ),
+        ),
+      );
+
+      expect(find.bySemanticsLabel(RegExp(r'Test Menu')), findsNothing);
+      expect(find.bySemanticsLabel('Menu'), findsNothing);
+
+      final root = tester.getSemantics(find.byType(Scaffold));
+      final leakedTriggerNodes = collectSemanticsNodes(root, (node) {
+        final data = node.getSemanticsData();
+        return data.label.contains('Test Menu') ||
+            data.label.contains('Menu') ||
+            data.flagsCollection.isButton ||
+            data.flagsCollection.isExpanded != Tristate.none ||
+            data.hasAction(SemanticsAction.tap);
+      });
+      expect(leakedTriggerNodes, isEmpty);
 
       semanticsHandle.dispose();
     });

@@ -80,6 +80,7 @@ class NakedRadio<T> extends StatefulWidget {
     this.onPressChange,
     this.builder,
     this.groupRegistry,
+    this.semanticLabel,
   }) : assert(
          child != null || builder != null,
          'Either child or builder must be provided',
@@ -123,6 +124,9 @@ class NakedRadio<T> extends StatefulWidget {
   /// When null, the nearest [RadioGroup] ancestor is used.
   final RadioGroupRegistry<T>? groupRegistry;
 
+  /// Semantic label for assistive technologies.
+  final String? semanticLabel;
+
   @override
   State<NakedRadio<T>> createState() => _NakedRadioState<T>();
 }
@@ -164,7 +168,7 @@ class _NakedRadioState<T> extends State<NakedRadio<T>>
         widget.mouseCursor ??
         (widget.enabled ? SystemMouseCursors.click : SystemMouseCursors.basic);
 
-    return RawRadio<T>(
+    final radio = RawRadio<T>(
       value: widget.value,
       mouseCursor: WidgetStateMouseCursor.resolveWith((_) => effectiveCursor),
       toggleable: widget.toggleable,
@@ -207,14 +211,24 @@ class _NakedRadioState<T> extends State<NakedRadio<T>>
 
         // Ensure the area is hit-testable so RawRadio's GestureDetector
         // can receive taps even if the built widget has no gesture handlers.
-        return HitTestableContainer(
+        Widget radioChild = HitTestableContainer(
           child: NakedStateScopeBuilder(
             value: radioStateTyped,
             child: widget.child,
             builder: widget.builder,
           ),
         );
+
+        if (widget.semanticLabel != null) {
+          radioChild = ExcludeSemantics(child: radioChild);
+        }
+
+        return radioChild;
       },
     );
+
+    return widget.semanticLabel == null
+        ? radio
+        : Semantics(label: widget.semanticLabel, child: radio);
   }
 }

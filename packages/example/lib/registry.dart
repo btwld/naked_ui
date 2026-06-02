@@ -19,6 +19,8 @@ import 'api/naked_radio.0.dart' as radio_basic_example;
 import 'api/naked_select.0.dart' as select_example;
 import 'api/naked_select.2.dart' as select_checkmark_example;
 import 'api/naked_select.1.dart' as select_cyberpunk_example;
+// Semantics
+import 'api/naked_semantics_playground.dart' as semantics_playground;
 // Slider
 import 'api/naked_slider.0.dart' as slider_example;
 // Tabs
@@ -182,6 +184,15 @@ class DemoRegistry {
       sourceUrl:
           'https://github.com/btwld/naked_ui/blob/main/example/lib/api/naked_toggle.0.dart',
       tags: ['toggle'],
+    ),
+    Demo(
+      id: 'semantics-playground',
+      title: 'Semantics - Playground',
+      category: 'Semantics',
+      builder: (_) => const semantics_playground.SemanticsPlayground(),
+      sourceUrl:
+          'https://github.com/btwld/naked_ui/blob/main/example/lib/api/naked_semantics_playground.dart',
+      tags: ['semantics', 'accessibility', 'a11y'],
     ),
   ];
 

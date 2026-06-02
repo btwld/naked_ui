@@ -192,5 +192,64 @@ void main() {
 
       handle.dispose();
     });
+
+    testWidgets(
+      'semanticLabel overrides visible child label and preserves radio semantics',
+      (tester) async {
+        final handle = tester.ensureSemantics();
+        final reg = _FakeRegistry<String>('a');
+
+        await tester.pumpWidget(
+          _buildTestApp(
+            NakedRadio<String>(
+              value: 'a',
+              groupRegistry: reg,
+              semanticLabel: 'Option A',
+              child: const Text('Visible A'),
+            ),
+          ),
+        );
+
+        final node = _findRadioNode(tester);
+        expect(
+          node,
+          matchesSemantics(
+            label: 'Option A',
+            hasCheckedState: true,
+            isChecked: true,
+            hasEnabledState: true,
+            isEnabled: true,
+            isFocusable: true,
+            isInMutuallyExclusiveGroup: true,
+            hasTapAction: true,
+            hasFocusAction: true,
+          ),
+        );
+        expect(node.getSemanticsData().label, isNot(contains('Visible A')));
+
+        handle.dispose();
+      },
+    );
+
+    testWidgets('visible child labels radio when semanticLabel is omitted', (
+      tester,
+    ) async {
+      final handle = tester.ensureSemantics();
+      final reg = _FakeRegistry<String>('a');
+
+      await tester.pumpWidget(
+        _buildTestApp(
+          NakedRadio<String>(
+            value: 'a',
+            groupRegistry: reg,
+            child: const Text('Visible A'),
+          ),
+        ),
+      );
+
+      expect(_findRadioNode(tester).getSemanticsData().label, 'Visible A');
+
+      handle.dispose();
+    });
   });
 }

@@ -183,6 +183,30 @@ void main() {
       handle.dispose();
     });
 
+    testWidgets('modal dialog exposes route scope and route name', (
+      tester,
+    ) async {
+      final handle = tester.ensureSemantics();
+
+      await _showNakedDialog(
+        tester,
+        title: 'Route Dialog',
+        content: 'This dialog is a route scope',
+      );
+
+      final dialogRoot = tester.getSemantics(find.byType(NakedDialog));
+      final routeNode = findSemanticsNode(dialogRoot, (node) {
+        final data = node.getSemanticsData();
+        return data.label == 'Route Dialog' &&
+            data.flagsCollection.scopesRoute &&
+            data.flagsCollection.namesRoute;
+      });
+
+      expect(routeNode, isNotNull);
+
+      handle.dispose();
+    });
+
     testWidgets('modal vs non-modal semantics', (tester) async {
       final handle = tester.ensureSemantics();
 
