@@ -1,6 +1,3 @@
-import 'dart:async';
-
-import 'package:flutter/gestures.dart';
 import 'package:flutter/widgets.dart';
 
 import 'naked_widgets.dart';
@@ -9,29 +6,17 @@ import 'utilities/positioning.dart';
 /// Provides tooltip behavior without visual styling.
 ///
 /// Handles showing, hiding, and positioning tooltips with automatic
-/// dismissal after specified duration.
+/// dismissal. Wraps Flutter's [RawTooltip] to provide a consistent
+/// naked_ui API with support for [OverlayPositionConfig]-based positioning.
+///
+/// The [tooltipBuilder] receives an [Animation] that drives the tooltip's
+/// show/hide transition, making it easy to add fade, scale, or custom
+/// animations.
 ///
 /// Example:
 /// ```dart
-/// class TooltipExample extends StatefulWidget {
-///  const TooltipExample({super.key});
-///
-///   @override
-///   State<TooltipExample> createState() => _TooltipExampleState();
-/// }
-///
-/// class _TooltipExampleState extends State<TooltipExample>
-///     with SingleTickerProviderStateMixin {
-///   late final _animationController = AnimationController(
-///     duration: const Duration(milliseconds: 300),
-///     vsync: this,
-///   );
-///
-///   @override
-///   void dispose() {
-///     _animationController.dispose();
-///     super.dispose();
-///   }
+/// class TooltipExample extends StatelessWidget {
+///   const TooltipExample({super.key});
 ///
 ///   @override
 ///   Widget build(BuildContext context) {
@@ -42,19 +27,10 @@ import 'utilities/positioning.dart';
 ///         followerAnchor: Alignment.topCenter,
 ///         offset: Offset(0, 4),
 ///       ),
-///       waitDuration: const Duration(seconds: 0),
-///       showDuration: const Duration(seconds: 1),
-///       onOpenRequested: (_, show) {
-///         show();
-///         _animationController.forward();
-///       },
-///       onCloseRequested: (hide) {
-///         _animationController.reverse().then((value) {
-///           hide();
-///         });
-///       },
-///       overlayBuilder: (context, info) => FadeTransition(
-///         opacity: _animationController,
+///       hoverDelay: Duration.zero,
+///       dismissDelay: const Duration(seconds: 1),
+///       tooltipBuilder: (context, animation) => FadeTransition(
+///         opacity: animation,
 ///         child: Container(
 ///           decoration: BoxDecoration(
 ///             color: Colors.black54,
@@ -87,20 +63,27 @@ class NakedTooltip extends StatefulWidget {
   const NakedTooltip({
     super.key,
     required this.child,
-    required this.overlayBuilder,
-    this.showDuration = const Duration(seconds: 2),
-    this.waitDuration = const Duration(seconds: 1),
-    this.positioning = const OverlayPositionConfig(
-      targetAnchor: Alignment.topCenter,
-      followerAnchor: Alignment.bottomCenter,
+    required this.tooltipBuilder,
+    this.hoverDelay = Duration.zero,
+    this.touchDelay = const Duration(milliseconds: 1500),
+    this.dismissDelay = const Duration(milliseconds: 100),
+    this.enableTapToDismiss = true,
+    this.triggerMode = TooltipTriggerMode.longPress,
+    this.enableFeedback = true,
+    this.onTriggered,
+    this.animationStyle = const AnimationStyle(
+      curve: Curves.fastOutSlowIn,
+      duration: Duration(milliseconds: 150),
+      reverseDuration: Duration(milliseconds: 75),
     ),
-    this.onOpen,
-    this.onClose,
-    this.onOpenRequested,
-    this.onCloseRequested,
+    this.positioning,
+    this.positionDelegate,
     this.semanticsLabel,
     this.excludeSemantics = false,
-  });
+  }) : assert(
+         positioning == null || positionDelegate == null,
+         'Cannot provide both positioning and positionDelegate',
+       );
 
   /// See also:
   /// - [NakedPopover], for anchored, click-triggered overlays.
@@ -108,8 +91,12 @@ class NakedTooltip extends StatefulWidget {
   /// The widget that triggers the tooltip.
   final Widget child;
 
-  /// The tooltip content overlayBuilder.
-  final RawMenuAnchorOverlayBuilder overlayBuilder;
+  /// Builds the tooltip content displayed in the overlay.
+  ///
+  /// The [animation] drives the show/hide transition (0.0 → 1.0 when showing,
+  /// 1.0 → 0.0 when hiding). Use it with [FadeTransition], [ScaleTransition],
+  /// or similar widgets for animated tooltips.
+  final TooltipComponentBuilder tooltipBuilder;
 
   /// The semantic label for screen readers.
   ///
@@ -117,36 +104,65 @@ class NakedTooltip extends StatefulWidget {
   /// semantic text is exposed.
   final String? semanticsLabel;
 
-  /// Positioning configuration for the overlay.
-  final OverlayPositionConfig positioning;
-
-  /// The duration tooltip remains visible.
-  final Duration showDuration;
-
-  /// The duration to wait before showing tooltip.
-  final Duration waitDuration;
-
-  /// Called when the tooltip opens.
-  final VoidCallback? onOpen;
-
-  /// Called when the tooltip closes.
-  final VoidCallback? onClose;
-
-  /// Called when a request is made to open the tooltip.
+  /// Positioning configuration for the overlay using anchor-based alignment.
   ///
-  /// Allows customizing opening behavior with animations or delays.
-  /// Call the provided callback to show the tooltip.
-  final RawMenuAnchorOpenRequestedCallback? onOpenRequested;
+  /// Cannot be used together with [positionDelegate].
+  final OverlayPositionConfig? positioning;
 
-  /// Called when a request is made to close the tooltip.
+  /// A custom position delegate for computing where the tooltip should
+  /// be positioned relative to the target.
   ///
-  /// Allows customizing closing behavior with animations or delays.
-  /// Call the provided callback to hide the tooltip.
-  final RawMenuAnchorCloseRequestedCallback? onCloseRequested;
+  /// Cannot be used together with [positioning].
+  final TooltipPositionDelegate? positionDelegate;
+
+  /// The delay before the tooltip is shown when hovering with a mouse.
+  ///
+  /// Defaults to [Duration.zero] (shown immediately on hover).
+  final Duration hoverDelay;
+
+  /// The duration the tooltip remains visible after a touch trigger is released.
+  ///
+  /// Does not affect mouse pointer devices.
+  ///
+  /// Defaults to 1500 milliseconds.
+  final Duration touchDelay;
+
+  /// The delay before the tooltip is hidden after the mouse exits.
+  ///
+  /// Defaults to 100 milliseconds.
+  final Duration dismissDelay;
+
+  /// Whether the tooltip can be dismissed by tapping elsewhere.
+  ///
+  /// Defaults to true.
+  final bool enableTapToDismiss;
+
+  /// How touch events should trigger the tooltip.
+  ///
+  /// Does not affect mouse hover behavior.
+  ///
+  /// Defaults to [TooltipTriggerMode.longPress].
+  final TooltipTriggerMode triggerMode;
+
+  /// Whether haptic/acoustic feedback is provided on touch trigger.
+  ///
+  /// Defaults to true.
+  final bool enableFeedback;
+
+  /// Called when the tooltip is triggered by tap or long press.
+  ///
+  /// Not called for mouse hover triggers.
+  final TooltipTriggeredCallback? onTriggered;
+
+  /// The animation style for the tooltip show/hide transition.
+  ///
+  /// Use [AnimationStyle.noAnimation] to disable animation.
+  final AnimationStyle animationStyle;
 
   /// Whether to exclude this widget from the semantic tree.
   ///
-  /// When true, the widget and its children are hidden from accessibility services.
+  /// When true, no tooltip semantics text is exposed to
+  /// accessibility services.
   final bool excludeSemantics;
 
   @override
@@ -154,71 +170,82 @@ class NakedTooltip extends StatefulWidget {
 }
 
 class _NakedTooltipState extends State<NakedTooltip> {
-  // ignore: dispose-fields
-  final _menuController = MenuController();
-  Timer? _showTimer;
-  Timer? _waitTimer;
+  TooltipPositionDelegate? _cachedPositionDelegate;
 
-  void _handleMouseEnter(PointerEnterEvent _) {
-    _showTimer?.cancel();
-    _waitTimer?.cancel();
-    _waitTimer = Timer(widget.waitDuration, () {
-      _menuController.open();
-    });
-  }
-
-  void _handleMouseExit(PointerExitEvent _) {
-    _showTimer?.cancel();
-    _waitTimer?.cancel();
-    _showTimer = Timer(widget.showDuration, () {
-      _menuController.close();
-    });
-  }
-
-  void _handleOpen() {
-    widget.onOpen?.call();
-  }
-
-  void _handleClose() {
-    widget.onClose?.call();
+  @override
+  void initState() {
+    super.initState();
+    _updatePositionDelegate();
   }
 
   @override
-  void dispose() {
-    _showTimer?.cancel();
-    _waitTimer?.cancel();
-    super.dispose();
+  void didUpdateWidget(NakedTooltip oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.positioning != oldWidget.positioning ||
+        widget.positionDelegate != oldWidget.positionDelegate) {
+      _updatePositionDelegate();
+    }
+  }
+
+  void _updatePositionDelegate() {
+    if (widget.positionDelegate != null) {
+      _cachedPositionDelegate = widget.positionDelegate;
+      return;
+    }
+    if (widget.positioning == null) {
+      _cachedPositionDelegate = null;
+      return;
+    }
+    final config = widget.positioning!;
+    _cachedPositionDelegate = (TooltipPositionContext context) {
+      final targetTopLeft =
+          context.target - context.targetSize.center(Offset.zero);
+      final targetAnchorOffset = config.targetAnchor.alongSize(
+        context.targetSize,
+      );
+      final followerAnchorOffset = config.followerAnchor.alongSize(
+        context.tooltipSize,
+      );
+      final position =
+          targetTopLeft +
+          targetAnchorOffset -
+          followerAnchorOffset +
+          config.offset;
+
+      return Offset(
+        position.dx.clamp(
+          0.0,
+          (context.overlaySize.width - context.tooltipSize.width).clamp(
+            0.0,
+            double.infinity,
+          ),
+        ),
+        position.dy.clamp(
+          0.0,
+          (context.overlaySize.height - context.tooltipSize.height).clamp(
+            0.0,
+            double.infinity,
+          ),
+        ),
+      );
+    };
   }
 
   @override
   Widget build(BuildContext context) {
-    Widget tooltipContent = MouseRegion(
-      onEnter: _handleMouseEnter,
-      onExit: _handleMouseExit,
+    return RawTooltip(
+      semanticsTooltip: widget.excludeSemantics ? null : widget.semanticsLabel,
+      tooltipBuilder: widget.tooltipBuilder,
+      hoverDelay: widget.hoverDelay,
+      touchDelay: widget.touchDelay,
+      dismissDelay: widget.dismissDelay,
+      enableTapToDismiss: widget.enableTapToDismiss,
+      triggerMode: widget.triggerMode,
+      enableFeedback: widget.enableFeedback,
+      onTriggered: widget.onTriggered,
+      animationStyle: widget.animationStyle,
+      positionDelegate: _cachedPositionDelegate,
       child: widget.child,
-    );
-
-    Widget tooltipChild = widget.excludeSemantics
-        ? tooltipContent
-        : Semantics(
-            container: true,
-            tooltip: widget.semanticsLabel,
-            child: tooltipContent,
-          );
-
-    return RawMenuAnchor(
-      consumeOutsideTaps: false,
-      onOpen: _handleOpen,
-      onClose: _handleClose,
-      onOpenRequested: widget.onOpenRequested ?? (_, show) => show(),
-      onCloseRequested: widget.onCloseRequested ?? (hide) => hide(),
-      controller: _menuController,
-      overlayBuilder: (context, info) => OverlayPositioner(
-        targetRect: info.anchorRect,
-        positioning: widget.positioning,
-        child: widget.overlayBuilder(context, info),
-      ),
-      child: tooltipChild,
     );
   }
 }

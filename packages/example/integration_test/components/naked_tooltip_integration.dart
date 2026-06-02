@@ -10,53 +10,40 @@ void main() {
 
   group('NakedTooltip Integration Tests', () {
     testWidgets('tooltip shows on hover and hides on exit', (tester) async {
-      // Use the actual example app
       await tester.pumpWidget(const tooltip_example.MyApp());
       await tester.pump(const Duration(milliseconds: 100));
 
       final tooltipFinder = find.byType(NakedTooltip);
       expect(tooltipFinder, findsOneWidget);
 
-      // Use the tooltip widget itself as the hover target for reliability
       final triggerFinder = tooltipFinder;
 
-      // Initially tooltip content should not be visible
       expect(find.text('This is a tooltip'), findsNothing);
 
-      // Simulate hover enter (add and move pointer to trigger center)
       final gesture = await tester.createGesture(kind: PointerDeviceKind.mouse);
       await gesture.addPointer();
       addTearDown(gesture.removePointer);
       await gesture.moveTo(tester.getCenter(triggerFinder));
-      await tester.pumpAndSettle(); // Wait for waitDuration and animations
+      await tester.pumpAndSettle();
 
-      // Tooltip should be visible now
       expect(find.text('This is a tooltip'), findsOneWidget);
 
-      // Simulate hover exit
       await gesture.moveTo(const Offset(0, 0));
-      await tester.pump(
-        const Duration(milliseconds: 350),
-      ); // Wait for animation + removal
+      await tester.pump(const Duration(milliseconds: 350));
+      await tester.pumpAndSettle();
 
-      // Tooltip should be hidden now
       expect(find.text('This is a tooltip'), findsNothing);
     }, skip: true);
 
-    testWidgets('tooltip respects wait duration', (tester) async {
-      bool tooltipOpened = false;
-
+    testWidgets('tooltip respects hover delay', (tester) async {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
             body: Center(
               child: NakedTooltip(
-                waitDuration: const Duration(milliseconds: 500),
-                showDuration: Duration.zero,
-                onOpen: () {
-                  tooltipOpened = true;
-                },
-                overlayBuilder: (context, info) => Container(
+                hoverDelay: const Duration(milliseconds: 500),
+                dismissDelay: Duration.zero,
+                tooltipBuilder: (context, animation) => Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
                     color: Colors.black,
@@ -87,41 +74,30 @@ void main() {
       final triggerFinder = find.text('Hover me');
       expect(triggerFinder, findsOneWidget);
 
-      // Initially tooltip should not be visible
       expect(find.text('Tooltip'), findsNothing);
-      expect(tooltipOpened, false);
 
-      // Start hovering
       final gesture = await tester.createGesture(kind: PointerDeviceKind.mouse);
       await gesture.addPointer();
       addTearDown(gesture.removePointer);
       await gesture.moveTo(tester.getCenter(triggerFinder));
 
-      // Should not be visible immediately (wait duration not elapsed)
       await tester.pump(const Duration(milliseconds: 100));
       expect(find.text('Tooltip'), findsNothing);
-      expect(tooltipOpened, false);
 
-      // Should be visible after wait duration
       await tester.pump(const Duration(milliseconds: 450));
+      await tester.pumpAndSettle();
       expect(find.text('Tooltip'), findsOneWidget);
-      expect(tooltipOpened, true);
     });
 
     testWidgets('tooltip shows on hover with zero durations', (tester) async {
-      bool tooltipOpened = false;
-      bool tooltipClosed = false;
-
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
             body: Center(
               child: NakedTooltip(
-                waitDuration: Duration.zero,
-                showDuration: Duration.zero,
-                onOpen: () => tooltipOpened = true,
-                onClose: () => tooltipClosed = true,
-                overlayBuilder: (context, info) => Container(
+                hoverDelay: Duration.zero,
+                dismissDelay: Duration.zero,
+                tooltipBuilder: (context, animation) => Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
                     color: Colors.black,
@@ -152,12 +128,8 @@ void main() {
       final triggerFinder = find.text('Hover me');
       expect(triggerFinder, findsOneWidget);
 
-      // Initially tooltip should not be visible
       expect(find.text('Tooltip'), findsNothing);
-      expect(tooltipOpened, false);
-      expect(tooltipClosed, false);
 
-      // Hover to show
       final gesture = await tester.createGesture(kind: PointerDeviceKind.mouse);
       await gesture.addPointer();
       addTearDown(gesture.removePointer);
@@ -165,14 +137,10 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Tooltip'), findsOneWidget);
-      expect(tooltipOpened, true);
-      expect(tooltipClosed, false);
 
-      // Move out to hide
       await gesture.moveTo(const Offset(0, 0));
       await tester.pumpAndSettle();
       expect(find.text('Tooltip'), findsNothing);
-      expect(tooltipClosed, true);
     });
 
     testWidgets('tooltip positioning works correctly', (tester) async {
@@ -185,9 +153,9 @@ void main() {
                   targetAnchor: Alignment.bottomCenter,
                   followerAnchor: Alignment.topCenter,
                 ),
-                waitDuration: Duration.zero,
-                showDuration: Duration.zero,
-                overlayBuilder: (context, info) => Container(
+                hoverDelay: Duration.zero,
+                dismissDelay: Duration.zero,
+                tooltipBuilder: (context, animation) => Container(
                   width: 100,
                   height: 50,
                   padding: const EdgeInsets.all(8),
@@ -219,24 +187,19 @@ void main() {
         ),
       );
 
-      // Use the tooltip widget itself as the hover target for reliability
       final triggerFinder = find.byType(NakedTooltip);
       expect(triggerFinder, findsOneWidget);
 
-      // Initially tooltip should not be visible
       expect(find.text('Positioned Tooltip'), findsNothing);
 
-      // Hover to show tooltip
       final gesture = await tester.createGesture(kind: PointerDeviceKind.mouse);
       await gesture.addPointer();
       addTearDown(gesture.removePointer);
       await gesture.moveTo(tester.getCenter(triggerFinder));
       await tester.pumpAndSettle();
 
-      // Tooltip should be visible and positioned correctly
       expect(find.text('Positioned Tooltip'), findsOneWidget);
 
-      // Check that tooltip rect is valid and on screen
       final tooltipRect = tester.getRect(find.text('Positioned Tooltip'));
 
       expect(tooltipRect.size.height, greaterThan(0));

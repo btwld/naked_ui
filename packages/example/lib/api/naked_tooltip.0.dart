@@ -36,48 +36,22 @@ class MyApp extends StatelessWidget {
   }
 }
 
-class TooltipExample extends StatefulWidget {
+class TooltipExample extends StatelessWidget {
   const TooltipExample({super.key});
-
-  @override
-  State<TooltipExample> createState() => _TooltipExampleState();
-}
-
-class _TooltipExampleState extends State<TooltipExample>
-    with SingleTickerProviderStateMixin {
-  late final _animationController = AnimationController(
-    duration: const Duration(milliseconds: 300),
-    vsync: this,
-  );
-
-  @override
-  void dispose() {
-    _animationController.dispose();
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {
     return NakedTooltip(
       semanticsLabel: 'This is a tooltip',
       positioning: const OverlayPositionConfig(
-        targetAnchor: Alignment.bottomCenter,
+        targetAnchor: Alignment.bottomRight,
         followerAnchor: Alignment.topCenter,
         offset: Offset(0, 4),
       ),
-      waitDuration: const Duration(seconds: 0),
-      showDuration: const Duration(seconds: 1),
-      onOpenRequested: (_, show) {
-        show();
-        _animationController.forward();
-      },
-      onCloseRequested: (hide) {
-        _animationController.reverse().then((value) {
-          hide();
-        });
-      },
-      overlayBuilder: (context, info) => FadeTransition(
-        opacity: _animationController,
+      hoverDelay: Duration.zero,
+      dismissDelay: const Duration(seconds: 1),
+      tooltipBuilder: (context, animation) => FadeTransition(
+        opacity: animation,
         child: Container(
           decoration: BoxDecoration(
             color: Colors.black54,

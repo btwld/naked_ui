@@ -1,10 +1,10 @@
 ---
 title: NakedTooltip
-description: Hover/focus triggered tooltip overlay with positioning and lifecycle callbacks
+description: Hover/touch triggered tooltip overlay with positioning, animation, and lifecycle callbacks
 keywords: [flutter, tooltip, hover, overlay, headless]
 ---
 
-Headless tooltip component. Handles hover/focus triggers, positioning, timers, and dismissal. Use builder pattern for custom styling.
+Headless tooltip component built on Flutter's `RawTooltip`. Handles hover/touch triggers, positioning, animations, timers, and dismissal. The builder receives an `Animation` for easy transitions.
 
 ## When to use this
 
@@ -23,25 +23,8 @@ Headless tooltip component. Handles hover/focus triggers, positioning, timers, a
 import 'package:flutter/material.dart';
 import 'package:naked_ui/naked_ui.dart';
 
-class TooltipExample extends StatefulWidget {
+class TooltipExample extends StatelessWidget {
   const TooltipExample({super.key});
-
-  @override
-  State<TooltipExample> createState() => _TooltipExampleState();
-}
-
-class _TooltipExampleState extends State<TooltipExample>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _controller = AnimationController(
-    duration: const Duration(milliseconds: 200),
-    vsync: this,
-  );
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -50,10 +33,8 @@ class _TooltipExampleState extends State<TooltipExample>
         targetAnchor: Alignment.topCenter,
         followerAnchor: Alignment.bottomCenter,
       ),
-      waitDuration: const Duration(milliseconds: 400),
-      showDuration: const Duration(seconds: 2),
-      onOpen: () => _controller.forward(),
-      onClose: () => _controller.reverse(),
+      hoverDelay: const Duration(milliseconds: 400),
+      dismissDelay: const Duration(seconds: 2),
       child: Container(
         padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
@@ -62,9 +43,9 @@ class _TooltipExampleState extends State<TooltipExample>
         ),
         child: const Icon(Icons.copy, color: Colors.white, size: 18),
       ),
-      overlayBuilder: (context, info) {
+      tooltipBuilder: (context, animation) {
         return FadeTransition(
-          opacity: _controller,
+          opacity: animation,
           child: Material(
             elevation: 4,
             borderRadius: BorderRadius.circular(8),
@@ -87,38 +68,45 @@ class _TooltipExampleState extends State<TooltipExample>
 const NakedTooltip({
   Key? key,
   required this.child,
-  required this.overlayBuilder,
-  this.showDuration = const Duration(seconds: 2),
-  this.waitDuration = const Duration(seconds: 1),
-  this.positioning = const OverlayPositionConfig(
-    targetAnchor: Alignment.topCenter,
-    followerAnchor: Alignment.bottomCenter,
-  ),
-  this.onOpen,
-  this.onClose,
-  this.onOpenRequested,
-  this.onCloseRequested,
+  required this.tooltipBuilder,
+  this.hoverDelay = Duration.zero,
+  this.touchDelay = const Duration(milliseconds: 1500),
+  this.dismissDelay = const Duration(milliseconds: 100),
+  this.enableTapToDismiss = true,
+  this.triggerMode = TooltipTriggerMode.longPress,
+  this.enableFeedback = true,
+  this.onTriggered,
+  this.animationStyle,
+  this.positioning,
+  this.positionDelegate,
   this.semanticsLabel,
+  this.excludeSemantics = false,
 })
 ```
 
 ### Key Parameters
 
-- `child` → trigger widget that displays the tooltip on hover/focus
-- `overlayBuilder` → `(BuildContext, RawMenuAnchorOverlayInfo)` that returns the tooltip body each time it shows
-- `showDuration` → how long the tooltip stays visible before hiding automatically
-- `waitDuration` → delay before showing once hover/focus occurs
+- `child` → trigger widget that displays the tooltip on hover/touch
+- `tooltipBuilder` → `(BuildContext, Animation<double>)` that returns the tooltip body; the animation drives show/hide transitions
+- `hoverDelay` → delay before showing once hover occurs (default: immediate)
+- `dismissDelay` → delay before hiding after mouse exits (default: 100ms)
+- `touchDelay` → how long the tooltip stays visible after touch release (default: 1500ms)
 - `positioning` → `OverlayPositionConfig` controlling anchor & offset
-- `onOpen` / `onClose` → lifecycle hooks useful for animations
-- `onOpenRequested` / `onCloseRequested` → intercept show/hide requests (e.g. async delays)
-- `semanticsLabel` → text announced by assistive technologies on hover/focus
+- `positionDelegate` → alternative `TooltipPositionDelegate` for custom positioning
+- `triggerMode` → how touch events trigger the tooltip (longPress, tap, or manual)
+- `animationStyle` → customize animation duration, curve, and reverse behavior
+- `onTriggered` → called when triggered by tap or long press (not hover)
+- `semanticsLabel` → text announced by assistive technologies
+- `excludeSemantics` → hide tooltip semantics from accessibility services
 
 ## Behaviour Notes
 
-- Tooltips open on pointer hover and keyboard focus
-- When `waitDuration` elapses, the overlay opens via `RawMenuAnchor`; timers reset on exit
-- The overlay hides after `showDuration`; supply `onClose` for exit animations
-- The trigger remains focusable; use `semanticsLabel` for descriptive text when the trigger has no visible label
+- Tooltips open on pointer hover automatically
+- Touch triggers depend on `triggerMode` (longPress by default, or tap)
+- The `tooltipBuilder` receives an `Animation<double>` (0→1 on show, 1→0 on hide) for smooth transitions
+- Use `AnimationStyle.noAnimation` to disable the built-in transition
+- The tooltip dismisses on outside tap (controllable via `enableTapToDismiss`)
+- Only one tooltip is shown at a time when using nested tooltips
 
 ## Positioning Tips
 
@@ -132,4 +120,16 @@ const OverlayPositionConfig(
 );
 ```
 
-The overlay builder receives `RawMenuAnchorOverlayInfo` (`info` in the sample) with `anchorRect`, `overlaySize`, and `position` should you need pointer coordinates for arrow placement.
+For advanced positioning, use `positionDelegate` which receives a `TooltipPositionContext` with target location, sizes, and overlay bounds:
+
+```dart
+NakedTooltip(
+  positionDelegate: (context) {
+    return Offset(
+      context.target.dx + context.targetSize.width / 2,
+      context.target.dy - context.tooltipSize.height / 2,
+    );
+  },
+  // ...
+)
+```
