@@ -21,8 +21,8 @@ void main() {
 
   Widget _buildNakedTooltip({required String message, required String child}) {
     return NakedTooltip(
-      semanticsLabel: message,
-      overlayBuilder: (context, info) => Container(
+      semanticLabel: message,
+      overlayBuilder: (context, animation) => Container(
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
           color: Colors.grey[800],
@@ -44,10 +44,8 @@ void main() {
         ),
       );
 
-      // Verify the basic structure exists
       expect(find.text('Trigger text'), findsOneWidget);
 
-      // Check semantics tree for tooltip semantics
       final triggerNode = tester.getSemantics(find.text('Trigger text'));
       expect(triggerNode, isNotNull);
 
@@ -61,10 +59,7 @@ void main() {
         return _buildTestApp(
           const Tooltip(
             message: 'Button tooltip',
-            child: ElevatedButton(
-              onPressed: null, // Disabled to simplify semantics
-              child: Text('Button'),
-            ),
+            child: ElevatedButton(onPressed: null, child: Text('Button')),
           ),
         );
       }
@@ -72,8 +67,8 @@ void main() {
       Widget buildNakedButtonWithTooltip() {
         return _buildTestApp(
           NakedTooltip(
-            semanticsLabel: 'Button tooltip',
-            overlayBuilder: (context, info) => Container(
+            semanticLabel: 'Button tooltip',
+            overlayBuilder: (context, animation) => Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
                 color: Colors.grey[800],
@@ -84,10 +79,7 @@ void main() {
                 style: TextStyle(color: Colors.white),
               ),
             ),
-            child: const NakedButton(
-              onPressed: null, // Disabled to simplify semantics
-              child: Text('Button'),
-            ),
+            child: const NakedButton(onPressed: null, child: Text('Button')),
           ),
         );
       }
@@ -108,7 +100,6 @@ void main() {
       await mouse.addPointer();
       await tester.pump();
 
-      // Test with simple text triggers (not buttons)
       await tester.pumpWidget(
         _buildTestApp(
           _buildMaterialTooltip(message: 'Hover tooltip', child: 'Hover me'),
@@ -119,10 +110,8 @@ void main() {
       await tester.pump();
       await tester.pump(const Duration(seconds: 1));
 
-      // Verify Material tooltip appeared
       expect(find.text('Hover tooltip'), findsOneWidget);
 
-      // Test Naked tooltip
       await tester.pumpWidget(
         _buildTestApp(
           _buildNakedTooltip(message: 'Hover tooltip', child: 'Hover me'),
@@ -133,7 +122,6 @@ void main() {
       await tester.pump();
       await tester.pump(const Duration(seconds: 1));
 
-      // Verify both work similarly (this is a behavioral test rather than strict parity)
       expect(find.text('Hover me'), findsOneWidget);
 
       await mouse.removePointer();
@@ -165,13 +153,13 @@ void main() {
       await tester.pumpWidget(
         _buildTestApp(
           NakedTooltip(
-            overlayBuilder: (context, info) => const Text('Tooltip content'),
+            overlayBuilder: (context, animation) =>
+                const Text('Tooltip content'),
             child: const Text('No label'),
           ),
         ),
       );
 
-      // Should still work without explicit semantics label
       expect(find.text('No label'), findsOneWidget);
       expect(
         tester.getSemantics(find.text('No label')),
