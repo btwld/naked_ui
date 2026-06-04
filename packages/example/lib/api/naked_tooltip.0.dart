@@ -42,7 +42,7 @@ class TooltipExample extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return NakedTooltip(
-      semanticsLabel: 'This is a tooltip',
+      semanticLabel: 'This is a tooltip',
       positioning: const OverlayPositionConfig(
         targetAnchor: Alignment.bottomRight,
         followerAnchor: Alignment.topCenter,
@@ -50,7 +50,7 @@ class TooltipExample extends StatelessWidget {
       ),
       hoverDelay: Duration.zero,
       dismissDelay: const Duration(seconds: 1),
-      tooltipBuilder: (context, animation) => FadeTransition(
+      overlayBuilder: (context, animation) => FadeTransition(
         opacity: animation,
         child: Container(
           decoration: BoxDecoration(

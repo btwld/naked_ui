@@ -43,7 +43,7 @@ void main() {
               child: NakedTooltip(
                 hoverDelay: const Duration(milliseconds: 500),
                 dismissDelay: Duration.zero,
-                tooltipBuilder: (context, animation) => Container(
+                overlayBuilder: (context, animation) => Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
                     color: Colors.black,
@@ -97,7 +97,7 @@ void main() {
               child: NakedTooltip(
                 hoverDelay: Duration.zero,
                 dismissDelay: Duration.zero,
-                tooltipBuilder: (context, animation) => Container(
+                overlayBuilder: (context, animation) => Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
                     color: Colors.black,
@@ -155,7 +155,7 @@ void main() {
                 ),
                 hoverDelay: Duration.zero,
                 dismissDelay: Duration.zero,
-                tooltipBuilder: (context, animation) => Container(
+                overlayBuilder: (context, animation) => Container(
                   width: 100,
                   height: 50,
                   padding: const EdgeInsets.all(8),

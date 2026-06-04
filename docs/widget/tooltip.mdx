@@ -43,7 +43,7 @@ class TooltipExample extends StatelessWidget {
         ),
         child: const Icon(Icons.copy, color: Colors.white, size: 18),
       ),
-      tooltipBuilder: (context, animation) {
+      overlayBuilder: (context, animation) {
         return FadeTransition(
           opacity: animation,
           child: Material(
@@ -56,7 +56,7 @@ class TooltipExample extends StatelessWidget {
           ),
         );
       },
-      semanticsLabel: 'Copy button tooltip',
+      semanticLabel: 'Copy button tooltip',
     );
   }
 }
@@ -68,7 +68,7 @@ class TooltipExample extends StatelessWidget {
 const NakedTooltip({
   Key? key,
   required this.child,
-  required this.tooltipBuilder,
+  required this.overlayBuilder,
   this.hoverDelay = Duration.zero,
   this.touchDelay = const Duration(milliseconds: 1500),
   this.dismissDelay = const Duration(milliseconds: 100),
@@ -77,9 +77,8 @@ const NakedTooltip({
   this.enableFeedback = true,
   this.onTriggered,
   this.animationStyle,
-  this.positioning,
-  this.positionDelegate,
-  this.semanticsLabel,
+  this.positioning = const OverlayPositionConfig(),
+  this.semanticLabel,
   this.excludeSemantics = false,
 })
 ```
@@ -87,23 +86,22 @@ const NakedTooltip({
 ### Key Parameters
 
 - `child` → trigger widget that displays the tooltip on hover/touch
-- `tooltipBuilder` → `(BuildContext, Animation<double>)` that returns the tooltip body; the animation drives show/hide transitions
+- `overlayBuilder` → `(BuildContext, Animation<double>)` that returns the tooltip body; the animation drives show/hide transitions
 - `hoverDelay` → delay before showing once hover occurs (default: immediate)
 - `dismissDelay` → delay before hiding after mouse exits (default: 100ms)
 - `touchDelay` → how long the tooltip stays visible after touch release (default: 1500ms)
 - `positioning` → `OverlayPositionConfig` controlling anchor & offset
-- `positionDelegate` → alternative `TooltipPositionDelegate` for custom positioning
 - `triggerMode` → how touch events trigger the tooltip (longPress, tap, or manual)
 - `animationStyle` → customize animation duration, curve, and reverse behavior
 - `onTriggered` → called when triggered by tap or long press (not hover)
-- `semanticsLabel` → text announced by assistive technologies
+- `semanticLabel` → text announced by assistive technologies
 - `excludeSemantics` → hide tooltip semantics from accessibility services
 
 ## Behaviour Notes
 
 - Tooltips open on pointer hover automatically
 - Touch triggers depend on `triggerMode` (longPress by default, or tap)
-- The `tooltipBuilder` receives an `Animation<double>` (0→1 on show, 1→0 on hide) for smooth transitions
+- The `overlayBuilder` receives an `Animation<double>` (0→1 on show, 1→0 on hide) for smooth transitions
 - Use `AnimationStyle.noAnimation` to disable the built-in transition
 - The tooltip dismisses on outside tap (controllable via `enableTapToDismiss`)
 - Only one tooltip is shown at a time when using nested tooltips
@@ -120,16 +118,4 @@ const OverlayPositionConfig(
 );
 ```
 
-For advanced positioning, use `positionDelegate` which receives a `TooltipPositionContext` with target location, sizes, and overlay bounds:
-
-```dart
-NakedTooltip(
-  positionDelegate: (context) {
-    return Offset(
-      context.target.dx + context.targetSize.width / 2,
-      context.target.dy - context.tooltipSize.height / 2,
-    );
-  },
-  // ...
-)
-```
+For fully custom positioning beyond what `OverlayPositionConfig` exposes, drop down to Flutter's `RawTooltip` directly and supply your own `TooltipPositionDelegate`.

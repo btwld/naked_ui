@@ -9,7 +9,7 @@ import 'utilities/positioning.dart';
 /// dismissal. Wraps Flutter's [RawTooltip] to provide a consistent
 /// naked_ui API with support for [OverlayPositionConfig]-based positioning.
 ///
-/// The [tooltipBuilder] receives an [Animation] that drives the tooltip's
+/// The [overlayBuilder] receives an [Animation] that drives the tooltip's
 /// show/hide transition, making it easy to add fade, scale, or custom
 /// animations.
 ///
@@ -21,7 +21,7 @@ import 'utilities/positioning.dart';
 ///   @override
 ///   Widget build(BuildContext context) {
 ///     return NakedTooltip(
-///       semanticsLabel: 'This is a tooltip',
+///       semanticLabel: 'This is a tooltip',
 ///       positioning: const OverlayPositionConfig(
 ///         targetAnchor: Alignment.bottomCenter,
 ///         followerAnchor: Alignment.topCenter,
@@ -29,7 +29,7 @@ import 'utilities/positioning.dart';
 ///       ),
 ///       hoverDelay: Duration.zero,
 ///       dismissDelay: const Duration(seconds: 1),
-///       tooltipBuilder: (context, animation) => FadeTransition(
+///       overlayBuilder: (context, animation) => FadeTransition(
 ///         opacity: animation,
 ///         child: Container(
 ///           decoration: BoxDecoration(
@@ -63,7 +63,7 @@ class NakedTooltip extends StatefulWidget {
   const NakedTooltip({
     super.key,
     required this.child,
-    required this.tooltipBuilder,
+    required this.overlayBuilder,
     this.hoverDelay = Duration.zero,
     this.touchDelay = const Duration(milliseconds: 1500),
     this.dismissDelay = const Duration(milliseconds: 100),
@@ -76,14 +76,10 @@ class NakedTooltip extends StatefulWidget {
       duration: Duration(milliseconds: 150),
       reverseDuration: Duration(milliseconds: 75),
     ),
-    this.positioning,
-    this.positionDelegate,
-    this.semanticsLabel,
+    this.positioning = const OverlayPositionConfig(),
+    this.semanticLabel,
     this.excludeSemantics = false,
-  }) : assert(
-         positioning == null || positionDelegate == null,
-         'Cannot provide both positioning and positionDelegate',
-       );
+  });
 
   /// See also:
   /// - [NakedPopover], for anchored, click-triggered overlays.
@@ -96,24 +92,16 @@ class NakedTooltip extends StatefulWidget {
   /// The [animation] drives the show/hide transition (0.0 → 1.0 when showing,
   /// 1.0 → 0.0 when hiding). Use it with [FadeTransition], [ScaleTransition],
   /// or similar widgets for animated tooltips.
-  final TooltipComponentBuilder tooltipBuilder;
+  final TooltipComponentBuilder overlayBuilder;
 
   /// The semantic label for screen readers.
   ///
   /// When null, the trigger keeps its own accessible name, but no tooltip
   /// semantic text is exposed.
-  final String? semanticsLabel;
+  final String? semanticLabel;
 
   /// Positioning configuration for the overlay using anchor-based alignment.
-  ///
-  /// Cannot be used together with [positionDelegate].
-  final OverlayPositionConfig? positioning;
-
-  /// A custom position delegate for computing where the tooltip should
-  /// be positioned relative to the target.
-  ///
-  /// Cannot be used together with [positioning].
-  final TooltipPositionDelegate? positionDelegate;
+  final OverlayPositionConfig positioning;
 
   /// The delay before the tooltip is shown when hovering with a mouse.
   ///
@@ -170,34 +158,26 @@ class NakedTooltip extends StatefulWidget {
 }
 
 class _NakedTooltipState extends State<NakedTooltip> {
-  TooltipPositionDelegate? _cachedPositionDelegate;
+  late TooltipPositionDelegate _positionDelegate;
 
   @override
   void initState() {
     super.initState();
-    _updatePositionDelegate();
+    _positionDelegate = _buildPositionDelegate(widget.positioning);
   }
 
   @override
   void didUpdateWidget(NakedTooltip oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.positioning != oldWidget.positioning ||
-        widget.positionDelegate != oldWidget.positionDelegate) {
-      _updatePositionDelegate();
+    if (widget.positioning != oldWidget.positioning) {
+      _positionDelegate = _buildPositionDelegate(widget.positioning);
     }
   }
 
-  void _updatePositionDelegate() {
-    if (widget.positionDelegate != null) {
-      _cachedPositionDelegate = widget.positionDelegate;
-      return;
-    }
-    if (widget.positioning == null) {
-      _cachedPositionDelegate = null;
-      return;
-    }
-    final config = widget.positioning!;
-    _cachedPositionDelegate = (TooltipPositionContext context) {
+  static TooltipPositionDelegate _buildPositionDelegate(
+    OverlayPositionConfig config,
+  ) {
+    return (TooltipPositionContext context) {
       final targetTopLeft =
           context.target - context.targetSize.center(Offset.zero);
       final targetAnchorOffset = config.targetAnchor.alongSize(
@@ -234,8 +214,8 @@ class _NakedTooltipState extends State<NakedTooltip> {
   @override
   Widget build(BuildContext context) {
     return RawTooltip(
-      semanticsTooltip: widget.excludeSemantics ? null : widget.semanticsLabel,
-      tooltipBuilder: widget.tooltipBuilder,
+      semanticsTooltip: widget.excludeSemantics ? null : widget.semanticLabel,
+      tooltipBuilder: widget.overlayBuilder,
       hoverDelay: widget.hoverDelay,
       touchDelay: widget.touchDelay,
       dismissDelay: widget.dismissDelay,
@@ -244,7 +224,7 @@ class _NakedTooltipState extends State<NakedTooltip> {
       enableFeedback: widget.enableFeedback,
       onTriggered: widget.onTriggered,
       animationStyle: widget.animationStyle,
-      positionDelegate: _cachedPositionDelegate,
+      positionDelegate: _positionDelegate,
       child: widget.child,
     );
   }

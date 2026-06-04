@@ -11,7 +11,7 @@ void main() {
       testWidgets('renders child widget', (WidgetTester tester) async {
         await tester.pumpMaterialWidget(
           NakedTooltip(
-            tooltipBuilder: (context, animation) => const Text('Tooltip'),
+            overlayBuilder: (context, animation) => const Text('Tooltip'),
             child: const Text('Hover me'),
           ),
         );
@@ -24,7 +24,7 @@ void main() {
       ) async {
         await tester.pumpMaterialWidget(
           NakedTooltip(
-            tooltipBuilder: (context, animation) => const Text('Tooltip'),
+            overlayBuilder: (context, animation) => const Text('Tooltip'),
             child: const Text('Hover me'),
           ),
         );
@@ -42,7 +42,7 @@ void main() {
           NakedTooltip(
             hoverDelay: const Duration(milliseconds: 100),
             dismissDelay: const Duration(seconds: 2),
-            tooltipBuilder: (context, animation) => const Text('Tooltip'),
+            overlayBuilder: (context, animation) => const Text('Tooltip'),
             child: const SizedBox(key: testKey, width: 100, height: 100),
           ),
         );
@@ -76,7 +76,7 @@ void main() {
           NakedTooltip(
             hoverDelay: Duration.zero,
             dismissDelay: const Duration(milliseconds: 100),
-            tooltipBuilder: (context, animation) => const Text('Tooltip'),
+            overlayBuilder: (context, animation) => const Text('Tooltip'),
             child: const SizedBox(key: testKey, width: 100, height: 100),
           ),
         );
@@ -114,7 +114,7 @@ void main() {
         await tester.pumpMaterialWidget(
           NakedTooltip(
             hoverDelay: const Duration(milliseconds: 100),
-            tooltipBuilder: (context, animation) => const Text('Tooltip'),
+            overlayBuilder: (context, animation) => const Text('Tooltip'),
             child: const SizedBox(key: testKey, width: 100, height: 100),
           ),
         );
@@ -146,7 +146,7 @@ void main() {
           NakedTooltip(
             hoverDelay: Duration.zero,
             dismissDelay: const Duration(milliseconds: 100),
-            tooltipBuilder: (context, animation) => const Text('Tooltip'),
+            overlayBuilder: (context, animation) => const Text('Tooltip'),
             child: const SizedBox(key: testKey, width: 100, height: 100),
           ),
         );
@@ -186,7 +186,7 @@ void main() {
         await tester.pumpMaterialWidget(
           NakedTooltip(
             hoverDelay: const Duration(milliseconds: 100),
-            tooltipBuilder: (context, animation) => const Text('Tooltip'),
+            overlayBuilder: (context, animation) => const Text('Tooltip'),
             child: const SizedBox(key: testKey, width: 100, height: 100),
           ),
         );
@@ -218,8 +218,8 @@ void main() {
 
         await tester.pumpMaterialWidget(
           NakedTooltip(
-            semanticsLabel: 'Help text',
-            tooltipBuilder: (context, animation) => const Text('Tooltip'),
+            semanticLabel: 'Help text',
+            overlayBuilder: (context, animation) => const Text('Tooltip'),
             child: const Text('Hover me'),
           ),
         );
@@ -236,9 +236,9 @@ void main() {
 
         await tester.pumpMaterialWidget(
           NakedTooltip(
-            semanticsLabel: 'Help text',
+            semanticLabel: 'Help text',
             excludeSemantics: true,
-            tooltipBuilder: (context, animation) => const Text('Tooltip'),
+            overlayBuilder: (context, animation) => const Text('Tooltip'),
             child: const Text('Hover me'),
           ),
         );
@@ -264,7 +264,7 @@ void main() {
                 followerAnchor: Alignment.topCenter,
                 offset: Offset(0, 8),
               ),
-              tooltipBuilder: (context, animation) => Container(
+              overlayBuilder: (context, animation) => Container(
                 key: const Key('tooltip'),
                 color: Colors.black,
                 child: const Text('Tooltip'),
@@ -295,7 +295,7 @@ void main() {
     });
 
     group('Animation', () {
-      testWidgets('provides animation to tooltipBuilder', (
+      testWidgets('provides animation to overlayBuilder', (
         WidgetTester tester,
       ) async {
         const testKey = Key('test');
@@ -304,7 +304,7 @@ void main() {
         await tester.pumpMaterialWidget(
           NakedTooltip(
             hoverDelay: Duration.zero,
-            tooltipBuilder: (context, animation) {
+            overlayBuilder: (context, animation) {
               receivedAnimation = animation;
               return const Text('Tooltip');
             },

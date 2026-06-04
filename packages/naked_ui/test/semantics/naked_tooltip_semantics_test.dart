@@ -21,8 +21,8 @@ void main() {
 
   Widget _buildNakedTooltip({required String message, required String child}) {
     return NakedTooltip(
-      semanticsLabel: message,
-      tooltipBuilder: (context, animation) => Container(
+      semanticLabel: message,
+      overlayBuilder: (context, animation) => Container(
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
           color: Colors.grey[800],
@@ -67,8 +67,8 @@ void main() {
       Widget buildNakedButtonWithTooltip() {
         return _buildTestApp(
           NakedTooltip(
-            semanticsLabel: 'Button tooltip',
-            tooltipBuilder: (context, animation) => Container(
+            semanticLabel: 'Button tooltip',
+            overlayBuilder: (context, animation) => Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
                 color: Colors.grey[800],
@@ -153,7 +153,7 @@ void main() {
       await tester.pumpWidget(
         _buildTestApp(
           NakedTooltip(
-            tooltipBuilder: (context, animation) =>
+            overlayBuilder: (context, animation) =>
                 const Text('Tooltip content'),
             child: const Text('No label'),
           ),
