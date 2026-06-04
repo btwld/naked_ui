@@ -59,10 +59,7 @@ void main() {
         return _buildTestApp(
           const Tooltip(
             message: 'Button tooltip',
-            child: ElevatedButton(
-              onPressed: null,
-              child: Text('Button'),
-            ),
+            child: ElevatedButton(onPressed: null, child: Text('Button')),
           ),
         );
       }
@@ -82,10 +79,7 @@ void main() {
                 style: TextStyle(color: Colors.white),
               ),
             ),
-            child: const NakedButton(
-              onPressed: null,
-              child: Text('Button'),
-            ),
+            child: const NakedButton(onPressed: null, child: Text('Button')),
           ),
         );
       }
