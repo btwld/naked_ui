@@ -226,6 +226,7 @@ class NakedSelect<T> extends StatefulWidget {
     this.closeOnSelect = true,
     this.closeOnClickOutside = true,
     this.enabled = true,
+    this.mouseCursor = SystemMouseCursors.click,
     this.triggerFocusNode,
     this.semanticLabel,
     this.positioning = const OverlayPositionConfig(
@@ -271,6 +272,12 @@ class NakedSelect<T> extends StatefulWidget {
 
   /// Whether the select is interactive.
   final bool enabled;
+
+  /// The mouse cursor for the trigger when the select is interactive.
+  ///
+  /// Defaults to [SystemMouseCursors.click]. When the select is disabled, the
+  /// trigger falls back to [SystemMouseCursors.basic].
+  final MouseCursor mouseCursor;
 
   /// Focus node for the trigger.
   final FocusNode? triggerFocusNode;
@@ -410,6 +417,7 @@ class _NakedSelectState<T> extends State<NakedSelect<T>>
       child: NakedButton(
         onPressed: widget.enabled ? _toggle : null,
         enabled: widget.enabled,
+        mouseCursor: widget.mouseCursor,
         focusNode: widget.triggerFocusNode,
         excludeSemantics: true,
         child: widget.child,

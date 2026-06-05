@@ -1023,4 +1023,52 @@ void main() {
       expect(isSelected, isTrue);
     });
   });
+
+  group('Cursor', () {
+    testWidgets('shows appropriate cursor based on interactive state', (
+      WidgetTester tester,
+    ) async {
+      final keyEnabled = UniqueKey();
+      final keyDisabled = UniqueKey();
+
+      await tester.pumpMaterialWidget(
+        Column(
+          children: [
+            NakedSelect<String>(
+              key: keyEnabled,
+              onChanged: (_) {},
+              builder: (context, state, child) => const Text('Enabled'),
+              overlayBuilder: (context, info) => const SizedBox(),
+            ),
+            NakedSelect<String>(
+              key: keyDisabled,
+              enabled: false,
+              onChanged: (_) {},
+              builder: (context, state, child) => const Text('Disabled'),
+              overlayBuilder: (context, info) => const SizedBox(),
+            ),
+          ],
+        ),
+      );
+
+      tester.expectCursor(SystemMouseCursors.click, on: keyEnabled);
+      tester.expectCursor(SystemMouseCursors.basic, on: keyDisabled);
+    });
+
+    testWidgets('supports custom cursor', (WidgetTester tester) async {
+      final key = UniqueKey();
+
+      await tester.pumpMaterialWidget(
+        NakedSelect<String>(
+          key: key,
+          onChanged: (_) {},
+          mouseCursor: SystemMouseCursors.help,
+          builder: (context, state, child) => const Text('Custom Cursor'),
+          overlayBuilder: (context, info) => const SizedBox(),
+        ),
+      );
+
+      tester.expectCursor(SystemMouseCursors.help, on: key);
+    });
+  });
 }
