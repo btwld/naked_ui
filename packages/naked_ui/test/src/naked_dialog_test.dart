@@ -12,6 +12,7 @@ void main() {
 
         await tester.pumpWidget(
           MaterialApp(
+            theme: ThemeData(splashFactory: NoSplash.splashFactory),
             home: Builder(
               builder: (ctx) => Scaffold(
                 body: Center(

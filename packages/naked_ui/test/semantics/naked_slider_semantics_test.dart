@@ -77,6 +77,11 @@ void main() {
 
     testWidgets('focus parity', (tester) async {
       final handle = tester.ensureSemantics();
+      // Force traditional focus highlight so Material exposes `isFocused`
+      // in semantics consistently regardless of any pointer events that ran
+      // in earlier tests in the same suite.
+      FocusManager.instance.highlightStrategy =
+          FocusHighlightStrategy.alwaysTraditional;
       final fm = FocusNode();
       final fn = FocusNode();
 
