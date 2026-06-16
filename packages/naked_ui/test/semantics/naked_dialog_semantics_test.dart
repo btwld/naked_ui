@@ -8,6 +8,7 @@ import 'semantics_test_utils.dart';
 void main() {
   Widget _buildTestApp(Widget child) {
     return MaterialApp(
+      theme: ThemeData(splashFactory: NoSplash.splashFactory),
       home: Scaffold(body: Center(child: child)),
     );
   }
@@ -20,6 +21,7 @@ void main() {
   }) async {
     await tester.pumpWidget(
       MaterialApp(
+        theme: ThemeData(splashFactory: NoSplash.splashFactory),
         home: Scaffold(
           body: Builder(
             builder: (context) => ElevatedButton(

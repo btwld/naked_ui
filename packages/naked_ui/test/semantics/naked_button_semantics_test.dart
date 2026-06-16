@@ -10,6 +10,7 @@ import 'semantics_test_utils.dart';
 void main() {
   Widget _buildTestApp(Widget child) {
     return MaterialApp(
+      theme: ThemeData(splashFactory: NoSplash.splashFactory),
       home: Scaffold(body: Center(child: child)),
     );
   }

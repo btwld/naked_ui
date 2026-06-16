@@ -7,7 +7,15 @@ import 'package:flutter_test/flutter_test.dart';
 
 extension WidgetTesterExtension on WidgetTester {
   Future<void> pumpMaterialWidget(Widget widget) async {
-    await pumpWidget(MaterialApp(home: Scaffold(body: widget)));
+    await pumpWidget(
+      MaterialApp(
+        // Avoid loading the InkSparkle fragment shader, which can fail to
+        // decode in some test environments and surface as
+        // `Unsupported runtime stages format version` exceptions.
+        theme: ThemeData(splashFactory: NoSplash.splashFactory),
+        home: Scaffold(body: widget),
+      ),
+    );
   }
 
   /// Simulates hover more robustly by moving a mouse pointer to the center of

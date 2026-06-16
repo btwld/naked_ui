@@ -46,6 +46,7 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
+          theme: ThemeData(splashFactory: NoSplash.splashFactory),
           home: StatefulBuilder(
             builder: (context, setState) {
               return Scaffold(
@@ -104,6 +105,7 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
+          theme: ThemeData(splashFactory: NoSplash.splashFactory),
           home: NakedStateScope<TestNakedState>(
             value: testState,
             child: StatefulBuilder(
