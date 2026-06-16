@@ -1,3 +1,9 @@
+## 1.0.0-beta.1
+
+- feat(naked-select): add `mouseCursor` property to NakedSelect
+- refactor(naked-tooltip): replace `RawMenuAnchor` with `RawTooltip`
+- fix: stabilize flaky tests (InkSparkle shader + focus mode)
+
 ## 0.2.0-beta.7
 
 - fix: text style handling in NakedTextField
