@@ -130,6 +130,57 @@ void main() {
     );
   }
 
+  testWidgets(
+    'Controlled host that commits asynchronously receives one onChanged '
+    'per press',
+    (tester) async {
+      // Regression: focusing a tab selects it (selection follows focus) and
+      // the tap that caused the focus selects it again. A host that does not
+      // rebuild synchronously inside onChanged must still see one call.
+      final changes = <String>[];
+      final tab2 = UniqueKey();
+
+      await tester.pumpWidget(
+        WidgetsApp(
+          color: const Color(0xFF000000),
+          builder: (context, child) => child ?? const SizedBox.shrink(),
+          pageRouteBuilder: _defaultPageRouteBuilder,
+          home: Directionality(
+            textDirection: TextDirection.ltr,
+            child: NakedTabs(
+              // Never rebuilt with a new selection: models a host that commits
+              // asynchronously (or rejects the change).
+              selectedTabId: 'tab1',
+              onChanged: changes.add,
+              child: Column(
+                children: [
+                  NakedTabBar(
+                    child: Row(
+                      children: [
+                        const NakedTab(tabId: 'tab1', child: Text('Tab 1')),
+                        NakedTab(
+                          key: tab2,
+                          tabId: 'tab2',
+                          child: const Text('Tab 2'),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byKey(tab2));
+      await tester.pumpAndSettle();
+
+      expect(changes, ['tab2']);
+    },
+  );
+
   testWidgets('Selection follows focus via arrow keys', (tester) async {
     final changes = <String>[];
     final tab1 = UniqueKey();

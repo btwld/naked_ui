@@ -99,7 +99,7 @@ class NakedTabState extends NakedState {
 /// - [TabBar], the Material-styled tabs widget for typical apps.
 /// - [FocusTraversalGroup], for customizing keyboard focus traversal.
 
-class NakedTabs extends StatelessWidget {
+class NakedTabs extends StatefulWidget {
   const NakedTabs({
     super.key,
     required this.child,
@@ -141,20 +141,46 @@ class NakedTabs extends StatelessWidget {
   /// Called when Escape is pressed while a tab has focus.
   final VoidCallback? onEscapePressed;
 
+  @override
+  State<NakedTabs> createState() => _NakedTabsState();
+}
+
+class _NakedTabsState extends State<NakedTabs> {
+  /// Tab id already forwarded to [NakedTabs.onChanged] that the host has not
+  /// yet committed back through [NakedTabs.selectedTabId].
+  ///
+  /// One press can request the same selection twice — focusing a tab selects it
+  /// (selection follows focus) and the tap that caused the focus selects it
+  /// again. With a controller the second call is a no-op because the controller
+  /// updates synchronously, but a controlled host may commit asynchronously, so
+  /// without this guard it would receive two [NakedTabs.onChanged] calls for
+  /// one press.
+  String? _pendingTabId;
+
   String get _effectiveSelectedTabId =>
-      controller?.selectedTabId ?? selectedTabId!;
+      widget.controller?.selectedTabId ?? widget.selectedTabId!;
 
   bool get _effectiveEnabled =>
-      enabled && (controller != null || onChanged != null);
+      widget.enabled && (widget.controller != null || widget.onChanged != null);
+
+  @override
+  void didUpdateWidget(covariant NakedTabs oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.selectedTabId != oldWidget.selectedTabId) {
+      _pendingTabId = null;
+    }
+  }
 
   void _selectTab(String tabId) {
     if (!_effectiveEnabled || tabId == _effectiveSelectedTabId) return;
     assert(tabId.isNotEmpty, 'Tab ID cannot be empty');
 
-    if (controller != null) {
-      controller!.selectTab(tabId);
+    if (widget.controller != null) {
+      widget.controller!.selectTab(tabId);
     } else {
-      onChanged?.call(tabId);
+      if (tabId == _pendingTabId) return;
+      _pendingTabId = tabId;
+      widget.onChanged?.call(tabId);
     }
   }
 
@@ -165,16 +191,16 @@ class NakedTabs extends StatelessWidget {
     return Actions(
       actions: {
         DismissIntent: CallbackAction<DismissIntent>(
-          onInvoke: (_) => onEscapePressed?.call(),
+          onInvoke: (_) => widget.onEscapePressed?.call(),
         ),
       },
       child: NakedTabsScope(
         selectedTabId: _effectiveSelectedTabId,
         onChanged: _selectTab,
-        orientation: orientation,
+        orientation: widget.orientation,
         enabled: _effectiveEnabled,
-        onEscapePressed: onEscapePressed,
-        child: child,
+        onEscapePressed: widget.onEscapePressed,
+        child: widget.child,
       ),
     );
   }
@@ -292,6 +318,10 @@ class NakedTab extends StatefulWidget {
   final ValueWidgetBuilder<NakedTabState>? builder;
 
   /// Semantic label for the trigger.
+  ///
+  /// When provided it replaces the semantics of the tab's content, so a tab
+  /// whose content already renders the same text is announced once. When null
+  /// the content's own semantics are used.
   final String? semanticLabel;
 
   /// Whether the tab is enabled.
@@ -457,6 +487,10 @@ class _NakedTabState extends State<NakedTab>
             selected: isSelected,
             button: true,
             label: widget.semanticLabel,
+            // An explicit label replaces the content's semantics; without this
+            // a tab whose content renders the same text is announced twice.
+            // When no label is given the content's own semantics flow through.
+            excludeSemantics: widget.semanticLabel != null,
             onTap: _isEnabled ? _handleTap : null,
             child: gestureDetector,
           );

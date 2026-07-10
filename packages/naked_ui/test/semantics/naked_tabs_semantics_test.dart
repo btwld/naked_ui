@@ -75,6 +75,40 @@ void main() {
       handle.dispose();
     });
 
+    testWidgets('explicit semanticLabel replaces content semantics', (
+      tester,
+    ) async {
+      // Regression: a tab with semanticLabel whose content renders the same
+      // text was announced twice ("Overview\nOverview").
+      final handle = tester.ensureSemantics();
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: NakedTabs(
+              selectedTabId: 'overview',
+              onChanged: (_) {},
+              child: NakedTabBar(
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: const [
+                    NakedTab(
+                      tabId: 'overview',
+                      semanticLabel: 'Overview',
+                      child: Text('Overview'),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+
+      final node = tester.getSemantics(find.bySemanticsLabel('Overview'));
+      expect(node.label, 'Overview');
+      handle.dispose();
+    });
+
     testWidgets('hovered selected tab keeps selected button contract', (
       tester,
     ) async {
