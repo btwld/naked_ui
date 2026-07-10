@@ -80,14 +80,16 @@ abstract class NakedState {
   /// Throws if no [NakedStateScope] with a controller is found.
   ///
   /// ```dart
-  /// final controller = NakedState.controllerOf(context);
+  /// final controller = NakedState.controllerOf<NakedMenuState>(context);
   /// ```
   ///
   /// See also:
   /// - [maybeControllerOf], which returns null instead of throwing
   /// - [NakedStateScope], for providing states and controllers
-  static WidgetStatesController controllerOf(BuildContext context) {
-    return NakedStateScope.controllerOf(context);
+  static WidgetStatesController controllerOf<T extends NakedState>(
+    BuildContext context,
+  ) {
+    return NakedStateScope.controllerOf<T>(context);
   }
 
   /// Gets the [WidgetStatesController] from the nearest [NakedStateScope].
@@ -98,7 +100,7 @@ abstract class NakedState {
   /// rebuild when the controller's value changes.
   ///
   /// ```dart
-  /// final controller = NakedState.maybeControllerOf(context);
+  /// final controller = NakedState.maybeControllerOf<NakedMenuState>(context);
   /// if (controller != null) {
   ///   // Use the controller
   /// }
@@ -107,8 +109,10 @@ abstract class NakedState {
   /// See also:
   /// - [controllerOf], which throws instead of returning null
   /// - [NakedStateScope], for providing states and controllers
-  static WidgetStatesController? maybeControllerOf(BuildContext context) {
-    return NakedStateScope.maybeControllerOf(context);
+  static WidgetStatesController? maybeControllerOf<T extends NakedState>(
+    BuildContext context,
+  ) {
+    return NakedStateScope.maybeControllerOf<T>(context);
   }
 
   /// Raw set of [WidgetState]s reported by the underlying control.

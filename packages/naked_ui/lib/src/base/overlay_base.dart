@@ -38,30 +38,26 @@ abstract class OverlayScope<T> extends InheritedWidget {
     required Type scopeOwner,
   }) {
     final S? result = maybeOf<S>(context);
-    assert(() {
-      if (result == null) {
-        throw FlutterError.fromParts([
-          ErrorSummary('$scopeConsumer requires a $scopeOwner ancestor.'),
-          ErrorDescription(
-            'The $scopeConsumer widget must be placed inside the overlayBuilder '
-            'callback of a $scopeOwner widget.',
-          ),
-          ErrorHint(
-            'Ensure that $scopeConsumer is only used within:\n'
-            '$scopeOwner(\n'
-            '  overlayBuilder: (context, info) {\n'
-            '    return $scopeConsumer(...); // ✓ Correct usage\n'
-            '  },\n'
-            ')',
-          ),
-          context.describeElement('The context used was'),
-        ]);
-      }
+    if (result == null) {
+      throw FlutterError.fromParts([
+        ErrorSummary('$scopeConsumer requires a $scopeOwner ancestor.'),
+        ErrorDescription(
+          'The $scopeConsumer widget must be placed inside the overlayBuilder '
+          'callback of a $scopeOwner widget.',
+        ),
+        ErrorHint(
+          'Ensure that $scopeConsumer is only used within:\n'
+          '$scopeOwner(\n'
+          '  overlayBuilder: (context, info) {\n'
+          '    return $scopeConsumer(...); // ✓ Correct usage\n'
+          '  },\n'
+          ')',
+        ),
+        context.describeElement('The context used was'),
+      ]);
+    }
 
-      return true;
-    }());
-
-    return result!;
+    return result;
   }
 }
 

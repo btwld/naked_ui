@@ -359,12 +359,12 @@ void main() {
   });
 
   group('Builder Tests', () {
-    testStateScopeBuilder<NakedRadioState>(
+    testStateScopeBuilder<NakedRadioState<String>>(
       'builder\'s context contains NakedStateScope',
       (builder) => RadioGroup<String>(
         groupValue: 'test',
         onChanged: (_) {},
-        child: NakedRadio(
+        child: NakedRadio<String>(
           value: 'test',
           builder: builder,
           child: const SizedBox(width: 24, height: 24),

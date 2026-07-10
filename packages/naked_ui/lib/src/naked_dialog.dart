@@ -117,7 +117,7 @@ class NakedDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     Widget dialog = excludeSemantics
-        ? child
+        ? ExcludeSemantics(child: child)
         : Semantics(
             container: true,
             explicitChildNodes: true,

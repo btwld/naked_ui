@@ -157,6 +157,7 @@ void main() {
       await tester.pumpWidget(
         _buildTestApp(
           NakedSelect<String>(
+            onChanged: (_) {},
             triggerFocusNode: focusNode,
             builder: (context, state, child) => const Text('Select option'),
             overlayBuilder: (context, info) => const Column(

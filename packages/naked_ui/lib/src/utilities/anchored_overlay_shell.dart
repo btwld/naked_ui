@@ -61,6 +61,17 @@ class AnchoredOverlayShell extends StatelessWidget {
   /// Positioning configuration for the overlay.
   final OverlayPositionConfig positioning;
 
+  void _focusBoundary({required bool last}) {
+    final current = FocusManager.instance.primaryFocus;
+    if (current == null) return;
+    final policy = FocusTraversalGroup.maybeOfNode(current);
+    if (policy == null) return;
+    final target = last
+        ? policy.findLastFocus(current, ignoreCurrentFocus: true)
+        : policy.findFirstFocus(current, ignoreCurrentFocus: true);
+    target?.requestFocus();
+  }
+
   @override
   Widget build(BuildContext context) {
     return RawMenuAnchor(
@@ -92,6 +103,8 @@ class AnchoredOverlayShell extends StatelessWidget {
                     onNextFocus: () => FocusScope.of(context).nextFocus(),
                     onPreviousFocus: () =>
                         FocusScope.of(context).previousFocus(),
+                    onFirstFocus: () => _focusBoundary(last: false),
+                    onLastFocus: () => _focusBoundary(last: true),
                   ),
                   child: Focus(
                     autofocus: true,

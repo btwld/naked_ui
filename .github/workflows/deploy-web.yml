@@ -28,21 +28,19 @@ jobs:
           cache: true
       - run: flutter --version
       - run: flutter pub get
-      - run: flutter pub get
-        working-directory: example
       - name: Ensure web platform files
         run: |
           if [ ! -d "web" ]; then
             flutter create --platforms web .
           fi
-        working-directory: example
+        working-directory: packages/example
       - run: flutter config --enable-web
       - run: flutter build web --release --base-href /naked_ui/
-        working-directory: example
+        working-directory: packages/example
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: example/build/web
+          publish_dir: packages/example/build/web
           force_orphan: true
           publish_branch: gh-pages

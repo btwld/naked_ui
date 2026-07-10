@@ -17,7 +17,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
 import 'mixins/naked_mixins.dart';
-import 'utilities/naked_focusable_detector.dart';
 import 'utilities/naked_state_scope.dart';
 import 'utilities/state.dart';
 
@@ -55,11 +54,11 @@ class NakedTextFieldState extends NakedState {
 
   /// Returns the [WidgetStatesController] from the nearest scope.
   static WidgetStatesController controllerOf(BuildContext context) =>
-      NakedState.controllerOf(context);
+      NakedState.controllerOf<NakedTextFieldState>(context);
 
   /// Returns the [WidgetStatesController] from the nearest scope, if any.
   static WidgetStatesController? maybeControllerOf(BuildContext context) =>
-      NakedState.maybeControllerOf(context);
+      NakedState.maybeControllerOf<NakedTextFieldState>(context);
 
   /// Whether the text field is empty.
   bool get isEmpty => !hasText;
@@ -365,7 +364,10 @@ class NakedTextField extends StatefulWidget {
 }
 
 class _NakedTextFieldState extends State<NakedTextField>
-    with RestorationMixin, WidgetStatesMixin<NakedTextField>
+    with
+        RestorationMixin,
+        WidgetStatesMixin<NakedTextField>,
+        FocusNodeMixin<NakedTextField>
     implements TextSelectionGestureDetectorBuilderDelegate, AutofillClient {
   static const Color _neutralBgCursor = Color(0xFFBDBDBD);
   static const int _iOSHorizontalOffset = -2;
@@ -373,6 +375,12 @@ class _NakedTextFieldState extends State<NakedTextField>
   @override
   final GlobalKey<EditableTextState> editableTextKey =
       GlobalKey<EditableTextState>();
+
+  @override
+  FocusNode? get widgetProvidedNode => widget.focusNode;
+
+  @override
+  ValueChanged<bool>? get onFocusChange => _handleFocusChange;
 
   @override
   void initState() {
@@ -387,7 +395,6 @@ class _NakedTextFieldState extends State<NakedTextField>
 
     _effectiveFocusNode.canRequestFocus =
         widget.canRequestFocus && widget.enabled;
-    _effectiveFocusNode.addListener(_handleFocusChange);
     if (widget.controller != null) {
       _updateAttachedController(widget.controller);
     } else if (_controller != null && !restorePending) {
@@ -398,7 +405,7 @@ class _NakedTextFieldState extends State<NakedTextField>
   bool _canRequestFocusFor(NavigationMode? mode) {
     switch (mode) {
       case NavigationMode.directional:
-        return true;
+        return widget.canRequestFocus;
       case NavigationMode.traditional:
       case null:
         return widget.canRequestFocus && widget.enabled;
@@ -435,12 +442,12 @@ class _NakedTextFieldState extends State<NakedTextField>
     setState(() {});
   }
 
-  void _handleFocusChange() {
-    final focused = _effectiveFocusNode.hasFocus;
+  void _handleFocusChange(bool focused) {
     updateFocusState(focused, widget.onFocusChange);
-    if (!mounted) return;
-    // ignore: no-empty-block
-    setState(() {});
+  }
+
+  void _handlePressChange(bool pressed) {
+    updatePressState(pressed, widget.onPressChange);
   }
 
   bool _shouldShowSelectionHandles(SelectionChangedCause? cause) {
@@ -542,11 +549,6 @@ class _NakedTextFieldState extends State<NakedTextField>
         widget.controller ?? (!restorePending ? _controller?.value : null);
     _updateAttachedController(nextController);
 
-    if (widget.focusNode != oldWidget.focusNode) {
-      (oldWidget.focusNode ?? _focusNode)?.removeListener(_handleFocusChange);
-      (widget.focusNode ?? _focusNode)?.addListener(_handleFocusChange);
-    }
-
     _effectiveFocusNode.canRequestFocus = _canRequestFocusFor(_navMode);
 
     if (_effectiveFocusNode.hasFocus &&
@@ -571,10 +573,8 @@ class _NakedTextFieldState extends State<NakedTextField>
 
   @override
   void dispose() {
-    _effectiveFocusNode.removeListener(_handleFocusChange);
     _detachControllerListener?.call();
     _detachControllerListener = null;
-    _focusNode?.dispose();
     _controller?.dispose();
     super.dispose();
   }
@@ -590,10 +590,7 @@ class _NakedTextFieldState extends State<NakedTextField>
   TextEditingController get _effectiveController =>
       widget.controller ?? _controller!.value;
 
-  FocusNode? _focusNode;
-
-  FocusNode get _effectiveFocusNode =>
-      widget.focusNode ?? (_focusNode ??= FocusNode());
+  FocusNode get _effectiveFocusNode => effectiveFocusNode;
 
   MaxLengthEnforcement get _effectiveMaxLengthEnforcement =>
       widget.maxLengthEnforcement ??
@@ -797,7 +794,7 @@ class _NakedTextFieldState extends State<NakedTextField>
 
     Widget withSemantics(Widget child) {
       return widget.excludeSemantics
-          ? child
+          ? ExcludeSemantics(child: child)
           : MergeSemantics(
               child: Semantics(
                 enabled: widget.enabled,
@@ -806,12 +803,15 @@ class _NakedTextFieldState extends State<NakedTextField>
                 focusable: widget.enabled,
                 focused: widget.enabled ? focusNode.hasFocus : null,
                 obscured: widget.obscureText,
-                multiline: (widget.maxLines ?? 1) > 1,
+                multiline: widget.maxLines != 1,
                 maxValueLength: widget.maxLength,
                 currentValueLength: controller.text.length,
                 label: widget.semanticLabel,
                 value: widget.obscureText ? null : controller.text,
                 hint: _semanticHint(),
+                onFocus: widget.enabled && focusNode.canRequestFocus
+                    ? focusNode.requestFocus
+                    : null,
                 onTap: (widget.enabled && !widget.readOnly)
                     ? _semanticTap
                     : null,
@@ -834,16 +834,10 @@ class _NakedTextFieldState extends State<NakedTextField>
           withSemantics(widget.builder!(context, value, child!)),
     );
 
-    final Widget composedWithFocusSemantics = NakedFocusableDetector(
-      enabled: widget.enabled,
-      includeSemantics: true,
-      child: content,
-    );
-
     final Widget detector = _selectionGestureDetectorBuilder
         .buildGestureDetector(
           behavior: HitTestBehavior.translucent,
-          child: composedWithFocusSemantics,
+          child: content,
         );
 
     final Widget maybeMouseRegion = widget.enabled
@@ -869,6 +863,7 @@ class _NakedSelectionGestureDetectorBuilder
 
   @override
   void onUserTap() {
+    if (!_state.widget.enabled) return;
     _state.widget.onTap?.call();
 
     if (!_state.widget.readOnly) {
@@ -883,15 +878,25 @@ class _NakedSelectionGestureDetectorBuilder
   @override
   void onTapDown(TapDragDownDetails details) {
     super.onTapDown(details);
+    if (!_state.widget.enabled) return;
     _state.widget.onTapChange?.call(true);
-    _state.widget.onPressChange?.call(true);
+    _state._handlePressChange(true);
   }
 
   @override
   void onSingleTapUp(TapDragUpDetails details) {
     super.onSingleTapUp(details);
+    if (!_state.widget.enabled) return;
     _state.widget.onTapChange?.call(false);
-    _state.widget.onPressChange?.call(false);
+    _state._handlePressChange(false);
+  }
+
+  @override
+  void onSingleTapCancel() {
+    super.onSingleTapCancel();
+    if (!_state.widget.enabled) return;
+    _state.widget.onTapChange?.call(false);
+    _state._handlePressChange(false);
   }
 
   @override

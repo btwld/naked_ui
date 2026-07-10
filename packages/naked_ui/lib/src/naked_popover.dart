@@ -1,7 +1,7 @@
 import 'package:flutter/widgets.dart';
 
-import 'utilities/intents.dart';
-import 'utilities/naked_focusable_detector.dart';
+import 'naked_button.dart';
+import 'utilities/anchored_overlay_shell.dart';
 import 'utilities/naked_state_scope.dart';
 import 'utilities/positioning.dart';
 import 'utilities/state.dart';
@@ -34,11 +34,11 @@ class NakedPopoverState extends NakedState {
 
   /// Returns the [WidgetStatesController] from the nearest scope.
   static WidgetStatesController controllerOf(BuildContext context) =>
-      NakedState.controllerOf(context);
+      NakedState.controllerOf<NakedPopoverState>(context);
 
   /// Returns the [WidgetStatesController] from the nearest scope, if any.
   static WidgetStatesController? maybeControllerOf(BuildContext context) =>
-      NakedState.maybeControllerOf(context);
+      NakedState.maybeControllerOf<NakedPopoverState>(context);
 }
 
 /// A headless popover without visuals.
@@ -89,6 +89,8 @@ class NakedPopover extends StatefulWidget {
     this.onOpenRequested,
     this.onCloseRequested,
     this.controller,
+    this.semanticLabel,
+    this.excludeSemantics = false,
   }) : assert(
          child != null || builder != null,
          'Either child or builder must be provided',
@@ -126,6 +128,12 @@ class NakedPopover extends StatefulWidget {
 
   final MenuController? controller;
 
+  /// Optional semantics label for the trigger.
+  final String? semanticLabel;
+
+  /// Whether to hide the popover trigger subtree from accessibility.
+  final bool excludeSemantics;
+
   /// Called when a request is made to open the popover.
   ///
   /// This callback allows you to customize the opening behavior, such as
@@ -144,13 +152,15 @@ class NakedPopover extends StatefulWidget {
 
 class _NakedPopoverState extends State<NakedPopover> {
   // ignore: dispose-fields
-  late final _menuController = widget.controller ?? MenuController();
-  late final _statesController = WidgetStatesController();
+  final _internalMenuController = MenuController();
 
   // Internal node used when the child does not already provide a Focus.
   final _internalTriggerNode = FocusNode(
     debugLabel: 'NakedPopover trigger (internal)',
   );
+
+  MenuController get _menuController =>
+      widget.controller ?? _internalMenuController;
 
   void _toggle() {
     if (_menuController.isOpen) {
@@ -161,10 +171,12 @@ class _NakedPopoverState extends State<NakedPopover> {
   }
 
   void _handleOpen() {
+    if (mounted) setState(() {});
     widget.onOpen?.call();
   }
 
   void _handleClose() {
+    if (mounted) setState(() {});
     widget.onClose?.call();
   }
 
@@ -176,94 +188,69 @@ class _NakedPopoverState extends State<NakedPopover> {
     return null;
   }
 
-  Widget _buildTrigger(FocusNode returnNode) {
-    final popoverState = NakedPopoverState(
-      states: _statesController.value,
-      isOpen: _menuController.isOpen,
-    );
-
-    final child = NakedStateScopeBuilder(
-      value: popoverState,
-      child: widget.child ?? const SizedBox.shrink(),
-      builder: widget.builder,
-    );
-
-    // Case A: We own the focus node (no Focus provided by the child).
-    if (identical(returnNode, _internalTriggerNode)) {
-      if (!widget.openOnTap) {
-        return Focus(focusNode: _internalTriggerNode, child: child);
-      }
-
-      return NakedFocusableDetector(
-        focusNode: _internalTriggerNode,
-        shortcuts: NakedIntentActions.button.shortcuts,
-        actions: NakedIntentActions.button.actions(onPressed: () => _toggle()),
-        child: GestureDetector(
-          onTap: _toggle,
-          behavior: HitTestBehavior.opaque,
-          child: child,
-        ),
+  Widget _buildTrigger(FocusNode returnNode, FocusNode? childFocusNode) {
+    if (widget.openOnTap) {
+      return NakedButton(
+        onPressed: _toggle,
+        focusNode: identical(returnNode, childFocusNode) ? null : returnNode,
+        semanticLabel: widget.semanticLabel,
+        child: widget.child,
+        builder: (context, buttonState, child) {
+          return NakedStateScopeBuilder(
+            value: NakedPopoverState(
+              states: buttonState.states,
+              isOpen: _menuController.isOpen,
+            ),
+            child: child,
+            builder: widget.builder,
+          );
+        },
       );
     }
 
-    // Case B: Child already provides a Focus node; don't add another focus owner.
-    // Keep behavior headless: tap toggles when enabled.
-    return GestureDetector(
-      onTap: widget.openOnTap ? _toggle : null,
-      behavior: HitTestBehavior.opaque,
-      child: child, // retains the caller's Focus node
+    final child = NakedStateScopeBuilder(
+      value: NakedPopoverState(
+        states: const <WidgetState>{},
+        isOpen: _menuController.isOpen,
+      ),
+      child: widget.child,
+      builder: widget.builder,
     );
+
+    return identical(returnNode, childFocusNode)
+        ? child
+        : Focus(focusNode: returnNode, child: child);
   }
 
   @override
   void dispose() {
-    _statesController.dispose();
     _internalTriggerNode.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    final childFocusNode = _extractChildFocusNode();
     final returnNode =
-        widget.triggerFocusNode ??
-        _extractChildFocusNode() ??
-        _internalTriggerNode;
+        widget.triggerFocusNode ?? childFocusNode ?? _internalTriggerNode;
 
-    return RawMenuAnchor(
-      childFocusNode: returnNode,
+    final result = AnchoredOverlayShell(
+      controller: _menuController,
+      triggerFocusNode: returnNode,
       consumeOutsideTaps: widget.consumeOutsideTaps,
       onOpen: _handleOpen,
       onClose: _handleClose,
       onOpenRequested: widget.onOpenRequested ?? (_, show) => show(),
       onCloseRequested: widget.onCloseRequested ?? (hide) => hide(),
       useRootOverlay: widget.useRootOverlay,
-      controller: _menuController,
+      closeOnClickOutside: true,
+      positioning: widget.positioning,
       overlayBuilder: (context, info) {
-        return OverlayPositioner(
-          targetRect: info.anchorRect,
-          positioning: widget.positioning,
-          child: TapRegion(
-            onTapOutside: (event) => _menuController.close(),
-            groupId: info.tapRegionGroupId,
-            child: FocusTraversalGroup(
-              child: Shortcuts(
-                shortcuts: NakedIntentActions.menu.shortcuts,
-                child: Actions(
-                  actions: NakedIntentActions.menu.actions(
-                    onDismiss: () => _menuController.close(),
-                    onNextFocus: () => FocusScope.of(context).nextFocus(),
-                    onPreviousFocus: () =>
-                        FocusScope.of(context).previousFocus(),
-                  ),
-                  child: widget.popoverBuilder(context, info),
-                ),
-              ),
-            ),
-          ),
-        );
+        return widget.popoverBuilder(context, info);
       },
-
-      child: _buildTrigger(returnNode),
+      child: _buildTrigger(returnNode, childFocusNode),
     );
+
+    return widget.excludeSemantics ? ExcludeSemantics(child: result) : result;
   }
 }

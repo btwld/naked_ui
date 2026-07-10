@@ -23,11 +23,11 @@ class NakedMenuState extends NakedState {
 
   /// Returns the [WidgetStatesController] from the nearest scope.
   static WidgetStatesController controllerOf(BuildContext context) =>
-      NakedState.controllerOf(context);
+      NakedState.controllerOf<NakedMenuState>(context);
 
   /// Returns the [WidgetStatesController] from the nearest scope, if any.
   static WidgetStatesController? maybeControllerOf(BuildContext context) =>
-      NakedState.maybeControllerOf(context);
+      NakedState.maybeControllerOf<NakedMenuState>(context);
 
   @override
   bool operator ==(Object other) {
@@ -58,12 +58,12 @@ class NakedMenuItemState<T> extends NakedState {
       NakedState.maybeOf(context);
 
   /// Returns the [WidgetStatesController] from the nearest scope.
-  static WidgetStatesController controllerOf(BuildContext context) =>
-      NakedState.controllerOf(context);
+  static WidgetStatesController controllerOf<S>(BuildContext context) =>
+      NakedState.controllerOf<NakedMenuItemState<S>>(context);
 
   /// Returns the [WidgetStatesController] from the nearest scope, if any.
-  static WidgetStatesController? maybeControllerOf(BuildContext context) =>
-      NakedState.maybeControllerOf(context);
+  static WidgetStatesController? maybeControllerOf<S>(BuildContext context) =>
+      NakedState.maybeControllerOf<NakedMenuItemState<S>>(context);
 
   @override
   bool operator ==(Object other) {
@@ -89,9 +89,13 @@ class _NakedMenuScope<T> extends OverlayScope<T> {
 
   /// Returns the [_NakedMenuScope] that most tightly encloses the given [context].
   ///
-  /// Returns null if no [NakedMenu] ancestor is found.
-  static _NakedMenuScope<T>? maybeOf<T>(BuildContext context) {
-    return OverlayScope.maybeOf(context);
+  /// If no [NakedMenu] ancestor is found, throws a descriptive [FlutterError].
+  static _NakedMenuScope<T> of<T>(BuildContext context) {
+    return OverlayScope.of(
+      context,
+      scopeConsumer: NakedMenuItem,
+      scopeOwner: NakedMenu,
+    );
   }
 
   final ValueChanged<T>? onSelected;
@@ -126,14 +130,14 @@ class NakedMenuItem<T> extends OverlayItem<T, NakedMenuItemState<T>> {
   /// the menu contains interactive content.
   final bool closeOnActivate;
 
-  void _handleActivation(_NakedMenuScope<T>? menu) {
-    menu?.onSelected?.call(value);
-    if (closeOnActivate) menu?.controller.close();
+  void _handleActivation(_NakedMenuScope<T> menu) {
+    menu.onSelected?.call(value);
+    if (closeOnActivate) menu.controller.close();
   }
 
   @override
   Widget build(BuildContext context) {
-    final scope = _NakedMenuScope.maybeOf<T>(context);
+    final scope = _NakedMenuScope.of<T>(context);
 
     final VoidCallback? onPressed = enabled
         ? () => _handleActivation(scope)
@@ -187,7 +191,7 @@ class NakedMenuItem<T> extends OverlayItem<T, NakedMenuItemState<T>> {
 ///       NakedMenu.Item(value: 'paste', child: Text('Paste')),
 ///     ],
 ///   ),
-///   onSelected: (value) => menuController.select(value),
+///   onSelected: (value) => print('Activated: $value'),
 /// )
 /// ```
 ///
@@ -214,7 +218,10 @@ class NakedMenu<T> extends StatefulWidget {
     this.positioning = const OverlayPositionConfig(),
     this.semanticLabel,
     this.excludeSemantics = false,
-  });
+  }) : assert(
+         child != null || builder != null,
+         'Either child or builder must be provided',
+       );
 
   /// Type alias for [NakedMenuItem] for cleaner API access.
   static final Item = NakedMenuItem.new;
@@ -232,8 +239,6 @@ class NakedMenu<T> extends StatefulWidget {
   final MenuController controller;
 
   /// Called when an item is selected.
-  ///
-  /// Note: You can also use [controller.select] to update selection state directly.
   final ValueChanged<T>? onSelected;
 
   /// Lifecycle callbacks.

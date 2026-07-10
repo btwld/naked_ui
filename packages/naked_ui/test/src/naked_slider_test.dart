@@ -607,26 +607,17 @@ void main() {
       expect(changes, isEmpty);
     });
 
-    testWidgets('value clamped when set outside range', (tester) async {
-      final changes = <double>[];
-      await tester.pumpWidget(
-        _harness(
-          initial: 150, // above max
+    test('value outside range is rejected', () {
+      expect(
+        () => NakedSlider(
+          value: 150,
           min: 0,
           max: 100,
-          onChangedSpy: changes.add,
-          size: const Size(200, 24),
+          onChanged: (_) {},
+          child: const SizedBox(),
         ),
+        throwsAssertionError,
       );
-      await tester.pumpAndSettle();
-
-      // Drag should clamp the value within range
-      await tester.drag(_findSlider(), const Offset(-50, 0));
-      await tester.pump();
-
-      expect(changes, isNotEmpty);
-      expect(changes.last, lessThanOrEqualTo(100));
-      expect(changes.last, greaterThanOrEqualTo(0));
     });
 
     testWidgets('percentage calculation is correct at boundaries', (

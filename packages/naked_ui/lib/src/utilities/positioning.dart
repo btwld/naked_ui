@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 
@@ -80,7 +82,11 @@ class _OverlayPositionerDelegate extends SingleChildLayoutDelegate {
     final preferredPosition =
         targetPosition + targetAnchorOffset - followerAnchorOffset + offset;
 
-    return _clampToBounds(preferredPosition, childSize, size);
+    return clampOverlayPosition(
+      preferredPosition,
+      overlaySize: childSize,
+      boundsSize: size,
+    );
   }
 
   @override
@@ -93,13 +99,21 @@ class _OverlayPositionerDelegate extends SingleChildLayoutDelegate {
   }
 }
 
-Offset _clampToBounds(
-  Offset overlayTopLeft,
-  Size overlaySize,
-  Size screenSize,
-) {
+/// Clamps an overlay's top-left position to its available layout bounds.
+///
+/// If the overlay is larger than the available bounds on either axis, that
+/// axis is pinned to zero. This keeps the result valid and lets the overlay's
+/// own clipping or scrolling policy decide how to expose oversized content.
+Offset clampOverlayPosition(
+  Offset overlayTopLeft, {
+  required Size overlaySize,
+  required Size boundsSize,
+}) {
+  final maxX = math.max(0.0, boundsSize.width - overlaySize.width);
+  final maxY = math.max(0.0, boundsSize.height - overlaySize.height);
+
   return Offset(
-    overlayTopLeft.dx.clamp(0.0, screenSize.width - overlaySize.width),
-    overlayTopLeft.dy.clamp(0.0, screenSize.height - overlaySize.height),
+    overlayTopLeft.dx.clamp(0.0, maxX),
+    overlayTopLeft.dy.clamp(0.0, maxY),
   );
 }

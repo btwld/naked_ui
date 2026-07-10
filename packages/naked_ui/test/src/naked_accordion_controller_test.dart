@@ -17,6 +17,14 @@ void main() {
         expect(controller.max, 3);
       });
 
+      test('exposes an unmodifiable values view', () {
+        final controller = NakedAccordionController<String>();
+        controller.open('item1');
+
+        expect(() => controller.values.add('item2'), throwsUnsupportedError);
+        expect(controller.values, orderedEquals(['item1']));
+      });
+
       test('throws assertion error when min < 0', () {
         expect(
           () => NakedAccordionController<String>(min: -1),
@@ -339,6 +347,19 @@ void main() {
         controller.replaceAll(['item1', 'item2']);
 
         expect(notifyCount, 0, reason: 'no notification when no change');
+      });
+
+      test('treats insertion order as observable state', () {
+        final controller = NakedAccordionController<String>();
+        controller.openAll(['item1', 'item2']);
+
+        var notifyCount = 0;
+        controller.addListener(() => notifyCount++);
+
+        controller.replaceAll(['item2', 'item1']);
+
+        expect(controller.values, orderedEquals(['item2', 'item1']));
+        expect(notifyCount, 1);
       });
 
       test('can produce fewer than min items (programmatic update)', () {

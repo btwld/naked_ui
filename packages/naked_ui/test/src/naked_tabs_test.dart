@@ -130,6 +130,94 @@ void main() {
     );
   }
 
+  testWidgets('controlled host receives one onChanged per press', (
+    tester,
+  ) async {
+    final changes = <String>[];
+    final tab2 = UniqueKey();
+
+    await tester.pumpWidget(
+      WidgetsApp(
+        color: const Color(0xFF000000),
+        builder: (context, child) => child ?? const SizedBox.shrink(),
+        pageRouteBuilder: _defaultPageRouteBuilder,
+        home: Directionality(
+          textDirection: TextDirection.ltr,
+          child: NakedTabs(
+            selectedTabId: 'tab1',
+            onChanged: changes.add,
+            child: NakedTabBar(
+              child: Row(
+                children: [
+                  const NakedTab(tabId: 'tab1', child: Text('Tab 1')),
+                  NakedTab(
+                    key: tab2,
+                    tabId: 'tab2',
+                    child: const Text('Tab 2'),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(tab2));
+    await tester.pumpAndSettle();
+    expect(changes, ['tab2']);
+
+    await tester.tap(find.byKey(tab2));
+    await tester.pumpAndSettle();
+    expect(changes, ['tab2', 'tab2']);
+  });
+
+  testWidgets('keyboard activation retries on a rejecting controlled host', (
+    tester,
+  ) async {
+    final changes = <String>[];
+    final tab1 = UniqueKey();
+
+    await tester.pumpWidget(
+      WidgetsApp(
+        color: const Color(0xFF000000),
+        builder: (context, child) => child ?? const SizedBox.shrink(),
+        pageRouteBuilder: _defaultPageRouteBuilder,
+        home: Directionality(
+          textDirection: TextDirection.ltr,
+          child: NakedTabs(
+            selectedTabId: 'tab1',
+            onChanged: changes.add,
+            child: NakedTabBar(
+              child: Row(
+                children: [
+                  NakedTab(
+                    key: tab1,
+                    tabId: 'tab1',
+                    child: const Text('Tab 1'),
+                  ),
+                  const NakedTab(tabId: 'tab2', child: Text('Tab 2')),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(tab1));
+    await tester.pump();
+    await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
+    await tester.pump();
+    expect(changes, ['tab2']);
+
+    await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+    await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+    expect(changes, ['tab2', 'tab2', 'tab2']);
+  });
+
   testWidgets('Selection follows focus via arrow keys', (tester) async {
     final changes = <String>[];
     final tab1 = UniqueKey();
@@ -155,6 +243,103 @@ void main() {
 
     // Selection should follow focus (tab2).
     expect(changes.last, 'tab2');
+  });
+
+  testWidgets('controller changes rebuild tabs and panels', (tester) async {
+    final controller = NakedTabController(selectedTabId: 'tab1');
+    addTearDown(controller.dispose);
+
+    await tester.pumpWidget(
+      WidgetsApp(
+        color: const Color(0xFF000000),
+        builder: (context, child) => child ?? const SizedBox.shrink(),
+        pageRouteBuilder: _defaultPageRouteBuilder,
+        home: Directionality(
+          textDirection: TextDirection.ltr,
+          child: NakedTabs(
+            controller: controller,
+            child: Column(
+              children: [
+                NakedTabBar(
+                  child: Row(
+                    children: [
+                      NakedTab(
+                        tabId: 'tab1',
+                        builder: (_, state, __) =>
+                            Text(state.isSelected ? 'Tab 1 selected' : 'Tab 1'),
+                      ),
+                      NakedTab(
+                        tabId: 'tab2',
+                        builder: (_, state, __) =>
+                            Text(state.isSelected ? 'Tab 2 selected' : 'Tab 2'),
+                      ),
+                    ],
+                  ),
+                ),
+                const NakedTabView(tabId: 'tab1', child: Text('Panel 1')),
+                const NakedTabView(tabId: 'tab2', child: Text('Panel 2')),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+
+    expect(find.text('Tab 1 selected'), findsOneWidget);
+    expect(find.text('Panel 1'), findsOneWidget);
+    expect(find.text('Panel 2'), findsNothing);
+
+    controller.selectTab('tab2');
+    await tester.pump();
+
+    expect(find.text('Tab 2 selected'), findsOneWidget);
+    expect(find.text('Panel 1'), findsNothing);
+    expect(find.text('Panel 2'), findsOneWidget);
+  });
+
+  testWidgets('tabs invoke the latest parent callback', (tester) async {
+    var useSecondCallback = false;
+    var firstCalls = 0;
+    var secondCalls = 0;
+    late StateSetter rebuild;
+
+    await tester.pumpWidget(
+      WidgetsApp(
+        color: const Color(0xFF000000),
+        builder: (context, child) => child ?? const SizedBox.shrink(),
+        pageRouteBuilder: _defaultPageRouteBuilder,
+        home: Directionality(
+          textDirection: TextDirection.ltr,
+          child: StatefulBuilder(
+            builder: (context, setState) {
+              rebuild = setState;
+              return NakedTabs(
+                selectedTabId: 'tab1',
+                onChanged: useSecondCallback
+                    ? (_) => secondCalls++
+                    : (_) => firstCalls++,
+                child: const NakedTabBar(
+                  child: Row(
+                    children: [
+                      NakedTab(tabId: 'tab1', child: Text('First')),
+                      NakedTab(tabId: 'tab2', child: Text('Second')),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      ),
+    );
+
+    rebuild(() => useSecondCallback = true);
+    await tester.pump();
+    await tester.tap(find.text('Second'));
+    await tester.pump();
+
+    expect(firstCalls, 0);
+    expect(secondCalls, 1);
   });
 
   testWidgets('Enter/Space activation also selects (redundant but fine)', (
@@ -371,7 +556,8 @@ void main() {
                 child: Column(
                   children: [
                     NakedTabBar(
-                      child: Row(
+                      child: Flex(
+                        direction: orientation,
                         children: [
                           NakedTab(
                             tabId: 'tab1',
@@ -467,6 +653,33 @@ void main() {
       await tester.sendKeyEvent(LogicalKeyboardKey.end);
       await tester.pump();
 
+      expect(changes.last, 'tab3');
+    });
+
+    testWidgets('Home and End follow vertical tab orientation', (tester) async {
+      final changes = <String>[];
+      final tab2 = UniqueKey();
+
+      await tester.pumpWidget(
+        threeTabHarness(
+          initialSelected: 'tab2',
+          orientation: Axis.vertical,
+          onChangedSpy: changes.add,
+          tab2Key: tab2,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byKey(tab2));
+      await tester.pump();
+      changes.clear();
+
+      await tester.sendKeyEvent(LogicalKeyboardKey.home);
+      await tester.pump();
+      expect(changes.last, 'tab1');
+
+      await tester.sendKeyEvent(LogicalKeyboardKey.end);
+      await tester.pump();
       expect(changes.last, 'tab3');
     });
   });
@@ -724,6 +937,52 @@ void main() {
   });
 
   group('Controller state management', () {
+    testWidgets('one press produces one controller notification', (
+      tester,
+    ) async {
+      final controller = NakedTabController(selectedTabId: 'tab1');
+      addTearDown(controller.dispose);
+      var notifications = 0;
+      final tab2Key = UniqueKey();
+      controller.addListener(() => notifications++);
+
+      await tester.pumpWidget(
+        WidgetsApp(
+          color: const Color(0xFF000000),
+          builder: (context, child) => child ?? const SizedBox.shrink(),
+          pageRouteBuilder: _defaultPageRouteBuilder,
+          home: Directionality(
+            textDirection: TextDirection.ltr,
+            child: NakedTabs(
+              controller: controller,
+              child: NakedTabBar(
+                child: Row(
+                  children: [
+                    const NakedTab(
+                      tabId: 'tab1',
+                      child: SizedBox(width: 100, height: 40),
+                    ),
+                    NakedTab(
+                      key: tab2Key,
+                      tabId: 'tab2',
+                      child: const SizedBox(width: 100, height: 40),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byKey(tab2Key));
+      await tester.pumpAndSettle();
+
+      expect(notifications, 1);
+      expect(controller.selectedTabId, 'tab2');
+    });
+
     testWidgets('previousTabId is set when switching tabs', (tester) async {
       final controller = NakedTabController(selectedTabId: 'tab1');
       addTearDown(controller.dispose);
@@ -768,7 +1027,7 @@ void main() {
       expect(controller.previousTabId, isNull);
 
       // Select tab2.
-      await tester.tap(find.byKey(const Key('tab2')));
+      controller.selectTab('tab2');
       await tester.pump();
 
       expect(controller.selectedTabId, 'tab2');
@@ -817,7 +1076,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // Select tab2.
-      await tester.tap(find.byKey(const Key('tab2')));
+      controller.selectTab('tab2');
       await tester.pump();
       expect(controller.selectedTabId, 'tab2');
 

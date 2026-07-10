@@ -1,7 +1,7 @@
 name: naked_ui_workspace
 environment:
-  sdk: ">=3.8.0 <4.0.0"
-  flutter: ">=3.27.0"
+  sdk: ">=3.9.0 <4.0.0"
+  flutter: ">=3.41.0"
 
 dependencies:
   dart_code_metrics_presets: ^2.26.1
@@ -13,7 +13,7 @@ dev_dependencies:
 workspace:
   - packages/example
   - packages/naked_ui
-  
+
 melos:
   # IDE settings (migrated from melos.yaml for Melos 7.x)
   ide:
@@ -43,9 +43,9 @@ melos:
     format:check:
       description: Check if all Dart code is formatted
       run: dart format --set-exit-if-changed .
-    
+
     test:all:
-      run: melos exec -- flutter test 
+      run: melos exec -- flutter test
       description: Run flutter test
       packageFilters:
         dirExists: test

@@ -273,6 +273,39 @@ void main() {
       ),
     );
 
+    testWidgets('builder exposes pressed and open interaction states', (
+      tester,
+    ) async {
+      NakedPopoverState? state;
+
+      await tester.pumpMaterialWidget(
+        Center(
+          child: NakedPopover(
+            popoverBuilder: (context, info) => const Text('Popover Content'),
+            builder: (context, value, child) {
+              state = value;
+              return const SizedBox(
+                key: Key('trigger'),
+                width: 100,
+                height: 40,
+              );
+            },
+          ),
+        ),
+      );
+
+      final gesture = await tester.startGesture(
+        tester.getCenter(find.byKey(const Key('trigger'))),
+      );
+      await tester.pump(const Duration(milliseconds: 100));
+      expect(state!.isPressed, isTrue);
+
+      await gesture.up();
+      await tester.pumpAndSettle();
+      expect(state!.isPressed, isFalse);
+      expect(state!.isOpen, isTrue);
+    });
+
     group('openOnTap behavior', () {
       testWidgets('does not open on tap when openOnTap is false', (
         tester,
@@ -441,6 +474,35 @@ void main() {
     });
 
     group('controller', () {
+      testWidgets('uses a replacement external controller', (tester) async {
+        final firstController = MenuController();
+        final secondController = MenuController();
+        late StateSetter rebuild;
+        MenuController controller = firstController;
+
+        await tester.pumpMaterialWidget(
+          StatefulBuilder(
+            builder: (context, setState) {
+              rebuild = setState;
+              return NakedPopover(
+                controller: controller,
+                popoverBuilder: (context, info) =>
+                    const Text('Popover Content'),
+                child: const Text('Trigger'),
+              );
+            },
+          ),
+        );
+
+        rebuild(() => controller = secondController);
+        await tester.pump();
+
+        secondController.open();
+        await tester.pumpAndSettle();
+        expect(find.text('Popover Content'), findsOneWidget);
+        expect(secondController.isOpen, isTrue);
+      });
+
       testWidgets('can open and close via external controller', (tester) async {
         final controller = MenuController();
 

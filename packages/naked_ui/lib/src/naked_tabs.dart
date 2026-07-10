@@ -58,11 +58,11 @@ class NakedTabState extends NakedState {
 
   /// Returns the [WidgetStatesController] from the nearest scope.
   static WidgetStatesController controllerOf(BuildContext context) =>
-      NakedState.controllerOf(context);
+      NakedState.controllerOf<NakedTabState>(context);
 
   /// Returns the [WidgetStatesController] from the nearest scope, if any.
   static WidgetStatesController? maybeControllerOf(BuildContext context) =>
-      NakedState.maybeControllerOf(context);
+      NakedState.maybeControllerOf<NakedTabState>(context);
 
   @override
   bool operator ==(Object other) {
@@ -158,10 +158,7 @@ class NakedTabs extends StatelessWidget {
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    assert(_effectiveSelectedTabId.isNotEmpty, 'selectedTabId cannot be empty');
-
+  Widget _buildTabs() {
     return Actions(
       actions: {
         DismissIntent: CallbackAction<DismissIntent>(
@@ -176,6 +173,19 @@ class NakedTabs extends StatelessWidget {
         onEscapePressed: onEscapePressed,
         child: child,
       ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    assert(_effectiveSelectedTabId.isNotEmpty, 'selectedTabId cannot be empty');
+
+    final controller = this.controller;
+    if (controller == null) return _buildTabs();
+
+    return ListenableBuilder(
+      listenable: controller,
+      builder: (context, child) => _buildTabs(),
     );
   }
 }
@@ -223,6 +233,7 @@ class NakedTabsScope extends InheritedWidget {
     return selectedTabId != old.selectedTabId ||
         orientation != old.orientation ||
         enabled != old.enabled ||
+        onChanged != old.onChanged ||
         onEscapePressed != old.onEscapePressed;
   }
 }
@@ -292,6 +303,10 @@ class NakedTab extends StatefulWidget {
   final ValueWidgetBuilder<NakedTabState>? builder;
 
   /// Semantic label for the trigger.
+  ///
+  /// When provided, it replaces the semantics of the tab's content, so a tab
+  /// whose content already renders the same text is announced once. When
+  /// null, the content's own semantics are used.
   final String? semanticLabel;
 
   /// Whether the tab is enabled.
@@ -326,6 +341,13 @@ class _NakedTabState extends State<NakedTab>
   late bool _isEnabled;
   late NakedTabsScope _scope;
 
+  /// Whether selection from this tab's own activation is awaiting focus.
+  ///
+  /// A press selects directly and may also move focus. Since selection follows
+  /// focus, the focus-driven follow-up is suppressed to keep one callback per
+  /// activation without suppressing later retries from controlled hosts.
+  bool _selectionRequestedByTap = false;
+
   void _applyFocusability() {
     final node = effectiveFocusNode;
     node
@@ -337,6 +359,8 @@ class _NakedTabState extends State<NakedTab>
     if (!_isEnabled) return;
     if (widget.enableFeedback) HapticFeedback.selectionClick();
     if (effectiveFocusNode.canRequestFocus) {
+      // An already-focused node emits no focus event to consume this flag.
+      _selectionRequestedByTap = !effectiveFocusNode.hasPrimaryFocus;
       effectiveFocusNode.requestFocus();
     }
     _scope.selectTab(widget.tabId);
@@ -368,34 +392,32 @@ class _NakedTabState extends State<NakedTab>
   static const int _maxFocusIterations = 100;
 
   void _focusFirstTab() {
-    // Find the first tab in the current tab group
     final scope = FocusScope.of(context);
-    scope.focusInDirection(TraversalDirection.left);
-    // Move left until we cannot go further (reaching the first tab).
-    // Limit iterations to prevent infinite loops in circular focus scenarios.
+    final direction = _scope.orientation == Axis.horizontal
+        ? TraversalDirection.left
+        : TraversalDirection.up;
+    scope.focusInDirection(direction);
     for (
       int i = 0;
-      i < _maxFocusIterations &&
-          scope.focusInDirection(TraversalDirection.left);
+      i < _maxFocusIterations && scope.focusInDirection(direction);
       i++
     ) {
-      // Continue until we reach the first tab or hit iteration limit.
+      // Continue until the first tab or the safety bound is reached.
     }
   }
 
   void _focusLastTab() {
-    // Find the last tab in the current tab group
     final scope = FocusScope.of(context);
-    scope.focusInDirection(TraversalDirection.right);
-    // Move right until we cannot go further (reaching the last tab).
-    // Limit iterations to prevent infinite loops in circular focus scenarios.
+    final direction = _scope.orientation == Axis.horizontal
+        ? TraversalDirection.right
+        : TraversalDirection.down;
+    scope.focusInDirection(direction);
     for (
       int i = 0;
-      i < _maxFocusIterations &&
-          scope.focusInDirection(TraversalDirection.right);
+      i < _maxFocusIterations && scope.focusInDirection(direction);
       i++
     ) {
-      // Continue until we reach the last tab or hit iteration limit.
+      // Continue until the last tab or the safety bound is reached.
     }
   }
 
@@ -450,13 +472,14 @@ class _NakedTabState extends State<NakedTab>
     );
 
     Widget tabChild = widget.excludeSemantics
-        ? gestureDetector
+        ? ExcludeSemantics(child: gestureDetector)
         : Semantics(
             container: true,
             enabled: _isEnabled,
             selected: isSelected,
             button: true,
             label: widget.semanticLabel,
+            excludeSemantics: widget.semanticLabel != null,
             onTap: _isEnabled ? _handleTap : null,
             child: gestureDetector,
           );
@@ -465,11 +488,13 @@ class _NakedTabState extends State<NakedTab>
       enabled: _isEnabled,
       autofocus: widget.autofocus,
       onFocusChange: (f) {
+        final selectedByTap = _selectionRequestedByTap;
+        _selectionRequestedByTap = false;
+        // updateFocusState already rebuilds for every real focus transition.
         updateFocusState(f, widget.onFocusChange);
-        if (f && _isEnabled) {
+        if (f && _isEnabled && !selectedByTap) {
           _scope.selectTab(widget.tabId);
         }
-        setState(() {});
       },
       onHoverChange: (h) => updateHoverState(h, widget.onHoverChange),
       focusNode: effectiveFocusNode,

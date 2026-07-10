@@ -16,9 +16,9 @@ class NakedButtonState extends NakedState {
   static NakedButtonState? maybeOf(BuildContext context) =>
       NakedState.maybeOf(context);
   static WidgetStatesController controllerOf(BuildContext context) =>
-      NakedState.controllerOf(context);
+      NakedState.controllerOf<NakedButtonState>(context);
   static WidgetStatesController? maybeControllerOf(BuildContext context) =>
-      NakedState.maybeControllerOf(context);
+      NakedState.maybeControllerOf<NakedButtonState>(context);
 
   @override
   bool operator ==(Object other) {
@@ -238,7 +238,7 @@ class _NakedButtonState extends State<NakedButton>
     );
 
     Widget result = widget.excludeSemantics
-        ? gestureDetector
+        ? ExcludeSemantics(child: gestureDetector)
         : Semantics(
             enabled: _isInteractive,
             button: true,

@@ -338,6 +338,63 @@ void main() {
       expect(node.hasFocus, isFalse);
     });
 
+    testWidgets(
+      'canRequestFocus=false is honored in directional navigation mode',
+      (tester) async {
+        final node = FocusNode();
+
+        await _pumpApp(
+          tester,
+          child: MediaQuery(
+            data: const MediaQueryData(
+              navigationMode: NavigationMode.directional,
+            ),
+            child: NakedTextField(
+              canRequestFocus: false,
+              focusNode: node,
+              builder: _builder(),
+            ),
+          ),
+        );
+
+        node.requestFocus();
+        await tester.pump();
+        expect(node.hasFocus, isFalse);
+      },
+    );
+
+    testWidgets('focus survives swapping from external to internal node', (
+      tester,
+    ) async {
+      final externalNode = FocusNode();
+      late StateSetter rebuild;
+      FocusNode? node = externalNode;
+
+      await _pumpApp(
+        tester,
+        child: StatefulBuilder(
+          builder: (context, setState) {
+            rebuild = setState;
+            return NakedTextField(focusNode: node, builder: _builder());
+          },
+        ),
+      );
+
+      externalNode.requestFocus();
+      await tester.pump();
+      expect(externalNode.hasFocus, isTrue);
+
+      rebuild(() => node = null);
+      await tester.pump();
+      await tester.pump();
+
+      final editable = _getEditableText(tester);
+      expect(editable.focusNode, isNot(same(externalNode)));
+      expect(editable.focusNode.hasFocus, isTrue);
+
+      externalNode.dispose();
+    });
+
     testWidgets('onTap & onTapAlwaysCalled true triggers', (tester) async {
       int taps = 0;
 

@@ -302,5 +302,52 @@ void main() {
 
       semanticsHandle.dispose();
     });
+
+    testWidgets('NakedRadio respects excludeSemantics', (tester) async {
+      final semanticsHandle = tester.ensureSemantics();
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: RadioGroup<String>(
+              groupValue: 'a',
+              onChanged: (_) {},
+              child: const NakedRadio<String>(
+                value: 'a',
+                semanticLabel: 'Test Radio',
+                excludeSemantics: true,
+                child: Text('Radio'),
+              ),
+            ),
+          ),
+        ),
+      );
+
+      expect(find.bySemanticsLabel(RegExp(r'Test Radio|Radio')), findsNothing);
+      semanticsHandle.dispose();
+    });
+
+    testWidgets('NakedPopover respects excludeSemantics', (tester) async {
+      final semanticsHandle = tester.ensureSemantics();
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: NakedPopover(
+              semanticLabel: 'Test Popover',
+              excludeSemantics: true,
+              popoverBuilder: (context, info) => const Text('Overlay'),
+              child: const Text('Popover'),
+            ),
+          ),
+        ),
+      );
+
+      expect(
+        find.bySemanticsLabel(RegExp(r'Test Popover|Popover')),
+        findsNothing,
+      );
+      semanticsHandle.dispose();
+    });
   });
 }

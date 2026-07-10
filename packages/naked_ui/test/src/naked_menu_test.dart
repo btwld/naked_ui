@@ -244,7 +244,7 @@ void main() {
           final controller = MenuController();
 
           await tester.pumpMaterialWidget(
-            NakedMenu(
+            NakedMenu<String>(
               controller: controller,
               onClose: () => onMenuCloseCalled = true,
               overlayBuilder: (context, info) => Container(
@@ -286,7 +286,7 @@ void main() {
         final controller = MenuController();
         await tester.pumpMaterialWidget(
           Center(
-            child: NakedMenu(
+            child: NakedMenu<String>(
               controller: controller,
               overlayBuilder: (context, info) => const Column(
                 children: [

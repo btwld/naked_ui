@@ -23,11 +23,11 @@ class NakedToggleState extends NakedState {
 
   /// Returns the [WidgetStatesController] from the nearest scope.
   static WidgetStatesController controllerOf(BuildContext context) =>
-      NakedState.controllerOf(context);
+      NakedState.controllerOf<NakedToggleState>(context);
 
   /// Returns the [WidgetStatesController] from the nearest scope, if any.
   static WidgetStatesController? maybeControllerOf(BuildContext context) =>
-      NakedState.maybeControllerOf(context);
+      NakedState.maybeControllerOf<NakedToggleState>(context);
 
   @override
   bool operator ==(Object other) {
@@ -58,12 +58,12 @@ class NakedToggleOptionState<T> extends NakedState {
       NakedState.maybeOf(context);
 
   /// Returns the [WidgetStatesController] from the nearest scope.
-  static WidgetStatesController controllerOf(BuildContext context) =>
-      NakedState.controllerOf(context);
+  static WidgetStatesController controllerOf<S>(BuildContext context) =>
+      NakedState.controllerOf<NakedToggleOptionState<S>>(context);
 
   /// Returns the [WidgetStatesController] from the nearest scope, if any.
-  static WidgetStatesController? maybeControllerOf(BuildContext context) =>
-      NakedState.maybeControllerOf(context);
+  static WidgetStatesController? maybeControllerOf<S>(BuildContext context) =>
+      NakedState.maybeControllerOf<NakedToggleOptionState<S>>(context);
 
   @override
   bool operator ==(Object other) {
@@ -218,7 +218,7 @@ class _NakedToggleState extends State<NakedToggle>
     );
 
     return widget.excludeSemantics
-        ? gestureDetector
+        ? ExcludeSemantics(child: gestureDetector)
         : Semantics(
             enabled: widget._effectiveEnabled,
             toggled: widget.value,
@@ -347,7 +347,9 @@ class _ToggleScope<T> extends InheritedWidget {
 
   @override
   bool updateShouldNotify(_ToggleScope<T> old) {
-    return selectedValue != old.selectedValue || enabled != old.enabled;
+    return selectedValue != old.selectedValue ||
+        enabled != old.enabled ||
+        onChanged != old.onChanged;
   }
 }
 
@@ -467,7 +469,7 @@ class _NakedToggleOptionState<T> extends State<NakedToggleOption<T>>
     );
 
     Widget optionChild = widget.excludeSemantics
-        ? gestureDetector
+        ? ExcludeSemantics(child: gestureDetector)
         : Semantics(
             container: true,
             enabled: isEnabled,

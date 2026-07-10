@@ -1,3 +1,31 @@
+## 1.0.0
+
+### Breaking changes
+
+- Require Dart 3.9 and Flutter 3.41, matching the `RawTooltip` API used by the
+  package.
+- Treat `NakedSelect.value` as fully controlled, including `null`; a select
+  without `onChanged` is now consistently non-interactive.
+- Make `NakedAccordionController.values` immutable to callers and preserve its
+  observable FIFO ordering.
+- Make `NakedStateScope.controllerOf` type-specific; generic state helpers now
+  require the requested value type.
+- Require `NakedMenu` to have either a `child` or `builder`, and throw a
+  descriptive error when menu/select items are used outside their owner.
+
+### Fixes and hardening
+
+- Rebuild controller-driven tabs, prevent duplicate tab selection callbacks,
+  replace duplicated content semantics when `semanticLabel` is set, and make
+  Home/End navigation orientation-aware.
+- Correct focus-node ownership swaps across controls and remove the redundant
+  focus owner around `EditableText`.
+- Consolidate overlay positioning, including safe handling of oversized
+  content, and rebuild Popover on the shared anchored-overlay shell.
+- Keep inherited callbacks current, initialize replacement accordion
+  controllers, and scope slider drag-end values to each drag session.
+- Correct example paths in CI workflows and remove redundant dependency steps.
+
 ## 1.0.0-beta.1
 
 - feat(naked-select): add `mouseCursor` property to NakedSelect

@@ -44,11 +44,11 @@ class NakedSliderState extends NakedState {
 
   /// Returns the [WidgetStatesController] from the nearest scope.
   static WidgetStatesController controllerOf(BuildContext context) =>
-      NakedState.controllerOf(context);
+      NakedState.controllerOf<NakedSliderState>(context);
 
   /// Returns the [WidgetStatesController] from the nearest scope, if any.
   static WidgetStatesController? maybeControllerOf(BuildContext context) =>
-      NakedState.maybeControllerOf(context);
+      NakedState.maybeControllerOf<NakedSliderState>(context);
 
   /// The slider value as a percentage (0.0 to 1.0).
   ///
@@ -123,7 +123,28 @@ class NakedSlider extends StatefulWidget {
     this.semanticLabel,
     this.semanticFormatterCallback,
     this.excludeSemantics = false,
-  }) : assert(min < max, 'min must be less than max'),
+  }) : assert(
+         min > double.negativeInfinity &&
+             min < double.infinity &&
+             max > double.negativeInfinity &&
+             max < double.infinity,
+         'min and max must be finite',
+       ),
+       assert(min < max, 'min must be less than max'),
+       assert(
+         value > double.negativeInfinity && value < double.infinity,
+         'value must be finite',
+       ),
+       assert(value >= min && value <= max, 'value must be within min and max'),
+       assert(divisions == null || divisions > 0, 'divisions must be positive'),
+       assert(
+         keyboardStep > 0 && keyboardStep < double.infinity,
+         'keyboardStep must be finite and positive',
+       ),
+       assert(
+         largeKeyboardStep > 0 && largeKeyboardStep < double.infinity,
+         'largeKeyboardStep must be finite and positive',
+       ),
        assert(
          child != null || builder != null,
          'Either child or builder must be provided',
@@ -270,6 +291,7 @@ class _NakedSliderState extends State<NakedSlider>
     if (!_isEnabled) return;
 
     _isDragging = true;
+    _lastEmittedValue = widget.value;
     _dragStartPosition = details.globalPosition;
     _dragStartValue = widget.value;
 
@@ -440,7 +462,7 @@ class _NakedSliderState extends State<NakedSlider>
       shortcuts: _shortcuts,
       actions: _actions,
       child: widget.excludeSemantics
-          ? wrappedContent
+          ? ExcludeSemantics(child: wrappedContent)
           : Semantics(
               container: true,
               enabled: _isEnabled,

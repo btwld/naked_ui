@@ -195,8 +195,9 @@ mixin FocusNodeMixin<T extends StatefulWidget> on State<T> {
 
   FocusNode? _internalFocusNode;
   FocusNode? _lastExternalNode;
+  FocusNode? _effectiveFocusNode;
 
-  FocusNode get effectiveFocusNode => widgetProvidedNode ?? _internalFocusNode!;
+  FocusNode get effectiveFocusNode => _effectiveFocusNode!;
 
   void _notifyFocusChanged() {
     final focused = effectiveFocusNode.hasFocus;
@@ -211,6 +212,7 @@ mixin FocusNodeMixin<T extends StatefulWidget> on State<T> {
     if (_lastExternalNode == null) {
       _internalFocusNode = FocusNode(debugLabel: focusNodeDebugLabel);
     }
+    _effectiveFocusNode = _lastExternalNode ?? _internalFocusNode;
     effectiveFocusNode.addListener(_notifyFocusChanged);
   }
 
@@ -224,7 +226,6 @@ mixin FocusNodeMixin<T extends StatefulWidget> on State<T> {
     super.didUpdateWidget(oldWidget);
 
     // BEFORE: snapshot and (later) detach listener safely
-    final FocusNode? oldEffective = effectiveFocusNode;
     final FocusNode? newExternal = widgetProvidedNode;
 
     // Nothing changed wrt external node identity → no swap needed
@@ -232,10 +233,11 @@ mixin FocusNodeMixin<T extends StatefulWidget> on State<T> {
       return;
     }
 
-    final bool hadFocus = oldEffective?.hasFocus ?? false;
+    final oldEffective = _effectiveFocusNode!;
+    final bool hadFocus = oldEffective.hasFocus;
 
     // Detach BEFORE we might dispose the old node
-    oldEffective?.removeListener(_notifyFocusChanged);
+    oldEffective.removeListener(_notifyFocusChanged);
 
     // Transition handling
     if (_lastExternalNode == null && newExternal != null) {
@@ -249,15 +251,18 @@ mixin FocusNodeMixin<T extends StatefulWidget> on State<T> {
     _lastExternalNode = newExternal;
 
     // AFTER: recompute from the updated fields using a different initializer
-    final FocusNode? newEffective = _lastExternalNode ?? _internalFocusNode;
+    final newEffective = _lastExternalNode ?? _internalFocusNode!;
+    _effectiveFocusNode = newEffective;
 
     // Reattach listener to the current effective node
-    newEffective?.addListener(_notifyFocusChanged);
+    newEffective.addListener(_notifyFocusChanged);
 
     // Preserve focus across the swap
     if (hadFocus) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) newEffective?.requestFocus();
+        if (mounted && identical(_effectiveFocusNode, newEffective)) {
+          newEffective.requestFocus();
+        }
       });
     }
   }
@@ -265,10 +270,11 @@ mixin FocusNodeMixin<T extends StatefulWidget> on State<T> {
   @override
   @mustCallSuper
   void dispose() {
-    effectiveFocusNode.removeListener(_notifyFocusChanged);
+    _effectiveFocusNode?.removeListener(_notifyFocusChanged);
     _internalFocusNode?.dispose();
     _internalFocusNode = null;
     _lastExternalNode = null;
+    _effectiveFocusNode = null;
     super.dispose();
   }
 }

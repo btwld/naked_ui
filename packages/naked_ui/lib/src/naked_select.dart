@@ -44,12 +44,12 @@ class NakedSelectState<T> extends NakedState {
       NakedState.maybeOf(context);
 
   /// Returns the [WidgetStatesController] from the nearest scope.
-  static WidgetStatesController controllerOf(BuildContext context) =>
-      NakedState.controllerOf(context);
+  static WidgetStatesController controllerOf<S>(BuildContext context) =>
+      NakedState.controllerOf<NakedSelectState<S>>(context);
 
   /// Returns the [WidgetStatesController] from the nearest scope, if any.
-  static WidgetStatesController? maybeControllerOf(BuildContext context) =>
-      NakedState.maybeControllerOf(context);
+  static WidgetStatesController? maybeControllerOf<S>(BuildContext context) =>
+      NakedState.maybeControllerOf<NakedSelectState<S>>(context);
 
   /// Whether a selection exists.
   bool get hasValue => value != null;
@@ -83,12 +83,12 @@ class NakedSelectOptionState<T> extends NakedState {
       NakedState.maybeOf(context);
 
   /// Returns the [WidgetStatesController] from the nearest scope.
-  static WidgetStatesController controllerOf(BuildContext context) =>
-      NakedState.controllerOf(context);
+  static WidgetStatesController controllerOf<S>(BuildContext context) =>
+      NakedState.controllerOf<NakedSelectOptionState<S>>(context);
 
   /// Returns the [WidgetStatesController] from the nearest scope, if any.
-  static WidgetStatesController? maybeControllerOf(BuildContext context) =>
-      NakedState.maybeControllerOf(context);
+  static WidgetStatesController? maybeControllerOf<S>(BuildContext context) =>
+      NakedState.maybeControllerOf<NakedSelectOptionState<S>>(context);
 }
 
 /// Internal scope provided by [NakedSelect] to its overlay subtree.
@@ -262,6 +262,9 @@ class NakedSelect<T> extends StatefulWidget {
   final T? value;
 
   /// Callback for single selection changes.
+  ///
+  /// When null, the select is non-interactive because [value] is controlled by
+  /// the caller and cannot be updated.
   final ValueChanged<T?>? onChanged;
 
   /// Whether selecting an item closes the menu.
@@ -318,7 +321,6 @@ class _NakedSelectState<T> extends State<NakedSelect<T>>
     with OverlayStateMixin<NakedSelect<T>> {
   // ignore: dispose-fields
   late final MenuController _menuController;
-  T? _internalValue;
 
   /// Number of items to jump when pressing PageUp/PageDown.
   static const int _pageJumpSize = 10;
@@ -327,10 +329,10 @@ class _NakedSelectState<T> extends State<NakedSelect<T>>
   void initState() {
     super.initState();
     _menuController = MenuController();
-    _internalValue = widget.value;
   }
 
-  T? get _effectiveValue => widget.value ?? _internalValue;
+  T? get _effectiveValue => widget.value;
+  bool get _isEnabled => widget.enabled && widget.onChanged != null;
 
   void _toggle() =>
       _menuController.isOpen ? _menuController.close() : _menuController.open();
@@ -351,9 +353,6 @@ class _NakedSelectState<T> extends State<NakedSelect<T>>
 
   void _handleSelection(T? value) {
     markSelectionMade();
-    setState(() {
-      _internalValue = value;
-    });
     widget.onChanged?.call(value);
   }
 
@@ -380,8 +379,8 @@ class _NakedSelectState<T> extends State<NakedSelect<T>>
   @override
   void didUpdateWidget(covariant NakedSelect<T> oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.value != oldWidget.value) {
-      _internalValue = widget.value;
+    if (!_isEnabled && _menuController.isOpen) {
+      _menuController.close();
     }
   }
 
@@ -397,7 +396,7 @@ class _NakedSelectState<T> extends State<NakedSelect<T>>
         return _NakedSelectScope<T>(
           controller: _menuController,
           closeOnSelect: widget.closeOnSelect,
-          enabled: widget.enabled,
+          enabled: _isEnabled,
           onChanged: _handleSelection,
           value: _effectiveValue,
           child: Builder(
@@ -415,11 +414,11 @@ class _NakedSelectState<T> extends State<NakedSelect<T>>
       triggerFocusNode: widget.triggerFocusNode,
       positioning: widget.positioning,
       child: NakedButton(
-        onPressed: widget.enabled ? _toggle : null,
-        enabled: widget.enabled,
+        onPressed: _isEnabled ? _toggle : null,
+        enabled: _isEnabled,
         mouseCursor: widget.mouseCursor,
         focusNode: widget.triggerFocusNode,
-        excludeSemantics: true,
+        semanticLabel: widget.semanticLabel,
         child: widget.child,
         builder: (context, buttonState, child) {
           final selectState = NakedSelectState(
@@ -428,32 +427,27 @@ class _NakedSelectState<T> extends State<NakedSelect<T>>
             value: _effectiveValue,
           );
 
-          return NakedStateScopeBuilder(
+          final trigger = NakedStateScopeBuilder(
             value: selectState,
             child: child,
             builder: widget.builder,
           );
+
+          return widget.semanticLabel == null
+              ? trigger
+              : ExcludeSemantics(child: trigger);
         },
       ),
     );
-
-    final Widget semanticsChild = widget.semanticLabel == null
-        ? selectWidget
-        : ExcludeSemantics(child: selectWidget);
 
     Widget result = widget.excludeSemantics
         ? ExcludeSemantics(child: selectWidget)
         : MergeSemantics(
             child: Semantics(
               container: true,
-              enabled: widget.enabled,
-              button: true,
-              focusable: true,
               expanded: _isOpen,
-              label: widget.semanticLabel,
               value: semanticsValue,
-              onTap: widget.enabled ? _toggle : null,
-              child: semanticsChild,
+              child: selectWidget,
             ),
           );
 
@@ -462,7 +456,7 @@ class _NakedSelectState<T> extends State<NakedSelect<T>>
       child: Actions(
         actions: NakedIntentActions.select.actions(
           onDismiss: () => _menuController.close(),
-          onOpenOverlay: () => _menuController.open(),
+          onOpenOverlay: _isEnabled ? () => _menuController.open() : null,
           onPageUp: _handlePageUp,
           onPageDown: _handlePageDown,
         ),

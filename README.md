@@ -35,10 +35,6 @@ The complete documentation covers detailed component APIs and examples, guides a
 2. Wrap the visuals in the corresponding Naked component
 3. React to typed state callbacks or use the builder snapshot to style interaction states
 
-1. **Create your visual design**: Design your UI components using standard Flutter widgets
-2. **Wrap with Naked behavior**: Wrap your design with the appropriate Naked component
-3. **Handle state changes**: Use the builder pattern to access component state and update your visual design accordingly
-
 ## Examples
 
 Below are examples of using `NakedButton`, `NakedCheckbox`, and `NakedMenu`. Each shows how to wrap custom visuals with headless behavior and handle states using the builder pattern. See the [full documentation](https://docs.page/btwld/naked_ui) for all components.
@@ -100,7 +96,10 @@ class _SimpleCheckboxState extends State<SimpleCheckbox> {
 Create a dropdown menu with custom styling and menu items.
 
 ```dart
+final menuController = MenuController();
+
 NakedMenu<String>(
+  controller: menuController,
   onSelected: (value) => print('Selected: $value'),
   builder: (context, state, child) => Container(
     padding: const EdgeInsets.all(8),

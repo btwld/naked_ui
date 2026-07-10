@@ -282,7 +282,9 @@ void main() {
               value: testState,
               child: Builder(
                 builder: (context) {
-                  final result = NakedState.controllerOf(context);
+                  final result = NakedState.controllerOf<TestNakedState>(
+                    context,
+                  );
                   expect(result, isA<WidgetStatesController>());
                   expect(result.value, equals(testState.states));
                   return const SizedBox();
@@ -304,7 +306,9 @@ void main() {
               value: testState,
               child: Builder(
                 builder: (context) {
-                  final result = NakedState.maybeControllerOf(context);
+                  final result = NakedState.maybeControllerOf<TestNakedState>(
+                    context,
+                  );
                   expect(result, isA<WidgetStatesController>());
                   expect(result!.value, equals(testState.states));
                   return const SizedBox();
@@ -322,7 +326,9 @@ void main() {
           MaterialApp(
             home: Builder(
               builder: (context) {
-                final result = NakedState.maybeControllerOf(context);
+                final result = NakedState.maybeControllerOf<TestNakedState>(
+                  context,
+                );
                 expect(result, isNull);
                 return const SizedBox();
               },

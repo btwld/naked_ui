@@ -30,11 +30,11 @@ class NakedCheckboxState extends NakedState {
 
   /// Returns the [WidgetStatesController] from the nearest scope.
   static WidgetStatesController controllerOf(BuildContext context) =>
-      NakedState.controllerOf(context);
+      NakedState.controllerOf<NakedCheckboxState>(context);
 
   /// Returns the [WidgetStatesController] from the nearest scope, if any.
   static WidgetStatesController? maybeControllerOf(BuildContext context) =>
-      NakedState.maybeControllerOf(context);
+      NakedState.maybeControllerOf<NakedCheckboxState>(context);
 
   /// Whether the checkbox is in intermediate/mixed state.
   bool get isIntermediate => tristate && isChecked == null;
@@ -221,7 +221,7 @@ class _NakedCheckboxState extends State<NakedCheckbox>
     );
 
     return widget.excludeSemantics
-        ? gestureDetector
+        ? ExcludeSemantics(child: gestureDetector)
         : Semantics(
             enabled: widget._effectiveEnabled,
             checked: widget.value == true,

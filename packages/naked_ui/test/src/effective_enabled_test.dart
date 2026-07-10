@@ -27,10 +27,10 @@ void main() {
           ),
         );
 
-        // Tap the select - overlay should open even without callbacks (current API behavior)
+        // A controlled select without an update callback is non-interactive.
         await tester.tap(find.text('Select'));
         await tester.pump();
-        expect(find.text('Item 1'), findsOneWidget);
+        expect(find.text('Item 1'), findsNothing);
       },
     );
 
