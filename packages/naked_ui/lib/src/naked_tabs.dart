@@ -293,9 +293,9 @@ class NakedTab extends StatefulWidget {
 
   /// Semantic label for the trigger.
   ///
-  /// When provided it replaces the semantics of the tab's content, so a tab
-  /// whose content already renders the same text is announced once. When null
-  /// the content's own semantics are used.
+  /// When provided, it replaces the semantics of the tab's content, so a tab
+  /// whose content already renders the same text is announced once. When
+  /// null, the content's own semantics are used.
   final String? semanticLabel;
 
   /// Whether the tab is enabled.
@@ -337,20 +337,19 @@ class _NakedTabState extends State<NakedTab>
       ..skipTraversal = !_isEnabled;
   }
 
-  /// True while a focus-gain event caused by this tab's own tap/activation
-  /// is in flight; the next focus event on this tab consumes it.
+  /// Whether a focus-gain event caused by this tab's own tap or keyboard
+  /// activation is in flight.
   ///
   /// A press would otherwise dispatch selection twice: [_handleTap] selects
-  /// directly and the focus it requests selects again (selection follows
+  /// directly, and the focus it requests selects again (selection follows
   /// focus). The direct call must stay — a press selects synchronously, even
   /// when focus cannot move — so the focus-driven follow-up is the one
-  /// suppressed. Deliberately not frame- or timer-scoped: a controlled host
-  /// that rejects a change schedules no frame, and a frame-scoped guard would
-  /// swallow keyboard retries. The flag is armed only when the tap will
-  /// actually produce a focus event and consumed on the next event either
-  /// way, so at worst (requested focus preempted before landing here) it
-  /// suppresses one focus-follow selection and self-heals; a press's own
-  /// selection is never lost.
+  /// suppressed; the next focus event on this tab consumes the flag either
+  /// way. Deliberately not frame- or timer-scoped: a controlled host that
+  /// rejects a change schedules no frame, and a frame-scoped guard would
+  /// swallow keyboard retries. At worst (requested focus preempted before
+  /// landing here) a stale flag suppresses one focus-follow selection and
+  /// self-heals; a press's own selection is never lost.
   bool _selectionRequestedByTap = false;
 
   void _handleTap() {
@@ -480,9 +479,10 @@ class _NakedTabState extends State<NakedTab>
             selected: isSelected,
             button: true,
             label: widget.semanticLabel,
-            // An explicit label replaces the content's semantics; without this
-            // a tab whose content renders the same text is announced twice.
-            // When no label is given the content's own semantics flow through.
+            // An explicit label replaces the content's semantics; without
+            // this, a tab whose content renders the same text is announced
+            // twice. When no label is given, the content's own semantics flow
+            // through.
             excludeSemantics: widget.semanticLabel != null,
             onTap: _isEnabled ? _handleTap : null,
             child: gestureDetector,
@@ -494,8 +494,9 @@ class _NakedTabState extends State<NakedTab>
       onFocusChange: (f) {
         final selectedByTap = _selectionRequestedByTap;
         _selectionRequestedByTap = false;
-        // updateFocusState already rebuilds on every real focus transition,
-        // which is the only way Focus.onFocusChange fires.
+        // No setState here: updateFocusState already rebuilds on every real
+        // focus transition, and transitions are the only way
+        // Focus.onFocusChange fires.
         updateFocusState(f, widget.onFocusChange);
         if (f && _isEnabled && !selectedByTap) {
           _scope.selectTab(widget.tabId);

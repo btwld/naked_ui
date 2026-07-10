@@ -195,7 +195,7 @@ void main() {
       // is produced, and a host that rejects the change marks nothing dirty —
       // no frame separates two real key presses, so the second press was
       // swallowed. Deliberately no pump between the two activations below;
-      // pumping would manufacture a frame production never gets.
+      // pumping would manufacture a frame that production never gets.
       final changes = <String>[];
       final tab1 = UniqueKey();
       final tab2 = UniqueKey();
@@ -302,7 +302,7 @@ void main() {
     await tester.sendKeyEvent(LogicalKeyboardKey.space);
     await tester.pump();
 
-    // The tap selected 'tab1' exactly once; Space re-activates the now
+    // The tap selected 'tab1' exactly once; Space re-activates the
     // already-selected tab, which is a no-op. An exact list guards against
     // a future double-fire.
     expect(changes, ['tab1']);
