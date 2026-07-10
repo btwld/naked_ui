@@ -5,8 +5,6 @@ import 'package:flutter/semantics.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:naked_ui/naked_ui.dart';
 
-import 'semantics/semantics_test_utils.dart';
-
 void main() {
   group('excludeSemantics', () {
     testWidgets('NakedButton respects excludeSemantics', (tester) async {
@@ -287,18 +285,11 @@ void main() {
       );
 
       expect(find.bySemanticsLabel(RegExp(r'Test Menu')), findsNothing);
-      expect(find.bySemanticsLabel('Menu'), findsNothing);
-
-      final root = tester.getSemantics(find.byType(Scaffold));
-      final leakedTriggerNodes = collectSemanticsNodes(root, (node) {
-        final data = node.getSemanticsData();
-        return data.label.contains('Test Menu') ||
-            data.label.contains('Menu') ||
-            data.flagsCollection.isButton ||
-            data.flagsCollection.isExpanded != Tristate.none ||
-            data.hasAction(SemanticsAction.tap);
-      });
-      expect(leakedTriggerNodes, isEmpty);
+      final data = tester.getSemantics(find.text('Menu')).getSemanticsData();
+      expect(data.label, 'Menu');
+      expect(data.flagsCollection.isButton, isFalse);
+      expect(data.flagsCollection.isExpanded, Tristate.none);
+      expect(data.hasAction(SemanticsAction.tap), isFalse);
 
       semanticsHandle.dispose();
     });

@@ -7,7 +7,7 @@ typedef StateScopeWidgetBuilder<T extends NakedState> =
     Widget Function(ValueWidgetBuilder<T> builder);
 
 @isTest
-testStateScopeBuilder<T extends NakedState>(
+void testStateScopeBuilder<T extends NakedState>(
   String description,
   StateScopeWidgetBuilder<T> builder,
 ) {
@@ -19,7 +19,7 @@ testStateScopeBuilder<T extends NakedState>(
           // Verify that the scope provides a working controller
           final controller = NakedStateScope.controllerOf(context);
           expect(controller.value, isA<Set<WidgetState>>());
-          return SizedBox();
+          return const SizedBox(width: 1, height: 1);
         }),
       ),
     );

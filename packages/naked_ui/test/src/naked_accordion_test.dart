@@ -58,7 +58,77 @@ void main() {
       expect(find.text('Content 2'), findsNothing);
     });
 
-    testStateScopeBuilder<NakedAccordionItemState>(
+    testWidgets('applies initial values when the controller is replaced', (
+      tester,
+    ) async {
+      final firstController = NakedAccordionController<String>();
+      final secondController = NakedAccordionController<String>();
+      addTearDown(firstController.dispose);
+      addTearDown(secondController.dispose);
+      var useSecondController = false;
+      late StateSetter updateHost;
+
+      await tester.pumpMaterialWidget(
+        StatefulBuilder(
+          builder: (context, setState) {
+            updateHost = setState;
+            return NakedAccordionGroup<String>(
+              controller: useSecondController
+                  ? secondController
+                  : firstController,
+              initialExpandedValues: const ['item1'],
+              child: NakedAccordion<String>(
+                value: 'item1',
+                builder: (_, state) => const Text('Trigger 1'),
+                child: const Text('Content 1'),
+              ),
+            );
+          },
+        ),
+      );
+
+      expect(firstController.values, contains('item1'));
+
+      updateHost(() => useSecondController = true);
+      await tester.pump();
+
+      expect(secondController.values, contains('item1'));
+      expect(find.text('Content 1'), findsOneWidget);
+    });
+
+    testWidgets('builder exposes pressed state without an observer callback', (
+      tester,
+    ) async {
+      final controller = NakedAccordionController<String>();
+      addTearDown(controller.dispose);
+      NakedAccordionItemState<String>? state;
+
+      await tester.pumpMaterialWidget(
+        NakedAccordionGroup<String>(
+          controller: controller,
+          child: NakedAccordion<String>(
+            value: 'item1',
+            builder: (context, value) {
+              state = value;
+              return const SizedBox(width: 100, height: 40);
+            },
+            child: const SizedBox(),
+          ),
+        ),
+      );
+
+      final gesture = await tester.startGesture(
+        tester.getCenter(find.byType(NakedAccordion<String>)),
+      );
+      await tester.pump();
+      expect(state?.isPressed, isTrue);
+
+      await gesture.up();
+      await tester.pump();
+      expect(state?.isPressed, isFalse);
+    });
+
+    testStateScopeBuilder<NakedAccordionItemState<String>>(
       'builder\'s context contains NakedStateScope',
       (builder) {
         final controller = NakedAccordionController<String>();
@@ -322,6 +392,74 @@ void main() {
       expect(find.text('Content 1'), findsNothing);
       expect(find.text('Close 2'), findsOneWidget);
       expect(find.text('Content 2'), findsOneWidget);
+    });
+
+    testWidgets(
+      'closed item remains expandable at max because opening evicts',
+      (WidgetTester tester) async {
+        controller = NakedAccordionController<String>(max: 1)..open('item1');
+        late NakedAccordionItemState<String> secondState;
+
+        await tester.pumpMaterialWidget(
+          NakedAccordionGroup<String>(
+            controller: controller,
+            child: Column(
+              children: [
+                NakedAccordion<String>(
+                  value: 'item1',
+                  builder: (_, state) => const Text('First'),
+                  child: const Text('First body'),
+                ),
+                NakedAccordion<String>(
+                  value: 'item2',
+                  builder: (_, state) {
+                    secondState = state;
+                    return const Text('Second');
+                  },
+                  child: const Text('Second body'),
+                ),
+              ],
+            ),
+          ),
+        );
+
+        expect(secondState.canExpand, isTrue);
+        expect(secondState.states, isNot(contains(WidgetState.disabled)));
+
+        await tester.tap(find.text('Second'));
+        await tester.pump();
+
+        expect(controller.values.toList(), ['item2']);
+      },
+    );
+
+    testWidgets('item at the minimum is exposed as non-interactive', (
+      WidgetTester tester,
+    ) async {
+      controller = NakedAccordionController<String>(min: 1)..open('item1');
+      late NakedAccordionItemState<String> itemState;
+
+      await tester.pumpMaterialWidget(
+        NakedAccordionGroup<String>(
+          controller: controller,
+          child: NakedAccordion<String>(
+            value: 'item1',
+            builder: (_, state) {
+              itemState = state;
+              return const Text('Locked open');
+            },
+            child: const Text('Body'),
+          ),
+        ),
+      );
+
+      expect(itemState.canCollapse, isFalse);
+      expect(itemState.states, contains(WidgetState.disabled));
+
+      await tester.tap(find.text('Locked open'));
+      await tester.pump();
+
+      expect(controller.values.toList(), ['item1']);
     });
 
     testWidgets('controller respects both min and max constraints', (

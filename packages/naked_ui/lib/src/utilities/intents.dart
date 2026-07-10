@@ -1,71 +1,41 @@
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
-/// Central namespace for Naked UI intent helpers. Access widget-specific helpers
-/// via namespaces such as `NakedIntentActions.button.shortcuts` and
-/// `NakedIntentActions.button.actions(...)`. Each helper returns the concrete
-/// types expected for that widget to keep usage strongly typed and predictable.
+/// Internal cross-library namespace for Naked UI shortcut and action maps.
 ///
-/// This class is not intended to be instantiated or extended; use the static
-/// members to access the helpers.
+/// The class is public only because Dart library privacy is file-scoped. It is
+/// not exported from `package:naked_ui/naked_ui.dart`.
 class NakedIntentActions {
-  static const _ButtonIntentActions button = _ButtonIntentActions();
-  static const _CheckboxIntentActions checkbox = _CheckboxIntentActions();
-  static const _ToggleIntentActions toggle = _ToggleIntentActions();
-  static const _AccordionIntentActions accordion = _AccordionIntentActions();
-  static const _TabIntentActions tab = _TabIntentActions();
-  static const _MenuIntentActions menu = _MenuIntentActions();
-  static const _SelectIntentActions select = _SelectIntentActions();
-  static const _DialogIntentActions dialog = _DialogIntentActions();
-  static const _SliderIntentActions slider = _SliderIntentActions();
-}
+  NakedIntentActions._();
 
-// Intent helpers for button and activation-based widgets
+  /// Shortcuts shared by button-like controls.
+  static Map<ShortcutActivator, Intent> get buttonShortcuts => _buttonShortcuts;
 
-class _ButtonIntentActions {
-  const _ButtonIntentActions();
+  /// Creates actions for a button-like activation.
+  static Map<Type, Action<Intent>> buttonActions({
+    required VoidCallback onPressed,
+  }) => _activation(onPressed, includeButtonIntent: true);
 
-  Map<ShortcutActivator, Intent> get shortcuts => _buttonShortcuts;
+  /// Creates actions for checkbox activation.
+  static Map<Type, Action<Intent>> checkboxActions({
+    required VoidCallback onToggle,
+  }) => _activation(onToggle, includeButtonIntent: true);
 
-  Map<Type, Action<Intent>> actions({required VoidCallback onPressed}) =>
-      _activation(onPressed, includeButtonIntent: true);
-}
+  /// Creates actions for toggle activation.
+  static Map<Type, Action<Intent>> toggleActions({
+    required VoidCallback onToggle,
+  }) => _activation(onToggle, includeButtonIntent: true);
 
-class _CheckboxIntentActions {
-  const _CheckboxIntentActions();
+  /// Creates actions for accordion disclosure activation.
+  static Map<Type, Action<Intent>> accordionActions({
+    required VoidCallback onToggle,
+  }) => _activation(onToggle, includeButtonIntent: true);
 
-  Map<ShortcutActivator, Intent> get shortcuts => _buttonShortcuts;
+  /// Shortcuts for tab activation and navigation.
+  static Map<ShortcutActivator, Intent> get tabShortcuts => _tabShortcuts;
 
-  Map<Type, Action<Intent>> actions({required VoidCallback onToggle}) =>
-      _activation(onToggle, includeButtonIntent: true);
-}
-
-class _ToggleIntentActions {
-  const _ToggleIntentActions();
-
-  Map<ShortcutActivator, Intent> get shortcuts => _buttonShortcuts;
-
-  Map<Type, Action<Intent>> actions({required VoidCallback onToggle}) =>
-      _activation(onToggle, includeButtonIntent: true);
-}
-
-class _AccordionIntentActions {
-  const _AccordionIntentActions();
-
-  Map<ShortcutActivator, Intent> get shortcuts => _buttonShortcuts;
-
-  Map<Type, Action<Intent>> actions({required VoidCallback onToggle}) =>
-      _activation(onToggle, includeButtonIntent: true);
-}
-
-// Intent helpers for tab widgets
-
-class _TabIntentActions {
-  const _TabIntentActions();
-
-  Map<ShortcutActivator, Intent> get shortcuts => _tabShortcuts;
-
-  Map<Type, Action<Intent>> actions({
+  /// Creates actions for tab activation and navigation.
+  static Map<Type, Action<Intent>> tabActions({
     required VoidCallback onActivate,
     required ValueChanged<TraversalDirection> onDirectionalFocus,
     VoidCallback? onFirstFocus,
@@ -90,16 +60,12 @@ class _TabIntentActions {
 
     return map;
   }
-}
 
-// Intent helpers for menu and overlay collection widgets
+  /// Shortcuts for menu and overlay navigation.
+  static Map<ShortcutActivator, Intent> get menuShortcuts => _menuShortcuts;
 
-class _MenuIntentActions {
-  const _MenuIntentActions();
-
-  Map<ShortcutActivator, Intent> get shortcuts => _menuShortcuts;
-
-  Map<Type, Action<Intent>> actions({
+  /// Creates actions for menu and overlay navigation.
+  static Map<Type, Action<Intent>> menuActions({
     required VoidCallback onDismiss,
     VoidCallback? onNextFocus,
     VoidCallback? onPreviousFocus,
@@ -138,16 +104,12 @@ class _MenuIntentActions {
 
     return map;
   }
-}
 
-// Intent helpers for select and combobox widgets
+  /// Shortcuts for select and combobox navigation.
+  static Map<ShortcutActivator, Intent> get selectShortcuts => _selectShortcuts;
 
-class _SelectIntentActions {
-  const _SelectIntentActions();
-
-  Map<ShortcutActivator, Intent> get shortcuts => _selectShortcuts;
-
-  Map<Type, Action<Intent>> actions({
+  /// Creates actions for select and combobox navigation.
+  static Map<Type, Action<Intent>> selectActions({
     required VoidCallback onDismiss,
     VoidCallback? onOpenOverlay,
     VoidCallback? onPageUp,
@@ -179,29 +141,14 @@ class _SelectIntentActions {
 
     return map;
   }
-}
 
-// Intent helpers for dialog widgets
+  /// Returns direction-aware slider shortcuts.
+  static Map<ShortcutActivator, Intent> sliderShortcuts({
+    required bool isRTL,
+  }) => isRTL ? _sliderShortcutsRtl : _sliderShortcutsLtr;
 
-class _DialogIntentActions {
-  const _DialogIntentActions();
-
-  Map<ShortcutActivator, Intent> get shortcuts => _dialogShortcuts;
-
-  Map<Type, Action<Intent>> actions({required VoidCallback onDismiss}) => {
-    DismissIntent: CallbackAction<DismissIntent>(onInvoke: (_) => onDismiss()),
-  };
-}
-
-// Intent helpers for slider widgets
-
-class _SliderIntentActions {
-  const _SliderIntentActions();
-
-  Map<ShortcutActivator, Intent> shortcuts({required bool isRTL}) =>
-      isRTL ? _sliderShortcutsRtl : _sliderShortcutsLtr;
-
-  Map<Type, Action<Intent>> actions({
+  /// Creates actions for slider adjustment and bounds.
+  static Map<Type, Action<Intent>> sliderActions({
     required ValueChanged<double> onChanged,
     required double Function(bool isShift) calculateStep,
     required double Function(double value) normalizeValue,
@@ -314,11 +261,6 @@ const Map<ShortcutActivator, Intent> _selectShortcuts =
       SingleActivator(LogicalKeyboardKey.arrowDown, alt: true):
           _OpenOverlayIntent(),
       SingleActivator(LogicalKeyboardKey.arrowUp, alt: true): DismissIntent(),
-    };
-
-const Map<ShortcutActivator, Intent> _dialogShortcuts =
-    <ShortcutActivator, Intent>{
-      SingleActivator(LogicalKeyboardKey.escape): DismissIntent(),
     };
 
 const Map<ShortcutActivator, Intent> _sliderShortcutsLtr =

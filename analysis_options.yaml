@@ -5,3 +5,8 @@ analyzer:
     strict-casts: true
     strict-inference: true
     strict-raw-types: true
+
+linter:
+  rules:
+    # The root Dart target is a command-line test runner.
+    avoid_print: false

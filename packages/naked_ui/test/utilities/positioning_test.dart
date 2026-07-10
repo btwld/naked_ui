@@ -3,6 +3,19 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:naked_ui/src/utilities/positioning.dart';
 
 void main() {
+  group('clampOverlayToBounds', () {
+    test('pins an oversized overlay to the available origin', () {
+      expect(
+        clampOverlayToBounds(
+          const Offset(40, 30),
+          const Size(500, 400),
+          const Size(400, 300),
+        ),
+        Offset.zero,
+      );
+    });
+  });
+
   group('OverlayPositionConfig', () {
     testWidgets('creates with default parameters', (tester) async {
       const config = OverlayPositionConfig();

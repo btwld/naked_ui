@@ -15,6 +15,7 @@ class NakedCheckboxState extends NakedState {
   /// Whether the checkbox is in tristate mode.
   final bool tristate;
 
+  /// Creates a checkbox state snapshot.
   NakedCheckboxState({
     required super.states,
     required this.isChecked,
@@ -30,11 +31,11 @@ class NakedCheckboxState extends NakedState {
 
   /// Returns the [WidgetStatesController] from the nearest scope.
   static WidgetStatesController controllerOf(BuildContext context) =>
-      NakedState.controllerOf(context);
+      NakedState.controllerOfType<NakedCheckboxState>(context);
 
   /// Returns the [WidgetStatesController] from the nearest scope, if any.
   static WidgetStatesController? maybeControllerOf(BuildContext context) =>
-      NakedState.maybeControllerOf(context);
+      NakedState.maybeControllerOfType<NakedCheckboxState>(context);
 
   /// Whether the checkbox is in intermediate/mixed state.
   bool get isIntermediate => tristate && isChecked == null;
@@ -67,10 +68,10 @@ class NakedCheckboxState extends NakedState {
 /// ```
 ///
 /// See also:
-/// - [Checkbox], the Material-styled checkbox for typical apps.
-/// - [NakedToggle], for a headless binary toggle alternative.
-
+/// - `Checkbox`, the Material-styled checkbox for typical apps.
+/// - `NakedToggle`, for a headless binary toggle alternative.
 class NakedCheckbox extends StatefulWidget {
+  /// Creates a headless checkbox.
   const NakedCheckbox({
     super.key,
     this.child,
@@ -140,9 +141,9 @@ class NakedCheckbox extends StatefulWidget {
   /// Semantic label for accessibility.
   final String? semanticLabel;
 
-  /// Whether to exclude this widget from the semantic tree.
+  /// Whether to omit the checkbox semantics contributed by [NakedCheckbox].
   ///
-  /// When true, the widget and its children are hidden from accessibility services.
+  /// Semantics supplied by [child] or [builder] remain available.
   final bool excludeSemantics;
 
   bool get _effectiveEnabled => enabled && onChanged != null;
@@ -192,8 +193,8 @@ class _NakedCheckboxState extends State<NakedCheckbox>
 
     return NakedStateScopeBuilder(
       value: checkboxState,
-      child: widget.child,
       builder: widget.builder,
+      child: widget.child,
     );
   }
 
@@ -223,6 +224,7 @@ class _NakedCheckboxState extends State<NakedCheckbox>
     return widget.excludeSemantics
         ? gestureDetector
         : Semantics(
+            excludeSemantics: widget.semanticLabel != null,
             enabled: widget._effectiveEnabled,
             checked: widget.value == true,
             mixed: widget.tristate && widget.value == null,
@@ -241,7 +243,7 @@ class _NakedCheckboxState extends State<NakedCheckbox>
 
   @override
   void initializeWidgetStates() {
-    updateDisabledState(!widget.enabled);
+    updateDisabledState(!widget._effectiveEnabled);
     updateSelectedState(widget.value == true, null);
   }
 
@@ -249,8 +251,12 @@ class _NakedCheckboxState extends State<NakedCheckbox>
   void didUpdateWidget(covariant NakedCheckbox oldWidget) {
     super.didUpdateWidget(oldWidget);
     syncWidgetStates();
-    if (oldWidget.value != widget.value) {
-      updateSelectedState(widget.value == true, null);
+    if (oldWidget._effectiveEnabled && !widget._effectiveEnabled) {
+      clearInteractionStates(
+        onHoverChange: widget.onHoverChange,
+        onFocusChange: widget.onFocusChange,
+        onPressChange: widget.onPressChange,
+      );
     }
   }
 
@@ -268,8 +274,8 @@ class _NakedCheckboxState extends State<NakedCheckbox>
         },
         focusNode: widget.focusNode,
         mouseCursor: _effectiveCursor,
-        shortcuts: NakedIntentActions.checkbox.shortcuts,
-        actions: NakedIntentActions.checkbox.actions(
+        shortcuts: NakedIntentActions.buttonShortcuts,
+        actions: NakedIntentActions.checkboxActions(
           onToggle: () => _handleKeyboardActivation(),
         ),
         child: _buildCheckbox(),

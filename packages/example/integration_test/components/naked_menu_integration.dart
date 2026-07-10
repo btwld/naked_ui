@@ -15,7 +15,8 @@ void main() {
       await tester.pump(const Duration(milliseconds: 100));
 
       // Find the trigger button
-      final triggerButton = find.byType(NakedButton);
+      expect(find.byType(NakedButton), findsOneWidget);
+      final triggerButton = find.byIcon(Icons.more_vert);
       expect(triggerButton, findsOneWidget);
 
       // Initially menu should be closed (no overlay content)
@@ -29,6 +30,11 @@ void main() {
       expect(find.text('Edit'), findsOneWidget);
       expect(find.text('Copy'), findsOneWidget);
       expect(find.text('Delete'), findsOneWidget);
+
+      // Tap again to exercise the animated close path and leave no live overlay.
+      await tester.tap(triggerButton);
+      await tester.pumpAndSettle();
+      expect(find.text('Edit'), findsNothing);
     });
 
     testWidgets('menu items respond to selection', (tester) async {

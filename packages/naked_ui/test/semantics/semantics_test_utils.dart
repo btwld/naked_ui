@@ -1,5 +1,11 @@
 // ignore_for_file: deprecated_member_use
-import 'dart:ui' show CheckedState, Tristate;
+import 'dart:ui'
+    show
+        CheckedState,
+        SemanticsInputType,
+        SemanticsRole,
+        SemanticsValidationResult,
+        Tristate;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -17,6 +23,16 @@ class SemanticsSummary {
     required this.increasedValue,
     required this.decreasedValue,
     required this.identifier,
+    required this.hint,
+    required this.tooltip,
+    required this.minValue,
+    required this.maxValue,
+    required this.role,
+    required this.validationResult,
+    required this.inputType,
+    required this.maxValueLength,
+    required this.currentValueLength,
+    required this.controlsNodes,
     required this.flags,
     required this.actions,
   });
@@ -26,26 +42,61 @@ class SemanticsSummary {
   final String? increasedValue;
   final String? decreasedValue;
   final String? identifier;
+  final String? hint;
+  final String? tooltip;
+  final String? minValue;
+  final String? maxValue;
+  final SemanticsRole role;
+  final SemanticsValidationResult validationResult;
+  final SemanticsInputType inputType;
+  final int? maxValueLength;
+  final int? currentValueLength;
+  final Set<String>? controlsNodes;
   final Set<String> flags;
   final Set<String> actions;
 
+  SemanticsSummary copyWith({Set<String>? flags, Set<String>? actions}) {
+    return SemanticsSummary(
+      label: label,
+      value: value,
+      increasedValue: increasedValue,
+      decreasedValue: decreasedValue,
+      identifier: identifier,
+      hint: hint,
+      tooltip: tooltip,
+      minValue: minValue,
+      maxValue: maxValue,
+      role: role,
+      validationResult: validationResult,
+      inputType: inputType,
+      maxValueLength: maxValueLength,
+      currentValueLength: currentValueLength,
+      controlsNodes: controlsNodes,
+      flags: flags ?? this.flags,
+      actions: actions ?? this.actions,
+    );
+  }
+
   @override
   String toString() {
-    return 'SemanticsSummary(label: ' +
-        (label ?? '') +
-        ', value: ' +
-        (value ?? '') +
-        ', increasedValue: ' +
-        (increasedValue ?? '') +
-        ', decreasedValue: ' +
-        (decreasedValue ?? '') +
-        ', identifier: ' +
-        (identifier ?? '') +
-        ', flags: ' +
-        flags.join(',') +
-        ', actions: ' +
-        actions.join(',') +
-        ')';
+    return 'SemanticsSummary('
+        'label: ${label ?? ''}, '
+        'value: ${value ?? ''}, '
+        'increasedValue: ${increasedValue ?? ''}, '
+        'decreasedValue: ${decreasedValue ?? ''}, '
+        'identifier: ${identifier ?? ''}, '
+        'hint: ${hint ?? ''}, '
+        'tooltip: ${tooltip ?? ''}, '
+        'minValue: ${minValue ?? ''}, '
+        'maxValue: ${maxValue ?? ''}, '
+        'role: $role, '
+        'validationResult: $validationResult, '
+        'inputType: $inputType, '
+        'maxValueLength: $maxValueLength, '
+        'currentValueLength: $currentValueLength, '
+        'controlsNodes: $controlsNodes, '
+        'flags: ${flags.join(',')}, '
+        'actions: ${actions.join(',')})';
   }
 
   @override
@@ -57,6 +108,16 @@ class SemanticsSummary {
         other.increasedValue == increasedValue &&
         other.decreasedValue == decreasedValue &&
         other.identifier == identifier &&
+        other.hint == hint &&
+        other.tooltip == tooltip &&
+        other.minValue == minValue &&
+        other.maxValue == maxValue &&
+        other.role == role &&
+        other.validationResult == validationResult &&
+        other.inputType == inputType &&
+        other.maxValueLength == maxValueLength &&
+        other.currentValueLength == currentValueLength &&
+        _setsEqual(other.controlsNodes, controlsNodes) &&
         other.flags.length == flags.length &&
         other.flags.containsAll(flags) &&
         other.actions.length == actions.length &&
@@ -70,9 +131,27 @@ class SemanticsSummary {
     increasedValue,
     decreasedValue,
     identifier,
-    flags.length,
-    actions.length,
+    hint,
+    tooltip,
+    minValue,
+    maxValue,
+    role,
+    validationResult,
+    inputType,
+    maxValueLength,
+    currentValueLength,
+    controlsNodes == null ? null : Object.hashAllUnordered(controlsNodes!),
+    Object.hashAllUnordered(flags),
+    Object.hashAllUnordered(actions),
   );
+}
+
+bool _setsEqual<T>(Set<T>? left, Set<T>? right) {
+  if (identical(left, right)) return true;
+  if (left == null || right == null || left.length != right.length) {
+    return false;
+  }
+  return left.containsAll(right);
 }
 
 /// Traverses semantics tree depth-first and returns the first node
@@ -171,59 +250,33 @@ void expectNoNestedSemanticsNodes(
 SemanticsSummary summarizeNode(SemanticsNode node) {
   final data = node.getSemanticsData();
 
-  final Set<String> flags = <String>{};
-  void addFlag(String name, bool value) {
-    if (value) flags.add(name);
-  }
-
-  addFlag('isButton', data.flagsCollection.isButton);
-  addFlag('hasEnabledState', data.flagsCollection.isEnabled != Tristate.none);
-  addFlag('isEnabled', data.flagsCollection.isEnabled == Tristate.isTrue);
-  addFlag('isFocusable', data.flagsCollection.isFocused != Tristate.none);
-  addFlag('isFocused', data.flagsCollection.isFocused == Tristate.isTrue);
-  addFlag(
-    'hasCheckedState',
-    data.flagsCollection.isChecked != CheckedState.none,
-  );
-  addFlag('isChecked', data.flagsCollection.isChecked == CheckedState.isTrue);
-  addFlag(
-    'isCheckStateMixed',
-    data.flagsCollection.isChecked == CheckedState.mixed,
-  );
-  addFlag('isSelected', data.flagsCollection.isSelected == Tristate.isTrue);
-  addFlag('isSlider', data.flagsCollection.isSlider);
-  addFlag('isTextField', data.flagsCollection.isTextField);
-  addFlag('isReadOnly', data.flagsCollection.isReadOnly);
-  addFlag('isMultiline', data.flagsCollection.isMultiline);
-  addFlag('scopesRoute', data.flagsCollection.scopesRoute);
-  addFlag('namesRoute', data.flagsCollection.namesRoute);
-  addFlag('isLiveRegion', data.flagsCollection.isLiveRegion);
-  addFlag('hasExpandedState', data.flagsCollection.isExpanded != Tristate.none);
-  addFlag('isExpanded', data.flagsCollection.isExpanded == Tristate.isTrue);
-  addFlag(
-    'isInMutuallyExclusiveGroup',
-    data.flagsCollection.isInMutuallyExclusiveGroup,
-  );
-  addFlag('hasToggledState', data.flagsCollection.isToggled != Tristate.none);
-  addFlag('isToggled', data.flagsCollection.isToggled == Tristate.isTrue);
-
-  final Set<String> actions = <String>{};
-  void addAction(String name, SemanticsAction action) {
-    if (node.getSemanticsData().hasAction(action)) actions.add(name);
-  }
-
-  addAction('tap', SemanticsAction.tap);
-  addAction('longPress', SemanticsAction.longPress);
-  addAction('focus', SemanticsAction.focus);
-  addAction('increase', SemanticsAction.increase);
-  addAction('decrease', SemanticsAction.decrease);
+  final flags = <String>{
+    for (final flag in SemanticsFlag.values)
+      if (data.hasFlag(flag)) flag.name,
+  };
+  final actions = <String>{
+    for (final action in SemanticsAction.values)
+      if (data.hasAction(action)) action.name,
+  };
 
   return SemanticsSummary(
-    label: _normalizeLabel(data.label),
+    label: data.label.isEmpty ? null : data.label,
     value: data.value.isEmpty ? null : data.value,
     increasedValue: data.increasedValue.isEmpty ? null : data.increasedValue,
     decreasedValue: data.decreasedValue.isEmpty ? null : data.decreasedValue,
     identifier: data.identifier.isEmpty ? null : data.identifier,
+    hint: data.hint.isEmpty ? null : data.hint,
+    tooltip: data.tooltip.isEmpty ? null : data.tooltip,
+    minValue: data.minValue,
+    maxValue: data.maxValue,
+    role: data.role,
+    validationResult: data.validationResult,
+    inputType: data.inputType,
+    maxValueLength: data.maxValueLength,
+    currentValueLength: data.currentValueLength,
+    controlsNodes: data.controlsNodes == null
+        ? null
+        : Set<String>.unmodifiable(data.controlsNodes!),
     flags: flags,
     actions: actions,
   );
@@ -267,15 +320,7 @@ SemanticsSummary summarizeMergedButtonFromRoot(WidgetTester tester) {
       if (focusedStack.any((b) => b)) mergedFlags.add('isFocused');
       if (hasFocusActionStack.any((b) => b)) mergedActions.add('focus');
 
-      found = SemanticsSummary(
-        label: summary.label,
-        value: summary.value,
-        increasedValue: summary.increasedValue,
-        decreasedValue: summary.decreasedValue,
-        identifier: summary.identifier,
-        flags: mergedFlags,
-        actions: mergedActions,
-      );
+      found = summary.copyWith(flags: mergedFlags, actions: mergedActions);
       // Continue traversal to allow deeper nodes to override? We can stop now.
       // But returning true continues; instead, we short-circuit by skipping children.
     } else {
@@ -326,15 +371,7 @@ SemanticsSummary summarizeMergedFromRoot(
       if (focusedStack.any((b) => b)) mergedFlags.add('isFocused');
       if (hasFocusActionStack.any((b) => b)) mergedActions.add('focus');
 
-      found = SemanticsSummary(
-        label: summary.label,
-        value: summary.value,
-        increasedValue: summary.increasedValue,
-        decreasedValue: summary.decreasedValue,
-        identifier: summary.identifier,
-        flags: mergedFlags,
-        actions: mergedActions,
-      );
+      found = summary.copyWith(flags: mergedFlags, actions: mergedActions);
     } else {
       node.visitChildren(dfs);
     }
@@ -407,19 +444,6 @@ Future<T> withSemantics<T>(
   } finally {
     handle.dispose();
   }
-}
-
-String? _normalizeLabel(String raw) {
-  if (raw.isEmpty) return null;
-  // Split on newlines and dedupe while preserving order.
-  final parts = raw
-      .split('\n')
-      .map((s) => s.trim())
-      .where((s) => s.isNotEmpty)
-      .toList();
-  if (parts.isEmpty) return null;
-  // Use the first unique part as canonical label.
-  return parts.first;
 }
 
 /// Minimal strict matcher builder derived directly from SemanticsData

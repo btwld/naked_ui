@@ -92,6 +92,30 @@ void main() {
   });
 
   group('State Callback Tests', () {
+    testWidgets('does not report inactive states during initial build', (
+      WidgetTester tester,
+    ) async {
+      final hoverEvents = <bool>[];
+      final pressEvents = <bool>[];
+
+      await tester.pumpMaterialWidget(
+        RadioGroup<String>(
+          groupValue: null,
+          onChanged: (_) {},
+          child: NakedRadio<String>(
+            value: 'test',
+            onHoverChange: hoverEvents.add,
+            onPressChange: pressEvents.add,
+            child: const SizedBox(width: 24, height: 24),
+          ),
+        ),
+      );
+      await tester.pump();
+
+      expect(hoverEvents, isEmpty);
+      expect(pressEvents, isEmpty);
+    });
+
     testWidgets('reports hovered state changes', (WidgetTester tester) async {
       bool isHovered = false;
 
@@ -138,6 +162,43 @@ void main() {
       await gesture.up();
       await tester.pump();
       expect(isPressed, false);
+    });
+
+    testWidgets('disabling during a press reports the reset', (
+      WidgetTester tester,
+    ) async {
+      var enabled = true;
+      late StateSetter setHostState;
+      final pressEvents = <bool>[];
+
+      await tester.pumpMaterialWidget(
+        StatefulBuilder(
+          builder: (context, setState) {
+            setHostState = setState;
+            return RadioGroup<String>(
+              groupValue: null,
+              onChanged: (_) {},
+              child: NakedRadio<String>(
+                value: 'test',
+                enabled: enabled,
+                onPressChange: pressEvents.add,
+                child: const SizedBox(width: 24, height: 24),
+              ),
+            );
+          },
+        ),
+      );
+
+      final gesture = await tester.press(find.byType(NakedRadio<String>));
+      await tester.pump();
+      expect(pressEvents, [true]);
+
+      setHostState(() => enabled = false);
+      await tester.pump();
+      await tester.pump();
+      expect(pressEvents, [true, false]);
+
+      await gesture.up();
     });
 
     testWidgets('reports focused state changes', (WidgetTester tester) async {
@@ -359,12 +420,12 @@ void main() {
   });
 
   group('Builder Tests', () {
-    testStateScopeBuilder<NakedRadioState>(
+    testStateScopeBuilder<NakedRadioState<String>>(
       'builder\'s context contains NakedStateScope',
       (builder) => RadioGroup<String>(
         groupValue: 'test',
         onChanged: (_) {},
-        child: NakedRadio(
+        child: NakedRadio<String>(
           value: 'test',
           builder: builder,
           child: const SizedBox(width: 24, height: 24),

@@ -187,6 +187,54 @@ void main() {
   });
 
   group('Pointer dragging', () {
+    testWidgets('builder reports WidgetState.dragged for the active drag', (
+      tester,
+    ) async {
+      NakedSliderState? state;
+      var value = 50.0;
+
+      await tester.pumpWidget(
+        WidgetsApp(
+          color: const Color(0xFF000000),
+          builder: (context, _) => Directionality(
+            textDirection: TextDirection.ltr,
+            child: Center(
+              child: StatefulBuilder(
+                builder: (context, setState) {
+                  return NakedSlider(
+                    key: const Key('slider'),
+                    value: value,
+                    min: 0,
+                    max: 100,
+                    onChanged: (next) => setState(() => value = next),
+                    builder: (context, currentState, child) {
+                      state = currentState;
+                      return child!;
+                    },
+                    child: const SizedBox(width: 200, height: 24),
+                  );
+                },
+              ),
+            ),
+          ),
+        ),
+      );
+
+      final gesture = await tester.startGesture(
+        tester.getCenter(_findSlider()),
+      );
+      await gesture.moveBy(const Offset(30, 0));
+      await tester.pump();
+
+      expect(state!.isDragging, isTrue);
+      expect(state!.states, contains(WidgetState.dragged));
+
+      await gesture.up();
+      await tester.pump();
+      expect(state!.isDragging, isFalse);
+      expect(state!.states, isNot(contains(WidgetState.dragged)));
+    });
+
     testWidgets(
       'Horizontal drag updates value; onDragStart/End emit; focus requested',
       (tester) async {
@@ -607,26 +655,38 @@ void main() {
       expect(changes, isEmpty);
     });
 
-    testWidgets('value clamped when set outside range', (tester) async {
-      final changes = <double>[];
-      await tester.pumpWidget(
-        _harness(
-          initial: 150, // above max
+    testWidgets('rejects values outside the configured range', (tester) async {
+      expect(
+        () => NakedSlider(
+          value: 101,
           min: 0,
           max: 100,
-          onChangedSpy: changes.add,
-          size: const Size(200, 24),
+          onChanged: (_) {},
+          child: const SizedBox(),
         ),
+        throwsAssertionError,
       );
-      await tester.pumpAndSettle();
+    });
 
-      // Drag should clamp the value within range
-      await tester.drag(_findSlider(), const Offset(-50, 0));
-      await tester.pump();
+    testWidgets('rejects invalid divisions and keyboard steps', (tester) async {
+      NakedSlider build({
+        int? divisions = 10,
+        double keyboardStep = 1,
+        double largeKeyboardStep = 10,
+      }) => NakedSlider(
+        value: 50,
+        min: 0,
+        max: 100,
+        divisions: divisions,
+        keyboardStep: keyboardStep,
+        largeKeyboardStep: largeKeyboardStep,
+        onChanged: (_) {},
+        child: const SizedBox(),
+      );
 
-      expect(changes, isNotEmpty);
-      expect(changes.last, lessThanOrEqualTo(100));
-      expect(changes.last, greaterThanOrEqualTo(0));
+      expect(() => build(divisions: 0), throwsAssertionError);
+      expect(() => build(keyboardStep: 0), throwsAssertionError);
+      expect(() => build(largeKeyboardStep: -1), throwsAssertionError);
     });
 
     testWidgets('percentage calculation is correct at boundaries', (

@@ -56,6 +56,17 @@ void main() {
       );
       expect(summary.actions.contains('tap'), isTrue);
       expect(summary.flags.contains('isFocusable'), isTrue);
+      expect(summary.flags, contains('isButton'));
+      expect(summary.flags, contains('hasExpandedState'));
+      expect(summary.flags, isNot(contains('isExpanded')));
+
+      await tester.tap(find.text('Show Menu'));
+      await tester.pumpAndSettle();
+      final openSummary = summarizeMergedFromRoot(
+        tester,
+        control: ControlType.button,
+      );
+      expect(openSummary.flags, contains('isExpanded'));
 
       handle.dispose();
     });
@@ -131,6 +142,7 @@ void main() {
       await tester.pumpWidget(
         _buildTestApp(
           NakedPopover(
+            triggerFocusNode: focusNode,
             popoverBuilder: (context, info) => Container(
               width: 200,
               padding: const EdgeInsets.all(16),
@@ -141,10 +153,7 @@ void main() {
               ),
               child: const Text('Popover Content'),
             ),
-            child: Focus(
-              focusNode: focusNode,
-              child: const Text('Focusable Trigger'),
-            ),
+            child: const Text('Focusable Trigger'),
           ),
         ),
       );

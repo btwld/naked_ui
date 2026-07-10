@@ -70,6 +70,54 @@ void main() {
   });
 
   group('NakedToggleGroup', () {
+    testWidgets('supports an inferred disabled group with typed options', (
+      tester,
+    ) async {
+      await tester.pumpMaterialWidget(
+        const NakedToggleGroup(
+          selectedValue: null,
+          child: NakedToggleOption<String>(value: 'a', child: Text('A')),
+        ),
+      );
+
+      expect(tester.takeException(), isNull);
+      expect(find.text('A'), findsOneWidget);
+    });
+
+    testWidgets('const options use the latest onChanged callback', (
+      tester,
+    ) async {
+      late StateSetter rebuild;
+      var useSecondCallback = false;
+      var firstCalls = 0;
+      var secondCalls = 0;
+
+      await tester.pumpMaterialWidget(
+        StatefulBuilder(
+          builder: (context, setState) {
+            rebuild = setState;
+            return NakedToggleGroup<String>(
+              selectedValue: null,
+              onChanged: useSecondCallback
+                  ? (_) => secondCalls++
+                  : (_) => firstCalls++,
+              child: const NakedToggleOption<String>(
+                value: 'a',
+                child: Text('A'),
+              ),
+            );
+          },
+        ),
+      );
+
+      rebuild(() => useSecondCallback = true);
+      await tester.pump();
+      await tester.tap(find.text('A'));
+
+      expect(firstCalls, 0);
+      expect(secondCalls, 1);
+    });
+
     testWidgets('selects one option at a time', (tester) async {
       String? selected = 'a';
 

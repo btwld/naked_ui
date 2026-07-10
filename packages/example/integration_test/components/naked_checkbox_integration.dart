@@ -294,11 +294,7 @@ void main() {
                       );
                       return Column(
                         mainAxisSize: MainAxisSize.min,
-                        children: [
-                          box,
-                          const SizedBox(height: 8),
-                          if (child != null) child,
-                        ],
+                        children: [box, const SizedBox(height: 8), ?child],
                       );
                     },
                     onHoverChange: (hovered) => isHovered = hovered,

@@ -1,6 +1,9 @@
+import 'dart:ui' show SemanticsRole;
+
 import 'package:flutter/widgets.dart';
 
 import 'base/overlay_base.dart';
+import 'mixins/naked_mixins.dart';
 import 'naked_button.dart';
 import 'utilities/anchored_overlay_shell.dart';
 import 'utilities/naked_state_scope.dart';
@@ -12,6 +15,7 @@ class NakedMenuState extends NakedState {
   /// Whether the overlay is currently open.
   final bool isOpen;
 
+  /// Creates a menu state snapshot.
   NakedMenuState({required super.states, required this.isOpen});
 
   /// Returns the nearest [NakedMenuState] provided by [NakedStateScope].
@@ -23,11 +27,11 @@ class NakedMenuState extends NakedState {
 
   /// Returns the [WidgetStatesController] from the nearest scope.
   static WidgetStatesController controllerOf(BuildContext context) =>
-      NakedState.controllerOf(context);
+      NakedState.controllerOfType<NakedMenuState>(context);
 
   /// Returns the [WidgetStatesController] from the nearest scope, if any.
   static WidgetStatesController? maybeControllerOf(BuildContext context) =>
-      NakedState.maybeControllerOf(context);
+      NakedState.maybeControllerOfType<NakedMenuState>(context);
 
   @override
   bool operator ==(Object other) {
@@ -47,6 +51,7 @@ class NakedMenuItemState<T> extends NakedState {
   /// The menu item's value.
   final T value;
 
+  /// Creates a menu-item state snapshot for [value].
   NakedMenuItemState({required super.states, required this.value});
 
   /// Returns the nearest [NakedMenuItemState] of the requested type.
@@ -59,11 +64,11 @@ class NakedMenuItemState<T> extends NakedState {
 
   /// Returns the [WidgetStatesController] from the nearest scope.
   static WidgetStatesController controllerOf(BuildContext context) =>
-      NakedState.controllerOf(context);
+      NakedState.controllerOfType<NakedMenuItemState<dynamic>>(context);
 
   /// Returns the [WidgetStatesController] from the nearest scope, if any.
   static WidgetStatesController? maybeControllerOf(BuildContext context) =>
-      NakedState.maybeControllerOf(context);
+      NakedState.maybeControllerOfType<NakedMenuItemState<dynamic>>(context);
 
   @override
   bool operator ==(Object other) {
@@ -87,11 +92,15 @@ class _NakedMenuScope<T> extends OverlayScope<T> {
     super.key,
   });
 
-  /// Returns the [_NakedMenuScope] that most tightly encloses the given [context].
+  /// Returns the [_NakedMenuScope] that encloses [context].
   ///
-  /// Returns null if no [NakedMenu] ancestor is found.
-  static _NakedMenuScope<T>? maybeOf<T>(BuildContext context) {
-    return OverlayScope.maybeOf(context);
+  /// Throws a [FlutterError] if no [NakedMenu] ancestor exists.
+  static _NakedMenuScope<dynamic> of(BuildContext context) {
+    return OverlayScope.of<_NakedMenuScope<dynamic>>(
+      context,
+      scopeConsumer: NakedMenuItem,
+      scopeOwner: NakedMenu,
+    );
   }
 
   final ValueChanged<T>? onSelected;
@@ -109,6 +118,7 @@ class _NakedMenuScope<T> extends OverlayScope<T> {
 /// This enables fully declarative composition inside [NakedMenu.overlayBuilder]
 /// without relying on the data-driven [NakedMenuItem] list.
 class NakedMenuItem<T> extends OverlayItem<T, NakedMenuItemState<T>> {
+  /// Creates an actionable item for a [NakedMenu] overlay.
   const NakedMenuItem({
     super.key,
     required super.value,
@@ -126,14 +136,14 @@ class NakedMenuItem<T> extends OverlayItem<T, NakedMenuItemState<T>> {
   /// the menu contains interactive content.
   final bool closeOnActivate;
 
-  void _handleActivation(_NakedMenuScope<T>? menu) {
-    menu?.onSelected?.call(value);
-    if (closeOnActivate) menu?.controller.close();
+  void _handleActivation(_NakedMenuScope<dynamic> menu) {
+    menu.onSelected?.call(value);
+    if (closeOnActivate) menu.controller.close();
   }
 
   @override
   Widget build(BuildContext context) {
-    final scope = _NakedMenuScope.maybeOf<T>(context);
+    final scope = _NakedMenuScope.of(context);
 
     final VoidCallback? onPressed = enabled
         ? () => _handleActivation(scope)
@@ -142,6 +152,7 @@ class NakedMenuItem<T> extends OverlayItem<T, NakedMenuItemState<T>> {
     return buildButton(
       onPressed: onPressed,
       effectiveEnabled: enabled,
+      semanticRole: SemanticsRole.menuItem,
       mapStates: (states) =>
           NakedMenuItemState<T>(states: states, value: value),
     );
@@ -180,21 +191,24 @@ class NakedMenuItem<T> extends OverlayItem<T, NakedMenuItemState<T>> {
 /// final menuController = MenuController();
 /// NakedMenu<String>(
 ///   controller: menuController,
-///   builder: (context, state) => Text('Menu'),
+///   builder: (context, state, child) => const Text('Menu'),
 ///   overlayBuilder: (context, info) => Column(
 ///     children: [
-///       NakedMenu.Item(value: 'copy', child: Text('Copy')),
-///       NakedMenu.Item(value: 'paste', child: Text('Paste')),
+///       NakedMenuItem(value: 'copy', child: Text('Copy')),
+///       NakedMenuItem(value: 'paste', child: Text('Paste')),
 ///     ],
 ///   ),
-///   onSelected: (value) => menuController.select(value),
+///   onSelected: (value) => handleMenuAction(value),
 /// )
 /// ```
 ///
 /// See also:
 /// - [NakedMenuItem], for individual actionable items
-/// - [NakedSelect], for selection-based menus with similar keyboard behavior
+/// - `NakedSelect`, for selection-based menus with similar keyboard behavior
 class NakedMenu<T> extends StatefulWidget {
+  /// Creates a menu controlled by [controller].
+  ///
+  /// Either [child] or [builder] must be provided for the trigger.
   const NakedMenu({
     super.key,
     this.child,
@@ -217,6 +231,8 @@ class NakedMenu<T> extends StatefulWidget {
   });
 
   /// Type alias for [NakedMenuItem] for cleaner API access.
+  // Retains the established `NakedMenu.Item(...)` public API.
+  // ignore: non_constant_identifier_names
   static final Item = NakedMenuItem.new;
 
   /// The static trigger widget.
@@ -233,11 +249,13 @@ class NakedMenu<T> extends StatefulWidget {
 
   /// Called when an item is selected.
   ///
-  /// Note: You can also use [controller.select] to update selection state directly.
+  /// Use [controller] to open or close the menu programmatically.
   final ValueChanged<T>? onSelected;
 
-  /// Lifecycle callbacks.
+  /// Called when the menu opens.
   final VoidCallback? onOpen;
+
+  /// Called when the menu closes.
   final VoidCallback? onClose;
 
   /// Called when the menu closes without a selection.
@@ -246,6 +264,7 @@ class NakedMenu<T> extends StatefulWidget {
   /// Open/close interceptors (for example, to drive animations).
   final RawMenuAnchorOpenRequestedCallback? onOpenRequested;
 
+  /// Intercepts close requests, for example to drive an exit animation.
   final RawMenuAnchorCloseRequestedCallback? onCloseRequested;
 
   /// Whether taps outside the overlay close the menu.
@@ -266,9 +285,10 @@ class NakedMenu<T> extends StatefulWidget {
   /// Semantic label for the menu trigger.
   final String? semanticLabel;
 
-  /// Whether to exclude this widget from the semantic tree.
+  /// Whether to omit the menu trigger semantics contributed by [NakedMenu].
   ///
-  /// When true, the widget and its children are hidden from accessibility services.
+  /// Semantics supplied by [child] or [builder] remain available. The overlay
+  /// and its menu items keep their standard menu semantics.
   final bool excludeSemantics;
 
   @override
@@ -276,7 +296,10 @@ class NakedMenu<T> extends StatefulWidget {
 }
 
 class _NakedMenuState<T> extends State<NakedMenu<T>>
-    with OverlayStateMixin<NakedMenu<T>> {
+    with OverlayStateMixin<NakedMenu<T>>, FocusNodeMixin<NakedMenu<T>> {
+  @override
+  FocusNode? get widgetProvidedNode => widget.triggerFocusNode;
+
   bool get _isOpen => widget.controller.isOpen;
 
   void _toggle() => widget.controller.isOpen
@@ -292,7 +315,7 @@ class _NakedMenuState<T> extends State<NakedMenu<T>>
     handleClose(
       onClose: widget.onClose,
       onCanceled: widget.onCanceled,
-      triggerFocusNode: widget.triggerFocusNode,
+      triggerFocusNode: effectiveFocusNode,
     );
     if (mounted) setState(() {});
   }
@@ -304,11 +327,11 @@ class _NakedMenuState<T> extends State<NakedMenu<T>>
 
   @override
   Widget build(BuildContext context) {
-    Widget button = NakedButton(
+    final button = NakedButton(
       onPressed: _toggle,
-      focusNode: widget.triggerFocusNode,
+      focusNode: effectiveFocusNode,
       semanticLabel: widget.semanticLabel,
-      child: widget.child,
+      excludeSemantics: widget.excludeSemantics,
       builder: (context, buttonState, child) {
         final menuState = NakedMenuState(
           states: buttonState.states,
@@ -317,28 +340,35 @@ class _NakedMenuState<T> extends State<NakedMenu<T>>
 
         final trigger = NakedStateScopeBuilder(
           value: menuState,
-          child: widget.child,
           builder: widget.builder,
+          child: child,
         );
 
-        return widget.semanticLabel == null
+        return widget.semanticLabel == null || widget.excludeSemantics
             ? trigger
             : ExcludeSemantics(child: trigger);
       },
+      child: widget.child,
     );
 
-    Widget menuChild = widget.excludeSemantics
-        ? ExcludeSemantics(child: button)
-        : Semantics(expanded: _isOpen, child: button);
+    final menuChild = widget.excludeSemantics
+        ? button
+        : MergeSemantics(
+            child: Semantics(expanded: _isOpen, child: button),
+          );
 
     return AnchoredOverlayShell(
       controller: widget.controller,
       overlayBuilder: (context, info) {
-        return _NakedMenuScope<T>(
-          onSelected: _handleSelection,
-          controller: widget.controller,
-          child: Builder(
-            builder: (context) => widget.overlayBuilder(context, info),
+        return Semantics(
+          role: SemanticsRole.menu,
+          explicitChildNodes: true,
+          child: _NakedMenuScope<T>(
+            onSelected: _handleSelection,
+            controller: widget.controller,
+            child: Builder(
+              builder: (context) => widget.overlayBuilder(context, info),
+            ),
           ),
         );
       },
@@ -349,7 +379,7 @@ class _NakedMenuState<T> extends State<NakedMenu<T>>
       consumeOutsideTaps: widget.consumeOutsideTaps,
       useRootOverlay: widget.useRootOverlay,
       closeOnClickOutside: widget.closeOnClickOutside,
-      triggerFocusNode: widget.triggerFocusNode,
+      triggerFocusNode: effectiveFocusNode,
       positioning: widget.positioning,
       child: menuChild,
     );

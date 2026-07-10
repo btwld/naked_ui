@@ -233,8 +233,8 @@ void main() {
     testWidgets(
       'tristate behavior parity: activation parity starting from null',
       (tester) async {
-        bool? materialValue = null;
-        bool? nakedValue = null;
+        bool? materialValue;
+        bool? nakedValue;
 
         final materialFocus = FocusNode();
         final nakedFocus = FocusNode();

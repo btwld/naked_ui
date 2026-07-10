@@ -17,17 +17,17 @@ void main() {
         expect(controller.max, 3);
       });
 
-      test('throws assertion error when min < 0', () {
+      test('throws argument error when min < 0', () {
         expect(
           () => NakedAccordionController<String>(min: -1),
-          throwsA(isA<AssertionError>()),
+          throwsArgumentError,
         );
       });
 
-      test('throws assertion error when max < min', () {
+      test('throws argument error when max < min', () {
         expect(
           () => NakedAccordionController<String>(min: 3, max: 2),
-          throwsA(isA<AssertionError>()),
+          throwsArgumentError,
         );
       });
     });
@@ -43,6 +43,50 @@ void main() {
         controller.open('item1');
         expect(controller.contains('item1'), isTrue);
       });
+    });
+
+    group('capabilities', () {
+      test('reports whether an item can be opened, closed, or toggled', () {
+        final controller = NakedAccordionController<String>(min: 1, max: 1);
+
+        expect(controller.canOpen('item1'), isTrue);
+        expect(controller.canClose('item1'), isFalse);
+        expect(controller.canToggle('item1'), isTrue);
+
+        controller.open('item1');
+
+        expect(controller.canOpen('item1'), isFalse);
+        expect(controller.canClose('item1'), isFalse);
+        expect(controller.canToggle('item1'), isFalse);
+
+        expect(
+          controller.canOpen('item2'),
+          isTrue,
+          reason: 'opening at max evicts the oldest expanded item',
+        );
+        expect(controller.canToggle('item2'), isTrue);
+      });
+
+      test('cannot open an item when max is zero', () {
+        final controller = NakedAccordionController<String>(max: 0);
+
+        expect(controller.canOpen('item1'), isFalse);
+        expect(controller.canToggle('item1'), isFalse);
+      });
+    });
+
+    test('values is an immutable insertion-ordered snapshot', () {
+      final controller = NakedAccordionController<String>();
+      controller.open('item1');
+      final snapshot = controller.values;
+
+      expect(() => snapshot.add('bypass'), throwsUnsupportedError);
+      expect(controller.values.toList(), ['item1']);
+
+      controller.open('item2');
+
+      expect(snapshot.toList(), ['item1']);
+      expect(controller.values.toList(), ['item1', 'item2']);
     });
 
     group('open', () {
@@ -328,6 +372,14 @@ void main() {
         expect(controller.values.toList(), ['item1', 'item2']);
       });
 
+      test('fills max with unique values when input contains duplicates', () {
+        final controller = NakedAccordionController<String>(max: 2);
+
+        controller.replaceAll(['item1', 'item1', 'item2', 'item3']);
+
+        expect(controller.values.toList(), ['item1', 'item2']);
+      });
+
       test('is no-op when values are identical', () {
         final controller = NakedAccordionController<String>();
         controller.open('item1');
@@ -339,6 +391,21 @@ void main() {
         controller.replaceAll(['item1', 'item2']);
 
         expect(notifyCount, 0, reason: 'no notification when no change');
+      });
+
+      test('notifies when FIFO order changes', () {
+        final controller = NakedAccordionController<String>(max: 2)
+          ..openAll(['item1', 'item2']);
+        var notifyCount = 0;
+        controller.addListener(() => notifyCount++);
+
+        controller.replaceAll(['item2', 'item1']);
+
+        expect(controller.values.toList(), ['item2', 'item1']);
+        expect(notifyCount, 1);
+
+        controller.open('item3');
+        expect(controller.values.toList(), ['item1', 'item3']);
       });
 
       test('can produce fewer than min items (programmatic update)', () {

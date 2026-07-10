@@ -10,6 +10,14 @@ import 'helpers/builder_state_scope.dart';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
+  test('controller rejects empty tab identifiers', () {
+    expect(() => NakedTabController(selectedTabId: ''), throwsArgumentError);
+
+    final controller = NakedTabController(selectedTabId: 'tab1');
+    addTearDown(controller.dispose);
+    expect(() => controller.selectTab(''), throwsArgumentError);
+  });
+
   setUp(() {
     FocusManager.instance.highlightStrategy =
         FocusHighlightStrategy.alwaysTraditional;
@@ -458,7 +466,9 @@ void main() {
         onChanged: (value) {},
         child: NakedTabBar(
           child: Row(
-            children: [NakedTab(tabId: 'tab1', builder: builder)],
+            children: [
+              NakedTab(tabId: 'tab1', semanticLabel: 'Tab 1', builder: builder),
+            ],
           ),
         ),
       ),
@@ -537,6 +547,61 @@ void main() {
       );
     }
 
+    testWidgets('arrow navigation works inside a nested traversal group', (
+      tester,
+    ) async {
+      final firstNode = FocusNode(debugLabel: 'first tab');
+      final secondNode = FocusNode(debugLabel: 'second tab');
+      addTearDown(firstNode.dispose);
+      addTearDown(secondNode.dispose);
+      var selected = 'tab1';
+
+      await tester.pumpWidget(
+        WidgetsApp(
+          color: const Color(0xFF000000),
+          builder: (context, child) => child ?? const SizedBox.shrink(),
+          pageRouteBuilder: _defaultPageRouteBuilder,
+          home: Directionality(
+            textDirection: TextDirection.ltr,
+            child: StatefulBuilder(
+              builder: (context, setState) => NakedTabs(
+                selectedTabId: selected,
+                onChanged: (value) => setState(() => selected = value),
+                child: NakedTabBar(
+                  child: FocusTraversalGroup(
+                    policy: ReadingOrderTraversalPolicy(),
+                    child: Row(
+                      children: [
+                        NakedTab(
+                          tabId: 'tab1',
+                          focusNode: firstNode,
+                          child: const Text('One'),
+                        ),
+                        NakedTab(
+                          tabId: 'tab2',
+                          focusNode: secondNode,
+                          child: const Text('Two'),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+
+      firstNode.requestFocus();
+      await tester.pump();
+      await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
+      await tester.pump();
+
+      expect(tester.takeException(), isNull);
+      expect(secondNode.hasPrimaryFocus, isTrue);
+      expect(selected, 'tab2');
+    });
+
     testWidgets('Home key focuses first tab', (tester) async {
       final changes = <String>[];
       final tab1 = UniqueKey();
@@ -593,6 +658,61 @@ void main() {
       await tester.pump();
 
       expect(changes.last, 'tab3');
+    });
+
+    testWidgets('Tab exits the tab list instead of visiting every tab', (
+      tester,
+    ) async {
+      final firstNode = FocusNode(debugLabel: 'first tab');
+      final secondNode = FocusNode(debugLabel: 'second tab');
+      final afterNode = FocusNode(debugLabel: 'after tabs');
+      addTearDown(firstNode.dispose);
+      addTearDown(secondNode.dispose);
+      addTearDown(afterNode.dispose);
+
+      await tester.pumpWidget(
+        WidgetsApp(
+          color: const Color(0xFF000000),
+          builder: (context, child) => child ?? const SizedBox.shrink(),
+          pageRouteBuilder: _defaultPageRouteBuilder,
+          home: Directionality(
+            textDirection: TextDirection.ltr,
+            child: NakedTabs(
+              selectedTabId: 'tab1',
+              onChanged: (_) {},
+              child: Column(
+                children: [
+                  NakedTabBar(
+                    child: Row(
+                      children: [
+                        NakedTab(
+                          tabId: 'tab1',
+                          focusNode: firstNode,
+                          child: const Text('One'),
+                        ),
+                        NakedTab(
+                          tabId: 'tab2',
+                          focusNode: secondNode,
+                          child: const Text('Two'),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Focus(focusNode: afterNode, child: const Text('After')),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+
+      firstNode.requestFocus();
+      await tester.pump();
+      await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+      await tester.pump();
+
+      expect(afterNode.hasFocus, isTrue);
+      expect(secondNode.hasFocus, isFalse);
     });
   });
 
@@ -849,6 +969,58 @@ void main() {
   });
 
   group('Controller state management', () {
+    testWidgets('programmatic selection rebuilds tabs and views', (
+      tester,
+    ) async {
+      final controller = NakedTabController(selectedTabId: 'tab1');
+      addTearDown(controller.dispose);
+
+      await tester.pumpWidget(
+        WidgetsApp(
+          color: const Color(0xFF000000),
+          builder: (context, child) => child ?? const SizedBox.shrink(),
+          pageRouteBuilder: _defaultPageRouteBuilder,
+          home: Directionality(
+            textDirection: TextDirection.ltr,
+            child: NakedTabs(
+              controller: controller,
+              child: const Column(
+                children: [
+                  NakedTabBar(
+                    child: Row(
+                      children: [
+                        NakedTab(tabId: 'tab1', child: Text('One')),
+                        NakedTab(tabId: 'tab2', child: Text('Two')),
+                      ],
+                    ),
+                  ),
+                  NakedTabView(
+                    tabId: 'tab1',
+                    maintainState: false,
+                    child: Text('First panel'),
+                  ),
+                  NakedTabView(
+                    tabId: 'tab2',
+                    maintainState: false,
+                    child: Text('Second panel'),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+
+      expect(find.text('First panel'), findsOneWidget);
+      expect(find.text('Second panel'), findsNothing);
+
+      controller.selectTab('tab2');
+      await tester.pump();
+
+      expect(find.text('First panel'), findsNothing);
+      expect(find.text('Second panel'), findsOneWidget);
+    });
+
     testWidgets('previousTabId is set when switching tabs', (tester) async {
       final controller = NakedTabController(selectedTabId: 'tab1');
       addTearDown(controller.dispose);
@@ -893,7 +1065,7 @@ void main() {
       expect(controller.previousTabId, isNull);
 
       // Select tab2.
-      await tester.tap(find.byKey(const Key('tab2')));
+      await tester.tap(find.byType(NakedTab).at(1));
       await tester.pump();
 
       expect(controller.selectedTabId, 'tab2');
@@ -942,7 +1114,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // Select tab2.
-      await tester.tap(find.byKey(const Key('tab2')));
+      await tester.tap(find.byType(NakedTab).at(1));
       await tester.pump();
       expect(controller.selectedTabId, 'tab2');
 
@@ -998,7 +1170,7 @@ void main() {
 
       // Settle past the tap's focus follow-up: the press must notify once,
       // not once from the tap and again when focus lands.
-      await tester.tap(find.byKey(const Key('tab2')));
+      await tester.tap(find.byType(NakedTab).at(1));
       await tester.pumpAndSettle();
 
       expect(notifications, 1);

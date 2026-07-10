@@ -14,7 +14,7 @@ Headless slider component. Handles drag interactions, keyboard navigation (arrow
 - **Custom designs**: When you need sliders that match your design system perfectly
 
 <Info>
-  See complete examples in our [GitHub repository](https://github.com/btwld/naked_ui/blob/main/example/lib/api/naked_slider.0.dart).
+  See complete examples in our [GitHub repository](https://github.com/btwld/naked_ui/blob/main/packages/example/lib/api/naked_slider.0.dart).
 </Info>
 ## Basic implementation
 
@@ -92,14 +92,14 @@ builder: (context, state, child) {
   Color thumbColor = Colors.blue;
   if (state.isDragging) thumbColor = Colors.blue.shade800;
   else if (state.isHovered) thumbColor = Colors.blue.shade600;
-  
+
   // Focus indicator
   final borderColor = state.isFocused ? Colors.orange : Colors.transparent;
-  
+
   return Stack(
     children: [
       // Your track containers here...
-      
+
       // Enhanced thumb with focus ring
       Positioned(
         left: (200 - 24) * _value,
@@ -113,7 +113,7 @@ builder: (context, state, child) {
             // Add shadow when dragging
             boxShadow: state.isDragging ? [
               BoxShadow(
-                color: Colors.blue.withOpacity(0.3),
+                color: Colors.blue.withValues(alpha: 0.3),
                 blurRadius: 8,
                 spreadRadius: 2,
               ),
@@ -169,7 +169,7 @@ NakedSlider(
 
 ### Custom painters (advanced)
 
-For complex designs, you can use CustomPaint for pixel-perfect control. Check out our [complete CustomPaint examples](https://github.com/btwld/naked_ui/blob/main/example/lib/api/naked_slider.0.dart) in the repository.
+For complex designs, you can use CustomPaint for pixel-perfect control. Check out our [complete CustomPaint examples](https://github.com/btwld/naked_ui/blob/main/packages/example/lib/api/naked_slider.0.dart) in the repository.
 
 
 ## Constructor
@@ -198,6 +198,8 @@ const NakedSlider({
   this.keyboardStep = 0.01,
   this.largeKeyboardStep = 0.1,
   this.semanticLabel,
+  this.semanticFormatterCallback,
+  this.excludeSemantics = false,
 })
 ```
 
@@ -265,3 +267,10 @@ Whether to provide haptic feedback on drag start. Defaults to true.
 
 #### semanticLabel → `String?`
 Semantic label for screen readers.
+
+#### semanticFormatterCallback → `String Function(double)?`
+Formats the semantic value announced by assistive technologies.
+
+#### excludeSemantics → `bool`
+Omits only the slider semantics contributed by `NakedSlider`; descendant
+semantics remain available.

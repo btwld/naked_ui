@@ -14,7 +14,7 @@ Headless radio button component. RadioGroup coordinates keyboard navigation and 
 - **Filters**: Select one filter option from a category
 
 <Info>
-  Full examples are available in [`example/lib/api/naked_radio.0.dart`](https://github.com/btwld/naked_ui/blob/main/example/lib/api/naked_radio.0.dart).
+  Full examples are available in [`packages/example/lib/api/naked_radio.0.dart`](https://github.com/btwld/naked_ui/blob/main/packages/example/lib/api/naked_radio.0.dart).
 </Info>
 
 ## Basic implementation
@@ -114,7 +114,7 @@ class _RadioChip extends StatelessWidget {
 
 - `value` → radio value for this option
 - `isSelected` → convenience getter for selection state
-- `widgetStates` → hover/focus/pressed/disabled information
+- `states` → immutable hover/focus/pressed/disabled state set
 
 ### Access from Context
 
@@ -153,6 +153,7 @@ const NakedRadio<T>({
   this.onPressChange,
   this.builder,
   this.groupRegistry,
+  this.semanticLabel,
 })
 ```
 
@@ -162,6 +163,7 @@ Key notes:
 - `builder` → `ValueWidgetBuilder<NakedRadioState<T>>?`
 - `toggleable` lets the selected radio clear the group when activated again
 - Pass `focusNode` to integrate with external focus management
+- Use `semanticLabel` when the builder does not contain a useful textual label
 - interaction callbacks: `onPressChange`/`onHoverChange`/`onFocusChange` (prefer `builder` pattern)
 
 ## Accessibility Tips

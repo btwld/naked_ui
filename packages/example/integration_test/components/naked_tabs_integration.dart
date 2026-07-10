@@ -1,5 +1,6 @@
 import 'package:example/api/naked_tabs.0.dart' as tabs_example;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:naked_ui/naked_ui.dart';
@@ -84,12 +85,17 @@ void main() {
       await tester.testKeyboardActivation(find.byKey(darkTabKey));
       await tester.pumpAndSettle();
 
-      // Test tab order navigation
-      await tester.verifyTabOrder([
-        find.byKey(lightTabKey),
-        find.byKey(darkTabKey),
-        find.byKey(systemTabKey),
-      ]);
+      expect(find.text('Dark Content'), findsOneWidget);
+
+      // Tabs use roving focus: directional keys move and select within the
+      // group, while Tab enters or leaves the group as one stop.
+      await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
+      await tester.pumpAndSettle();
+      expect(find.text('System Content'), findsOneWidget);
+
+      await tester.sendKeyEvent(LogicalKeyboardKey.home);
+      await tester.pumpAndSettle();
+      expect(find.text('Light Content'), findsOneWidget);
     });
 
     testWidgets('tab state callbacks work correctly', (tester) async {

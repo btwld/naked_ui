@@ -26,6 +26,7 @@ class NakedSliderState extends NakedState {
   /// Whether the slider is currently being dragged.
   final bool isDragging;
 
+  /// Creates a slider state snapshot.
   NakedSliderState({
     required super.states,
     required this.value,
@@ -44,11 +45,11 @@ class NakedSliderState extends NakedState {
 
   /// Returns the [WidgetStatesController] from the nearest scope.
   static WidgetStatesController controllerOf(BuildContext context) =>
-      NakedState.controllerOf(context);
+      NakedState.controllerOfType<NakedSliderState>(context);
 
   /// Returns the [WidgetStatesController] from the nearest scope, if any.
   static WidgetStatesController? maybeControllerOf(BuildContext context) =>
-      NakedState.maybeControllerOf(context);
+      NakedState.maybeControllerOfType<NakedSliderState>(context);
 
   /// The slider value as a percentage (0.0 to 1.0).
   ///
@@ -95,9 +96,13 @@ class NakedSliderState extends NakedState {
 /// ```
 ///
 /// See also:
-/// - [Slider], the Material-styled slider for typical apps.
+/// - `Slider`, the Material-styled slider for typical apps.
 /// - [NakedFocusableDetector], used to integrate keyboard and focus handling.
 class NakedSlider extends StatefulWidget {
+  /// Creates a headless slider controlled by [value].
+  ///
+  /// [min] and [max] must be finite with [min] less than [max], and [value]
+  /// must fall within that range. Either [child] or [builder] must be provided.
   const NakedSlider({
     super.key,
     this.child,
@@ -123,7 +128,24 @@ class NakedSlider extends StatefulWidget {
     this.semanticLabel,
     this.semanticFormatterCallback,
     this.excludeSemantics = false,
-  }) : assert(min < max, 'min must be less than max'),
+  }) : assert(
+         min > double.negativeInfinity && max < double.infinity,
+         'min and max must be finite',
+       ),
+       assert(min < max, 'min must be less than max'),
+       assert(
+         value >= min && value <= max,
+         'value $value must be between min $min and max $max',
+       ),
+       assert(divisions == null || divisions > 0, 'divisions must be positive'),
+       assert(
+         keyboardStep > 0 && keyboardStep < double.infinity,
+         'keyboardStep must be finite and positive',
+       ),
+       assert(
+         largeKeyboardStep > 0 && largeKeyboardStep < double.infinity,
+         'largeKeyboardStep must be finite and positive',
+       ),
        assert(
          child != null || builder != null,
          'Either child or builder must be provided',
@@ -195,9 +217,9 @@ class NakedSlider extends StatefulWidget {
   /// Formats semantic value announcements.
   final NakedSliderSemanticFormatterCallback? semanticFormatterCallback;
 
-  /// Whether to exclude this widget from the semantic tree.
+  /// Whether to omit the slider semantics contributed by [NakedSlider].
   ///
-  /// When true, the widget and its children are hidden from accessibility services.
+  /// Semantics supplied by [child] or [builder] remain available.
   final bool excludeSemantics;
 
   @override
@@ -222,10 +244,11 @@ class _NakedSliderState extends State<NakedSlider>
       _isEnabled ? widget.mouseCursor : SystemMouseCursors.basic;
 
   void _callOnChangeIfNeeded(double value) {
+    final currentValue = _lastEmittedValue ?? widget.value;
+    if (value == currentValue) return;
+
     _lastEmittedValue = value;
-    if (value != widget.value) {
-      widget.onChanged?.call(value);
-    }
+    widget.onChanged?.call(value);
   }
 
   double _normalizeValue(double value) {
@@ -270,10 +293,11 @@ class _NakedSliderState extends State<NakedSlider>
     if (!_isEnabled) return;
 
     _isDragging = true;
+    _lastEmittedValue = widget.value;
     _dragStartPosition = details.globalPosition;
     _dragStartValue = widget.value;
 
-    updateState(WidgetState.pressed, true);
+    updateState(WidgetState.dragged, true);
     widget.onDragChange?.call(true);
     widget.onDragStart?.call();
 
@@ -284,8 +308,9 @@ class _NakedSliderState extends State<NakedSlider>
     if (!_isDragging || !_isEnabled) return;
 
     final RenderBox? box = context.findRenderObject() as RenderBox?;
-    if (box == null || _dragStartPosition == null || _dragStartValue == null)
+    if (box == null || _dragStartPosition == null || _dragStartValue == null) {
       return;
+    }
 
     final Offset dragDelta = details.globalPosition - _dragStartPosition!;
     final double dragExtent = widget.direction == Axis.horizontal
@@ -301,23 +326,33 @@ class _NakedSliderState extends State<NakedSlider>
         (dragDistance / dragExtent) * (widget.max - widget.min);
     final double newValue = _normalizeValue(_dragStartValue! + valueDelta);
 
-    if (newValue != widget.value) {
-      _callOnChangeIfNeeded(newValue);
-    }
+    _callOnChangeIfNeeded(newValue);
   }
 
-  void _finishDrag() {
+  void _finishDrag({bool notifyAfterFrame = false}) {
     if (!_isDragging) return;
 
     _isDragging = false;
     _dragStartPosition = null;
     _dragStartValue = null;
 
-    updateState(WidgetState.pressed, false);
-    widget.onDragChange?.call(false);
-
+    updateState(WidgetState.dragged, false);
     final v = _lastEmittedValue ?? widget.value;
-    widget.onDragEnd?.call(v);
+    final onDragChange = widget.onDragChange;
+    final onDragEnd = widget.onDragEnd;
+
+    void notify() {
+      onDragChange?.call(false);
+      onDragEnd?.call(v);
+    }
+
+    if (notifyAfterFrame) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) notify();
+      });
+    } else {
+      notify();
+    }
   }
 
   void _handleDragEnd(DragEndDetails details) => _finishDrag();
@@ -344,9 +379,16 @@ class _NakedSliderState extends State<NakedSlider>
 
     syncWidgetStates();
 
+    if (!_isEnabled && _isDragging) {
+      _finishDrag(notifyAfterFrame: true);
+    }
+
     if (!_isEnabled) {
-      updateState(WidgetState.hovered, false);
-      updateState(WidgetState.pressed, false);
+      updateState(WidgetState.dragged, false);
+      clearInteractionStates(
+        onHoverChange: widget.onHoverChange,
+        onFocusChange: widget.onFocusChange,
+      );
     }
 
     final focusNode = effectiveFocusNode;
@@ -358,11 +400,11 @@ class _NakedSliderState extends State<NakedSlider>
   }
 
   Map<ShortcutActivator, Intent> get _shortcuts {
-    return NakedIntentActions.slider.shortcuts(isRTL: _isRTL);
+    return NakedIntentActions.sliderShortcuts(isRTL: _isRTL);
   }
 
   Map<Type, Action<Intent>> get _actions {
-    return NakedIntentActions.slider.actions(
+    return NakedIntentActions.sliderActions(
       onChanged: _callOnChangeIfNeeded,
       calculateStep: _calculateStep,
       normalizeValue: _normalizeValue,
@@ -375,6 +417,12 @@ class _NakedSliderState extends State<NakedSlider>
 
   @override
   Widget build(BuildContext context) {
+    final semanticStep = _calculateStep(false);
+    final increasedValue = _normalizeValue(widget.value + semanticStep);
+    final decreasedValue = _normalizeValue(widget.value - semanticStep);
+    final canIncrease = _isEnabled && increasedValue != widget.value;
+    final canDecrease = _isEnabled && decreasedValue != widget.value;
+
     final sliderState = NakedSliderState(
       states: widgetStates,
       value: widget.value,
@@ -443,33 +491,25 @@ class _NakedSliderState extends State<NakedSlider>
           ? wrappedContent
           : Semantics(
               container: true,
+              excludeSemantics: widget.semanticLabel != null,
               enabled: _isEnabled,
               slider: true,
-              focusable: _isEnabled,
               focused: _isEnabled ? isFocused : null,
               label: widget.semanticLabel,
               value: _semanticValueString(widget.value),
-              increasedValue: _semanticValueString(
-                _normalizeValue(widget.value + _calculateStep(false)),
-              ),
-              decreasedValue: _semanticValueString(
-                _normalizeValue(widget.value - _calculateStep(false)),
-              ),
-              onIncrease: _isEnabled
-                  ? () {
-                      final step = _calculateStep(false);
-                      _callOnChangeIfNeeded(
-                        _normalizeValue(widget.value + step),
-                      );
-                    }
+              minValue: _semanticValueString(widget.min),
+              maxValue: _semanticValueString(widget.max),
+              increasedValue: canIncrease
+                  ? _semanticValueString(increasedValue)
                   : null,
-              onDecrease: _isEnabled
-                  ? () {
-                      final step = _calculateStep(false);
-                      _callOnChangeIfNeeded(
-                        _normalizeValue(widget.value - step),
-                      );
-                    }
+              decreasedValue: canDecrease
+                  ? _semanticValueString(decreasedValue)
+                  : null,
+              onIncrease: canIncrease
+                  ? () => _callOnChangeIfNeeded(increasedValue)
+                  : null,
+              onDecrease: canDecrease
+                  ? () => _callOnChangeIfNeeded(decreasedValue)
                   : null,
               child: wrappedContent,
             ),

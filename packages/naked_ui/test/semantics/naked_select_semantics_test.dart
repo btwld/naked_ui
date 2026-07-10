@@ -9,6 +9,11 @@ import 'package:naked_ui/naked_ui.dart';
 
 import 'semantics_test_utils.dart';
 
+class _OpaqueValue {
+  @override
+  String toString() => 'implementation-only value';
+}
+
 void main() {
   Widget _buildTestApp(Widget child) {
     return MaterialApp(
@@ -97,6 +102,20 @@ void main() {
       // Verify select menu is open
       expect(find.text('Option 1'), findsOneWidget);
       expect(find.text('Option 2'), findsOneWidget);
+
+      final optionData = tester
+          .getSemantics(find.text('Option 2'))
+          .getSemanticsData();
+      expect(optionData.role, SemanticsRole.menuItem);
+
+      SemanticsNode? ancestor = tester
+          .getSemantics(find.text('Option 2'))
+          .parent;
+      while (ancestor != null &&
+          ancestor.getSemanticsData().role != SemanticsRole.menu) {
+        ancestor = ancestor.parent;
+      }
+      expect(ancestor, isNotNull);
       expect(find.text('Option 3'), findsOneWidget);
       // Trigger must report the open state to screen readers.
       expect(triggerExpanded(), Tristate.isTrue);
@@ -108,6 +127,30 @@ void main() {
       // Verify select menu is closed
       expect(find.text('Option 1'), findsNothing);
       expect(triggerExpanded(), Tristate.isFalse);
+
+      handle.dispose();
+    });
+
+    testWidgets('does not derive accessible values from arbitrary toString', (
+      tester,
+    ) async {
+      final handle = tester.ensureSemantics();
+
+      await tester.pumpWidget(
+        _buildTestApp(
+          NakedSelect<_OpaqueValue>(
+            value: _OpaqueValue(),
+            semanticLabel: 'Account',
+            builder: (context, state, child) => const Text('Account picker'),
+            overlayBuilder: (context, info) => const SizedBox.shrink(),
+          ),
+        ),
+      );
+
+      final data = tester
+          .getSemantics(find.bySemanticsLabel('Account'))
+          .getSemanticsData();
+      expect(data.value, isEmpty);
 
       handle.dispose();
     });

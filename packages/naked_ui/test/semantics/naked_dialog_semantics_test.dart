@@ -1,3 +1,5 @@
+import 'dart:ui' show SemanticsRole;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -205,6 +207,57 @@ void main() {
       });
 
       expect(routeNode, isNotNull);
+      expect(routeNode!.getSemanticsData().role, SemanticsRole.dialog);
+
+      handle.dispose();
+    });
+
+    testWidgets('supports alert-dialog semantics explicitly', (tester) async {
+      final handle = tester.ensureSemantics();
+
+      await tester.pumpWidget(
+        _buildTestApp(
+          const NakedDialog(
+            semanticsRole: SemanticsRole.alertDialog,
+            semanticLabel: 'Destructive action',
+            child: Text('Delete this item?'),
+          ),
+        ),
+      );
+
+      final root = tester.getSemantics(find.byType(NakedDialog));
+      final alert = findSemanticsNode(root, (node) {
+        final data = node.getSemanticsData();
+        return data.label == 'Destructive action' &&
+            data.role == SemanticsRole.alertDialog;
+      });
+      expect(alert, isNotNull);
+
+      handle.dispose();
+    });
+
+    testWidgets('excludeSemantics preserves a caller-owned dialog contract', (
+      tester,
+    ) async {
+      final handle = tester.ensureSemantics();
+
+      await tester.pumpWidget(
+        _buildTestApp(
+          NakedDialog(
+            excludeSemantics: true,
+            child: Semantics(
+              role: SemanticsRole.alertDialog,
+              label: 'Caller-owned dialog',
+              excludeSemantics: true,
+              child: const Text('Content'),
+            ),
+          ),
+        ),
+      );
+
+      final data = tester.getSemantics(find.text('Content')).getSemanticsData();
+      expect(data.role, SemanticsRole.alertDialog);
+      expect(data.label, 'Caller-owned dialog');
 
       handle.dispose();
     });

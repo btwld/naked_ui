@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../registry.dart';
 
@@ -145,21 +146,21 @@ class _DemoScaffold extends StatelessWidget {
                 IconButton(
                   tooltip: 'Open fullscreen',
                   icon: const Icon(Icons.open_in_full),
-                  onPressed: () {
-                    final uri = Uri(path: '/#/${'component'}/${demo.id}');
-                    // On the web this opens the gh-pages URL; locally it’s fine.
-                    // ignore: deprecated_member_use
-                    // Navigator logic not used here; rely on copy for now.
-                    debugPrint(uri.toString());
-                  },
+                  onPressed: () =>
+                      Navigator.of(context).pushNamed('/component/${demo.id}'),
                 ),
                 if (demo.sourceUrl != null)
                   IconButton(
-                    tooltip: 'View source',
+                    tooltip: 'Copy source URL',
                     icon: const Icon(Icons.code),
-                    onPressed: () {
-                      // A real app might use url_launcher; we avoid runtime deps here.
-                      debugPrint('Source: ${demo.sourceUrl}');
+                    onPressed: () async {
+                      await Clipboard.setData(
+                        ClipboardData(text: demo.sourceUrl!),
+                      );
+                      if (!context.mounted) return;
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Source URL copied')),
+                      );
                     },
                   ),
               ],

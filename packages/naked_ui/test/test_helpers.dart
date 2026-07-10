@@ -45,23 +45,19 @@ extension WidgetTesterExtension on WidgetTester {
     final center = getCenter(find.byKey(key));
 
     final gesture = await startGesture(center);
-    addTearDown(() async {
-      try {
-        await gesture.up();
-      } on AssertionError {
-        // gesture.up() asserts _pointer._isDown, so calling it twice throws
-        // AssertionError. This is expected when the test completed normally.
-        // We catch to prevent teardown failures from masking actual test failures.
-      }
-    });
+    var released = false;
+    try {
+      // Give UI plenty of time to reflect pressed state in integration env.
+      await pump(const Duration(milliseconds: 100));
+      await pump(const Duration(milliseconds: 100));
 
-    // Give UI plenty of time to reflect pressed state in integration env.
-    await pump(const Duration(milliseconds: 100));
-    await pump(const Duration(milliseconds: 100));
-
-    onPressed?.call();
-    await gesture.up();
-    await pump();
+      onPressed?.call();
+      await gesture.up();
+      released = true;
+      await pump();
+    } finally {
+      if (!released) await gesture.cancel();
+    }
   }
 
   void expectCursor(SystemMouseCursor cursor, {required Key on}) {
@@ -95,51 +91,5 @@ extension WidgetTesterExtension on WidgetTester {
 
   Future<void> expectActiveCursor(MouseCursor cursor, {required Key on}) async {
     expect(await activeCursorFor(on), cursor);
-  }
-
-  /// Helper to verify widget interaction states for Set<WidgetState> snapshots.
-  void expectWidgetStates(
-    Set<WidgetState> actualStates, {
-    bool? expectHovered,
-    bool? expectFocused,
-    bool? expectPressed,
-    bool? expectDisabled,
-    bool? expectSelected,
-  }) {
-    if (expectHovered != null) {
-      expect(
-        actualStates.contains(WidgetState.hovered),
-        expectHovered,
-        reason: 'Hover state mismatch',
-      );
-    }
-    if (expectFocused != null) {
-      expect(
-        actualStates.contains(WidgetState.focused),
-        expectFocused,
-        reason: 'Focus state mismatch',
-      );
-    }
-    if (expectPressed != null) {
-      expect(
-        actualStates.contains(WidgetState.pressed),
-        expectPressed,
-        reason: 'Press state mismatch',
-      );
-    }
-    if (expectDisabled != null) {
-      expect(
-        actualStates.contains(WidgetState.disabled),
-        expectDisabled,
-        reason: 'Disabled state mismatch',
-      );
-    }
-    if (expectSelected != null) {
-      expect(
-        actualStates.contains(WidgetState.selected),
-        expectSelected,
-        reason: 'Selected state mismatch',
-      );
-    }
   }
 }

@@ -1,0 +1,15 @@
+include: package:flutter_lints/flutter.yaml
+
+analyzer:
+  language:
+    strict-casts: true
+    strict-inference: true
+    strict-raw-types: true
+
+linter:
+  rules:
+    avoid_print: false
+    no_leading_underscores_for_local_identifiers: false
+    sized_box_for_whitespace: false
+    sort_child_properties_last: false
+    unnecessary_underscores: false

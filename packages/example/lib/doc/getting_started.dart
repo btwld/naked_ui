@@ -17,8 +17,7 @@ class MyApp extends StatelessWidget {
           child: MyCustomButton(
             text: 'Click me',
             onPressed: () {
-              // ignore: avoid_print
-              print('Button pressed!');
+              debugPrint('Button pressed!');
             },
           ),
         ),

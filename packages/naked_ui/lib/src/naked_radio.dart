@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 
 import 'mixins/naked_mixins.dart';
 import 'utilities/hit_testable_container.dart';
@@ -10,6 +10,7 @@ class NakedRadioState<T> extends NakedState {
   /// The value represented by this radio.
   final T value;
 
+  /// Creates a radio state snapshot for [value].
   NakedRadioState({required super.states, required this.value});
 
   @override
@@ -34,11 +35,11 @@ class NakedRadioState<T> extends NakedState {
 
   /// Returns the [WidgetStatesController] from the nearest scope.
   static WidgetStatesController controllerOf(BuildContext context) =>
-      NakedState.controllerOf(context);
+      NakedState.controllerOfType<NakedRadioState<dynamic>>(context);
 
   /// Returns the [WidgetStatesController] from the nearest scope, if any.
   static WidgetStatesController? maybeControllerOf(BuildContext context) =>
-      NakedState.maybeControllerOf(context);
+      NakedState.maybeControllerOfType<NakedRadioState<dynamic>>(context);
 }
 
 /// A headless radio without visuals.
@@ -63,9 +64,12 @@ class NakedRadioState<T> extends NakedState {
 /// to tap accurately.
 ///
 /// See also:
-/// - [Radio], the Material-styled radio for typical apps.
+/// - Flutter's Material `Radio`, for a styled radio control.
 /// - [RadioGroup], which manages the selected value and provides grouping.
 class NakedRadio<T> extends StatefulWidget {
+  /// Creates a headless radio representing [value].
+  ///
+  /// Either [child] or [builder] must be provided.
   const NakedRadio({
     super.key,
     required this.value,
@@ -133,8 +137,8 @@ class NakedRadio<T> extends StatefulWidget {
 
 class _NakedRadioState<T> extends State<NakedRadio<T>>
     with FocusNodeMixin<NakedRadio<T>> {
-  bool? _lastReportedPressed;
-  bool? _lastReportedHover;
+  bool _lastReportedPressed = false;
+  bool _lastReportedHover = false;
 
   @protected
   @override
@@ -147,12 +151,38 @@ class _NakedRadioState<T> extends State<NakedRadio<T>>
   @override
   void didUpdateWidget(covariant NakedRadio<T> oldWidget) {
     super.didUpdateWidget(oldWidget);
-    // When enablement flips, clear sentinels so the next interactive state
-    // change is reported instead of being suppressed by stale values.
-    if (oldWidget.enabled != widget.enabled) {
-      _lastReportedHover = null;
-      _lastReportedPressed = null;
+    if (oldWidget.enabled && !widget.enabled) {
+      final wasHovered = _lastReportedHover;
+      final wasPressed = _lastReportedPressed;
+      _lastReportedHover = false;
+      _lastReportedPressed = false;
+
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted || widget.enabled) return;
+        if (wasHovered) widget.onHoverChange?.call(false);
+        if (wasPressed) widget.onPressChange?.call(false);
+      });
     }
+  }
+
+  void _reportHoverAfterBuild(bool hovered) {
+    if (_lastReportedHover == hovered) return;
+    _lastReportedHover = hovered;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && widget.enabled && _lastReportedHover == hovered) {
+        widget.onHoverChange?.call(hovered);
+      }
+    });
+  }
+
+  void _reportPressAfterBuild(bool pressed) {
+    if (_lastReportedPressed == pressed) return;
+    _lastReportedPressed = pressed;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && widget.enabled && _lastReportedPressed == pressed) {
+        widget.onPressChange?.call(pressed);
+      }
+    });
   }
 
   @override
@@ -169,6 +199,11 @@ class _NakedRadioState<T> extends State<NakedRadio<T>>
         (widget.enabled ? SystemMouseCursors.click : SystemMouseCursors.basic);
 
     final radio = RawRadio<T>(
+      // Recreate RawRadio when enablement changes. Updating its gesture
+      // recognizer in place while a pointer is down can synchronously cancel
+      // the recognizer during build, which makes ToggleableStateMixin call
+      // setState during build. A fresh element defers disposal safely.
+      key: ValueKey<bool>(widget.enabled),
       value: widget.value,
       mouseCursor: WidgetStateMouseCursor.resolveWith((_) => effectiveCursor),
       toggleable: widget.toggleable,
@@ -182,21 +217,10 @@ class _NakedRadioState<T> extends State<NakedRadio<T>>
         final bool pressed = radioState.downPosition != null;
         final states = {...radioState.states, if (pressed) WidgetState.pressed};
 
-        // Notify hover changes only when interactive, without setState in build
         final hovered = states.contains(WidgetState.hovered);
-        if (widget.enabled && _lastReportedHover != hovered) {
-          _lastReportedHover = hovered;
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (mounted) widget.onHoverChange?.call(hovered);
-          });
-        }
-
-        // Notify press changes only when interactive
-        if (widget.enabled && _lastReportedPressed != pressed) {
-          _lastReportedPressed = pressed;
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (mounted) widget.onPressChange?.call(pressed);
-          });
+        if (widget.enabled) {
+          _reportHoverAfterBuild(hovered);
+          _reportPressAfterBuild(pressed);
         }
 
         final isSelected = registry.groupValue == widget.value;
@@ -214,8 +238,8 @@ class _NakedRadioState<T> extends State<NakedRadio<T>>
         Widget radioChild = HitTestableContainer(
           child: NakedStateScopeBuilder(
             value: radioStateTyped,
-            child: widget.child,
             builder: widget.builder,
+            child: widget.child,
           ),
         );
 

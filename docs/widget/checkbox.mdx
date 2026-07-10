@@ -9,12 +9,12 @@ Headless checkbox component. Handles toggle behavior, keyboard activation, and a
 ## When to use this
 
 - **Form selections**: Multiple choice options in forms
-- **Settings toggles**: Enable/disable features or preferences  
+- **Settings toggles**: Enable/disable features or preferences
 - **List selections**: Select multiple items from a list
 - **Agreement confirmations**: Terms of service, privacy policies
 
 <Info>
-  See complete examples in our [GitHub repository](https://github.com/btwld/naked_ui/blob/main/example/lib/api/naked_checkbox.0.dart).
+  See complete examples in our [GitHub repository](https://github.com/btwld/naked_ui/blob/main/packages/example/lib/api/naked_checkbox.0.dart).
 </Info>
 
 ## Basic implementation
@@ -77,7 +77,7 @@ class _CheckboxExampleState extends State<CheckboxExample> {
 - `isChecked` → `bool?` (null when tristate and currently indeterminate)
 - `tristate` → whether tristate mode is enabled
 - `isIntermediate` → convenience flag for the null case
-- `widgetStates` → hover/focus/pressed/disabled information
+- `states` → immutable hover/focus/pressed/disabled state set
 
 ### Access from Context
 
@@ -105,6 +105,7 @@ const NakedCheckbox({
   this.onPressChange,
   this.builder,
   this.semanticLabel,
+  this.excludeSemantics = false,
 })
 ```
 
@@ -117,6 +118,7 @@ const NakedCheckbox({
 - `child` → static child when you do not need the builder
 - interaction callbacks: `onFocusChange`, `onHoverChange`, `onPressChange`
 - `semanticLabel` → accessible name announced by screen readers
+- `excludeSemantics` → omit only Naked UI's checkbox semantics while preserving descendant semantics
 
 ## Accessibility Notes
 

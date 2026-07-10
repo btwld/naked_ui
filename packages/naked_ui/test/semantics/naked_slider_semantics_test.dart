@@ -2,6 +2,7 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/semantics.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:naked_ui/naked_ui.dart';
 
@@ -42,6 +43,54 @@ void main() {
       expect(summary.flags, containsAll(['isSlider', 'hasEnabledState']));
       expect(summary.flags, contains('isEnabled'));
       expect(summary.actions, containsAll(['increase', 'decrease']));
+
+      final root = tester.getSemantics(find.byType(Scaffold));
+      final data = findSemanticsNode(
+        root,
+        (node) => node.getSemanticsData().flagsCollection.isSlider,
+      )!.getSemanticsData();
+      expect(data.minValue, '0%');
+      expect(data.maxValue, '100%');
+
+      handle.dispose();
+    });
+
+    testWidgets('only exposes adjustments that can change a boundary value', (
+      tester,
+    ) async {
+      final handle = tester.ensureSemantics();
+
+      Future<SemanticsData> pumpAt(double value) async {
+        await tester.pumpWidget(
+          _buildTestApp(
+            NakedSlider(
+              value: value,
+              min: 0,
+              max: 1,
+              keyboardStep: 0.1,
+              onChanged: (_) {},
+              child: const SizedBox(width: 200, height: 40),
+            ),
+          ),
+        );
+        final root = tester.getSemantics(find.byType(Scaffold));
+        return findSemanticsNode(
+          root,
+          (node) => node.getSemanticsData().flagsCollection.isSlider,
+        )!.getSemanticsData();
+      }
+
+      final atMin = await pumpAt(0);
+      expect(atMin.hasAction(SemanticsAction.increase), isTrue);
+      expect(atMin.hasAction(SemanticsAction.decrease), isFalse);
+      expect(atMin.increasedValue, '10%');
+      expect(atMin.decreasedValue, isEmpty);
+
+      final atMax = await pumpAt(1);
+      expect(atMax.hasAction(SemanticsAction.increase), isFalse);
+      expect(atMax.hasAction(SemanticsAction.decrease), isTrue);
+      expect(atMax.increasedValue, isEmpty);
+      expect(atMax.decreasedValue, '90%');
 
       handle.dispose();
     });

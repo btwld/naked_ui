@@ -1,4 +1,4 @@
-// ignore_for_file: no-empty-block
+import 'dart:ui' show SemanticsRole;
 
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
@@ -18,7 +18,14 @@ class NakedTabController extends ChangeNotifier {
 
   /// Creates a [NakedTabController] with the given initial tab.
   NakedTabController({required String selectedTabId})
-    : _selectedTabId = selectedTabId;
+    : _selectedTabId = _validateTabId(selectedTabId);
+
+  static String _validateTabId(String tabId) {
+    if (tabId.isEmpty) {
+      throw ArgumentError.value(tabId, 'tabId', 'must not be empty');
+    }
+    return tabId;
+  }
 
   /// The currently selected tab identifier.
   String get selectedTabId => _selectedTabId;
@@ -28,6 +35,7 @@ class NakedTabController extends ChangeNotifier {
 
   /// Selects the tab with the given [tabId].
   void selectTab(String tabId) {
+    _validateTabId(tabId);
     if (tabId == _selectedTabId) return;
     _previousTabId = _selectedTabId;
     _selectedTabId = tabId;
@@ -47,6 +55,7 @@ class NakedTabState extends NakedState {
   /// The unique identifier for this tab.
   final String tabId;
 
+  /// Creates a tab state snapshot for [tabId].
   NakedTabState({required super.states, required this.tabId});
 
   /// Returns the nearest [NakedTabState] from context.
@@ -58,11 +67,11 @@ class NakedTabState extends NakedState {
 
   /// Returns the [WidgetStatesController] from the nearest scope.
   static WidgetStatesController controllerOf(BuildContext context) =>
-      NakedState.controllerOf(context);
+      NakedState.controllerOfType<NakedTabState>(context);
 
   /// Returns the [WidgetStatesController] from the nearest scope, if any.
   static WidgetStatesController? maybeControllerOf(BuildContext context) =>
-      NakedState.maybeControllerOf(context);
+      NakedState.maybeControllerOfType<NakedTabState>(context);
 
   @override
   bool operator ==(Object other) {
@@ -96,10 +105,13 @@ class NakedTabState extends NakedState {
 /// ```
 ///
 /// See also:
-/// - [TabBar], the Material-styled tabs widget for typical apps.
+/// - `TabBar`, the Material-styled tabs widget for typical apps.
 /// - [FocusTraversalGroup], for customizing keyboard focus traversal.
-
 class NakedTabs extends StatelessWidget {
+  /// Creates a controlled tab group.
+  ///
+  /// Provide either [controller] or [selectedTabId]. When using
+  /// [selectedTabId], [onChanged] must be non-null for interaction.
   const NakedTabs({
     super.key,
     required this.child,
@@ -141,15 +153,24 @@ class NakedTabs extends StatelessWidget {
   /// Called when Escape is pressed while a tab has focus.
   final VoidCallback? onEscapePressed;
 
-  String get _effectiveSelectedTabId =>
-      controller?.selectedTabId ?? selectedTabId!;
+  String get _effectiveSelectedTabId {
+    final id = controller?.selectedTabId ?? selectedTabId;
+    if (id == null || id.isEmpty) {
+      throw FlutterError(
+        'NakedTabs requires a non-empty selectedTabId or a controller.',
+      );
+    }
+    return id;
+  }
 
   bool get _effectiveEnabled =>
       enabled && (controller != null || onChanged != null);
 
   void _selectTab(String tabId) {
     if (!_effectiveEnabled || tabId == _effectiveSelectedTabId) return;
-    assert(tabId.isNotEmpty, 'Tab ID cannot be empty');
+    if (tabId.isEmpty) {
+      throw ArgumentError.value(tabId, 'tabId', 'must not be empty');
+    }
 
     if (controller != null) {
       controller!.selectTab(tabId);
@@ -158,30 +179,44 @@ class NakedTabs extends StatelessWidget {
     }
   }
 
+  Widget _buildTabs() {
+    final scope = NakedTabsScope(
+      selectedTabId: _effectiveSelectedTabId,
+      onChanged: _selectTab,
+      orientation: orientation,
+      enabled: _effectiveEnabled,
+      onEscapePressed: onEscapePressed,
+      child: child,
+    );
+
+    final escapeHandler = onEscapePressed;
+    return escapeHandler == null
+        ? scope
+        : Actions(
+            actions: {
+              DismissIntent: CallbackAction<DismissIntent>(
+                onInvoke: (_) => escapeHandler(),
+              ),
+            },
+            child: scope,
+          );
+  }
+
   @override
   Widget build(BuildContext context) {
-    assert(_effectiveSelectedTabId.isNotEmpty, 'selectedTabId cannot be empty');
-
-    return Actions(
-      actions: {
-        DismissIntent: CallbackAction<DismissIntent>(
-          onInvoke: (_) => onEscapePressed?.call(),
-        ),
-      },
-      child: NakedTabsScope(
-        selectedTabId: _effectiveSelectedTabId,
-        onChanged: _selectTab,
-        orientation: orientation,
-        enabled: _effectiveEnabled,
-        onEscapePressed: onEscapePressed,
-        child: child,
-      ),
-    );
+    final tabController = controller;
+    return tabController == null
+        ? _buildTabs()
+        : ListenableBuilder(
+            listenable: tabController,
+            builder: (context, child) => _buildTabs(),
+          );
   }
 }
 
 /// Provides tab state to descendant widgets.
 class NakedTabsScope extends InheritedWidget {
+  /// Creates tab state inherited by [child].
   const NakedTabsScope({
     super.key,
     required this.selectedTabId,
@@ -192,6 +227,9 @@ class NakedTabsScope extends InheritedWidget {
     required super.child,
   });
 
+  /// Returns the nearest tab scope.
+  ///
+  /// Throws a [FlutterError] when called outside [NakedTabs].
   static NakedTabsScope of(BuildContext context) {
     final scope = context.dependOnInheritedWidgetOfExactType<NakedTabsScope>();
     if (scope == null) {
@@ -204,17 +242,30 @@ class NakedTabsScope extends InheritedWidget {
     return scope;
   }
 
+  /// The currently selected tab identifier.
   final String selectedTabId;
+
+  /// Called to request a selection change.
   final ValueChanged<String>? onChanged;
+
+  /// The direction in which tabs are arranged.
   final Axis orientation;
+
+  /// Whether descendants can change selection.
   final bool enabled;
+
+  /// Called when Escape is pressed within the tab group.
   final VoidCallback? onEscapePressed;
 
+  /// Whether [tabId] identifies the selected tab.
   bool isTabSelected(String tabId) => selectedTabId == tabId;
 
+  /// Requests selection of [tabId] when the scope is enabled.
   void selectTab(String tabId) {
     if (!enabled || tabId == selectedTabId) return;
-    assert(tabId.isNotEmpty, 'Tab ID cannot be empty');
+    if (tabId.isEmpty) {
+      throw ArgumentError.value(tabId, 'tabId', 'must not be empty');
+    }
     onChanged?.call(tabId);
   }
 
@@ -223,6 +274,7 @@ class NakedTabsScope extends InheritedWidget {
     return selectedTabId != old.selectedTabId ||
         orientation != old.orientation ||
         enabled != old.enabled ||
+        onChanged != old.onChanged ||
         onEscapePressed != old.onEscapePressed;
   }
 }
@@ -233,29 +285,64 @@ class NakedTabsScope extends InheritedWidget {
 ///
 /// See also:
 /// - [NakedTab], the individual tab trigger components.
-class NakedTabBar extends StatelessWidget {
+class NakedTabBar extends StatefulWidget {
+  /// Creates a semantic tab bar around [child].
   const NakedTabBar({super.key, required this.child});
+
+  /// The tab triggers arranged by the caller.
   final Widget child;
 
   @override
+  State<NakedTabBar> createState() => _NakedTabBarState();
+}
+
+class _NakedTabBarState extends State<NakedTabBar> {
+  late final FocusScopeNode _focusScopeNode = FocusScopeNode(
+    debugLabel: 'NakedTabBar',
+    traversalEdgeBehavior: TraversalEdgeBehavior.parentScope,
+    directionalTraversalEdgeBehavior: TraversalEdgeBehavior.parentScope,
+  );
+
+  @override
+  void dispose() {
+    _focusScopeNode.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    // Default focus traversal will move among focusable children in widget order.
-    return FocusTraversalGroup(
-      policy: WidgetOrderTraversalPolicy(),
-      child: child,
+    return Semantics(
+      role: SemanticsRole.tabBar,
+      explicitChildNodes: true,
+      child: FocusTraversalGroup(
+        policy: _TabTraversalPolicy(),
+        child: FocusScope.withExternalFocusNode(
+          focusScopeNode: _focusScopeNode,
+          includeSemantics: false,
+          child: widget.child,
+        ),
+      ),
     );
   }
+}
+
+class _TabTraversalPolicy extends WidgetOrderTraversalPolicy {
+  List<FocusNode> orderedNodes(
+    Iterable<FocusNode> nodes,
+    FocusNode currentNode,
+  ) => sortDescendants(nodes, currentNode).toList();
 }
 
 /// A headless tab trigger without visuals.
 ///
 /// Selection follows focus for keyboard navigation.
-/// The builder receives a [NakedTabState] with the tab ID, selected tab ID,
-/// and interaction states for custom styling.
+/// The builder receives a [NakedTabState] with the tab ID and interaction
+/// states, including [WidgetState.selected], for custom styling.
 ///
 /// See also:
 /// - [NakedTabs], the container that manages tab state.
 class NakedTab extends StatefulWidget {
+  /// Creates a tab trigger identified by [tabId].
   const NakedTab({
     super.key,
     this.child,
@@ -313,9 +400,9 @@ class NakedTab extends StatefulWidget {
   /// Whether to autofocus.
   final bool autofocus;
 
-  /// Whether to exclude this widget from the semantic tree.
+  /// Whether to omit the tab semantics contributed by [NakedTab].
   ///
-  /// When true, the widget and its children are hidden from accessibility services.
+  /// Semantics supplied by [child] or [builder] remain available.
   final bool excludeSemantics;
 
   @override
@@ -327,14 +414,23 @@ class _NakedTabState extends State<NakedTab>
   @override
   FocusNode? get widgetProvidedNode => widget.focusNode;
 
-  late bool _isEnabled;
+  bool _isEnabled = false;
   late NakedTabsScope _scope;
 
-  void _applyFocusability() {
-    final node = effectiveFocusNode;
-    node
-      ..canRequestFocus = _isEnabled
-      ..skipTraversal = !_isEnabled;
+  void _syncScopeState() {
+    final wasEnabled = _isEnabled;
+    _isEnabled = widget.enabled && _scope.enabled;
+    updateDisabledState(!_isEnabled);
+    updateSelectedState(_scope.isTabSelected(widget.tabId), null);
+
+    if (wasEnabled && !_isEnabled) {
+      clearInteractionStates(
+        onHoverChange: widget.onHoverChange,
+        onFocusChange: widget.onFocusChange,
+        onPressChange: widget.onPressChange,
+      );
+      if (effectiveFocusNode.hasFocus) effectiveFocusNode.unfocus();
+    }
   }
 
   /// Whether a focus-gain event caused by this tab's own tap or keyboard
@@ -367,92 +463,80 @@ class _NakedTabState extends State<NakedTab>
   void _handleDirectionalFocus(TraversalDirection direction) {
     if (!_isEnabled) return;
 
-    final focusScope = FocusScope.of(context);
     final isHorizontal = _scope.orientation == Axis.horizontal;
 
     switch (direction) {
       case TraversalDirection.left:
-        if (isHorizontal) focusScope.previousFocus();
+        if (isHorizontal) _focusRelative(-1);
         break;
       case TraversalDirection.right:
-        if (isHorizontal) focusScope.nextFocus();
+        if (isHorizontal) _focusRelative(1);
         break;
       case TraversalDirection.up:
-        if (!isHorizontal) focusScope.previousFocus();
+        if (!isHorizontal) _focusRelative(-1);
         break;
       case TraversalDirection.down:
-        if (!isHorizontal) focusScope.nextFocus();
+        if (!isHorizontal) _focusRelative(1);
         break;
     }
   }
 
-  /// Maximum iterations for focus traversal to prevent infinite loops.
-  static const int _maxFocusIterations = 100;
+  List<FocusNode> _orderedTabNodes() {
+    final focusScope = FocusScope.of(context, createDependency: false);
+    final nodes = focusScope.descendants.where(
+      (node) => node is! FocusScopeNode && node.canRequestFocus,
+    );
+    return _TabTraversalPolicy().orderedNodes(nodes, effectiveFocusNode);
+  }
+
+  void _focusRelative(int offset) {
+    final nodes = _orderedTabNodes();
+    if (nodes.isEmpty) return;
+
+    final currentIndex = nodes.indexOf(effectiveFocusNode);
+    if (currentIndex < 0) return;
+
+    final nextIndex = (currentIndex + offset) % nodes.length;
+    nodes[nextIndex].requestFocus();
+  }
 
   void _focusFirstTab() {
-    // Find the first tab in the current tab group
-    final scope = FocusScope.of(context);
-    scope.focusInDirection(TraversalDirection.left);
-    // Move left until we cannot go further (reaching the first tab).
-    // Limit iterations to prevent infinite loops in circular focus scenarios.
-    for (
-      int i = 0;
-      i < _maxFocusIterations &&
-          scope.focusInDirection(TraversalDirection.left);
-      i++
-    ) {
-      // Continue until we reach the first tab or hit iteration limit.
-    }
+    final nodes = _orderedTabNodes();
+    if (nodes.isNotEmpty) nodes.first.requestFocus();
   }
 
   void _focusLastTab() {
-    // Find the last tab in the current tab group
-    final scope = FocusScope.of(context);
-    scope.focusInDirection(TraversalDirection.right);
-    // Move right until we cannot go further (reaching the last tab).
-    // Limit iterations to prevent infinite loops in circular focus scenarios.
-    for (
-      int i = 0;
-      i < _maxFocusIterations &&
-          scope.focusInDirection(TraversalDirection.right);
-      i++
-    ) {
-      // Continue until we reach the last tab or hit iteration limit.
-    }
+    final nodes = _orderedTabNodes();
+    if (nodes.isNotEmpty) nodes.last.requestFocus();
   }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     _scope = NakedTabsScope.of(context);
-    _isEnabled = widget.enabled && _scope.enabled;
-    _applyFocusability();
+    _syncScopeState();
   }
 
   @override
   void didUpdateWidget(covariant NakedTab oldWidget) {
     super.didUpdateWidget(oldWidget);
-    final newEnabled = widget.enabled && _scope.enabled;
-    if (newEnabled != _isEnabled) {
-      _isEnabled = newEnabled;
-      _applyFocusability();
-    }
+    _syncScopeState();
   }
 
   @override
   Widget build(BuildContext context) {
-    assert(widget.tabId.isNotEmpty, 'tabId cannot be empty');
+    if (widget.tabId.isEmpty) {
+      throw ArgumentError.value(widget.tabId, 'tabId', 'must not be empty');
+    }
 
     final isSelected = _scope.isTabSelected(widget.tabId);
-    updateDisabledState(!_isEnabled);
-    updateSelectedState(isSelected, null);
 
     final tabState = NakedTabState(states: widgetStates, tabId: widget.tabId);
 
     final wrappedContent = NakedStateScopeBuilder(
       value: tabState,
-      child: widget.child,
       builder: widget.builder,
+      child: widget.child,
     );
 
     Widget gestureDetector = GestureDetector(
@@ -471,24 +555,11 @@ class _NakedTabState extends State<NakedTab>
       child: wrappedContent,
     );
 
-    Widget tabChild = widget.excludeSemantics
+    final focusContent = widget.semanticLabel == null
         ? gestureDetector
-        : Semantics(
-            container: true,
-            enabled: _isEnabled,
-            selected: isSelected,
-            button: true,
-            label: widget.semanticLabel,
-            // An explicit label replaces the content's semantics; without
-            // this, a tab whose content renders the same text is announced
-            // twice. When no label is given, the content's own semantics flow
-            // through.
-            excludeSemantics: widget.semanticLabel != null,
-            onTap: _isEnabled ? _handleTap : null,
-            child: gestureDetector,
-          );
+        : ExcludeSemantics(child: gestureDetector);
 
-    return NakedFocusableDetector(
+    final focusable = NakedFocusableDetector(
       enabled: _isEnabled,
       autofocus: widget.autofocus,
       onFocusChange: (f) {
@@ -504,16 +575,32 @@ class _NakedTabState extends State<NakedTab>
       },
       onHoverChange: (h) => updateHoverState(h, widget.onHoverChange),
       focusNode: effectiveFocusNode,
+      skipTraversal: !_isEnabled || !isSelected,
+      descendantsAreFocusable: false,
+      descendantsAreTraversable: false,
       mouseCursor: _isEnabled ? widget.mouseCursor : SystemMouseCursors.basic,
-      shortcuts: NakedIntentActions.tab.shortcuts,
-      actions: NakedIntentActions.tab.actions(
+      shortcuts: NakedIntentActions.tabShortcuts,
+      actions: NakedIntentActions.tabActions(
         onActivate: () => _handleTap(),
         onDirectionalFocus: _handleDirectionalFocus,
         onFirstFocus: () => _focusFirstTab(),
         onLastFocus: () => _focusLastTab(),
       ),
-      child: tabChild,
+      child: focusContent,
     );
+
+    return widget.excludeSemantics
+        ? focusable
+        : Semantics(
+            container: true,
+            role: SemanticsRole.tab,
+            enabled: _isEnabled,
+            selected: isSelected,
+            button: true,
+            label: widget.semanticLabel,
+            onTap: _isEnabled ? _handleTap : null,
+            child: focusable,
+          );
   }
 }
 
@@ -525,6 +612,7 @@ class _NakedTabState extends State<NakedTab>
 /// See also:
 /// - [NakedTabs], the container that manages tab selection.
 class NakedTabView extends StatelessWidget {
+  /// Creates a panel associated with [tabId].
   const NakedTabView({
     super.key,
     required this.child,
@@ -543,7 +631,9 @@ class NakedTabView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    assert(tabId.isNotEmpty, 'tabId cannot be empty');
+    if (tabId.isEmpty) {
+      throw ArgumentError.value(tabId, 'tabId', 'must not be empty');
+    }
     final scope = NakedTabsScope.of(context);
     final isSelected = scope.isTabSelected(tabId);
 
@@ -556,7 +646,7 @@ class NakedTabView extends StatelessWidget {
       child: Visibility(
         visible: isSelected,
         maintainState: maintainState,
-        child: child,
+        child: Semantics(role: SemanticsRole.tabPanel, child: child),
       ),
     );
   }

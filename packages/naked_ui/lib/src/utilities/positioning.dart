@@ -1,15 +1,17 @@
-import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 
 /// Configuration for overlay positioning.
 class OverlayPositionConfig {
   /// Primary alignment for positioning the overlay relative to the anchor.
   final Alignment targetAnchor;
+
+  /// Alignment on the overlay placed at [targetAnchor].
   final Alignment followerAnchor;
 
   /// Additional offset to apply after alignment positioning.
   final Offset offset;
 
+  /// Creates an overlay positioning configuration.
   const OverlayPositionConfig({
     this.targetAnchor = Alignment.bottomLeft,
     this.followerAnchor = Alignment.topLeft,
@@ -17,7 +19,9 @@ class OverlayPositionConfig {
   });
 }
 
+/// Positions [child] relative to the global [targetRect].
 class OverlayPositioner extends StatelessWidget {
+  /// Creates a positioner for [targetRect].
   const OverlayPositioner({
     super.key,
     required this.targetRect,
@@ -25,9 +29,13 @@ class OverlayPositioner extends StatelessWidget {
     required this.child,
   });
 
+  /// The anchor rectangle in global coordinates.
   final Rect targetRect;
 
+  /// The alignments and offset applied to [child].
   final OverlayPositionConfig positioning;
+
+  /// The overlay content to position.
   final Widget child;
 
   @override
@@ -80,7 +88,7 @@ class _OverlayPositionerDelegate extends SingleChildLayoutDelegate {
     final preferredPosition =
         targetPosition + targetAnchorOffset - followerAnchorOffset + offset;
 
-    return _clampToBounds(preferredPosition, childSize, size);
+    return clampOverlayToBounds(preferredPosition, childSize, size);
   }
 
   @override
@@ -93,13 +101,24 @@ class _OverlayPositionerDelegate extends SingleChildLayoutDelegate {
   }
 }
 
-Offset _clampToBounds(
+/// Keeps an overlay origin inside the available size.
+///
+/// This is public only so the package's internal positioning contract can be
+/// unit tested. It is not exported from `package:naked_ui/naked_ui.dart`.
+Offset clampOverlayToBounds(
   Offset overlayTopLeft,
   Size overlaySize,
   Size screenSize,
 ) {
+  final maxX = screenSize.width > overlaySize.width
+      ? screenSize.width - overlaySize.width
+      : 0.0;
+  final maxY = screenSize.height > overlaySize.height
+      ? screenSize.height - overlaySize.height
+      : 0.0;
+
   return Offset(
-    overlayTopLeft.dx.clamp(0.0, screenSize.width - overlaySize.width),
-    overlayTopLeft.dy.clamp(0.0, screenSize.height - overlaySize.height),
+    overlayTopLeft.dx.clamp(0.0, maxX),
+    overlayTopLeft.dy.clamp(0.0, maxY),
   );
 }

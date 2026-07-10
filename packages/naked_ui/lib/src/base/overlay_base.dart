@@ -1,10 +1,12 @@
-/// Base abstractions for overlay widgets like [NakedMenu] and [NakedSelect].
+/// Base abstractions for menu and select overlay widgets.
 ///
 /// This file provides:
 /// - [OverlayScope]: InheritedWidget pattern for overlay context
 /// - [OverlayItem]: Base class for overlay items (actions/options)
 /// - [OverlayStateMixin]: State management for overlay widgets
 library;
+
+import 'dart:ui' show SemanticsRole;
 
 import 'package:flutter/widgets.dart';
 
@@ -18,50 +20,60 @@ import '../utilities/state.dart';
 /// This class provides the common pattern for InheritedWidget-based scopes
 /// used by overlay widgets like NakedMenu and NakedSelect.
 abstract class OverlayScope<T> extends InheritedWidget {
+  /// Creates a scope around [child].
   const OverlayScope({required super.child, super.key});
 
   /// Returns the scope of the specified type that most tightly encloses the given [context].
   ///
   /// This method returns null if no scope of the specified type is found.
   @protected
-  static S? maybeOf<S extends OverlayScope>(BuildContext context) {
-    return context.dependOnInheritedWidgetOfExactType();
+  static S? maybeOf<S extends OverlayScope<Object?>>(BuildContext context) {
+    final exactMatch = context.dependOnInheritedWidgetOfExactType<S>();
+    if (exactMatch != null) return exactMatch;
+
+    S? covariantMatch;
+    context.visitAncestorElements((element) {
+      final widget = element.widget;
+      if (widget is S) {
+        context.dependOnInheritedElement(element as InheritedElement);
+        covariantMatch = widget;
+        return false;
+      }
+      return true;
+    });
+    return covariantMatch;
   }
 
   /// Returns the scope of the specified type that most tightly encloses the given [context].
   ///
   /// If no scope is found, this method throws a [FlutterError] with a descriptive message.
   @protected
-  static S of<S extends OverlayScope>(
+  static S of<S extends OverlayScope<Object?>>(
     BuildContext context, {
     required Type scopeConsumer,
     required Type scopeOwner,
   }) {
     final S? result = maybeOf<S>(context);
-    assert(() {
-      if (result == null) {
-        throw FlutterError.fromParts([
-          ErrorSummary('$scopeConsumer requires a $scopeOwner ancestor.'),
-          ErrorDescription(
-            'The $scopeConsumer widget must be placed inside the overlayBuilder '
-            'callback of a $scopeOwner widget.',
-          ),
-          ErrorHint(
-            'Ensure that $scopeConsumer is only used within:\n'
-            '$scopeOwner(\n'
-            '  overlayBuilder: (context, info) {\n'
-            '    return $scopeConsumer(...); // ✓ Correct usage\n'
-            '  },\n'
-            ')',
-          ),
-          context.describeElement('The context used was'),
-        ]);
-      }
+    if (result == null) {
+      throw FlutterError.fromParts([
+        ErrorSummary('$scopeConsumer requires a $scopeOwner ancestor.'),
+        ErrorDescription(
+          'The $scopeConsumer widget must be placed inside the overlayBuilder '
+          'callback of a $scopeOwner widget.',
+        ),
+        ErrorHint(
+          'Ensure that $scopeConsumer is only used within:\n'
+          '$scopeOwner(\n'
+          '  overlayBuilder: (context, info) {\n'
+          '    return $scopeConsumer(...); // Correct usage\n'
+          '  },\n'
+          ')',
+        ),
+        context.describeElement('The context used was'),
+      ]);
+    }
 
-      return true;
-    }());
-
-    return result!;
+    return result;
   }
 }
 
@@ -72,6 +84,10 @@ abstract class OverlayScope<T> extends InheritedWidget {
 /// This class provides the common pattern for widgets that represent
 /// selectable/actionable items within overlay panels.
 abstract class OverlayItem<T, S extends NakedState> extends StatelessWidget {
+  /// Creates an overlay item for [value].
+  ///
+  /// Either [child] or [builder] must be provided. When both are provided,
+  /// [child] is passed to [builder].
   const OverlayItem({
     super.key,
     required this.value,
@@ -108,13 +124,18 @@ abstract class OverlayItem<T, S extends NakedState> extends StatelessWidget {
     required VoidCallback? onPressed,
     required bool effectiveEnabled,
     bool? isSelected,
+    SemanticsRole? semanticRole,
+    bool? semanticSelected,
     required S Function(Set<WidgetState> states) mapStates,
   }) {
-    return NakedButton(
+    if (child == null && builder == null) {
+      throw FlutterError('$runtimeType requires either a child or a builder.');
+    }
+
+    final button = NakedButton(
       onPressed: onPressed,
       enabled: effectiveEnabled,
       semanticLabel: semanticLabel,
-      child: child,
       builder: builder == null
           ? null
           : (context, buttonState, child) {
@@ -125,7 +146,16 @@ abstract class OverlayItem<T, S extends NakedState> extends StatelessWidget {
 
               return builder!(context, mapStates(effectiveStates), child);
             },
+      child: child,
     );
+
+    return semanticRole == null
+        ? button
+        : Semantics(
+            role: semanticRole,
+            selected: semanticSelected,
+            child: button,
+          );
   }
 }
 

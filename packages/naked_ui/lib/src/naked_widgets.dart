@@ -1,3 +1,6 @@
+/// Public headless component exports for `package:naked_ui/naked_ui.dart`.
+library;
+
 export 'naked_accordion.dart';
 export 'naked_button.dart';
 export 'naked_checkbox.dart';

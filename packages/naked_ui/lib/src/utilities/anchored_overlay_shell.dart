@@ -9,6 +9,7 @@ import 'positioning.dart';
 /// positioned relative to the anchor. Handles outside taps, simple keyboard
 /// traversal (Esc and Arrow Up/Down), and focus traversal grouping.
 class AnchoredOverlayShell extends StatelessWidget {
+  /// Creates a positioned overlay bound to [controller] and [child].
   const AnchoredOverlayShell({
     super.key,
     required this.controller,
@@ -74,6 +75,7 @@ class AnchoredOverlayShell extends StatelessWidget {
       controller: controller,
       overlayBuilder: (context, info) {
         final overlayChild = overlayBuilder(context, info);
+        final traversalPolicy = ReadingOrderTraversalPolicy();
 
         return OverlayPositioner(
           targetRect: info.anchorRect,
@@ -84,20 +86,40 @@ class AnchoredOverlayShell extends StatelessWidget {
                 : null,
             groupId: info.tapRegionGroupId,
             child: FocusTraversalGroup(
-              child: Shortcuts(
-                shortcuts: NakedIntentActions.menu.shortcuts,
-                child: Actions(
-                  actions: NakedIntentActions.menu.actions(
-                    onDismiss: () => controller.close(),
-                    onNextFocus: () => FocusScope.of(context).nextFocus(),
-                    onPreviousFocus: () =>
-                        FocusScope.of(context).previousFocus(),
-                  ),
-                  child: Focus(
-                    autofocus: true,
-                    canRequestFocus: true,
-                    child: overlayChild,
-                  ),
+              policy: traversalPolicy,
+              child: FocusScope(
+                child: Builder(
+                  builder: (focusContext) {
+                    final focusScope = FocusScope.of(focusContext);
+                    return Shortcuts(
+                      shortcuts: NakedIntentActions.menuShortcuts,
+                      child: Actions(
+                        actions: NakedIntentActions.menuActions(
+                          onDismiss: controller.close,
+                          onNextFocus: focusScope.nextFocus,
+                          onPreviousFocus: focusScope.previousFocus,
+                          onFirstFocus: () => traversalPolicy
+                              .findFirstFocus(
+                                focusScope,
+                                ignoreCurrentFocus: true,
+                              )
+                              ?.requestFocus(),
+                          onLastFocus: () => traversalPolicy
+                              .findLastFocus(
+                                focusScope,
+                                ignoreCurrentFocus: true,
+                              )
+                              .requestFocus(),
+                        ),
+                        child: Focus(
+                          autofocus: true,
+                          canRequestFocus: true,
+                          skipTraversal: true,
+                          child: overlayChild,
+                        ),
+                      ),
+                    );
+                  },
                 ),
               ),
             ),

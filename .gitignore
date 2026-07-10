@@ -38,6 +38,7 @@
 .pub/
 build/
 coverage/
+*_test_results.txt
 
 # Android related
 **/android/**/gradle-wrapper.jar

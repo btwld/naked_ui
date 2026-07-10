@@ -5,8 +5,6 @@ import 'package:flutter/semantics.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:naked_ui/naked_ui.dart';
 
-import 'semantics_test_utils.dart';
-
 void main() {
   Widget _buildTestApp(Widget child) {
     return MaterialApp(
@@ -86,7 +84,7 @@ void main() {
       handle.dispose();
     });
 
-    testWidgets('excludeSemantics hides visible header fallback', (
+    testWidgets('excludeSemantics preserves caller-provided semantics only', (
       tester,
     ) async {
       final handle = tester.ensureSemantics();
@@ -105,16 +103,43 @@ void main() {
         ),
       );
 
-      expect(find.bySemanticsLabel('Visible Header'), findsNothing);
-      final root = tester.getSemantics(find.byType(Scaffold));
-      final leakedTriggerNodes = collectSemanticsNodes(root, (node) {
-        final data = node.getSemanticsData();
-        return data.label.contains('Visible Header') ||
-            data.flagsCollection.isButton ||
-            data.flagsCollection.isExpanded != Tristate.none ||
-            data.hasAction(SemanticsAction.tap);
-      });
-      expect(leakedTriggerNodes, isEmpty);
+      final data = tester
+          .getSemantics(find.bySemanticsLabel('Visible Header'))
+          .getSemanticsData();
+      expect(data.label, 'Visible Header');
+      expect(data.flagsCollection.isButton, isFalse);
+      expect(data.flagsCollection.isExpanded, Tristate.none);
+      expect(data.hasAction(SemanticsAction.tap), isFalse);
+
+      handle.dispose();
+    });
+
+    testWidgets('minimum constraint removes an ineffective activation', (
+      tester,
+    ) async {
+      final handle = tester.ensureSemantics();
+      final controller = NakedAccordionController<String>(min: 1)..open('item');
+
+      await tester.pumpWidget(
+        _buildTestApp(
+          NakedAccordionGroup<String>(
+            controller: controller,
+            child: NakedAccordion<String>(
+              value: 'item',
+              semanticLabel: 'Required section',
+              builder: (_, __) => const Text('Visible Header'),
+              child: const Text('Body'),
+            ),
+          ),
+        ),
+      );
+
+      final data = tester
+          .getSemantics(find.bySemanticsLabel('Required section'))
+          .getSemanticsData();
+      expect(data.flagsCollection.isEnabled, Tristate.isFalse);
+      expect(data.flagsCollection.isExpanded, Tristate.isTrue);
+      expect(data.hasAction(SemanticsAction.tap), isFalse);
 
       handle.dispose();
     });

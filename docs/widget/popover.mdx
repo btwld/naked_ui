@@ -14,7 +14,7 @@ Headless popover component. Handles positioning, focus management, outside dismi
 - **Content previews**: Preview links, images, or documents
 
 <Info>
-  Explore the sample in [`example/lib/api/naked_popover.0.dart`](https://github.com/btwld/naked_ui/blob/main/example/lib/api/naked_popover.0.dart).
+  Explore the sample in [`packages/example/lib/api/naked_popover.0.dart`](https://github.com/btwld/naked_ui/blob/main/packages/example/lib/api/naked_popover.0.dart).
 </Info>
 
 ## Basic implementation
@@ -23,12 +23,20 @@ Headless popover component. Handles positioning, focus management, outside dismi
 import 'package:flutter/material.dart';
 import 'package:naked_ui/naked_ui.dart';
 
-class PopoverExample extends StatelessWidget {
+class PopoverExample extends StatefulWidget {
   const PopoverExample({super.key});
+
+  @override
+  State<PopoverExample> createState() => _PopoverExampleState();
+}
+
+class _PopoverExampleState extends State<PopoverExample> {
+  final controller = MenuController();
 
   @override
   Widget build(BuildContext context) {
     return NakedPopover(
+      controller: controller,
       positioning: const OverlayPositionConfig(
         targetAnchor: Alignment.bottomCenter,
         followerAnchor: Alignment.topCenter,
@@ -51,7 +59,7 @@ class PopoverExample extends StatelessWidget {
                   const Text('Share this project link to collaborate.'),
                   const SizedBox(height: 12),
                   ElevatedButton(
-                    onPressed: () => Navigator.of(context).maybePop(),
+                    onPressed: controller.close,
                     child: const Text('Copy link'),
                   ),
                 ],
@@ -106,8 +114,13 @@ class _AnimatedPopoverState extends State<AnimatedPopover>
   Widget build(BuildContext context) {
     return NakedPopover(
       positioning: const OverlayPositionConfig(),
-      onOpen: () => _controller.forward(),
-      onClose: () => _controller.reverse(),
+      onOpenRequested: (position, showOverlay) {
+        showOverlay();
+        _controller.forward(from: 0);
+      },
+      onCloseRequested: (hideOverlay) {
+        _controller.reverse().whenComplete(hideOverlay);
+      },
       popoverBuilder: (context, info) {
         return FadeTransition(
           opacity: _controller,
@@ -122,7 +135,7 @@ class _AnimatedPopoverState extends State<AnimatedPopover>
               ),
               child: const Padding(
                 padding: EdgeInsets.all(16),
-                child: const Text(
+                child: Text(
                   'Animated popover content',
                   style: TextStyle(color: Colors.white),
                 ),
@@ -148,31 +161,45 @@ const NakedPopover({
   this.positioning = const OverlayPositionConfig(),
   this.consumeOutsideTaps = true,
   this.useRootOverlay = false,
+  this.closeOnClickOutside = true,
   this.openOnTap = true,
+  this.enabled = true,
+  this.mouseCursor = SystemMouseCursors.click,
   this.triggerFocusNode,
+  this.autofocus = false,
+  this.onFocusChange,
+  this.onHoverChange,
+  this.onPressChange,
   this.onOpen,
   this.onClose,
   this.onOpenRequested,
   this.onCloseRequested,
   this.controller,
+  this.semanticLabel,
+  this.excludeSemantics = false,
 })
 ```
 
 ### Key Parameters
 
 - `child` / `builder` → provide a static trigger or a `ValueWidgetBuilder<NakedPopoverState>` for dynamic styling
-- `popoverBuilder` → `(BuildContext, RawMenuAnchorOverlayInfo)` to build the overlay content
-- `positioning` → `OverlayPositionConfig` controlling alignment/offset/fallbacks
+- `popoverBuilder` → `(BuildContext, RawMenuOverlayInfo)` to build the overlay content
+- `positioning` → `OverlayPositionConfig` controlling anchor alignment and offset
 - `openOnTap` → disable to manage open state manually (e.g. hover triggers)
+- `enabled` / `mouseCursor` and the interaction callbacks configure the trigger
 - `consumeOutsideTaps` / `useRootOverlay` → control gesture capture and overlay target
 - `triggerFocusNode` → provide an external `FocusNode` for restoring focus after close
+- `semanticLabel` / `excludeSemantics` configure only the trigger's Naked UI semantics
 - Lifecycle hooks: `onOpen`, `onClose`, `onOpenRequested`, `onCloseRequested`
 
 ## Behaviour & Accessibility
 
 - Tap trigger or press Space/Enter to open when `openOnTap` is true
 - Escape closes and returns focus to the trigger
-- Outside taps close automatically (configurable via `consumeOutsideTaps`)
+- Outside taps close automatically when `closeOnClickOutside` is true;
+  `consumeOutsideTaps` separately controls whether the tap reaches widgets behind the overlay
+- Use `onOpenRequested` / `onCloseRequested` when an animation must delay
+  insertion or removal; `onOpen` / `onClose` are notifications after visibility changes
 - Wrap complex content in `FocusTraversalGroup` or provide your own focusable widgets inside the popover for keyboard navigation
 - Provide a `semanticLabel` inside the popover content as needed (e.g. heading)
 
@@ -188,4 +215,6 @@ const OverlayPositionConfig(
 );
 ```
 
-The builder receives `RawMenuAnchorOverlayInfo` (`info` in the sample) with `anchorRect`, `overlaySize`, and `position` should you need custom math.
+The builder receives `RawMenuOverlayInfo` (`info` in the sample) with
+`anchorRect`, `overlaySize`, `position`, and `tapRegionGroupId` should you need
+custom layout or tap-region coordination.

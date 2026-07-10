@@ -332,6 +332,31 @@ void main() {
       handle.dispose();
     });
 
+    testWidgets('enabled false removes all activation semantics', (
+      tester,
+    ) async {
+      final handle = tester.ensureSemantics();
+
+      await tester.pumpWidget(
+        _buildTestApp(
+          NakedButton(
+            enabled: false,
+            onPressed: () {},
+            onLongPress: () {},
+            child: const Text('Disabled actions'),
+          ),
+        ),
+      );
+
+      final data = tester
+          .getSemantics(find.bySemanticsLabel('Disabled actions'))
+          .getSemanticsData();
+      expect(data.hasAction(SemanticsAction.tap), isFalse);
+      expect(data.hasAction(SemanticsAction.longPress), isFalse);
+
+      handle.dispose();
+    });
+
     // Replaced by strict parity tests below
 
     testWidgets('no duplicate tap semantics', (tester) async {

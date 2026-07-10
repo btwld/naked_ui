@@ -44,127 +44,135 @@ class DialogExample extends StatefulWidget {
 }
 
 class _DialogExampleState extends State<DialogExample> {
-  void _showBasicDialog() async {
+  Future<void> _showBasicDialog() async {
     await showNakedDialog<String>(
       context: context,
       barrierColor: Colors.black54,
-      builder: (context) => Center(
-        child: Container(
-          margin: const EdgeInsets.all(40),
-          padding: const EdgeInsets.all(24),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.2),
-                blurRadius: 20,
-                offset: const Offset(0, 8),
-              ),
-            ],
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              const Text(
-                'Confirm Action',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF1A1A1A),
+      barrierLabel: MaterialLocalizations.of(context).modalBarrierDismissLabel,
+      builder: (context) => NakedDialog(
+        semanticLabel: 'Confirm action',
+        child: Center(
+          child: Container(
+            margin: const EdgeInsets.all(40),
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.2),
+                  blurRadius: 20,
+                  offset: const Offset(0, 8),
                 ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 16),
-              const Text(
-                'Are you sure you want to proceed with this action? This operation cannot be undone.',
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Color(0xFF666666),
-                  height: 1.4,
+              ],
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const Text(
+                  'Confirm Action',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF1A1A1A),
+                  ),
+                  textAlign: TextAlign.center,
                 ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 24),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  _DialogButton(
-                    onPressed: () => Navigator.of(context).pop('cancel'),
-                    backgroundColor: Colors.grey.shade100,
-                    textColor: Colors.grey.shade700,
-                    text: 'Cancel',
+                const SizedBox(height: 16),
+                const Text(
+                  'Are you sure you want to proceed with this action? This operation cannot be undone.',
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Color(0xFF666666),
+                    height: 1.4,
                   ),
-                  const SizedBox(width: 12),
-                  _DialogButton(
-                    onPressed: () => Navigator.of(context).pop('confirm'),
-                    backgroundColor: const Color(0xFF3D3D3D),
-                    textColor: Colors.white,
-                    text: 'Confirm',
-                  ),
-                ],
-              ),
-            ],
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 24),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    _DialogButton(
+                      onPressed: () => Navigator.of(context).pop('cancel'),
+                      backgroundColor: Colors.grey.shade100,
+                      textColor: Colors.grey.shade700,
+                      text: 'Cancel',
+                    ),
+                    const SizedBox(width: 12),
+                    _DialogButton(
+                      onPressed: () => Navigator.of(context).pop('confirm'),
+                      backgroundColor: const Color(0xFF3D3D3D),
+                      textColor: Colors.white,
+                      text: 'Confirm',
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       ),
     );
   }
 
-  void _showCustomDialog() async {
+  Future<void> _showCustomDialog() async {
     await showNakedDialog<String>(
       context: context,
       barrierColor: const Color(0x80E3F2FD),
       barrierDismissible: true,
-      builder: (context) => Align(
-        alignment: Alignment.topCenter,
-        child: Container(
-          margin: const EdgeInsets.only(top: 100),
-          padding: const EdgeInsets.all(20),
-          constraints: const BoxConstraints(maxWidth: 300),
-          decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [Color(0xFF2196F3), Color(0xFF1976D2)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            borderRadius: BorderRadius.circular(20),
-            boxShadow: [
-              BoxShadow(
-                color: const Color(0xFF2196F3).withValues(alpha: 0.3),
-                blurRadius: 20,
-                offset: const Offset(0, 10),
+      barrierLabel: MaterialLocalizations.of(context).modalBarrierDismissLabel,
+      builder: (context) => NakedDialog(
+        semanticLabel: 'Success',
+        child: Align(
+          alignment: Alignment.topCenter,
+          child: Container(
+            margin: const EdgeInsets.only(top: 100),
+            padding: const EdgeInsets.all(20),
+            constraints: const BoxConstraints(maxWidth: 300),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [Color(0xFF2196F3), Color(0xFF1976D2)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
               ),
-            ],
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(Icons.star, size: 48, color: Colors.white),
-              const SizedBox(height: 16),
-              const Text(
-                'Success!',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFF2196F3).withValues(alpha: 0.3),
+                  blurRadius: 20,
+                  offset: const Offset(0, 10),
                 ),
-              ),
-              const SizedBox(height: 8),
-              const Text(
-                'Your action was completed successfully.',
-                style: TextStyle(fontSize: 14, color: Colors.white70),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 20),
-              _DialogButton(
-                onPressed: () => Navigator.of(context).pop('success'),
-                backgroundColor: Colors.white,
-                textColor: const Color(0xFF1976D2),
-                text: 'Great!',
-              ),
-            ],
+              ],
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.star, size: 48, color: Colors.white),
+                const SizedBox(height: 16),
+                const Text(
+                  'Success!',
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  'Your action was completed successfully.',
+                  style: TextStyle(fontSize: 14, color: Colors.white70),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 20),
+                _DialogButton(
+                  onPressed: () => Navigator.of(context).pop('success'),
+                  backgroundColor: Colors.white,
+                  textColor: const Color(0xFF1976D2),
+                  text: 'Great!',
+                ),
+              ],
+            ),
           ),
         ),
       ),

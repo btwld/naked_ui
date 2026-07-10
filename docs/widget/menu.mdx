@@ -14,7 +14,7 @@ Headless menu component. Handles focus, keyboard navigation, outside-click dismi
 - **Custom overlays**: Any triggered overlay that needs menu-like behavior
 
 <Info>
-  Browse the full sample at [`example/lib/api/naked_menu.0.dart`](https://github.com/btwld/naked_ui/blob/main/example/lib/api/naked_menu.0.dart).
+  Browse the full sample at [`packages/example/lib/api/naked_menu.0.dart`](https://github.com/btwld/naked_ui/blob/main/packages/example/lib/api/naked_menu.0.dart).
 </Info>
 
 ## Basic implementation
@@ -74,7 +74,7 @@ class _MenuExampleState extends State<MenuExample> {
             borderRadius: BorderRadius.circular(10),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.08),
+                color: Colors.black.withValues(alpha: 0.08),
                 blurRadius: 12,
                 offset: const Offset(0, 6),
               ),
@@ -140,7 +140,7 @@ class _MenuItem extends StatelessWidget {
               Icon(icon, size: 16,
                   color: selected ? Colors.blue : Colors.grey.shade700),
               const SizedBox(width: 12),
-              Expanded(child: const Text(label)),
+              Expanded(child: Text(label)),
               if (selected)
                 const Icon(Icons.check, size: 16, color: Colors.blue),
             ],
@@ -156,11 +156,11 @@ class _MenuItem extends StatelessWidget {
 
 ### Trigger – `NakedMenuState`
 - `isOpen` → whether the overlay is visible
-- `widgetStates` → hover/focus/pressed/disabled states exposed in the builder (`state.isHovered`, `state.isPressed`, etc.)
+- `states` → immutable hover/focus/pressed/disabled state set (`state.isHovered`, `state.isPressed`, etc. are convenient projections)
 
 ### Items – `NakedMenuItemState<T>`
 - `value` → the item's value for comparisons with your own selection model
-- `widgetStates` → hover/focus/pressed/disabled states for styling
+- `states` → immutable hover/focus/pressed/disabled state set for styling
 
 ### Access from Context
 
@@ -188,24 +188,30 @@ const NakedMenu({
   this.closeOnClickOutside = true,
   this.triggerFocusNode,
   this.positioning = const OverlayPositionConfig(),
+  this.semanticLabel,
+  this.excludeSemantics = false,
 })
 ```
 
 ### Key Parameters
 
 - `child` / `builder` → supply a static trigger child or a dynamic `ValueWidgetBuilder<NakedMenuState>`
-- `overlayBuilder` → `(BuildContext, RawMenuAnchorOverlayInfo)` from `RawMenuAnchor`
+- `overlayBuilder` → `(BuildContext, RawMenuOverlayInfo)` from `RawMenuAnchor`
 - `controller` → `MenuController` controlling show/hide
-- `onSelected` → callback invoked with the selected value; the controller also exposes `select`
+- `onSelected` → callback invoked with the selected value
 - `positioning` → provide an `OverlayPositionConfig` for alignment or offset tweaks
 - `closeOnClickOutside` → hide the overlay when tapping outside (default `true`)
 - `consumeOutsideTaps` / `useRootOverlay` → capture outside taps before they reach ancestors or target the root overlay stack
 - `triggerFocusNode` → reuse an external focus node so focus returns to the trigger after closing
+- `semanticLabel` → replaces the trigger's derived accessible name
+- `excludeSemantics` → omits only Naked UI's trigger semantics; descendant semantics remain available
 - Lifecycle hooks: `onOpen`, `onClose`, `onCanceled` announce overlay visibility; `onOpenRequested`, `onCloseRequested` let you intercept RawMenuAnchor requests before they commit
 
 ## NakedMenuItem Essentials
 
-`NakedMenuItem<T>` extends the shared `OverlayItem` base. Provide either `child` or a builder; the builder gets a `NakedMenuItemState<T>` typed snapshot. `NakedMenu.Item` is exported as a convenience alias for the constructor.
+`NakedMenuItem<T>` extends the shared `OverlayItem` base. Provide either `child`
+or a builder; the builder gets a `NakedMenuItemState<T>` typed snapshot.
+`NakedMenu.Item(...)` is also available as a constructor tear-off.
 
 ```dart
 const NakedMenuItem({
@@ -227,4 +233,4 @@ Set `closeOnActivate` to `false` for menus that keep focus while toggling option
 - Menu items should stay at least 44×44 logical pixels for touch targets
 - Provide visual hover/focus states using `itemState.isHovered` and `itemState.isFocused`
 - Restoring focus: pass a `triggerFocusNode` so focus returns to the trigger after closing
-- Arrow keys work automatically; ensure your overlay contains focusable descendants
+- Arrow keys move between items; Home and End jump to the first and last item

@@ -54,6 +54,20 @@ void main() {
       expect(summary.flags, containsAll(['hasEnabledState', 'isEnabled']));
       expect(summary.actions, contains('tap'));
 
+      final tabNode = tester.getSemantics(find.text('A').first);
+      expect(tabNode.getSemanticsData().role, SemanticsRole.tab);
+      SemanticsNode? tabAncestor = tabNode.parent;
+      while (tabAncestor != null &&
+          tabAncestor.getSemanticsData().role != SemanticsRole.tabBar) {
+        tabAncestor = tabAncestor.parent;
+      }
+      expect(tabAncestor, isNotNull);
+
+      expect(
+        tester.getSemantics(find.text('A body')).getSemanticsData().role,
+        SemanticsRole.tabPanel,
+      );
+
       handle.dispose();
     });
 

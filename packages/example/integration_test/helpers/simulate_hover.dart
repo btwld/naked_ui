@@ -1,14 +1,9 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 extension WidgetTesterExtension on WidgetTester {
-  Future<void> pumpMaterialWidget(Widget widget) async {
-    await pumpWidget(MaterialApp(home: Scaffold(body: widget)));
-  }
-
   /// Simulates hover more robustly by moving a mouse pointer to the center of
   /// the target, ensuring highlight mode is traditional, and giving extra
   /// frames for pointer enter/exit to propagate reliably in integration runs.
@@ -38,13 +33,7 @@ extension WidgetTesterExtension on WidgetTester {
       await gesture.moveTo(const Offset(-1000, -1000));
       await pump(const Duration(milliseconds: 32)); // allow onExit
     } finally {
-      // Ensure gesture cleanup even if something fails
-      try {
-        await gesture.removePointer();
-      } catch (e) {
-        // Cleanup may fail if gesture already released - log for debugging
-        debugPrint('Gesture cleanup (expected if already released): $e');
-      }
+      await gesture.removePointer();
     }
   }
 
@@ -59,6 +48,7 @@ extension WidgetTesterExtension on WidgetTester {
 
     final center = getCenter(finder);
     final gesture = await startGesture(center);
+    var released = false;
 
     try {
       // Give UI plenty of time to reflect pressed state in integration env.
@@ -67,25 +57,12 @@ extension WidgetTesterExtension on WidgetTester {
 
       onPressed?.call();
       await gesture.up();
+      released = true;
       await pump();
     } finally {
-      // Ensure gesture cleanup even if something fails
-      try {
-        await gesture.up();
-      } catch (e) {
-        // Cleanup may fail if gesture already released - log for debugging
-        debugPrint('Gesture cleanup (expected if already released): $e');
+      if (!released) {
+        await gesture.cancel();
       }
     }
-  }
-
-  void expectCursor(SystemMouseCursor cursor, {required Key on}) async {
-    final region = widget<MouseRegion>(
-      find
-          .descendant(of: find.byKey(on), matching: find.byType(MouseRegion))
-          .first,
-    );
-
-    expect(region.cursor, cursor);
   }
 }

@@ -229,7 +229,11 @@ class _FadeInAnimationState extends State<FadeInAnimation> {
     return ScaleTransition(
       alignment: Alignment.topLeft,
       scale: _animation.drive(Tween<double>(begin: 0.9, end: 1.0)),
-      child: FadeTransition(opacity: _animation, child: widget.child),
+      child: FadeTransition(
+        opacity: _animation,
+        alwaysIncludeSemantics: true,
+        child: widget.child,
+      ),
     );
   }
 }

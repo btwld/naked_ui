@@ -84,12 +84,22 @@ void main() {
         );
       }
 
-      await expectSemanticsParity(
-        tester: tester,
-        material: buildMaterialButtonWithTooltip(),
-        naked: buildNakedButtonWithTooltip(),
+      await tester.pumpWidget(buildMaterialButtonWithTooltip());
+      final material = summarizeMergedFromRoot(
+        tester,
         control: ControlType.button,
       );
+
+      await tester.pumpWidget(buildNakedButtonWithTooltip());
+      final naked = summarizeMergedFromRoot(
+        tester,
+        control: ControlType.button,
+      );
+
+      expect(naked.label, material.label);
+      expect(naked.flags, material.flags);
+      expect(naked.actions, material.actions);
+      expect(naked.tooltip, 'Button tooltip');
 
       handle.dispose();
     });

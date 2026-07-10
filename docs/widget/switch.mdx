@@ -14,7 +14,7 @@ Headless switch component. Handles toggle behavior and accessibility with switch
 - **Status controls**: Active/inactive, enabled/disabled states
 
 <Info>
-  See the runnable sample in [`example/lib/api/naked_toggle.0.dart`](https://github.com/btwld/naked_ui/blob/main/example/lib/api/naked_toggle.0.dart) under the "Switch" section.
+  See the runnable sample in [`packages/example/lib/api/naked_toggle.0.dart`](https://github.com/btwld/naked_ui/blob/main/packages/example/lib/api/naked_toggle.0.dart) under the "Switch" section.
 </Info>
 
 ## Basic implementation
@@ -42,12 +42,9 @@ class _SettingsSwitchState extends State<SettingsSwitch> {
       onChanged: (next) => setState(() => _notificationsEnabled = next),
       builder: (context, state, _) {
         final bool isToggled = state.isToggled;
-        final bool isDisabled = state.isDisabled;
-
         final backgroundColor = state.when(
           disabled: Colors.grey.shade300,
-          toggled: Colors.green.shade500,
-          orElse: Colors.grey.shade400,
+          orElse: isToggled ? Colors.green.shade500 : Colors.grey.shade400,
         );
 
         return AnimatedContainer(
@@ -70,7 +67,7 @@ class _SettingsSwitchState extends State<SettingsSwitch> {
                 shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
+                    color: Colors.black.withValues(alpha: 0.1),
                     blurRadius: 3,
                     offset: const Offset(0, 1),
                   ),

@@ -90,6 +90,16 @@ abstract class NakedState {
     return NakedStateScope.controllerOf(context);
   }
 
+  /// Gets the controller for the nearest [NakedStateScope] containing [T].
+  ///
+  /// This is the safe lookup for nested component builders because unrelated
+  /// state scopes are skipped. It does not create a dependency.
+  static WidgetStatesController controllerOfType<T extends NakedState>(
+    BuildContext context,
+  ) {
+    return NakedStateScope.controllerOfType<T>(context);
+  }
+
   /// Gets the [WidgetStatesController] from the nearest [NakedStateScope].
   ///
   /// Returns null if no scope with a controller is found.
@@ -111,28 +121,57 @@ abstract class NakedState {
     return NakedStateScope.maybeControllerOf(context);
   }
 
+  /// Gets the controller for the nearest [NakedStateScope] containing [T].
+  ///
+  /// Returns null when no matching scope exists and does not create a
+  /// dependency.
+  static WidgetStatesController? maybeControllerOfType<T extends NakedState>(
+    BuildContext context,
+  ) {
+    return NakedStateScope.maybeControllerOfType<T>(context);
+  }
+
   /// Raw set of [WidgetState]s reported by the underlying control.
   ///
   /// Remains useful for custom logic not covered by convenience getters.
   Set<WidgetState> get states => _states;
 
+  /// Whether this snapshot and [other] contain the same widget states.
   @protected
   bool statesEqual(NakedState other) => setEquals(other._states, _states);
 
+  /// An order-independent hash of [states].
   @protected
   int get statesHashCode => _statesHashCode;
+
+  /// Whether the widget is hovered.
   bool get isHovered => _states.contains(WidgetState.hovered);
+
+  /// Whether the widget has focus.
   bool get isFocused => _states.contains(WidgetState.focused);
+
+  /// Whether the widget is pressed.
   bool get isPressed => _states.contains(WidgetState.pressed);
+
+  /// Whether the widget is being dragged.
   bool get isDragged => _states.contains(WidgetState.dragged);
+
+  /// Whether the widget is selected.
   bool get isSelected => _states.contains(WidgetState.selected);
+
+  /// Whether the widget is disabled.
   bool get isDisabled => _states.contains(WidgetState.disabled);
+
+  /// Whether the widget is in an error state.
   bool get isError => _states.contains(WidgetState.error);
 
+  /// Whether content has scrolled underneath the widget.
   bool get isScrolledUnder => _states.contains(WidgetState.scrolledUnder);
 
+  /// Whether the widget is not disabled.
   bool get isEnabled => !isDisabled;
 
+  /// Whether [states] contains every state in [requiredStates].
   bool matches(Set<WidgetState> requiredStates) {
     return _states.containsAll(requiredStates);
   }
@@ -169,10 +208,10 @@ abstract class NakedState {
 
   /// Nullable variant of [when] that returns null when no branch matches.
   ///
-  /// Like [when], but returns null if no states match and [orElse] is null.
+  /// Like [when], but returns null if no states match.
   /// Useful when you want to check for specific states without a fallback.
   ///
-  /// Returns the first matching state value, [orElse], or null.
+  /// Returns the first matching state value, or null.
   T? whenOrNull<T>({
     T? selected,
     T? hovered,

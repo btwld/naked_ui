@@ -1,3 +1,4 @@
+/// Public state, focus, and positioning utilities for Naked components.
 library;
 
 export '../mixins/naked_mixins.dart';

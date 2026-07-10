@@ -1,4 +1,5 @@
-import 'dart:ui' show Tristate;
+import 'dart:ui'
+    show SemanticsInputType, SemanticsRole, SemanticsValidationResult, Tristate;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -23,6 +24,11 @@ void main() {
             expanded: true,
             scopesRoute: true,
             namesRoute: true,
+            role: SemanticsRole.dialog,
+            validationResult: SemanticsValidationResult.invalid,
+            inputType: SemanticsInputType.email,
+            minValue: 'Minimum',
+            maxValue: 'Maximum',
             explicitChildNodes: true,
             identifier: 'details-trigger',
             child: SizedBox(width: 10, height: 10),
@@ -39,10 +45,33 @@ void main() {
     expect(summary.increasedValue, 'Next');
     expect(summary.decreasedValue, 'Previous');
     expect(summary.identifier, 'details-trigger');
+    expect(summary.role, SemanticsRole.dialog);
+    expect(summary.validationResult, SemanticsValidationResult.invalid);
+    expect(summary.inputType, SemanticsInputType.email);
+    expect(summary.minValue, 'Minimum');
+    expect(summary.maxValue, 'Maximum');
     expect(summary.flags, contains('isExpanded'));
     expect(summary.flags, contains('scopesRoute'));
     expect(summary.flags, contains('namesRoute'));
     expect(node.getSemanticsData().flagsCollection.isExpanded, Tristate.isTrue);
+
+    handle.dispose();
+  });
+
+  testWidgets('summarizeNode preserves duplicate merged labels', (
+    tester,
+  ) async {
+    final handle = tester.ensureSemantics();
+
+    await tester.pumpWidget(
+      Directionality(
+        textDirection: TextDirection.ltr,
+        child: Semantics(label: 'Name', child: const Text('Name')),
+      ),
+    );
+
+    final summary = summarizeNode(tester.getSemantics(find.text('Name')));
+    expect(summary.label, 'Name\nName');
 
     handle.dispose();
   });

@@ -15,25 +15,17 @@ import 'components/naked_slider_integration.dart' as slider_tests;
 import 'components/naked_tabs_integration.dart' as tabs_tests;
 import 'components/naked_textfield_integration.dart' as textfield_tests;
 import 'components/naked_toggle_integration.dart' as toggle_tests;
+import 'components/naked_tooltip_integration.dart' as tooltip_tests;
 
 void main() {
-  // Initialize integration test binding and configure timeout
+  // Initialize integration test binding and configure a suite-wide timeout.
   final binding = IntegrationTestWidgetsFlutterBinding.ensureInitialized();
-  binding.defaultTestTimeout = const Timeout(
-    Duration(minutes: 30),
-  ); // Long timeout for all tests
+  binding.defaultTestTimeout = const Timeout(Duration(minutes: 5));
   // Ensure hover highlights are enabled across all integration tests
   FocusManager.instance.highlightStrategy =
       FocusHighlightStrategy.alwaysTraditional;
 
   group('All NakedUI Integration Tests', () {
-    // Add teardown to help with process termination
-    tearDownAll(() async {
-      // All integration tests completed, cleaning up...
-      await Future.delayed(const Duration(seconds: 2));
-      // This helps ensure the test process terminates properly
-    });
-
     // Run all component integration tests
     group('Accordion Tests', accordion_tests.main);
     group('Button Tests', button_tests.main);
@@ -47,5 +39,6 @@ void main() {
     group('Tabs Tests', tabs_tests.main);
     group('TextField Tests', textfield_tests.main);
     group('Toggle Tests', toggle_tests.main);
+    group('Tooltip Tests', tooltip_tests.main);
   });
 }

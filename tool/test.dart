@@ -1,18 +1,18 @@
 #!/usr/bin/env dart
 // Dart script for running tests with proper configuration
-// Usage: dart tool/test.dart [options]
+// Usage: fvm dart tool/test.dart [options]
 
 import 'dart:async';
 import 'dart:io';
 
-void main(List<String> arguments) async {
+Future<void> main(List<String> arguments) async {
   final stopwatch = Stopwatch()..start();
 
   // Parse arguments
   final showHelp = arguments.contains('--help') || arguments.contains('-h');
-  final runUnit = arguments.contains('--unit') || arguments.isEmpty;
-  final runIntegration =
-      arguments.contains('--integration') || arguments.contains('--all');
+  final runAll = arguments.contains('--all');
+  final runUnit = arguments.contains('--unit') || runAll || arguments.isEmpty;
+  final runIntegration = arguments.contains('--integration') || runAll;
   final runSpecific = arguments.firstWhere(
     (arg) => arg.startsWith('--component='),
     orElse: () => '',
@@ -30,8 +30,10 @@ void main(List<String> arguments) async {
     // Run unit tests
     if (runUnit) {
       print('📦 Running unit tests...');
-      final unitResult = await runCommand('flutter', [
+      final unitResult = await runFlutter([
         'test',
+        'packages/naked_ui/test',
+        'packages/example/test',
         '--reporter=${verbose ? "expanded" : "compact"}',
       ], workingDirectory: Directory.current.path);
 
@@ -46,21 +48,14 @@ void main(List<String> arguments) async {
     if (runIntegration) {
       print('🧪 Running integration tests...');
 
-      // Set the environment variable
-      final environment = Map<String, String>.of(Platform.environment);
-      environment['RUN_INTEGRATION'] = '1';
-
-      final integrationResult = await runCommand(
-        'flutter',
-        [
-          'test',
-          'test/integration_tests_test.dart',
-          '--reporter=${verbose ? "expanded" : "compact"}',
-          '--timeout=300s',
-        ],
-        workingDirectory: Directory.current.path,
-        environment: environment,
-      );
+      final integrationResult = await runFlutter([
+        'test',
+        'integration_test/all_tests.dart',
+        '-d',
+        'flutter-tester',
+        '--reporter=${verbose ? "expanded" : "compact"}',
+        '--timeout=300s',
+      ], workingDirectory: Directory('packages/example').absolute.path);
 
       if (integrationResult != 0) {
         print('❌ Integration tests failed');
@@ -76,7 +71,7 @@ void main(List<String> arguments) async {
 
       final componentPath =
           'integration_test/components/naked_${component}_integration.dart';
-      final componentFile = File('example/$componentPath');
+      final componentFile = File('packages/example/$componentPath');
 
       if (!componentFile.existsSync()) {
         print('❌ Component test file not found: $componentPath');
@@ -86,14 +81,13 @@ void main(List<String> arguments) async {
         exit(1);
       }
 
-      final componentResult = await runCommand('flutter', [
+      final componentResult = await runFlutter([
         'test',
         componentPath,
         '-d',
-        Platform.isMacOS ? 'macos' : 'linux',
+        'flutter-tester',
         '--reporter=${verbose ? "expanded" : "compact"}',
-        '--no-enable-impeller',
-      ], workingDirectory: Directory('example').absolute.path);
+      ], workingDirectory: Directory('packages/example').absolute.path);
 
       if (componentResult != 0) {
         print('❌ $component tests failed');
@@ -106,8 +100,9 @@ void main(List<String> arguments) async {
     final duration = stopwatch.elapsed;
     print('⏱️  Total time: ${duration.inMinutes}m ${duration.inSeconds % 60}s');
     print('✨ All tests completed successfully!');
-  } catch (e) {
-    print('💥 Test runner error: $e');
+  } catch (error, stackTrace) {
+    stderr.writeln('💥 Test runner error: $error');
+    stderr.writeln(stackTrace);
     exit(1);
   }
 }
@@ -129,11 +124,24 @@ Future<int> runCommand(
   return await process.exitCode;
 }
 
+Future<int> runFlutter(
+  List<String> args, {
+  String? workingDirectory,
+  Map<String, String>? environment,
+}) {
+  return runCommand(
+    'fvm',
+    ['flutter', ...args],
+    workingDirectory: workingDirectory,
+    environment: environment,
+  );
+}
+
 void printHelp() {
   print('''
 🚀 NakedUI Test Runner
 
-Usage: dart tool/test.dart [options]
+Usage: fvm dart tool/test.dart [options]
 
 Options:
   --help, -h        Show this help message
@@ -145,10 +153,10 @@ Options:
   --verbose, -v     Use expanded reporter for detailed output
 
 Examples:
-  dart tool/test.dart                    # Run unit tests
-  dart tool/test.dart --all              # Run all tests
-  dart tool/test.dart --integration      # Run integration tests only
-  dart tool/test.dart --component=button # Run button integration tests
+  fvm dart tool/test.dart                    # Run unit tests
+  fvm dart tool/test.dart --all              # Run all tests
+  fvm dart tool/test.dart --integration      # Run integration tests only
+  fvm dart tool/test.dart --component=button # Run button integration tests
 
 Available components:
   button, checkbox, radio, slider, textfield, select,

@@ -321,6 +321,49 @@ void main() {
       expect(events, containsAllInOrder([true, false]));
     });
 
+    testWidgets(
+      'swapping from an external to an internal focus node preserves focus',
+      (tester) async {
+        final externalNode = FocusNode(debugLabel: 'external');
+        addTearDown(externalNode.dispose);
+        FocusNode? providedNode = externalNode;
+        late StateSetter setHostState;
+        late NakedTextFieldState fieldState;
+        final focusEvents = <bool>[];
+
+        await _pumpApp(
+          tester,
+          child: StatefulBuilder(
+            builder: (context, setState) {
+              setHostState = setState;
+              return NakedTextField(
+                focusNode: providedNode,
+                onFocusChange: focusEvents.add,
+                builder: (context, state, editable) {
+                  fieldState = state;
+                  return editable;
+                },
+              );
+            },
+          ),
+        );
+
+        externalNode.requestFocus();
+        await tester.pump();
+        expect(externalNode.hasFocus, isTrue);
+
+        setHostState(() => providedNode = null);
+        await tester.pump();
+        await tester.pump();
+
+        final internalNode = _getEditableText(tester).focusNode;
+        expect(internalNode, isNot(same(externalNode)));
+        expect(internalNode.hasFocus, isTrue);
+        expect(fieldState.states, contains(WidgetState.focused));
+        expect(focusEvents.last, isTrue);
+      },
+    );
+
     testWidgets('canRequestFocus=false prevents focusing', (tester) async {
       final node = FocusNode();
 
@@ -353,6 +396,64 @@ void main() {
       await tester.tap(find.byType(EditableText));
       await tester.pump();
       expect(taps, 1);
+    });
+
+    testWidgets('press interaction updates builder state and callbacks', (
+      tester,
+    ) async {
+      late NakedTextFieldState fieldState;
+      final pressEvents = <bool>[];
+
+      await _pumpApp(
+        tester,
+        child: NakedTextField(
+          onPressChange: pressEvents.add,
+          builder: (context, state, editable) {
+            fieldState = state;
+            return Padding(padding: const EdgeInsets.all(12), child: editable);
+          },
+        ),
+      );
+
+      final gesture = await tester.startGesture(
+        tester.getCenter(find.byType(EditableText)),
+      );
+      await tester.pump(const Duration(milliseconds: 200));
+
+      expect(fieldState.states, contains(WidgetState.pressed));
+      expect(pressEvents, [true]);
+
+      await gesture.up();
+      await tester.pump();
+
+      expect(fieldState.states, isNot(contains(WidgetState.pressed)));
+      expect(pressEvents, [true, false]);
+    });
+
+    testWidgets('disabled field does not emit pointer callbacks', (
+      tester,
+    ) async {
+      var taps = 0;
+      final tapStates = <bool>[];
+      final pressStates = <bool>[];
+
+      await _pumpApp(
+        tester,
+        child: NakedTextField(
+          enabled: false,
+          onTap: () => taps++,
+          onTapChange: tapStates.add,
+          onPressChange: pressStates.add,
+          builder: _builder(padding: const EdgeInsets.all(12)),
+        ),
+      );
+
+      await tester.tap(find.byType(EditableText), warnIfMissed: false);
+      await tester.pump();
+
+      expect(taps, 0);
+      expect(tapStates, isEmpty);
+      expect(pressStates, isEmpty);
     });
 
     testWidgets('onHoverChange toggles with mouse enter/exit', (tester) async {
@@ -599,6 +700,61 @@ void main() {
       expect(et.dragStartBehavior, DragStartBehavior.down);
       expect(et.scrollPadding, const EdgeInsets.all(42));
       expect(et.clipBehavior, Clip.antiAlias);
+    });
+
+    testWidgets('keyboard appearance follows platform brightness by default', (
+      tester,
+    ) async {
+      await _pumpApp(
+        tester,
+        child: MediaQuery(
+          data: const MediaQueryData(platformBrightness: Brightness.dark),
+          child: NakedTextField(builder: _builder()),
+        ),
+      );
+
+      expect(_getEditableText(tester).keyboardAppearance, Brightness.dark);
+    });
+
+    testWidgets('honors DefaultSelectionStyle', (tester) async {
+      const cursorColor = Color(0xFF123456);
+      const selectionColor = Color(0xFF654321);
+
+      await _pumpApp(
+        tester,
+        child: DefaultSelectionStyle(
+          cursorColor: cursorColor,
+          selectionColor: selectionColor,
+          child: NakedTextField(builder: _builder()),
+        ),
+      );
+
+      final editable = _getEditableText(tester);
+      expect(editable.cursorColor, cursorColor);
+      editable.focusNode.requestFocus();
+      await tester.pumpAndSettle();
+      expect(editable.focusNode.hasFocus, isTrue);
+      expect(_getEditableText(tester).selectionColor, selectionColor);
+    });
+
+    testWidgets('custom groupId covers the complete built field', (
+      tester,
+    ) async {
+      final groupId = Object();
+
+      await _pumpApp(
+        tester,
+        child: NakedTextField(groupId: groupId, builder: _builder()),
+      );
+
+      final regions = tester.widgetList<TextFieldTapRegion>(
+        find.byType(TextFieldTapRegion),
+      );
+      expect(regions, isNotEmpty);
+      expect(
+        regions.every((region) => identical(region.groupId, groupId)),
+        isTrue,
+      );
     });
 
     testWidgets('text direction & alignment propagate', (tester) async {

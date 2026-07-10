@@ -1,6 +1,6 @@
 import 'package:flutter/widgets.dart';
 
-import 'naked_widgets.dart';
+import 'naked_popover.dart' show NakedPopover;
 import 'utilities/positioning.dart';
 
 /// Provides tooltip behavior without visual styling.
@@ -58,7 +58,10 @@ import 'utilities/positioning.dart';
 ///   }
 /// }
 /// ```
-class NakedTooltip extends StatefulWidget {
+///
+/// See also:
+/// - [NakedPopover], for anchored, click-triggered overlays.
+class NakedTooltip extends StatelessWidget {
   /// Creates a headless tooltip.
   const NakedTooltip({
     super.key,
@@ -81,15 +84,12 @@ class NakedTooltip extends StatefulWidget {
     this.excludeSemantics = false,
   });
 
-  /// See also:
-  /// - [NakedPopover], for anchored, click-triggered overlays.
-
   /// The widget that triggers the tooltip.
   final Widget child;
 
   /// Builds the tooltip content displayed in the overlay.
   ///
-  /// The [animation] drives the show/hide transition (0.0 → 1.0 when showing,
+  /// The `animation` drives the show/hide transition (0.0 → 1.0 when showing,
   /// 1.0 → 0.0 when hiding). Use it with [FadeTransition], [ScaleTransition],
   /// or similar widgets for animated tooltips.
   final TooltipComponentBuilder overlayBuilder;
@@ -147,32 +147,11 @@ class NakedTooltip extends StatefulWidget {
   /// Use [AnimationStyle.noAnimation] to disable animation.
   final AnimationStyle animationStyle;
 
-  /// Whether to exclude this widget from the semantic tree.
+  /// Whether to omit tooltip text contributed by [NakedTooltip].
   ///
   /// When true, no tooltip semantics text is exposed to
   /// accessibility services.
   final bool excludeSemantics;
-
-  @override
-  State<NakedTooltip> createState() => _NakedTooltipState();
-}
-
-class _NakedTooltipState extends State<NakedTooltip> {
-  late TooltipPositionDelegate _positionDelegate;
-
-  @override
-  void initState() {
-    super.initState();
-    _positionDelegate = _buildPositionDelegate(widget.positioning);
-  }
-
-  @override
-  void didUpdateWidget(NakedTooltip oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (widget.positioning != oldWidget.positioning) {
-      _positionDelegate = _buildPositionDelegate(widget.positioning);
-    }
-  }
 
   static TooltipPositionDelegate _buildPositionDelegate(
     OverlayPositionConfig config,
@@ -214,18 +193,18 @@ class _NakedTooltipState extends State<NakedTooltip> {
   @override
   Widget build(BuildContext context) {
     return RawTooltip(
-      semanticsTooltip: widget.excludeSemantics ? null : widget.semanticLabel,
-      tooltipBuilder: widget.overlayBuilder,
-      hoverDelay: widget.hoverDelay,
-      touchDelay: widget.touchDelay,
-      dismissDelay: widget.dismissDelay,
-      enableTapToDismiss: widget.enableTapToDismiss,
-      triggerMode: widget.triggerMode,
-      enableFeedback: widget.enableFeedback,
-      onTriggered: widget.onTriggered,
-      animationStyle: widget.animationStyle,
-      positionDelegate: _positionDelegate,
-      child: widget.child,
+      semanticsTooltip: excludeSemantics ? null : semanticLabel,
+      tooltipBuilder: overlayBuilder,
+      hoverDelay: hoverDelay,
+      touchDelay: touchDelay,
+      dismissDelay: dismissDelay,
+      enableTapToDismiss: enableTapToDismiss,
+      triggerMode: triggerMode,
+      enableFeedback: enableFeedback,
+      onTriggered: onTriggered,
+      animationStyle: animationStyle,
+      positionDelegate: _buildPositionDelegate(positioning),
+      child: child,
     );
   }
 }

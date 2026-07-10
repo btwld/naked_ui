@@ -325,6 +325,37 @@ void main() {
         expect(lastEnabledState, isTrue);
       });
 
+      testWidgets('onEnableChange may safely rebuild an ancestor', (
+        tester,
+      ) async {
+        var enabled = true;
+        var callbackCount = 0;
+        late StateSetter updateHost;
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: StatefulBuilder(
+              builder: (context, setState) {
+                updateHost = setState;
+                return NakedFocusableDetector(
+                  enabled: enabled,
+                  onEnableChange: (_) {
+                    updateHost(() => callbackCount++);
+                  },
+                  child: const SizedBox(width: 100, height: 100),
+                );
+              },
+            ),
+          ),
+        );
+
+        updateHost(() => enabled = false);
+        await tester.pump();
+
+        expect(tester.takeException(), isNull);
+        expect(callbackCount, 1);
+      });
+
       testWidgets('maintains focus properties correctly', (tester) async {
         await tester.pumpWidget(
           MaterialApp(

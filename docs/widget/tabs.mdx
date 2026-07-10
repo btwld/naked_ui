@@ -16,11 +16,11 @@ Headless tabs component. Handles keyboard navigation (arrow keys) and selection 
 ## Components
 
 - `NakedTabs` – owns the selected tab id and focus handling
-- `NakedTab` – trigger button that receives a typed state snapshot  
+- `NakedTab` – trigger button that receives a typed state snapshot
 - `NakedTabView` – panel that shows/hides content based on the active tab
 
 <Info>
-  See the complete implementation in [`example/lib/api/naked_tabs.0.dart`](https://github.com/btwld/naked_ui/blob/main/example/lib/api/naked_tabs.0.dart).
+  See the complete implementation in [`packages/example/lib/api/naked_tabs.0.dart`](https://github.com/btwld/naked_ui/blob/main/packages/example/lib/api/naked_tabs.0.dart).
 </Info>
 
 ## Basic implementation
@@ -128,7 +128,7 @@ class _TabChip extends StatelessWidget {
               width: isFocused ? 2 : 1,
             ),
           ),
-          child: const Text(
+          child: Text(
             label,
             style: TextStyle(
               fontWeight: FontWeight.w600,
@@ -159,7 +159,7 @@ class _PanelBox extends StatelessWidget {
         color: color,
         borderRadius: BorderRadius.circular(12),
       ),
-      child: const Text(text),
+      child: Text(text),
     );
   }
 }
@@ -171,7 +171,7 @@ class _PanelBox extends StatelessWidget {
 
 - `tabId` → identifier for the tab
 - `isSelected` → convenience getter for selection state
-- `widgetStates` → hover/focus/pressed/disabled flags for styling
+- `states` → immutable hover/focus/pressed/disabled state set for styling
 
 ### Access from Context
 
@@ -218,12 +218,14 @@ const NakedTab({
   this.onPressChange,
   this.builder,
   this.semanticLabel,
+  this.excludeSemantics = false,
 })
 ```
 
 - Provide either `child` or `builder`
 - `builder` → `ValueWidgetBuilder<NakedTabState>?`
 - `semanticLabel` → override accessible name
+- `excludeSemantics` → omit only Naked UI's tab semantics while preserving descendant semantics
 - interaction callbacks: `onFocusChange`, `onHoverChange`, `onPressChange`
 
 ### NakedTabView
@@ -241,7 +243,8 @@ const NakedTabView({
 
 ## Accessibility Guidance
 
-- Tabs expose button semantics; Tab/Shift+Tab traverse groups
-- Arrow keys move between tabs (horizontal or vertical based on `orientation`)
+- Tabs expose tab semantics within a tab-list role; Tab/Shift+Tab enter or leave the group
+- Arrow keys move and select within the group; Home/End select the first/last tab
+  (horizontal or vertical behavior follows `orientation`)
 - Provide strong focus states via `tabState.isFocused`
 - Each panel should contain headings or text to clarify context for screen readers

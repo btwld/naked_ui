@@ -14,9 +14,7 @@ Headless dialog component. Handles focus management, backdrop interaction, and a
 - **Custom modals**: When standard dialog styles don't match your design
 
 <Info>
-  Examples: 
-  - Basic: https://github.com/btwld/naked_ui/blob/main/example/lib/api/naked_dialog.0.dart
-  - Transitions: https://github.com/btwld/naked_ui/blob/main/example/lib/api/naked_dialog.1.dart
+  [Browse the complete example](https://github.com/btwld/naked_ui/blob/main/packages/example/lib/api/naked_dialog.0.dart).
 </Info>
 
 ## Basic implementation
@@ -28,6 +26,7 @@ import 'package:naked_ui/naked_ui.dart';
 final result = await showNakedDialog<String>(
   context: context,
   barrierColor: Colors.black54,
+  barrierLabel: MaterialLocalizations.of(context).modalBarrierDismissLabel,
   builder: (context) => NakedDialog(
     modal: true,
     semanticLabel: 'Confirm Action',
@@ -42,7 +41,7 @@ final result = await showNakedDialog<String>(
         children: [
           const Padding(
             padding: EdgeInsets.all(16),
-            child: const Text('Are you sure?'),
+            child: Text('Are you sure?'),
           ),
           Row(
             mainAxisAlignment: MainAxisAlignment.end,
@@ -98,15 +97,23 @@ class NakedDialog extends StatelessWidget {
     required this.child,
     this.modal = true,
     this.semanticLabel,
+    this.semanticsRole = SemanticsRole.dialog,
+    this.excludeSemantics = false,
   });
 }
 ```
 
 - child: Your dialog content.
-- modal: When true, blocks background semantics and interaction.
+- modal: When true, scopes the semantic route and blocks background semantics.
 - semanticLabel: Optional screen reader label.
+- semanticsRole: Defaults to `SemanticsRole.dialog`; use
+  `SemanticsRole.alertDialog` for a message that requires an immediate response.
+- excludeSemantics: Omits only the semantics contributed by `NakedDialog` while
+  preserving semantics from `child`.
 
 ## Notes
 
-- `NakedDialog` only sets semantics; visuals are entirely up to you.
+- A dismissible barrier requires a localized `barrierLabel`; the function throws
+  `ArgumentError` when one is omitted.
+- `NakedDialog` only contributes semantics; visuals are entirely up to you.
 - For non‑modal popovers, set `modal: false` and manage dismissal yourself.

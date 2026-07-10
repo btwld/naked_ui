@@ -14,7 +14,7 @@ Headless button component. Handles click interactions, keyboard navigation, and 
 - **Custom designs**: When standard button styles don't match your design system
 
 <Info>
-  You can find this example in our [GitHub repository](https://github.com/btwld/naked_ui/blob/main/example/lib/api/naked_button.0.dart).
+  You can find this example in our [GitHub repository](https://github.com/btwld/naked_ui/blob/main/packages/example/lib/api/naked_button.0.dart).
 </Info>
 ## Basic implementation
 
@@ -49,7 +49,7 @@ class ButtonExample extends StatelessWidget {
 ```
 </CodeGroup>
 
-<CodeGroup title="Icon Button with Tooltip" defaultLanguage="dart">
+<CodeGroup title="Icon Button with Semantic Tooltip" defaultLanguage="dart">
 ```dart
 import 'package:flutter/material.dart';
 import 'package:naked_ui/naked_ui.dart';
@@ -170,6 +170,7 @@ const NakedButton({
   this.focusOnPress = false,
   this.tooltip,
   this.semanticLabel,
+  this.excludeSemantics = false,
 })
 ```
 
@@ -179,7 +180,9 @@ const NakedButton({
 The child widget to display. Provide either `child` or `builder`.
 
 #### onPressed → `VoidCallback?`
-Called when the button is tapped or activated via keyboard. If null, the button will be considered disabled.
+Called when the button is tapped or activated via keyboard. The control remains
+interactive when only `onLongPress` is provided, but keyboard activation requires
+`onPressed`.
 
 #### onLongPress → `VoidCallback?`
 Called when the button is long pressed.
@@ -219,3 +222,7 @@ Optional tooltip semantics for assistive technologies.
 
 #### semanticLabel → `String?`
 Optional semantic label for screen readers.
+
+#### excludeSemantics → `bool`
+Omits only the button semantics contributed by `NakedButton`. Semantics from the
+builder or child remain in the tree.

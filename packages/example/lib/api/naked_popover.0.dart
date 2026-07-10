@@ -137,8 +137,9 @@ class PopoverMenu extends StatelessWidget {
                 'Popover Content',
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
               ),
-              GestureDetector(
-                onTap: controller.close,
+              NakedButton(
+                onPressed: controller.close,
+                semanticLabel: 'Close popover',
                 child: const Icon(Icons.close, size: 16),
               ),
             ],
@@ -152,8 +153,8 @@ class PopoverMenu extends StatelessWidget {
           const SizedBox(height: 4),
           Align(
             alignment: Alignment.centerRight,
-            child: GestureDetector(
-              onTap: controller.close,
+            child: NakedButton(
+              onPressed: controller.close,
               child: Container(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 12,

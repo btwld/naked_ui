@@ -72,12 +72,9 @@ void main() {
         await tester.pumpMaterialWidget(
           Center(
             child: NakedPopover(
+              triggerFocusNode: triggerFocusNode,
               popoverBuilder: (context, info) => const Text('Popover Content'),
-              child: Focus(
-                // give the trigger a node we can assert on
-                focusNode: triggerFocusNode,
-                child: const Text('Trigger'),
-              ),
+              child: const Text('Trigger'),
             ),
           ),
         );
@@ -95,6 +92,34 @@ void main() {
         expect(triggerFocusNode.hasFocus, isTrue);
       },
     );
+
+    testWidgets('returns focus to a direct Focus child after Escape', (
+      tester,
+    ) async {
+      final childFocusNode = FocusNode(debugLabel: 'direct child');
+      addTearDown(childFocusNode.dispose);
+
+      await tester.pumpMaterialWidget(
+        Center(
+          child: NakedPopover(
+            popoverBuilder: (context, info) => const Text('Popover Content'),
+            child: Focus(
+              focusNode: childFocusNode,
+              child: const Text('Trigger'),
+            ),
+          ),
+        ),
+      );
+
+      await tester.tap(find.text('Trigger'));
+      await tester.pumpAndSettle();
+      await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Popover Content'), findsNothing);
+      expect(childFocusNode.hasFocus, isTrue);
+    });
+
     testWidgets('opens via Space key on trigger (internal focus)', (
       tester,
     ) async {
@@ -272,6 +297,66 @@ void main() {
         child: const Text('Trigger'),
       ),
     );
+
+    testWidgets('builder reflects interaction and open state', (tester) async {
+      const triggerKey = Key('stateful-trigger');
+      NakedPopoverState? state;
+
+      await tester.pumpMaterialWidget(
+        Center(
+          child: NakedPopover(
+            popoverBuilder: (context, info) => const Text('Popover Content'),
+            builder: (context, currentState, child) {
+              state = currentState;
+              return child!;
+            },
+            child: const SizedBox(
+              key: triggerKey,
+              width: 100,
+              height: 40,
+              child: Text('Trigger'),
+            ),
+          ),
+        ),
+      );
+
+      expect(state!.isOpen, isFalse);
+      await tester.simulateHover(
+        triggerKey,
+        onHover: () {
+          expect(state!.states, contains(WidgetState.hovered));
+        },
+      );
+
+      await tester.tap(find.byKey(triggerKey));
+      await tester.pumpAndSettle();
+      expect(state!.isOpen, isTrue);
+    });
+
+    testWidgets('triggerFocusNode is attached to the interactive trigger', (
+      tester,
+    ) async {
+      final triggerFocusNode = FocusNode(debugLabel: 'provided trigger');
+      addTearDown(triggerFocusNode.dispose);
+
+      await tester.pumpMaterialWidget(
+        Center(
+          child: NakedPopover(
+            triggerFocusNode: triggerFocusNode,
+            popoverBuilder: (context, info) => const Text('Popover Content'),
+            child: const Text('Trigger'),
+          ),
+        ),
+      );
+
+      triggerFocusNode.requestFocus();
+      await tester.pump();
+      expect(triggerFocusNode.hasFocus, isTrue);
+
+      await tester.sendKeyEvent(LogicalKeyboardKey.space);
+      await tester.pumpAndSettle();
+      expect(find.text('Popover Content'), findsOneWidget);
+    });
 
     group('openOnTap behavior', () {
       testWidgets('does not open on tap when openOnTap is false', (

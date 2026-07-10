@@ -53,16 +53,22 @@ void main() {
     testWidgets('does not respond when onChanged is null', (
       WidgetTester tester,
     ) async {
+      NakedCheckboxState? state;
+
       await tester.pumpMaterialWidget(
-        const NakedCheckbox(
+        NakedCheckbox(
           value: false,
           onChanged: null,
-          child: Text('Checkbox Label'),
+          builder: (context, currentState, child) {
+            state = currentState;
+            return child ?? const SizedBox.shrink();
+          },
+          child: const Text('Checkbox Label'),
         ),
       );
 
       await tester.tap(find.byType(NakedCheckbox));
-      // No error should occur
+      expect(state!.states, contains(WidgetState.disabled));
     });
 
     testStateScopeBuilder<NakedCheckboxState>(

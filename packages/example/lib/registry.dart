@@ -29,6 +29,8 @@ import 'api/naked_tabs.0.dart' as tabs_example;
 import 'api/naked_textfield.0.dart' as textfield_example;
 // Toggle
 import 'api/naked_toggle.0.dart' as toggle_example;
+// Tooltip
+import 'api/naked_tooltip.0.dart' as tooltip_example;
 
 class Demo {
   final String id; // slug used in routes
@@ -49,14 +51,14 @@ class Demo {
 }
 
 class DemoRegistry {
-  static final List<Demo> demos = <Demo>[
+  static final List<Demo> demos = List.unmodifiable(<Demo>[
     Demo(
       id: 'button-basic',
       title: 'Button – Basic',
       category: 'Button',
       builder: (_) => const button_basic_example.ButtonExample(),
       sourceUrl:
-          'https://github.com/btwld/naked_ui/blob/main/example/lib/api/naked_button.0.dart',
+          'https://github.com/btwld/naked_ui/blob/main/packages/example/lib/api/naked_button.0.dart',
       tags: ['button'],
     ),
     Demo(
@@ -65,7 +67,7 @@ class DemoRegistry {
       category: 'Button',
       builder: (_) => const button_builder_example.SimpleBuilderExample(),
       sourceUrl:
-          'https://github.com/btwld/naked_ui/blob/main/example/lib/api/naked_button.1.dart',
+          'https://github.com/btwld/naked_ui/blob/main/packages/example/lib/api/naked_button.1.dart',
       tags: ['button', 'builder'],
     ),
     Demo(
@@ -74,7 +76,7 @@ class DemoRegistry {
       category: 'Checkbox',
       builder: (_) => const checkbox_basic_example.CheckboxExample(),
       sourceUrl:
-          'https://github.com/btwld/naked_ui/blob/main/example/lib/api/naked_checkbox.0.dart',
+          'https://github.com/btwld/naked_ui/blob/main/packages/example/lib/api/naked_checkbox.0.dart',
       tags: ['checkbox'],
     ),
     Demo(
@@ -83,7 +85,7 @@ class DemoRegistry {
       category: 'Radio',
       builder: (_) => const radio_basic_example.RadioExample(),
       sourceUrl:
-          'https://github.com/btwld/naked_ui/blob/main/example/lib/api/naked_radio.0.dart',
+          'https://github.com/btwld/naked_ui/blob/main/packages/example/lib/api/naked_radio.0.dart',
       tags: ['radio'],
     ),
     Demo(
@@ -92,7 +94,7 @@ class DemoRegistry {
       category: 'Select',
       builder: (_) => const select_example.SimpleSelectExample(),
       sourceUrl:
-          'https://github.com/btwld/naked_ui/blob/main/example/lib/api/naked_select.0.dart',
+          'https://github.com/btwld/naked_ui/blob/main/packages/example/lib/api/naked_select.0.dart',
       tags: ['select'],
     ),
     Demo(
@@ -101,7 +103,7 @@ class DemoRegistry {
       category: 'Select',
       builder: (_) => const select_checkmark_example.CheckmarkSelectExample(),
       sourceUrl:
-          'https://github.com/btwld/naked_ui/blob/main/example/lib/api/naked_select.1.dart',
+          'https://github.com/btwld/naked_ui/blob/main/packages/example/lib/api/naked_select.2.dart',
       tags: ['select', 'checkmark'],
     ),
     Demo(
@@ -110,7 +112,7 @@ class DemoRegistry {
       category: 'Select',
       builder: (_) => const select_cyberpunk_example.CyberpunkSelectExample(),
       sourceUrl:
-          'https://github.com/btwld/naked_ui/blob/main/example/lib/api/naked_select.2.dart',
+          'https://github.com/btwld/naked_ui/blob/main/packages/example/lib/api/naked_select.1.dart',
       tags: ['select', 'cyberpunk', 'glow'],
     ),
     Demo(
@@ -119,7 +121,7 @@ class DemoRegistry {
       category: 'Tabs',
       builder: (_) => const tabs_example.TabsExample(),
       sourceUrl:
-          'https://github.com/btwld/naked_ui/blob/main/example/lib/api/naked_tabs.0.dart',
+          'https://github.com/btwld/naked_ui/blob/main/packages/example/lib/api/naked_tabs.0.dart',
       tags: ['tabs'],
     ),
     Demo(
@@ -128,7 +130,7 @@ class DemoRegistry {
       category: 'Slider',
       builder: (_) => const slider_example.SliderExample(),
       sourceUrl:
-          'https://github.com/btwld/naked_ui/blob/main/example/lib/api/naked_slider.0.dart',
+          'https://github.com/btwld/naked_ui/blob/main/packages/example/lib/api/naked_slider.0.dart',
       tags: ['slider'],
     ),
     Demo(
@@ -137,7 +139,7 @@ class DemoRegistry {
       category: 'TextField',
       builder: (_) => const textfield_example.TextFieldExample(),
       sourceUrl:
-          'https://github.com/btwld/naked_ui/blob/main/example/lib/api/naked_textfield.0.dart',
+          'https://github.com/btwld/naked_ui/blob/main/packages/example/lib/api/naked_textfield.0.dart',
       tags: ['textfield'],
     ),
     Demo(
@@ -146,7 +148,7 @@ class DemoRegistry {
       category: 'Menu',
       builder: (_) => const menu_example.SimpleMenuExample(),
       sourceUrl:
-          'https://github.com/btwld/naked_ui/blob/main/example/lib/api/naked_menu.0.dart',
+          'https://github.com/btwld/naked_ui/blob/main/packages/example/lib/api/naked_menu.0.dart',
       tags: ['menu'],
     ),
     Demo(
@@ -155,7 +157,7 @@ class DemoRegistry {
       category: 'Accordion',
       builder: (_) => const accordion_example.AccordionExample(),
       sourceUrl:
-          'https://github.com/btwld/naked_ui/blob/main/example/lib/api/naked_accordion.0.dart',
+          'https://github.com/btwld/naked_ui/blob/main/packages/example/lib/api/naked_accordion.0.dart',
       tags: ['accordion'],
     ),
     Demo(
@@ -164,7 +166,7 @@ class DemoRegistry {
       category: 'Dialog',
       builder: (_) => const dialog_basic_example.DialogExample(),
       sourceUrl:
-          'https://github.com/btwld/naked_ui/blob/main/example/lib/api/naked_dialog.0.dart',
+          'https://github.com/btwld/naked_ui/blob/main/packages/example/lib/api/naked_dialog.0.dart',
       tags: ['dialog'],
     ),
     Demo(
@@ -173,8 +175,17 @@ class DemoRegistry {
       category: 'Popover',
       builder: (_) => const popover_example.PopoverExample(),
       sourceUrl:
-          'https://github.com/btwld/naked_ui/blob/main/example/lib/api/naked_popover.0.dart',
+          'https://github.com/btwld/naked_ui/blob/main/packages/example/lib/api/naked_popover.0.dart',
       tags: ['popover'],
+    ),
+    Demo(
+      id: 'tooltip-basic',
+      title: 'Tooltip – Basic',
+      category: 'Tooltip',
+      builder: (_) => const tooltip_example.TooltipExample(),
+      sourceUrl:
+          'https://github.com/btwld/naked_ui/blob/main/packages/example/lib/api/naked_tooltip.0.dart',
+      tags: ['tooltip', 'hover', 'accessibility'],
     ),
     Demo(
       id: 'toggle-basic',
@@ -182,7 +193,7 @@ class DemoRegistry {
       category: 'Toggle',
       builder: (_) => const toggle_example.ToggleButtonExample(),
       sourceUrl:
-          'https://github.com/btwld/naked_ui/blob/main/example/lib/api/naked_toggle.0.dart',
+          'https://github.com/btwld/naked_ui/blob/main/packages/example/lib/api/naked_toggle.0.dart',
       tags: ['toggle'],
     ),
     Demo(
@@ -191,17 +202,16 @@ class DemoRegistry {
       category: 'Semantics',
       builder: (_) => const semantics_playground.SemanticsPlayground(),
       sourceUrl:
-          'https://github.com/btwld/naked_ui/blob/main/example/lib/api/naked_semantics_playground.dart',
+          'https://github.com/btwld/naked_ui/blob/main/packages/example/lib/api/naked_semantics_playground.dart',
       tags: ['semantics', 'accessibility', 'a11y'],
     ),
-  ];
+  ]);
 
   static Demo? find(String id) {
-    try {
-      return demos.firstWhere((d) => d.id == id);
-    } on StateError {
-      return null; // Not found - expected case
+    for (final demo in demos) {
+      if (demo.id == id) return demo;
     }
+    return null;
   }
 
   static Map<String, List<Demo>> byCategory() {

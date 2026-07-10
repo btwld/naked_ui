@@ -1,6 +1,7 @@
-import 'dart:ui' show Tristate;
+import 'dart:ui' show SemanticsInputType, SemanticsValidationResult, Tristate;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:naked_ui/naked_ui.dart';
 
@@ -67,32 +68,35 @@ void main() {
       handle.dispose();
     });
 
-    testWidgets('focused field exposes focus semantics', (tester) async {
-      final handle = tester.ensureSemantics();
-      final fn = FocusNode();
+    testWidgets(
+      'focused field exposes state without a redundant focus action',
+      (tester) async {
+        final handle = tester.ensureSemantics();
+        final fn = FocusNode();
 
-      await tester.pumpWidget(
-        _buildTestApp(
-          NakedTextField(
-            focusNode: fn,
-            builder: (context, state, editable) => editable,
+        await tester.pumpWidget(
+          _buildTestApp(
+            NakedTextField(
+              focusNode: fn,
+              builder: (context, state, editable) => editable,
+            ),
           ),
-        ),
-      );
-      fn.requestFocus();
-      await tester.pump();
-      final summary = summarizeMergedFromRoot(
-        tester,
-        control: ControlType.textField,
-      );
-      expect(summary.flags, contains('isTextField'));
-      expect(summary.flags, contains('isFocused'));
-      expect(summary.flags, contains('isFocusable'));
-      expect(summary.actions, contains('focus'));
+        );
+        fn.requestFocus();
+        await tester.pump();
+        final summary = summarizeMergedFromRoot(
+          tester,
+          control: ControlType.textField,
+        );
+        expect(summary.flags, contains('isTextField'));
+        expect(summary.flags, contains('isFocused'));
+        expect(summary.flags, contains('isFocusable'));
+        expect(summary.actions, isNot(contains('focus')));
 
-      fn.dispose();
-      handle.dispose();
-    });
+        fn.dispose();
+        handle.dispose();
+      },
+    );
 
     testWidgets('read-only multiline field exposes text-field flags', (
       tester,
@@ -192,6 +196,85 @@ void main() {
       expect(data.hint, 'Enter your email');
       expect(data.hint, isNot(contains('Enter a valid email address')));
       expect(data.flagsCollection.isLiveRegion, isFalse);
+
+      handle.dispose();
+    });
+
+    testWidgets('reports grapheme length and only an enforced maximum', (
+      tester,
+    ) async {
+      final handle = tester.ensureSemantics();
+      final controller = TextEditingController(text: '👨‍👩‍👧‍👦');
+      addTearDown(controller.dispose);
+
+      await tester.pumpWidget(
+        _buildTestApp(
+          NakedTextField(
+            controller: controller,
+            maxLength: 10,
+            maxLengthEnforcement: MaxLengthEnforcement.none,
+            builder: (context, state, editable) => editable,
+          ),
+        ),
+      );
+
+      final root = tester.getSemantics(find.byType(Scaffold));
+      final node = findSemanticsNode(
+        root,
+        (candidate) => candidate.getSemanticsData().flagsCollection.isTextField,
+      );
+      expect(node, isNotNull);
+      final data = node!.getSemanticsData();
+      expect(data.currentValueLength, 1);
+      expect(data.maxValueLength, isNull);
+
+      handle.dispose();
+    });
+
+    testWidgets('error state reports invalid validation', (tester) async {
+      final handle = tester.ensureSemantics();
+
+      await tester.pumpWidget(
+        _buildTestApp(
+          NakedTextField(
+            error: true,
+            keyboardType: TextInputType.emailAddress,
+            builder: (context, state, editable) => editable,
+          ),
+        ),
+      );
+
+      final data = summarizeMergedFromRoot(
+        tester,
+        control: ControlType.textField,
+      );
+      expect(data.validationResult, SemanticsValidationResult.invalid);
+      expect(data.inputType, SemanticsInputType.email);
+
+      handle.dispose();
+    });
+
+    testWidgets('supports explicit validation and semantic input types', (
+      tester,
+    ) async {
+      final handle = tester.ensureSemantics();
+
+      await tester.pumpWidget(
+        _buildTestApp(
+          NakedTextField(
+            semanticValidationResult: SemanticsValidationResult.valid,
+            semanticInputType: SemanticsInputType.search,
+            builder: (context, state, editable) => editable,
+          ),
+        ),
+      );
+
+      final data = summarizeMergedFromRoot(
+        tester,
+        control: ControlType.textField,
+      );
+      expect(data.validationResult, SemanticsValidationResult.valid);
+      expect(data.inputType, SemanticsInputType.search);
 
       handle.dispose();
     });

@@ -1,4 +1,10 @@
-import 'dart:ui' as ui show BoxHeightStyle, BoxWidthStyle;
+import 'dart:ui'
+    as ui
+    show
+        BoxHeightStyle,
+        BoxWidthStyle,
+        SemanticsInputType,
+        SemanticsValidationResult;
 
 import 'package:flutter/cupertino.dart'
     show
@@ -17,10 +23,10 @@ import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
 import 'mixins/naked_mixins.dart';
-import 'utilities/naked_focusable_detector.dart';
 import 'utilities/naked_state_scope.dart';
 import 'utilities/state.dart';
 
+/// Builds a text-field presentation around the underlying editable widget.
 typedef NakedTextFieldBuilder =
     Widget Function(
       BuildContext context,
@@ -39,6 +45,7 @@ class NakedTextFieldState extends NakedState {
   /// Whether the text field is read-only.
   final bool isReadOnly;
 
+  /// Creates a text-field state snapshot.
   NakedTextFieldState({
     required super.states,
     required this.text,
@@ -55,11 +62,11 @@ class NakedTextFieldState extends NakedState {
 
   /// Returns the [WidgetStatesController] from the nearest scope.
   static WidgetStatesController controllerOf(BuildContext context) =>
-      NakedState.controllerOf(context);
+      NakedState.controllerOfType<NakedTextFieldState>(context);
 
   /// Returns the [WidgetStatesController] from the nearest scope, if any.
   static WidgetStatesController? maybeControllerOf(BuildContext context) =>
-      NakedState.maybeControllerOf(context);
+      NakedState.maybeControllerOfType<NakedTextFieldState>(context);
 
   /// Whether the text field is empty.
   bool get isEmpty => !hasText;
@@ -82,13 +89,14 @@ class NakedTextFieldState extends NakedState {
 /// Headless, builder-first text input built on [EditableText].
 ///
 /// Exposes native-feeling defaults while remaining design-system agnostic.
-/// Renders no visuals—wrap the provided [editableText] via [builder] to style or decorate.
+/// Renders no visuals—wrap the provided `editableText` via [builder] to style
+/// or decorate.
 ///
 /// ```dart
 /// NakedTextField(
 ///   controller: textController,
 ///   onChanged: (text) => print('Changed: $text'),
-///   builder: (context, editableText) => Container(
+///   builder: (context, state, editableText) => Container(
 ///     decoration: BoxDecoration(border: Border.all()),
 ///     child: editableText,
 ///   ),
@@ -97,8 +105,9 @@ class NakedTextFieldState extends NakedState {
 ///
 /// See also:
 /// - [EditableText], the underlying primitive text input.
-/// - [TextField], the Material-styled text input for typical apps.
+/// - `TextField`, the Material-styled text input for typical apps.
 class NakedTextField extends StatefulWidget {
+  /// Creates a headless text field.
   const NakedTextField({
     super.key,
     this.groupId = EditableText, // Keeps parity with EditableText default.
@@ -164,11 +173,13 @@ class NakedTextField extends StatefulWidget {
     this.onFocusChange,
     this.onPressChange,
     this.style,
-    this.builder,
+    required this.builder,
     this.ignorePointers,
     this.semanticLabel,
     this.semanticHint,
     this.semanticErrorText,
+    this.semanticValidationResult,
+    this.semanticInputType,
     this.strutStyle,
     this.excludeSemantics = false,
   }) : assert(obscuringCharacter.length == 1),
@@ -180,7 +191,6 @@ class NakedTextField extends StatefulWidget {
            (obscureText ? SmartQuotesType.disabled : SmartQuotesType.enabled),
        assert(maxLines == null || maxLines > 0),
        assert(minLines == null || minLines > 0),
-       assert(builder != null, 'NakedTextField requires a builder'),
        assert(
          (maxLines == null) || (minLines == null) || (maxLines >= minLines),
          "minLines can't be greater than maxLines",
@@ -207,13 +217,19 @@ class NakedTextField extends StatefulWidget {
   /// The undo/redo controller.
   final UndoHistoryController? undoController;
 
-  /// The keyboard type and action.
+  /// The keyboard configuration requested from the platform.
   final TextInputType? keyboardType;
+
+  /// The action button requested for the platform keyboard.
   final TextInputAction? textInputAction;
 
-  /// The text capitalization and alignment.
+  /// The automatic capitalization behavior.
   final TextCapitalization textCapitalization;
+
+  /// How text is aligned horizontally.
   final TextAlign textAlign;
+
+  /// The text direction override, or null to use the ambient direction.
   final TextDirection? textDirection;
 
   /// Whether the field is read-only.
@@ -222,6 +238,7 @@ class NakedTextField extends StatefulWidget {
   /// Whether to show the cursor.
   final bool? showCursor;
 
+  /// Whether this field requests focus when first built.
   final bool autofocus;
 
   /// The character used for obscuring text.
@@ -278,61 +295,97 @@ class NakedTextField extends StatefulWidget {
   /// Whether the field has an error.
   final bool error;
 
-  /// Cursor visuals
+  /// The cursor width in logical pixels.
   final double cursorWidth;
+
+  /// The cursor height, or null to derive it from the text style.
   final double? cursorHeight;
+
+  /// The radius used to round cursor corners.
   final Radius? cursorRadius;
+
+  /// Whether cursor opacity animates on supported platforms.
   final bool? cursorOpacityAnimates;
+
+  /// The cursor color override.
   final Color? cursorColor;
 
-  /// Selection visuals
+  /// How selection highlights align vertically to text boxes.
   final ui.BoxHeightStyle selectionHeightStyle;
+
+  /// How selection highlights align horizontally to text boxes.
   final ui.BoxWidthStyle selectionWidthStyle;
 
   /// Keyboard appearance (iOS).
   final Brightness? keyboardAppearance;
 
-  /// Scrolling
+  /// Padding kept visible when the field scrolls into view.
   final EdgeInsets scrollPadding;
+
+  /// How drag gestures determine their initial position.
   final DragStartBehavior dragStartBehavior;
+
+  /// The controller for scrolling multiline content.
   final ScrollController? scrollController;
+
+  /// The physics used when scrolling text content.
   final ScrollPhysics? scrollPhysics;
 
   /// Clipping behavior for the underlying [EditableText].
   final Clip clipBehavior;
 
-  /// Selection and context menu
+  /// Whether the user can select text interactively.
   final bool enableInteractiveSelection;
+
+  /// The platform selection controls override.
   final TextSelectionControls? selectionControls;
+
+  /// Builds the context menu for text selection.
   final EditableTextContextMenuBuilder? contextMenuBuilder;
 
-  /// Taps, hover, and outside taps
+  /// Called when the field is tapped.
   final GestureTapCallback? onTap;
+
+  /// Whether [onTap] runs for every tap instead of only the first tap series.
   final bool onTapAlwaysCalled;
+
+  /// Called when the field's tap-active state changes.
   final ValueChanged<bool>? onTapChange;
+
+  /// Called for pointer-down events outside the field's tap region.
   final TapRegionCallback? onTapOutside;
+
+  /// Called for pointer-up events outside the field's tap region.
   final TapRegionUpCallback? onTapUpOutside;
+
+  /// Called when hover state changes.
   final ValueChanged<bool>? onHoverChange;
+
+  /// Called when pressed state changes.
   final ValueChanged<bool>? onPressChange;
 
-  /// Autofill and content insertion
+  /// Hints used by the platform autofill service.
   final Iterable<String>? autofillHints;
+
+  /// Configures rich content insertion from the input method.
   final ContentInsertionConfiguration? contentInsertionConfiguration;
 
-  /// Focus management
+  /// Whether the field's focus node can request focus.
   final bool canRequestFocus;
 
   /// Called when focus changes.
   final ValueChanged<bool>? onFocusChange;
 
-  /// Restoration
+  /// The identifier used to restore the editing state.
   final String? restorationId;
 
-  /// IME and stylus features
+  /// Whether supported stylus handwriting gestures are enabled.
   final bool stylusHandwritingEnabled;
+
+  /// Whether the IME may learn personalized input from this field.
   final bool enableIMEPersonalizedLearning;
 
-  /// Spell check
+  /// The spell-check configuration override.
   final SpellCheckConfiguration? spellCheckConfiguration;
 
   /// Grouping for IME (matches [EditableText]).
@@ -341,23 +394,39 @@ class NakedTextField extends StatefulWidget {
   /// Text style override (else derives from [DefaultTextStyle]).
   final TextStyle? style;
 
-  /// Defines the strut
+  /// Defines minimum line metrics for the editable text.
   final StrutStyle? strutStyle;
 
   /// Whether to ignore pointers.
   final bool? ignorePointers;
 
   /// Builds the visual wrapper around the underlying [EditableText].
-  final NakedTextFieldBuilder? builder;
+  final NakedTextFieldBuilder builder;
 
-  /// Semantics
+  /// Replaces the editable content's accessible name when non-null.
   final String? semanticLabel;
+
+  /// Additional usage guidance announced by assistive technologies.
   final String? semanticHint;
+
+  /// Error text announced by assistive technologies.
   final String? semanticErrorText;
 
-  /// Whether to exclude this widget from the semantic tree.
+  /// Explicit form validation result announced by assistive technologies.
   ///
-  /// When true, the widget and its children are hidden from accessibility services.
+  /// When omitted, [error] maps to [ui.SemanticsValidationResult.invalid] and
+  /// a non-error field reports no validation result.
+  final ui.SemanticsValidationResult? semanticValidationResult;
+
+  /// Optional semantic input type override.
+  ///
+  /// When omitted, [EditableText] derives the type from [keyboardType].
+  final ui.SemanticsInputType? semanticInputType;
+
+  /// Whether to omit the semantics contributed by [NakedTextField].
+  ///
+  /// The underlying [EditableText] semantics remain available, allowing the
+  /// builder to provide a custom accessibility contract.
   final bool excludeSemantics;
 
   @override
@@ -365,7 +434,10 @@ class NakedTextField extends StatefulWidget {
 }
 
 class _NakedTextFieldState extends State<NakedTextField>
-    with RestorationMixin, WidgetStatesMixin<NakedTextField>
+    with
+        RestorationMixin,
+        WidgetStatesMixin<NakedTextField>,
+        FocusNodeMixin<NakedTextField>
     implements TextSelectionGestureDetectorBuilderDelegate, AutofillClient {
   static const Color _neutralBgCursor = Color(0xFFBDBDBD);
   static const int _iOSHorizontalOffset = -2;
@@ -373,6 +445,15 @@ class _NakedTextFieldState extends State<NakedTextField>
   @override
   final GlobalKey<EditableTextState> editableTextKey =
       GlobalKey<EditableTextState>();
+
+  @override
+  FocusNode? get widgetProvidedNode => widget.focusNode;
+
+  @override
+  ValueChanged<bool>? get onFocusChange => _handleFocusChange;
+
+  @override
+  String get focusNodeDebugLabel => 'NakedTextField (internal)';
 
   @override
   void initState() {
@@ -385,9 +466,8 @@ class _NakedTextFieldState extends State<NakedTextField>
       _createLocalController();
     }
 
-    _effectiveFocusNode.canRequestFocus =
+    effectiveFocusNode.canRequestFocus =
         widget.canRequestFocus && widget.enabled;
-    _effectiveFocusNode.addListener(_handleFocusChange);
     if (widget.controller != null) {
       _updateAttachedController(widget.controller);
     } else if (_controller != null && !restorePending) {
@@ -416,15 +496,10 @@ class _NakedTextFieldState extends State<NakedTextField>
   }
 
   void _updateAttachedController(TextEditingController? newController) {
-    _detachControllerListener?.call();
-    _detachControllerListener = null;
-
-    if (newController != null) {
-      newController.addListener(_handleControllerChanged);
-      _detachControllerListener = () {
-        newController.removeListener(_handleControllerChanged);
-      };
-    }
+    if (identical(_attachedController, newController)) return;
+    _attachedController?.removeListener(_handleControllerChanged);
+    _attachedController = newController;
+    _attachedController?.addListener(_handleControllerChanged);
   }
 
   void _requestKeyboard() => _editableText?.requestKeyboard();
@@ -435,13 +510,8 @@ class _NakedTextFieldState extends State<NakedTextField>
     setState(() {});
   }
 
-  void _handleFocusChange() {
-    final focused = _effectiveFocusNode.hasFocus;
-    updateFocusState(focused, widget.onFocusChange);
-    if (!mounted) return;
-    // ignore: no-empty-block
-    setState(() {});
-  }
+  void _handleFocusChange(bool focused) =>
+      updateFocusState(focused, widget.onFocusChange);
 
   bool _shouldShowSelectionHandles(SelectionChangedCause? cause) {
     if (!_selectionGestureDetectorBuilder.shouldShowSelectionToolbar) {
@@ -509,6 +579,12 @@ class _NakedTextFieldState extends State<NakedTextField>
   void _handleMouseExit(PointerExitEvent _) =>
       updateHoverState(false, widget.onHoverChange);
 
+  bool _updatePressInteraction(bool pressed) {
+    final changed = updatePressState(pressed, widget.onPressChange);
+    if (changed) widget.onTapChange?.call(pressed);
+    return changed;
+  }
+
   @override
   void initializeWidgetStates() {
     updateDisabledState(!widget.enabled);
@@ -519,7 +595,7 @@ class _NakedTextFieldState extends State<NakedTextField>
   void didChangeDependencies() {
     super.didChangeDependencies();
     _navMode = MediaQuery.maybeNavigationModeOf(context);
-    _effectiveFocusNode.canRequestFocus = _canRequestFocusFor(_navMode);
+    effectiveFocusNode.canRequestFocus = _canRequestFocusFor(_navMode);
   }
 
   @override
@@ -528,11 +604,20 @@ class _NakedTextFieldState extends State<NakedTextField>
 
     updateDisabledState(!widget.enabled);
     updateErrorState(widget.error);
+    if (!widget.enabled && oldWidget.enabled) {
+      clearInteractionStates(
+        onHoverChange: widget.onHoverChange,
+        onFocusChange: widget.onFocusChange,
+        onPressChange: widget.onPressChange,
+        onPressCleared: () => widget.onTapChange?.call(false),
+      );
+      if (effectiveFocusNode.hasFocus) effectiveFocusNode.unfocus();
+    }
 
     if (widget.controller == null && oldWidget.controller != null) {
       _createLocalController(oldWidget.controller!.value);
     } else if (widget.controller != null && oldWidget.controller == null) {
-      _controller!.value.removeListener(_handleControllerChanged);
+      _updateAttachedController(null);
       unregisterFromRestoration(_controller!);
       _controller!.dispose();
       _controller = null;
@@ -542,14 +627,9 @@ class _NakedTextFieldState extends State<NakedTextField>
         widget.controller ?? (!restorePending ? _controller?.value : null);
     _updateAttachedController(nextController);
 
-    if (widget.focusNode != oldWidget.focusNode) {
-      (oldWidget.focusNode ?? _focusNode)?.removeListener(_handleFocusChange);
-      (widget.focusNode ?? _focusNode)?.addListener(_handleFocusChange);
-    }
+    effectiveFocusNode.canRequestFocus = _canRequestFocusFor(_navMode);
 
-    _effectiveFocusNode.canRequestFocus = _canRequestFocusFor(_navMode);
-
-    if (_effectiveFocusNode.hasFocus &&
+    if (effectiveFocusNode.hasFocus &&
         widget.readOnly != oldWidget.readOnly &&
         widget.enabled) {
       final willShow = _shouldShowSelectionHandles(
@@ -571,10 +651,7 @@ class _NakedTextFieldState extends State<NakedTextField>
 
   @override
   void dispose() {
-    _effectiveFocusNode.removeListener(_handleFocusChange);
-    _detachControllerListener?.call();
-    _detachControllerListener = null;
-    _focusNode?.dispose();
+    _updateAttachedController(null);
     _controller?.dispose();
     super.dispose();
   }
@@ -585,15 +662,10 @@ class _NakedTextFieldState extends State<NakedTextField>
 
   RestorableTextEditingController? _controller;
 
-  VoidCallback? _detachControllerListener;
+  TextEditingController? _attachedController;
 
   TextEditingController get _effectiveController =>
       widget.controller ?? _controller!.value;
-
-  FocusNode? _focusNode;
-
-  FocusNode get _effectiveFocusNode =>
-      widget.focusNode ?? (_focusNode ??= FocusNode());
 
   MaxLengthEnforcement get _effectiveMaxLengthEnforcement =>
       widget.maxLengthEnforcement ??
@@ -611,7 +683,8 @@ class _NakedTextFieldState extends State<NakedTextField>
   late bool forcePressEnabled;
 
   @override
-  bool get selectionEnabled => widget.enableInteractiveSelection;
+  bool get selectionEnabled =>
+      widget.enableInteractiveSelection && widget.enabled;
 
   EditableTextState? get _editableText => editableTextKey.currentState;
 
@@ -655,10 +728,13 @@ class _NakedTextFieldState extends State<NakedTextField>
     assert(debugCheckHasDirectionality(context));
 
     final Brightness keyboardAppearance =
-        widget.keyboardAppearance ?? Brightness.light;
+        widget.keyboardAppearance ??
+        MediaQuery.maybePlatformBrightnessOf(context) ??
+        Brightness.light;
 
     final controller = _effectiveController;
-    final focusNode = _effectiveFocusNode;
+    final focusNode = effectiveFocusNode;
+    final selectionStyle = DefaultSelectionStyle.of(context);
 
     final formatters = <TextInputFormatter>[
       ...?widget.inputFormatters,
@@ -675,7 +751,8 @@ class _NakedTextFieldState extends State<NakedTextField>
 
     final _PlatformDefaults p = _PlatformDefaults.resolve(
       context: context,
-      cursorColorOverride: widget.cursorColor,
+      cursorColorOverride: widget.cursorColor ?? selectionStyle.cursorColor,
+      selectionColorOverride: selectionStyle.selectionColor,
       cursorRadiusOverride: widget.cursorRadius,
       cursorOpacityAnimatesOverride: widget.cursorOpacityAnimates,
     );
@@ -733,6 +810,7 @@ class _NakedTextFieldState extends State<NakedTextField>
           onTapUpOutside: widget.onTapUpOutside,
           inputFormatters: formatters,
           rendererIgnoresPointer: true,
+          mouseCursor: MouseCursor.defer,
           cursorWidth: widget.cursorWidth,
           cursorHeight: widget.cursorHeight,
           cursorRadius: p.cursorRadius,
@@ -763,16 +841,11 @@ class _NakedTextFieldState extends State<NakedTextField>
       },
     );
 
-    editable = TextFieldTapRegion(
-      child: IgnorePointer(
-        ignoring: widget.ignorePointers ?? !widget.enabled,
-        child: RepaintBoundary(
-          child: UnmanagedRestorationScope(bucket: bucket, child: editable),
-        ),
-      ),
+    editable = RepaintBoundary(
+      child: UnmanagedRestorationScope(bucket: bucket, child: editable),
     );
 
-    void _semanticTap() {
+    void semanticTap() {
       widget.onTap?.call();
       if (!widget.readOnly) {
         final c = controller;
@@ -783,7 +856,7 @@ class _NakedTextFieldState extends State<NakedTextField>
       }
     }
 
-    String? _semanticHint() {
+    String? semanticHint() {
       final errorText = widget.error ? widget.semanticErrorText : null;
       if (widget.semanticHint == null || widget.semanticHint!.isEmpty) {
         return errorText;
@@ -796,24 +869,40 @@ class _NakedTextFieldState extends State<NakedTextField>
     }
 
     Widget withSemantics(Widget child) {
+      final hasSemanticError =
+          widget.error &&
+          widget.semanticErrorText != null &&
+          widget.semanticErrorText!.isNotEmpty;
+      final semanticsMaxValueLength =
+          _effectiveMaxLengthEnforcement != MaxLengthEnforcement.none
+          ? widget.maxLength
+          : null;
+
       return widget.excludeSemantics
           ? child
           : MergeSemantics(
               child: Semantics(
                 enabled: widget.enabled,
-                liveRegion: widget.error && widget.semanticErrorText != null,
+                liveRegion: hasSemanticError,
                 readOnly: widget.readOnly || !widget.enabled,
-                focusable: widget.enabled,
-                focused: widget.enabled ? focusNode.hasFocus : null,
                 obscured: widget.obscureText,
-                multiline: (widget.maxLines ?? 1) > 1,
-                maxValueLength: widget.maxLength,
-                currentValueLength: controller.text.length,
+                multiline: widget.maxLines != 1,
+                maxValueLength: semanticsMaxValueLength,
+                currentValueLength: controller.text.characters.length,
                 label: widget.semanticLabel,
                 value: widget.obscureText ? null : controller.text,
-                hint: _semanticHint(),
-                onTap: (widget.enabled && !widget.readOnly)
-                    ? _semanticTap
+                hint: semanticHint(),
+                validationResult:
+                    widget.semanticValidationResult ??
+                    (widget.error
+                        ? ui.SemanticsValidationResult.invalid
+                        : ui.SemanticsValidationResult.none),
+                inputType: widget.semanticInputType,
+                onTap:
+                    (widget.enabled &&
+                        !widget.readOnly &&
+                        focusNode.canRequestFocus)
+                    ? semanticTap
                     : null,
                 child: child,
               ),
@@ -821,7 +910,7 @@ class _NakedTextFieldState extends State<NakedTextField>
     }
 
     final textFieldState = NakedTextFieldState(
-      states: {...widgetStates, if (focusNode.hasFocus) WidgetState.focused},
+      states: widgetStates,
       text: controller.text,
       hasText: controller.text.isNotEmpty,
       isReadOnly: widget.readOnly,
@@ -831,31 +920,29 @@ class _NakedTextFieldState extends State<NakedTextField>
       value: textFieldState,
       child: editable,
       builder: (context, value, child) =>
-          withSemantics(widget.builder!(context, value, child!)),
-    );
-
-    final Widget composedWithFocusSemantics = NakedFocusableDetector(
-      enabled: widget.enabled,
-      includeSemantics: true,
-      child: content,
+          withSemantics(widget.builder(context, value, child!)),
     );
 
     final Widget detector = _selectionGestureDetectorBuilder
         .buildGestureDetector(
           behavior: HitTestBehavior.translucent,
-          child: composedWithFocusSemantics,
+          child: content,
         );
 
-    final Widget maybeMouseRegion = widget.enabled
-        ? MouseRegion(
-            onEnter: _handleMouseEnter,
-            onExit: _handleMouseExit,
-            cursor: SystemMouseCursors.text,
-            child: detector,
-          )
-        : detector;
-
-    return maybeMouseRegion;
+    return MouseRegion(
+      onEnter: widget.enabled ? _handleMouseEnter : null,
+      onExit: widget.enabled ? _handleMouseExit : null,
+      cursor: widget.enabled
+          ? selectionStyle.mouseCursor ?? SystemMouseCursors.text
+          : SystemMouseCursors.basic,
+      child: TextFieldTapRegion(
+        groupId: widget.groupId,
+        child: IgnorePointer(
+          ignoring: widget.ignorePointers ?? !widget.enabled,
+          child: detector,
+        ),
+      ),
+    );
   }
 }
 
@@ -869,29 +956,43 @@ class _NakedSelectionGestureDetectorBuilder
 
   @override
   void onUserTap() {
-    _state.widget.onTap?.call();
+    if (_state.widget.enabled) _state.widget.onTap?.call();
+  }
 
-    if (!_state.widget.readOnly) {
-      final c = _state._effectiveController;
-      if (!c.selection.isValid) {
-        c.selection = TextSelection.collapsed(offset: c.text.length);
-      }
-      _state._requestKeyboard();
-    }
+  void _updatePressed(bool pressed) {
+    _state._updatePressInteraction(pressed);
   }
 
   @override
   void onTapDown(TapDragDownDetails details) {
+    if (!_state.widget.enabled) return;
     super.onTapDown(details);
-    _state.widget.onTapChange?.call(true);
-    _state.widget.onPressChange?.call(true);
+    _updatePressed(true);
   }
 
   @override
   void onSingleTapUp(TapDragUpDetails details) {
+    if (!_state.widget.enabled) return;
     super.onSingleTapUp(details);
-    _state.widget.onTapChange?.call(false);
-    _state.widget.onPressChange?.call(false);
+    _updatePressed(false);
+  }
+
+  @override
+  void onSingleTapCancel() {
+    super.onSingleTapCancel();
+    _updatePressed(false);
+  }
+
+  @override
+  void onDragSelectionEnd(TapDragEndDetails details) {
+    super.onDragSelectionEnd(details);
+    _updatePressed(false);
+  }
+
+  @override
+  void onForcePressEnd(ForcePressDetails details) {
+    super.onForcePressEnd(details);
+    _updatePressed(false);
   }
 
   @override
@@ -924,6 +1025,7 @@ class _PlatformDefaults {
   static _PlatformDefaults resolve({
     required BuildContext context,
     Color? cursorColorOverride,
+    Color? selectionColorOverride,
     Radius? cursorRadiusOverride,
     bool? cursorOpacityAnimatesOverride,
   }) {
@@ -934,7 +1036,8 @@ class _PlatformDefaults {
           paintCursorAboveText: true,
           cursorOpacityAnimates: cursorOpacityAnimatesOverride ?? true,
           cursorColor: cursorColorOverride ?? const Color(0xFF007AFF),
-          selectionColor: const Color(0x66007AFF), // ~40% alpha
+          selectionColor:
+              selectionColorOverride ?? const Color(0x66007AFF), // ~40% alpha
           cursorRadius: cursorRadiusOverride ?? const Radius.circular(2),
           cursorOffset: Offset(
             _NakedTextFieldState._iOSHorizontalOffset /
@@ -949,7 +1052,7 @@ class _PlatformDefaults {
           paintCursorAboveText: true,
           cursorOpacityAnimates: cursorOpacityAnimatesOverride ?? false,
           cursorColor: cursorColorOverride ?? const Color(0xFF007AFF),
-          selectionColor: const Color(0x66007AFF),
+          selectionColor: selectionColorOverride ?? const Color(0x66007AFF),
           cursorRadius: cursorRadiusOverride ?? const Radius.circular(2),
           cursorOffset: Offset(
             _NakedTextFieldState._iOSHorizontalOffset /
@@ -966,7 +1069,8 @@ class _PlatformDefaults {
           paintCursorAboveText: false,
           cursorOpacityAnimates: cursorOpacityAnimatesOverride ?? false,
           cursorColor: cursorColorOverride ?? _androidBlue,
-          selectionColor: _androidBlue.withValues(alpha: 0.40),
+          selectionColor:
+              selectionColorOverride ?? _androidBlue.withValues(alpha: 0.40),
           cursorRadius: cursorRadiusOverride,
           cursorOffset: null,
           platformSelectionControls: materialTextSelectionHandleControls,
@@ -978,7 +1082,8 @@ class _PlatformDefaults {
           paintCursorAboveText: false,
           cursorOpacityAnimates: cursorOpacityAnimatesOverride ?? false,
           cursorColor: cursorColorOverride ?? _androidBlue,
-          selectionColor: _androidBlue.withValues(alpha: 0.40),
+          selectionColor:
+              selectionColorOverride ?? _androidBlue.withValues(alpha: 0.40),
           cursorRadius: cursorRadiusOverride,
           cursorOffset: null,
           platformSelectionControls: desktopTextSelectionHandleControls,

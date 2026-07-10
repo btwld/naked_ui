@@ -1,14 +1,55 @@
 ## Unreleased
 
-- fix: one tab press no longer dispatches selection twice. A press selected
-  directly and again when its requested focus landed (selection follows
-  focus); the focus-driven duplicate is now suppressed inside `NakedTab`, so
-  controlled hosts that commit asynchronously receive one `onChanged` per
-  press, and retries — including keyboard Enter/Space on a host that rejects
-  the change — always fire.
-- fix: an explicit `NakedTab.semanticLabel` now replaces the content's
-  semantics instead of concatenating with them, so a tab whose content renders
-  the same text is announced once.
+### Added
+
+- Added explicit, test-backed semantics contracts across buttons, toggles,
+  checkboxes, radios, sliders, menus, selects, tabs, accordions, dialogs,
+  tooltips, popovers, and text fields, including roles, states, values,
+  actions, labels, focus behavior, and `excludeSemantics` behavior.
+- Added semantic value formatting for sliders and selects, dialog role
+  selection, tab Home/End navigation, and regression coverage for public
+  controller, focus, overlay, state-scope, and lifecycle contracts.
+
+### Changed
+
+- Raised the supported toolchain to Dart 3.11 and Flutter 3.41 so the package
+  can use Flutter's current semantics roles and `RawTooltip` contract.
+- Invalid runtime configurations now fail with descriptive errors in release
+  builds. This includes dismissible dialogs without barrier labels, invalid
+  accordion constraints, empty tab identifiers, orphan menu/select items, and
+  invalid overlay item construction.
+- State snapshots now expose immutable state sets, and component controller
+  lookups skip unrelated nested state scopes.
+- Simplified overlay hit testing, normalized focus/controller ownership, and
+  removed obsolete integration wrappers and unused example dependencies.
+
+### Fixed
+
+- Fixed stale callbacks and generic scope lookup for inferred toggle groups,
+  menus, and selects.
+- Fixed controller replacement, externally owned focus-node handling, disabled
+  state cleanup, and focus restoration across interactive controls.
+- Fixed slider bounds, discrete-step rounding, duplicate emissions, RTL and
+  vertical dragging, and semantic increment/decrement behavior.
+- Fixed accordion FIFO constraints, tab selection double dispatch, roving
+  focus, anchored-overlay Home/End navigation, Escape handling, and
+  selected-panel semantics.
+- Fixed dialog theme capture, barrier validation, dialog/alert-dialog roles,
+  text-field controller ownership, native editing defaults, and validation
+  semantics.
+- Fixed explicit semantic labels being concatenated with duplicate descendant
+  labels; caller-provided descendant semantics now remain available when Naked
+  UI semantics are excluded.
+
+### Quality
+
+- Enabled strict analysis and complete public API documentation checks, added a
+  real coverage gate, made workspace scripts FVM-aware, and aligned CI with the
+  checked-in Flutter version.
+- Pinned third-party workflow actions to immutable revisions and enabled
+  automated GitHub Actions update proposals.
+- Reconciled the guides and runnable catalog with the public API, registered the
+  tooltip demo, and corrected all example source links.
 
 ## 1.0.0-beta.1
 

@@ -1,23 +1,47 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
 import 'package:example/main.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  testWidgets('App loads and shows title', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
+  testWidgets('catalog loads', (tester) async {
     await tester.pumpWidget(const MyApp());
 
-    // Verify that the app title is shown.
     expect(find.text('Naked Kitchen Sink'), findsOneWidget);
-
-    // Verify that the app loads without crashing.
     expect(find.byType(MaterialApp), findsOneWidget);
+  });
+
+  testWidgets('fullscreen action opens a component route', (tester) async {
+    await tester.pumpWidget(const MyApp());
+
+    await tester.tap(find.byTooltip('Open fullscreen'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(BackButton), findsOneWidget);
+  });
+
+  testWidgets('source action confirms that the URL was copied', (tester) async {
+    MethodCall? platformCall;
+    tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+      SystemChannels.platform,
+      (call) async {
+        platformCall = call;
+        return null;
+      },
+    );
+    addTearDown(
+      () => tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+        SystemChannels.platform,
+        null,
+      ),
+    );
+
+    await tester.pumpWidget(const MyApp());
+
+    await tester.tap(find.byTooltip('Copy source URL'));
+    await tester.pump();
+
+    expect(platformCall?.method, 'Clipboard.setData');
+    expect(find.text('Source URL copied'), findsOneWidget);
   });
 }

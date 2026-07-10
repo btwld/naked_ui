@@ -4,7 +4,7 @@ import 'package:naked_ui/src/utilities/naked_state_scope.dart';
 import 'package:naked_ui/src/utilities/state.dart';
 
 class TestNakedState extends NakedState {
-  TestNakedState({required Set<WidgetState> states}) : super(states: states);
+  TestNakedState({required super.states});
 }
 
 void main() {

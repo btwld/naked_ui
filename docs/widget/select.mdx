@@ -14,7 +14,7 @@ Headless select dropdown component. Handles keyboard navigation, focus managemen
 - **Data selection**: Pick items from large sets with search/grouping
 
 <Info>
-  Working samples are in [`example/lib/api/naked_select.0.dart`](https://github.com/btwld/naked_ui/blob/main/example/lib/api/naked_select.0.dart) (plus `.1`/`.2` for searchable and grouped variants).
+  Working samples are in [`packages/example/lib/api/naked_select.0.dart`](https://github.com/btwld/naked_ui/blob/main/packages/example/lib/api/naked_select.0.dart) (plus `.1`/`.2` for searchable and grouped variants).
 </Info>
 
 ## Basic implementation
@@ -93,7 +93,7 @@ class _SelectOption extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return NakedSelect.Option<String>(
+    return NakedSelectOption<String>(
       value: value,
       builder: (context, optionState, _) {
         final bool isSelected = optionState.isSelected;
@@ -102,7 +102,7 @@ class _SelectOption extends StatelessWidget {
         return Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
           color: isSelected
-              ? Colors.blue.withOpacity(0.12)
+              ? Colors.blue.withValues(alpha: 0.12)
               : isHovered
                   ? Colors.grey.shade100
                   : null,
@@ -127,12 +127,12 @@ class _SelectOption extends StatelessWidget {
 ### Trigger – `NakedSelectState<T>`
 - `isOpen` → overlay visibility
 - `value` → currently selected value (nullable)
-- `hasValue` helper plus raw `widgetStates` from the trigger builder
+- `hasValue` helper plus the immutable `states` set from the trigger builder
 
 ### Options – `NakedSelectOptionState<T>`
 - `value` → option value
 - `isSelected` → convenience getter supplied via `WidgetState.selected`
-- `widgetStates` → hover/focus/pressed/disabled information
+- `states` → immutable hover/focus/pressed/disabled state set
 
 ### Access from Context
 
@@ -155,6 +155,8 @@ const NakedSelect({
   this.enabled = true,
   this.triggerFocusNode,
   this.semanticLabel,
+  this.semanticValue,
+  this.semanticValueFormatter,
   this.positioning = const OverlayPositionConfig(
     targetAnchor: Alignment.bottomCenter,
     followerAnchor: Alignment.topCenter,
@@ -166,28 +168,34 @@ const NakedSelect({
   this.onCloseRequested,
   this.consumeOutsideTaps = true,
   this.useRootOverlay = false,
+  this.excludeSemantics = false,
 })
 ```
 
 ### Key Parameters
 
 - `child` / `builder` → provide static trigger content or a `ValueWidgetBuilder<NakedSelectState<T>>`
-- `overlayBuilder` → `(BuildContext, RawMenuAnchorOverlayInfo)` – build any list/panel/search UI
+- `overlayBuilder` → `(BuildContext, RawMenuOverlayInfo)` – build any list/panel/search UI
 - `value` / `onChanged` → manage the selected value externally (falls back to internal state when `value` is null)
-- `positioning` → tune `OverlayPositionConfig` alignment, fallback, and offset for the dropdown shell
+- `positioning` → tune `OverlayPositionConfig` anchor alignment and offset for the dropdown shell
 - `closeOnSelect` / `closeOnClickOutside` → opt into dismissal after selection and pointer taps outside
 - `consumeOutsideTaps` / `useRootOverlay` → control how outside gestures are captured and which overlay stack is used
 - `enabled` → disables trigger & option activation when false
 - `triggerFocusNode` → reuse an external focus node; focus is restored here automatically on close
-- `semanticLabel` → override trigger semantics; the current `value?.toString()` is announced when provided
+- `semanticLabel` → replace the trigger's derived accessible name
+- `semanticValue` / `semanticValueFormatter` → announce the selected value;
+  string values are announced automatically, while arbitrary objects are never
+  converted with `toString()` implicitly
+- `excludeSemantics` → omit only Naked UI's trigger semantics; option semantics remain available
 - Lifecycle hooks: `onOpen`, `onClose`, `onCanceled` fire around overlay visibility; `onOpenRequested`, `onCloseRequested` intercept RawMenuAnchor requests (e.g. for animations)
 
-## Options via `NakedSelect.Option`
+## Options
 
-`NakedSelect.Option<T>` is a factory for `NakedSelectOption<T>`:
+Use `NakedSelectOption<T>` directly. `NakedSelect.Option(...)` is also available
+as a constructor tear-off:
 
 ```dart
-const NakedSelect.Option({
+const NakedSelectOption({
   Key? key,
   required T value,
   Widget? child,
@@ -197,11 +205,14 @@ const NakedSelect.Option({
 })
 ```
 
-Use the builder to react to `optionState.isSelected` or `optionState.widgetStates` for hover styling. Options respect the select's `enabled` and `closeOnSelect` settings automatically.
+Use the builder to react to `optionState.isSelected` or
+`optionState.states` for hover styling. Options respect the select's `enabled`
+and `closeOnSelect` settings automatically.
 
 ## Accessibility Notes
 
 - Each option is focusable and keyboard navigable; provide textual labels
+- **Home/End**: Move focus to the first or last option
 - **PageUp/PageDown**: Move focus by ~10 traversal steps for faster navigation (policy-driven)
 - Trigger announces `semanticLabel` and selected value; set both for clarity
 - Respect `closeOnSelect` for quick dismissal or keep it `false` for multi-step flows

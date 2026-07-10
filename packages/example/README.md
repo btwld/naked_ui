@@ -1,115 +1,45 @@
-# Naked UI Example App
+# Naked UI example
 
-A showcase application demonstrating the Naked UI library.
+This app is the executable catalog for `naked_ui`. It demonstrates every
+component, custom styling through builders, keyboard interaction, and
+accessibility semantics.
 
-## Getting Started
+## Run
 
-This project demonstrates how to use the Naked UI library to create customizable UI components with separation of concerns between behavior and appearance.
+From the repository root:
 
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
-
-## Testing
-
-This example app includes comprehensive unit and integration tests for all Naked UI components.
-
-### Quick Start - Running Tests
-
-From the project root directory:
-
-```bash
-# Run unit tests only
-dart tool/test.dart
-
-# Run all tests (unit + integration)
-dart tool/test.dart --all
-
-# Run integration tests only
-dart tool/test.dart --integration
-
-# Run specific component tests
-dart tool/test.dart --component=button
-dart tool/test.dart --component=textfield
-
-# Get detailed output for debugging
-dart tool/test.dart --all --verbose
+```sh
+fvm flutter pub get
+cd packages/example
+fvm flutter run
 ```
 
-### Test Types
+Generate a native platform directory first when your target is not already
+present, for example `fvm flutter create --platforms=macos .`.
 
-#### Unit Tests
-- Fast, isolated tests for widget behavior
-- Located in `test/widget_test.dart`
-- Run automatically on every test command
+## Verify
 
-#### Integration Tests
-- Full UI automation tests on macOS
-- Test real user interactions: hover, click, keyboard navigation
-- Located in `integration_test/components/`
-- Require macOS platform for UI testing
+The fast widget suite runs on `flutter-tester`:
 
-### Available Integration Test Components
+```sh
+fvm flutter test packages/example/test
+```
 
-- **button** - NakedButton interactions and states
-- **checkbox** - NakedCheckbox toggle and accessibility
-- **radio** - NakedRadio selection and groups
-- **slider** - NakedSlider dragging and value changes
-- **textfield** - NakedTextField input and validation
-- **select** - NakedSelect dropdown and selection
-- **popover** - NakedPopover positioning and dismissal
-- **tooltip** - NakedTooltip display and timing
-- **menu** - NakedMenu navigation and actions
-- **accordion** - NakedAccordion expand/collapse
-- **tabs** - NakedTabs switching and keyboard nav
-- **dialog** - NakedDialog modal behavior
+Run the complete integration suite from this directory:
 
-### Prerequisites
+```sh
+fvm flutter test integration_test/all_tests.dart -d flutter-tester
+```
 
-1. **macOS platform support** (for integration tests):
-   ```bash
-   flutter create --platforms=macos .
-   ```
+The repository runner can execute unit tests, integration tests, or one
+component from the root:
 
-2. **Flutter dependencies up to date**:
-   ```bash
-   flutter pub get
-   ```
+```sh
+fvm dart tool/test.dart
+fvm dart tool/test.dart --all
+fvm dart tool/test.dart --component=button
+```
 
-### Troubleshooting
-
-#### Integration Tests Hang or Fail
-
-1. **Check app runs manually first**:
-   ```bash
-   flutter run -d macos
-   ```
-
-2. **Run individual component tests**:
-   ```bash
-   dart tool/test.dart --component=button
-   ```
-
-3. **Use verbose output for details**:
-   ```bash
-   dart tool/test.dart --integration --verbose
-   ```
-
-#### Common Issues
-
-- **Timeout errors**: Integration tests have 5-minute timeout
-- **macOS permissions**: Grant screen recording/accessibility permissions if prompted
-- **Focus issues**: Tests automatically clean up focus state between runs
-- **Gesture cleanup**: Improved hover simulation prevents test interference
-
-#### Test Environment
-
-- **Platform**: macOS required for integration tests
-- **Timeout**: 5 minutes for full integration suite
-- **Environment**: `RUN_INTEGRATION=1` set automatically
-- **Reporter**: Compact by default, expanded with `--verbose`
+Available component names are `button`, `checkbox`, `radio`, `slider`,
+`textfield`, `select`, `popover`, `tooltip`, `menu`, `accordion`, `tabs`, and
+`dialog`.

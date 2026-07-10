@@ -15,7 +15,7 @@ class _HasFocusMatcher extends Matcher {
       description.add('a Focus widget with focusNode.hasFocus == true');
 
   @override
-  bool matches(Object? item, Map matchState) {
+  bool matches(Object? item, Map<dynamic, dynamic> matchState) {
     if (item is! Focus) return false;
     final FocusNode? node = item.focusNode;
     return node?.hasFocus == true;
@@ -25,7 +25,7 @@ class _HasFocusMatcher extends Matcher {
   Description describeMismatch(
     Object? item,
     Description mismatchDescription,
-    Map matchState,
+    Map<dynamic, dynamic> matchState,
     bool verbose,
   ) {
     if (item is! Focus) {

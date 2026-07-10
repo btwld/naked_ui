@@ -7,7 +7,7 @@ on:
 
 jobs:
   publish_naked_ui:
-    uses: btwld/dart-actions/.github/workflows/publish.yml@main
+    uses: btwld/dart-actions/.github/workflows/publish.yml@9075ce1232ec77b8747953f2ff4a349190e5a805 # main 2026-07-10
     with:
       packages_folder_path: "packages"
       packages: |

@@ -1,10 +1,11 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 
 import '../mixins/naked_mixins.dart';
 
 /// Minimal widget that composes [MouseRegion], [Focus], [Shortcuts], and [Actions]
 /// based on what's needed. Exposes all [Focus] parameters for full control.
 class NakedFocusableDetector extends StatefulWidget {
+  /// Creates a detector around [child].
   const NakedFocusableDetector({
     super.key,
     required this.child,
@@ -84,8 +85,6 @@ class NakedFocusableDetector extends StatefulWidget {
 
 class _NakedFocusableDetectorState extends State<NakedFocusableDetector>
     with FocusNodeMixin<NakedFocusableDetector> {
-  bool _wasEnabled = true;
-
   @override
   FocusNode? get widgetProvidedNode => widget.focusNode;
 
@@ -94,24 +93,15 @@ class _NakedFocusableDetectorState extends State<NakedFocusableDetector>
       widget.debugLabel ?? 'NakedFocusableDetector';
 
   @override
-  void initState() {
-    super.initState();
-    _wasEnabled = widget.enabled;
-  }
-
-  void _handleEnabledChange() {
-    if (widget.onEnableChange != null && widget.enabled != _wasEnabled) {
-      widget.onEnableChange!(widget.enabled);
-    }
-    _wasEnabled = widget.enabled;
-  }
-
-  @override
   void didUpdateWidget(NakedFocusableDetector oldWidget) {
     super.didUpdateWidget(oldWidget);
 
     if (widget.enabled != oldWidget.enabled) {
-      _handleEnabledChange();
+      final enabled = widget.enabled;
+      final callback = widget.onEnableChange;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && widget.enabled == enabled) callback?.call(enabled);
+      });
     }
   }
 

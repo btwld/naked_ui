@@ -24,29 +24,25 @@ jobs:
   integration-tests:
     name: Integration Tests
     runs-on: macos-latest
+    permissions:
+      contents: read
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
 
       - name: Set up Flutter
-        uses: subosito/flutter-action@v2
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
         with:
           channel: 'stable'
-          flutter-version: '3.41.2'
+          flutter-version-file: .fvmrc
           cache: true
 
       - name: Enable macOS desktop
         run: flutter config --enable-macos-desktop
 
-      - name: Install root dependencies
+      - name: Install workspace dependencies
         run: flutter pub get
-        working-directory: packages/example
-
-      - name: Install example dependencies
-        run: flutter pub get
-        working-directory: packages/example
 
       - name: Run all integration tests
         working-directory: packages/example
         run: flutter test -r compact -d flutter-tester integration_test/all_tests.dart
-

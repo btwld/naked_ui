@@ -1,19 +1,16 @@
 name: naked_ui_workspace
 environment:
-  sdk: ">=3.8.0 <4.0.0"
-  flutter: ">=3.27.0"
-
-dependencies:
-  dart_code_metrics_presets: ^2.26.1
-  flutter_lints: ^6.0.0
+  sdk: ">=3.11.0 <4.0.0"
+  flutter: ">=3.41.0"
 
 dev_dependencies:
+  flutter_lints: ^6.0.0
   melos: ^7.3.0
 
 workspace:
   - packages/example
   - packages/naked_ui
-  
+
 melos:
   # IDE settings (migrated from melos.yaml for Melos 7.x)
   ide:
@@ -30,37 +27,35 @@ melos:
   scripts:
     get:
       description: Get dependencies for all packages
-      run: flutter pub get
+      run: fvm flutter pub get
 
     analyze:
       description: Run static analysis
-      run: flutter analyze
+      run: fvm flutter analyze --fatal-infos --fatal-warnings
 
     format:
       description: Format all Dart code
-      run: dart format .
+      run: fvm dart format .
 
     format:check:
       description: Check if all Dart code is formatted
-      run: dart format --set-exit-if-changed .
-    
+      run: fvm dart format --output=none --set-exit-if-changed .
+
     test:all:
-      run: melos exec -- flutter test 
-      description: Run flutter test
-      packageFilters:
-        dirExists: test
+      description: Run all unit and widget tests
+      run: fvm dart tool/test.dart --unit
 
     # Build commands
     build:example:
-      description: Build example app for macOS
-      run: flutter build macos
+      description: Compile the example's platform-neutral asset bundle
+      exec: fvm flutter build bundle
       packageFilters:
-        dirExists: example
+        scope: example
 
     # CI/CD commands
     ci:
       description: Run CI checks (format, analyze, test)
       run: |
-        melos format:check &&
-        melos analyze &&
-        melos test:all
+        fvm dart format --output=none --set-exit-if-changed . &&
+        fvm flutter analyze --fatal-infos --fatal-warnings &&
+        fvm dart tool/test.dart --unit

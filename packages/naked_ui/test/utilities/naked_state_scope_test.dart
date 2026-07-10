@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:naked_ui/src/naked_button.dart';
 import 'package:naked_ui/src/utilities/naked_state_scope.dart';
 import 'package:naked_ui/src/utilities/state.dart';
 
@@ -7,8 +8,17 @@ import 'package:naked_ui/src/utilities/state.dart';
 class TestNakedState extends NakedState {
   final String label;
 
-  TestNakedState({required Set<WidgetState> states, required this.label})
-    : super(states: states);
+  TestNakedState({required super.states, required this.label});
+}
+
+class OtherNakedState extends NakedState {
+  OtherNakedState({required super.states});
+}
+
+class GenericNakedState<T> extends NakedState {
+  GenericNakedState({required super.states, required this.value});
+
+  final T value;
 }
 
 void main() {
@@ -35,6 +45,69 @@ void main() {
       expect(capturedController, isNotNull);
       expect(capturedController!.value, contains(WidgetState.focused));
       expect(capturedController!.value, contains(WidgetState.hovered));
+    });
+
+    testWidgets('typed lookup skips unrelated nested scopes', (tester) async {
+      WidgetStatesController? outerController;
+      WidgetStatesController? innerController;
+      WidgetStatesController? genericController;
+
+      await tester.pumpWidget(
+        NakedStateScope<TestNakedState>(
+          value: TestNakedState(states: {WidgetState.focused}, label: 'outer'),
+          child: NakedStateScope<GenericNakedState<String>>(
+            value: GenericNakedState<String>(
+              states: {WidgetState.selected},
+              value: 'generic',
+            ),
+            child: NakedStateScope<OtherNakedState>(
+              value: OtherNakedState(states: {WidgetState.pressed}),
+              child: Builder(
+                builder: (context) {
+                  outerController = NakedState.controllerOfType<TestNakedState>(
+                    context,
+                  );
+                  innerController =
+                      NakedState.controllerOfType<OtherNakedState>(context);
+                  genericController =
+                      NakedState.controllerOfType<GenericNakedState<dynamic>>(
+                        context,
+                      );
+                  return const SizedBox();
+                },
+              ),
+            ),
+          ),
+        ),
+      );
+
+      expect(outerController!.value, {WidgetState.focused});
+      expect(innerController!.value, {WidgetState.pressed});
+      expect(genericController!.value, {WidgetState.selected});
+      expect(outerController, isNot(same(innerController)));
+    });
+
+    testWidgets('component lookup skips unrelated nested scopes', (
+      tester,
+    ) async {
+      WidgetStatesController? buttonController;
+
+      await tester.pumpWidget(
+        NakedStateScope<NakedButtonState>(
+          value: NakedButtonState(states: {WidgetState.focused}),
+          child: NakedStateScope<OtherNakedState>(
+            value: OtherNakedState(states: {WidgetState.pressed}),
+            child: Builder(
+              builder: (context) {
+                buttonController = NakedButtonState.controllerOf(context);
+                return const SizedBox();
+              },
+            ),
+          ),
+        ),
+      );
+
+      expect(buttonController!.value, {WidgetState.focused});
     });
 
     testWidgets('updates controller when states change', (tester) async {

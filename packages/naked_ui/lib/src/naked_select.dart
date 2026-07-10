@@ -1,12 +1,18 @@
+import 'dart:ui' show SemanticsRole;
+
 import 'package:flutter/widgets.dart';
 
 import 'base/overlay_base.dart';
+import 'mixins/naked_mixins.dart';
 import 'naked_button.dart';
 import 'utilities/anchored_overlay_shell.dart';
 import 'utilities/intents.dart';
 import 'utilities/naked_state_scope.dart';
 import 'utilities/positioning.dart';
 import 'utilities/state.dart';
+
+/// Formats a selected value for assistive technologies.
+typedef NakedSelectSemanticValueFormatter<T> = String Function(T value);
 
 /// Immutable view passed to [NakedSelect.builder].
 class NakedSelectState<T> extends NakedState {
@@ -16,6 +22,7 @@ class NakedSelectState<T> extends NakedState {
   /// Currently selected value, if any.
   final T? value;
 
+  /// Creates a select state snapshot.
   NakedSelectState({
     required super.states,
     required this.isOpen,
@@ -45,11 +52,11 @@ class NakedSelectState<T> extends NakedState {
 
   /// Returns the [WidgetStatesController] from the nearest scope.
   static WidgetStatesController controllerOf(BuildContext context) =>
-      NakedState.controllerOf(context);
+      NakedState.controllerOfType<NakedSelectState<dynamic>>(context);
 
   /// Returns the [WidgetStatesController] from the nearest scope, if any.
   static WidgetStatesController? maybeControllerOf(BuildContext context) =>
-      NakedState.maybeControllerOf(context);
+      NakedState.maybeControllerOfType<NakedSelectState<dynamic>>(context);
 
   /// Whether a selection exists.
   bool get hasValue => value != null;
@@ -60,6 +67,7 @@ class NakedSelectOptionState<T> extends NakedState {
   /// The option's value.
   final T value;
 
+  /// Creates a select-option state snapshot for [value].
   NakedSelectOptionState({required super.states, required this.value});
 
   @override
@@ -84,11 +92,13 @@ class NakedSelectOptionState<T> extends NakedState {
 
   /// Returns the [WidgetStatesController] from the nearest scope.
   static WidgetStatesController controllerOf(BuildContext context) =>
-      NakedState.controllerOf(context);
+      NakedState.controllerOfType<NakedSelectOptionState<dynamic>>(context);
 
   /// Returns the [WidgetStatesController] from the nearest scope, if any.
   static WidgetStatesController? maybeControllerOf(BuildContext context) =>
-      NakedState.maybeControllerOf(context);
+      NakedState.maybeControllerOfType<NakedSelectOptionState<dynamic>>(
+        context,
+      );
 }
 
 /// Internal scope provided by [NakedSelect] to its overlay subtree.
@@ -106,8 +116,8 @@ class _NakedSelectScope<T> extends OverlayScope<T> {
   /// Returns the [_NakedSelectScope] that most tightly encloses the given [context].
   ///
   /// If no [NakedSelect] ancestor is found, this method throws a [FlutterError].
-  static _NakedSelectScope<T> of<T>(BuildContext context) {
-    return OverlayScope.of(
+  static _NakedSelectScope<dynamic> of(BuildContext context) {
+    return OverlayScope.of<_NakedSelectScope<dynamic>>(
       context,
       scopeConsumer: NakedSelectOption,
       scopeOwner: NakedSelect,
@@ -136,6 +146,7 @@ class _NakedSelectScope<T> extends OverlayScope<T> {
 /// This enables fully declarative composition inside [NakedSelect.overlayBuilder]
 /// without relying on the data-driven approach.
 class NakedSelectOption<T> extends OverlayItem<T, NakedSelectOptionState<T>> {
+  /// Creates an option for a [NakedSelect] overlay.
   const NakedSelectOption({
     super.key,
     required super.value,
@@ -146,14 +157,14 @@ class NakedSelectOption<T> extends OverlayItem<T, NakedSelectOptionState<T>> {
   });
 
   /// Handles selection of this option.
-  void _handleSelection(_NakedSelectScope<T> scope) {
+  void _handleSelection(_NakedSelectScope<dynamic> scope) {
     scope.onChanged?.call(value);
     if (scope.closeOnSelect) scope.controller.close();
   }
 
   @override
   Widget build(BuildContext context) {
-    final scope = _NakedSelectScope.of<T>(context);
+    final scope = _NakedSelectScope.of(context);
 
     final isSelected = scope.value == value;
     final effectiveEnabled = enabled && scope.enabled;
@@ -163,6 +174,8 @@ class NakedSelectOption<T> extends OverlayItem<T, NakedSelectOptionState<T>> {
       onPressed: onPressed,
       effectiveEnabled: effectiveEnabled,
       isSelected: isSelected,
+      semanticRole: SemanticsRole.menuItem,
+      semanticSelected: isSelected,
       mapStates: (states) {
         return NakedSelectOptionState<T>(states: states, value: value);
       },
@@ -201,7 +214,8 @@ class NakedSelectOption<T> extends OverlayItem<T, NakedSelectOptionState<T>> {
 /// ### Example Usage
 /// ```dart
 /// NakedSelect<String>(
-///   builder: (context, state) => Text('Select: ${state.value ?? 'None'}'),
+///   builder: (context, state, child) =>
+///       Text('Select: ${state.value ?? 'None'}'),
 ///   overlayBuilder: (context, info) => Column(
 ///     children: [
 ///       NakedSelect.Option(value: 'apple', child: Text('Apple')),
@@ -214,8 +228,11 @@ class NakedSelectOption<T> extends OverlayItem<T, NakedSelectOptionState<T>> {
 ///
 /// See also:
 /// - [NakedSelectOption], for individual selectable items
-/// - [NakedMenu], for action-based menus with similar keyboard behavior
+/// - `NakedMenu`, for action-based menus with similar keyboard behavior
 class NakedSelect<T> extends StatefulWidget {
+  /// Creates a headless single-selection control.
+  ///
+  /// Either [child] or [builder] must be provided for the trigger.
   const NakedSelect({
     super.key,
     this.child,
@@ -229,6 +246,8 @@ class NakedSelect<T> extends StatefulWidget {
     this.mouseCursor = SystemMouseCursors.click,
     this.triggerFocusNode,
     this.semanticLabel,
+    this.semanticValue,
+    this.semanticValueFormatter,
     this.positioning = const OverlayPositionConfig(
       targetAnchor: Alignment.bottomCenter,
       followerAnchor: Alignment.topCenter,
@@ -247,6 +266,8 @@ class NakedSelect<T> extends StatefulWidget {
        );
 
   /// Type alias for [NakedSelectOption] for cleaner API access.
+  // Retains the established `NakedSelect.Option(...)` public API.
+  // ignore: non_constant_identifier_names
   static final Option = NakedSelectOption.new;
 
   /// The static trigger widget.
@@ -285,18 +306,32 @@ class NakedSelect<T> extends StatefulWidget {
   /// Optional semantics label for the trigger.
   final String? semanticLabel;
 
+  /// Explicit accessible value announced for the current selection.
+  final String? semanticValue;
+
+  /// Formats non-string selected values for assistive technologies.
+  ///
+  /// Arbitrary objects are never converted with [Object.toString]. String
+  /// values are announced directly when neither this nor [semanticValue] is
+  /// provided.
+  final NakedSelectSemanticValueFormatter<T>? semanticValueFormatter;
+
   /// Overlay positioning configuration.
   final OverlayPositionConfig positioning;
 
-  /// Lifecycle callbacks.
+  /// Called when the overlay opens.
   final VoidCallback? onOpen;
+
+  /// Called when the overlay closes.
   final VoidCallback? onClose;
 
   /// Called when the select closes without a selection.
   final VoidCallback? onCanceled;
 
-  /// Open/close interceptors.
+  /// Intercepts open requests, for example to drive an entrance animation.
   final RawMenuAnchorOpenRequestedCallback? onOpenRequested;
+
+  /// Intercepts close requests, for example to drive an exit animation.
   final RawMenuAnchorCloseRequestedCallback? onCloseRequested;
 
   /// Whether outside taps on the trigger are consumed.
@@ -305,9 +340,10 @@ class NakedSelect<T> extends StatefulWidget {
   /// Whether to target the root overlay instead of the nearest ancestor.
   final bool useRootOverlay;
 
-  /// Whether to exclude this widget from the semantic tree.
+  /// Whether to omit the select semantics contributed by [NakedSelect].
   ///
-  /// When true, the widget and its children are hidden from accessibility services.
+  /// Semantics supplied by [child] or [builder] remain available. The overlay
+  /// and its options retain their menu semantics.
   final bool excludeSemantics;
 
   @override
@@ -315,13 +351,17 @@ class NakedSelect<T> extends StatefulWidget {
 }
 
 class _NakedSelectState<T> extends State<NakedSelect<T>>
-    with OverlayStateMixin<NakedSelect<T>> {
+    with OverlayStateMixin<NakedSelect<T>>, FocusNodeMixin<NakedSelect<T>> {
+  // MenuController has no dispose lifecycle.
   // ignore: dispose-fields
   late final MenuController _menuController;
   T? _internalValue;
 
   /// Number of items to jump when pressing PageUp/PageDown.
   static const int _pageJumpSize = 10;
+
+  @override
+  FocusNode? get widgetProvidedNode => widget.triggerFocusNode;
 
   @override
   void initState() {
@@ -332,8 +372,10 @@ class _NakedSelectState<T> extends State<NakedSelect<T>>
 
   T? get _effectiveValue => widget.value ?? _internalValue;
 
-  void _toggle() =>
-      _menuController.isOpen ? _menuController.close() : _menuController.open();
+  void _toggle() {
+    if (!widget.enabled) return;
+    _menuController.isOpen ? _menuController.close() : _menuController.open();
+  }
 
   void _handleOpen() {
     handleOpen(widget.onOpen);
@@ -344,7 +386,7 @@ class _NakedSelectState<T> extends State<NakedSelect<T>>
     handleClose(
       onClose: widget.onClose,
       onCanceled: widget.onCanceled,
-      triggerFocusNode: widget.triggerFocusNode,
+      triggerFocusNode: effectiveFocusNode,
     );
     if (mounted) setState(() {});
   }
@@ -358,7 +400,7 @@ class _NakedSelectState<T> extends State<NakedSelect<T>>
   }
 
   void _handlePageUp() {
-    if (!_menuController.isOpen) return;
+    if (!widget.enabled || !_menuController.isOpen) return;
     final primaryFocus = FocusManager.instance.primaryFocus;
     if (primaryFocus?.context == null) return;
     final focusScope = FocusScope.of(primaryFocus!.context!);
@@ -368,7 +410,7 @@ class _NakedSelectState<T> extends State<NakedSelect<T>>
   }
 
   void _handlePageDown() {
-    if (!_menuController.isOpen) return;
+    if (!widget.enabled || !_menuController.isOpen) return;
     final primaryFocus = FocusManager.instance.primaryFocus;
     if (primaryFocus?.context == null) return;
     final focusScope = FocusScope.of(primaryFocus!.context!);
@@ -383,25 +425,42 @@ class _NakedSelectState<T> extends State<NakedSelect<T>>
     if (widget.value != oldWidget.value) {
       _internalValue = widget.value;
     }
+    if (oldWidget.enabled && !widget.enabled && _menuController.isOpen) {
+      _menuController.close();
+    }
   }
 
   bool get _isOpen => _menuController.isOpen;
 
+  String? get _semanticsValue {
+    final explicitValue = widget.semanticValue;
+    if (explicitValue != null) return explicitValue;
+
+    final selectedValue = _effectiveValue;
+    if (selectedValue == null) return null;
+
+    final formatter = widget.semanticValueFormatter;
+    if (formatter != null) return formatter(selectedValue);
+    return selectedValue is String ? selectedValue : null;
+  }
+
   @override
   Widget build(BuildContext context) {
-    final semanticsValue = _effectiveValue?.toString();
-
     Widget selectWidget = AnchoredOverlayShell(
       controller: _menuController,
       overlayBuilder: (context, info) {
-        return _NakedSelectScope<T>(
-          controller: _menuController,
-          closeOnSelect: widget.closeOnSelect,
-          enabled: widget.enabled,
-          onChanged: _handleSelection,
-          value: _effectiveValue,
-          child: Builder(
-            builder: (context) => widget.overlayBuilder(context, info),
+        return Semantics(
+          role: SemanticsRole.menu,
+          explicitChildNodes: true,
+          child: _NakedSelectScope<T>(
+            controller: _menuController,
+            closeOnSelect: widget.closeOnSelect,
+            enabled: widget.enabled,
+            onChanged: _handleSelection,
+            value: _effectiveValue,
+            child: Builder(
+              builder: (context) => widget.overlayBuilder(context, info),
+            ),
           ),
         );
       },
@@ -412,13 +471,13 @@ class _NakedSelectState<T> extends State<NakedSelect<T>>
       consumeOutsideTaps: widget.consumeOutsideTaps,
       useRootOverlay: widget.useRootOverlay,
       closeOnClickOutside: widget.closeOnClickOutside,
-      triggerFocusNode: widget.triggerFocusNode,
+      triggerFocusNode: effectiveFocusNode,
       positioning: widget.positioning,
       child: NakedButton(
         onPressed: widget.enabled ? _toggle : null,
         enabled: widget.enabled,
         mouseCursor: widget.mouseCursor,
-        focusNode: widget.triggerFocusNode,
+        focusNode: effectiveFocusNode,
         excludeSemantics: true,
         child: widget.child,
         builder: (context, buttonState, child) {
@@ -430,8 +489,8 @@ class _NakedSelectState<T> extends State<NakedSelect<T>>
 
           return NakedStateScopeBuilder(
             value: selectState,
-            child: child,
             builder: widget.builder,
+            child: child,
           );
         },
       ),
@@ -441,33 +500,38 @@ class _NakedSelectState<T> extends State<NakedSelect<T>>
         ? selectWidget
         : ExcludeSemantics(child: selectWidget);
 
-    Widget result = widget.excludeSemantics
-        ? ExcludeSemantics(child: selectWidget)
+    final result = widget.excludeSemantics
+        ? selectWidget
         : MergeSemantics(
             child: Semantics(
               container: true,
+              // Flutter exposes SemanticsRole.comboBox, but its debug role
+              // validator is still unimplemented (flutter/flutter#159741).
+              // The established button + expanded + value contract remains
+              // executable on every supported platform and in debug builds.
               enabled: widget.enabled,
               button: true,
-              focusable: true,
               expanded: _isOpen,
               label: widget.semanticLabel,
-              value: semanticsValue,
+              value: _semanticsValue,
               onTap: widget.enabled ? _toggle : null,
               child: semanticsChild,
             ),
           );
 
-    return Shortcuts(
-      shortcuts: NakedIntentActions.select.shortcuts,
-      child: Actions(
-        actions: NakedIntentActions.select.actions(
-          onDismiss: () => _menuController.close(),
-          onOpenOverlay: () => _menuController.open(),
-          onPageUp: _handlePageUp,
-          onPageDown: _handlePageDown,
-        ),
-        child: result,
-      ),
-    );
+    return widget.enabled
+        ? Shortcuts(
+            shortcuts: NakedIntentActions.selectShortcuts,
+            child: Actions(
+              actions: NakedIntentActions.selectActions(
+                onDismiss: () => _menuController.close(),
+                onOpenOverlay: () => _menuController.open(),
+                onPageUp: _handlePageUp,
+                onPageDown: _handlePageDown,
+              ),
+              child: result,
+            ),
+          )
+        : result;
   }
 }

@@ -12,6 +12,7 @@ class NakedToggleState extends NakedState {
   /// Whether the toggle is currently on.
   final bool isToggled;
 
+  /// Creates a toggle state snapshot.
   NakedToggleState({required super.states, required this.isToggled});
 
   /// Returns the nearest [NakedToggleState] from context.
@@ -23,11 +24,11 @@ class NakedToggleState extends NakedState {
 
   /// Returns the [WidgetStatesController] from the nearest scope.
   static WidgetStatesController controllerOf(BuildContext context) =>
-      NakedState.controllerOf(context);
+      NakedState.controllerOfType<NakedToggleState>(context);
 
   /// Returns the [WidgetStatesController] from the nearest scope, if any.
   static WidgetStatesController? maybeControllerOf(BuildContext context) =>
-      NakedState.maybeControllerOf(context);
+      NakedState.maybeControllerOfType<NakedToggleState>(context);
 
   @override
   bool operator ==(Object other) {
@@ -47,6 +48,7 @@ class NakedToggleOptionState<T> extends NakedState {
   /// The option's value.
   final T value;
 
+  /// Creates a toggle-option state snapshot for [value].
   NakedToggleOptionState({required super.states, required this.value});
 
   /// Returns the nearest [NakedToggleOptionState] of the requested type.
@@ -59,11 +61,13 @@ class NakedToggleOptionState<T> extends NakedState {
 
   /// Returns the [WidgetStatesController] from the nearest scope.
   static WidgetStatesController controllerOf(BuildContext context) =>
-      NakedState.controllerOf(context);
+      NakedState.controllerOfType<NakedToggleOptionState<dynamic>>(context);
 
   /// Returns the [WidgetStatesController] from the nearest scope, if any.
   static WidgetStatesController? maybeControllerOf(BuildContext context) =>
-      NakedState.maybeControllerOf(context);
+      NakedState.maybeControllerOfType<NakedToggleOptionState<dynamic>>(
+        context,
+      );
 
   @override
   bool operator ==(Object other) {
@@ -92,10 +96,10 @@ class NakedToggleOptionState<T> extends NakedState {
 /// ```
 ///
 /// See also:
-/// - [NakedCheckbox], for a boolean form control alternative.
-/// - [NakedRadio], for exclusive selection among options.
-
+/// - `NakedCheckbox`, for a boolean form control alternative.
+/// - `NakedRadio`, for exclusive selection among options.
 class NakedToggle extends StatefulWidget {
+  /// Creates a headless binary toggle controlled by [value].
   const NakedToggle({
     super.key,
     required this.value,
@@ -160,9 +164,9 @@ class NakedToggle extends StatefulWidget {
   /// Whether to use switch semantics instead of button semantics.
   final bool asSwitch;
 
-  /// Whether to exclude this widget from the semantic tree.
+  /// Whether to omit the semantics contributed by [NakedToggle].
   ///
-  /// When true, the widget and its children are hidden from accessibility services.
+  /// Semantics supplied by [child] or [builder] remain available.
   final bool excludeSemantics;
 
   bool get _effectiveEnabled => enabled && onChanged != null;
@@ -195,8 +199,8 @@ class _NakedToggleState extends State<NakedToggle>
 
     return NakedStateScopeBuilder(
       value: toggleState,
-      child: widget.child,
       builder: widget.builder,
+      child: widget.child,
     );
   }
 
@@ -220,6 +224,7 @@ class _NakedToggleState extends State<NakedToggle>
     return widget.excludeSemantics
         ? gestureDetector
         : Semantics(
+            excludeSemantics: widget.semanticLabel != null,
             enabled: widget._effectiveEnabled,
             toggled: widget.value,
             button: !widget.asSwitch,
@@ -247,9 +252,11 @@ class _NakedToggleState extends State<NakedToggle>
       final nowDisabled = !widget._effectiveEnabled;
       updateDisabledState(nowDisabled);
       if (nowDisabled) {
-        updateState(WidgetState.hovered, false);
-        updateState(WidgetState.pressed, false);
-        updateState(WidgetState.focused, false);
+        clearInteractionStates(
+          onHoverChange: widget.onHoverChange,
+          onFocusChange: widget.onFocusChange,
+          onPressChange: widget.onPressChange,
+        );
       }
     }
 
@@ -267,8 +274,8 @@ class _NakedToggleState extends State<NakedToggle>
       onHoverChange: (h) => updateHoverState(h, widget.onHoverChange),
       focusNode: widget.focusNode,
       mouseCursor: _effectiveCursor,
-      shortcuts: NakedIntentActions.toggle.shortcuts,
-      actions: NakedIntentActions.toggle.actions(
+      shortcuts: NakedIntentActions.buttonShortcuts,
+      actions: NakedIntentActions.toggleActions(
         onToggle: () {
           if (widget._effectiveEnabled) {
             _activate();
@@ -285,6 +292,7 @@ class _NakedToggleState extends State<NakedToggle>
 /// Provides an inherited scope for items to read `selectedValue` and call
 /// `onChanged` when activated. No styling is provided.
 class NakedToggleGroup<T> extends StatelessWidget {
+  /// Creates a single-selection group around [child].
   const NakedToggleGroup({
     super.key,
     required this.child,
@@ -326,13 +334,29 @@ class _ToggleScope<T> extends InheritedWidget {
     required super.child,
   });
 
-  static _ToggleScope<T>? maybeOf<T>(BuildContext context) =>
-      context.dependOnInheritedWidgetOfExactType();
-  static _ToggleScope<T> of<T>(BuildContext context) {
-    final scope = maybeOf<T>(context);
+  static _ToggleScope<dynamic>? maybeOf(BuildContext context) {
+    final exact = context
+        .dependOnInheritedWidgetOfExactType<_ToggleScope<dynamic>>();
+    if (exact != null) return exact;
+
+    _ToggleScope<dynamic>? covariantMatch;
+    context.visitAncestorElements((element) {
+      final widget = element.widget;
+      if (widget is _ToggleScope<dynamic>) {
+        context.dependOnInheritedElement(element as InheritedElement);
+        covariantMatch = widget;
+        return false;
+      }
+      return true;
+    });
+    return covariantMatch;
+  }
+
+  static _ToggleScope<dynamic> of(BuildContext context) {
+    final scope = maybeOf(context);
     if (scope == null) {
       throw FlutterError(
-        'NakedToggleGroup<$T> scope not found. Wrap options in NakedToggleGroup.',
+        'NakedToggleGroup scope not found. Wrap options in NakedToggleGroup.',
       );
     }
 
@@ -345,9 +369,13 @@ class _ToggleScope<T> extends InheritedWidget {
 
   bool isSelected(T value) => selectedValue == value;
 
+  void select(Object? value) => onChanged?.call(value as T?);
+
   @override
   bool updateShouldNotify(_ToggleScope<T> old) {
-    return selectedValue != old.selectedValue || enabled != old.enabled;
+    return selectedValue != old.selectedValue ||
+        enabled != old.enabled ||
+        onChanged != old.onChanged;
   }
 }
 
@@ -355,6 +383,7 @@ class _ToggleScope<T> extends InheritedWidget {
 ///
 /// Uses button-like semantics and exposes selected state via WidgetStates.
 class NakedToggleOption<T> extends StatefulWidget {
+  /// Creates an option representing [value].
   const NakedToggleOption({
     super.key,
     required this.value,
@@ -375,22 +404,45 @@ class NakedToggleOption<T> extends StatefulWidget {
          'Either child or builder must be provided',
        );
 
+  /// The value represented by this option.
   final T value;
+
+  /// The option content when [builder] is not provided.
   final Widget? child;
+
+  /// Whether this option can be selected.
   final bool enabled;
+
+  /// The mouse cursor when the option is interactive.
   final MouseCursor? mouseCursor;
+
+  /// Whether activation produces platform feedback.
   final bool enableFeedback;
+
+  /// The focus node for this option.
   final FocusNode? focusNode;
+
+  /// Whether this option requests focus initially.
   final bool autofocus;
+
+  /// Called when focus changes.
   final ValueChanged<bool>? onFocusChange;
+
+  /// Called when hover changes.
   final ValueChanged<bool>? onHoverChange;
+
+  /// Called when the pressed state changes.
   final ValueChanged<bool>? onPressChange;
+
+  /// Builds the option from its current state.
   final ValueWidgetBuilder<NakedToggleOptionState<T>>? builder;
+
+  /// Replaces the option content's accessible name when non-null.
   final String? semanticLabel;
 
-  /// Whether to exclude this widget from the semantic tree.
+  /// Whether to omit the semantics contributed by [NakedToggleOption].
   ///
-  /// When true, the widget and its children are hidden from accessibility services.
+  /// Semantics supplied by [child] or [builder] remain available.
   final bool excludeSemantics;
 
   @override
@@ -399,29 +451,46 @@ class NakedToggleOption<T> extends StatefulWidget {
 
 class _NakedToggleOptionState<T> extends State<NakedToggleOption<T>>
     with WidgetStatesMixin<NakedToggleOption<T>> {
-  void _activate(_ToggleScope<T> scope) {
+  void _activate(_ToggleScope<dynamic> scope) {
     final isEnabled = scope.enabled && widget.enabled;
     if (!isEnabled) return;
     if (widget.enableFeedback) HapticFeedback.selectionClick();
-    if (scope.onChanged != null && scope.selectedValue != widget.value) {
-      scope.onChanged!(widget.value);
+    if (scope.selectedValue != widget.value) {
+      scope.select(widget.value);
     }
   }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    final scope = _ToggleScope.of<T>(context);
+    final scope = _ToggleScope.of(context);
     final isEnabled = scope.enabled && widget.enabled;
+    final wasEnabled = !isDisabled;
     updateDisabledState(!isEnabled);
     updateSelectedState(scope.selectedValue == widget.value, null);
+    if (wasEnabled && !isEnabled) {
+      clearInteractionStates(
+        onHoverChange: widget.onHoverChange,
+        onFocusChange: widget.onFocusChange,
+        onPressChange: widget.onPressChange,
+      );
+    }
   }
 
   @override
   void didUpdateWidget(covariant NakedToggleOption<T> oldWidget) {
     super.didUpdateWidget(oldWidget);
-    final scope = _ToggleScope.of<T>(context);
-    updateDisabledState(!(scope.enabled && widget.enabled));
+    final scope = _ToggleScope.of(context);
+    final isEnabled = scope.enabled && widget.enabled;
+    final wasEnabled = !isDisabled;
+    updateDisabledState(!isEnabled);
+    if (wasEnabled && !isEnabled) {
+      clearInteractionStates(
+        onHoverChange: widget.onHoverChange,
+        onFocusChange: widget.onFocusChange,
+        onPressChange: widget.onPressChange,
+      );
+    }
 
     // If *this item's* value changed identity, recompute selected.
     if (widget.value != oldWidget.value) {
@@ -431,7 +500,7 @@ class _NakedToggleOptionState<T> extends State<NakedToggleOption<T>>
 
   @override
   Widget build(BuildContext context) {
-    final scope = _ToggleScope.of<T>(context);
+    final scope = _ToggleScope.of(context);
     final isEnabled = scope.enabled && widget.enabled;
     final isSelected = scope.selectedValue == widget.value;
 
@@ -470,6 +539,7 @@ class _NakedToggleOptionState<T> extends State<NakedToggleOption<T>>
         ? gestureDetector
         : Semantics(
             container: true,
+            excludeSemantics: widget.semanticLabel != null,
             enabled: isEnabled,
             selected: isSelected,
             button: true,
@@ -485,8 +555,8 @@ class _NakedToggleOptionState<T> extends State<NakedToggleOption<T>>
       onHoverChange: (h) => updateHoverState(h, widget.onHoverChange),
       focusNode: widget.focusNode,
       mouseCursor: cursor,
-      shortcuts: NakedIntentActions.toggle.shortcuts,
-      actions: NakedIntentActions.toggle.actions(
+      shortcuts: NakedIntentActions.buttonShortcuts,
+      actions: NakedIntentActions.toggleActions(
         onToggle: () => _activate(scope),
       ),
       child: optionChild,

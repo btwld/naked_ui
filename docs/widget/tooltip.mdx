@@ -14,7 +14,7 @@ Headless tooltip component built on Flutter's `RawTooltip`. Handles hover/touch 
 - **Feature descriptions**: Brief explanations of complex features
 
 <Info>
-  Working example: [`example/lib/api/naked_tooltip.0.dart`](https://github.com/btwld/naked_ui/blob/main/example/lib/api/naked_tooltip.0.dart).
+  Working example: [`packages/example/lib/api/naked_tooltip.0.dart`](https://github.com/btwld/naked_ui/blob/main/packages/example/lib/api/naked_tooltip.0.dart).
 </Info>
 
 ## Basic implementation
@@ -95,7 +95,8 @@ const NakedTooltip({
 - `animationStyle` → customize animation duration, curve, and reverse behavior
 - `onTriggered` → called when triggered by tap or long press (not hover)
 - `semanticLabel` → text announced by assistive technologies
-- `excludeSemantics` → hide tooltip semantics from accessibility services
+- `excludeSemantics` → omit the tooltip text contributed by `NakedTooltip`;
+  semantics from the trigger child remain available
 
 ## Behaviour Notes
 

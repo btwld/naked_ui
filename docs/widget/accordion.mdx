@@ -14,7 +14,7 @@ Headless accordion component. Handles section expansion, keyboard navigation, an
 - **Space-saving layouts**: Show/hide content sections as needed
 
 <Info>
-  A complete example lives in [`example/lib/api/naked_accordion.0.dart`](https://github.com/btwld/naked_ui/blob/main/example/lib/api/naked_accordion.0.dart).
+  A complete example lives in [`packages/example/lib/api/naked_accordion.0.dart`](https://github.com/btwld/naked_ui/blob/main/packages/example/lib/api/naked_accordion.0.dart).
 </Info>
 
 ## Basic implementation
@@ -34,23 +34,31 @@ class _AccordionExampleState extends State<AccordionExample> {
   final controller = NakedAccordionController<String>(min: 1, max: 2);
 
   @override
+  void dispose() {
+    controller.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return NakedAccordionGroup<String>(
       controller: controller,
       initialExpandedValues: const ['intro'],
-      children: const [
-        _AccordionSection(
-          value: 'intro',
-          title: 'Introduction',
-          body: 'Foundational information about the topic.',
-        ),
-        SizedBox(height: 8),
-        _AccordionSection(
-          value: 'details',
-          title: 'Details',
-          body: 'Deep-dive content that can be long-form text.',
-        ),
-      ],
+      child: const Column(
+        children: [
+          _AccordionSection(
+            value: 'intro',
+            title: 'Introduction',
+            body: 'Foundational information about the topic.',
+          ),
+          SizedBox(height: 8),
+          _AccordionSection(
+            value: 'details',
+            title: 'Details',
+            body: 'Deep-dive content that can be long-form text.',
+          ),
+        ],
+      ),
     );
   }
 }
@@ -98,7 +106,7 @@ class _AccordionSectionState extends State<_AccordionSection> {
           child: Row(
             children: [
               Expanded(
-                child: const Text(
+                child: Text(
                   widget.title,
                   style: const TextStyle(fontWeight: FontWeight.w600),
                 ),
@@ -123,7 +131,7 @@ class _AccordionSectionState extends State<_AccordionSection> {
       ),
       child: Padding(
         padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-        child: const Text(widget.body),
+        child: Text(widget.body),
       ),
     );
   }
@@ -137,7 +145,7 @@ class _AccordionSectionState extends State<_AccordionSection> {
 - `expandedCount` → number of currently expanded items
 - `canExpandMore` / `canCollapseMore` → whether additional opens/closes are allowed under the controller constraints
 - `minExpanded` / `maxExpanded` → configuration echoed for convenience
-- `widgetStates` → hover/focus/pressed/disabled states captured from the group container
+- `states` → immutable hover/focus/pressed/disabled state set captured from the group container
 
 ## Item State Snapshot
 
@@ -146,7 +154,7 @@ class _AccordionSectionState extends State<_AccordionSection> {
 - `value` → item identifier
 - `isExpanded` → whether the panel is currently open
 - `canExpand` / `canCollapse` → controller-aware capabilities
-- `widgetStates` → raw `Set<WidgetState>` to resolve hover, focus, press
+- `states` → immutable `Set<WidgetState>` to resolve hover, focus, press
 
 Use these values to adjust affordances (e.g. disable icons when the controller prevents expansion).
 
@@ -166,6 +174,8 @@ Use these values to adjust affordances (e.g. disable icons when the controller p
 - `openAll(Iterable<T>)`, `replaceAll(Iterable<T>)`, `clear()`
 - `min` ensures at least that many sections stay expanded when closing
 - `max` limits how many sections can be open at once (FIFO eviction)
+
+The controller is caller-owned; dispose it with the owning state.
 
 ## Constructors
 
@@ -202,6 +212,7 @@ const NakedAccordion({
   this.onHoverChange,
   this.onPressChange,
   this.semanticLabel,
+  this.excludeSemantics = false,
 })
 ```
 
@@ -211,6 +222,8 @@ const NakedAccordion({
 - interaction callbacks: `onFocusChange`, `onHoverChange`, `onPressChange`
 - `transitionBuilder` lets you wrap the panel with your own show/hide animation
 - `enabled` / `mouseCursor` / `enableFeedback` provide interaction affordance hooks
+- `excludeSemantics` omits only the trigger semantics contributed by
+  `NakedAccordion`; panel semantics remain available
 
 ## Accessibility Guidance
 

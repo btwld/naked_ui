@@ -99,7 +99,7 @@ void main() {
       expect(find.text('Banana'), findsNothing);
     });
 
-    testWidgets('onSelectedValueChanged callback works', (tester) async {
+    testWidgets('onChanged callback works', (tester) async {
       String? lastSelectedValue;
       int callbackCount = 0;
 

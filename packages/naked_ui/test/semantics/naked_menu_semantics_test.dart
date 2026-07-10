@@ -180,6 +180,16 @@ void main() {
       expect(find.text('Item 2'), findsOneWidget);
       expect(find.text('Disabled Item'), findsOneWidget);
 
+      final itemNode = tester.getSemantics(find.text('Item 1'));
+      expect(itemNode.getSemanticsData().role, SemanticsRole.menuItem);
+
+      SemanticsNode? ancestor = itemNode.parent;
+      while (ancestor != null &&
+          ancestor.getSemanticsData().role != SemanticsRole.menu) {
+        ancestor = ancestor.parent;
+      }
+      expect(ancestor, isNotNull);
+
       handle.dispose();
     });
 

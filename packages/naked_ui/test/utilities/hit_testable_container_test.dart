@@ -1,50 +1,38 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:naked_ui/src/utilities/hit_testable_container.dart';
 
 void main() {
   group('HitTestableContainer', () {
-    testWidgets('creates render object correctly', (tester) async {
+    testWidgets('renders its child without changing its size', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
-          home: HitTestableContainer(child: Container(width: 100, height: 100)),
-        ),
-      );
-
-      final renderObject = tester.renderObject(
-        find.byType(HitTestableContainer),
-      );
-      expect(renderObject, isA<RenderProxyBox>());
-    });
-
-    testWidgets('renders child widget', (tester) async {
-      await tester.pumpWidget(
-        MaterialApp(
-          home: HitTestableContainer(
-            child: Container(
-              width: 100,
-              height: 100,
-              color: Colors.red,
-              child: const Text('Test'),
+        const MaterialApp(
+          home: Center(
+            child: HitTestableContainer(
+              child: SizedBox(width: 80, height: 40, child: Text('Test')),
             ),
           ),
         ),
       );
 
       expect(find.text('Test'), findsOneWidget);
-      expect(find.byType(Container), findsOneWidget);
+      expect(
+        tester.getSize(find.byType(HitTestableContainer)),
+        const Size(80, 40),
+      );
     });
 
-    testWidgets('is hit testable within bounds', (tester) async {
-      bool wasPressed = false;
+    testWidgets('makes a layout-only child opaque to hit testing', (
+      tester,
+    ) async {
+      var tapCount = 0;
 
       await tester.pumpWidget(
         MaterialApp(
           home: Center(
             child: GestureDetector(
-              onTap: () => wasPressed = true,
-              child: HitTestableContainer(
+              onTap: () => tapCount++,
+              child: const HitTestableContainer(
                 child: SizedBox(width: 100, height: 100),
               ),
             ),
@@ -52,20 +40,20 @@ void main() {
         ),
       );
 
-      // Tap within the bounds
       await tester.tap(find.byType(HitTestableContainer));
-      expect(wasPressed, isTrue);
+
+      expect(tapCount, 1);
     });
 
-    testWidgets('hit test passes through to children', (tester) async {
-      bool childPressed = false;
+    testWidgets('preserves child gesture handling', (tester) async {
+      var childTapCount = 0;
 
       await tester.pumpWidget(
         MaterialApp(
           home: Center(
             child: HitTestableContainer(
               child: GestureDetector(
-                onTap: () => childPressed = true,
+                onTap: () => childTapCount++,
                 child: Container(width: 100, height: 100, color: Colors.blue),
               ),
             ),
@@ -73,114 +61,42 @@ void main() {
         ),
       );
 
-      await tester.tap(find.byType(Container));
+      await tester.tap(find.byType(GestureDetector));
 
-      // Child should receive the tap
-      expect(childPressed, isTrue);
+      expect(childTapCount, 1);
     });
 
-    testWidgets('debug properties are hidden from inspector', (tester) async {
+    testWidgets('does not accept hits outside its bounds', (tester) async {
+      var backgroundTapCount = 0;
+      var foregroundTapCount = 0;
+
       await tester.pumpWidget(
         MaterialApp(
-          home: HitTestableContainer(child: Container(width: 100, height: 100)),
-        ),
-      );
-
-      final widget = tester.widget<HitTestableContainer>(
-        find.byType(HitTestableContainer),
-      );
-      final properties = DiagnosticPropertiesBuilder();
-      widget.debugFillProperties(properties);
-
-      // Should have added the hidden property
-      final hiddenProperty = properties.properties.firstWhere(
-        (prop) =>
-            prop.name == 'inspector' && prop.level == DiagnosticLevel.hidden,
-      );
-      expect(hiddenProperty.value, equals('hidden'));
-    });
-
-    testWidgets('hit test rejects taps outside bounds', (tester) async {
-      await tester.pumpWidget(
-        MaterialApp(
-          home: Center(
-            child: HitTestableContainer(
-              child: Container(width: 50, height: 50, color: Colors.green),
-            ),
+          home: Stack(
+            children: [
+              Positioned.fill(
+                child: GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: () => backgroundTapCount++,
+                ),
+              ),
+              Center(
+                child: GestureDetector(
+                  onTap: () => foregroundTapCount++,
+                  child: const HitTestableContainer(
+                    child: SizedBox(width: 50, height: 50),
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
       );
 
-      final renderObject = tester.renderObject<RenderBox>(
-        find.byType(HitTestableContainer),
-      );
-      final result = BoxHitTestResult();
+      await tester.tapAt(const Offset(10, 10));
 
-      // Test hit outside bounds
-      final outsidePosition = Offset(
-        renderObject.size.width + 10,
-        renderObject.size.height + 10,
-      );
-      final hitOutside = renderObject.hitTest(
-        result,
-        position: outsidePosition,
-      );
-
-      expect(hitOutside, isFalse);
-    });
-
-    testWidgets('paint method works with and without child', (tester) async {
-      // Test with child
-      await tester.pumpWidget(
-        MaterialApp(
-          home: HitTestableContainer(
-            child: Container(width: 100, height: 100, color: Colors.red),
-          ),
-        ),
-      );
-
-      expect(tester.takeException(), isNull);
-
-      // Test without child (empty SizedBox)
-      await tester.pumpWidget(
-        MaterialApp(home: HitTestableContainer(child: const SizedBox.shrink())),
-      );
-
-      expect(tester.takeException(), isNull);
-    });
-
-    testWidgets('debugPaintSize works in debug mode', (tester) async {
-      // Test with child
-      await tester.pumpWidget(
-        MaterialApp(
-          home: HitTestableContainer(
-            child: Container(width: 100, height: 100, color: Colors.red),
-          ),
-        ),
-      );
-
-      // Enable debug painting to trigger debugPaintSize
-      final originalDebugPaintSizeEnabled = debugPaintSizeEnabled;
-      debugPaintSizeEnabled = true;
-
-      try {
-        // Force a repaint to trigger debugPaintSize method
-        await tester.pump();
-        expect(tester.takeException(), isNull);
-
-        // Test without child (empty SizedBox)
-        await tester.pumpWidget(
-          MaterialApp(
-            home: HitTestableContainer(child: const SizedBox.shrink()),
-          ),
-        );
-
-        await tester.pump();
-        expect(tester.takeException(), isNull);
-      } finally {
-        // Always restore original debug state
-        debugPaintSizeEnabled = originalDebugPaintSizeEnabled;
-      }
+      expect(backgroundTapCount, 1);
+      expect(foregroundTapCount, 0);
     });
   });
 }

@@ -35,6 +35,7 @@ class NakedAccordionGroupState extends NakedState {
     required this.maxExpanded,
   });
 
+  /// Creates a group snapshot and derives its expansion affordances.
   factory NakedAccordionGroupState({
     required Set<WidgetState> states,
     required int expandedCount,
@@ -64,11 +65,11 @@ class NakedAccordionGroupState extends NakedState {
 
   /// Returns the [WidgetStatesController] from the nearest scope.
   static WidgetStatesController controllerOf(BuildContext context) =>
-      NakedState.controllerOf(context);
+      NakedState.controllerOfType<NakedAccordionGroupState>(context);
 
   /// Returns the [WidgetStatesController] from the nearest scope, if any.
   static WidgetStatesController? maybeControllerOf(BuildContext context) =>
-      NakedState.maybeControllerOf(context);
+      NakedState.maybeControllerOfType<NakedAccordionGroupState>(context);
 
   @override
   bool operator ==(Object other) {
@@ -108,6 +109,7 @@ class NakedAccordionItemState<T> extends NakedState {
   /// Whether this item can be expanded while honoring [NakedAccordionController.max].
   final bool canExpand;
 
+  /// Creates an accordion-item state snapshot for [value].
   NakedAccordionItemState({
     required super.states,
     required this.value,
@@ -126,11 +128,13 @@ class NakedAccordionItemState<T> extends NakedState {
 
   /// Returns the [WidgetStatesController] from the nearest scope.
   static WidgetStatesController controllerOf(BuildContext context) =>
-      NakedState.controllerOf(context);
+      NakedState.controllerOfType<NakedAccordionItemState<dynamic>>(context);
 
   /// Returns the [WidgetStatesController] from the nearest scope, if any.
   static WidgetStatesController? maybeControllerOf(BuildContext context) =>
-      NakedState.maybeControllerOf(context);
+      NakedState.maybeControllerOfType<NakedAccordionItemState<dynamic>>(
+        context,
+      );
 
   @override
   bool operator ==(Object other) {
@@ -165,61 +169,86 @@ class NakedAccordionController<T> with ChangeNotifier {
   /// When `null`, expansion count is unlimited.
   final int? max;
 
-  /// Expanded values tracked in insertion order (oldest → newest).
-  final LinkedHashSet<T> values = LinkedHashSet<T>();
+  final LinkedHashSet<T> _values = LinkedHashSet<T>();
 
-  NakedAccordionController({this.min = 0, this.max})
-    : assert(min >= 0, 'min must be >= 0'),
-      assert(max == null || max >= min, 'max must be >= min');
+  /// An immutable snapshot of the expanded values, oldest first.
+  ///
+  /// Use [open], [close], [toggle], [openAll], [replaceAll], or [clear] to
+  /// update the controller while preserving constraints and notifications.
+  Set<T> get values => Set<T>.unmodifiable(_values);
+
+  /// Creates an accordion controller with optional expansion constraints.
+  ///
+  /// Throws an [ArgumentError] when [min] is negative or [max] is less than
+  /// [min].
+  NakedAccordionController({this.min = 0, this.max}) {
+    if (min < 0) {
+      throw ArgumentError.value(min, 'min', 'must be non-negative');
+    }
+    if (max != null && max! < min) {
+      throw ArgumentError.value(max, 'max', 'must be at least min ($min)');
+    }
+  }
 
   /// Reports whether the item with [value] is currently expanded.
-  bool contains(T value) => values.contains(value);
+  bool contains(T value) => _values.contains(value);
+
+  /// Whether [value] can be opened.
+  ///
+  /// Reaching [max] does not prevent opening a new value: the oldest expanded
+  /// value is evicted first. A value cannot be opened only when it is already
+  /// open or [max] is zero.
+  bool canOpen(T value) => !_values.contains(value) && max != 0;
+
+  /// Whether [value] can be closed without crossing the [min] floor.
+  bool canClose(T value) => _values.contains(value) && _values.length > min;
+
+  /// Whether toggling [value] would change this controller.
+  bool canToggle(T value) =>
+      _values.contains(value) ? canClose(value) : canOpen(value);
 
   /// Opens [value], evicting the oldest entry when [max] is reached.
   void open(T value) {
-    if (values.contains(value)) return; // no-op
+    if (!canOpen(value)) return;
     final maxValue = max;
-    if (maxValue == 0) return; // never allow expands when max is zero
-    if (maxValue != null && values.length >= maxValue) {
+    if (maxValue != null && _values.length >= maxValue) {
       // Close oldest to make room.
-      if (values.isNotEmpty) {
-        final oldest = values.first;
-        values.remove(oldest);
+      if (_values.isNotEmpty) {
+        _values.remove(_values.first);
       }
     }
-    values.add(value);
+    _values.add(value);
     notifyListeners();
   }
 
   /// Closes [value] while respecting the [min] floor.
   void close(T value) {
-    if (!values.contains(value)) return; // no-op
-    if (min > 0 && values.length <= min) return; // floor
-    values.remove(value);
+    if (!canClose(value)) return;
+    _values.remove(value);
     notifyListeners();
   }
 
   /// Toggles [value], applying both [min] and [max] constraints.
   void toggle(T value) {
-    if (values.contains(value)) {
-      close(value); // close() will notify
+    if (_values.contains(value)) {
+      close(value);
     } else {
-      open(value); // open() will notify
+      open(value);
     }
   }
 
   /// Removes all expanded values but preserves the first [min] entries.
   void clear() {
-    if (values.isEmpty) return;
+    if (_values.isEmpty) return;
     if (min <= 0) {
-      values.clear();
+      _values.clear();
       notifyListeners();
 
       return;
     }
-    if (values.length <= min) return; // already at/under floor
-    final keep = values.take(min).toList(growable: false);
-    values
+    if (_values.length <= min) return;
+    final keep = _values.take(min).toList(growable: false);
+    _values
       ..clear()
       ..addAll(keep);
     notifyListeners();
@@ -231,14 +260,13 @@ class NakedAccordionController<T> with ChangeNotifier {
     if (maxValue == 0) return;
     var changed = false;
     for (final v in newValues) {
-      if (values.contains(v)) continue;
-      if (maxValue != null && values.length >= maxValue) {
-        if (values.isNotEmpty) {
-          final oldest = values.first;
-          values.remove(oldest);
+      if (_values.contains(v)) continue;
+      if (maxValue != null && _values.length >= maxValue) {
+        if (_values.isNotEmpty) {
+          _values.remove(_values.first);
         }
       }
-      values.add(v);
+      _values.add(v);
       changed = true;
     }
     if (changed) notifyListeners();
@@ -249,10 +277,14 @@ class NakedAccordionController<T> with ChangeNotifier {
   /// This may produce fewer than [min] expanded items because it is a direct
   /// programmatic update. User-initiated closing still honors [min].
   void replaceAll(Iterable<T> newValues) {
-    final target = (max != null) ? newValues.take(max!) : newValues;
-    final next = LinkedHashSet<T>.of(target);
-    if (setEquals(values, next)) return; // no change
-    values
+    final maxValue = max;
+    final next = <T>{};
+    for (final value in newValues) {
+      if (maxValue != null && next.length >= maxValue) break;
+      next.add(value);
+    }
+    if (listEquals(_values.toList(), next.toList())) return;
+    _values
       ..clear()
       ..addAll(next);
     notifyListeners();
@@ -265,12 +297,10 @@ class NakedAccordionController<T> with ChangeNotifier {
 /// the controller's state changes, eliminating the need for explicit
 /// [ListenableBuilder] wrappers in accordion items.
 ///
-/// All accordion items rebuild when any item changes state - this is intentional
-/// as Flutter's Element reconciliation efficiently handles widget reuse, and
-/// typical accordion usage involves only 2-5 items where optimization overhead
-/// exceeds any benefit.
+/// Descendants that depend on this scope rebuild when the controller notifies.
 class NakedAccordionScope<T>
     extends InheritedNotifier<NakedAccordionController<T>> {
+  /// Creates a scope for [controller] around [child].
   const NakedAccordionScope({
     super.key,
     required NakedAccordionController<T> controller,
@@ -306,19 +336,22 @@ class NakedAccordionScope<T>
 /// final controller = NakedAccordionController<String>();
 /// NakedAccordionGroup<String>(
 ///   controller: controller,
-///   children: [
-///     NakedAccordion(
-///       value: 'section1',
-///       builder: (context, state) => Text('Section 1'),
-///       child: Text('Content 1'),
-///     ),
-///   ],
+///   child: Column(
+///     children: [
+///       NakedAccordion(
+///         value: 'section1',
+///         builder: (context, state) => Text('Section 1'),
+///         child: Text('Content 1'),
+///       ),
+///     ],
+///   ),
 /// )
 /// ```
 ///
 /// See also:
-/// - [ExpansionPanelList], the Material-styled accordion for typical apps.
+/// - `ExpansionPanelList`, the Material-styled accordion for typical apps.
 class NakedAccordionGroup<T> extends StatefulWidget {
+  /// Creates an accordion group controlled by [controller].
   const NakedAccordionGroup({
     super.key,
     required this.child,
@@ -356,10 +389,15 @@ class _NakedAccordionGroupState<T> extends State<NakedAccordionGroup<T>> {
   @override
   void didUpdateWidget(covariant NakedAccordionGroup<T> oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (!listEquals(
-          oldWidget.initialExpandedValues,
-          widget.initialExpandedValues,
-        ) &&
+    final controllerChanged = !identical(
+      oldWidget.controller,
+      widget.controller,
+    );
+    final initialValuesChanged = !listEquals(
+      oldWidget.initialExpandedValues,
+      widget.initialExpandedValues,
+    );
+    if ((controllerChanged || initialValuesChanged) &&
         _controller.values.isEmpty) {
       _controller.replaceAll(widget.initialExpandedValues);
     }
@@ -393,6 +431,7 @@ class _NakedAccordionGroupState<T> extends State<NakedAccordionGroup<T>> {
   }
 }
 
+/// Builds an accordion trigger from its current item [state].
 typedef NakedAccordionTriggerBuilder<T> =
     Widget Function(BuildContext context, NakedAccordionItemState<T> state);
 
@@ -404,6 +443,7 @@ typedef NakedAccordionTriggerBuilder<T> =
 /// See also:
 /// - [NakedAccordionGroup], the container that manages accordion items.
 class NakedAccordion<T> extends StatefulWidget {
+  /// Creates an accordion item identified by [value].
   const NakedAccordion({
     super.key,
     required this.builder,
@@ -461,9 +501,10 @@ class NakedAccordion<T> extends StatefulWidget {
   /// Focus node associated with the header.
   final FocusNode? focusNode;
 
-  /// Whether to exclude this widget from the semantic tree.
+  /// Whether to omit the accordion's button and expanded-state semantics.
   ///
-  /// When true, the widget and its children are hidden from accessibility services.
+  /// The semantics supplied by [builder] remain in the tree, allowing callers
+  /// to provide a complete custom accessibility contract.
   final bool excludeSemantics;
 
   @override
@@ -485,6 +526,13 @@ class _NakedAccordionState<T> extends State<NakedAccordion<T>>
     super.didUpdateWidget(oldWidget);
     if (oldWidget.enabled != widget.enabled) {
       updateDisabledState(!widget.enabled);
+      if (!widget.enabled) {
+        clearInteractionStates(
+          onHoverChange: widget.onHoverChange,
+          onFocusChange: widget.onFocusChange,
+          onPressChange: widget.onPressChange,
+        );
+      }
     }
   }
 
@@ -504,23 +552,28 @@ class _NakedAccordionState<T> extends State<NakedAccordion<T>>
   ) {
     // Derive state directly from controller.
     final isExpanded = controller.contains(widget.value);
-    final canCollapse =
-        isExpanded && (controller.values.length > controller.min);
-    final canExpand =
-        !isExpanded &&
-        (controller.max == null || controller.values.length < controller.max!);
+    final canCollapse = controller.canClose(widget.value);
+    final canExpand = controller.canOpen(widget.value);
+    final effectiveEnabled =
+        widget.enabled && controller.canToggle(widget.value);
+    final effectiveStates = widgetStates;
+    if (!effectiveEnabled) {
+      effectiveStates
+        ..add(WidgetState.disabled)
+        ..remove(WidgetState.pressed);
+    }
 
     // Build the panel only when expanded.
     final Widget panel = isExpanded ? widget.child : const SizedBox.shrink();
 
     void onTap() {
-      if (!widget.enabled) return;
+      if (!effectiveEnabled) return;
       if (widget.enableFeedback) Feedback.forTap(context);
       _toggle(controller);
     }
 
     final accordionState = NakedAccordionItemState<T>(
-      states: widgetStates,
+      states: effectiveStates,
       value: widget.value,
       isExpanded: isExpanded,
       canCollapse: canCollapse,
@@ -533,18 +586,18 @@ class _NakedAccordionState<T> extends State<NakedAccordion<T>>
           widget.builder(context, accordionState),
     );
 
-    final bool excludeTriggerSemantics =
-        widget.excludeSemantics || widget.semanticLabel != null;
+    final excludeTriggerSemantics =
+        !widget.excludeSemantics && widget.semanticLabel != null;
 
     Widget triggerContent = GestureDetector(
-      onTapDown: (widget.enabled && widget.onPressChange != null)
+      onTapDown: effectiveEnabled
           ? (_) => updatePressState(true, widget.onPressChange)
           : null,
-      onTapUp: (widget.enabled && widget.onPressChange != null)
+      onTapUp: effectiveEnabled
           ? (_) => updatePressState(false, widget.onPressChange)
           : null,
-      onTap: widget.enabled ? onTap : null,
-      onTapCancel: (widget.enabled && widget.onPressChange != null)
+      onTap: effectiveEnabled ? onTap : null,
+      onTapCancel: effectiveEnabled
           ? () => updatePressState(false, widget.onPressChange)
           : null,
       behavior: HitTestBehavior.opaque,
@@ -557,11 +610,11 @@ class _NakedAccordionState<T> extends State<NakedAccordion<T>>
     Widget accordionChild = widget.excludeSemantics
         ? triggerContent
         : Semantics(
-            enabled: widget.enabled,
+            enabled: effectiveEnabled,
             button: true,
             expanded: isExpanded,
             label: widget.semanticLabel,
-            onTap: widget.enabled ? onTap : null,
+            onTap: effectiveEnabled ? onTap : null,
             child: triggerContent,
           );
 
@@ -569,16 +622,16 @@ class _NakedAccordionState<T> extends State<NakedAccordion<T>>
       mainAxisSize: MainAxisSize.min,
       children: [
         NakedFocusableDetector(
-          enabled: widget.enabled,
+          enabled: effectiveEnabled,
           autofocus: widget.autofocus,
           onFocusChange: (f) => updateFocusState(f, widget.onFocusChange),
           onHoverChange: (h) => updateHoverState(h, widget.onHoverChange),
           focusNode: widget.focusNode,
-          mouseCursor: widget.enabled
+          mouseCursor: effectiveEnabled
               ? widget.mouseCursor
               : SystemMouseCursors.basic,
-          shortcuts: NakedIntentActions.accordion.shortcuts,
-          actions: NakedIntentActions.accordion.actions(onToggle: onTap),
+          shortcuts: NakedIntentActions.buttonShortcuts,
+          actions: NakedIntentActions.accordionActions(onToggle: onTap),
           child: accordionChild,
         ),
         NakedStateScopeBuilder(

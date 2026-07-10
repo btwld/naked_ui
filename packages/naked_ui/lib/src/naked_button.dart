@@ -10,15 +10,23 @@ import 'utilities/state.dart';
 
 /// Immutable view passed to [NakedButton.builder].
 class NakedButtonState extends NakedState {
+  /// Creates a snapshot from [states].
   NakedButtonState({required super.states});
 
+  /// Returns the nearest [NakedButtonState].
   static NakedButtonState of(BuildContext context) => NakedState.of(context);
+
+  /// Returns the nearest [NakedButtonState], or null when none exists.
   static NakedButtonState? maybeOf(BuildContext context) =>
       NakedState.maybeOf(context);
+
+  /// Returns the state controller for the nearest button scope.
   static WidgetStatesController controllerOf(BuildContext context) =>
-      NakedState.controllerOf(context);
+      NakedState.controllerOfType<NakedButtonState>(context);
+
+  /// Returns the nearest button state controller, if one exists.
   static WidgetStatesController? maybeControllerOf(BuildContext context) =>
-      NakedState.maybeControllerOf(context);
+      NakedState.maybeControllerOfType<NakedButtonState>(context);
 
   @override
   bool operator ==(Object other) {
@@ -38,6 +46,9 @@ class NakedButtonState extends NakedState {
 /// See also:
 /// - [GestureDetector], for direct gesture handling without button semantics.
 class NakedButton extends StatefulWidget {
+  /// Creates a headless button.
+  ///
+  /// Either [child] or [builder] must be provided to render content.
   const NakedButton({
     super.key,
     this.child,
@@ -103,9 +114,9 @@ class NakedButton extends StatefulWidget {
   /// Semantic label for the button.
   final String? semanticLabel;
 
-  /// Whether to exclude this widget from the semantic tree.
+  /// Whether to omit the button semantics contributed by [NakedButton].
   ///
-  /// When true, the widget and its children are hidden from accessibility services.
+  /// Semantics supplied by [child] or [builder] remain available.
   final bool excludeSemantics;
 
   @override
@@ -202,8 +213,12 @@ class _NakedButtonState extends State<NakedButton>
       // Clean up if becoming non-interactive
       if (!_isInteractive) {
         _cleanupKeyboardTimer();
-        // Force clear pressed state when disabled
-        updatePressState(false, widget.onPressChange);
+        clearInteractionStates(
+          onHoverChange: widget.onHoverChange,
+          onFocusChange: widget.onFocusChange,
+          onPressChange: widget.onPressChange,
+        );
+        if (effectiveFocusNode.hasFocus) effectiveFocusNode.unfocus();
       }
     }
   }
@@ -232,20 +247,25 @@ class _NakedButtonState extends State<NakedButton>
       excludeFromSemantics: true,
       child: NakedStateScopeBuilder(
         value: buttonState,
-        child: widget.child,
         builder: widget.builder,
+        child: widget.child,
       ),
     );
 
     Widget result = widget.excludeSemantics
         ? gestureDetector
         : Semantics(
+            excludeSemantics: widget.semanticLabel != null,
             enabled: _isInteractive,
             button: true,
             label: widget.semanticLabel,
             tooltip: widget.tooltip,
-            onTap: widget.onPressed != null ? _handleTap : null,
-            onLongPress: widget.onLongPress != null ? _handleLongPress : null,
+            onTap: _isInteractive && widget.onPressed != null
+                ? _handleTap
+                : null,
+            onLongPress: _isInteractive && widget.onLongPress != null
+                ? _handleLongPress
+                : null,
             child: gestureDetector,
           );
 
@@ -262,8 +282,8 @@ class _NakedButtonState extends State<NakedButton>
       mouseCursor: _isInteractive
           ? widget.mouseCursor
           : SystemMouseCursors.basic,
-      shortcuts: NakedIntentActions.button.shortcuts,
-      actions: NakedIntentActions.button.actions(
+      shortcuts: NakedIntentActions.buttonShortcuts,
+      actions: NakedIntentActions.buttonActions(
         onPressed: _handleKeyboardActivation,
       ),
       child: result,

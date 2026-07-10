@@ -19,6 +19,19 @@ extension _NakedMenuTester on WidgetTester {
 }
 
 void main() {
+  testWidgets('NakedMenuItem reports a descriptive error outside NakedMenu', (
+    tester,
+  ) async {
+    await tester.pumpMaterialWidget(
+      const NakedMenuItem<String>(value: 'orphan', child: Text('Orphan item')),
+    );
+
+    final exception = tester.takeException();
+    expect(exception, isA<FlutterError>());
+    expect(exception.toString(), contains('requires a NakedMenu'));
+    expect(exception.toString(), contains('ancestor'));
+  });
+
   group('NakedMenu', () {
     group('Basic Functionality', () {
       NakedMenu<String> buildBasicMenu(MenuController controller) {
@@ -244,7 +257,7 @@ void main() {
           final controller = MenuController();
 
           await tester.pumpMaterialWidget(
-            NakedMenu(
+            NakedMenu<String>(
               controller: controller,
               onClose: () => onMenuCloseCalled = true,
               overlayBuilder: (context, info) => Container(
@@ -279,6 +292,50 @@ void main() {
       );
     });
     group('Keyboard Interaction', () {
+      testWidgets('Home and End focus the first and last items', (
+        tester,
+      ) async {
+        final controller = MenuController();
+        final focused = List<bool>.filled(3, false);
+
+        await tester.pumpMaterialWidget(
+          Center(
+            child: NakedMenu<String>(
+              controller: controller,
+              overlayBuilder: (context, info) => Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  for (var index = 0; index < focused.length; index++)
+                    NakedMenuItem<String>(
+                      value: 'item$index',
+                      builder: (context, state, child) {
+                        focused[index] = state.isFocused;
+                        return child!;
+                      },
+                      child: Text('Item $index'),
+                    ),
+                ],
+              ),
+              builder: (context, state, child) => const Text('Open menu'),
+            ),
+          ),
+        );
+
+        controller.open();
+        await tester.pumpAndSettle();
+        await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
+        await tester.pump();
+        expect(focused.indexWhere((value) => value), 0);
+
+        await tester.sendKeyEvent(LogicalKeyboardKey.end);
+        await tester.pump();
+        expect(focused.indexWhere((value) => value), 2);
+
+        await tester.sendKeyEvent(LogicalKeyboardKey.home);
+        await tester.pump();
+        expect(focused.indexWhere((value) => value), 0);
+      });
+
       testWidgets('Traps focus within menu when opens', (
         WidgetTester tester,
       ) async {
@@ -286,7 +343,7 @@ void main() {
         final controller = MenuController();
         await tester.pumpMaterialWidget(
           Center(
-            child: NakedMenu(
+            child: NakedMenu<String>(
               controller: controller,
               overlayBuilder: (context, info) => const Column(
                 children: [
@@ -349,7 +406,7 @@ void main() {
                   Positioned(
                     top: 100,
                     left: 100,
-                    child: NakedMenu(
+                    child: NakedMenu<String>(
                       controller: controller,
                       onClose: () => onMenuCloseCalled = true,
                       consumeOutsideTaps: true,

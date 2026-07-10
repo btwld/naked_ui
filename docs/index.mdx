@@ -1,226 +1,133 @@
 ---
 title: Getting Started
-description: Behavior-first, zero-styling Flutter components
+description: Behavior-first, unstyled Flutter components
 ---
 
-The Naked UI library provides headless components that handle functionality, interaction, and accessibility without imposing any visual styling. This approach gives you full control over your design system while ensuring components work correctly and meet accessibility standards.
+Naked UI provides interaction, focus, keyboard, and accessibility behavior
+without prescribing presentation. Its builders expose immutable state snapshots,
+so your design system owns every pixel while the control keeps a predictable
+behavioral contract.
 
-## What is headless UI?
+## Requirements
 
-Headless components handle interaction behavior and accessibility without visual styling. They provide:
+- Flutter 3.41 or newer
+- Dart 3.11 or newer
 
-- Keyboard navigation (pressing Tab, Enter, arrow keys)
-- Screen reader announcements 
-- Mouse interactions (hover, click, drag)
-- Focus management
-- Touch gestures
+## Install
 
-Headless components provide behavior and accessibility without visual styling.
+```shell
+flutter pub add naked_ui
+```
 
-### Standard UI library approach
-
-Most UI libraries give you components that look like this:
+Then import the public library:
 
 ```dart
-// Standard UI library approach
-ElevatedButton(
-  onPressed: () {},
-  child: const Text('Click me'), // Fixed appearance
-)
+import 'package:naked_ui/naked_ui.dart';
 ```
 
-Standard libraries limit customization to predefined themes and styles. Design flexibility is constrained.
-
-### The Naked UI approach
-
-Naked UI provides custom styling through builders:
-
-```dart
-NakedButton(
-  onPressed: () {},
-  builder: (context, state, child) {
-    // Custom styling based on state
-    return Container(
-      decoration: BoxDecoration(
-        color: state.isPressed ? Colors.blue.shade700 : Colors.blue,
-        borderRadius: BorderRadius.circular(8),
-        // Customize any aspect of design
-      ),
-      child: const Text('Click me'),
-    );
-  },
-)
-```
-
-Components handle behavior. Builders define appearance.
-
-## Key Features
-
-- Zero-styling: behavior only - you own presentation
-- Accessible: correct semantics and keyboard navigation
-- Observable state: hover, focus, press, drag, select
-- Composable: small, predictable APIs
-
-## Components
-
-- NakedButton - button interactions (hover, press, focus)
-- NakedCheckbox - toggle behavior and semantics
-- NakedRadio - single-select radio with group management
-- NakedSelect - dropdown/select with keyboard navigation
-- NakedSlider - value slider with drag + keys
-- NakedToggle - toggle button or switch behavior
-- NakedTabs - tablist + roving focus
-- NakedAccordion - expandable/collapsible sections
-- NakedMenu - anchored overlay menu
-- NakedDialog - modal dialog behavior + focus trap
-- NakedTooltip - anchored tooltip with lifecycle
-- NakedPopover - anchored, dismissible popover overlay
-
-## Getting Started
-
-### Installation
-
-```yaml
-dependencies:
-  naked_ui: ^latest_version  # https://pub.dev/packages/naked_ui
-```
-
-Then: `flutter pub get`
-
-Import: `import 'package:naked_ui/naked_ui.dart';`
-
-### Basic implementation
-
-Build a simple button:
+## First control
 
 ```dart
 import 'package:flutter/material.dart';
 import 'package:naked_ui/naked_ui.dart';
 
-NakedButton(
-  onPressed: () => print('Hello World!'),
-  builder: (context, state, child) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      color: state.isPressed ? Colors.blue : Colors.grey,
-      child: const Text('Submit'),
+class SubmitButton extends StatelessWidget {
+  const SubmitButton({super.key, required this.onPressed});
+
+  final VoidCallback? onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return NakedButton(
+      onPressed: onPressed,
+      builder: (context, state, child) {
+        final color = state.when(
+          disabled: Colors.grey.shade300,
+          pressed: Colors.blue.shade800,
+          hovered: Colors.blue.shade600,
+          focused: Colors.blue.shade400,
+          orElse: Colors.blue,
+        );
+
+        return AnimatedContainer(
+          duration: const Duration(milliseconds: 120),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(
+            color: color,
+            borderRadius: BorderRadius.circular(8),
+            border: state.isFocused
+                ? Border.all(color: Colors.white, width: 2)
+                : null,
+          ),
+          child: const Text('Submit'),
+        );
+      },
     );
-  },
-)
+  }
+}
 ```
 
-This button includes:
-- Press state color changes
-- Automatic keyboard navigation
-- Screen reader support  
-- Mouse and touch interaction
+`NakedButton` owns activation, focus, pointer, keyboard, feedback, and button
+semantics. The builder owns appearance. A null `onPressed` disables activation
+and exposes the disabled state to both the builder and assistive technology.
 
-The color changes when pressed due to the `state.isPressed` condition.
+## State snapshots
 
-### Implementation details
+Every builder receives a component-specific subclass of `NakedState`. Common
+state is available through:
 
-1. `NakedButton` manages interaction behavior and accessibility
-2. `builder` function defines visual appearance based on state
-3. `state.isPressed` provides current press state
-4. Return any Widget for custom styling
+- `states`, an immutable `Set<WidgetState>`
+- `isHovered`, `isFocused`, `isPressed`, `isDragged`, `isSelected`, and
+  `isDisabled`
+- `when(...)`, which resolves branches in a documented priority order
+- `whenOrNull(...)`, when no fallback is needed
 
-### Enhanced patterns
+Component snapshots add domain state such as `NakedSliderState.value`,
+`NakedTabState.tabId`, or `NakedCheckboxState.isChecked`.
 
-**Multiple states**: Use `state.when()` to handle pressed, hovered, and focused states
+## Accessibility contract
 
-**Animations**: Wrap containers in AnimatedContainer for smooth transitions
+Naked controls provide their native role, state, and actions. You remain
+responsible for content-specific accessible names and hints:
 
-**Advanced styling**: Add borders, shadows, gradients, or any visual elements
+- Prefer visible text that naturally labels the control.
+- Provide `semanticLabel` for icon-only or otherwise unlabeled controls.
+- For non-string select values, provide `semanticValue` or
+  `semanticValueFormatter`.
+- Keep visible focus indicators and sufficiently large pointer targets in your
+  presentation layer.
+- Use `excludeSemantics` only when replacing the Naked UI semantics contract
+  yourself. Descendant semantics are preserved.
 
-Check out our [Button documentation](/widget/button) for advanced examples and patterns.
+## Choose a component
 
-## Advanced state management
+### Actions and choices
 
-Common patterns for enhanced interactivity:
+- [Button](/widget/button) — invoke an action
+- [Toggle](/widget/toggle) — binary toggle button or switch
+- [Checkbox](/widget/checkbox) — independent boolean or tristate choice
+- [Radio](/widget/radio) — one choice in a `RadioGroup`
 
-### Multiple interaction states
+### Input
 
-Handle pressed, hovered, and focused states:
+- [Text field](/widget/textfield) — native text editing with custom chrome
+- [Select](/widget/select) — choose one value from an anchored overlay
+- [Slider](/widget/slider) — continuous or discrete numeric input
 
-```dart
-import 'package:flutter/material.dart';
-import 'package:naked_ui/naked_ui.dart';
+### Structure and overlays
 
-NakedButton(
-  onPressed: () {},
-  builder: (context, state, child) {
-    // Method 1: Check each state individually
-    Color buttonColor = Colors.grey;
-    if (state.isPressed) buttonColor = Colors.blue.shade800;
-    else if (state.isHovered) buttonColor = Colors.blue.shade600; 
-    else if (state.isFocused) buttonColor = Colors.blue.shade400;
+- [Tabs](/widget/tabs) — roving-focus tab list and panels
+- [Accordion](/widget/accordion) — constrained expandable sections
+- [Menu](/widget/menu) — anchored action menu
+- [Dialog](/widget/dialog) — modal route and dialog semantics
+- [Tooltip](/widget/tooltip) — hover/touch hint
+- [Popover](/widget/popover) — arbitrary anchored content
 
-    // Method 2: Use state.when() for cleaner code
-    final color = state.when(
-      pressed: Colors.blue.shade800,    // Darkest when clicked
-      hovered: Colors.blue.shade600,    // Medium when mouse over
-      focused: Colors.blue.shade400,    // Light when keyboard focused
-      orElse: Colors.grey,              // Default state
-    );
+## Ownership and lifecycle
 
-    return Container(
-      padding: const EdgeInsets.all(12),
-      color: color,
-      child: const Text('Interactive button'),
-    );
-  },
-)
-```
+Controllers and focus nodes supplied by the caller remain caller-owned and must
+be disposed by the caller when their API has a disposal lifecycle. Internally
+created objects are owned by the component. Controlled values remain the source
+of truth; callbacks request changes rather than mutating caller state.
 
-The `state.when()` method provides cleaner conditional logic.
-
-### Programmatic focus control
-
-For precise focus management in forms or complex UIs:
-
-```dart
-import 'package:flutter/material.dart';
-import 'package:naked_ui/naked_ui.dart';
-
-final myFocusNode = FocusNode();
-
-NakedButton(
-  focusNode: myFocusNode,        // Use your own focus node
-  autofocus: true,               // Focus automatically when built
-  onPressed: () {
-    myFocusNode.requestFocus();  // Focus programmatically
-  },
-  builder: (context, state, child) => YourCustomWidget(),
-)
-```
-
-## Component selection guide
-
-All components follow the same builder pattern. Choose based on interaction requirements:
-
-### For user actions
-- **[Button](/widget/button)** - Any clickable action (submit, save, delete, etc.)
-- **[Toggle](/widget/toggle)** - On/off switches (dark mode, notifications)
-- **[Checkbox](/widget/checkbox)** - Select multiple options from a list
-- **[Radio](/widget/radio)** - Pick one option from a group
-
-### For user input
-- **[TextField](/widget/textfield)** - Text input (names, messages, search)
-- **[Select](/widget/select)** - Choose from a dropdown list (countries, categories)
-- **[Slider](/widget/slider)** - Pick numeric values (volume, price range)
-
-### For organizing content
-- **[Tabs](/widget/tabs)** - Switch between different content sections
-- **[Accordion](/widget/accordion)** - Expandable sections (FAQ, settings groups)
-- **[Dialog](/widget/dialog)** - Modal windows (confirmations, forms)
-
-### For helpful overlays
-- **[Tooltip](/widget/tooltip)** - Show help text on hover
-- **[Popover](/widget/popover)** - Show additional info or controls
-- **[Menu](/widget/menu)** - Context menus and dropdown actions
-
-### Getting started
-
-**Recommended approach**: Begin with Button - the simplest component for learning the core patterns. Other components use the same builder-based approach.
-
-**Next steps**: Review component-specific documentation for detailed implementation examples and API references.
+Browse the component guides for complete examples and API-specific semantics.

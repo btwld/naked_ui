@@ -16,8 +16,7 @@ class _NakedStateScopeInherited<T extends NakedState> extends InheritedWidget {
 
   @override
   bool updateShouldNotify(_NakedStateScopeInherited<T> oldWidget) {
-    // Only notify when the value changes, not the controller
-    // Controller changes are handled through ValueListenableBuilder
+    // Consumers of the controller subscribe to it independently.
     return value != oldWidget.value;
   }
 }
@@ -38,7 +37,7 @@ class _NakedStateScopeInherited<T extends NakedState> extends InheritedWidget {
 /// Access the state and controller anywhere in the subtree:
 /// ```dart
 /// final menuState = NakedState.of<NakedMenuState>(context);
-/// final controller = NakedState.controllerOf(context);
+/// final controller = NakedState.controllerOfType<NakedMenuState>(context);
 /// ```
 ///
 /// ## Multiple States
@@ -70,23 +69,65 @@ class NakedStateScope<T extends NakedState> extends StatefulWidget {
     return inherited?.value;
   }
 
+  static _NakedStateScopeInherited? _findScope(
+    BuildContext context,
+    bool Function(NakedState value) matches,
+  ) {
+    _NakedStateScopeInherited? result;
+    context.visitAncestorElements((element) {
+      final widget = element.widget;
+      if (widget is _NakedStateScopeInherited && matches(widget.value)) {
+        result = widget;
+        return false;
+      }
+      return true;
+    });
+    return result;
+  }
+
+  /// Gets the controller for the nearest scope whose value is [T].
+  ///
+  /// Unlike [controllerOf], this skips nested scopes for unrelated component
+  /// states. The lookup does not establish an inherited-widget dependency.
+  static WidgetStatesController controllerOfType<T extends NakedState>(
+    BuildContext context,
+  ) {
+    final inherited = _findScope(context, (value) => value is T);
+    if (inherited == null) {
+      throw FlutterError.fromParts([
+        ErrorSummary(
+          'NakedStateScope.controllerOfType<$T>() found no matching scope.',
+        ),
+        ErrorDescription('No NakedStateScope containing $T was found.'),
+        ErrorHint(
+          'Ensure that a NakedStateScope<$T> is above this widget in the tree.',
+        ),
+        context.describeElement('The context used was'),
+      ]);
+    }
+    return inherited.controller;
+  }
+
+  /// Gets the controller for the nearest scope whose value is [T], if any.
+  ///
+  /// The lookup does not establish an inherited-widget dependency.
+  static WidgetStatesController? maybeControllerOfType<T extends NakedState>(
+    BuildContext context,
+  ) {
+    return _findScope(context, (value) => value is T)?.controller;
+  }
+
   /// Gets the [WidgetStatesController] from the nearest [NakedStateScope].
+  ///
+  /// This untyped compatibility API returns the nearest scope regardless of
+  /// its state type. Prefer [controllerOfType] in nested component builders.
   ///
   /// This method does not create a dependency, so the calling widget won't
   /// rebuild when the controller's value changes.
   ///
   /// Throws if no [NakedStateScope] is found.
   static WidgetStatesController controllerOf(BuildContext context) {
-    _NakedStateScopeInherited? inherited;
-    context.visitAncestorElements((element) {
-      if (element.widget is _NakedStateScopeInherited) {
-        inherited = element.widget as _NakedStateScopeInherited;
-
-        return false; // Stop walking
-      }
-
-      return true; // Continue walking
-    });
+    final inherited = _findScope(context, (_) => true);
 
     if (inherited == null) {
       throw FlutterError.fromParts([
@@ -106,27 +147,20 @@ class NakedStateScope<T extends NakedState> extends StatefulWidget {
       ]);
     }
 
-    return inherited!.controller;
+    return inherited.controller;
   }
 
   /// Gets the [WidgetStatesController] from the nearest [NakedStateScope].
+  ///
+  /// This untyped compatibility API returns the nearest scope regardless of
+  /// its state type. Prefer [maybeControllerOfType] in nested component
+  /// builders.
   ///
   /// Returns null if no scope is found.
   ///
   /// This method does not create a dependency.
   static WidgetStatesController? maybeControllerOf(BuildContext context) {
-    _NakedStateScopeInherited? inherited;
-    context.visitAncestorElements((element) {
-      if (element.widget is _NakedStateScopeInherited) {
-        inherited = element.widget as _NakedStateScopeInherited;
-
-        return false; // Stop walking
-      }
-
-      return true; // Continue walking
-    });
-
-    return inherited?.controller;
+    return _findScope(context, (_) => true)?.controller;
   }
 
   /// The state value to provide to descendant widgets.
@@ -194,10 +228,19 @@ class NakedStateScopeBuilder<T extends NakedState> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final effectiveBuilder = builder;
+    if (child == null && effectiveBuilder == null) {
+      throw FlutterError(
+        'NakedStateScopeBuilder<$T> requires either a child or a builder.',
+      );
+    }
+
     return NakedStateScope(
       value: value,
-      child: builder != null
-          ? Builder(builder: (context) => builder!(context, value, child))
+      child: effectiveBuilder != null
+          ? Builder(
+              builder: (context) => effectiveBuilder(context, value, child),
+            )
           : child!,
     );
   }

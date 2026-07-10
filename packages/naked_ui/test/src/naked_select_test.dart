@@ -135,9 +135,36 @@ void main() {
       timeout: const Timeout(Duration(seconds: 10)),
     );
 
-    testStateScopeBuilder<NakedSelectState>(
+    testWidgets('disabled descendant cannot open select with Alt+ArrowDown', (
+      tester,
+    ) async {
+      await tester.pumpMaterialWidget(
+        Center(
+          child: NakedSelect<String>(
+            enabled: false,
+            builder: (context, state, child) =>
+                const Focus(autofocus: true, child: Text('Disabled select')),
+            overlayBuilder: (context, info) => const Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                NakedSelectOption<String>(value: 'apple', child: Text('Apple')),
+              ],
+            ),
+          ),
+        ),
+      );
+
+      await tester.sendKeyDownEvent(LogicalKeyboardKey.altLeft);
+      await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
+      await tester.sendKeyUpEvent(LogicalKeyboardKey.altLeft);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Apple'), findsNothing);
+    });
+
+    testStateScopeBuilder<NakedSelectState<String>>(
       'builder\'s context contains NakedStateScope',
-      (builder) => NakedSelect(
+      (builder) => NakedSelect<String>(
         builder: builder,
         overlayBuilder: (context, info) =>
             const SizedBox(child: Text('Select option')),
@@ -606,9 +633,10 @@ void main() {
     });
 
     testWidgets(
-      'fallback alignment positions overlay using fallback when primary would overflow',
+      'clamps the overlay into the viewport when its position overflows',
       (tester) async {
-        // Build with the trigger near the bottom so primary (bottomLeft/topLeft) would overflow
+        // Build with the trigger near the bottom so the preferred position
+        // would overflow the viewport.
         await tester.pumpMaterialWidget(
           Align(
             alignment: Alignment.bottomLeft,
@@ -648,22 +676,13 @@ void main() {
         final triggerRect = tester.getRect(find.text('Select option'));
         final menuRect = tester.getRect(find.byKey(kMenuKey));
 
-        // Assert the overlay is at least partially visible within viewport
         final view = tester.binding.platformDispatcher.views.first;
         final Size screenSize = view.physicalSize / view.devicePixelRatio;
-        expect(menuRect.right > 0, isTrue);
-        expect(menuRect.bottom > 0, isTrue);
-        expect(menuRect.left < screenSize.width, isTrue);
-        expect(menuRect.top < screenSize.height, isTrue);
-
-        // Optional sanity: menu should be positioned near the trigger in Y direction
-        // (above or below), but we don't assert exact fallback choice.
-        expect(
-          menuRect.overlaps(triggerRect) ||
-              menuRect.bottom <= triggerRect.top ||
-              menuRect.top >= triggerRect.bottom,
-          isTrue,
-        );
+        expect(menuRect.left, greaterThanOrEqualTo(0));
+        expect(menuRect.top, greaterThanOrEqualTo(0));
+        expect(menuRect.right, lessThanOrEqualTo(screenSize.width));
+        expect(menuRect.bottom, lessThanOrEqualTo(screenSize.height));
+        expect(menuRect.top, lessThan(triggerRect.bottom));
       },
       timeout: const Timeout(Duration(seconds: 10)),
     );
@@ -938,6 +957,22 @@ void main() {
   });
 
   group('NakedSelectOption', () {
+    testWidgets('reports a descriptive error outside NakedSelect', (
+      WidgetTester tester,
+    ) async {
+      await tester.pumpMaterialWidget(
+        const NakedSelectOption<String>(
+          value: 'orphan',
+          child: Text('Orphan option'),
+        ),
+      );
+
+      final exception = tester.takeException();
+      expect(exception, isA<FlutterError>());
+      expect(exception.toString(), contains('requires a NakedSelect'));
+      expect(exception.toString(), contains('ancestor'));
+    });
+
     testWidgets('disabled option does not trigger selection', (
       WidgetTester tester,
     ) async {

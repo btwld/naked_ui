@@ -29,11 +29,11 @@ void main() {
       expect(find.text('This is a tooltip'), findsOneWidget);
 
       await gesture.moveTo(const Offset(0, 0));
-      await tester.pump(const Duration(milliseconds: 350));
+      await tester.pump(const Duration(milliseconds: 1100));
       await tester.pumpAndSettle();
 
       expect(find.text('This is a tooltip'), findsNothing);
-    }, skip: true);
+    });
 
     testWidgets('tooltip respects hover delay', (tester) async {
       await tester.pumpWidget(
