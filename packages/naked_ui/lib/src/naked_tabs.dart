@@ -146,30 +146,22 @@ class NakedTabs extends StatefulWidget {
 }
 
 class _NakedTabsState extends State<NakedTabs> {
-  /// Tab id already forwarded to [NakedTabs.onChanged] that the host has not
-  /// yet committed back through [NakedTabs.selectedTabId].
+  /// Tab id already forwarded to [NakedTabs.onChanged] in the current frame.
   ///
   /// One press can request the same selection twice — focusing a tab selects it
   /// (selection follows focus) and the tap that caused the focus selects it
   /// again. With a controller the second call is a no-op because the controller
-  /// updates synchronously, but a controlled host may commit asynchronously, so
-  /// without this guard it would receive two [NakedTabs.onChanged] calls for
-  /// one press.
-  String? _pendingTabId;
+  /// updates synchronously, but a controlled host may commit asynchronously.
+  /// The guard lasts for one frame so it collapses the focus and tap paths from
+  /// one press without suppressing a later press if the host rejects or delays
+  /// the requested selection.
+  String? _requestedTabIdThisFrame;
 
   String get _effectiveSelectedTabId =>
       widget.controller?.selectedTabId ?? widget.selectedTabId!;
 
   bool get _effectiveEnabled =>
       widget.enabled && (widget.controller != null || widget.onChanged != null);
-
-  @override
-  void didUpdateWidget(covariant NakedTabs oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (widget.selectedTabId != oldWidget.selectedTabId) {
-      _pendingTabId = null;
-    }
-  }
 
   void _selectTab(String tabId) {
     if (!_effectiveEnabled || tabId == _effectiveSelectedTabId) return;
@@ -178,8 +170,13 @@ class _NakedTabsState extends State<NakedTabs> {
     if (widget.controller != null) {
       widget.controller!.selectTab(tabId);
     } else {
-      if (tabId == _pendingTabId) return;
-      _pendingTabId = tabId;
+      if (tabId == _requestedTabIdThisFrame) return;
+      _requestedTabIdThisFrame = tabId;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && _requestedTabIdThisFrame == tabId) {
+          _requestedTabIdThisFrame = null;
+        }
+      });
       widget.onChanged?.call(tabId);
     }
   }

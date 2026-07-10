@@ -178,6 +178,13 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(changes, ['tab2']);
+
+      // A later user press is a new request, even if the controlled host has
+      // not committed the earlier selection.
+      await tester.tap(find.byKey(tab2));
+      await tester.pumpAndSettle();
+
+      expect(changes, ['tab2', 'tab2']);
     },
   );
 
