@@ -1,3 +1,15 @@
+## Unreleased
+
+- fix: one tab press no longer dispatches selection twice. A press selected
+  directly and again when its requested focus landed (selection follows
+  focus); the focus-driven duplicate is now suppressed inside `NakedTab`, so
+  controlled hosts that commit asynchronously receive one `onChanged` per
+  press, and retries — including keyboard Enter/Space on a host that rejects
+  the change — always fire.
+- fix: an explicit `NakedTab.semanticLabel` now replaces the content's
+  semantics instead of concatenating with them, so a tab whose content renders
+  the same text is announced once.
+
 ## 1.0.0-beta.1
 
 - feat(naked-select): add `mouseCursor` property to NakedSelect

@@ -75,6 +75,49 @@ void main() {
       handle.dispose();
     });
 
+    testWidgets('explicit semanticLabel replaces content semantics', (
+      tester,
+    ) async {
+      // Regression: a tab with semanticLabel whose content renders the same
+      // text was announced twice ("Overview\nOverview").
+      final handle = tester.ensureSemantics();
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: NakedTabs(
+              selectedTabId: 'overview',
+              onChanged: (_) {},
+              child: NakedTabBar(
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: const [
+                    NakedTab(
+                      tabId: 'overview',
+                      semanticLabel: 'Overview',
+                      child: Text('Overview'),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+
+      // Raw label match: 'Overview\nOverview' would fail here (the summary
+      // below normalizes duplicated lines away, so it cannot catch this).
+      final node = tester.getSemantics(find.bySemanticsLabel('Overview'));
+      expect(node.label, 'Overview');
+
+      // Replacing the content's semantics must not drop the tab contract.
+      final summary = summarizeMergedFromRoot(tester, control: ControlType.tab);
+      expect(summary.label, 'Overview');
+      expect(summary.flags, containsAll(['isButton', 'isSelected']));
+      expect(summary.flags, containsAll(['hasEnabledState', 'isEnabled']));
+      expect(summary.actions, contains('tap'));
+      handle.dispose();
+    });
+
     testWidgets('hovered selected tab keeps selected button contract', (
       tester,
     ) async {

@@ -292,6 +292,10 @@ class NakedTab extends StatefulWidget {
   final ValueWidgetBuilder<NakedTabState>? builder;
 
   /// Semantic label for the trigger.
+  ///
+  /// When provided, it replaces the semantics of the tab's content, so a tab
+  /// whose content already renders the same text is announced once. When
+  /// null, the content's own semantics are used.
   final String? semanticLabel;
 
   /// Whether the tab is enabled.
@@ -333,10 +337,28 @@ class _NakedTabState extends State<NakedTab>
       ..skipTraversal = !_isEnabled;
   }
 
+  /// Whether a focus-gain event caused by this tab's own tap or keyboard
+  /// activation is in flight.
+  ///
+  /// A press would otherwise dispatch selection twice: [_handleTap] selects
+  /// directly, and the focus it requests selects again (selection follows
+  /// focus). The direct call must stay — a press selects synchronously, even
+  /// when focus cannot move — so the focus-driven follow-up is the one
+  /// suppressed; the next focus event on this tab consumes the flag either
+  /// way. Deliberately not frame- or timer-scoped: a controlled host that
+  /// rejects a change schedules no frame, and a frame-scoped guard would
+  /// swallow keyboard retries. At worst (requested focus preempted before
+  /// landing here) a stale flag suppresses one focus-follow selection and
+  /// self-heals; a press's own selection is never lost.
+  bool _selectionRequestedByTap = false;
+
   void _handleTap() {
     if (!_isEnabled) return;
     if (widget.enableFeedback) HapticFeedback.selectionClick();
     if (effectiveFocusNode.canRequestFocus) {
+      // requestFocus on an already-focused node emits no focus event and
+      // would leave the flag stale; only arm it when an event will consume it.
+      _selectionRequestedByTap = !effectiveFocusNode.hasPrimaryFocus;
       effectiveFocusNode.requestFocus();
     }
     _scope.selectTab(widget.tabId);
@@ -457,6 +479,11 @@ class _NakedTabState extends State<NakedTab>
             selected: isSelected,
             button: true,
             label: widget.semanticLabel,
+            // An explicit label replaces the content's semantics; without
+            // this, a tab whose content renders the same text is announced
+            // twice. When no label is given, the content's own semantics flow
+            // through.
+            excludeSemantics: widget.semanticLabel != null,
             onTap: _isEnabled ? _handleTap : null,
             child: gestureDetector,
           );
@@ -465,11 +492,15 @@ class _NakedTabState extends State<NakedTab>
       enabled: _isEnabled,
       autofocus: widget.autofocus,
       onFocusChange: (f) {
+        final selectedByTap = _selectionRequestedByTap;
+        _selectionRequestedByTap = false;
+        // No setState here: updateFocusState already rebuilds on every real
+        // focus transition, and transitions are the only way
+        // Focus.onFocusChange fires.
         updateFocusState(f, widget.onFocusChange);
-        if (f && _isEnabled) {
+        if (f && _isEnabled && !selectedByTap) {
           _scope.selectTab(widget.tabId);
         }
-        setState(() {});
       },
       onHoverChange: (h) => updateHoverState(h, widget.onHoverChange),
       focusNode: effectiveFocusNode,
