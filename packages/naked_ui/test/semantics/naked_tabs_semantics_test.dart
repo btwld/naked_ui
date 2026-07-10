@@ -78,7 +78,8 @@ void main() {
     testWidgets('explicit semanticLabel replaces content semantics', (
       tester,
     ) async {
-      // Regression: matching content and semantic labels were announced twice.
+      // Regression: a tab with semanticLabel whose content renders the same
+      // text was announced twice ("Overview\nOverview").
       final handle = tester.ensureSemantics();
       await tester.pumpWidget(
         MaterialApp(
@@ -103,11 +104,12 @@ void main() {
         ),
       );
 
-      // A duplicated raw label would fail this exact finder.
+      // Raw label match: 'Overview\nOverview' would fail here (the summary
+      // below normalizes duplicated lines away, so it cannot catch this).
       final node = tester.getSemantics(find.bySemanticsLabel('Overview'));
       expect(node.label, 'Overview');
 
-      // Replacing content semantics must retain the tab contract.
+      // Replacing the content's semantics must not drop the tab contract.
       final summary = summarizeMergedFromRoot(tester, control: ControlType.tab);
       expect(summary.label, 'Overview');
       expect(summary.flags, containsAll(['isButton', 'isSelected']));
