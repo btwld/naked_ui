@@ -188,6 +188,71 @@ void main() {
     },
   );
 
+  testWidgets(
+    'Keyboard activation on a rejecting host fires onChanged every press',
+    (tester) async {
+      // Regression: a frame-scoped dedup guard is only cleared when a frame
+      // is produced, and a host that rejects the change marks nothing dirty —
+      // no frame separates two real key presses, so the second press was
+      // swallowed. Deliberately no pump between the two activations below;
+      // pumping would manufacture a frame production never gets.
+      final changes = <String>[];
+      final tab1 = UniqueKey();
+      final tab2 = UniqueKey();
+
+      await tester.pumpWidget(
+        WidgetsApp(
+          color: const Color(0xFF000000),
+          builder: (context, child) => child ?? const SizedBox.shrink(),
+          pageRouteBuilder: _defaultPageRouteBuilder,
+          home: Directionality(
+            textDirection: TextDirection.ltr,
+            child: NakedTabs(
+              // Never rebuilt with a new selection: models a host that
+              // rejects every requested change.
+              selectedTabId: 'tab1',
+              onChanged: changes.add,
+              child: Column(
+                children: [
+                  NakedTabBar(
+                    child: Row(
+                      children: [
+                        NakedTab(
+                          key: tab1,
+                          tabId: 'tab1',
+                          child: const Text('Tab 1'),
+                        ),
+                        NakedTab(
+                          key: tab2,
+                          tabId: 'tab2',
+                          child: const Text('Tab 2'),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Focus tab1 (selecting the already-selected tab is a no-op), then
+      // traverse to tab2: selection follows focus and fires once.
+      await tester.tap(find.byKey(tab1));
+      await tester.pump();
+      await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
+      await tester.pump();
+      expect(changes, ['tab2']);
+
+      // Each activation is a new request, with no frame between them.
+      await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+      await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+      expect(changes, ['tab2', 'tab2', 'tab2']);
+    },
+  );
+
   testWidgets('Selection follows focus via arrow keys', (tester) async {
     final changes = <String>[];
     final tab1 = UniqueKey();
@@ -237,8 +302,10 @@ void main() {
     await tester.sendKeyEvent(LogicalKeyboardKey.space);
     await tester.pump();
 
-    // Selection is already 'tab1' due to focus; Space keeps it.
-    expect(changes.contains('tab1'), isTrue);
+    // The tap selected 'tab1' exactly once; Space re-activates the now
+    // already-selected tab, which is a no-op. An exact list guards against
+    // a future double-fire.
+    expect(changes, ['tab1']);
   });
 
   testWidgets('Disabled group: selection does not change on focus or tap', (
@@ -882,6 +949,60 @@ void main() {
       // Go back to previous.
       controller.selectPrevious();
       expect(controller.selectedTabId, 'tab1');
+    });
+
+    testWidgets('one press produces exactly one controller notification', (
+      tester,
+    ) async {
+      final controller = NakedTabController(selectedTabId: 'tab1');
+      addTearDown(controller.dispose);
+      var notifications = 0;
+      controller.addListener(() => notifications++);
+
+      await tester.pumpWidget(
+        WidgetsApp(
+          color: const Color(0xFF000000),
+          builder: (context, child) => child ?? const SizedBox.shrink(),
+          pageRouteBuilder: _defaultPageRouteBuilder,
+          home: Directionality(
+            textDirection: TextDirection.ltr,
+            child: NakedTabs(
+              controller: controller,
+              child: NakedTabBar(
+                child: Row(
+                  children: [
+                    NakedTab(
+                      tabId: 'tab1',
+                      child: const SizedBox(
+                        key: Key('tab1'),
+                        width: 100,
+                        height: 40,
+                      ),
+                    ),
+                    NakedTab(
+                      tabId: 'tab2',
+                      child: const SizedBox(
+                        key: Key('tab2'),
+                        width: 100,
+                        height: 40,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Settle past the tap's focus follow-up: the press must notify once,
+      // not once from the tap and again when focus lands.
+      await tester.tap(find.byKey(const Key('tab2')));
+      await tester.pumpAndSettle();
+
+      expect(notifications, 1);
+      expect(controller.selectedTabId, 'tab2');
     });
 
     testWidgets('selectPrevious does nothing when no previous tab', (

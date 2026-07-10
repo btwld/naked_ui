@@ -99,7 +99,7 @@ class NakedTabState extends NakedState {
 /// - [TabBar], the Material-styled tabs widget for typical apps.
 /// - [FocusTraversalGroup], for customizing keyboard focus traversal.
 
-class NakedTabs extends StatefulWidget {
+class NakedTabs extends StatelessWidget {
   const NakedTabs({
     super.key,
     required this.child,
@@ -141,43 +141,20 @@ class NakedTabs extends StatefulWidget {
   /// Called when Escape is pressed while a tab has focus.
   final VoidCallback? onEscapePressed;
 
-  @override
-  State<NakedTabs> createState() => _NakedTabsState();
-}
-
-class _NakedTabsState extends State<NakedTabs> {
-  /// Tab id already forwarded to [NakedTabs.onChanged] in the current frame.
-  ///
-  /// One press can request the same selection twice — focusing a tab selects it
-  /// (selection follows focus) and the tap that caused the focus selects it
-  /// again. With a controller the second call is a no-op because the controller
-  /// updates synchronously, but a controlled host may commit asynchronously.
-  /// The guard lasts for one frame so it collapses the focus and tap paths from
-  /// one press without suppressing a later press if the host rejects or delays
-  /// the requested selection.
-  String? _requestedTabIdThisFrame;
-
   String get _effectiveSelectedTabId =>
-      widget.controller?.selectedTabId ?? widget.selectedTabId!;
+      controller?.selectedTabId ?? selectedTabId!;
 
   bool get _effectiveEnabled =>
-      widget.enabled && (widget.controller != null || widget.onChanged != null);
+      enabled && (controller != null || onChanged != null);
 
   void _selectTab(String tabId) {
     if (!_effectiveEnabled || tabId == _effectiveSelectedTabId) return;
     assert(tabId.isNotEmpty, 'Tab ID cannot be empty');
 
-    if (widget.controller != null) {
-      widget.controller!.selectTab(tabId);
+    if (controller != null) {
+      controller!.selectTab(tabId);
     } else {
-      if (tabId == _requestedTabIdThisFrame) return;
-      _requestedTabIdThisFrame = tabId;
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted && _requestedTabIdThisFrame == tabId) {
-          _requestedTabIdThisFrame = null;
-        }
-      });
-      widget.onChanged?.call(tabId);
+      onChanged?.call(tabId);
     }
   }
 
@@ -188,16 +165,16 @@ class _NakedTabsState extends State<NakedTabs> {
     return Actions(
       actions: {
         DismissIntent: CallbackAction<DismissIntent>(
-          onInvoke: (_) => widget.onEscapePressed?.call(),
+          onInvoke: (_) => onEscapePressed?.call(),
         ),
       },
       child: NakedTabsScope(
         selectedTabId: _effectiveSelectedTabId,
         onChanged: _selectTab,
-        orientation: widget.orientation,
+        orientation: orientation,
         enabled: _effectiveEnabled,
-        onEscapePressed: widget.onEscapePressed,
-        child: widget.child,
+        onEscapePressed: onEscapePressed,
+        child: child,
       ),
     );
   }
@@ -360,10 +337,29 @@ class _NakedTabState extends State<NakedTab>
       ..skipTraversal = !_isEnabled;
   }
 
+  /// True while a focus-gain event caused by this tab's own tap/activation
+  /// is in flight; the next focus event on this tab consumes it.
+  ///
+  /// A press would otherwise dispatch selection twice: [_handleTap] selects
+  /// directly and the focus it requests selects again (selection follows
+  /// focus). The direct call must stay — a press selects synchronously, even
+  /// when focus cannot move — so the focus-driven follow-up is the one
+  /// suppressed. Deliberately not frame- or timer-scoped: a controlled host
+  /// that rejects a change schedules no frame, and a frame-scoped guard would
+  /// swallow keyboard retries. The flag is armed only when the tap will
+  /// actually produce a focus event and consumed on the next event either
+  /// way, so at worst (requested focus preempted before landing here) it
+  /// suppresses one focus-follow selection and self-heals; a press's own
+  /// selection is never lost.
+  bool _selectionRequestedByTap = false;
+
   void _handleTap() {
     if (!_isEnabled) return;
     if (widget.enableFeedback) HapticFeedback.selectionClick();
     if (effectiveFocusNode.canRequestFocus) {
+      // requestFocus on an already-focused node emits no focus event and
+      // would leave the flag stale; only arm it when an event will consume it.
+      _selectionRequestedByTap = !effectiveFocusNode.hasPrimaryFocus;
       effectiveFocusNode.requestFocus();
     }
     _scope.selectTab(widget.tabId);
@@ -496,11 +492,14 @@ class _NakedTabState extends State<NakedTab>
       enabled: _isEnabled,
       autofocus: widget.autofocus,
       onFocusChange: (f) {
+        final selectedByTap = _selectionRequestedByTap;
+        _selectionRequestedByTap = false;
+        // updateFocusState already rebuilds on every real focus transition,
+        // which is the only way Focus.onFocusChange fires.
         updateFocusState(f, widget.onFocusChange);
-        if (f && _isEnabled) {
+        if (f && _isEnabled && !selectedByTap) {
           _scope.selectTab(widget.tabId);
         }
-        setState(() {});
       },
       onHoverChange: (h) => updateHoverState(h, widget.onHoverChange),
       focusNode: effectiveFocusNode,

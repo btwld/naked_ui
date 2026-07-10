@@ -104,8 +104,17 @@ void main() {
         ),
       );
 
+      // Raw label match: 'Overview\nOverview' would fail here (the summary
+      // below normalizes duplicated lines away, so it cannot catch this).
       final node = tester.getSemantics(find.bySemanticsLabel('Overview'));
       expect(node.label, 'Overview');
+
+      // Replacing the content's semantics must not drop the tab contract.
+      final summary = summarizeMergedFromRoot(tester, control: ControlType.tab);
+      expect(summary.label, 'Overview');
+      expect(summary.flags, containsAll(['isButton', 'isSelected']));
+      expect(summary.flags, containsAll(['hasEnabledState', 'isEnabled']));
+      expect(summary.actions, contains('tap'));
       handle.dispose();
     });
 

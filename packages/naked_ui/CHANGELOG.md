@@ -1,10 +1,11 @@
 ## Unreleased
 
-- fix: NakedTabs in controlled mode (`selectedTabId` + `onChanged`) no longer
-  fires `onChanged` twice for one tab press. Focusing a tab selects it
-  (selection follows focus) and the tap that caused the focus selected it
-  again; hosts that commit asynchronously now receive one call per requested
-  change.
+- fix: one tab press no longer dispatches selection twice. A press selected
+  directly and again when its requested focus landed (selection follows
+  focus); the focus-driven duplicate is now suppressed inside `NakedTab`, so
+  controlled hosts that commit asynchronously receive one `onChanged` per
+  press, and retries — including keyboard Enter/Space on a host that rejects
+  the change — always fire.
 - fix: an explicit `NakedTab.semanticLabel` now replaces the content's
   semantics instead of concatenating with them, so a tab whose content renders
   the same text is announced once.
