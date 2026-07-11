@@ -11,6 +11,7 @@ import 'dart:ui' show SemanticsRole;
 import 'package:flutter/widgets.dart';
 
 import '../naked_button.dart';
+import '../utilities/naked_state_scope.dart';
 import '../utilities/state.dart';
 
 // Overlay scope pattern implementation
@@ -124,7 +125,17 @@ abstract class OverlayItem<T, S extends NakedState> extends StatelessWidget {
                 effectiveStates.add(WidgetState.selected);
               }
 
-              return builder!(context, mapStates(effectiveStates), child);
+              // Install a NakedStateScope<S> for the mapped item state so the
+              // builder honors the public invariant: every ValueWidgetBuilder<S>
+              // receives a context containing a matching NakedStateScope<S>,
+              // making S.of(context) and S.controllerOf(context) resolve to the
+              // item state without leaking the internal NakedButton scope.
+              // Mirrors how the NakedSelect trigger scopes NakedSelectState.
+              return NakedStateScopeBuilder<S>(
+                value: mapStates(effectiveStates),
+                child: child,
+                builder: builder,
+              );
             },
     );
 

@@ -1,3 +1,14 @@
+## 1.0.0-beta.3
+
+### Fixes and hardening
+
+- Scope overlay-item builders to their declared state type: `NakedMenuItem` and
+  `NakedSelectOption` builders now receive a context containing a matching
+  `NakedStateScope<S>`, so `NakedMenuItemState`/`NakedSelectOptionState`'s
+  `of`/`controllerOf` helpers resolve to the item state. Downstream code no
+  longer needs `NakedButtonState`, which leaked the internal button
+  implementation.
+
 ## 1.0.0-beta.2
 
 ### Breaking changes
