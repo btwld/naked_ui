@@ -25,6 +25,19 @@ void main() {
     });
   });
 
+  group('clampOverlayPosition', () {
+    test('pins an oversized overlay to the available origin', () {
+      expect(
+        clampOverlayPosition(
+          const Offset(40, 30),
+          overlaySize: const Size(500, 400),
+          boundsSize: const Size(400, 300),
+        ),
+        Offset.zero,
+      );
+    });
+  });
+
   group('OverlayPositioner Widget Tests', () {
     const overlayKey = Key('overlay');
     const childKey = Key('child');

@@ -150,6 +150,33 @@ void main() {
         secondNode.dispose();
       });
 
+      testWidgets('swaps from an external node to an internal node', (
+        tester,
+      ) async {
+        final externalNode = FocusNode(debugLabel: 'External');
+
+        Widget buildWidget(FocusNode? node) {
+          return MaterialApp(home: TestWidgetWithFocusMixin(focusNode: node));
+        }
+
+        await tester.pumpWidget(buildWidget(externalNode));
+        final state = tester.state<_TestWidgetWithFocusMixinState>(
+          find.byType(TestWidgetWithFocusMixin),
+        );
+
+        externalNode.requestFocus();
+        await tester.pump();
+        expect(externalNode.hasFocus, isTrue);
+
+        await tester.pumpWidget(buildWidget(null));
+        await tester.pump();
+
+        expect(state.effectiveFocusNode, isNot(same(externalNode)));
+        expect(state.effectiveFocusNode.hasFocus, isTrue);
+
+        externalNode.dispose();
+      });
+
       testWidgets('handles identical node updates without swapping', (
         tester,
       ) async {

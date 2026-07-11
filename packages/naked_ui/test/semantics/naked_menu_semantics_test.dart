@@ -1,4 +1,4 @@
-import 'dart:ui' show Tristate;
+import 'dart:ui' show SemanticsRole, Tristate;
 
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -180,6 +180,51 @@ void main() {
       expect(find.text('Item 2'), findsOneWidget);
       expect(find.text('Disabled Item'), findsOneWidget);
 
+      final items = [
+        tester.getSemantics(find.text('Item 1')),
+        tester.getSemantics(find.text('Item 2')),
+        tester.getSemantics(find.text('Disabled Item')),
+      ];
+      for (final item in items) {
+        expect(item.getSemanticsData().role, SemanticsRole.menuItem);
+      }
+
+      SemanticsNode? ancestor = items.first.parent;
+      var hasMenuAncestor = false;
+      while (ancestor != null) {
+        if (ancestor.getSemanticsData().role == SemanticsRole.menu) {
+          hasMenuAncestor = true;
+          break;
+        }
+        ancestor = ancestor.parent;
+      }
+      expect(hasMenuAncestor, isTrue);
+
+      handle.dispose();
+    });
+
+    testWidgets('menu role stays valid while item semantics are faded out', (
+      tester,
+    ) async {
+      final handle = tester.ensureSemantics();
+
+      await tester.pumpWidget(
+        _buildTestApp(
+          NakedMenu<String>(
+            controller: MenuController(),
+            builder: (context, state, child) => const Text('Open'),
+            overlayBuilder: (context, info) => const FadeTransition(
+              opacity: AlwaysStoppedAnimation<double>(0),
+              child: NakedMenuItem<String>(value: 'item', child: Text('Item')),
+            ),
+          ),
+        ),
+      );
+
+      await tester.tap(find.text('Open'));
+      await tester.pump();
+
+      expect(tester.takeException(), isNull);
       handle.dispose();
     });
 

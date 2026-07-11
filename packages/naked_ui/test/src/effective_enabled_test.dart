@@ -27,10 +27,10 @@ void main() {
           ),
         );
 
-        // Tap the select - overlay should open even without callbacks (current API behavior)
+        // A controlled select without an update callback is non-interactive.
         await tester.tap(find.text('Select'));
         await tester.pump();
-        expect(find.text('Item 1'), findsOneWidget);
+        expect(find.text('Item 1'), findsNothing);
       },
     );
 
@@ -62,6 +62,28 @@ void main() {
       await tester.tap(find.text('Select'));
       await tester.pump();
       expect(find.text('Item 1'), findsOneWidget);
+    });
+
+    testWidgets('NakedCheckbox without onChanged reports disabled state', (
+      tester,
+    ) async {
+      NakedCheckboxState? state;
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: NakedCheckbox(
+              value: false,
+              builder: (context, value, child) {
+                state = value;
+                return const Text('Checkbox');
+              },
+            ),
+          ),
+        ),
+      );
+
+      expect(state!.isDisabled, isTrue);
     });
 
     testWidgets('NakedMenuItem disables when onPressed is null', (

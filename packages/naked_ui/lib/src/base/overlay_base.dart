@@ -6,6 +6,8 @@
 /// - [OverlayStateMixin]: State management for overlay widgets
 library;
 
+import 'dart:ui' show SemanticsRole;
+
 import 'package:flutter/widgets.dart';
 
 import '../naked_button.dart';
@@ -18,6 +20,7 @@ import '../utilities/state.dart';
 /// This class provides the common pattern for InheritedWidget-based scopes
 /// used by overlay widgets like NakedMenu and NakedSelect.
 abstract class OverlayScope<T> extends InheritedWidget {
+  /// Creates a scope that exposes overlay state to [child].
   const OverlayScope({required super.child, super.key});
 
   /// Returns the scope of the specified type that most tightly encloses the given [context].
@@ -38,30 +41,26 @@ abstract class OverlayScope<T> extends InheritedWidget {
     required Type scopeOwner,
   }) {
     final S? result = maybeOf<S>(context);
-    assert(() {
-      if (result == null) {
-        throw FlutterError.fromParts([
-          ErrorSummary('$scopeConsumer requires a $scopeOwner ancestor.'),
-          ErrorDescription(
-            'The $scopeConsumer widget must be placed inside the overlayBuilder '
-            'callback of a $scopeOwner widget.',
-          ),
-          ErrorHint(
-            'Ensure that $scopeConsumer is only used within:\n'
-            '$scopeOwner(\n'
-            '  overlayBuilder: (context, info) {\n'
-            '    return $scopeConsumer(...); // ✓ Correct usage\n'
-            '  },\n'
-            ')',
-          ),
-          context.describeElement('The context used was'),
-        ]);
-      }
+    if (result == null) {
+      throw FlutterError.fromParts([
+        ErrorSummary('$scopeConsumer requires a $scopeOwner ancestor.'),
+        ErrorDescription(
+          'The $scopeConsumer widget must be placed inside the overlayBuilder '
+          'callback of a $scopeOwner widget.',
+        ),
+        ErrorHint(
+          'Ensure that $scopeConsumer is only used within:\n'
+          '$scopeOwner(\n'
+          '  overlayBuilder: (context, info) {\n'
+          '    return $scopeConsumer(...); // ✓ Correct usage\n'
+          '  },\n'
+          ')',
+        ),
+        context.describeElement('The context used was'),
+      ]);
+    }
 
-      return true;
-    }());
-
-    return result!;
+    return result;
   }
 }
 
@@ -72,6 +71,7 @@ abstract class OverlayScope<T> extends InheritedWidget {
 /// This class provides the common pattern for widgets that represent
 /// selectable/actionable items within overlay panels.
 abstract class OverlayItem<T, S extends NakedState> extends StatelessWidget {
+  /// Creates an overlay item associated with [value].
   const OverlayItem({
     super.key,
     required this.value,
@@ -108,9 +108,10 @@ abstract class OverlayItem<T, S extends NakedState> extends StatelessWidget {
     required VoidCallback? onPressed,
     required bool effectiveEnabled,
     bool? isSelected,
+    SemanticsRole? semanticsRole,
     required S Function(Set<WidgetState> states) mapStates,
   }) {
-    return NakedButton(
+    final button = NakedButton(
       onPressed: onPressed,
       enabled: effectiveEnabled,
       semanticLabel: semanticLabel,
@@ -125,6 +126,16 @@ abstract class OverlayItem<T, S extends NakedState> extends StatelessWidget {
 
               return builder!(context, mapStates(effectiveStates), child);
             },
+    );
+
+    if (semanticsRole == null && isSelected == null) return button;
+
+    return MergeSemantics(
+      child: Semantics(
+        role: semanticsRole,
+        selected: isSelected,
+        child: button,
+      ),
     );
   }
 }

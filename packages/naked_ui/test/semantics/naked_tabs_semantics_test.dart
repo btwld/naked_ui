@@ -1,4 +1,4 @@
-import 'dart:ui' show Tristate;
+import 'dart:ui' show SemanticsRole, Tristate;
 
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -67,10 +67,44 @@ void main() {
       final tabB = tester.getSemantics(find.text('B'));
       final data = tabB.getSemanticsData();
       expect(data.label, 'B');
+      expect(data.role, SemanticsRole.tab);
       expect(data.flagsCollection.isButton, isTrue);
       expect(data.flagsCollection.isSelected, Tristate.isTrue);
       expect(data.flagsCollection.isEnabled, Tristate.isTrue);
       expect(data.hasAction(SemanticsAction.tap), isTrue);
+
+      handle.dispose();
+    });
+
+    testWidgets('tabs expose tab bar, tab, and tab panel roles', (
+      tester,
+    ) async {
+      final handle = tester.ensureSemantics();
+
+      await tester.pumpWidget(_buildNakedTabs(selected: 'A'));
+
+      final root = tester.getSemantics(find.byType(Scaffold));
+      expect(
+        collectSemanticsNodes(
+          root,
+          (node) => node.getSemanticsData().role == SemanticsRole.tabBar,
+        ),
+        hasLength(1),
+      );
+      expect(
+        collectSemanticsNodes(
+          root,
+          (node) => node.getSemanticsData().role == SemanticsRole.tab,
+        ),
+        hasLength(2),
+      );
+      expect(
+        collectSemanticsNodes(
+          root,
+          (node) => node.getSemanticsData().role == SemanticsRole.tabPanel,
+        ),
+        hasLength(1),
+      );
 
       handle.dispose();
     });

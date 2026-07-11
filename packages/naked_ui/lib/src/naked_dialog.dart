@@ -1,3 +1,5 @@
+import 'dart:ui' show SemanticsRole;
+
 import 'package:flutter/widgets.dart';
 
 import 'utilities/intents.dart';
@@ -92,6 +94,7 @@ Future<T?> showNakedDialog<T>({
 /// See also:
 /// - [showNakedDialog], the function that displays dialogs.
 class NakedDialog extends StatelessWidget {
+  /// Creates a semantic wrapper for dialog [child].
   const NakedDialog({
     super.key,
     required this.child,
@@ -117,8 +120,9 @@ class NakedDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     Widget dialog = excludeSemantics
-        ? child
+        ? ExcludeSemantics(child: child)
         : Semantics(
+            role: SemanticsRole.dialog,
             container: true,
             explicitChildNodes: true,
             scopesRoute: modal,

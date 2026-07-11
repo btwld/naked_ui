@@ -11,6 +11,10 @@ class TestNakedState extends NakedState {
     : super(states: states);
 }
 
+class OtherNakedState extends NakedState {
+  OtherNakedState({required super.states});
+}
+
 void main() {
   group('NakedStateScope', () {
     testWidgets('provides controller to descendants', (tester) async {
@@ -25,7 +29,9 @@ void main() {
           value: testState,
           child: Builder(
             builder: (context) {
-              capturedController = NakedState.controllerOf(context);
+              capturedController = NakedState.controllerOf<TestNakedState>(
+                context,
+              );
               return const SizedBox();
             },
           ),
@@ -55,7 +61,8 @@ void main() {
                   child: Builder(
                     builder: (context) {
                       // Get fresh controller reference each build
-                      capturedController = NakedState.controllerOf(context);
+                      capturedController =
+                          NakedState.controllerOf<TestNakedState>(context);
                       return Center(
                         child: ElevatedButton(
                           onPressed: () {
@@ -116,7 +123,8 @@ void main() {
                       Builder(
                         builder: (context) {
                           buildCount++;
-                          capturedController = NakedState.controllerOf(context);
+                          capturedController =
+                              NakedState.controllerOf<TestNakedState>(context);
                           return Text('Build count: $buildCount');
                         },
                       ),
@@ -153,7 +161,9 @@ void main() {
       await tester.pumpWidget(
         Builder(
           builder: (context) {
-            capturedController = NakedState.maybeControllerOf(context);
+            capturedController = NakedState.maybeControllerOf<TestNakedState>(
+              context,
+            );
             return const SizedBox();
           },
         ),
@@ -172,9 +182,42 @@ void main() {
       );
 
       expect(
-        () => NakedState.controllerOf(tester.element(find.byType(SizedBox))),
+        () => NakedState.controllerOf<TestNakedState>(
+          tester.element(find.byType(SizedBox)),
+        ),
         throwsA(isA<FlutterError>()),
       );
+    });
+
+    testWidgets('typed lookup skips unrelated nested scopes', (tester) async {
+      WidgetStatesController? outerController;
+      WidgetStatesController? resolvedController;
+
+      await tester.pumpWidget(
+        NakedStateScope<TestNakedState>(
+          value: TestNakedState(states: {WidgetState.focused}, label: 'outer'),
+          child: Builder(
+            builder: (outerContext) {
+              outerController = NakedState.controllerOf<TestNakedState>(
+                outerContext,
+              );
+              return NakedStateScope<OtherNakedState>(
+                value: OtherNakedState(states: {WidgetState.hovered}),
+                child: Builder(
+                  builder: (innerContext) {
+                    resolvedController =
+                        NakedState.controllerOf<TestNakedState>(innerContext);
+                    return const SizedBox();
+                  },
+                ),
+              );
+            },
+          ),
+        ),
+      );
+
+      expect(resolvedController, same(outerController));
+      expect(resolvedController!.value, {WidgetState.focused});
     });
   });
 }

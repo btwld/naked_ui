@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 
@@ -5,11 +7,14 @@ import 'package:flutter/widgets.dart';
 class OverlayPositionConfig {
   /// Primary alignment for positioning the overlay relative to the anchor.
   final Alignment targetAnchor;
+
+  /// Alignment on the overlay that is placed at [targetAnchor].
   final Alignment followerAnchor;
 
   /// Additional offset to apply after alignment positioning.
   final Offset offset;
 
+  /// Creates overlay positioning configuration.
   const OverlayPositionConfig({
     this.targetAnchor = Alignment.bottomLeft,
     this.followerAnchor = Alignment.topLeft,
@@ -17,7 +22,9 @@ class OverlayPositionConfig {
   });
 }
 
+/// Positions an overlay relative to an anchor rectangle and clamps it on-screen.
 class OverlayPositioner extends StatelessWidget {
+  /// Creates a positioner for [child] relative to [targetRect].
   const OverlayPositioner({
     super.key,
     required this.targetRect,
@@ -25,9 +32,13 @@ class OverlayPositioner extends StatelessWidget {
     required this.child,
   });
 
+  /// The anchor rectangle in the overlay's coordinate space.
   final Rect targetRect;
 
+  /// Alignment and offset configuration for the overlay.
   final OverlayPositionConfig positioning;
+
+  /// The overlay content to position.
   final Widget child;
 
   @override
@@ -80,7 +91,11 @@ class _OverlayPositionerDelegate extends SingleChildLayoutDelegate {
     final preferredPosition =
         targetPosition + targetAnchorOffset - followerAnchorOffset + offset;
 
-    return _clampToBounds(preferredPosition, childSize, size);
+    return clampOverlayPosition(
+      preferredPosition,
+      overlaySize: childSize,
+      boundsSize: size,
+    );
   }
 
   @override
@@ -93,13 +108,21 @@ class _OverlayPositionerDelegate extends SingleChildLayoutDelegate {
   }
 }
 
-Offset _clampToBounds(
-  Offset overlayTopLeft,
-  Size overlaySize,
-  Size screenSize,
-) {
+/// Clamps an overlay's top-left position to its available layout bounds.
+///
+/// If the overlay is larger than the available bounds on either axis, that
+/// axis is pinned to zero. This keeps the result valid and lets the overlay's
+/// own clipping or scrolling policy decide how to expose oversized content.
+Offset clampOverlayPosition(
+  Offset overlayTopLeft, {
+  required Size overlaySize,
+  required Size boundsSize,
+}) {
+  final maxX = math.max(0.0, boundsSize.width - overlaySize.width);
+  final maxY = math.max(0.0, boundsSize.height - overlaySize.height);
+
   return Offset(
-    overlayTopLeft.dx.clamp(0.0, screenSize.width - overlaySize.width),
-    overlayTopLeft.dy.clamp(0.0, screenSize.height - overlaySize.height),
+    overlayTopLeft.dx.clamp(0.0, maxX),
+    overlayTopLeft.dy.clamp(0.0, maxY),
   );
 }

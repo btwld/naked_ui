@@ -38,7 +38,7 @@ class _NakedStateScopeInherited<T extends NakedState> extends InheritedWidget {
 /// Access the state and controller anywhere in the subtree:
 /// ```dart
 /// final menuState = NakedState.of<NakedMenuState>(context);
-/// final controller = NakedState.controllerOf(context);
+/// final controller = NakedState.controllerOf<NakedMenuState>(context);
 /// ```
 ///
 /// ## Multiple States
@@ -76,24 +76,23 @@ class NakedStateScope<T extends NakedState> extends StatefulWidget {
   /// rebuild when the controller's value changes.
   ///
   /// Throws if no [NakedStateScope] is found.
-  static WidgetStatesController controllerOf(BuildContext context) {
-    _NakedStateScopeInherited? inherited;
-    context.visitAncestorElements((element) {
-      if (element.widget is _NakedStateScopeInherited) {
-        inherited = element.widget as _NakedStateScopeInherited;
-
-        return false; // Stop walking
-      }
-
-      return true; // Continue walking
-    });
+  static WidgetStatesController controllerOf<T extends NakedState>(
+    BuildContext context,
+  ) {
+    final inherited =
+        context
+                .getElementForInheritedWidgetOfExactType<
+                  _NakedStateScopeInherited<T>
+                >()
+                ?.widget
+            as _NakedStateScopeInherited<T>?;
 
     if (inherited == null) {
       throw FlutterError.fromParts([
         ErrorSummary(
-          'NakedStateScope.controllerOf() called with a context that does not contain a NakedStateScope.',
+          'NakedStateScope.controllerOf<$T>() called with a context that does not contain a NakedStateScope<$T>.',
         ),
-        ErrorDescription('No NakedStateScope was found above this widget.'),
+        ErrorDescription('No NakedStateScope<$T> was found above this widget.'),
         ErrorHint(
           'Ensure that a NakedStateScope is above this widget in the tree.\n'
           'Example:\n'
@@ -106,7 +105,7 @@ class NakedStateScope<T extends NakedState> extends StatefulWidget {
       ]);
     }
 
-    return inherited!.controller;
+    return inherited.controller;
   }
 
   /// Gets the [WidgetStatesController] from the nearest [NakedStateScope].
@@ -114,17 +113,16 @@ class NakedStateScope<T extends NakedState> extends StatefulWidget {
   /// Returns null if no scope is found.
   ///
   /// This method does not create a dependency.
-  static WidgetStatesController? maybeControllerOf(BuildContext context) {
-    _NakedStateScopeInherited? inherited;
-    context.visitAncestorElements((element) {
-      if (element.widget is _NakedStateScopeInherited) {
-        inherited = element.widget as _NakedStateScopeInherited;
-
-        return false; // Stop walking
-      }
-
-      return true; // Continue walking
-    });
+  static WidgetStatesController? maybeControllerOf<T extends NakedState>(
+    BuildContext context,
+  ) {
+    final inherited =
+        context
+                .getElementForInheritedWidgetOfExactType<
+                  _NakedStateScopeInherited<T>
+                >()
+                ?.widget
+            as _NakedStateScopeInherited<T>?;
 
     return inherited?.controller;
   }

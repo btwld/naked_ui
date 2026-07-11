@@ -109,6 +109,41 @@ void main() {
       expect(find.text('B*'), findsOneWidget);
     });
 
+    testWidgets('options invoke the latest group callback', (tester) async {
+      var useSecondCallback = false;
+      var firstCalls = 0;
+      var secondCalls = 0;
+      late StateSetter rebuild;
+
+      await tester.pumpMaterialWidget(
+        StatefulBuilder(
+          builder: (context, setState) {
+            rebuild = setState;
+            return NakedToggleGroup<String>(
+              selectedValue: 'a',
+              onChanged: useSecondCallback
+                  ? (_) => secondCalls++
+                  : (_) => firstCalls++,
+              child: const Row(
+                children: [
+                  NakedToggleOption<String>(value: 'a', child: Text('A')),
+                  NakedToggleOption<String>(value: 'b', child: Text('B')),
+                ],
+              ),
+            );
+          },
+        ),
+      );
+
+      rebuild(() => useSecondCallback = true);
+      await tester.pump();
+      await tester.tap(find.text('B'));
+      await tester.pump();
+
+      expect(firstCalls, 0);
+      expect(secondCalls, 1);
+    });
+
     testWidgets('disabled group prevents interaction', (tester) async {
       String? selected = 'a';
 

@@ -21,7 +21,7 @@ void main() {
     return Center(
       child: NakedSelect<T>(
         value: selectedValue,
-        onChanged: onSelectedValueChanged,
+        onChanged: onSelectedValueChanged ?? (_) {},
         enabled: enabled,
         closeOnSelect: closeOnSelect,
         onClose: onMenuClose,
@@ -135,9 +135,10 @@ void main() {
       timeout: const Timeout(Duration(seconds: 10)),
     );
 
-    testStateScopeBuilder<NakedSelectState>(
+    testStateScopeBuilder<NakedSelectState<String>>(
       'builder\'s context contains NakedStateScope',
-      (builder) => NakedSelect(
+      (builder) => NakedSelect<String>(
+        onChanged: (_) {},
         builder: builder,
         overlayBuilder: (context, info) =>
             const SizedBox(child: Text('Select option')),
@@ -168,6 +169,7 @@ void main() {
         await tester.pumpMaterialWidget(
           Center(
             child: NakedSelect<String>(
+              onChanged: (_) {},
               triggerFocusNode: triggerFocusNode,
               builder: (context, state, child) => const Text('Select option'),
               overlayBuilder: (context, info) => const Column(
@@ -249,6 +251,7 @@ void main() {
       await tester.pumpMaterialWidget(
         Center(
           child: NakedSelect<String>(
+            onChanged: (_) {},
             builder: (context, state, child) => const Text('Select option'),
             overlayBuilder: (context, info) => Column(
               mainAxisSize: MainAxisSize.min,
@@ -298,6 +301,7 @@ void main() {
       await tester.pumpMaterialWidget(
         Center(
           child: NakedSelect<String>(
+            onChanged: (_) {},
             builder: (context, state, child) => const Text('Select option'),
             overlayBuilder: (context, info) => Column(
               mainAxisSize: MainAxisSize.min,
@@ -432,6 +436,7 @@ void main() {
       await tester.pumpMaterialWidget(
         Center(
           child: NakedSelect<String>(
+            onChanged: (_) {},
             builder: (context, state, child) {
               return Container(
                 key: const Key('trigger'),
@@ -469,6 +474,7 @@ void main() {
       await tester.pumpMaterialWidget(
         Center(
           child: NakedSelect<String>(
+            onChanged: (_) {},
             builder: (context, state, child) {
               return Container(
                 key: const Key('trigger'),
@@ -510,6 +516,7 @@ void main() {
       await tester.pumpMaterialWidget(
         Center(
           child: NakedSelect<String>(
+            onChanged: (_) {},
             triggerFocusNode: focusNode,
             builder: (context, state, child) {
               return Container(
@@ -551,6 +558,7 @@ void main() {
       await tester.pumpMaterialWidget(
         Center(
           child: NakedSelect<String>(
+            onChanged: (_) {},
             builder: (context, state, child) => const Text('Select option'),
             overlayBuilder: (context, info) => Column(
               mainAxisSize: MainAxisSize.min,
@@ -615,6 +623,7 @@ void main() {
             child: Padding(
               padding: const EdgeInsets.only(bottom: 4),
               child: NakedSelect<String>(
+                onChanged: (_) {},
                 positioning: const OverlayPositionConfig(
                   targetAnchor: Alignment.bottomLeft,
                   followerAnchor: Alignment.topLeft,
@@ -729,6 +738,7 @@ void main() {
     ) async {
       await tester.pumpMaterialWidget(
         NakedSelect<String>(
+          onChanged: (_) {},
           onCloseRequested: (hideOverlay) {
             // Simulate removalDelay by delaying the actual close
             Future.delayed(const Duration(milliseconds: 200), hideOverlay);
@@ -808,6 +818,7 @@ void main() {
       await tester.pumpMaterialWidget(
         Center(
           child: NakedSelect<String>(
+            onChanged: (_) {},
             onCanceled: () => onCanceledCalled = true,
             onClose: () => onCloseCalled = true,
             builder: (context, state, child) => const Text('Select option'),
@@ -874,6 +885,7 @@ void main() {
       await tester.pumpMaterialWidget(
         Center(
           child: NakedSelect<String>(
+            onChanged: (_) {},
             onOpen: () => onOpenCalled = true,
             builder: (context, state, child) => const Text('Select option'),
             overlayBuilder: (context, info) => const Column(
@@ -935,6 +947,60 @@ void main() {
       await tester.pumpMaterialWidget(buildWidget(null));
       expect(currentValue, isNull);
     });
+
+    testWidgets('controlled null remains authoritative after selection', (
+      tester,
+    ) async {
+      String? capturedValue = 'not-built';
+      String? requestedValue;
+
+      await tester.pumpMaterialWidget(
+        Center(
+          child: NakedSelect<String>(
+            value: null,
+            onChanged: (value) => requestedValue = value,
+            builder: (context, state, child) {
+              capturedValue = state.value;
+              return const Text('Select option');
+            },
+            overlayBuilder: (context, info) => const NakedSelectOption<String>(
+              value: 'apple',
+              child: Text('Apple'),
+            ),
+          ),
+        ),
+      );
+
+      await tester.tap(find.text('Select option'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Apple'));
+      await tester.pumpAndSettle();
+
+      expect(requestedValue, 'apple');
+      expect(capturedValue, isNull);
+    });
+
+    testWidgets('missing onChanged makes the select non-interactive', (
+      tester,
+    ) async {
+      NakedSelectState<String>? capturedState;
+
+      await tester.pumpMaterialWidget(
+        NakedSelect<String>(
+          value: 'apple',
+          builder: (context, state, child) {
+            capturedState = state;
+            return const Text('Select option');
+          },
+          overlayBuilder: (context, info) => const Text('Overlay'),
+        ),
+      );
+
+      expect(capturedState!.isDisabled, isTrue);
+      await tester.tap(find.text('Select option'));
+      await tester.pump();
+      expect(find.text('Overlay'), findsNothing);
+    });
   });
 
   group('NakedSelectOption', () {
@@ -994,6 +1060,7 @@ void main() {
         Center(
           child: NakedSelect<String>(
             value: 'apple',
+            onChanged: (_) {},
             builder: (context, state, child) => const Text('Select option'),
             overlayBuilder: (context, info) => Column(
               mainAxisSize: MainAxisSize.min,

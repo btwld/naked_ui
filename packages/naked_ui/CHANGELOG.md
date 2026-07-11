@@ -1,14 +1,32 @@
-## Unreleased
+## 1.0.0
 
-- fix: one tab press no longer dispatches selection twice. A press selected
-  directly and again when its requested focus landed (selection follows
-  focus); the focus-driven duplicate is now suppressed inside `NakedTab`, so
-  controlled hosts that commit asynchronously receive one `onChanged` per
-  press, and retries — including keyboard Enter/Space on a host that rejects
-  the change — always fire.
-- fix: an explicit `NakedTab.semanticLabel` now replaces the content's
-  semantics instead of concatenating with them, so a tab whose content renders
-  the same text is announced once.
+### Breaking changes
+
+- Require Dart 3.9 and Flutter 3.41, matching the `RawTooltip` API used by the
+  package.
+- Treat `NakedSelect.value` as fully controlled, including `null`; a select
+  without `onChanged` is now consistently non-interactive.
+- Make `NakedAccordionController.values` immutable to callers and preserve its
+  observable FIFO ordering.
+- Make `NakedStateScope.controllerOf` type-specific; generic state helpers now
+  require the requested value type.
+- Require `NakedMenu` to have either a `child` or `builder`, and throw a
+  descriptive error when menu/select items are used outside their owner.
+
+### Fixes and hardening
+
+- Rebuild controller-driven tabs, prevent duplicate tab selection callbacks,
+  replace duplicated content semantics when `semanticLabel` is set, and keep
+  orientation-aware Home/End navigation within each tab bar.
+- Apply dialog, tab, menu, and menu-item semantic roles, including selected
+  state for select options.
+- Correct focus-node ownership swaps across controls and remove the redundant
+  focus owner around `EditableText`.
+- Consolidate overlay positioning, including safe handling of oversized
+  content, and rebuild Popover on the shared anchored-overlay shell.
+- Keep inherited callbacks current, initialize replacement accordion
+  controllers, and scope slider drag-end values to each drag session.
+- Correct example paths in CI workflows and remove redundant dependency steps.
 
 ## 1.0.0-beta.1
 

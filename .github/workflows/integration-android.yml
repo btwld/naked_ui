@@ -38,16 +38,12 @@ jobs:
       - name: Resolve root dependencies
         run: flutter pub get
 
-      - name: Resolve example dependencies
-        run: flutter pub get
-        working-directory: example
-
       - name: Ensure Android platform files for example
         run: |
           if [ ! -d "android" ]; then
             flutter create --platforms android .
           fi
-        working-directory: example
+        working-directory: packages/example
 
       - name: Launch emulator and run integration tests
         uses: reactivecircus/android-emulator-runner@v2
@@ -60,6 +56,5 @@ jobs:
           disable-animations: true
           script: |
             adb devices -l
-            cd example
+            cd packages/example
             flutter test integration_test/all_tests.dart -d emulator-5554
-

@@ -9,6 +9,7 @@ import 'positioning.dart';
 /// positioned relative to the anchor. Handles outside taps, simple keyboard
 /// traversal (Esc and Arrow Up/Down), and focus traversal grouping.
 class AnchoredOverlayShell extends StatelessWidget {
+  /// Creates a shared anchored-overlay shell around [child].
   const AnchoredOverlayShell({
     super.key,
     required this.controller,
@@ -61,6 +62,27 @@ class AnchoredOverlayShell extends StatelessWidget {
   /// Positioning configuration for the overlay.
   final OverlayPositionConfig positioning;
 
+  void _focusBoundary({required bool last}) {
+    final current = FocusManager.instance.primaryFocus;
+    if (current == null) return;
+    final policy = FocusTraversalGroup.maybeOfNode(current);
+    if (policy == null) return;
+    final target = last
+        ? policy.findLastFocus(current, ignoreCurrentFocus: true)
+        : policy.findFirstFocus(current, ignoreCurrentFocus: true);
+    target?.requestFocus();
+  }
+
+  void _moveFocus({required bool forward}) {
+    final current = FocusManager.instance.primaryFocus;
+    if (current == null) return;
+    if (forward) {
+      current.nextFocus();
+    } else {
+      current.previousFocus();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return RawMenuAnchor(
@@ -83,20 +105,24 @@ class AnchoredOverlayShell extends StatelessWidget {
                 ? (event) => controller.close()
                 : null,
             groupId: info.tapRegionGroupId,
-            child: FocusTraversalGroup(
-              child: Shortcuts(
-                shortcuts: NakedIntentActions.menu.shortcuts,
-                child: Actions(
-                  actions: NakedIntentActions.menu.actions(
-                    onDismiss: () => controller.close(),
-                    onNextFocus: () => FocusScope.of(context).nextFocus(),
-                    onPreviousFocus: () =>
-                        FocusScope.of(context).previousFocus(),
-                  ),
-                  child: Focus(
-                    autofocus: true,
-                    canRequestFocus: true,
-                    child: overlayChild,
+            child: FocusScope(
+              child: FocusTraversalGroup(
+                child: Shortcuts(
+                  shortcuts: NakedIntentActions.menu.shortcuts,
+                  child: Actions(
+                    actions: NakedIntentActions.menu.actions(
+                      onDismiss: () => controller.close(),
+                      onNextFocus: () => _moveFocus(forward: true),
+                      onPreviousFocus: () => _moveFocus(forward: false),
+                      onFirstFocus: () => _focusBoundary(last: false),
+                      onLastFocus: () => _focusBoundary(last: true),
+                    ),
+                    child: Focus(
+                      autofocus: true,
+                      canRequestFocus: true,
+                      skipTraversal: true,
+                      child: overlayChild,
+                    ),
                   ),
                 ),
               ),

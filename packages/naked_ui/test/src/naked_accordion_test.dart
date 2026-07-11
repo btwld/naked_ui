@@ -58,7 +58,45 @@ void main() {
       expect(find.text('Content 2'), findsNothing);
     });
 
-    testStateScopeBuilder<NakedAccordionItemState>(
+    testWidgets('initializes a newly supplied empty controller', (
+      tester,
+    ) async {
+      final firstController = NakedAccordionController<String>();
+      final secondController = NakedAccordionController<String>();
+      addTearDown(firstController.dispose);
+      addTearDown(secondController.dispose);
+      var controller = firstController;
+      late StateSetter rebuild;
+
+      await tester.pumpMaterialWidget(
+        StatefulBuilder(
+          builder: (context, setState) {
+            rebuild = setState;
+            return NakedAccordionGroup<String>(
+              controller: controller,
+              initialExpandedValues: const ['item1'],
+              child: NakedAccordion<String>(
+                value: 'item1',
+                builder: (_, state) =>
+                    Text(state.isExpanded ? 'Expanded' : 'Collapsed'),
+                child: const Text('Content 1'),
+              ),
+            );
+          },
+        ),
+      );
+
+      expect(firstController.values, orderedEquals(['item1']));
+
+      rebuild(() => controller = secondController);
+      await tester.pump();
+
+      expect(secondController.values, orderedEquals(['item1']));
+      expect(find.text('Expanded'), findsOneWidget);
+      expect(find.text('Content 1'), findsOneWidget);
+    });
+
+    testStateScopeBuilder<NakedAccordionItemState<String>>(
       'builder\'s context contains NakedStateScope',
       (builder) {
         final controller = NakedAccordionController<String>();

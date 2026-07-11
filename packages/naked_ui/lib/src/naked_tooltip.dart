@@ -1,6 +1,6 @@
 import 'package:flutter/widgets.dart';
 
-import 'naked_widgets.dart';
+import 'naked_popover.dart';
 import 'utilities/positioning.dart';
 
 /// Provides tooltip behavior without visual styling.
@@ -192,28 +192,17 @@ class _NakedTooltipState extends State<NakedTooltip> {
           followerAnchorOffset +
           config.offset;
 
-      return Offset(
-        position.dx.clamp(
-          0.0,
-          (context.overlaySize.width - context.tooltipSize.width).clamp(
-            0.0,
-            double.infinity,
-          ),
-        ),
-        position.dy.clamp(
-          0.0,
-          (context.overlaySize.height - context.tooltipSize.height).clamp(
-            0.0,
-            double.infinity,
-          ),
-        ),
+      return clampOverlayPosition(
+        position,
+        overlaySize: context.tooltipSize,
+        boundsSize: context.overlaySize,
       );
     };
   }
 
   @override
   Widget build(BuildContext context) {
-    return RawTooltip(
+    final result = RawTooltip(
       semanticsTooltip: widget.excludeSemantics ? null : widget.semanticLabel,
       tooltipBuilder: widget.overlayBuilder,
       hoverDelay: widget.hoverDelay,
@@ -227,5 +216,7 @@ class _NakedTooltipState extends State<NakedTooltip> {
       positionDelegate: _positionDelegate,
       child: widget.child,
     );
+
+    return widget.excludeSemantics ? ExcludeSemantics(child: result) : result;
   }
 }

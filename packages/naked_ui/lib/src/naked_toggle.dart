@@ -12,6 +12,7 @@ class NakedToggleState extends NakedState {
   /// Whether the toggle is currently on.
   final bool isToggled;
 
+  /// Creates an immutable snapshot of binary toggle state.
   NakedToggleState({required super.states, required this.isToggled});
 
   /// Returns the nearest [NakedToggleState] from context.
@@ -23,11 +24,11 @@ class NakedToggleState extends NakedState {
 
   /// Returns the [WidgetStatesController] from the nearest scope.
   static WidgetStatesController controllerOf(BuildContext context) =>
-      NakedState.controllerOf(context);
+      NakedState.controllerOf<NakedToggleState>(context);
 
   /// Returns the [WidgetStatesController] from the nearest scope, if any.
   static WidgetStatesController? maybeControllerOf(BuildContext context) =>
-      NakedState.maybeControllerOf(context);
+      NakedState.maybeControllerOf<NakedToggleState>(context);
 
   @override
   bool operator ==(Object other) {
@@ -47,6 +48,7 @@ class NakedToggleOptionState<T> extends NakedState {
   /// The option's value.
   final T value;
 
+  /// Creates an immutable snapshot for the option associated with [value].
   NakedToggleOptionState({required super.states, required this.value});
 
   /// Returns the nearest [NakedToggleOptionState] of the requested type.
@@ -58,12 +60,12 @@ class NakedToggleOptionState<T> extends NakedState {
       NakedState.maybeOf(context);
 
   /// Returns the [WidgetStatesController] from the nearest scope.
-  static WidgetStatesController controllerOf(BuildContext context) =>
-      NakedState.controllerOf(context);
+  static WidgetStatesController controllerOf<S>(BuildContext context) =>
+      NakedState.controllerOf<NakedToggleOptionState<S>>(context);
 
   /// Returns the [WidgetStatesController] from the nearest scope, if any.
-  static WidgetStatesController? maybeControllerOf(BuildContext context) =>
-      NakedState.maybeControllerOf(context);
+  static WidgetStatesController? maybeControllerOf<S>(BuildContext context) =>
+      NakedState.maybeControllerOf<NakedToggleOptionState<S>>(context);
 
   @override
   bool operator ==(Object other) {
@@ -96,6 +98,7 @@ class NakedToggleOptionState<T> extends NakedState {
 /// - [NakedRadio], for exclusive selection among options.
 
 class NakedToggle extends StatefulWidget {
+  /// Creates a headless binary toggle controlled by [value].
   const NakedToggle({
     super.key,
     required this.value,
@@ -218,7 +221,7 @@ class _NakedToggleState extends State<NakedToggle>
     );
 
     return widget.excludeSemantics
-        ? gestureDetector
+        ? ExcludeSemantics(child: gestureDetector)
         : Semantics(
             enabled: widget._effectiveEnabled,
             toggled: widget.value,
@@ -285,6 +288,7 @@ class _NakedToggleState extends State<NakedToggle>
 /// Provides an inherited scope for items to read `selectedValue` and call
 /// `onChanged` when activated. No styling is provided.
 class NakedToggleGroup<T> extends StatelessWidget {
+  /// Creates a single-select group controlled by [selectedValue].
   const NakedToggleGroup({
     super.key,
     required this.child,
@@ -347,7 +351,9 @@ class _ToggleScope<T> extends InheritedWidget {
 
   @override
   bool updateShouldNotify(_ToggleScope<T> old) {
-    return selectedValue != old.selectedValue || enabled != old.enabled;
+    return selectedValue != old.selectedValue ||
+        enabled != old.enabled ||
+        onChanged != old.onChanged;
   }
 }
 
@@ -355,6 +361,7 @@ class _ToggleScope<T> extends InheritedWidget {
 ///
 /// Uses button-like semantics and exposes selected state via WidgetStates.
 class NakedToggleOption<T> extends StatefulWidget {
+  /// Creates a headless group option associated with [value].
   const NakedToggleOption({
     super.key,
     required this.value,
@@ -375,17 +382,40 @@ class NakedToggleOption<T> extends StatefulWidget {
          'Either child or builder must be provided',
        );
 
+  /// The value selected when this option is activated.
   final T value;
+
+  /// The option content when [builder] is not used.
   final Widget? child;
+
+  /// Whether this option can be activated.
   final bool enabled;
+
+  /// The cursor shown while hovering over an enabled option.
   final MouseCursor? mouseCursor;
+
+  /// Whether activation provides platform feedback.
   final bool enableFeedback;
+
+  /// The focus node used by this option.
   final FocusNode? focusNode;
+
+  /// Whether this option requests focus when first built.
   final bool autofocus;
+
+  /// Called when the option's focus state changes.
   final ValueChanged<bool>? onFocusChange;
+
+  /// Called when the pointer enters or leaves the option.
   final ValueChanged<bool>? onHoverChange;
+
+  /// Called when the option's pressed state changes.
   final ValueChanged<bool>? onPressChange;
+
+  /// Builds the option from its current interaction and selection state.
   final ValueWidgetBuilder<NakedToggleOptionState<T>>? builder;
+
+  /// The accessibility label for this option.
   final String? semanticLabel;
 
   /// Whether to exclude this widget from the semantic tree.
@@ -467,7 +497,7 @@ class _NakedToggleOptionState<T> extends State<NakedToggleOption<T>>
     );
 
     Widget optionChild = widget.excludeSemantics
-        ? gestureDetector
+        ? ExcludeSemantics(child: gestureDetector)
         : Semantics(
             container: true,
             enabled: isEnabled,

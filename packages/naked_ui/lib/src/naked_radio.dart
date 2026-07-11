@@ -10,6 +10,7 @@ class NakedRadioState<T> extends NakedState {
   /// The value represented by this radio.
   final T value;
 
+  /// Creates an immutable snapshot for the radio associated with [value].
   NakedRadioState({required super.states, required this.value});
 
   @override
@@ -33,12 +34,12 @@ class NakedRadioState<T> extends NakedState {
       NakedState.maybeOf(context);
 
   /// Returns the [WidgetStatesController] from the nearest scope.
-  static WidgetStatesController controllerOf(BuildContext context) =>
-      NakedState.controllerOf(context);
+  static WidgetStatesController controllerOf<S>(BuildContext context) =>
+      NakedState.controllerOf<NakedRadioState<S>>(context);
 
   /// Returns the [WidgetStatesController] from the nearest scope, if any.
-  static WidgetStatesController? maybeControllerOf(BuildContext context) =>
-      NakedState.maybeControllerOf(context);
+  static WidgetStatesController? maybeControllerOf<S>(BuildContext context) =>
+      NakedState.maybeControllerOf<NakedRadioState<S>>(context);
 }
 
 /// A headless radio without visuals.
@@ -66,6 +67,7 @@ class NakedRadioState<T> extends NakedState {
 /// - [Radio], the Material-styled radio for typical apps.
 /// - [RadioGroup], which manages the selected value and provides grouping.
 class NakedRadio<T> extends StatefulWidget {
+  /// Creates a headless radio associated with [value].
   const NakedRadio({
     super.key,
     required this.value,
@@ -81,6 +83,7 @@ class NakedRadio<T> extends StatefulWidget {
     this.builder,
     this.groupRegistry,
     this.semanticLabel,
+    this.excludeSemantics = false,
   }) : assert(
          child != null || builder != null,
          'Either child or builder must be provided',
@@ -126,6 +129,9 @@ class NakedRadio<T> extends StatefulWidget {
 
   /// Semantic label for assistive technologies.
   final String? semanticLabel;
+
+  /// Whether to hide this radio and its visual subtree from accessibility.
+  final bool excludeSemantics;
 
   @override
   State<NakedRadio<T>> createState() => _NakedRadioState<T>();
@@ -227,8 +233,10 @@ class _NakedRadioState<T> extends State<NakedRadio<T>>
       },
     );
 
-    return widget.semanticLabel == null
+    final result = widget.semanticLabel == null
         ? radio
         : Semantics(label: widget.semanticLabel, child: radio);
+
+    return widget.excludeSemantics ? ExcludeSemantics(child: result) : result;
   }
 }

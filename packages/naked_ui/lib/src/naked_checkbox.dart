@@ -15,6 +15,7 @@ class NakedCheckboxState extends NakedState {
   /// Whether the checkbox is in tristate mode.
   final bool tristate;
 
+  /// Creates an immutable snapshot of checkbox state.
   NakedCheckboxState({
     required super.states,
     required this.isChecked,
@@ -30,11 +31,11 @@ class NakedCheckboxState extends NakedState {
 
   /// Returns the [WidgetStatesController] from the nearest scope.
   static WidgetStatesController controllerOf(BuildContext context) =>
-      NakedState.controllerOf(context);
+      NakedState.controllerOf<NakedCheckboxState>(context);
 
   /// Returns the [WidgetStatesController] from the nearest scope, if any.
   static WidgetStatesController? maybeControllerOf(BuildContext context) =>
-      NakedState.maybeControllerOf(context);
+      NakedState.maybeControllerOf<NakedCheckboxState>(context);
 
   /// Whether the checkbox is in intermediate/mixed state.
   bool get isIntermediate => tristate && isChecked == null;
@@ -71,6 +72,7 @@ class NakedCheckboxState extends NakedState {
 /// - [NakedToggle], for a headless binary toggle alternative.
 
 class NakedCheckbox extends StatefulWidget {
+  /// Creates a headless checkbox controlled by [value].
   const NakedCheckbox({
     super.key,
     this.child,
@@ -221,7 +223,7 @@ class _NakedCheckboxState extends State<NakedCheckbox>
     );
 
     return widget.excludeSemantics
-        ? gestureDetector
+        ? ExcludeSemantics(child: gestureDetector)
         : Semantics(
             enabled: widget._effectiveEnabled,
             checked: widget.value == true,
@@ -241,7 +243,7 @@ class _NakedCheckboxState extends State<NakedCheckbox>
 
   @override
   void initializeWidgetStates() {
-    updateDisabledState(!widget.enabled);
+    updateDisabledState(!widget._effectiveEnabled);
     updateSelectedState(widget.value == true, null);
   }
 

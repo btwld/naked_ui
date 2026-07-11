@@ -80,14 +80,16 @@ abstract class NakedState {
   /// Throws if no [NakedStateScope] with a controller is found.
   ///
   /// ```dart
-  /// final controller = NakedState.controllerOf(context);
+  /// final controller = NakedState.controllerOf<NakedMenuState>(context);
   /// ```
   ///
   /// See also:
   /// - [maybeControllerOf], which returns null instead of throwing
   /// - [NakedStateScope], for providing states and controllers
-  static WidgetStatesController controllerOf(BuildContext context) {
-    return NakedStateScope.controllerOf(context);
+  static WidgetStatesController controllerOf<T extends NakedState>(
+    BuildContext context,
+  ) {
+    return NakedStateScope.controllerOf<T>(context);
   }
 
   /// Gets the [WidgetStatesController] from the nearest [NakedStateScope].
@@ -98,7 +100,7 @@ abstract class NakedState {
   /// rebuild when the controller's value changes.
   ///
   /// ```dart
-  /// final controller = NakedState.maybeControllerOf(context);
+  /// final controller = NakedState.maybeControllerOf<NakedMenuState>(context);
   /// if (controller != null) {
   ///   // Use the controller
   /// }
@@ -107,8 +109,10 @@ abstract class NakedState {
   /// See also:
   /// - [controllerOf], which throws instead of returning null
   /// - [NakedStateScope], for providing states and controllers
-  static WidgetStatesController? maybeControllerOf(BuildContext context) {
-    return NakedStateScope.maybeControllerOf(context);
+  static WidgetStatesController? maybeControllerOf<T extends NakedState>(
+    BuildContext context,
+  ) {
+    return NakedStateScope.maybeControllerOf<T>(context);
   }
 
   /// Raw set of [WidgetState]s reported by the underlying control.
@@ -116,23 +120,42 @@ abstract class NakedState {
   /// Remains useful for custom logic not covered by convenience getters.
   Set<WidgetState> get states => _states;
 
+  /// Whether this snapshot and [other] contain the same widget states.
   @protected
   bool statesEqual(NakedState other) => setEquals(other._states, _states);
 
+  /// The order-independent hash of [states].
   @protected
   int get statesHashCode => _statesHashCode;
+
+  /// Whether the pointer is hovering over the control.
   bool get isHovered => _states.contains(WidgetState.hovered);
+
+  /// Whether the control currently has focus.
   bool get isFocused => _states.contains(WidgetState.focused);
+
+  /// Whether the control is currently pressed.
   bool get isPressed => _states.contains(WidgetState.pressed);
+
+  /// Whether the control is currently being dragged.
   bool get isDragged => _states.contains(WidgetState.dragged);
+
+  /// Whether the control is selected.
   bool get isSelected => _states.contains(WidgetState.selected);
+
+  /// Whether the control is disabled.
   bool get isDisabled => _states.contains(WidgetState.disabled);
+
+  /// Whether the control is in an error state.
   bool get isError => _states.contains(WidgetState.error);
 
+  /// Whether content has scrolled beneath the control.
   bool get isScrolledUnder => _states.contains(WidgetState.scrolledUnder);
 
+  /// Whether the control is enabled.
   bool get isEnabled => !isDisabled;
 
+  /// Whether every state in [requiredStates] is present in this snapshot.
   bool matches(Set<WidgetState> requiredStates) {
     return _states.containsAll(requiredStates);
   }
