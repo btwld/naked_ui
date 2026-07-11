@@ -20,6 +20,7 @@ import 'mixins/naked_mixins.dart';
 import 'utilities/naked_state_scope.dart';
 import 'utilities/state.dart';
 
+/// Builds a text-field surface around the supplied [editableText] widget.
 typedef NakedTextFieldBuilder =
     Widget Function(
       BuildContext context,
@@ -38,6 +39,7 @@ class NakedTextFieldState extends NakedState {
   /// Whether the text field is read-only.
   final bool isReadOnly;
 
+  /// Creates an immutable snapshot of text-field state.
   NakedTextFieldState({
     required super.states,
     required this.text,
@@ -81,7 +83,7 @@ class NakedTextFieldState extends NakedState {
 /// Headless, builder-first text input built on [EditableText].
 ///
 /// Exposes native-feeling defaults while remaining design-system agnostic.
-/// Renders no visuals—wrap the provided [editableText] via [builder] to style or decorate.
+/// Renders no visuals; use [builder] to style or decorate its editable child.
 ///
 /// ```dart
 /// NakedTextField(
@@ -98,6 +100,7 @@ class NakedTextFieldState extends NakedState {
 /// - [EditableText], the underlying primitive text input.
 /// - [TextField], the Material-styled text input for typical apps.
 class NakedTextField extends StatefulWidget {
+  /// Creates a headless text field backed by [EditableText].
   const NakedTextField({
     super.key,
     this.groupId = EditableText, // Keeps parity with EditableText default.
@@ -206,13 +209,19 @@ class NakedTextField extends StatefulWidget {
   /// The undo/redo controller.
   final UndoHistoryController? undoController;
 
-  /// The keyboard type and action.
+  /// The kind of keyboard to display for this field.
   final TextInputType? keyboardType;
+
+  /// The action button to display on the platform keyboard.
   final TextInputAction? textInputAction;
 
-  /// The text capitalization and alignment.
+  /// The automatic capitalization strategy for entered text.
   final TextCapitalization textCapitalization;
+
+  /// How text is aligned horizontally within the field.
   final TextAlign textAlign;
+
+  /// The direction used to interpret and render the text.
   final TextDirection? textDirection;
 
   /// Whether the field is read-only.
@@ -221,6 +230,7 @@ class NakedTextField extends StatefulWidget {
   /// Whether to show the cursor.
   final bool? showCursor;
 
+  /// Whether the field requests focus when first built.
   final bool autofocus;
 
   /// The character used for obscuring text.
@@ -277,45 +287,79 @@ class NakedTextField extends StatefulWidget {
   /// Whether the field has an error.
   final bool error;
 
-  /// Cursor visuals
+  /// The width of the text cursor.
   final double cursorWidth;
+
+  /// The cursor height, or null to derive it from the text style.
   final double? cursorHeight;
+
+  /// The radius used to round the cursor corners.
   final Radius? cursorRadius;
+
+  /// Whether cursor opacity changes are animated.
   final bool? cursorOpacityAnimates;
+
+  /// The cursor color, or null to use the package's neutral fallback.
   final Color? cursorColor;
 
-  /// Selection visuals
+  /// How selection highlights align vertically with text boxes.
   final ui.BoxHeightStyle selectionHeightStyle;
+
+  /// How selection highlights align horizontally with text boxes.
   final ui.BoxWidthStyle selectionWidthStyle;
 
   /// Keyboard appearance (iOS).
   final Brightness? keyboardAppearance;
 
-  /// Scrolling
+  /// Padding kept visible when scrolling the field into view.
   final EdgeInsets scrollPadding;
+
+  /// When drag gestures begin for scrolling and text selection.
   final DragStartBehavior dragStartBehavior;
+
+  /// The controller for the field's scroll position.
   final ScrollController? scrollController;
+
+  /// The physics used by the field's scrollable content.
   final ScrollPhysics? scrollPhysics;
 
   /// Clipping behavior for the underlying [EditableText].
   final Clip clipBehavior;
 
-  /// Selection and context menu
+  /// Whether users can select, cut, copy, and paste text.
   final bool enableInteractiveSelection;
+
+  /// Controls the platform text-selection handles and toolbar.
   final TextSelectionControls? selectionControls;
+
+  /// Builds the context menu shown for text-selection actions.
   final EditableTextContextMenuBuilder? contextMenuBuilder;
 
-  /// Taps, hover, and outside taps
+  /// Called when the field is tapped.
   final GestureTapCallback? onTap;
+
+  /// Whether [onTap] runs for every tap instead of only the first tap series.
   final bool onTapAlwaysCalled;
+
+  /// Called when the field's pressed state changes.
   final ValueChanged<bool>? onTapChange;
+
+  /// Called for a pointer-down event outside the field's tap region.
   final TapRegionCallback? onTapOutside;
+
+  /// Called for a pointer-up event outside the field's tap region.
   final TapRegionUpCallback? onTapUpOutside;
+
+  /// Called when the pointer enters or leaves the field.
   final ValueChanged<bool>? onHoverChange;
+
+  /// Called when the field's aggregate pressed state changes.
   final ValueChanged<bool>? onPressChange;
 
-  /// Autofill and content insertion
+  /// Hints that identify the field for platform autofill services.
   final Iterable<String>? autofillHints;
+
+  /// Configures insertion of rich content from an input method.
   final ContentInsertionConfiguration? contentInsertionConfiguration;
 
   /// Focus management
@@ -327,8 +371,10 @@ class NakedTextField extends StatefulWidget {
   /// Restoration
   final String? restorationId;
 
-  /// IME and stylus features
+  /// Whether stylus handwriting input is enabled.
   final bool stylusHandwritingEnabled;
+
+  /// Whether the IME may use entered text for personalized learning.
   final bool enableIMEPersonalizedLearning;
 
   /// Spell check
@@ -349,9 +395,13 @@ class NakedTextField extends StatefulWidget {
   /// Builds the visual wrapper around the underlying [EditableText].
   final NakedTextFieldBuilder? builder;
 
-  /// Semantics
+  /// The accessibility label for the field.
   final String? semanticLabel;
+
+  /// The accessibility hint that describes how to use the field.
   final String? semanticHint;
+
+  /// The accessibility announcement for the current validation error.
   final String? semanticErrorText;
 
   /// Whether to exclude this widget from the semantic tree.

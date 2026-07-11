@@ -35,6 +35,7 @@ class NakedAccordionGroupState extends NakedState {
     required this.maxExpanded,
   });
 
+  /// Creates a group snapshot and derives its expansion affordances.
   factory NakedAccordionGroupState({
     required Set<WidgetState> states,
     required int expandedCount,
@@ -108,6 +109,7 @@ class NakedAccordionItemState<T> extends NakedState {
   /// Whether this item can be expanded while honoring [NakedAccordionController.max].
   final bool canExpand;
 
+  /// Creates an immutable snapshot for the accordion item identified by [value].
   NakedAccordionItemState({
     required super.states,
     required this.value,
@@ -167,6 +169,7 @@ class NakedAccordionController<T> with ChangeNotifier {
 
   final LinkedHashSet<T> _values = LinkedHashSet<T>();
 
+  /// Creates a controller with optional expansion count constraints.
   NakedAccordionController({this.min = 0, this.max})
     : assert(min >= 0, 'min must be >= 0'),
       assert(max == null || max >= min, 'max must be >= min');
@@ -276,6 +279,7 @@ class NakedAccordionController<T> with ChangeNotifier {
 /// exceeds any benefit.
 class NakedAccordionScope<T>
     extends InheritedNotifier<NakedAccordionController<T>> {
+  /// Creates a scope that exposes [controller] to [child].
   const NakedAccordionScope({
     super.key,
     required NakedAccordionController<T> controller,
@@ -324,6 +328,7 @@ class NakedAccordionScope<T>
 /// See also:
 /// - [ExpansionPanelList], the Material-styled accordion for typical apps.
 class NakedAccordionGroup<T> extends StatefulWidget {
+  /// Creates a group managed by [controller].
   const NakedAccordionGroup({
     super.key,
     required this.child,
@@ -399,6 +404,7 @@ class _NakedAccordionGroupState<T> extends State<NakedAccordionGroup<T>> {
   }
 }
 
+/// Builds an accordion trigger from its current item [state].
 typedef NakedAccordionTriggerBuilder<T> =
     Widget Function(BuildContext context, NakedAccordionItemState<T> state);
 
@@ -410,6 +416,7 @@ typedef NakedAccordionTriggerBuilder<T> =
 /// See also:
 /// - [NakedAccordionGroup], the container that manages accordion items.
 class NakedAccordion<T> extends StatefulWidget {
+  /// Creates a headless accordion item identified by [value].
   const NakedAccordion({
     super.key,
     required this.builder,

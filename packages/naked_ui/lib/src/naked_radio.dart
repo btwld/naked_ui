@@ -10,6 +10,7 @@ class NakedRadioState<T> extends NakedState {
   /// The value represented by this radio.
   final T value;
 
+  /// Creates an immutable snapshot for the radio associated with [value].
   NakedRadioState({required super.states, required this.value});
 
   @override
@@ -66,6 +67,7 @@ class NakedRadioState<T> extends NakedState {
 /// - [Radio], the Material-styled radio for typical apps.
 /// - [RadioGroup], which manages the selected value and provides grouping.
 class NakedRadio<T> extends StatefulWidget {
+  /// Creates a headless radio associated with [value].
   const NakedRadio({
     super.key,
     required this.value,

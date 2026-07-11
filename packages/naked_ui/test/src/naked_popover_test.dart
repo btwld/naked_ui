@@ -95,6 +95,121 @@ void main() {
         expect(triggerFocusNode.hasFocus, isTrue);
       },
     );
+
+    testWidgets('a caller-provided Focus child is the only trigger tab stop', (
+      tester,
+    ) async {
+      final before = FocusNode(debugLabel: 'before popover');
+      final trigger = FocusNode(debugLabel: 'popover trigger');
+      final after = FocusNode(debugLabel: 'after popover');
+      addTearDown(before.dispose);
+      addTearDown(trigger.dispose);
+      addTearDown(after.dispose);
+
+      await tester.pumpMaterialWidget(
+        Column(
+          children: [
+            Focus(focusNode: before, child: const SizedBox(height: 20)),
+            NakedPopover(
+              popoverBuilder: (context, info) => const Text('Popover Content'),
+              child: Focus(
+                focusNode: trigger,
+                child: const SizedBox(
+                  width: 100,
+                  height: 40,
+                  child: Text('Trigger'),
+                ),
+              ),
+            ),
+            Focus(focusNode: after, child: const SizedBox(height: 20)),
+          ],
+        ),
+      );
+
+      before.requestFocus();
+      await tester.pump();
+
+      await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+      await tester.pump();
+      expect(trigger.hasPrimaryFocus, isTrue);
+
+      await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+      await tester.pump();
+      expect(after.hasPrimaryFocus, isTrue);
+    });
+
+    testWidgets('a Focus child without a node does not add a tab stop', (
+      tester,
+    ) async {
+      final before = FocusNode(debugLabel: 'before popover');
+      final after = FocusNode(debugLabel: 'after popover');
+      addTearDown(before.dispose);
+      addTearDown(after.dispose);
+
+      await tester.pumpMaterialWidget(
+        Column(
+          children: [
+            Focus(focusNode: before, child: const SizedBox(height: 20)),
+            NakedPopover(
+              popoverBuilder: (context, info) => const Text('Popover Content'),
+              child: const Focus(
+                child: SizedBox(width: 100, height: 40, child: Text('Trigger')),
+              ),
+            ),
+            Focus(focusNode: after, child: const SizedBox(height: 20)),
+          ],
+        ),
+      );
+
+      before.requestFocus();
+      await tester.pump();
+
+      await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+      await tester.pump();
+      expect(after.hasPrimaryFocus, isFalse);
+
+      await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+      await tester.pump();
+      expect(after.hasPrimaryFocus, isTrue);
+    });
+
+    testWidgets('caller-owned trigger reports keyboard pressed state', (
+      tester,
+    ) async {
+      final trigger = FocusNode(debugLabel: 'popover trigger');
+      addTearDown(trigger.dispose);
+      Set<WidgetState> states = {};
+
+      await tester.pumpMaterialWidget(
+        NakedPopover(
+          popoverBuilder: (context, info) => const Text('Popover Content'),
+          builder: (context, state, child) {
+            states = state.states;
+            return child!;
+          },
+          child: Focus(
+            focusNode: trigger,
+            child: const SizedBox(
+              width: 100,
+              height: 40,
+              child: Text('Trigger'),
+            ),
+          ),
+        ),
+      );
+
+      trigger.requestFocus();
+      await tester.pump();
+      await tester.sendKeyEvent(LogicalKeyboardKey.space);
+      await tester.pump();
+
+      expect(states, contains(WidgetState.pressed));
+      expect(find.text('Popover Content'), findsOneWidget);
+
+      await tester.pump(const Duration(milliseconds: 100));
+      expect(states, isNot(contains(WidgetState.pressed)));
+    });
+
     testWidgets('opens via Space key on trigger (internal focus)', (
       tester,
     ) async {

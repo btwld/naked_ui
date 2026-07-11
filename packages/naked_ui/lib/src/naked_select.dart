@@ -1,3 +1,5 @@
+import 'dart:ui' show SemanticsRole;
+
 import 'package:flutter/widgets.dart';
 
 import 'base/overlay_base.dart';
@@ -16,6 +18,7 @@ class NakedSelectState<T> extends NakedState {
   /// Currently selected value, if any.
   final T? value;
 
+  /// Creates an immutable snapshot of select state.
   NakedSelectState({
     required super.states,
     required this.isOpen,
@@ -60,6 +63,7 @@ class NakedSelectOptionState<T> extends NakedState {
   /// The option's value.
   final T value;
 
+  /// Creates an immutable snapshot for the option associated with [value].
   NakedSelectOptionState({required super.states, required this.value});
 
   @override
@@ -136,6 +140,7 @@ class _NakedSelectScope<T> extends OverlayScope<T> {
 /// This enables fully declarative composition inside [NakedSelect.overlayBuilder]
 /// without relying on the data-driven approach.
 class NakedSelectOption<T> extends OverlayItem<T, NakedSelectOptionState<T>> {
+  /// Creates a selectable option associated with [value].
   const NakedSelectOption({
     super.key,
     required super.value,
@@ -163,6 +168,7 @@ class NakedSelectOption<T> extends OverlayItem<T, NakedSelectOptionState<T>> {
       onPressed: onPressed,
       effectiveEnabled: effectiveEnabled,
       isSelected: isSelected,
+      semanticsRole: SemanticsRole.menuItem,
       mapStates: (states) {
         return NakedSelectOptionState<T>(states: states, value: value);
       },
@@ -216,6 +222,7 @@ class NakedSelectOption<T> extends OverlayItem<T, NakedSelectOptionState<T>> {
 /// - [NakedSelectOption], for individual selectable items
 /// - [NakedMenu], for action-based menus with similar keyboard behavior
 class NakedSelect<T> extends StatefulWidget {
+  /// Creates a headless select controlled by [value].
   const NakedSelect({
     super.key,
     this.child,
@@ -291,8 +298,10 @@ class NakedSelect<T> extends StatefulWidget {
   /// Overlay positioning configuration.
   final OverlayPositionConfig positioning;
 
-  /// Lifecycle callbacks.
+  /// Called when the select overlay opens.
   final VoidCallback? onOpen;
+
+  /// Called when the select overlay closes.
   final VoidCallback? onClose;
 
   /// Called when the select closes without a selection.
@@ -300,6 +309,8 @@ class NakedSelect<T> extends StatefulWidget {
 
   /// Open/close interceptors.
   final RawMenuAnchorOpenRequestedCallback? onOpenRequested;
+
+  /// Intercepts close requests so callers can coordinate custom transitions.
   final RawMenuAnchorCloseRequestedCallback? onCloseRequested;
 
   /// Whether outside taps on the trigger are consumed.
@@ -393,14 +404,19 @@ class _NakedSelectState<T> extends State<NakedSelect<T>>
     Widget selectWidget = AnchoredOverlayShell(
       controller: _menuController,
       overlayBuilder: (context, info) {
-        return _NakedSelectScope<T>(
-          controller: _menuController,
-          closeOnSelect: widget.closeOnSelect,
-          enabled: _isEnabled,
-          onChanged: _handleSelection,
-          value: _effectiveValue,
-          child: Builder(
-            builder: (context) => widget.overlayBuilder(context, info),
+        return Semantics(
+          role: SemanticsRole.menu,
+          container: true,
+          explicitChildNodes: true,
+          child: _NakedSelectScope<T>(
+            controller: _menuController,
+            closeOnSelect: widget.closeOnSelect,
+            enabled: _isEnabled,
+            onChanged: _handleSelection,
+            value: _effectiveValue,
+            child: Builder(
+              builder: (context) => widget.overlayBuilder(context, info),
+            ),
           ),
         );
       },

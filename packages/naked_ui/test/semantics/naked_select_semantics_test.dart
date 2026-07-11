@@ -1,4 +1,4 @@
-import 'dart:ui' show Tristate;
+import 'dart:ui' show SemanticsRole, Tristate;
 
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -131,6 +131,44 @@ void main() {
 
       // Verify select closed (normal behavior for single select)
       expect(find.text('Option 2'), findsNothing);
+
+      handle.dispose();
+    });
+
+    testWidgets('select options expose menu roles and selected state', (
+      tester,
+    ) async {
+      final handle = tester.ensureSemantics();
+
+      await tester.pumpWidget(
+        _buildTestApp(_buildNakedSelect(selectedValue: 'option1')),
+      );
+      await tester.tap(find.text('Select Option'));
+      await tester.pumpAndSettle();
+
+      final items = [
+        tester.getSemantics(find.text('Option 1')),
+        tester.getSemantics(find.text('Option 2')),
+        tester.getSemantics(find.text('Option 3')),
+      ];
+      for (final item in items) {
+        expect(item.getSemanticsData().role, SemanticsRole.menuItem);
+      }
+
+      SemanticsNode? ancestor = items.first.parent;
+      var hasMenuAncestor = false;
+      while (ancestor != null) {
+        if (ancestor.getSemanticsData().role == SemanticsRole.menu) {
+          hasMenuAncestor = true;
+          break;
+        }
+        ancestor = ancestor.parent;
+      }
+      expect(hasMenuAncestor, isTrue);
+      expect(
+        items.first.getSemanticsData().flagsCollection.isSelected,
+        Tristate.isTrue,
+      );
 
       handle.dispose();
     });

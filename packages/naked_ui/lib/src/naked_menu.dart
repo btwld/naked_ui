@@ -1,3 +1,5 @@
+import 'dart:ui' show SemanticsRole;
+
 import 'package:flutter/widgets.dart';
 
 import 'base/overlay_base.dart';
@@ -12,6 +14,7 @@ class NakedMenuState extends NakedState {
   /// Whether the overlay is currently open.
   final bool isOpen;
 
+  /// Creates an immutable snapshot of menu interaction state.
   NakedMenuState({required super.states, required this.isOpen});
 
   /// Returns the nearest [NakedMenuState] provided by [NakedStateScope].
@@ -47,6 +50,7 @@ class NakedMenuItemState<T> extends NakedState {
   /// The menu item's value.
   final T value;
 
+  /// Creates an immutable snapshot for the menu item associated with [value].
   NakedMenuItemState({required super.states, required this.value});
 
   /// Returns the nearest [NakedMenuItemState] of the requested type.
@@ -113,6 +117,7 @@ class _NakedMenuScope<T> extends OverlayScope<T> {
 /// This enables fully declarative composition inside [NakedMenu.overlayBuilder]
 /// without relying on the data-driven [NakedMenuItem] list.
 class NakedMenuItem<T> extends OverlayItem<T, NakedMenuItemState<T>> {
+  /// Creates a menu item associated with [value].
   const NakedMenuItem({
     super.key,
     required super.value,
@@ -146,6 +151,7 @@ class NakedMenuItem<T> extends OverlayItem<T, NakedMenuItemState<T>> {
     return buildButton(
       onPressed: onPressed,
       effectiveEnabled: enabled,
+      semanticsRole: SemanticsRole.menuItem,
       mapStates: (states) =>
           NakedMenuItemState<T>(states: states, value: value),
     );
@@ -199,6 +205,7 @@ class NakedMenuItem<T> extends OverlayItem<T, NakedMenuItemState<T>> {
 /// - [NakedMenuItem], for individual actionable items
 /// - [NakedSelect], for selection-based menus with similar keyboard behavior
 class NakedMenu<T> extends StatefulWidget {
+  /// Creates a headless menu managed by [controller].
   const NakedMenu({
     super.key,
     this.child,
@@ -241,8 +248,10 @@ class NakedMenu<T> extends StatefulWidget {
   /// Called when an item is selected.
   final ValueChanged<T>? onSelected;
 
-  /// Lifecycle callbacks.
+  /// Called when the menu opens.
   final VoidCallback? onOpen;
+
+  /// Called when the menu closes.
   final VoidCallback? onClose;
 
   /// Called when the menu closes without a selection.
@@ -251,6 +260,7 @@ class NakedMenu<T> extends StatefulWidget {
   /// Open/close interceptors (for example, to drive animations).
   final RawMenuAnchorOpenRequestedCallback? onOpenRequested;
 
+  /// Intercepts close requests so callers can coordinate custom transitions.
   final RawMenuAnchorCloseRequestedCallback? onCloseRequested;
 
   /// Whether taps outside the overlay close the menu.
@@ -339,11 +349,16 @@ class _NakedMenuState<T> extends State<NakedMenu<T>>
     return AnchoredOverlayShell(
       controller: widget.controller,
       overlayBuilder: (context, info) {
-        return _NakedMenuScope<T>(
-          onSelected: _handleSelection,
-          controller: widget.controller,
-          child: Builder(
-            builder: (context) => widget.overlayBuilder(context, info),
+        return Semantics(
+          role: SemanticsRole.menu,
+          container: true,
+          explicitChildNodes: true,
+          child: _NakedMenuScope<T>(
+            onSelected: _handleSelection,
+            controller: widget.controller,
+            child: Builder(
+              builder: (context) => widget.overlayBuilder(context, info),
+            ),
           ),
         );
       },

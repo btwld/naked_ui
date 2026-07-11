@@ -9,14 +9,31 @@ import 'package:flutter/widgets.dart';
 /// This class is not intended to be instantiated or extended; use the static
 /// members to access the helpers.
 class NakedIntentActions {
+  /// Intent bindings for button activation.
   static const _ButtonIntentActions button = _ButtonIntentActions();
+
+  /// Intent bindings for checkbox activation.
   static const _CheckboxIntentActions checkbox = _CheckboxIntentActions();
+
+  /// Intent bindings for binary toggle activation.
   static const _ToggleIntentActions toggle = _ToggleIntentActions();
+
+  /// Intent bindings for accordion item activation.
   static const _AccordionIntentActions accordion = _AccordionIntentActions();
+
+  /// Intent bindings for tab activation and navigation.
   static const _TabIntentActions tab = _TabIntentActions();
+
+  /// Intent bindings for menu dismissal and navigation.
   static const _MenuIntentActions menu = _MenuIntentActions();
+
+  /// Intent bindings for select dismissal and navigation.
   static const _SelectIntentActions select = _SelectIntentActions();
+
+  /// Intent bindings for dialog dismissal.
   static const _DialogIntentActions dialog = _DialogIntentActions();
+
+  /// Intent bindings for slider value changes.
   static const _SliderIntentActions slider = _SliderIntentActions();
 }
 

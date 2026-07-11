@@ -26,6 +26,7 @@ class NakedSliderState extends NakedState {
   /// Whether the slider is currently being dragged.
   final bool isDragging;
 
+  /// Creates an immutable snapshot of slider state.
   NakedSliderState({
     required super.states,
     required this.value,
@@ -98,6 +99,7 @@ class NakedSliderState extends NakedState {
 /// - [Slider], the Material-styled slider for typical apps.
 /// - [NakedFocusableDetector], used to integrate keyboard and focus handling.
 class NakedSlider extends StatefulWidget {
+  /// Creates a headless slider controlled by [value].
   const NakedSlider({
     super.key,
     this.child,

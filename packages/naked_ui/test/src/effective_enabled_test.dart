@@ -64,6 +64,28 @@ void main() {
       expect(find.text('Item 1'), findsOneWidget);
     });
 
+    testWidgets('NakedCheckbox without onChanged reports disabled state', (
+      tester,
+    ) async {
+      NakedCheckboxState? state;
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: NakedCheckbox(
+              value: false,
+              builder: (context, value, child) {
+                state = value;
+                return const Text('Checkbox');
+              },
+            ),
+          ),
+        ),
+      );
+
+      expect(state!.isDisabled, isTrue);
+    });
+
     testWidgets('NakedMenuItem disables when onPressed is null', (
       tester,
     ) async {

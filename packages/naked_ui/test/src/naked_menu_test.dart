@@ -312,6 +312,67 @@ void main() {
         expect(find.text('Item 1'), findsOneWidget);
         expect(find.text('Item 2'), findsOneWidget);
       });
+
+      testWidgets('Home and End stay within the open menu', (tester) async {
+        final controller = MenuController();
+        final before = FocusNode(debugLabel: 'before menu');
+        final after = FocusNode(debugLabel: 'after menu');
+        addTearDown(before.dispose);
+        addTearDown(after.dispose);
+        var firstFocused = false;
+        var lastFocused = false;
+
+        await tester.pumpMaterialWidget(
+          Column(
+            children: [
+              Focus(focusNode: before, child: const SizedBox(height: 20)),
+              NakedMenu<String>(
+                controller: controller,
+                builder: (context, state, child) => const Text('Open'),
+                overlayBuilder: (context, info) => Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    NakedMenuItem<String>(
+                      value: 'first',
+                      builder: (context, state, child) {
+                        firstFocused = state.isFocused;
+                        return child!;
+                      },
+                      child: const Text('First'),
+                    ),
+                    const NakedMenuItem<String>(
+                      value: 'middle',
+                      child: Text('Middle'),
+                    ),
+                    NakedMenuItem<String>(
+                      value: 'last',
+                      builder: (context, state, child) {
+                        lastFocused = state.isFocused;
+                        return child!;
+                      },
+                      child: const Text('Last'),
+                    ),
+                  ],
+                ),
+              ),
+              Focus(focusNode: after, child: const SizedBox(height: 20)),
+            ],
+          ),
+        );
+
+        controller.open();
+        await tester.pumpAndSettle();
+
+        await tester.sendKeyEvent(LogicalKeyboardKey.home);
+        await tester.pump();
+        expect(firstFocused, isTrue);
+        expect(before.hasFocus, isFalse);
+
+        await tester.sendKeyEvent(LogicalKeyboardKey.end);
+        await tester.pump();
+        expect(lastFocused, isTrue);
+        expect(after.hasFocus, isFalse);
+      });
     });
   });
 

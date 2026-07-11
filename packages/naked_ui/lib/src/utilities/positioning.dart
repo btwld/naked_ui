@@ -7,11 +7,14 @@ import 'package:flutter/widgets.dart';
 class OverlayPositionConfig {
   /// Primary alignment for positioning the overlay relative to the anchor.
   final Alignment targetAnchor;
+
+  /// Alignment on the overlay that is placed at [targetAnchor].
   final Alignment followerAnchor;
 
   /// Additional offset to apply after alignment positioning.
   final Offset offset;
 
+  /// Creates overlay positioning configuration.
   const OverlayPositionConfig({
     this.targetAnchor = Alignment.bottomLeft,
     this.followerAnchor = Alignment.topLeft,
@@ -19,7 +22,9 @@ class OverlayPositionConfig {
   });
 }
 
+/// Positions an overlay relative to an anchor rectangle and clamps it on-screen.
 class OverlayPositioner extends StatelessWidget {
+  /// Creates a positioner for [child] relative to [targetRect].
   const OverlayPositioner({
     super.key,
     required this.targetRect,
@@ -27,9 +32,13 @@ class OverlayPositioner extends StatelessWidget {
     required this.child,
   });
 
+  /// The anchor rectangle in the overlay's coordinate space.
   final Rect targetRect;
 
+  /// Alignment and offset configuration for the overlay.
   final OverlayPositionConfig positioning;
+
+  /// The overlay content to position.
   final Widget child;
 
   @override

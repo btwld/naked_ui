@@ -16,8 +16,10 @@
 ### Fixes and hardening
 
 - Rebuild controller-driven tabs, prevent duplicate tab selection callbacks,
-  replace duplicated content semantics when `semanticLabel` is set, and make
-  Home/End navigation orientation-aware.
+  replace duplicated content semantics when `semanticLabel` is set, and keep
+  orientation-aware Home/End navigation within each tab bar.
+- Apply dialog, tab, menu, and menu-item semantic roles, including selected
+  state for select options.
 - Correct focus-node ownership swaps across controls and remove the redundant
   focus owner around `EditableText`.
 - Consolidate overlay positioning, including safe handling of oversized

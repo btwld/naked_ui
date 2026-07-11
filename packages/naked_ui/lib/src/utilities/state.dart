@@ -120,23 +120,42 @@ abstract class NakedState {
   /// Remains useful for custom logic not covered by convenience getters.
   Set<WidgetState> get states => _states;
 
+  /// Whether this snapshot and [other] contain the same widget states.
   @protected
   bool statesEqual(NakedState other) => setEquals(other._states, _states);
 
+  /// The order-independent hash of [states].
   @protected
   int get statesHashCode => _statesHashCode;
+
+  /// Whether the pointer is hovering over the control.
   bool get isHovered => _states.contains(WidgetState.hovered);
+
+  /// Whether the control currently has focus.
   bool get isFocused => _states.contains(WidgetState.focused);
+
+  /// Whether the control is currently pressed.
   bool get isPressed => _states.contains(WidgetState.pressed);
+
+  /// Whether the control is currently being dragged.
   bool get isDragged => _states.contains(WidgetState.dragged);
+
+  /// Whether the control is selected.
   bool get isSelected => _states.contains(WidgetState.selected);
+
+  /// Whether the control is disabled.
   bool get isDisabled => _states.contains(WidgetState.disabled);
+
+  /// Whether the control is in an error state.
   bool get isError => _states.contains(WidgetState.error);
 
+  /// Whether content has scrolled beneath the control.
   bool get isScrolledUnder => _states.contains(WidgetState.scrolledUnder);
 
+  /// Whether the control is enabled.
   bool get isEnabled => !isDisabled;
 
+  /// Whether every state in [requiredStates] is present in this snapshot.
   bool matches(Set<WidgetState> requiredStates) {
     return _states.containsAll(requiredStates);
   }

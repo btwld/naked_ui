@@ -15,6 +15,7 @@ class NakedCheckboxState extends NakedState {
   /// Whether the checkbox is in tristate mode.
   final bool tristate;
 
+  /// Creates an immutable snapshot of checkbox state.
   NakedCheckboxState({
     required super.states,
     required this.isChecked,
@@ -71,6 +72,7 @@ class NakedCheckboxState extends NakedState {
 /// - [NakedToggle], for a headless binary toggle alternative.
 
 class NakedCheckbox extends StatefulWidget {
+  /// Creates a headless checkbox controlled by [value].
   const NakedCheckbox({
     super.key,
     this.child,
@@ -241,7 +243,7 @@ class _NakedCheckboxState extends State<NakedCheckbox>
 
   @override
   void initializeWidgetStates() {
-    updateDisabledState(!widget.enabled);
+    updateDisabledState(!widget._effectiveEnabled);
     updateSelectedState(widget.value == true, null);
   }
 

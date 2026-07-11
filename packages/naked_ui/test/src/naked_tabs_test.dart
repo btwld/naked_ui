@@ -459,6 +459,53 @@ void main() {
     expect(changes.isEmpty || changes.last == 'tab1', isTrue);
   });
 
+  testWidgets('disabled tab stays unfocusable after focus-node replacement', (
+    tester,
+  ) async {
+    final firstNode = FocusNode(debugLabel: 'first disabled node');
+    final replacementNode = FocusNode(debugLabel: 'replacement disabled node');
+    addTearDown(firstNode.dispose);
+    addTearDown(replacementNode.dispose);
+    var node = firstNode;
+    late StateSetter rebuild;
+
+    await tester.pumpWidget(
+      Directionality(
+        textDirection: TextDirection.ltr,
+        child: MediaQuery(
+          data: const MediaQueryData(
+            navigationMode: NavigationMode.directional,
+          ),
+          child: StatefulBuilder(
+            builder: (context, setState) {
+              rebuild = setState;
+              return NakedTabs(
+                selectedTabId: 'tab',
+                onChanged: (_) {},
+                child: NakedTabBar(
+                  child: NakedTab(
+                    tabId: 'tab',
+                    enabled: false,
+                    focusNode: node,
+                    child: const SizedBox(width: 40, height: 40),
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      ),
+    );
+
+    rebuild(() => node = replacementNode);
+    await tester.pump();
+    replacementNode.requestFocus();
+    await tester.pump();
+
+    expect(replacementNode.hasFocus, isFalse);
+    expect(replacementNode.skipTraversal, isTrue);
+  });
+
   testWidgets('Panels show/hide; maintainState=false removes inactive view', (
     tester,
   ) async {
@@ -555,7 +602,16 @@ void main() {
         onChanged: (value) {},
         child: NakedTabBar(
           child: Row(
-            children: [NakedTab(tabId: 'tab1', builder: builder)],
+            children: [
+              NakedTab(
+                tabId: 'tab1',
+                builder: (context, state, child) => SizedBox(
+                  width: 1,
+                  height: 1,
+                  child: builder(context, state, child),
+                ),
+              ),
+            ],
           ),
         ),
       ),
@@ -718,6 +774,75 @@ void main() {
       await tester.sendKeyEvent(LogicalKeyboardKey.end);
       await tester.pump();
       expect(changes.last, 'tab3');
+    });
+
+    testWidgets('Home and End stay within the tab bar', (tester) async {
+      final before = FocusNode(debugLabel: 'before tabs');
+      final first = FocusNode(debugLabel: 'first tab');
+      final middle = FocusNode(debugLabel: 'middle tab');
+      final last = FocusNode(debugLabel: 'last tab');
+      final after = FocusNode(debugLabel: 'after tabs');
+      addTearDown(before.dispose);
+      addTearDown(first.dispose);
+      addTearDown(middle.dispose);
+      addTearDown(last.dispose);
+      addTearDown(after.dispose);
+
+      await tester.pumpWidget(
+        Directionality(
+          textDirection: TextDirection.ltr,
+          child: Row(
+            children: [
+              Focus(
+                focusNode: before,
+                child: const SizedBox(width: 40, height: 40),
+              ),
+              NakedTabs(
+                selectedTabId: 'middle',
+                onChanged: (_) {},
+                child: NakedTabBar(
+                  child: Row(
+                    children: [
+                      NakedTab(
+                        tabId: 'first',
+                        focusNode: first,
+                        child: const SizedBox(width: 40, height: 40),
+                      ),
+                      NakedTab(
+                        tabId: 'middle',
+                        focusNode: middle,
+                        child: const SizedBox(width: 40, height: 40),
+                      ),
+                      NakedTab(
+                        tabId: 'last',
+                        focusNode: last,
+                        child: const SizedBox(width: 40, height: 40),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              Focus(
+                focusNode: after,
+                child: const SizedBox(width: 40, height: 40),
+              ),
+            ],
+          ),
+        ),
+      );
+
+      middle.requestFocus();
+      await tester.pump();
+
+      await tester.sendKeyEvent(LogicalKeyboardKey.home);
+      await tester.pump();
+      expect(first.hasPrimaryFocus, isTrue);
+      expect(before.hasFocus, isFalse);
+
+      await tester.sendKeyEvent(LogicalKeyboardKey.end);
+      await tester.pump();
+      expect(last.hasPrimaryFocus, isTrue);
+      expect(after.hasFocus, isFalse);
     });
   });
 

@@ -10,13 +10,21 @@ import 'utilities/state.dart';
 
 /// Immutable view passed to [NakedButton.builder].
 class NakedButtonState extends NakedState {
+  /// Creates an immutable snapshot of button interaction [states].
   NakedButtonState({required super.states});
 
+  /// Returns the nearest [NakedButtonState] provided by [NakedStateScope].
   static NakedButtonState of(BuildContext context) => NakedState.of(context);
+
+  /// Returns the nearest [NakedButtonState], if one is available.
   static NakedButtonState? maybeOf(BuildContext context) =>
       NakedState.maybeOf(context);
+
+  /// Returns the [WidgetStatesController] from the nearest state scope.
   static WidgetStatesController controllerOf(BuildContext context) =>
       NakedState.controllerOf<NakedButtonState>(context);
+
+  /// Returns the nearest state scope's controller, if one is available.
   static WidgetStatesController? maybeControllerOf(BuildContext context) =>
       NakedState.maybeControllerOf<NakedButtonState>(context);
 
@@ -38,6 +46,7 @@ class NakedButtonState extends NakedState {
 /// See also:
 /// - [GestureDetector], for direct gesture handling without button semantics.
 class NakedButton extends StatefulWidget {
+  /// Creates a headless button.
   const NakedButton({
     super.key,
     this.child,

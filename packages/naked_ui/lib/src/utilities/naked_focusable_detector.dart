@@ -5,6 +5,7 @@ import '../mixins/naked_mixins.dart';
 /// Minimal widget that composes [MouseRegion], [Focus], [Shortcuts], and [Actions]
 /// based on what's needed. Exposes all [Focus] parameters for full control.
 class NakedFocusableDetector extends StatefulWidget {
+  /// Creates an interaction detector around [child].
   const NakedFocusableDetector({
     super.key,
     required this.child,

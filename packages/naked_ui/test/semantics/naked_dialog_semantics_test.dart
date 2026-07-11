@@ -1,3 +1,5 @@
+import 'dart:ui' show SemanticsRole;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -200,6 +202,7 @@ void main() {
       final routeNode = findSemanticsNode(dialogRoot, (node) {
         final data = node.getSemanticsData();
         return data.label == 'Route Dialog' &&
+            data.role == SemanticsRole.dialog &&
             data.flagsCollection.scopesRoute &&
             data.flagsCollection.namesRoute;
       });

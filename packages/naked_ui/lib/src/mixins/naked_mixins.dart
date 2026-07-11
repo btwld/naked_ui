@@ -182,6 +182,7 @@ mixin WidgetStatesMixin<T extends StatefulWidget> on State<T> {
 ///   `class _State extends State<W>
 ///       with SomeMixin<W>, FocusNodeMixin<W> { ... }`
 mixin FocusNodeMixin<T extends StatefulWidget> on State<T> {
+  /// The focus node supplied by the host widget, if any.
   @protected
   FocusNode? get widgetProvidedNode;
 
@@ -197,6 +198,7 @@ mixin FocusNodeMixin<T extends StatefulWidget> on State<T> {
   FocusNode? _lastExternalNode;
   FocusNode? _effectiveFocusNode;
 
+  /// The caller-provided or internally owned focus node currently in use.
   FocusNode get effectiveFocusNode => _effectiveFocusNode!;
 
   void _notifyFocusChanged() {
@@ -216,6 +218,7 @@ mixin FocusNodeMixin<T extends StatefulWidget> on State<T> {
     effectiveFocusNode.addListener(_notifyFocusChanged);
   }
 
+  /// Requests focus for [effectiveFocusNode].
   void requestEffectiveFocus() {
     effectiveFocusNode.requestFocus();
   }

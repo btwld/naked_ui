@@ -1,7 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter/widgets.dart';
 
+import 'mixins/naked_mixins.dart';
 import 'naked_button.dart';
 import 'utilities/anchored_overlay_shell.dart';
+import 'utilities/intents.dart';
 import 'utilities/naked_state_scope.dart';
 import 'utilities/positioning.dart';
 import 'utilities/state.dart';
@@ -11,6 +15,7 @@ class NakedPopoverState extends NakedState {
   /// Whether the overlay is currently open.
   final bool isOpen;
 
+  /// Creates an immutable snapshot of popover interaction state.
   NakedPopoverState({required super.states, required this.isOpen});
 
   @override
@@ -74,6 +79,7 @@ class NakedPopoverState extends NakedState {
 /// - [NakedTooltip], for hover-triggered lightweight hints.
 /// - [NakedDialog], for modal dialog functionality.
 class NakedPopover extends StatefulWidget {
+  /// Creates a headless popover with a custom overlay builder.
   const NakedPopover({
     super.key,
     this.child,
@@ -126,6 +132,7 @@ class NakedPopover extends StatefulWidget {
   /// Called when the popover closes.
   final VoidCallback? onClose;
 
+  /// Controls whether the popover overlay is open.
   final MenuController? controller;
 
   /// Optional semantics label for the trigger.
@@ -150,7 +157,8 @@ class NakedPopover extends StatefulWidget {
   State<NakedPopover> createState() => _NakedPopoverState();
 }
 
-class _NakedPopoverState extends State<NakedPopover> {
+class _NakedPopoverState extends State<NakedPopover>
+    with WidgetStatesMixin<NakedPopover> {
   // ignore: dispose-fields
   final _internalMenuController = MenuController();
 
@@ -158,9 +166,17 @@ class _NakedPopoverState extends State<NakedPopover> {
   final _internalTriggerNode = FocusNode(
     debugLabel: 'NakedPopover trigger (internal)',
   );
+  FocusNode? _observedChildFocusNode;
+  Timer? _keyboardPressTimer;
 
   MenuController get _menuController =>
       widget.controller ?? _internalMenuController;
+
+  @override
+  void initState() {
+    super.initState();
+    _updateObservedChildFocusNode();
+  }
 
   void _toggle() {
     if (_menuController.isOpen) {
@@ -188,13 +204,101 @@ class _NakedPopoverState extends State<NakedPopover> {
     return null;
   }
 
+  void _updateObservedChildFocusNode() {
+    final next = _extractChildFocusNode();
+    if (identical(next, _observedChildFocusNode)) return;
+    _observedChildFocusNode?.removeListener(_handleChildFocusChange);
+    _observedChildFocusNode = next;
+    _observedChildFocusNode?.addListener(_handleChildFocusChange);
+    _handleChildFocusChange();
+  }
+
+  void _handleChildFocusChange() {
+    updateFocusState(_observedChildFocusNode?.hasFocus ?? false, null);
+  }
+
+  void _activate() {
+    Feedback.forTap(context);
+    _toggle();
+  }
+
+  void _handleKeyboardActivation() {
+    _keyboardPressTimer?.cancel();
+    _activate();
+    updatePressState(true, null);
+    _keyboardPressTimer = Timer(const Duration(milliseconds: 100), () {
+      if (mounted) updatePressState(false, null);
+      _keyboardPressTimer = null;
+    });
+  }
+
+  Widget _buildChildOwnedTrigger(FocusNode childFocusNode) {
+    final state = NakedPopoverState(
+      states: {
+        ...widgetStates,
+        if (childFocusNode.hasFocus) WidgetState.focused,
+      },
+      isOpen: _menuController.isOpen,
+    );
+    final content = NakedStateScopeBuilder(
+      value: state,
+      child: widget.child,
+      builder: widget.builder,
+    );
+    final semanticContent = widget.semanticLabel == null
+        ? content
+        : ExcludeSemantics(child: content);
+
+    Widget trigger = GestureDetector(
+      onTapDown: (_) => updatePressState(true, null),
+      onTapUp: (_) => updatePressState(false, null),
+      onTapCancel: () => updatePressState(false, null),
+      onTap: _activate,
+      behavior: HitTestBehavior.opaque,
+      excludeFromSemantics: true,
+      child: semanticContent,
+    );
+    trigger = Semantics(
+      enabled: true,
+      button: true,
+      label: widget.semanticLabel,
+      onTap: _activate,
+      child: trigger,
+    );
+    trigger = MouseRegion(
+      onEnter: (_) => updateHoverState(true, null),
+      onExit: (_) => updateHoverState(false, null),
+      cursor: SystemMouseCursors.click,
+      child: trigger,
+    );
+
+    return Shortcuts(
+      shortcuts: NakedIntentActions.button.shortcuts,
+      child: Actions(
+        actions: NakedIntentActions.button.actions(
+          onPressed: _handleKeyboardActivation,
+        ),
+        child: trigger,
+      ),
+    );
+  }
+
   Widget _buildTrigger(FocusNode returnNode, FocusNode? childFocusNode) {
+    final excludeChildTraversal =
+        widget.child is Focus && !identical(returnNode, childFocusNode);
+
     if (widget.openOnTap) {
+      if (identical(returnNode, childFocusNode)) {
+        return _buildChildOwnedTrigger(childFocusNode!);
+      }
+
       return NakedButton(
         onPressed: _toggle,
-        focusNode: identical(returnNode, childFocusNode) ? null : returnNode,
+        focusNode: returnNode,
         semanticLabel: widget.semanticLabel,
-        child: widget.child,
+        child: excludeChildTraversal
+            ? ExcludeFocusTraversal(child: widget.child!)
+            : widget.child,
         builder: (context, buttonState, child) {
           return NakedStateScopeBuilder(
             value: NakedPopoverState(
@@ -217,13 +321,28 @@ class _NakedPopoverState extends State<NakedPopover> {
       builder: widget.builder,
     );
 
-    return identical(returnNode, childFocusNode)
-        ? child
-        : Focus(focusNode: returnNode, child: child);
+    if (identical(returnNode, childFocusNode)) return child;
+
+    return Focus(
+      focusNode: returnNode,
+      child: excludeChildTraversal
+          ? ExcludeFocusTraversal(child: child)
+          : child,
+    );
+  }
+
+  @override
+  void didUpdateWidget(covariant NakedPopover oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    _updateObservedChildFocusNode();
   }
 
   @override
   void dispose() {
+    _keyboardPressTimer?.cancel();
+    _keyboardPressTimer = null;
+    _observedChildFocusNode?.removeListener(_handleChildFocusChange);
+    _observedChildFocusNode = null;
     _internalTriggerNode.dispose();
     super.dispose();
   }

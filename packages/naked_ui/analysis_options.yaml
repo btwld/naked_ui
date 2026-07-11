@@ -58,6 +58,5 @@ analyzer:
 
 linter:
   rules:
-    # TODO: Turn this to true when all public APIs are documented.
-    public_member_api_docs: false
+    public_member_api_docs: true
     prefer_relative_imports: true
