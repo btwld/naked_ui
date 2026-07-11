@@ -203,6 +203,31 @@ void main() {
       handle.dispose();
     });
 
+    testWidgets('menu role stays valid while item semantics are faded out', (
+      tester,
+    ) async {
+      final handle = tester.ensureSemantics();
+
+      await tester.pumpWidget(
+        _buildTestApp(
+          NakedMenu<String>(
+            controller: MenuController(),
+            builder: (context, state, child) => const Text('Open'),
+            overlayBuilder: (context, info) => const FadeTransition(
+              opacity: AlwaysStoppedAnimation<double>(0),
+              child: NakedMenuItem<String>(value: 'item', child: Text('Item')),
+            ),
+          ),
+        ),
+      );
+
+      await tester.tap(find.text('Open'));
+      await tester.pump();
+
+      expect(tester.takeException(), isNull);
+      handle.dispose();
+    });
+
     testWidgets('disabled menu item semantics', (tester) async {
       final handle = tester.ensureSemantics();
       final controller = MenuController();

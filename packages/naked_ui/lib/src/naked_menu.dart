@@ -353,11 +353,16 @@ class _NakedMenuState<T> extends State<NakedMenu<T>>
           role: SemanticsRole.menu,
           container: true,
           explicitChildNodes: true,
-          child: _NakedMenuScope<T>(
-            onSelected: _handleSelection,
-            controller: widget.controller,
-            child: Builder(
-              builder: (context) => widget.overlayBuilder(context, info),
+          // Preserve a child boundary while transitions hide item semantics.
+          child: Semantics(
+            container: true,
+            explicitChildNodes: true,
+            child: _NakedMenuScope<T>(
+              onSelected: _handleSelection,
+              controller: widget.controller,
+              child: Builder(
+                builder: (context) => widget.overlayBuilder(context, info),
+              ),
             ),
           ),
         );

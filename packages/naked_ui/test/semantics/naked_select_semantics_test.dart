@@ -173,6 +173,34 @@ void main() {
       handle.dispose();
     });
 
+    testWidgets('menu role stays valid while option semantics are faded out', (
+      tester,
+    ) async {
+      final handle = tester.ensureSemantics();
+
+      await tester.pumpWidget(
+        _buildTestApp(
+          NakedSelect<String>(
+            onChanged: (_) {},
+            builder: (context, state, child) => const Text('Open'),
+            overlayBuilder: (context, info) => const FadeTransition(
+              opacity: AlwaysStoppedAnimation<double>(0),
+              child: NakedSelectOption<String>(
+                value: 'option',
+                child: Text('Option'),
+              ),
+            ),
+          ),
+        ),
+      );
+
+      await tester.tap(find.text('Open'));
+      await tester.pump();
+
+      expect(tester.takeException(), isNull);
+      handle.dispose();
+    });
+
     testWidgets('disabled select semantics', (tester) async {
       final handle = tester.ensureSemantics();
 

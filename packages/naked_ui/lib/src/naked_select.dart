@@ -408,14 +408,19 @@ class _NakedSelectState<T> extends State<NakedSelect<T>>
           role: SemanticsRole.menu,
           container: true,
           explicitChildNodes: true,
-          child: _NakedSelectScope<T>(
-            controller: _menuController,
-            closeOnSelect: widget.closeOnSelect,
-            enabled: _isEnabled,
-            onChanged: _handleSelection,
-            value: _effectiveValue,
-            child: Builder(
-              builder: (context) => widget.overlayBuilder(context, info),
+          // Preserve a child boundary while transitions hide option semantics.
+          child: Semantics(
+            container: true,
+            explicitChildNodes: true,
+            child: _NakedSelectScope<T>(
+              controller: _menuController,
+              closeOnSelect: widget.closeOnSelect,
+              enabled: _isEnabled,
+              onChanged: _handleSelection,
+              value: _effectiveValue,
+              child: Builder(
+                builder: (context) => widget.overlayBuilder(context, info),
+              ),
             ),
           ),
         );
