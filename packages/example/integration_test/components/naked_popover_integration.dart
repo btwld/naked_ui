@@ -1,5 +1,6 @@
 import 'package:example/api/naked_popover.0.dart' as popover_example;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:naked_ui/naked_ui.dart';
@@ -61,6 +62,7 @@ void main() {
 
     testWidgets('popover handles keyboard activation', (tester) async {
       final popoverKey = UniqueKey();
+      final triggerFocusNode = tester.createManagedFocusNode();
 
       await tester.pumpWidget(
         MaterialApp(
@@ -68,12 +70,10 @@ void main() {
             body: Center(
               child: NakedPopover(
                 key: popoverKey,
+                triggerFocusNode: triggerFocusNode,
                 popoverBuilder: (context, info) =>
                     const Text('Popover Content'),
-                child: NakedButton(
-                  onPressed: () {},
-                  child: const Text('Trigger'),
-                ),
+                child: const Text('Trigger'),
               ),
             ),
           ),
@@ -81,12 +81,15 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      // Test keyboard activation
-      await tester.testKeyboardActivation(find.byKey(popoverKey));
-      await tester.pumpAndSettle();
+      expect(find.text('Popover Content'), findsNothing);
 
-      // Popover should respond to keyboard input
-      expect(find.byKey(popoverKey), findsOneWidget);
+      await tester.pressKeyOn(triggerFocusNode, LogicalKeyboardKey.enter);
+      await tester.pumpAndSettle();
+      expect(
+        find.text('Popover Content'),
+        findsOneWidget,
+        reason: 'Enter on the focused trigger must open the popover',
+      );
     });
 
     testWidgets('popover positioning works correctly', (tester) async {

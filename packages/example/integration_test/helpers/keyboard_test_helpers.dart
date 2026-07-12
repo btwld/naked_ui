@@ -2,72 +2,114 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+/// Keyboard/focus helpers for integration tests.
+///
+/// Contract (plan/briefing.md §12.4): keyboard tests must fail loudly.
+/// Helpers here never catch-and-continue; they assert focus preconditions
+/// and leave the outcome assertion (value change, overlay visibility,
+/// callback count) to the caller.
 extension KeyboardTestHelpers on WidgetTester {
-  /// Performs cleanup between tests to prevent gesture and focus state leakage.
-  /// Call this in tearDown() to ensure proper test isolation.
+  /// Performs cleanup between tests to prevent gesture and focus state
+  /// leakage. Call this in tearDown() to ensure proper test isolation.
+  ///
+  /// Uses a bounded pump, not pumpAndSettle: components with live timers or
+  /// repeating animations would hang pumpAndSettle (briefing §21.2).
   Future<void> cleanupBetweenTests() async {
-    // Clear any remaining focus
     FocusManager.instance.primaryFocus?.unfocus();
-
-    // Reset focus highlight strategy to default
     FocusManager.instance.highlightStrategy = FocusHighlightStrategy.automatic;
-
-    // Allow any pending animations to complete
-    await pumpAndSettle();
-
-    // Clear any pending timers or animations
     await pump(const Duration(milliseconds: 100));
   }
 
-  /// Test tab navigation order through a list of widgets without relying on raw key events.
-  /// Uses Focus traversal directly to avoid platform keyboard flakiness in integration runs.
-  Future<void> verifyTabOrder(List<Finder> expectedOrder) async {
-    if (expectedOrder.isEmpty) return;
-
-    // Focus the first element by tapping on it
-    await tap(expectedOrder.first);
-    await pump();
-
-    // Then advance focus using Focus traversal (no raw key events)
-    for (int i = 1; i < expectedOrder.length; i++) {
-      // Get context and use immediately to avoid async gaps
-      FocusScope.of(element(expectedOrder[i - 1])).nextFocus();
-      await pump();
-
-      // Just verify the widget exists - focus detection is complex and platform-dependent
-      expect(expectedOrder[i], findsOneWidget);
+  /// Pumps frames until [condition] holds, failing after [timeout].
+  ///
+  /// Deterministic replacement for pumpAndSettle on widgets with live timers
+  /// or repeating animations (briefing §21.2).
+  Future<void> pumpUntil(
+    bool Function() condition, {
+    Duration step = const Duration(milliseconds: 16),
+    Duration timeout = const Duration(seconds: 10),
+  }) async {
+    var elapsed = Duration.zero;
+    while (!condition()) {
+      if (elapsed >= timeout) {
+        fail('pumpUntil: condition not met within $timeout');
+      }
+      await pump(step);
+      elapsed += step;
     }
   }
 
-  /// Simulates keyboard activation using raw key down events (Enter/Space).
-  /// Uses full press (down+up) via sendKeyEvent to keep pressed set consistent.
-  ///
-  /// Returns true if keyboard activation succeeded, false if it failed.
-  /// Callers can decide whether to fail the test or continue based on this.
-  Future<bool> testKeyboardActivation(
-    Finder target, {
-    bool testSpace = true,
-    bool testEnter = true,
-  }) async {
-    try {
-      // Focus the target first. A tap is the most reliable cross-platform way in tests.
-      await tap(target);
-      await pumpAndSettle();
-
-      if (testEnter) {
-        await sendKeyEvent(LogicalKeyboardKey.enter);
-        await pumpAndSettle();
-      }
-      if (testSpace) {
-        await sendKeyEvent(LogicalKeyboardKey.space);
-        await pumpAndSettle();
+  /// Whether the primary focus node is attached at or beneath the widget
+  /// matched by [target].
+  bool hasPrimaryFocusOn(Finder target) {
+    final focusContext = FocusManager.instance.primaryFocus?.context;
+    if (focusContext == null) return false;
+    final targetElement = element(target);
+    if (focusContext == targetElement) return true;
+    var found = false;
+    focusContext.visitAncestorElements((ancestor) {
+      if (ancestor == targetElement) {
+        found = true;
+        return false;
       }
       return true;
-    } catch (e) {
-      // If keyboard events fail in integration test environment, log and return false
-      // This is a known issue with keyboard simulation in Flutter integration tests
-      debugPrint('Keyboard activation test skipped due to: $e');
-      return false;
+    });
+    return found;
+  }
+
+  /// Focuses [node], proves it holds primary focus, then sends a full key
+  /// press (down+up) of [key] and pumps one frame.
+  ///
+  /// Naked components do not focus on tap by default, so keyboard tests must
+  /// focus through a known [FocusNode]. A keyboard test that cannot focus its
+  /// target fails here instead of silently passing.
+  Future<void> pressKeyOn(FocusNode node, LogicalKeyboardKey key) async {
+    node.requestFocus();
+    await pump();
+    expect(
+      node.hasPrimaryFocus,
+      isTrue,
+      reason: 'target must hold primary focus before receiving ${key.keyLabel}',
+    );
+    await sendKeyEvent(key);
+    await pump();
+  }
+
+  /// Proves a disabled control neither takes focus nor activates: requests
+  /// focus on [node], asserts focus is refused, then sends Enter and Space
+  /// anyway. Callers assert that no state changed afterwards.
+  Future<void> expectRefusesKeyboardActivation(FocusNode node) async {
+    node.requestFocus();
+    await pump();
+    expect(
+      node.hasPrimaryFocus,
+      isFalse,
+      reason: 'a disabled control must not accept focus',
+    );
+    await sendKeyEvent(LogicalKeyboardKey.enter);
+    await pump();
+    await sendKeyEvent(LogicalKeyboardKey.space);
+    await pump();
+  }
+
+  /// Walks focus traversal and asserts focus actually lands on each element
+  /// of [expectedOrder], in order.
+  Future<void> verifyTabOrder(List<Finder> expectedOrder) async {
+    if (expectedOrder.isEmpty) return;
+
+    // Start from a clean slate so the first nextFocus() lands on the first
+    // focusable in scope.
+    FocusManager.instance.primaryFocus?.unfocus();
+    await pump();
+
+    for (final expected in expectedOrder) {
+      FocusScope.of(element(expected)).nextFocus();
+      await pump();
+      expect(
+        hasPrimaryFocusOn(expected),
+        isTrue,
+        reason: 'focus traversal should reach $expected next',
+      );
     }
   }
 }

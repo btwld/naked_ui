@@ -1,5 +1,6 @@
 import 'package:example/api/naked_checkbox.0.dart' as checkbox_example;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:naked_ui/naked_ui.dart';
@@ -39,6 +40,7 @@ void main() {
 
     testWidgets('checkbox responds to keyboard activation', (tester) async {
       final checkboxKey = UniqueKey();
+      final focusNode = tester.createManagedFocusNode();
       bool checkboxValue = false;
 
       await tester.pumpWidget(
@@ -47,6 +49,7 @@ void main() {
             body: Center(
               child: NakedCheckbox(
                 key: checkboxKey,
+                focusNode: focusNode,
                 value: checkboxValue,
                 onChanged: (value) => checkboxValue = value!,
                 child: const Text('Test Checkbox'),
@@ -57,9 +60,14 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      // Test keyboard activation
-      await tester.testKeyboardActivation(find.byKey(checkboxKey));
-      await tester.pumpAndSettle();
+      await tester.pressKeyOn(focusNode, LogicalKeyboardKey.enter);
+      expect(checkboxValue, isTrue, reason: 'Enter must activate the checkbox');
+
+      // The fixture does not rebuild, so each activation reports !value.
+      // Reset the flag to prove Space activates independently.
+      checkboxValue = false;
+      await tester.pressKeyOn(focusNode, LogicalKeyboardKey.space);
+      expect(checkboxValue, isTrue, reason: 'Space must activate the checkbox');
     });
 
     testWidgets('checkbox state callbacks work correctly', (tester) async {
@@ -144,6 +152,7 @@ void main() {
 
     testWidgets('disabled checkbox blocks all interactions', (tester) async {
       final checkboxKey = UniqueKey();
+      final focusNode = tester.createManagedFocusNode();
       bool wasChanged = false;
       bool hoverChanged = false;
       bool checkboxValue = false;
@@ -154,6 +163,7 @@ void main() {
             body: Center(
               child: NakedCheckbox(
                 key: checkboxKey,
+                focusNode: focusNode,
                 value: checkboxValue,
                 onChanged: (value) => wasChanged = true,
                 enabled: false,
@@ -172,8 +182,8 @@ void main() {
       await tester.pump();
       expect(wasChanged, isFalse);
 
-      // Test that disabled checkbox doesn't respond to keyboard
-      await tester.testKeyboardActivation(find.byKey(checkboxKey));
+      // Test that disabled checkbox refuses focus and keyboard activation
+      await tester.expectRefusesKeyboardActivation(focusNode);
       expect(wasChanged, isFalse);
 
       // Test that hover callbacks aren't triggered when disabled

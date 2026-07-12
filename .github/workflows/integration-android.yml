@@ -1,11 +1,23 @@
 name: Android Integration Tests
 
 on:
+  workflow_call:
   workflow_dispatch:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - packages/naked_ui/**
+      - packages/example/**
+      - tool/**
+      - pubspec.yaml
+      - pubspec.lock
+      - .github/workflows/integration-android.yml
+  merge_group:
 
 # Avoid overlapping runs for same branch/PR
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.ref }}-android
   cancel-in-progress: true
 
 jobs:
@@ -38,13 +50,6 @@ jobs:
       - name: Resolve root dependencies
         run: flutter pub get
 
-      - name: Ensure Android platform files for example
-        run: |
-          if [ ! -d "android" ]; then
-            flutter create --platforms android .
-          fi
-        working-directory: packages/example
-
       - name: Launch emulator and run integration tests
         uses: reactivecircus/android-emulator-runner@v2
         with:
@@ -57,4 +62,27 @@ jobs:
           script: |
             adb devices -l
             cd packages/example
-            flutter test integration_test/all_tests.dart -d emulator-5554
+            flutter drive \
+              --driver=test_driver/integration_test_behavior.dart \
+              --target=integration_test/all_tests.dart \
+              -d emulator-5554
+            flutter drive \
+              --driver=test_driver/integration_test.dart \
+              --target=integration_test/screenshot_smoke.dart \
+              -d emulator-5554 \
+              --dart-define=NAKED_UI_CAPTURE_SCREENSHOTS=true \
+              --dart-define=NAKED_UI_GIT_SHA=${{ github.sha }} \
+              --dart-define=NAKED_UI_FLUTTER_VERSION=3.41.2
+            test -s build/integration_test_screenshots/dialog__open__android__reference.png
+            test -s build/integration_test_screenshots/manifest.json
+
+      - name: Upload Android integration evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: integration-android-${{ github.sha }}
+          path: |
+            packages/example/build/integration_test_screenshots/
+            packages/example/build/integration_response_data.json
+          if-no-files-found: warn
+          retention-days: 14

@@ -1,5 +1,6 @@
 import 'package:example/api/naked_accordion.0.dart' as accordion_example;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:naked_ui/naked_ui.dart';
@@ -276,6 +277,7 @@ void main() {
     testWidgets('accordion keyboard navigation works', (tester) async {
       final controller = NakedAccordionController<String>();
       final itemKey = UniqueKey();
+      final focusNode = tester.createManagedFocusNode();
 
       await tester.pumpWidget(
         MaterialApp(
@@ -288,6 +290,7 @@ void main() {
                     NakedAccordion<String>(
                       key: itemKey,
                       value: 'keyboard',
+                      focusNode: focusNode,
                       builder: (context, itemState) => Container(
                         padding: const EdgeInsets.all(12),
                         child: const Text('Keyboard Item'),
@@ -306,17 +309,25 @@ void main() {
       // Initially collapsed
       expect(find.text('Keyboard Content'), findsNothing);
 
-      // Test keyboard activation (Enter/Space)
-      await tester.testKeyboardActivation(find.byKey(itemKey));
-      await tester.pump();
+      await tester.pressKeyOn(focusNode, LogicalKeyboardKey.enter);
+      expect(
+        find.text('Keyboard Content'),
+        findsOneWidget,
+        reason: 'Enter must expand the focused accordion item',
+      );
 
-      // Should be expanded now
-      expect(find.text('Keyboard Content'), findsOneWidget);
+      await tester.pressKeyOn(focusNode, LogicalKeyboardKey.space);
+      expect(
+        find.text('Keyboard Content'),
+        findsNothing,
+        reason: 'Space must collapse the expanded accordion item',
+      );
     });
 
     testWidgets('disabled accordion item blocks interactions', (tester) async {
       final controller = NakedAccordionController<String>();
       final itemKey = UniqueKey();
+      final focusNode = tester.createManagedFocusNode();
       bool hoverChanged = false;
 
       await tester.pumpWidget(
@@ -331,6 +342,7 @@ void main() {
                       key: itemKey,
                       value: 'disabled',
                       enabled: false,
+                      focusNode: focusNode,
                       onHoverChange: (hovered) => hoverChanged = true,
                       builder: (context, itemState) => Container(
                         padding: const EdgeInsets.all(12),
@@ -360,8 +372,7 @@ void main() {
       expect(hoverChanged, isFalse);
 
       // Keyboard activation should not work
-      await tester.testKeyboardActivation(find.byKey(itemKey));
-      await tester.pump();
+      await tester.expectRefusesKeyboardActivation(focusNode);
       expect(find.text('Disabled Content'), findsNothing);
     });
 

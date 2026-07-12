@@ -1,4 +1,5 @@
 import 'package:example/api/naked_textfield.0.dart' as textfield_example;
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
@@ -187,7 +188,18 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      // Initially not focused
+      // Chrome can transfer a retained DOM editing connection to this field
+      // when the test root is replaced. Flutter's own EditableText tests use
+      // a platform connection close to establish the corresponding web blur.
+      if (kIsWeb) {
+        tester.testTextInput.closeConnection();
+        await tester.idle();
+      } else {
+        focusNode.unfocus();
+        await tester.pump();
+      }
+      focusTransitions.clear();
+
       expect(focusNode.hasFocus, isFalse);
       expect(focusTransitions, isEmpty);
 
@@ -196,9 +208,15 @@ void main() {
       await tester.pump();
       expect(focusNode.hasFocus, isTrue);
 
-      // Lose focus
-      focusNode.unfocus();
-      await tester.pump();
+      // Exercise the platform blur path on web; other targets can release
+      // framework focus directly.
+      if (kIsWeb) {
+        tester.testTextInput.closeConnection();
+        await tester.idle();
+      } else {
+        focusNode.unfocus();
+        await tester.pump();
+      }
       expect(focusNode.hasFocus, isFalse);
 
       // Verify focus transitions happened

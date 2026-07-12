@@ -12,7 +12,7 @@
 
 **Note**: Updating the `pubspec.yaml` and `CHANGELOG.md` is not required. These are handled automatically during the release process.
 
-- [ ] My PR includes unit or integration tests for *all* changed/updated/fixed behaviors.
+- [ ] My PR includes unit or integration tests for *all* changed/updated/fixed behaviors. Component-program PRs include the contract tests required by [`plan/process.md`](../plan/process.md) Phase B.
 - [ ] I have updated or added relevant documentation (doc comments with `///`).
 - [ ] I am prepared to follow up on review comments in a timely manner.
 
