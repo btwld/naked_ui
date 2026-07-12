@@ -46,7 +46,7 @@ jobs:
   test:
     name: Run Tests
     # Goldens are approved only on this explicit host image with Flutter
-    # 3.41.2 and the checked-in test font (D-14).
+    # 3.41.2 and the checked-in test font.
     runs-on: ubuntu-24.04
     permissions:
       pull-requests: write
@@ -94,7 +94,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: golden-failures-${{ github.sha }}
-          path: packages/example/test/failures/
+          path: packages/example/test/goldens/components/failures/
           if-no-files-found: ignore
           retention-days: 14
 
