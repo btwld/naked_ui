@@ -380,12 +380,12 @@ void main() {
                 .evaluate()
                 .isEmpty &&
             find
-                .text(
-                  'This is the content for section 2. You can put anything here!',
-                )
-                .evaluate()
-                .length ==
-            1,
+                    .text(
+                      'This is the content for section 2. You can put anything here!',
+                    )
+                    .evaluate()
+                    .length ==
+                1,
       );
       expect(
         find.text(
