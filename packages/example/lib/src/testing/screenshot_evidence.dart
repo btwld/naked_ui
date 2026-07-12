@@ -1,7 +1,6 @@
 /// Metadata for one reviewed real-target screenshot.
 ///
-/// Artifact names follow
-/// `component__scenario__target__theme.png` as required by briefing §21.3.
+/// Artifact names follow `component__scenario__target__theme.png`.
 class ScreenshotEvidence {
   ScreenshotEvidence({
     required this.component,

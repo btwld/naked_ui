@@ -4,16 +4,15 @@ import 'package:flutter_test/flutter_test.dart';
 
 /// Keyboard/focus helpers for integration tests.
 ///
-/// Contract (plan/briefing.md §12.4): keyboard tests must fail loudly.
-/// Helpers here never catch-and-continue; they assert focus preconditions
-/// and leave the outcome assertion (value change, overlay visibility,
-/// callback count) to the caller.
+/// Keyboard tests must fail loudly. Helpers here never catch-and-continue;
+/// they assert focus preconditions and leave the outcome assertion (value
+/// change, overlay visibility, callback count) to the caller.
 extension KeyboardTestHelpers on WidgetTester {
   /// Performs cleanup between tests to prevent gesture and focus state
   /// leakage. Call this in tearDown() to ensure proper test isolation.
   ///
   /// Uses a bounded pump, not pumpAndSettle: components with live timers or
-  /// repeating animations would hang pumpAndSettle (briefing §21.2).
+  /// repeating animations would hang pumpAndSettle.
   Future<void> cleanupBetweenTests() async {
     FocusManager.instance.primaryFocus?.unfocus();
     FocusManager.instance.highlightStrategy = FocusHighlightStrategy.automatic;
@@ -23,7 +22,7 @@ extension KeyboardTestHelpers on WidgetTester {
   /// Pumps frames until [condition] holds, failing after [timeout].
   ///
   /// Deterministic replacement for pumpAndSettle on widgets with live timers
-  /// or repeating animations (briefing §21.2).
+  /// or repeating animations.
   Future<void> pumpUntil(
     bool Function() condition, {
     Duration step = const Duration(milliseconds: 16),

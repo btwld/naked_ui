@@ -2,8 +2,8 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 
-/// Guard for plan/phases/00-test-harness.md task A2: every integration test
-/// file under integration_test/components/ must be imported by
+/// Every integration test file under integration_test/components/ must be
+/// imported by
 /// integration_test/all_tests.dart — a file missing from the aggregate
 /// runner silently does not run in CI.
 void main() {

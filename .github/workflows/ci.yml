@@ -105,8 +105,8 @@ jobs:
 
       # Coverage remains visible for review, but no percentage is presented as
       # a gate until the project adopts an evidence-based baseline. The
-      # blocking requirement is the test run above plus the component contract
-      # tests required by plan/process.md Phase B.
+      # blocking requirement is the test run above plus the contract tests for
+      # each changed component.
       - name: Report code coverage (informational)
         uses: zgosalvez/github-actions-report-lcov@v4
         with:

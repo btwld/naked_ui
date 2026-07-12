@@ -2,7 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 extension AccessibilityGuidelineHelpers on WidgetTester {
   /// Applies the accessibility guidelines that are meaningful for a canonical
-  /// styled interactive fixture (briefing §21.6).
+  /// styled interactive fixture.
   Future<void> expectMeetsAccessibilityGuidelines({
     bool labeledTapTarget = true,
     bool androidTapTarget = true,

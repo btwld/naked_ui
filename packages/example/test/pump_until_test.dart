@@ -5,9 +5,8 @@ import 'package:flutter_test/flutter_test.dart';
 
 import '../integration_test/helpers/keyboard_test_helpers.dart';
 
-/// Proof for plan/phases/00-test-harness.md task A6: pumpUntil must fail
-/// (not pass, not hang) when its condition is never met, and must return as
-/// soon as the condition holds.
+/// pumpUntil must fail (not pass, not hang) when its condition is never met,
+/// and must return as soon as the condition holds.
 void main() {
   testWidgets('pumpUntil returns once the condition holds', (tester) async {
     var done = false;
