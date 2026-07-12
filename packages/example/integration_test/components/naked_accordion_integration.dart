@@ -12,6 +12,11 @@ void main() {
 
   group('NakedAccordion Integration Tests', () {
     testWidgets('accordion expands and collapses correctly', (tester) async {
+      const section1Content =
+          'This is the content for section 1. You can put anything here!';
+      const section2Content =
+          'This is the content for section 2. You can put anything here!';
+
       // Use the actual example app
       await tester.pumpWidget(const accordion_example.MyApp());
       await tester.pump(const Duration(milliseconds: 100));
@@ -20,58 +25,32 @@ void main() {
       expect(accordionFinder, findsOneWidget);
 
       // Initially Section 1 should be expanded (from initialExpandedValues)
-      expect(
-        find.text(
-          'This is the content for section 1. You can put anything here!',
-        ),
-        findsOneWidget,
-      );
-      expect(
-        find.text(
-          'This is the content for section 2. You can put anything here!',
-        ),
-        findsNothing,
-      );
+      expect(find.text(section1Content), findsOneWidget);
+      expect(find.text(section2Content), findsNothing);
 
       // Tap Section 2 header to expand it
       await tester.tap(find.text('Section 2'));
-      await tester.pump(
-        const Duration(milliseconds: 250),
-      ); // Wait for animation
+      await tester.pumpUntil(
+        () =>
+            find.text(section1Content).evaluate().isEmpty &&
+            find.text(section2Content).evaluate().length == 1,
+      );
 
       // Section 1 should close (max: 1), Section 2 should open
-      expect(
-        find.text(
-          'This is the content for section 1. You can put anything here!',
-        ),
-        findsNothing,
-      );
-      expect(
-        find.text(
-          'This is the content for section 2. You can put anything here!',
-        ),
-        findsOneWidget,
-      );
+      expect(find.text(section1Content), findsNothing);
+      expect(find.text(section2Content), findsOneWidget);
 
       // Tap Section 1 header to expand it again
       await tester.tap(find.text('Section 1'));
-      await tester.pump(
-        const Duration(milliseconds: 250),
-      ); // Wait for animation
+      await tester.pumpUntil(
+        () =>
+            find.text(section1Content).evaluate().length == 1 &&
+            find.text(section2Content).evaluate().isEmpty,
+      );
 
       // Section 2 should close, Section 1 should open
-      expect(
-        find.text(
-          'This is the content for section 1. You can put anything here!',
-        ),
-        findsOneWidget,
-      );
-      expect(
-        find.text(
-          'This is the content for section 2. You can put anything here!',
-        ),
-        findsNothing,
-      );
+      expect(find.text(section1Content), findsOneWidget);
+      expect(find.text(section2Content), findsNothing);
     });
 
     testWidgets('accordion controller manages state correctly', (tester) async {
@@ -391,8 +370,23 @@ void main() {
       // During animation, both states might be visible briefly
       await tester.pump(const Duration(milliseconds: 100));
 
-      // After animation completes
-      await tester.pump(const Duration(milliseconds: 150));
+      // Wait for the completed state rather than a platform-specific duration.
+      await tester.pumpUntil(
+        () =>
+            find
+                .text(
+                  'This is the content for section 1. You can put anything here!',
+                )
+                .evaluate()
+                .isEmpty &&
+            find
+                .text(
+                  'This is the content for section 2. You can put anything here!',
+                )
+                .evaluate()
+                .length ==
+            1,
+      );
       expect(
         find.text(
           'This is the content for section 2. You can put anything here!',
