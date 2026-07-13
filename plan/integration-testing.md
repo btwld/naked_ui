@@ -1,11 +1,11 @@
 # Integration testing playbook
 
-This is the operational companion to the binding verification contracts in
+This is the operational companion to the verification baseline in
 [briefing §12](briefing.md#12-verification-architecture) and
 [briefing §21](briefing.md#21-integration-screenshot-golden-and-ci-implementation).
-It applies to every component phase. If this playbook and the frozen briefing
-ever conflict, stop and resolve the conflict explicitly; do not weaken the
-briefing silently.
+It applies to every component phase. The matching phase plan is the execution
+authority; if it changes a briefing verification proposal, the delta must be
+explicit and must not weaken outcome evidence silently.
 
 The rules below incorporate the failures and fixes from Phase 0 / PR #63.
 
@@ -45,6 +45,19 @@ Use the checked-in workflows and scripts as the executable source of truth:
 - `.github/workflows/integration-web.yml`
 - `tool/run_android_integration.sh`
 - `tool/run_integration_all.sh`
+
+The declared-minimum job remains authoritative for API compatibility. A phase
+that relies on `RawMenuAnchor`, `OverlayPortal`, `RawTooltip`, or
+`RawAutocomplete` also runs its focused regression slice on pinned Flutter
+3.44.6 before closure because those primitives changed after 3.41. Re-verify
+the current stable pin when that phase starts; a compatibility run does not
+silently raise the package floor.
+
+When [the Flutter raw-primitives watchlist](flutter-raw-primitives.md) names a
+beta/master change for the component, add a focused canary run at the recorded
+commit. Canary failures inform the adapter and upstream follow-up, but an
+unreleased channel is neither a release gate nor evidence that an API can be
+used at the declared minimum.
 
 Do not combine native behavior and host-transport evidence into one result that
 can hide an in-app failure. Keep the behavior aggregate and screenshot smoke as
@@ -208,7 +221,7 @@ quarantined.
 
 ## 9. Per-phase integration checklist
 
-Every just-in-time phase plan must name:
+Every phase plan must name before its implementation slice begins:
 
 - [ ] The requirement-to-test map and why each integration scenario needs a
       real target rather than only a widget test.

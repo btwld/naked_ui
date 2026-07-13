@@ -1,8 +1,11 @@
 # Naked UI component expansion — plan
 
-This folder is the working plan for delivering the eight new/expanded headless
-primitives (and the test-harness hardening that must precede them) described in
-the engineering briefing handed off from the Remix team.
+This folder is the working plan for evaluating and delivering eight proposed
+headless primitives, plus the test-harness hardening that preceded them. The
+component plans incorporate the current repository, open PRs, Flutter 3.41–3.44
+raw primitives, and accessibility research; they intentionally narrow or block
+parts of the original Remix briefing where the evidence does not support
+shipping them yet.
 
 Consumer: **Remix for Flutter**. Boundary rule: Naked UI owns behavior, focus,
 keyboard, overlays, timers, and semantics — never styling, product copy, or
@@ -12,82 +15,115 @@ business rules ([briefing §5](briefing.md#5-definition-of-the-headless-boundary
 
 | File | Role | Mutability |
 |---|---|---|
-| [briefing.md](briefing.md) | Full handoff contract (per-component behavior, semantics, tests, evidence) | **Frozen** — reference only |
+| [briefing.md](briefing.md) | Original Remix handoff and historical research baseline | **Frozen** — reference only; a phase plan may explicitly supersede a proposal |
 | [process.md](process.md) | The repeatable per-component workflow and PR gates | Stable |
 | [integration-testing.md](integration-testing.md) | Mandatory runner, determinism, evidence, and failure-triage playbook | Stable |
-| [decisions.md](decisions.md) | Decision log D-01…D-15 and escalation rule | **Living** — update as decisions resolve |
+| [decisions.md](decisions.md) | Decision log D-01…D-19 and escalation rule | **Living** — update as decisions resolve |
+| [flutter-raw-primitives.md](flutter-raw-primitives.md) | Exact stable/beta/master raw-primitive audit, component mapping, and release watchlist | **Living** — re-audit when a phase starts or Flutter releases |
+| [shadcn-flutter-reference.md](shadcn-flutter-reference.md) | Per-component source audit of `shadcn_flutter`; reusable behaviors and negative test cases | Reference baseline — refresh only if a phase relies on changed upstream behavior |
 | README.md (this file) | Index and status board | **Living** — update every phase PR |
-| [phases/](phases/) using the NN-name.md convention | Executable plan for one phase | Created just-in-time when a phase starts |
+| [phases/](phases/) using the NN-name.md convention | Execution authority for one phase, including deltas, reuse, evidence, and stop gates | **Living until implementation starts**, then changed only through review |
 
 ## Status board
 
-Phase numbers follow the briefing's PR order ([§7](briefing.md#7-delivery-sequence-and-pull-request-boundaries)).
-A phase plan file is created from the briefing contract when the phase starts —
-do not pre-write plans for phases whose blocking decisions are unresolved.
+Phase numbers retain the briefing's nominal PR order. All eight plans exist now
+so dependencies and wrong assumptions are visible. A blocked or demand-gated
+plan authorizes only its spike/gate work until its stop condition is cleared.
 
 | Phase | Scope | Contract | Blocking decisions | Plan | Status |
 |---:|---|---|---|---|---|
 | 0 | Test-harness hardening | [§6.2](briefing.md#62-confirmed-delivery-gaps-to-fix-before-adding-the-new-suite), [§21](briefing.md#21-integration-screenshot-golden-and-ci-implementation) | D-12, D-13, D-14, D-15 (resolved) | [phases/00-test-harness.md](phases/00-test-harness.md) | **Closed** — delivered by [PR #63](https://github.com/btwld/naked_ui/pull/63), squash-merged as `58a48a3` |
-| 1 | Alert Dialog (extend `NakedDialog`) | [§13](briefing.md#13-component-contract-alert-dialog) | D-02 (resolved) | — | Ready for phase plan |
-| 2 | Link | [§20](briefing.md#20-component-contract-link) | — | — | Not started |
-| 3 | Field + `NakedTextField` integration | [§17](briefing.md#17-component-contract-field) | D-08, D-09 | — | Not started |
-| 4 | Toggle Group expansion | [§14](briefing.md#14-component-contract-toggle-group) | D-01 | — | Not started |
-| 5 | Context Menu | [§15](briefing.md#15-component-contract-context-menu) | D-03 | — | Not started |
-| 6 | Toast | [§16](briefing.md#16-component-contract-toast) | D-04, D-05, D-06, D-07 | — | Not started |
-| 7 | Hover Card | [§19](briefing.md#19-component-contract-hover-card--preview-card) | — | — | Not started |
-| 8 | Combobox | [§18](briefing.md#18-component-contract-combobox) | D-10, D-11 + **accessibility spike ([§18.3](briefing.md#183-accessibility-spike-required-before-final-api))** | — | Blocked on spike |
+| 1 | Alert Dialog (extend `NakedDialog`) | [§13](briefing.md#13-component-contract-alert-dialog) | D-02 (resolved) | [phases/01-alert-dialog.md](phases/01-alert-dialog.md) | **PR #64 open** — implementation is sound; manual AT/release evidence and briefing correction remain |
+| 2 | Link | [§20](briefing.md#20-component-contract-link) | D-16 (resolved) | [phases/02-link.md](phases/02-link.md) | **PR #65 open; changes required** — disabled web destination, native-link composition, DOM proof, and PR scope |
+| 3 | Field + `NakedTextField` integration | [§17](briefing.md#17-component-contract-field) | D-08, D-09 (resolved) | [phases/03-field.md](phases/03-field.md) | Plan ready — TextField-first; generic-control wrapper gated by semantics spike |
+| 4 | Toggle Group intent/focus | [§14](briefing.md#14-component-contract-toggle-group) | D-01 (resolved) | [phases/04-toggle-group.md](phases/04-toggle-group.md) | Plan ready — preserve single semantics; multiple mode requires a real consumer |
+| 5 | Context Menu | [§15](briefing.md#15-component-contract-context-menu) | D-03 (open) | [phases/05-context-menu.md](phases/05-context-menu.md) | **Blocked on trigger-role/AT spike** |
+| 6 | Toast | [§16](briefing.md#16-component-contract-toast) | D-04–D-07 (resolved) | [phases/06-toast.md](phases/06-toast.md) | **Skip for now** — retain the demand-gated one-visible FIFO plan |
+| 7 | Hover Card | [§19](briefing.md#19-component-contract-hover-card--preview-card) | D-17 (resolved direction) | [phases/07-hover-card.md](phases/07-hover-card.md) | **Skip for now** — retain the plan; Link and a valid preview story are prerequisites |
+| 8 | Combobox | [§18](briefing.md#18-component-contract-combobox) | D-10, D-11 (open); D-18 (resolved direction) | [phases/08-combobox.md](phases/08-combobox.md) | **Blocked on RawAutocomplete/AT/IME/version spike** |
 
-Release grouping ([§23.2](briefing.md#232-recommended-release-grouping)):
-prerelease 1 = phases 1–3, prerelease 2 = phases 4–5, prerelease 3 = phases 6–7,
-Combobox ships alone after its spike passes. A blocked phase does not block
-independent phases.
+**Clean-sheet verdict: split.** These are not one eight-component commitment.
+Finish/refine Alert Dialog and Link, then implement the smaller TextField-first
+Field and the compatible single-mode Toggle focus work. Context Menu and
+Combobox authorize spikes only; Toast and Hover Card authorize nothing until a
+named Remix use case passes their demand/content gate. This keeps the proven
+parts of the briefing while removing speculative APIs and wrong semantic
+shortcuts.
+
+Recommended sequence is evidence-driven rather than a promise to ship all
+eight: finish Alert Dialog, correct and land Link, then build the TextField-first
+Field. Toggle Group's single-mode focus work can follow. Context Menu proceeds
+only after D-03; Toast and Hover Card require named Remix demand; Combobox ships
+alone only after its spike passes. A blocked phase does not block independent
+work.
 
 ## Program readiness
 
-Phase 0 made the harness trustworthy enough to begin component work. The
-program is **ready to start targeted planning**, but it is not research-complete
-for every phase and no phase may bypass its open decisions, spikes, or evidence
-gates.
+Phase 0 made the harness trustworthy. Repository and upstream research is now
+captured in every component plan. The program is ready to execute the first
+three phases, but no component may bypass its demand, spike, version, or manual
+assistive-technology gate.
 
 | Phase | Start readiness | Required work before implementation |
 |---:|---|---|
-| 1 — Alert Dialog | **Ready for a just-in-time phase plan** | Re-verify the current `NakedDialog` baseline, carry the resolved D-02 focus contract into tests/examples, then create the phase plan. |
-| 2 — Link | **Ready for a just-in-time phase plan** | Re-verify Flutter 3.41.0/3.41.2 link semantics and existing interaction-state patterns; no product decision currently blocks implementation. |
-| 3 — Field | Blocked on decisions | Resolve D-08 metadata precedence and D-09 initial-error announcement policy before implementation/semantics tests. |
-| 4 — Toggle Group | Blocked on compatibility decision | Resolve D-01 and document the consumer-facing `selected` to `toggled` announcement migration. |
-| 5 — Context Menu | Spike/decision required | Resolve D-03 with a trigger-role/semantic-long-press prototype and real VoiceOver/TalkBack results. |
-| 6 — Toast | Blocked on scope/API decisions | Resolve D-04–D-07 before tests or controller implementation; timer, queue, focus, and announcement contracts then become the phase plan. |
-| 7 — Hover Card | Contract ready, dependency pending | Land Link first, then create the phase plan and verify reusable overlay positioning plus pointer-grace geometry. |
-| 8 — Combobox | **Blocked on required accessibility spike** | Land Field, run the macOS/Android/web spike, then resolve D-10/D-11 before freezing the API. |
+| 1 — Alert Dialog | **Completion ready** | Rebase/isolate PR #64; finish VoiceOver, TalkBack, Chrome tree, and release iOS evidence. |
+| 2 — Link | **Correction ready** | Rebase PR #65 after Alert; remove disabled URI, correct docs, prove browser/native-link composition and selectable text. |
+| 3 — Field | **MVP ready** | Implement controlled TextField semantics first; stop generic-control publication if role/action preservation fails. |
+| 4 — Toggle Group | **Conditional implementation ready** | Classify Remix stories; ship roving focus, and add multiple mode only for a genuine independent-toggle use case. |
+| 5 — Context Menu | **Spike only** | Resolve D-03 with real trigger-role/semantic-long-press evidence. |
+| 6 — Toast | **Demand gate first** | Name a transient-feedback screen, then implement the reduced one-visible FIFO contract. |
+| 7 — Hover Card | **Dependency + demand gate first** | Land Link, prove a noninteractive/nonessential preview story, then run raw-overlay/pointer-grace spike. |
+| 8 — Combobox | **Spike only** | Land Field; prove RawAutocomplete, active-option AT, disabled options, IME, and 3.41/3.44.6 behavior before API work. |
 
 Shared closure gates for every component:
 
 - Follow [integration-testing.md](integration-testing.md) and include its
   per-phase checklist in the executable phase plan.
+- Apply the stable/floor policy and re-audit protocol in
+  [flutter-raw-primitives.md](flutter-raw-primitives.md); beta/master findings
+  are canaries, not package dependencies.
 - Re-evaluate or explicitly resolve the Flutter 3.41.2 web-screenshot
   limitation; a web behavior log is not a silent substitute for a required
   screenshot.
 - Schedule and record the required VoiceOver, TalkBack, Chrome accessibility
   tree, and release-level iOS checks. Automated semantics alone are not enough.
-- Re-verify the phase's current-code baseline when its just-in-time plan is
-  created; the original `0ca0b8b` audit is historical evidence, not a permanent
-  assumption.
+- Re-verify the phase's current-code and current-stable Flutter baseline when
+  implementation starts; `d341b90` and Flutter 3.44.6 are planning evidence,
+  not permanent assumptions.
 
-Recommended next move: start the Phase 1 Alert Dialog plan in the nominal
-delivery order. Phase 2 Link remains independently ready if Phase 1 becomes
-blocked during implementation. Do not begin all phases in parallel.
+Recommended next move: finish the Phase 1 evidence packet and merge PR #64,
+then rebase/correct PR #65. Field can begin after their shared example/registry
+churn settles. Do not implement every planned component in parallel.
 
 ## How to work a phase
 
-1. Resolve the phase's blocking decisions in [decisions.md](decisions.md) first
-   — nothing is decided silently inside an implementation PR.
-2. Create an NN-name.md plan under [phases/](phases/) by deriving tasks from
-   the phase's briefing contract section (see the template at the end of
-   [process.md](process.md)).
+1. Read the phase plan as the execution authority and the frozen briefing as
+   its research/history source. Any explicit phase-plan delta wins.
+2. Resolve that plan's remaining demand/spike/decision gate in
+   [decisions.md](decisions.md) before public API implementation.
 3. Follow the workflow in [process.md](process.md) (contract review → failing
    tests → implementation → fixture → platform proof → evidence packet).
 4. In the phase's final PR, update this status board and any resolved rows in
    decisions.md.
+
+### Component-plan research record (2026-07-13)
+
+The eight plans were re-derived at workspace `d341b90` from current source and
+tests, open Alert Dialog PR head `409ec27`, open Link PR head `2614555`, exact
+Flutter 3.41.0/3.41.2 behavior, and Flutter 3.44.6 current-stable source
+(`ee80f08bbf97172ec030b8751ceab557177a34a6`). That baseline was compared with beta
+`677d472756f83c14371dd8cc624387065f3d32a7` and master
+`cf9e8afe9a5e601158517782b5b824a328bb2c68`. The audit covered
+`RawDialogRoute`/`showRawDialog`, `RawMenuAnchor`, the new Cupertino menu
+family, `RawTooltip`, `OverlayPortal`/`Overlay`, `RawAutocomplete`, `FormField`,
+Semantics roles/properties, Material `SegmentedButton`, official
+`url_launcher.Link`, current `shadcn_flutter` master
+`a4504aae7a99844a350e64d92f3d2ae773ebb361`, and the relevant WAI-ARIA/WCAG
+patterns. The complete Flutter adopt/adapt/watch/reject record is in
+[flutter-raw-primitives.md](flutter-raw-primitives.md); the third-party
+comparison is in [shadcn-flutter-reference.md](shadcn-flutter-reference.md).
+Each phase records its reuse decision, semantics matrix, SDK matrix, ordered
+tasks, and stop gate.
 
 ## Verification record
 

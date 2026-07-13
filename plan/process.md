@@ -1,8 +1,9 @@
 # Per-component process
 
-Every component phase follows this workflow. It is a navigation layer over the
-briefing — the briefing sections linked here are the binding contract; this
-file just makes them executable in order. Do not restate contract details here.
+Every component phase follows this workflow. The frozen briefing is the
+historical handoff and research baseline. The matching file under `phases/` is
+the execution authority and may explicitly narrow or correct a briefing
+proposal; every delta must be visible in that plan and in `decisions.md`.
 
 ## Ground rules (apply to every PR)
 
@@ -19,6 +20,22 @@ file just makes them executable in order. Do not restate contract details here.
   rules ([§11](briefing.md#11-universal-keyboard-and-focus-rules)).
 - **One behavior contract per PR**, each PR releasable
   ([§7](briefing.md#7-delivery-sequence-and-pull-request-boundaries)).
+- **Reuse before invention** — inspect the declared-minimum and current-stable
+  Flutter raw primitives plus existing Naked UI utilities. Apply the audit and
+  release protocol in
+  [flutter-raw-primitives.md](flutter-raw-primitives.md). Record why a raw
+  primitive is adopted, adapted, used as a behavior reference, watched, or
+  rejected; never copy private framework implementation merely to force a
+  proposed API to work. Material/Cupertino and
+  [`shadcn_flutter`](shadcn-flutter-reference.md) comparisons contribute
+  behavior and negative test cases, not styling or a second component-system
+  dependency.
+- **Version truthfulness** — compile and test on exact Flutter 3.41.0 and the
+  workspace pin. Components depending on raw behavior that changed by current
+  stable also run a pinned 3.44.6 compatibility slice. Re-verify the current
+  stable version and commit when implementation begins. Beta/master runs are
+  non-blocking canaries only and never authorize a package API or release
+  claim.
 - **Integration proof is operational, not implied** — every phase follows
   [integration-testing.md](integration-testing.md), including authoritative
   runners, bounded waits, failure triage, artifacts, and manual AT evidence.
@@ -30,7 +47,7 @@ file just makes them executable in order. Do not restate contract details here.
 
 | Phase | Deliverable | Gate |
 |---|---|---|
-| **A — Contract review** | Component contract section copied into the issue/PR; semantics matrix written; every input path, focus path, timer, platform scenario, and known engine limitation listed | Reviewer sign-off on the contract, decisions resolved, integration playbook checklist mapped |
+| **A — Contract review** | Phase plan linked in the issue/PR; raw-reuse decision, release watchlist, and semantics matrix reviewed; every input path, focus path, timer, platform scenario, SDK boundary, and known engine limitation listed | Demand/spike gates passed, current Flutter channels re-audited, reviewer sign-off on the contract, decisions resolved, integration playbook checklist mapped |
 | **B — Failing tests** | Tests in the order of §8 Phase B (invariants → builder/scope → pointer → keyboard/focus → semantics → overlay → timers → disposal) | Each test fails for the intended missing behavior |
 | **C — Implementation** | Smallest behavior surface; existing `NakedState`/builder/scope conventions; injectable durations; no styles, no English defaults | Analyze/format/unit green |
 | **D — Example fixture** | Deterministic canonical example: stable `ValueKey`s, local data, state readout, fixed viewport, RTL/large-text variants, reset behavior | Fixture reviewed against §8 Phase D list |
@@ -92,14 +109,26 @@ flutter test -r compact -d macos integration_test/all_tests.dart
 
 ## Phase plan file template
 
-Create an NN-name.md plan under [phases/](phases/) when a phase starts:
+Use this shape when adding or materially revising a phase plan:
 
 ```markdown
 # Phase NN — <name>
 
 Goal: <one paragraph>
-Contract: briefing §<n> (binding). Decisions resolved: D-xx (link decisions.md).
+Contract source: briefing §<n>; list every explicit delta. Decisions: D-xx.
 Baseline commit: <sha this plan was derived against>
+
+## Scope and stop gate
+State what ships, what is deferred, what evidence authorizes implementation,
+and what blocks only this component.
+
+## Reuse before new machinery
+List existing Naked UI code, raw Flutter primitives at minimum/current SDK,
+and rejected alternatives with reasons.
+
+## Semantics and interaction contract
+Answer role, name, value/state, actions, focus, keyboard, pointer/touch,
+disabled/read-only, announcement, overlay, timer, and localization questions.
 
 ## Tasks
 For each task: What / Where (file:line) / How / Verify (exact command).
@@ -107,6 +136,7 @@ Order tasks so the PR stays releasable at every merge point.
 
 ## Research and readiness
 - Current-code baseline re-verified:
+- Minimum/current Flutter behavior re-verified:
 - Decisions resolved:
 - Required spike/manual AT sessions:
 - Known engine/platform limitations and stop conditions:
