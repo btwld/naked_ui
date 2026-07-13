@@ -46,11 +46,6 @@ jobs:
       - name: Install workspace dependencies
         run: flutter pub get
 
-      - name: Install virtual display
-        run: |
-          sudo apt-get update
-          sudo apt-get install --yes xvfb
-
       - name: Record target environment
         run: |
           flutter doctor -v
@@ -65,12 +60,11 @@ jobs:
           "${{ steps.chrome.outputs.chromedriver-path }}" --port=4444 &
           driver_pid=$!
           trap 'kill "$driver_pid" 2>/dev/null || true' EXIT
-          xvfb-run --auto-servernum --server-args="-screen 0 1280x1024x24" \
-            flutter drive \
+          flutter drive \
             --driver=test_driver/integration_test_behavior.dart \
             --target=integration_test/all_tests.dart \
-            -d chrome \
-            --headless \
+            -d web-server \
+            --browser-name=chrome \
             --browser-dimension=800x600@1 \
             --chrome-binary="${{ steps.chrome.outputs.chrome-path }}" \
             2>&1 | tee build/web-integration.log
