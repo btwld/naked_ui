@@ -25,7 +25,7 @@ The complete documentation covers detailed component APIs and examples, guides a
 - NakedTabs — tablist + roving focus
 - NakedAccordion — expandable/collapsible sections
 - NakedMenu — anchored overlay menu
-- NakedDialog — modal dialog behavior + focus trap
+- NakedDialog — normal and alert dialog semantics + modal focus trap
 - NakedTooltip — anchored tooltip with lifecycle
 - NakedPopover — anchored, dismissible popover overlay
 
@@ -38,6 +38,39 @@ The complete documentation covers detailed component APIs and examples, guides a
 ## Examples
 
 Below are examples of using `NakedButton`, `NakedCheckbox`, and `NakedMenu`. Each shows how to wrap custom visuals with headless behavior and handle states using the builder pattern. See the [full documentation](https://docs.page/btwld/naked_ui) for all components.
+
+### Alert Dialog
+
+Use `showNakedAlertDialog` for urgent acknowledgements or destructive
+confirmations, not ordinary modal content. Its builder returns only the visual
+contents; the helper adds the single alert-dialog semantics wrapper, always
+moves focus inside, and keeps outside-barrier dismissal disabled by default.
+Escape and platform Back safely cancel with a null result.
+
+Keep the initial focus node in the caller's `State` and dispose it there. For
+irreversible work, focus the least destructive action. For a simple
+acknowledgement, focus the expected action. Long structured content can instead
+focus a non-action container near the beginning.
+
+```dart
+showNakedAlertDialog<bool>(
+  context: context,
+  barrierColor: Colors.black54,
+  semanticLabel: localizedDeleteProjectTitle,
+  initialFocusNode: cancelFocusNode,
+  builder: (dialogContext) => YourStyledAlertContents(
+    cancelFocusNode: cancelFocusNode,
+    onCancel: () => Navigator.of(dialogContext).pop(false),
+    onConfirm: () => Navigator.of(dialogContext).pop(true),
+  ),
+);
+```
+
+`semanticLabel` must be non-empty and localized. If a consumer deliberately
+enables `barrierDismissible`, it must also pass a non-empty localized
+`barrierLabel`, provide an explicit safe cancel action, and test every
+cancellation result. Naked UI never disposes the caller's focus node and does
+not provide styling or localized product copy.
 
 ### Custom Button
 Create a button with custom styling that responds to interaction states.
