@@ -32,6 +32,16 @@ void main() {
       lessThan(48),
       reason: 'An inline Link must not be forced into a button-sized line box.',
     );
+    for (final key in const ['link.external', 'link.disabled']) {
+      final size = tester.getSize(find.byKey(ValueKey(key)));
+      expect(size.height, greaterThanOrEqualTo(48));
+      expect(
+        size.width,
+        lessThan(600),
+        reason: '$key should wrap its content, not fill the 680px row.',
+      );
+    }
+    expect(find.text('.'), findsNothing);
   });
 
   testWidgets('primary and external activation update result exactly once', (

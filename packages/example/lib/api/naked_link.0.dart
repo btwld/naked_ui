@@ -193,10 +193,6 @@ class _LinkExampleState extends State<LinkExample> {
             child: child!,
           ),
         ),
-        const Text(
-          '.',
-          style: TextStyle(color: Color(0xFF334155), fontSize: 16),
-        ),
       ],
     );
   }
@@ -313,7 +309,6 @@ class _LinkSurface extends StatelessWidget {
         padding: standalone
             ? const EdgeInsets.symmetric(horizontal: 10, vertical: 10)
             : const EdgeInsets.symmetric(horizontal: 2, vertical: 2),
-        alignment: standalone ? Alignment.center : null,
         decoration: BoxDecoration(
           color: background,
           borderRadius: BorderRadius.circular(standalone ? 6 : 2),
