@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
@@ -287,7 +289,7 @@ class _NakedToggleState extends State<NakedToggle>
 ///
 /// Provides an inherited scope for items to read `selectedValue` and call
 /// `onChanged` when activated. No styling is provided.
-class NakedToggleGroup<T> extends StatelessWidget {
+class NakedToggleGroup<T> extends StatefulWidget {
   /// Creates a single-select group controlled by [selectedValue].
   const NakedToggleGroup({
     super.key,
@@ -295,6 +297,10 @@ class NakedToggleGroup<T> extends StatelessWidget {
     required this.selectedValue,
     this.onChanged,
     this.enabled = true,
+    this.orientation = Axis.horizontal,
+    this.loop = true,
+    this.semanticLabel,
+    this.excludeSemantics = false,
   });
 
   /// The widget containing toggle options.
@@ -309,21 +315,75 @@ class NakedToggleGroup<T> extends StatelessWidget {
   /// The enabled state of the group.
   final bool enabled;
 
+  /// The axis along which arrow keys move focus between options.
+  final Axis orientation;
+
+  /// Whether arrow-key focus movement wraps at either end of the group.
+  final bool loop;
+
+  /// The accessibility label for the group.
+  final String? semanticLabel;
+
+  /// Whether to hide the group and its options from accessibility services.
+  final bool excludeSemantics;
+
   bool get _effectiveEnabled => enabled && onChanged != null;
 
   @override
+  State<NakedToggleGroup<T>> createState() => _NakedToggleGroupState<T>();
+}
+
+class _NakedToggleGroupState<T> extends State<NakedToggleGroup<T>> {
+  late final _ToggleGroupController<T> _controller = _ToggleGroupController<T>(
+    this,
+  );
+  var _generation = 0;
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return _ToggleScope<T>(
-      selectedValue: selectedValue,
-      onChanged: _effectiveEnabled ? onChanged : null,
-      enabled: _effectiveEnabled,
-      child: child,
+    _controller.updateConfiguration(
+      selectedValue: widget.selectedValue,
+      enabled: widget._effectiveEnabled,
+      orientation: widget.orientation,
+      loop: widget.loop,
+      textDirection: Directionality.of(context),
     );
+
+    Widget result = FocusTraversalGroup(
+      policy: WidgetOrderTraversalPolicy(),
+      child: _ToggleScope<T>(
+        generation: ++_generation,
+        controller: _controller,
+        selectedValue: widget.selectedValue,
+        onChanged: widget._effectiveEnabled ? widget.onChanged : null,
+        enabled: widget._effectiveEnabled,
+        child: widget.child,
+      ),
+    );
+
+    result = widget.excludeSemantics
+        ? ExcludeSemantics(child: result)
+        : Semantics(
+            container: true,
+            explicitChildNodes: true,
+            label: widget.semanticLabel,
+            child: result,
+          );
+
+    return result;
   }
 }
 
 class _ToggleScope<T> extends InheritedWidget {
   const _ToggleScope({
+    required this.generation,
+    required this.controller,
     required this.selectedValue,
     required this.onChanged,
     required this.enabled,
@@ -343,6 +403,8 @@ class _ToggleScope<T> extends InheritedWidget {
     return scope;
   }
 
+  final int generation;
+  final _ToggleGroupController<T> controller;
   final T? selectedValue;
   final ValueChanged<T?>? onChanged;
   final bool enabled;
@@ -351,10 +413,396 @@ class _ToggleScope<T> extends InheritedWidget {
 
   @override
   bool updateShouldNotify(_ToggleScope<T> old) {
-    return selectedValue != old.selectedValue ||
+    return generation != old.generation ||
+        selectedValue != old.selectedValue ||
         enabled != old.enabled ||
         onChanged != old.onChanged;
   }
+}
+
+class _ToggleGroupEntry<T> {
+  _ToggleGroupEntry(this.owner);
+
+  final _NakedToggleOptionState<T> owner;
+  late T value;
+  var enabled = false;
+  var autofocus = false;
+
+  FocusNode get focusNode => owner.effectiveFocusNode;
+}
+
+class _ToggleGroupController<T> {
+  _ToggleGroupController(this.owner);
+
+  final _NakedToggleGroupState<T> owner;
+  final List<_ToggleGroupEntry<T>> _entries = [];
+  final List<_ToggleGroupEntry<T>> _orderedEntries = [];
+
+  _ToggleGroupEntry<T>? _target;
+  _ToggleGroupEntry<T>? _lastFocused;
+  _ToggleGroupEntry<T>? _focusedEntry;
+  T? _selectedValue;
+  var _enabled = false;
+  var _orientation = Axis.horizontal;
+  var _loop = true;
+  var _textDirection = TextDirection.ltr;
+  var _reconcileScheduled = false;
+  var _disposed = false;
+  var _autofocusHandled = false;
+  int? _repairSuccessorIndex;
+  int? _repairPredecessorIndex;
+  var _repairFocus = false;
+
+  _ToggleGroupEntry<T> register(_NakedToggleOptionState<T> option) {
+    final entry = _ToggleGroupEntry<T>(option);
+    _entries.add(entry);
+    _orderedEntries.add(entry);
+    _scheduleReconcile();
+    return entry;
+  }
+
+  void unregister(_ToggleGroupEntry<T> entry) {
+    if (!_entries.contains(entry)) return;
+
+    final oldIndex = _orderedEntries.indexOf(entry);
+    final repairFocusedEntry =
+        (entry.focusNode.hasFocus || identical(_focusedEntry, entry)) &&
+        oldIndex >= 0;
+    if (repairFocusedEntry) {
+      _repairSuccessorIndex = oldIndex;
+      _repairPredecessorIndex = oldIndex - 1;
+      _repairFocus = true;
+    }
+
+    _entries.remove(entry);
+    _orderedEntries.remove(entry);
+    if (identical(_target, entry)) _target = null;
+    if (identical(_lastFocused, entry)) _lastFocused = null;
+    if (identical(_focusedEntry, entry)) _focusedEntry = null;
+    if (repairFocusedEntry) {
+      _repairFocusImmediately(
+        successorIndex: oldIndex,
+        predecessorIndex: oldIndex - 1,
+      );
+    } else {
+      _choosePriorityTarget();
+    }
+    _scheduleReconcile();
+  }
+
+  void updateConfiguration({
+    required T? selectedValue,
+    required bool enabled,
+    required Axis orientation,
+    required bool loop,
+    required TextDirection textDirection,
+  }) {
+    _selectedValue = selectedValue;
+    _enabled = enabled;
+    _orientation = orientation;
+    _loop = loop;
+    _textDirection = textDirection;
+    _choosePriorityTarget();
+    _scheduleReconcile();
+  }
+
+  void updateEntry(
+    _ToggleGroupEntry<T> entry, {
+    required T value,
+    required bool enabled,
+    required bool autofocus,
+  }) {
+    final wasEnabled = entry.enabled;
+    final wasFocused =
+        entry.focusNode.hasFocus || identical(_focusedEntry, entry);
+    final oldIndex = _orderedEntries.indexOf(entry);
+    final shouldRepairFocus =
+        wasEnabled && !enabled && wasFocused && oldIndex >= 0;
+    entry
+      ..value = value
+      ..enabled = enabled
+      ..autofocus = autofocus;
+
+    if (shouldRepairFocus) {
+      _repairSuccessorIndex = oldIndex + 1;
+      _repairPredecessorIndex = oldIndex - 1;
+      _repairFocus = true;
+    }
+
+    if (!enabled) {
+      if (identical(_target, entry)) _target = null;
+      if (identical(_lastFocused, entry)) _lastFocused = null;
+      if (identical(_focusedEntry, entry)) _focusedEntry = null;
+    }
+
+    if (shouldRepairFocus) {
+      _repairFocusImmediately(
+        successorIndex: oldIndex + 1,
+        predecessorIndex: oldIndex - 1,
+      );
+    } else {
+      _choosePriorityTarget(preferredEntry: entry);
+    }
+    _applyFocusability(entry);
+    _scheduleReconcile();
+  }
+
+  bool isRovingTarget(_ToggleGroupEntry<T> entry) =>
+      _enabled && entry.enabled && identical(_target, entry);
+
+  void handleFocusChange(_ToggleGroupEntry<T> entry, bool focused) {
+    if (focused && entry.enabled) {
+      _focusedEntry = entry;
+      _lastFocused = entry;
+      _target = entry;
+      _scheduleReconcile();
+      return;
+    }
+    if (!focused && identical(_focusedEntry, entry)) {
+      scheduleMicrotask(() {
+        if (!_disposed &&
+            identical(_focusedEntry, entry) &&
+            !entry.focusNode.hasFocus) {
+          _focusedEntry = null;
+        }
+      });
+    }
+  }
+
+  void move(_ToggleGroupEntry<T> entry, int delta) {
+    if (!entry.enabled || _orderedEntries.isEmpty) return;
+    final currentIndex = _orderedEntries.indexOf(entry);
+    if (currentIndex < 0) return;
+
+    var index = currentIndex;
+    for (var visited = 0; visited < _orderedEntries.length; visited++) {
+      index += delta;
+      if (index < 0 || index >= _orderedEntries.length) {
+        if (!_loop) return;
+        index = index < 0 ? _orderedEntries.length - 1 : 0;
+      }
+
+      final candidate = _orderedEntries[index];
+      if (candidate.enabled) {
+        _focus(candidate);
+        return;
+      }
+    }
+  }
+
+  void focusFirst() {
+    for (final entry in _orderedEntries) {
+      if (entry.enabled) {
+        _focus(entry);
+        return;
+      }
+    }
+  }
+
+  void focusLast() {
+    for (final entry in _orderedEntries.reversed) {
+      if (entry.enabled) {
+        _focus(entry);
+        return;
+      }
+    }
+  }
+
+  int horizontalDeltaFor(LogicalKeyboardKey key) {
+    final movesForward = key == LogicalKeyboardKey.arrowRight;
+    if (_textDirection == TextDirection.rtl) {
+      return movesForward ? -1 : 1;
+    }
+    return movesForward ? 1 : -1;
+  }
+
+  void _focus(_ToggleGroupEntry<T> entry) {
+    if (!entry.enabled) return;
+    _setTarget(entry);
+    entry.focusNode.requestFocus();
+  }
+
+  void _repairFocusImmediately({
+    required int successorIndex,
+    required int predecessorIndex,
+  }) {
+    final repairTarget = _findRepairTarget(
+      successorIndex: successorIndex,
+      predecessorIndex: predecessorIndex,
+    );
+
+    if (repairTarget == null) {
+      _setTarget(null);
+      return;
+    }
+    _lastFocused = repairTarget;
+    _setTarget(repairTarget);
+    final node = repairTarget.focusNode;
+    scheduleMicrotask(() {
+      if (!_disposed &&
+          repairTarget.owner.mounted &&
+          identical(_target, repairTarget)) {
+        node.requestFocus();
+      }
+    });
+  }
+
+  _ToggleGroupEntry<T>? _findRepairTarget({
+    required int successorIndex,
+    required int predecessorIndex,
+  }) {
+    for (var i = successorIndex; i < _orderedEntries.length; i++) {
+      if (_orderedEntries[i].enabled) return _orderedEntries[i];
+    }
+
+    final lastIndex = _orderedEntries.length - 1;
+    for (var i = predecessorIndex.clamp(-1, lastIndex); i >= 0; i--) {
+      if (_orderedEntries[i].enabled) return _orderedEntries[i];
+    }
+
+    return null;
+  }
+
+  void _choosePriorityTarget({_ToggleGroupEntry<T>? preferredEntry}) {
+    final validLastFocused =
+        _lastFocused != null &&
+        _entries.contains(_lastFocused) &&
+        _lastFocused!.enabled;
+    if (validLastFocused) {
+      _setTarget(_lastFocused);
+      return;
+    }
+
+    if (preferredEntry != null &&
+        preferredEntry.enabled &&
+        preferredEntry.value == _selectedValue) {
+      _setTarget(preferredEntry);
+      return;
+    }
+
+    for (final entry in _orderedEntries) {
+      if (entry.enabled && entry.value == _selectedValue) {
+        _setTarget(entry);
+        return;
+      }
+    }
+
+    if (_target != null && _entries.contains(_target) && _target!.enabled) {
+      _applyAllFocusability();
+      return;
+    }
+
+    for (final entry in _orderedEntries) {
+      if (entry.enabled) {
+        _setTarget(entry);
+        return;
+      }
+    }
+    _setTarget(null);
+  }
+
+  void _setTarget(_ToggleGroupEntry<T>? entry) {
+    _target = entry;
+    _applyAllFocusability();
+  }
+
+  void _applyAllFocusability() {
+    for (final entry in _entries) {
+      _applyFocusability(entry);
+    }
+  }
+
+  void _applyFocusability(_ToggleGroupEntry<T> entry) {
+    final isEnabled = _enabled && entry.enabled;
+    entry.focusNode
+      ..canRequestFocus = isEnabled
+      ..skipTraversal = !isEnabled || !identical(_target, entry);
+  }
+
+  void _scheduleReconcile() {
+    if (_disposed || _reconcileScheduled) return;
+    _reconcileScheduled = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _reconcileScheduled = false;
+      if (!_disposed && owner.mounted) _reconcile();
+    });
+  }
+
+  void _reconcile() {
+    final attachedEntries = _entries
+        .where(
+          (entry) => entry.owner.mounted && entry.focusNode.context != null,
+        )
+        .toList();
+    attachedEntries.sort((a, b) {
+      final aRect = a.focusNode.rect;
+      final bRect = b.focusNode.rect;
+      if (_orientation == Axis.vertical) {
+        final vertical = aRect.top.compareTo(bRect.top);
+        if (vertical != 0) return vertical;
+      } else {
+        final horizontal = _textDirection == TextDirection.ltr
+            ? aRect.left.compareTo(bRect.left)
+            : bRect.right.compareTo(aRect.right);
+        if (horizontal != 0) return horizontal;
+      }
+      return _entries.indexOf(a).compareTo(_entries.indexOf(b));
+    });
+
+    _orderedEntries
+      ..clear()
+      ..addAll(attachedEntries);
+
+    final repairTarget = _repairFocus
+        ? _findRepairTarget(
+            successorIndex: _repairSuccessorIndex ?? 0,
+            predecessorIndex: _repairPredecessorIndex ?? -1,
+          )
+        : null;
+
+    final shouldRepairFocus = _repairFocus && repairTarget != null;
+    _repairFocus = false;
+    _repairSuccessorIndex = null;
+    _repairPredecessorIndex = null;
+
+    if (repairTarget != null) {
+      _lastFocused = repairTarget;
+      _setTarget(repairTarget);
+      if (shouldRepairFocus) repairTarget.focusNode.requestFocus();
+    } else {
+      _choosePriorityTarget();
+    }
+
+    if (!_autofocusHandled &&
+        _target != null &&
+        _entries.any((entry) => entry.autofocus)) {
+      _autofocusHandled = true;
+      FocusScope.of(_target!.owner.context).autofocus(_target!.focusNode);
+    }
+  }
+
+  void dispose() {
+    _disposed = true;
+    _entries.clear();
+    _orderedEntries.clear();
+    _target = null;
+    _lastFocused = null;
+    _focusedEntry = null;
+  }
+}
+
+class _ToggleGroupMoveIntent extends Intent {
+  const _ToggleGroupMoveIntent(this.delta);
+
+  final int delta;
+}
+
+class _ToggleGroupFirstIntent extends Intent {
+  const _ToggleGroupFirstIntent();
+}
+
+class _ToggleGroupLastIntent extends Intent {
+  const _ToggleGroupLastIntent();
 }
 
 /// A headless toggle option that participates in a [NakedToggleGroup].
@@ -428,7 +876,17 @@ class NakedToggleOption<T> extends StatefulWidget {
 }
 
 class _NakedToggleOptionState<T> extends State<NakedToggleOption<T>>
-    with WidgetStatesMixin<NakedToggleOption<T>> {
+    with
+        WidgetStatesMixin<NakedToggleOption<T>>,
+        FocusNodeMixin<NakedToggleOption<T>> {
+  @override
+  FocusNode? get widgetProvidedNode => widget.focusNode;
+
+  _ToggleScope<T>? _scope;
+  _ToggleGroupEntry<T>? _entry;
+  bool? _lastEffectiveEnabled;
+  var _effectiveEnabledGeneration = 0;
+
   void _activate(_ToggleScope<T> scope) {
     final isEnabled = scope.enabled && widget.enabled;
     if (!isEnabled) return;
@@ -438,12 +896,49 @@ class _NakedToggleOptionState<T> extends State<NakedToggleOption<T>>
     }
   }
 
+  void _updateEffectiveEnabled(bool isEnabled) {
+    if (_lastEffectiveEnabled != isEnabled) {
+      _lastEffectiveEnabled = isEnabled;
+      _effectiveEnabledGeneration++;
+    }
+    final becameDisabled = updateDisabledState(!isEnabled) && !isEnabled;
+    if (!becameDisabled) return;
+    final generation = _effectiveEnabledGeneration;
+    if (updateHoverState(false, null)) {
+      _deferDisabledCallback(widget.onHoverChange, generation);
+    }
+    if (updatePressState(false, null)) {
+      _deferDisabledCallback(widget.onPressChange, generation);
+    }
+    if (updateFocusState(false, null)) {
+      _deferDisabledCallback(widget.onFocusChange, generation);
+    }
+  }
+
+  void _deferDisabledCallback(ValueChanged<bool>? callback, int generation) {
+    if (callback == null) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted &&
+          _effectiveEnabledGeneration == generation &&
+          _lastEffectiveEnabled == false) {
+        callback(false);
+      }
+    });
+  }
+
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     final scope = _ToggleScope.of<T>(context);
+    if (!identical(_scope?.controller, scope.controller)) {
+      final oldEntry = _entry;
+      if (oldEntry != null) _scope?.controller.unregister(oldEntry);
+      _entry = scope.controller.register(this);
+    }
+    _scope = scope;
+    _syncEntry();
     final isEnabled = scope.enabled && widget.enabled;
-    updateDisabledState(!isEnabled);
+    _updateEffectiveEnabled(isEnabled);
     updateSelectedState(scope.selectedValue == widget.value, null);
   }
 
@@ -451,7 +946,9 @@ class _NakedToggleOptionState<T> extends State<NakedToggleOption<T>>
   void didUpdateWidget(covariant NakedToggleOption<T> oldWidget) {
     super.didUpdateWidget(oldWidget);
     final scope = _ToggleScope.of<T>(context);
-    updateDisabledState(!(scope.enabled && widget.enabled));
+    _scope = scope;
+    _syncEntry();
+    _updateEffectiveEnabled(scope.enabled && widget.enabled);
 
     // If *this item's* value changed identity, recompute selected.
     if (widget.value != oldWidget.value) {
@@ -459,9 +956,33 @@ class _NakedToggleOptionState<T> extends State<NakedToggleOption<T>>
     }
   }
 
+  void _syncEntry() {
+    final scope = _scope;
+    final entry = _entry;
+    if (scope == null || entry == null) return;
+    scope.controller.updateEntry(
+      entry,
+      value: widget.value,
+      enabled: scope.enabled && widget.enabled,
+      autofocus: widget.autofocus,
+    );
+  }
+
+  @override
+  void dispose() {
+    final entry = _entry;
+    if (entry != null) _scope?.controller.unregister(entry);
+    _entry = null;
+    _scope = null;
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     final scope = _ToggleScope.of<T>(context);
+    _scope = scope;
+    _syncEntry();
+    final entry = _entry!;
     final isEnabled = scope.enabled && widget.enabled;
     final isSelected = scope.selectedValue == widget.value;
 
@@ -508,17 +1029,57 @@ class _NakedToggleOptionState<T> extends State<NakedToggleOption<T>>
             child: gestureDetector,
           );
 
+    final shortcuts = <ShortcutActivator, Intent>{
+      ...NakedIntentActions.toggle.shortcuts,
+      if (scope.controller._orientation == Axis.horizontal) ...{
+        const SingleActivator(
+          LogicalKeyboardKey.arrowLeft,
+        ): _ToggleGroupMoveIntent(
+          scope.controller.horizontalDeltaFor(LogicalKeyboardKey.arrowLeft),
+        ),
+        const SingleActivator(
+          LogicalKeyboardKey.arrowRight,
+        ): _ToggleGroupMoveIntent(
+          scope.controller.horizontalDeltaFor(LogicalKeyboardKey.arrowRight),
+        ),
+      } else ...{
+        const SingleActivator(LogicalKeyboardKey.arrowUp):
+            const _ToggleGroupMoveIntent(-1),
+        const SingleActivator(LogicalKeyboardKey.arrowDown):
+            const _ToggleGroupMoveIntent(1),
+      },
+      const SingleActivator(LogicalKeyboardKey.home):
+          const _ToggleGroupFirstIntent(),
+      const SingleActivator(LogicalKeyboardKey.end):
+          const _ToggleGroupLastIntent(),
+    };
+    final actions = <Type, Action<Intent>>{
+      ...NakedIntentActions.toggle.actions(onToggle: () => _activate(scope)),
+      _ToggleGroupMoveIntent: CallbackAction<_ToggleGroupMoveIntent>(
+        onInvoke: (intent) => scope.controller.move(entry, intent.delta),
+      ),
+      _ToggleGroupFirstIntent: CallbackAction<_ToggleGroupFirstIntent>(
+        onInvoke: (_) => scope.controller.focusFirst(),
+      ),
+      _ToggleGroupLastIntent: CallbackAction<_ToggleGroupLastIntent>(
+        onInvoke: (_) => scope.controller.focusLast(),
+      ),
+    };
+
     return NakedFocusableDetector(
       enabled: isEnabled,
-      autofocus: widget.autofocus,
-      onFocusChange: (f) => updateFocusState(f, widget.onFocusChange),
+      autofocus: false,
+      canRequestFocus: isEnabled,
+      skipTraversal: !scope.controller.isRovingTarget(entry),
+      onFocusChange: (f) {
+        scope.controller.handleFocusChange(entry, f);
+        updateFocusState(f, widget.onFocusChange);
+      },
       onHoverChange: (h) => updateHoverState(h, widget.onHoverChange),
-      focusNode: widget.focusNode,
+      focusNode: effectiveFocusNode,
       mouseCursor: cursor,
-      shortcuts: NakedIntentActions.toggle.shortcuts,
-      actions: NakedIntentActions.toggle.actions(
-        onToggle: () => _activate(scope),
-      ),
+      shortcuts: shortcuts,
+      actions: actions,
       child: optionChild,
     );
   }
