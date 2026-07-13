@@ -20,9 +20,34 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  minimum-flutter:
+    name: Minimum Flutter (3.41.0)
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up exact minimum Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          flutter-version: '3.41.0'
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Analyze at the declared minimum
+        run: flutter analyze
+
+      - name: Run package widget and semantics tests
+        run: flutter test packages/naked_ui/test
+
   test:
     name: Run Tests
-    runs-on: ubuntu-latest
+    # Goldens are approved only on this explicit host image with Flutter
+    # 3.41.2 and the checked-in test font.
+    runs-on: ubuntu-24.04
     permissions:
       pull-requests: write
     strategy:
@@ -64,16 +89,27 @@ jobs:
       - name: Run example tests
         run: flutter test packages/example/test
 
+      - name: Upload golden failure images
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: golden-failures-${{ github.sha }}
+          path: packages/example/test/goldens/components/failures/
+          if-no-files-found: ignore
+          retention-days: 14
+
       - name: Setup LCOV
         uses: hrishikesh-kadam/setup-lcov@v1
         with:
           ref: v2.3
 
-      - name: Report Code Coverage
+      # Coverage remains visible for review, but no percentage is presented as
+      # a gate until the project adopts an evidence-based baseline. The
+      # blocking requirement is the test run above plus the contract tests for
+      # each changed component.
+      - name: Report code coverage (informational)
         uses: zgosalvez/github-actions-report-lcov@v4
         with:
           coverage-files: coverage/lcov.info
-          minimum-coverage: 80
           artifact-name: code-coverage-report
           github-token: ${{ secrets.GITHUB_TOKEN }}
-        continue-on-error: true  # Coverage threshold needs adjustment - currently 7.3% vs 80% target

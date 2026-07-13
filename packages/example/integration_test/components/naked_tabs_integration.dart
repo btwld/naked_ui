@@ -1,5 +1,6 @@
 import 'package:example/api/naked_tabs.0.dart' as tabs_example;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:naked_ui/naked_ui.dart';
@@ -64,6 +65,7 @@ void main() {
       final lightTabKey = UniqueKey();
       final darkTabKey = UniqueKey();
       final systemTabKey = UniqueKey();
+      final darkTabFocusNode = tester.createManagedFocusNode();
 
       await tester.pumpWidget(
         MaterialApp(
@@ -73,6 +75,7 @@ void main() {
                 lightTabKey: lightTabKey,
                 darkTabKey: darkTabKey,
                 systemTabKey: systemTabKey,
+                darkTabFocusNode: darkTabFocusNode,
               ),
             ),
           ),
@@ -80,9 +83,15 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      // Test keyboard activation on tabs
-      await tester.testKeyboardActivation(find.byKey(darkTabKey));
+      // Keyboard selection: focus the dark tab and activate it.
+      expect(find.text('Dark Content'), findsNothing);
+      await tester.pressKeyOn(darkTabFocusNode, LogicalKeyboardKey.enter);
       await tester.pumpAndSettle();
+      expect(
+        find.text('Dark Content'),
+        findsOneWidget,
+        reason: 'activating the focused dark tab must show its view',
+      );
 
       // Test tab order navigation
       await tester.verifyTabOrder([
@@ -121,12 +130,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // Test hover state
-      await tester.simulateHover(
-        tabKey,
-        onHover: () {
-          expect(isHovered, isTrue);
-        },
-      );
+      await tester.simulateHover(tabKey, until: () => isHovered);
 
       // Test focus state
       focusNode.requestFocus();
@@ -263,12 +267,14 @@ class _StatefulTabsWidget extends StatefulWidget {
     this.lightTabKey,
     this.darkTabKey,
     this.systemTabKey,
+    this.darkTabFocusNode,
     this.customTab,
   });
 
   final Key? lightTabKey;
   final Key? darkTabKey;
   final Key? systemTabKey;
+  final FocusNode? darkTabFocusNode;
   final Widget? customTab;
 
   @override
@@ -315,6 +321,7 @@ class _StatefulTabsWidgetState extends State<_StatefulTabsWidget> {
                 NakedTab(
                   key: widget.darkTabKey,
                   tabId: 'dark',
+                  focusNode: widget.darkTabFocusNode,
                   child: const Text('Dark'),
                 ),
                 NakedTab(

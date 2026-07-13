@@ -1,5 +1,6 @@
 import 'package:example/api/naked_button.0.dart' as button_example;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:naked_ui/naked_ui.dart';
@@ -18,12 +19,19 @@ void main() {
       final buttonFinder = find.byType(NakedButton);
       expect(buttonFinder, findsOneWidget);
 
-      // Test tap interaction
-      await tester.tap(buttonFinder);
+      // Keyboard activation: focus the button via traversal (naked
+      // components do not focus on tap), then Enter must fire onPressed —
+      // the example app shows a snackbar.
+      FocusScope.of(tester.element(buttonFinder)).nextFocus();
+      await tester.pump();
+      expect(tester.hasPrimaryFocusOn(buttonFinder), isTrue);
+      await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+      await tester.pump();
+      expect(find.text('Button pressed!'), findsOneWidget);
       await tester.pumpAndSettle();
 
-      // Test keyboard activation
-      await tester.testKeyboardActivation(buttonFinder);
+      // Test tap interaction
+      await tester.tap(buttonFinder);
       await tester.pumpAndSettle();
 
       // Test hover simulation (on platforms that support it)
@@ -109,12 +117,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // Test hover state
-      await tester.simulateHover(
-        buttonKey,
-        onHover: () {
-          expect(isHovered, isTrue);
-        },
-      );
+      await tester.simulateHover(buttonKey, until: () => isHovered);
 
       // Test press state
       await tester.simulatePress(
@@ -163,6 +166,7 @@ void main() {
 
     testWidgets('disabled button blocks all interactions', (tester) async {
       final buttonKey = UniqueKey();
+      final focusNode = tester.createManagedFocusNode();
       bool wasPressed = false;
       bool hoverChanged = false;
 
@@ -172,6 +176,7 @@ void main() {
             body: Center(
               child: NakedButton(
                 key: buttonKey,
+                focusNode: focusNode,
                 onPressed: () => wasPressed = true,
                 enabled: false,
                 onHoverChange: (hovered) => hoverChanged = true,
@@ -189,8 +194,8 @@ void main() {
       await tester.pump();
       expect(wasPressed, isFalse);
 
-      // Test that disabled button doesn't respond to keyboard
-      await tester.testKeyboardActivation(find.byKey(buttonKey));
+      // Test that disabled button refuses focus and keyboard activation
+      await tester.expectRefusesKeyboardActivation(focusNode);
       expect(wasPressed, isFalse);
 
       // Test that hover callbacks aren't triggered when disabled
@@ -308,12 +313,7 @@ void main() {
       expect(find.text('Builder Button'), findsOneWidget);
 
       // Test that builder updates with state changes
-      await tester.simulateHover(
-        buttonKey,
-        onHover: () {
-          expect(isHovered, isTrue);
-        },
-      );
+      await tester.simulateHover(buttonKey, until: () => isHovered);
 
       await tester.simulatePress(
         buttonKey,

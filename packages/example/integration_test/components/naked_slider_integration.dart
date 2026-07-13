@@ -172,12 +172,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // Test hover state
-      await tester.simulateHover(
-        sliderKey,
-        onHover: () {
-          expect(isHovered, isTrue);
-        },
-      );
+      await tester.simulateHover(sliderKey, until: () => isHovered);
 
       // Test focus state
       focusNode.requestFocus();

@@ -1,5 +1,6 @@
 import 'package:example/api/naked_radio.0.dart' as radio_example;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:naked_ui/naked_ui.dart';
@@ -41,6 +42,7 @@ void main() {
 
     testWidgets('radio responds to keyboard activation', (tester) async {
       final radioKey = UniqueKey();
+      final focusNode = tester.createManagedFocusNode();
       radio_example.RadioOption selectedValue =
           radio_example.RadioOption.banana;
 
@@ -53,6 +55,7 @@ void main() {
                 onChanged: (value) => selectedValue = value!,
                 child: NakedRadio<radio_example.RadioOption>(
                   key: radioKey,
+                  focusNode: focusNode,
                   value: radio_example.RadioOption.apple,
                   child: const Text('Apple'),
                 ),
@@ -63,9 +66,12 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      // Test keyboard activation
-      await tester.testKeyboardActivation(find.byKey(radioKey));
-      await tester.pumpAndSettle();
+      await tester.pressKeyOn(focusNode, LogicalKeyboardKey.space);
+      expect(
+        selectedValue,
+        radio_example.RadioOption.apple,
+        reason: 'Space on a focused radio must select it',
+      );
     });
 
     testWidgets('radio state callbacks work correctly', (tester) async {
@@ -112,12 +118,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // Test hover state
-      await tester.simulateHover(
-        radioKey,
-        onHover: () {
-          expect(isHovered, isTrue);
-        },
-      );
+      await tester.simulateHover(radioKey, until: () => isHovered);
 
       // Test press state
       await tester.simulatePress(
@@ -172,6 +173,7 @@ void main() {
 
     testWidgets('disabled radio blocks interactions', (tester) async {
       final radioKey = UniqueKey();
+      final focusNode = tester.createManagedFocusNode();
       bool hoverChanged = false;
       radio_example.RadioOption selectedValue =
           radio_example.RadioOption.banana;
@@ -185,6 +187,7 @@ void main() {
                 onChanged: (value) => selectedValue = value!,
                 child: NakedRadio<radio_example.RadioOption>(
                   key: radioKey,
+                  focusNode: focusNode,
                   value: radio_example.RadioOption.apple,
                   enabled: false,
                   onHoverChange: (hovered) => hoverChanged = true,
@@ -209,8 +212,8 @@ void main() {
       await tester.simulateHover(radioKey);
       expect(hoverChanged, isFalse);
 
-      // Test that disabled radio doesn't respond to keyboard
-      await tester.testKeyboardActivation(find.byKey(radioKey));
+      // Test that disabled radio refuses focus and keyboard activation
+      await tester.expectRefusesKeyboardActivation(focusNode);
       expect(
         selectedValue,
         radio_example.RadioOption.banana,
@@ -357,12 +360,7 @@ void main() {
       expect(isSelected, isFalse);
 
       // Test hover state updates builder
-      await tester.simulateHover(
-        radioKey,
-        onHover: () {
-          expect(isHovered, isTrue);
-        },
-      );
+      await tester.simulateHover(radioKey, until: () => isHovered);
 
       // Tap to select - builder should update
       await tester.tap(radioFinder);

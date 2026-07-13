@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'keyboard_test_helpers.dart';
+
 extension WidgetTesterExtension on WidgetTester {
   Future<void> pumpMaterialWidget(Widget widget) async {
     await pumpWidget(MaterialApp(home: Scaffold(body: widget)));
@@ -12,9 +14,11 @@ extension WidgetTesterExtension on WidgetTester {
   /// Simulates hover more robustly by moving a mouse pointer to the center of
   /// the target, ensuring highlight mode is traditional, and giving extra
   /// frames for pointer enter/exit to propagate reliably in integration runs.
+  /// When [until] is provided, pumps within a bounded timeout until that
+  /// observable hover state is reached while the pointer remains on-target.
   ///
   /// Uses try/finally to ensure proper gesture cleanup even if the test fails.
-  Future<void> simulateHover(Key key, {VoidCallback? onHover}) async {
+  Future<void> simulateHover(Key key, {bool Function()? until}) async {
     FocusManager.instance.highlightStrategy =
         FocusHighlightStrategy.alwaysTraditional;
 
@@ -30,21 +34,18 @@ extension WidgetTesterExtension on WidgetTester {
       // Move to center of the target to avoid any edge hit-test ambiguity.
       final center = getCenter(finder);
       await gesture.moveTo(center);
-      await pump(const Duration(milliseconds: 32)); // allow onEnter
-
-      onHover?.call();
+      if (until == null) {
+        await pump(const Duration(milliseconds: 32)); // allow onEnter
+      } else {
+        await pumpUntil(until, timeout: const Duration(seconds: 1));
+      }
 
       // Move well outside the app window to trigger a clean exit.
       await gesture.moveTo(const Offset(-1000, -1000));
       await pump(const Duration(milliseconds: 32)); // allow onExit
     } finally {
-      // Ensure gesture cleanup even if something fails
-      try {
-        await gesture.removePointer();
-      } catch (e) {
-        // Cleanup may fail if gesture already released - log for debugging
-        debugPrint('Gesture cleanup (expected if already released): $e');
-      }
+      // Cleanup failures must fail the test so pointer state cannot leak.
+      await gesture.removePointer();
     }
   }
 
@@ -66,20 +67,14 @@ extension WidgetTesterExtension on WidgetTester {
       await pump(const Duration(milliseconds: 100));
 
       onPressed?.call();
-      await gesture.up();
-      await pump();
     } finally {
-      // Ensure gesture cleanup even if something fails
-      try {
-        await gesture.up();
-      } catch (e) {
-        // Cleanup may fail if gesture already released - log for debugging
-        debugPrint('Gesture cleanup (expected if already released): $e');
-      }
+      // Release exactly once, including when the observation callback fails.
+      await gesture.up();
     }
+    await pump();
   }
 
-  void expectCursor(SystemMouseCursor cursor, {required Key on}) async {
+  void expectCursor(SystemMouseCursor cursor, {required Key on}) {
     final region = widget<MouseRegion>(
       find
           .descendant(of: find.byKey(on), matching: find.byType(MouseRegion))

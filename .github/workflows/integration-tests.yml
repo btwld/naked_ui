@@ -21,9 +21,36 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  integration-tests:
-    name: Integration Tests
+  integration-smoke:
+    name: Integration Tests (flutter-tester)
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          flutter-version: '3.41.2'
+          cache: true
+
+      - name: Install workspace dependencies
+        run: flutter pub get
+
+      - name: Run all integration tests
+        working-directory: packages/example
+        run: flutter test -r compact -d flutter-tester integration_test/all_tests.dart
+
+      # Guards tool/run_integration_all.sh against path rot by running the
+      # script itself on a single component file.
+      - name: Smoke the sequential runner script
+        run: bash tool/run_integration_all.sh flutter-tester "naked_button*"
+
+  integration-macos:
+    name: Integration Tests (macOS)
     runs-on: macos-latest
+    timeout-minutes: 20
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -41,6 +68,38 @@ jobs:
       - name: Install workspace dependencies
         run: flutter pub get
 
-      - name: Run all integration tests
+      - name: Record target environment
+        run: |
+          flutter doctor -v
+          flutter devices
+
+      - name: Run integration tests on macOS
         working-directory: packages/example
-        run: flutter test -r compact -d flutter-tester integration_test/all_tests.dart
+        run: flutter test -r compact -d macos integration_test/all_tests.dart
+
+      - name: Capture macOS screenshot evidence
+        working-directory: packages/example
+        run: >-
+          flutter drive
+          --driver=test_driver/integration_test.dart
+          --target=integration_test/screenshot_smoke.dart
+          -d macos
+          --dart-define=NAKED_UI_CAPTURE_SCREENSHOTS=true
+          --dart-define=NAKED_UI_GIT_SHA=${{ github.sha }}
+          --dart-define=NAKED_UI_FLUTTER_VERSION=3.41.2
+
+      - name: Verify macOS screenshot evidence
+        run: |
+          test -s packages/example/build/integration_test_screenshots/dialog__open__macos__reference.png
+          test -s packages/example/build/integration_test_screenshots/manifest.json
+
+      - name: Upload macOS integration evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: integration-macos-${{ github.sha }}
+          path: |
+            packages/example/build/integration_test_screenshots/
+            packages/example/build/integration_response_data.json
+          if-no-files-found: warn
+          retention-days: 14

@@ -1,5 +1,6 @@
 import 'package:example/api/naked_toggle.0.dart' as toggle_example;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:naked_ui/naked_ui.dart';
@@ -40,6 +41,7 @@ void main() {
 
     testWidgets('toggle responds to keyboard activation', (tester) async {
       final toggleKey = UniqueKey();
+      final focusNode = tester.createManagedFocusNode();
       bool toggleValue = false;
 
       await tester.pumpWidget(
@@ -48,6 +50,7 @@ void main() {
             body: Center(
               child: NakedToggle(
                 key: toggleKey,
+                focusNode: focusNode,
                 value: toggleValue,
                 onChanged: (value) => toggleValue = value,
                 child: const Text('Toggle Button'),
@@ -58,12 +61,14 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      // Test keyboard activation
-      await tester.testKeyboardActivation(find.byKey(toggleKey));
-      await tester.pumpAndSettle();
+      await tester.pressKeyOn(focusNode, LogicalKeyboardKey.enter);
+      expect(toggleValue, isTrue, reason: 'Enter must activate the toggle');
 
-      // Toggle should respond to keyboard input
-      expect(find.byKey(toggleKey), findsOneWidget);
+      // The fixture does not rebuild, so each activation reports !value.
+      // Reset the flag to prove Space activates independently.
+      toggleValue = false;
+      await tester.pressKeyOn(focusNode, LogicalKeyboardKey.space);
+      expect(toggleValue, isTrue, reason: 'Space must activate the toggle');
     });
 
     testWidgets('toggle handles focus management correctly', (tester) async {

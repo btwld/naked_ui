@@ -6,7 +6,18 @@ on:
       - 'v[0-9]+.[0-9]+.[0-9]+*'
 
 jobs:
+  integration_android:
+    name: Release gate (Android)
+    uses: ./.github/workflows/integration-android.yml
+
+  integration_web:
+    name: Release gate (web)
+    uses: ./.github/workflows/integration-web.yml
+
   publish_naked_ui:
+    needs:
+      - integration_android
+      - integration_web
     uses: btwld/dart-actions/.github/workflows/publish.yml@main
     with:
       packages_folder_path: "packages"

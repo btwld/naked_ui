@@ -1,11 +1,23 @@
 name: Android Integration Tests
 
 on:
+  workflow_call:
   workflow_dispatch:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - packages/naked_ui/**
+      - packages/example/**
+      - tool/**
+      - pubspec.yaml
+      - pubspec.lock
+      - .github/workflows/integration-android.yml
+  merge_group:
 
 # Avoid overlapping runs for same branch/PR
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.ref }}-android
   cancel-in-progress: true
 
 jobs:
@@ -38,15 +50,17 @@ jobs:
       - name: Resolve root dependencies
         run: flutter pub get
 
-      - name: Ensure Android platform files for example
+      - name: Enable KVM
         run: |
-          if [ ! -d "android" ]; then
-            flutter create --platforms android .
-          fi
-        working-directory: packages/example
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
 
       - name: Launch emulator and run integration tests
         uses: reactivecircus/android-emulator-runner@v2
+        env:
+          NAKED_UI_GIT_SHA: ${{ github.sha }}
+          NAKED_UI_FLUTTER_VERSION: '3.41.2'
         with:
           api-level: 34
           target: default
@@ -54,7 +68,15 @@ jobs:
           profile: pixel_6
           force-avd-creation: true
           disable-animations: true
-          script: |
-            adb devices -l
-            cd packages/example
-            flutter test integration_test/all_tests.dart -d emulator-5554
+          script: bash tool/run_android_integration.sh
+
+      - name: Upload Android integration evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: integration-android-${{ github.sha }}
+          path: |
+            packages/example/build/integration_test_screenshots/
+            packages/example/build/integration_response_data.json
+          if-no-files-found: warn
+          retention-days: 14

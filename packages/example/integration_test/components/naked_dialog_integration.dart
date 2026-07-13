@@ -1,5 +1,6 @@
 import 'package:example/api/naked_dialog.0.dart' as dialog_example;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:naked_ui/naked_ui.dart';
@@ -61,6 +62,8 @@ void main() {
 
     testWidgets('dialog responds to keyboard activation', (tester) async {
       final dialogKey = UniqueKey();
+      final focusNode = tester.createManagedFocusNode();
+      int pressCount = 0;
 
       await tester.pumpWidget(
         MaterialApp(
@@ -68,7 +71,8 @@ void main() {
             body: Center(
               child: NakedButton(
                 key: dialogKey,
-                onPressed: () {},
+                focusNode: focusNode,
+                onPressed: () => pressCount++,
                 child: const Text('Test Button'),
               ),
             ),
@@ -77,12 +81,11 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      // Test keyboard activation
-      await tester.testKeyboardActivation(find.byKey(dialogKey));
-      await tester.pumpAndSettle();
+      await tester.pressKeyOn(focusNode, LogicalKeyboardKey.enter);
+      expect(pressCount, 1, reason: 'Enter must press the trigger button');
 
-      // Button should be activated by keyboard
-      expect(find.byKey(dialogKey), findsOneWidget);
+      await tester.pressKeyOn(focusNode, LogicalKeyboardKey.space);
+      expect(pressCount, 2, reason: 'Space must press the trigger button');
     });
 
     testWidgets('dialog handles focus management correctly', (tester) async {
