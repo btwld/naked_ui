@@ -2,19 +2,20 @@
 
 Authority: **inactive research draft; not approved for implementation**.
 
-Status: **D-08 and D-09 recommendations await explicit approval. If activated
-just in time, generic-control composition still has an evidence gate.**
+Status: **D-08, D-09, and cross-cutting D-19 are approved. This draft remains
+inactive until current `main` is re-inspected and the plan is activated just in
+time; generic-control composition still has an evidence gate.**
 
 Goal: add a small field scope that gives one primary control one accessible
 name, description, required state, validation result, and current error without
 duplicating speech. Integrate it first with `NakedTextField`, while preserving
-standalone text-field behavior.
+standalone source and interaction behavior except for D-09's approved
+initial-error announcement correction.
 
 Planning baseline: `d341b90` on 2026-07-13. Contract source: briefing
-[§17](../briefing.md#17-component-contract-field). Proposed narrowing is
-recorded in the approval-pending
-[D-08 and D-09 recommendations](../decisions.md#component-plan-research-recommendations-2026-07-13).
-Cross-cutting D-19 also requires approval before activation.
+[§17](../briefing.md#17-component-contract-field). The approved narrowing and
+cross-cutting release policy are recorded in
+[D-08, D-09, and D-19](../decisions.md#architecture-decision-evidence-approved-2026-07-13).
 
 ## Scope correction
 
@@ -45,7 +46,7 @@ rejected, not missing work; see the shared
 
 | Question | Required answer |
 |---|---|
-| Role | The primary child keeps its native role and actions; Field adds no form/button role. |
+| Role | Apply Field metadata to the actual text-field semantics node; the primary child keeps its native role and actions, and Field adds no form/button role or generic replacement for `EditableText`. |
 | Name | Visible label becomes the control name exactly once. |
 | Description | Included once as the control hint/description in stable order. |
 | Error | Current error remains discoverable from the control; a changed non-empty error is announced once. |
@@ -60,6 +61,13 @@ rejected, not missing work; see the shared
 Prefer semantic tree updates and a short-lived status/alert node over explicit
 announcement APIs at the minimum SDK. Flutter 3.44.6's newer announcement API is
 not available at 3.41, and role plus live-region duplication must be avoided.
+
+D-09 intentionally changes existing `NakedTextField` behavior: today every
+displayed semantic error, including an initial error, marks the merged text
+field as a live region. Standalone and Field-integrated `NakedTextField` must
+keep the initial error discoverable without that initial live announcement.
+Record the behavior change in the changelog and verify the transition timing
+manually with VoiceOver and TalkBack.
 
 ## Ordered work
 
@@ -80,7 +88,10 @@ not available at 3.41, and role plus live-region duplication must be avoided.
   `packages/naked_ui/lib/src/naked_textfield.dart`.
 - Field is the semantic source when present. Identical explicit TextField
   metadata is accepted; conflicting label/hint/error/required/validation data
-  asserts in debug. Outside a field, current TextField behavior is unchanged.
+  asserts in debug. If assertions are disabled, the Field value
+  deterministically wins. D-09's initial-error live-region correction applies
+  to standalone and Field-integrated `NakedTextField`; other standalone source
+  and interaction behavior remains unchanged.
 - Let the primary control report focus/filled state only when needed by the
   builder. Guard updates during replacement/disposal.
 - Label taps request focus only when the control is mounted, enabled, and can
@@ -124,6 +135,8 @@ not available at 3.41, and role plus live-region duplication must be avoided.
 - **Where:** proposed `packages/example/lib/api/naked_field.0.dart`, registry,
   `packages/example/integration_test/components/naked_field_integration.dart`,
   aggregate runner, `docs/widget/field.mdx`, and changelog.
+- The changelog must explicitly name the intentional initial-error live-region
+  correction rather than presenting Field integration as semantics-neutral.
 - Stable keys: `field.email`, `.label`, `.control`, `.description`, `.error`,
   `.submit`, `.state`, and `.reset`.
 - Scenarios: label focus, type, submit invalid, unchanged rebuild, correct and
@@ -174,9 +187,12 @@ without raising the package floor deliberately.
 ## Acceptance
 
 - [ ] Minimal Field API contains no validation/business-state ownership.
-- [ ] Standalone `NakedTextField` remains source- and behavior-compatible.
+- [ ] Standalone `NakedTextField` remains source- and interaction-compatible
+      except for the documented D-09 semantics correction.
 - [ ] Required, validation, label, description, and error semantics are exact.
-- [ ] Error transition policy is deterministic and manually verified.
+- [ ] Error transition policy is deterministic and manually verified with
+      VoiceOver and TalkBack; the changelog names the initial-error behavior
+      correction.
 - [ ] Generic control ships only if role/action preservation passes the spike.
 - [ ] Example, integration aggregate, docs, changelog, AT evidence, and status board are current.
 

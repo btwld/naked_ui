@@ -26,12 +26,10 @@ Flutter's feature release notes are named 3.44.0, while the current stable
 hotfix release inspected here is 3.44.6. Record both the exact version and
 commit in future evidence so “3.44” cannot hide a moving baseline.
 
-## Recommended adoption policy (D-19 approval pending)
+## Approved adoption policy (D-19)
 
-This section records the clean-sheet recommendation. It does not resolve D-19
-or authorize a future phase; the maintainer must approve that policy when the
-next phase is activated. Existing package constraints and explicitly approved
-phase decisions continue to apply meanwhile.
+This section records approved D-19. It governs every phase but does not by
+itself activate a future phase or settle that component's remaining decisions.
 
 - Reuse a primitive only when it is exported from a public Flutter library such
   as `package:flutter/widgets.dart`, `cupertino.dart`, or `material.dart` and
@@ -43,8 +41,11 @@ phase decisions continue to apply meanwhile.
   cross-floor adapter, deliberately raise the package floor, or defer the
   feature. Dart code must not reference a missing symbol and hope a runtime
   version check will protect it.
+- Keep current stable as a required compatibility-test target. Beta/master are
+  non-blocking canaries and never authorize production use of a newer API.
 - Never import `package:flutter/src/...`, copy a private implementation to
-  freeze an unstable contract, or ship against an experimental feature flag.
+  freeze an unstable contract, ship against experimental windowing, or depend
+  on another unstable implementation API.
 - Keep callbacks and disposal idempotent across release-channel lifecycle
   changes. Test observable results, not private callback order.
 

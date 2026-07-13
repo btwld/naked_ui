@@ -35,11 +35,12 @@ briefing. Every approved delta must be visible in the active plan and in
   behavior and negative test cases, not styling or a second component-system
   dependency.
 - **Version truthfulness** — compile and test on exact Flutter 3.41.0 and the
-  workspace pin. Components depending on raw behavior that changed by current
-  stable also run a pinned 3.44.6 compatibility slice. Use the executable FVM
-  matrix below; re-verify the current stable version and commit when
-  implementation begins. Beta/main runs are non-blocking canaries only and
-  never authorize a package API or release claim.
+  workspace pin. Every component also runs current stable as a required
+  compatibility target; newer APIs remain unavailable to production until the
+  minimum is deliberately raised. Use the executable FVM matrix below;
+  re-verify the current stable version and commit when implementation begins.
+  Beta/main runs are non-blocking canaries only and never authorize a package
+  API or release claim.
 - **Integration proof is operational, not implied** — every phase follows
   [integration-testing.md](integration-testing.md), including authoritative
   runners, bounded waits, failure triage, artifacts, and manual AT evidence.
@@ -127,10 +128,11 @@ fvm spawn 3.41.0 analyze
 fvm spawn 3.41.0 test packages/naked_ui/test
 ```
 
-Current-stable compatibility gate for a component whose raw primitive changed
-after 3.41. Flutter 3.44.6 was verified as the stable release dated 2026-07-09;
-the active phase must recheck the current stable before execution and record
-why it keeps or updates this pin.
+Required current-stable compatibility gate. Flutter 3.44.6 was verified as the
+stable release dated 2026-07-09; the active phase must recheck the current
+stable before execution and record why it keeps or updates this pin. A
+component whose raw foundation changed after 3.41 also records and runs the
+relevant focused regression slice.
 
 ```sh
 fvm install 3.44.6 --skip-pub-get

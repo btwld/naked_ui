@@ -16,7 +16,8 @@ Planning baseline: `d341b90` on 2026-07-13. Contract source: briefing
 recorded in the approval-pending
 [D-18 recommendation](../decisions.md#component-plan-research-recommendations-2026-07-13).
 Open evidence decisions: [D-10 and D-11](../decisions.md#decision-log).
-Cross-cutting D-19 also requires approval before activation.
+Approved cross-cutting D-19 governs SDK/API use if the spike or phase is
+activated.
 
 ## Scope correction
 

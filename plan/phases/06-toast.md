@@ -14,7 +14,7 @@ Planning baseline: `d341b90` on 2026-07-13. Contract source: briefing
 [§16](../briefing.md#16-component-contract-toast). Proposed narrowing is
 recorded in the approval-pending
 [D-04–D-07 recommendations](../decisions.md#component-plan-research-recommendations-2026-07-13).
-Cross-cutting D-19 also requires approval before activation.
+Approved cross-cutting D-19 governs SDK/API use if this phase is activated.
 
 ## MVP scope
 

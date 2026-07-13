@@ -15,7 +15,7 @@ Planning baseline: `d341b90` on 2026-07-13. Contract source: briefing
 [§19](../briefing.md#19-component-contract-hover-card--preview-card). Proposed
 refinement is recorded in the approval-pending
 [D-17 recommendation](../decisions.md#component-plan-research-recommendations-2026-07-13).
-Cross-cutting D-19 also requires approval before activation.
+Approved cross-cutting D-19 governs SDK/API use if this phase is activated.
 
 ## Scope
 

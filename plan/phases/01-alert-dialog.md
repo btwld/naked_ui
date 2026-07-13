@@ -10,7 +10,9 @@ restoration. Preserve all existing dialog behavior and styling freedom.
 Planning baseline: workspace `d341b90`; reviewed PR head `409ec27` on
 2026-07-13. Contract source: briefing
 [§13](../briefing.md#13-component-contract-alert-dialog), with the explicit
-delta below. Decision: [D-02](../decisions.md#phase-1-decision-evidence-2026-07-12).
+delta below. Decisions:
+[D-02](../decisions.md#phase-1-decision-evidence-2026-07-12) and approved
+[D-19](../decisions.md#architecture-decision-evidence-approved-2026-07-13).
 
 ## Contract correction
 
@@ -168,6 +170,8 @@ focus requires Naked UI to own a caller node.
 - [ ] PR #64 contains only the Alert Dialog contract and is rebased on current `main`.
 - [ ] Role, name, descendants, initial focus, loop, every close path, and restoration are tested.
 - [ ] Outside tap is disabled by default; Escape and platform Back close safely.
+- [ ] The required current-stable compatibility gate passes without using
+      post-minimum production APIs.
 - [ ] VoiceOver, TalkBack, Chrome tree, and release iOS evidence is attached.
 - [ ] Example, docs, changelog, traceability table, and status board are current.
 

@@ -36,31 +36,32 @@ decision is never settled by prose in a draft.
 | Phase | Scope | Contract | Blocking decisions | Plan | Status |
 |---:|---|---|---|---|---|
 | 0 | Test-harness hardening | [§6.2](briefing.md#62-confirmed-delivery-gaps-to-fix-before-adding-the-new-suite), [§21](briefing.md#21-integration-screenshot-golden-and-ci-implementation) | D-12, D-13, D-14, D-15 (resolved) | [phases/00-test-harness.md](phases/00-test-harness.md) | **Closed** — delivered by [PR #63](https://github.com/btwld/naked_ui/pull/63), squash-merged as `58a48a3` |
-| 1 | Alert Dialog (extend `NakedDialog`) | [§13](briefing.md#13-component-contract-alert-dialog) | D-02 (resolved) | [phases/01-alert-dialog.md](phases/01-alert-dialog.md) | **PR #64 open** — implementation is sound; manual AT/release evidence and briefing correction remain |
-| 2 | Link | [§20](briefing.md#20-component-contract-link) | D-16 (resolved) | [phases/02-link.md](phases/02-link.md) | **PR #65 review-ready at `8084ecf`** — approved correction implemented; all seven exact-head hosted checks pass; closure still awaits required web screenshots, manual AT, and real Context Menu/Hover Card composition |
-| 3 | Field + `NakedTextField` integration | [§17](briefing.md#17-component-contract-field) | D-08, D-09, D-19 (approval pending) | [phases/03-field.md](phases/03-field.md) | **Research draft only** — TextField-first recommendation; activate just in time only after D-08/D-09/D-19 approval |
-| 4 | Toggle Group intent/focus | [§14](briefing.md#14-component-contract-toggle-group) | D-01, D-19 (approval pending) | [phases/04-toggle-group.md](phases/04-toggle-group.md) | **Research draft only** — preserve-single recommendation; activate only after decision approval and consumer classification |
-| 5 | Context Menu | [§15](briefing.md#15-component-contract-context-menu) | D-03 (evidence spike open); D-19 (approval pending) | [phases/05-context-menu.md](phases/05-context-menu.md) | **Research/spike draft only** — implementation blocked on trigger-role/AT evidence and decisions |
-| 6 | Toast | [§16](briefing.md#16-component-contract-toast) | D-04–D-07, D-19 (approval pending) | [phases/06-toast.md](phases/06-toast.md) | **Demand-gated research draft only** — no implementation until a named use case and explicit decisions |
-| 7 | Hover Card | [§19](briefing.md#19-component-contract-hover-card--preview-card) | D-17, D-19 (approval pending) | [phases/07-hover-card.md](phases/07-hover-card.md) | **Demand/dependency-gated research draft only** — Link must land and Remix must supply a valid preview story |
-| 8 | Combobox | [§18](briefing.md#18-component-contract-combobox) | D-10, D-11 (evidence spike open); D-18, D-19 (approval pending) | [phases/08-combobox.md](phases/08-combobox.md) | **Research/spike draft only** — public API blocked on RawAutocomplete/AT/IME/version evidence and decisions |
+| 1 | Alert Dialog (extend `NakedDialog`) | [§13](briefing.md#13-component-contract-alert-dialog) | D-02, D-19 (resolved) | [phases/01-alert-dialog.md](phases/01-alert-dialog.md) | **PR #64 open** — implementation is sound; current-stable compatibility, manual AT/release evidence, and briefing correction remain |
+| 2 | Link | [§20](briefing.md#20-component-contract-link) | D-16, D-19 (resolved) | [phases/02-link.md](phases/02-link.md) | **PR #65 review-ready at `8084ecf`** — approved correction implemented; all seven exact-head hosted checks pass; closure still awaits current-stable compatibility, required web screenshots, manual AT, and real Context Menu/Hover Card composition |
+| 3 | Field + `NakedTextField` integration | [§17](briefing.md#17-component-contract-field) | D-08, D-09, D-19 (resolved) | [phases/03-field.md](phases/03-field.md) | **Decision-cleared research draft** — TextField-first direction approved; re-inspect `main` and activate the plan just in time before implementation |
+| 4 | Toggle Group intent/focus | [§14](briefing.md#14-component-contract-toggle-group) | D-01 (approval pending); D-19 (resolved) | [phases/04-toggle-group.md](phases/04-toggle-group.md) | **Research draft only** — preserve-single recommendation; activate only after D-01 approval and consumer classification |
+| 5 | Context Menu | [§15](briefing.md#15-component-contract-context-menu) | D-03 (evidence spike open); D-19 (resolved) | [phases/05-context-menu.md](phases/05-context-menu.md) | **Research/spike draft only** — implementation blocked on trigger-role/AT evidence and D-03 |
+| 6 | Toast | [§16](briefing.md#16-component-contract-toast) | D-04–D-07 (approval pending); D-19 (resolved) | [phases/06-toast.md](phases/06-toast.md) | **Demand-gated research draft only** — no implementation until a named use case and explicit D-04–D-07 decisions |
+| 7 | Hover Card | [§19](briefing.md#19-component-contract-hover-card--preview-card) | D-17 (approval pending); D-19 (resolved) | [phases/07-hover-card.md](phases/07-hover-card.md) | **Demand/dependency-gated research draft only** — Link must land, Remix must supply a valid preview story, and D-17 must resolve |
+| 8 | Combobox | [§18](briefing.md#18-component-contract-combobox) | D-10, D-11 (evidence spike open); D-18 (approval pending); D-19 (resolved) | [phases/08-combobox.md](phases/08-combobox.md) | **Research/spike draft only** — public API blocked on RawAutocomplete/AT/IME/version evidence and D-10/D-11/D-18 |
 
 **Clean-sheet research recommendation: split.** This is not an approval or one
 eight-component commitment.
-Finish/refine Alert Dialog and Link, then implement the smaller TextField-first
-Field and the compatible single-mode Toggle focus work after approval. The
-Context Menu and Combobox research recommends spike-only evaluation; Toast and
-Hover Card remain demand-gated. No inactive draft authorizes either a spike or
-implementation. This keeps the proven parts of the briefing while removing
-speculative APIs and wrong semantic shortcuts.
+Finish/refine Alert Dialog and Link, then activate and implement the approved
+TextField-first Field direction. The compatible single-mode Toggle focus work
+can follow after D-01 approval. The Context Menu and Combobox research
+recommends spike-only evaluation; Toast and Hover Card remain demand-gated. No
+inactive draft authorizes either a spike or implementation. This keeps the
+proven parts of the briefing while removing speculative APIs and wrong
+semantic shortcuts.
 
 Recommended sequence is evidence-driven rather than a promise to ship all
-eight: finish Alert Dialog, correct and land Link, then—only after explicit
-decision approval and just-in-time activation—build the TextField-first Field.
-Toggle Group's single-mode focus work can follow under the same rule. Context
-Menu proceeds only after D-03; Toast and Hover Card require named Remix demand;
-Combobox ships alone only after its spike passes. A blocked phase does not block
-independent work.
+eight: finish Alert Dialog, correct and land Link, then re-inspect `main` and
+activate the approved TextField-first Field plan just in time. Toggle Group's
+single-mode focus work can follow after its own decision and activation.
+Context Menu proceeds only after D-03; Toast and Hover Card require named Remix
+demand; Combobox ships alone only after its spike passes. A blocked phase does
+not block independent work.
 
 ## Program readiness
 
@@ -71,20 +72,20 @@ demand, spike, version, or manual assistive-technology gate.
 
 | Phase | Start readiness | Required work before implementation |
 |---:|---|---|
-| 1 — Alert Dialog | **Completion ready** | Rebase/isolate PR #64; finish VoiceOver, TalkBack, Chrome tree, and release iOS evidence. |
-| 2 — Link | **Review-ready; not closed** | Approved correction is on PR #65 and exact-head hosted checks pass; obtain web screenshots, manual AT, real Phase 5/7 composition, merge authorization, and post-merge proof. |
-| 3 — Field | **Approval + activation required** | Approve D-08/D-09/D-19, re-inspect current code, then create/activate the just-in-time TextField-first plan. |
-| 4 — Toggle Group | **Approval + activation required** | Approve D-01/D-19 and classify Remix stories before activating a just-in-time plan. |
-| 5 — Context Menu | **Spike approval required** | Approve D-19 and separately approve/run the D-03 trigger-role/semantic-long-press spike before implementation planning. |
-| 6 — Toast | **Demand + decisions required** | Name a transient-feedback screen and approve D-04–D-07/D-19 before activating a plan. |
-| 7 — Hover Card | **Dependency + demand + decision required** | Land Link, prove a noninteractive/nonessential preview story, and approve D-17/D-19 before activating a spike/plan. |
-| 8 — Combobox | **Spike + decisions required** | Land Field; approve D-18/D-19; prove RawAutocomplete, active-option AT, disabled options, IME, and exact 3.41/3.44.6 behavior; then resolve D-10/D-11. |
+| 1 — Alert Dialog | **Completion ready** | Rebase/isolate PR #64; record the briefing correction; run current-stable compatibility; finish VoiceOver, TalkBack, Chrome tree, and release iOS evidence. |
+| 2 — Link | **Review-ready; not closed** | Approved correction is on PR #65 and exact-head hosted checks pass; run current-stable compatibility; obtain web screenshots, manual AT, real Phase 5/7 composition, merge authorization, and post-merge proof. |
+| 3 — Field | **Activation required** | D-08/D-09/D-19 are approved; re-inspect current code, then create/activate the just-in-time TextField-first plan. |
+| 4 — Toggle Group | **Approval + activation required** | Approve D-01 and classify Remix stories before activating a just-in-time plan. |
+| 5 — Context Menu | **Spike approval required** | Separately approve/run the D-03 trigger-role/semantic-long-press spike before implementation planning. |
+| 6 — Toast | **Demand + decisions required** | Name a transient-feedback screen and approve D-04–D-07 before activating a plan. |
+| 7 — Hover Card | **Dependency + demand + decision required** | Land Link, prove a noninteractive/nonessential preview story, and approve D-17 before activating a spike/plan. |
+| 8 — Combobox | **Spike + decisions required** | Land Field; approve D-18; prove RawAutocomplete, active-option AT, disabled options, IME, and exact 3.41/3.44.6 behavior; then resolve D-10/D-11. |
 
 Shared closure gates for every component:
 
 - Follow [integration-testing.md](integration-testing.md) and include its
   per-phase checklist in the executable phase plan.
-- Apply the stable/floor policy and re-audit protocol in
+- Apply approved D-19's stable/floor policy and re-audit protocol in
   [flutter-raw-primitives.md](flutter-raw-primitives.md); beta/master findings
   are canaries, not package dependencies.
 - Re-evaluate or explicitly resolve the Flutter 3.41.2 web-screenshot
@@ -98,8 +99,9 @@ Shared closure gates for every component:
 
 Recommended next move: finish the missing manual/evidence gates for PRs #64
 and #65, then obtain explicit merge authorization. Before Field begins,
-present D-08/D-09/D-19 for approval and re-derive its just-in-time plan from
-the then-current `main`; do not execute the inactive research draft directly.
+re-inspect the then-current `main` and activate a just-in-time plan that
+incorporates approved D-08/D-09/D-19; do not execute the inactive research
+draft directly.
 
 ## How to work a phase
 

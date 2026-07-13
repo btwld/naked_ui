@@ -48,12 +48,13 @@ Use the checked-in workflows and scripts as the executable source of truth:
 - `tool/run_android_integration.sh`
 - `tool/run_integration_all.sh`
 
-The declared-minimum job remains authoritative for API compatibility. A phase
-that relies on `RawMenuAnchor`, `OverlayPortal`, `RawTooltip`, or
-`RawAutocomplete` also runs its focused regression slice on pinned Flutter
-3.44.6 before closure because those primitives changed after 3.41. Re-verify
-the current stable pin when that phase starts; a compatibility run does not
-silently raise the package floor. Use the exact install/spawn commands in the
+The declared-minimum job remains authoritative for API compatibility. Approved
+D-19 also makes current stable a required compatibility-test target for every
+phase; a phase relying on `RawMenuAnchor`, `OverlayPortal`, `RawTooltip`, or
+`RawAutocomplete` adds its focused regression slice because those primitives
+changed after 3.41. Re-verify the current stable pin when that phase starts; a
+compatibility run does not silently raise the package floor or authorize newer
+production APIs. Use the exact install/spawn commands in the
 [process SDK matrix](process.md#executable-sdk-and-local-command-matrix), not a
 different SDK found on `PATH`.
 

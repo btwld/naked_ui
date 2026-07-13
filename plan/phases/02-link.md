@@ -5,8 +5,9 @@ Authority: **active just-in-time execution/evidence plan**.
 Status: **[PR #65](https://github.com/btwld/naked_ui/pull/65) is review-ready
 at `8084ecf`; the approved correction is implemented and all seven exact-head
 hosted checks pass. Phase closure remains blocked by the required web
-screenshots, human assistive-technology sessions, real Context Menu/Hover Card
-composition, merge authorization, and post-merge verification.**
+screenshots, D-19 current-stable compatibility run, human
+assistive-technology sessions, real Context Menu/Hover Card composition, merge
+authorization, and post-merge verification.**
 
 Goal: ship a headless link interaction primitive with Link rather than Button
 semantics, Enter activation, focus/hover/press state, correct unavailable
@@ -18,7 +19,9 @@ Planning baseline: workspace `d341b90`; rejected reviewer baseline `2614555`;
 approved implementation correction `dc20214`; current PR/docs head `8084ecf`
 on 2026-07-13. Contract source: briefing
 [§20](../briefing.md#20-component-contract-link), refined by
-[approved D-16](../decisions.md#phase-2-decision-evidence-approved-2026-07-13).
+[approved D-16](../decisions.md#phase-2-decision-evidence-approved-2026-07-13)
+and governed by approved
+[D-19](../decisions.md#architecture-decision-evidence-approved-2026-07-13).
 
 ## Approved correction
 
@@ -125,7 +128,8 @@ See the shared [raw-primitives mapping](../flutter-raw-primitives.md#component-b
   and
   [PR-title run 29271218006](https://github.com/btwld/naked_ui/actions/runs/29271218006).
 - VoiceOver, TalkBack, Chrome accessibility-tree, release-iOS VoiceOver, and
-  the unsupported Flutter 3.41.2 web screenshots remain honest blockers.
+  the unsupported Flutter 3.41.2 web screenshots remain honest blockers. The
+  newly approved D-19 current-stable compatibility gate also remains open.
 
 ### 6. Correct public documentation
 
@@ -191,6 +195,8 @@ button/duplicate link instead of one named link.
       the official Link delegate on pinned Chrome; the custom path includes a
       trusted W3C WebDriver click.
 - [x] All seven hosted checks pass on exact PR head `8084ecf`.
+- [ ] The required current-stable compatibility gate passes without using
+      post-minimum production APIs.
 - [ ] Required web screenshots and VoiceOver/TalkBack/Chrome-tree/release-iOS
       records are attached.
 - [ ] Real Context Menu and Hover Card implementations compose around Link.

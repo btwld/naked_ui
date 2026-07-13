@@ -26,10 +26,10 @@ These are evidence-backed recommendations, not approvals. The clean-sheet
 review requested on 2026-07-13 compared current Naked UI source/tests and open
 PRs with Flutter 3.41.0/3.41.2, Flutter 3.44.6 stable source, beta/master
 canaries, official Flutter package implementations, current `shadcn_flutter`
-source, and relevant WAI-ARIA/WCAG behavior. They remain open until the
-maintainer explicitly approves them; decisions that depend on real
-assistive-technology output also require the named spike. The exact upstream
-audits are recorded in
+source, and relevant WAI-ARIA/WCAG behavior. Recommendations still listed in
+this section remain open until the maintainer explicitly approves them;
+decisions that depend on real assistive-technology output also require the
+named spike. The exact upstream audits are recorded in
 [flutter-raw-primitives.md](flutter-raw-primitives.md) and
 [shadcn-flutter-reference.md](shadcn-flutter-reference.md).
 
@@ -45,10 +45,6 @@ audits are recorded in
   nullable; an explicit cap reports overflow through a dismissal reason. No
   entry is dropped silently.
 - **D-07:** swipe dismissal is deferred from the Toast MVP.
-- **D-08:** Field is the semantic source inside its scope. Identical explicit
-  TextField metadata is accepted; conflicting metadata asserts in debug.
-- **D-09:** an initial error is discoverable but not assertively announced. A
-  later changed non-empty error announces once; unchanged rebuilds do not.
 - **D-17:** `RawTooltip` is a behavior reference for Hover Card but is not the
   default base because the minimum SDK lacks per-instance public hide/focus/
   Escape ownership. Spike `RawMenuAnchor` plus existing generic positioning
@@ -57,10 +53,27 @@ audits are recorded in
   single editable selection. Multiple/token selection is a separate phase.
   No public API freezes until active-option AT, disabled options, IME, async,
   and 3.41/3.44.6 behavior pass.
-- **D-19:** production code may use only public Flutter APIs available at the
-  declared minimum. Current-stable additions are compatibility evidence until
-  the floor is deliberately raised; beta/master are non-blocking canaries.
-  Never import `package:flutter/src/...` or depend on experimental windowing.
+
+### Architecture decision evidence (approved 2026-07-13)
+
+- **D-08:** Field is the canonical semantic source inside its scope and applies
+  label, description, required state, validation result, and error metadata to
+  the actual text-field semantics node without replacing `EditableText`
+  semantics. Identical explicit TextField metadata is accepted for migration;
+  conflicting metadata asserts in debug, while Field deterministically wins in
+  release. Field does not own validators, `touched`, `dirty`, or submission
+  policy.
+- **D-09:** an initial error remains discoverable but does not create an
+  interruptive live announcement. A later changed non-empty error announces
+  exactly once; unchanged rebuilds do not. One message never combines an
+  alert/status role with another `liveRegion` announcement. This intentionally
+  replaces `NakedTextField`'s current initial-error live-region behavior and
+  requires a changelog entry plus manual VoiceOver and TalkBack verification.
+- **D-19:** production code may depend only on public Flutter APIs available in
+  minimum Flutter 3.41. Current stable is a required compatibility-test target,
+  but newer APIs cannot enter production until the minimum is deliberately
+  raised. Beta/master are canaries only. `package:flutter/src`, experimental
+  windowing, and other unstable implementation APIs are prohibited.
 
 ### Phase 2 decision evidence (approved 2026-07-13)
 
@@ -124,8 +137,8 @@ audits are recorded in
 | D-05 | Toast global shortcut | Caller opt-in only; canonical example may use F8; never reserve a key by default | Before Toast PR approval (phase 6) | [open (recommendation recorded; approval pending)](#component-plan-research-recommendations-2026-07-13) |
 | D-06 | Toast queue overflow | Unlimited pending queue or explicit nullable `maxQueued`; never drop silently without a dismissal reason | Before controller implementation (phase 6) | [open (recommendation recorded; approval pending)](#component-plan-research-recommendations-2026-07-13) |
 | D-07 | Toast swipe in first release | Defer unless all alternate dismissal + deterministic drag tests fit the PR | At Toast scoping (phase 6) | [open (recommendation recorded; approval pending)](#component-plan-research-recommendations-2026-07-13) |
-| D-08 | Field/TextField duplicate metadata | Debug-assert conflicting values; allow identical values; field scope is semantic source of truth | Before Field implementation (phase 3) | [open (recommendation recorded; approval pending)](#component-plan-research-recommendations-2026-07-13) |
-| D-09 | Initial Field error announcement | Initial error discoverable but not automatically assertive; later transitions announce once | Before Field semantics tests (phase 3) | [open (recommendation recorded; approval pending)](#component-plan-research-recommendations-2026-07-13) |
+| D-08 | Field/TextField duplicate metadata | Field owns metadata on the actual text-field node; identical values are accepted; conflicts assert in debug and Field wins in release | Before Field implementation (phase 3) | [resolved(Field canonical; identical accepted; conflict asserts/Field wins)](#architecture-decision-evidence-approved-2026-07-13) |
+| D-09 | Initial Field error announcement | Initial error is discoverable but not live; later changed non-empty errors announce once without duplicate role/live-region paths | Before Field semantics tests (phase 3) | [resolved(initial discoverable; later changes announce once)](#architecture-decision-evidence-approved-2026-07-13) |
 | D-10 | Combobox active-option strategy | Choose only after the macOS/Android/web spike; status announcer is the leading fallback | Before Combobox public API freeze (phase 8) | open |
 | D-11 | Combobox role on Flutter 3.41 | Use `SemanticsRole.comboBox` only if the prototype shows no regression; otherwise document fallback + upstream issue | During Combobox spike (phase 8) | open |
 | D-12 | Naked UI minimum Flutter | Keep `>=3.41.0` only if an exact 3.41.0 CI job passes; otherwise raise the minimum deliberately | Phase 0 (test-harness PR) | [resolved(keep `>=3.41.0`; exact-minimum CI)](#phase-0-decision-evidence-2026-07-12) |
@@ -135,7 +148,7 @@ audits are recorded in
 | D-16 | Link destination and native-browser contract | `linkUrl` owns destination/availability; official `url_launcher.Link` owns default platform navigation; supplied `onPressed` replaces default navigation; unavailable output has no Link/URL/anchor | Before Link PR approval (phase 2) | [resolved(destination-owned official Link with custom override)](#phase-2-decision-evidence-approved-2026-07-13) |
 | D-17 | Hover Card raw overlay primitive | Prefer per-instance `RawMenuAnchor`/existing positioning; use `RawTooltip` only if per-instance close/focus/Escape is proven | During Hover Card spike (phase 7) | [open (recommendation recorded; approval pending)](#component-plan-research-recommendations-2026-07-13) |
 | D-18 | Combobox raw foundation and first mode | Spike `RawAutocomplete`; single editable selection first; multiple/token selection separate | Before Combobox API work (phase 8) | [open (recommendation recorded; approval pending)](#component-plan-research-recommendations-2026-07-13) |
-| D-19 | Flutter raw-primitive release policy | Public APIs at the minimum only; current stable is compatibility evidence; beta/master are canaries; no `package:flutter/src` or experimental feature dependency | Every phase contract review | [open (recommendation recorded; approval pending)](#component-plan-research-recommendations-2026-07-13) |
+| D-19 | Flutter raw-primitive release policy | Public APIs at minimum 3.41 only; current stable is a required compatibility target; beta/master are canaries; unstable implementation APIs are prohibited | Every phase contract review | [resolved(public 3.41 floor plus required stable compatibility)](#architecture-decision-evidence-approved-2026-07-13) |
 
 ## Risk register
 

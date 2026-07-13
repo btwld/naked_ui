@@ -13,8 +13,8 @@ behavior.
 
 Planning baseline: `d341b90` on 2026-07-13. Contract source: briefing
 [§15](../briefing.md#15-component-contract-context-menu). Open gate:
-[D-03](../decisions.md#decision-log). Cross-cutting D-19 also requires
-approval before activation.
+[D-03](../decisions.md#decision-log). Approved cross-cutting D-19 governs
+SDK/API use if the spike or phase is activated.
 
 ## Reuse before new machinery
 
