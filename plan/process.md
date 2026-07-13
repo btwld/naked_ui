@@ -19,6 +19,9 @@ file just makes them executable in order. Do not restate contract details here.
   rules ([§11](briefing.md#11-universal-keyboard-and-focus-rules)).
 - **One behavior contract per PR**, each PR releasable
   ([§7](briefing.md#7-delivery-sequence-and-pull-request-boundaries)).
+- **Integration proof is operational, not implied** — every phase follows
+  [integration-testing.md](integration-testing.md), including authoritative
+  runners, bounded waits, failure triage, artifacts, and manual AT evidence.
 - Confirmed vs proposed vs open-decision language is defined in
   [§2.1](briefing.md#21-confirmed-facts-versus-proposals). Open decisions are
   resolved in [decisions.md](decisions.md) **before** the implementation PR.
@@ -27,11 +30,11 @@ file just makes them executable in order. Do not restate contract details here.
 
 | Phase | Deliverable | Gate |
 |---|---|---|
-| **A — Contract review** | Component contract section copied into the issue/PR; semantics matrix written; every input path, focus path, and timer listed; engine limitations recorded | Reviewer sign-off on the contract, decisions resolved |
+| **A — Contract review** | Component contract section copied into the issue/PR; semantics matrix written; every input path, focus path, timer, platform scenario, and known engine limitation listed | Reviewer sign-off on the contract, decisions resolved, integration playbook checklist mapped |
 | **B — Failing tests** | Tests in the order of §8 Phase B (invariants → builder/scope → pointer → keyboard/focus → semantics → overlay → timers → disposal) | Each test fails for the intended missing behavior |
 | **C — Implementation** | Smallest behavior surface; existing `NakedState`/builder/scope conventions; injectable durations; no styles, no English defaults | Analyze/format/unit green |
 | **D — Example fixture** | Deterministic canonical example: stable `ValueKey`s, local data, state readout, fixed viewport, RTL/large-text variants, reset behavior | Fixture reviewed against §8 Phase D list |
-| **E — Platform proof** | flutter-tester → real macOS → Android paths → web keyboard/semantics DOM; screenshots; goldens; accessibility guidelines; manual AT checks | All layers in [§12.1](briefing.md#121-required-test-layers) covered or explicitly N/A |
+| **E — Platform proof** | Follow [integration-testing.md](integration-testing.md): flutter-tester → real macOS → Android behavior → pinned web behavior; independent screenshot/golden evidence; accessibility guidelines; manual AT checks | All layers in [§12.1](briefing.md#121-required-test-layers) evidenced; unsupported requirements block closure unless explicitly resolved |
 | **F — Handoff packet** | The 10-item evidence package ([§22.1](briefing.md#221-per-component-pr-contents)) incl. traceability table ([§22.2](briefing.md#222-requirement-traceability-table-template)), manual AT records ([§22.3](briefing.md#223-manual-accessibility-result-template)), screenshot review ([§22.4](briefing.md#224-screenshot-review-template)) | Reviewer answers the API review questions ([§22.5](briefing.md#225-api-review-questions)) |
 
 ## Test standards (non-negotiable)
@@ -49,6 +52,12 @@ file just makes them executable in order. Do not restate contract details here.
   test file not in the aggregate runner is not delivered.
 - Flake policy: no `continue-on-error` on required checks, no real sleeps,
   quarantine requires issue+owner+date ([§21.10](briefing.md#2110-flake-policy)).
+- Native behavior uses `flutter test`; `flutter drive` is limited to web and
+  host-side screenshot/report-data transport. Behavior and evidence are
+  separate blocking results ([integration playbook](integration-testing.md)).
+- Pointer/gesture cleanup errors propagate. Platform-specific failures follow
+  the playbook's root-cause protocol; retries and timeout inflation are not
+  fixes.
 - Disposal/leak checklist for every overlay/timer component
   ([§21.11](briefing.md#2111-leak-and-disposal-checks)).
 
@@ -83,7 +92,7 @@ flutter test -r compact -d macos integration_test/all_tests.dart
 
 ## Phase plan file template
 
-Create `phases/NN-<name>.md` when a phase starts:
+Create an NN-name.md plan under [phases/](phases/) when a phase starts:
 
 ```markdown
 # Phase NN — <name>
@@ -96,8 +105,23 @@ Baseline commit: <sha this plan was derived against>
 For each task: What / Where (file:line) / How / Verify (exact command).
 Order tasks so the PR stays releasable at every merge point.
 
+## Research and readiness
+- Current-code baseline re-verified:
+- Decisions resolved:
+- Required spike/manual AT sessions:
+- Known engine/platform limitations and stop conditions:
+
+## Integration proof plan
+- Integration file and aggregate group:
+- Stable fixture keys and deterministic data/reset:
+- Scenario-to-platform matrix:
+- Exact pumps / observable waits / teardown ownership:
+- Screenshot, golden, guideline, and manual AT evidence:
+- Exact local and hosted commands:
+
 ## Acceptance
 - [ ] Contract checklist from briefing §<n> acceptance section
 - [ ] Existing suite green (widget + integration aggregate)
+- [ ] Integration playbook checklist evidenced on every applicable target
 - [ ] Status board + decisions.md updated
 ```

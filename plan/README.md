@@ -14,9 +14,10 @@ business rules ([briefing §5](briefing.md#5-definition-of-the-headless-boundary
 |---|---|---|
 | [briefing.md](briefing.md) | Full handoff contract (per-component behavior, semantics, tests, evidence) | **Frozen** — reference only |
 | [process.md](process.md) | The repeatable per-component workflow and PR gates | Stable |
+| [integration-testing.md](integration-testing.md) | Mandatory runner, determinism, evidence, and failure-triage playbook | Stable |
 | [decisions.md](decisions.md) | Decision log D-01…D-15 and escalation rule | **Living** — update as decisions resolve |
 | README.md (this file) | Index and status board | **Living** — update every phase PR |
-| `phases/NN-*.md` | Executable plan for one phase | Created just-in-time when a phase starts |
+| [phases/](phases/) using the NN-name.md convention | Executable plan for one phase | Created just-in-time when a phase starts |
 
 ## Status board
 
@@ -27,7 +28,7 @@ do not pre-write plans for phases whose blocking decisions are unresolved.
 | Phase | Scope | Contract | Blocking decisions | Plan | Status |
 |---:|---|---|---|---|---|
 | 0 | Test-harness hardening | [§6.2](briefing.md#62-confirmed-delivery-gaps-to-fix-before-adding-the-new-suite), [§21](briefing.md#21-integration-screenshot-golden-and-ci-implementation) | D-12, D-13, D-14, D-15 (resolved) | [phases/00-test-harness.md](phases/00-test-harness.md) | **Closed** — delivered by [PR #63](https://github.com/btwld/naked_ui/pull/63), squash-merged as `58a48a3` |
-| 1 | Alert Dialog (extend `NakedDialog`) | [§13](briefing.md#13-component-contract-alert-dialog) | D-02 | — | Not started |
+| 1 | Alert Dialog (extend `NakedDialog`) | [§13](briefing.md#13-component-contract-alert-dialog) | D-02 (resolved) | — | Ready for phase plan |
 | 2 | Link | [§20](briefing.md#20-component-contract-link) | — | — | Not started |
 | 3 | Field + `NakedTextField` integration | [§17](briefing.md#17-component-contract-field) | D-08, D-09 | — | Not started |
 | 4 | Toggle Group expansion | [§14](briefing.md#14-component-contract-toggle-group) | D-01 | — | Not started |
@@ -41,12 +42,48 @@ prerelease 1 = phases 1–3, prerelease 2 = phases 4–5, prerelease 3 = phases 
 Combobox ships alone after its spike passes. A blocked phase does not block
 independent phases.
 
+## Program readiness
+
+Phase 0 made the harness trustworthy enough to begin component work. The
+program is **ready to start targeted planning**, but it is not research-complete
+for every phase and no phase may bypass its open decisions, spikes, or evidence
+gates.
+
+| Phase | Start readiness | Required work before implementation |
+|---:|---|---|
+| 1 — Alert Dialog | **Ready for a just-in-time phase plan** | Re-verify the current `NakedDialog` baseline, carry the resolved D-02 focus contract into tests/examples, then create the phase plan. |
+| 2 — Link | **Ready for a just-in-time phase plan** | Re-verify Flutter 3.41.0/3.41.2 link semantics and existing interaction-state patterns; no product decision currently blocks implementation. |
+| 3 — Field | Blocked on decisions | Resolve D-08 metadata precedence and D-09 initial-error announcement policy before implementation/semantics tests. |
+| 4 — Toggle Group | Blocked on compatibility decision | Resolve D-01 and document the consumer-facing `selected` to `toggled` announcement migration. |
+| 5 — Context Menu | Spike/decision required | Resolve D-03 with a trigger-role/semantic-long-press prototype and real VoiceOver/TalkBack results. |
+| 6 — Toast | Blocked on scope/API decisions | Resolve D-04–D-07 before tests or controller implementation; timer, queue, focus, and announcement contracts then become the phase plan. |
+| 7 — Hover Card | Contract ready, dependency pending | Land Link first, then create the phase plan and verify reusable overlay positioning plus pointer-grace geometry. |
+| 8 — Combobox | **Blocked on required accessibility spike** | Land Field, run the macOS/Android/web spike, then resolve D-10/D-11 before freezing the API. |
+
+Shared closure gates for every component:
+
+- Follow [integration-testing.md](integration-testing.md) and include its
+  per-phase checklist in the executable phase plan.
+- Re-evaluate or explicitly resolve the Flutter 3.41.2 web-screenshot
+  limitation; a web behavior log is not a silent substitute for a required
+  screenshot.
+- Schedule and record the required VoiceOver, TalkBack, Chrome accessibility
+  tree, and release-level iOS checks. Automated semantics alone are not enough.
+- Re-verify the phase's current-code baseline when its just-in-time plan is
+  created; the original `0ca0b8b` audit is historical evidence, not a permanent
+  assumption.
+
+Recommended next move: start the Phase 1 Alert Dialog plan in the nominal
+delivery order. Phase 2 Link remains independently ready if Phase 1 becomes
+blocked during implementation. Do not begin all phases in parallel.
+
 ## How to work a phase
 
 1. Resolve the phase's blocking decisions in [decisions.md](decisions.md) first
    — nothing is decided silently inside an implementation PR.
-2. Create `phases/NN-<name>.md` by deriving tasks from the phase's briefing
-   contract section (see the template at the end of [process.md](process.md)).
+2. Create an NN-name.md plan under [phases/](phases/) by deriving tasks from
+   the phase's briefing contract section (see the template at the end of
+   [process.md](process.md)).
 3. Follow the workflow in [process.md](process.md) (contract review → failing
    tests → implementation → fixture → platform proof → evidence packet).
 4. In the phase's final PR, update this status board and any resolved rows in

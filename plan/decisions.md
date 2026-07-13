@@ -14,6 +14,20 @@ choosing an SDK-floor policy, platform-directory strategy, golden host/font,
 or Android/web cadence. The maintainer approved the evidence-backed D-12–D-15
 recommendations on 2026-07-12 before decision-dependent implementation began.
 
+### Phase 1 decision evidence (2026-07-12)
+
+- **D-02:** approved the optional caller-owned `initialFocusNode`. When the
+  supplied node is available and focusable, the alert dialog focuses it after
+  opening; otherwise normal route focus chooses the first focusable descendant.
+  Canonical examples must focus the least destructive action for irreversible
+  work, the expected action for a simple acknowledgement, or a non-action
+  semantic container near the start of long or structured content. Naked UI
+  never disposes the caller's node. This follows the
+  [WAI-ARIA modal-dialog focus guidance](https://www.w3.org/WAI/ARIA/apg/patterns/dialog-modal/),
+  while retaining the target control exposed by established primitives such as
+  [React Spectrum AlertDialog](https://react-spectrum.adobe.com/Dialog) and
+  [Radix Alert Dialog](https://www.radix-ui.com/primitives/docs/components/alert-dialog).
+
 ### Phase 0 decision evidence (2026-07-12)
 
 - **D-12:** the official Flutter repository contains the exact `3.41.0` tag.
@@ -35,7 +49,7 @@ recommendations on 2026-07-12 before decision-dependent implementation began.
 | ID | Decision | Briefing recommendation | Must resolve by | Status |
 |---|---|---|---|---|
 | D-01 | Toggle option semantics migration (`selected` → `toggled`) | Use button + `toggled` for all Toggle Group modes; changelog + announcement note; keep Radio Group for radio semantics | Before Toggle Group implementation (phase 4) | open |
-| D-02 | Alert Dialog initial focus API | Keep optional `initialFocusNode`; document safe-target heuristics; explicit canonical examples | Before Alert Dialog PR approval (phase 1) | open |
+| D-02 | Alert Dialog initial focus API | Keep optional `initialFocusNode`; document safe-target heuristics; explicit canonical examples | Before Alert Dialog PR approval (phase 1) | [resolved(optional caller-owned node plus documented safe-target heuristics)](#phase-1-decision-evidence-2026-07-12) |
 | D-03 | Context Menu trigger semantic action | Preserve child role + long-press semantic action; no fake button; prototype with VoiceOver/TalkBack | During Context Menu spike (phase 5) | open |
 | D-04 | Toast composition API | Structured message/action/close helpers so duplicate message semantics can be excluded without hiding controls | Before Toast tests are written (phase 6) | open |
 | D-05 | Toast global shortcut | Caller opt-in only; canonical example may use F8; never reserve a key by default | Before Toast PR approval (phase 6) | open |
