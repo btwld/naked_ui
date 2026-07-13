@@ -572,23 +572,29 @@ class _AlertDialogButton extends StatelessWidget {
         return AnimatedScale(
           scale: state.isPressed ? 0.95 : 1,
           duration: duration,
-          child: AnimatedContainer(
-            duration: duration,
-            constraints: const BoxConstraints(minHeight: 48),
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          child: DecoratedBox(
+            position: DecorationPosition.foreground,
             decoration: BoxDecoration(
-              color: effectiveBackground,
               borderRadius: BorderRadius.circular(8),
               border: state.isFocused
                   ? Border.all(color: const Color(0xFF2563EB), width: 3)
                   : null,
             ),
-            child: Text(
-              text,
-              style: TextStyle(
-                color: textColor,
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
+            child: AnimatedContainer(
+              duration: duration,
+              constraints: const BoxConstraints(minHeight: 48),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              decoration: BoxDecoration(
+                color: effectiveBackground,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                text,
+                style: TextStyle(
+                  color: textColor,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
           ),

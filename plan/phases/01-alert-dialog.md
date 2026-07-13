@@ -376,6 +376,16 @@ Actions implicitly requires `success()` for a post-failure step. The corrected
 condition explicitly requires both `failure()` and the example-test step's
 failed outcome; no retry or test relaxation was added.
 
+Visual review rejected the first generated Ubuntu candidate: the safe Cancel
+node was the known primary focus, but the image contained no blue focus-ring
+pixels because a zero-duration `AnimatedContainer` had not painted its target
+border on the capture frame. A regression assertion against the actually
+painted `DecoratedBox` failed with a null border. The focus ring now uses an
+immediate foreground decoration while color and press feedback remain animated;
+the regression test passes and a fresh native macOS capture visibly contains
+the ring (470 exact `#2563EB` pixels). The rejected Ubuntu candidate was not
+checked in; a new pinned-host candidate is required.
+
 ## Verification and publication gates
 
 Focused development:

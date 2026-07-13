@@ -30,6 +30,23 @@ void main() {
         ),
       );
       expect(FocusManager.instance.primaryFocus, same(cancelButton.focusNode));
+      final paintedFocusRings = tester
+          .widgetList<DecoratedBox>(
+            find.descendant(
+              of: find.byKey(const ValueKey('alert-dialog.cancel')),
+              matching: find.byType(DecoratedBox),
+            ),
+          )
+          .map((box) => box.decoration)
+          .whereType<BoxDecoration>()
+          .map((decoration) => decoration.border)
+          .whereType<Border>()
+          .where((border) => border.top.color == const Color(0xFF2563EB));
+      expect(
+        paintedFocusRings,
+        hasLength(1),
+        reason: 'the focused safe action must paint one visible focus ring',
+      );
       expect(find.byKey(const ValueKey('alert-dialog.title')), findsOneWidget);
       expect(
         find.byKey(const ValueKey('alert-dialog.message')),
