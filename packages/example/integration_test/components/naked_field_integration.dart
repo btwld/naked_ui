@@ -72,6 +72,7 @@ class _AlertSemanticsUpdateRecorder {
   final SemanticsOwner _owner;
   final List<String> introducedLabels = <String>[];
   Map<int, String> _previousAlerts = <int, String>{};
+  bool _isDisposed = false;
 
   void _recordUpdate() {
     final root = _owner.rootSemanticsNode;
@@ -99,7 +100,13 @@ class _AlertSemanticsUpdateRecorder {
     _previousAlerts = currentAlerts;
   }
 
-  void dispose() => _owner.removeListener(_recordUpdate);
+  void dispose() {
+    if (_isDisposed) {
+      return;
+    }
+    _isDisposed = true;
+    _owner.removeListener(_recordUpdate);
+  }
 }
 
 String _stateText(WidgetTester tester) {
@@ -140,111 +147,102 @@ void main() {
     testWidgets(
       'consumer validation announces changes once and clears on correction',
       (tester) async {
-        final semantics = tester.ensureSemantics();
         final announcements = _AlertSemanticsUpdateRecorder(tester);
-        try {
-          await tester.pumpWidget(_testApp(const field_example.FieldExample()));
-          await tester.pump();
+        addTearDown(announcements.dispose);
 
-          await tester.enterText(_editable, 'not-an-email');
-          await tester.tap(find.byKey(field_example.fieldEmailSubmitKey));
-          await tester.pump();
+        await tester.pumpWidget(_testApp(const field_example.FieldExample()));
+        await tester.pump();
 
-          expect(
-            find.descendant(
-              of: find.byKey(field_example.fieldEmailErrorKey),
-              matching: find.text('Enter a valid email address.'),
-            ),
-            findsOneWidget,
-          );
-          var data = _textFieldNode(tester).getSemanticsData();
-          expect(data.label, 'Email address');
-          expect(
-            data.hint,
-            'Use the address where we can reach you.\n'
-            'Enter a valid email address.',
-          );
-          expect(data.flagsCollection.isRequired, Tristate.isTrue);
-          expect(data.validationResult, SemanticsValidationResult.invalid);
-          expect(_alertNodes(tester), hasLength(1));
-          expect(
-            _alertNodes(tester).single.getSemanticsData().label,
-            'Enter a valid email address.',
-          );
-          expect(announcements.introducedLabels, <String>[
-            'Enter a valid email address.',
-          ]);
+        await tester.enterText(_editable, 'not-an-email');
+        await tester.tap(find.byKey(field_example.fieldEmailSubmitKey));
+        await tester.pump();
 
-          await tester.pump();
-          expect(_alertNodes(tester), isEmpty);
+        expect(
+          find.descendant(
+            of: find.byKey(field_example.fieldEmailErrorKey),
+            matching: find.text('Enter a valid email address.'),
+          ),
+          findsOneWidget,
+        );
+        var data = _textFieldNode(tester).getSemanticsData();
+        expect(data.label, 'Email address');
+        expect(
+          data.hint,
+          'Use the address where we can reach you.\n'
+          'Enter a valid email address.',
+        );
+        expect(data.flagsCollection.isRequired, Tristate.isTrue);
+        expect(data.validationResult, SemanticsValidationResult.invalid);
+        expect(_alertNodes(tester), hasLength(1));
+        expect(
+          _alertNodes(tester).single.getSemanticsData().label,
+          'Enter a valid email address.',
+        );
+        expect(announcements.introducedLabels, <String>[
+          'Enter a valid email address.',
+        ]);
 
-          await tester.tap(find.byKey(field_example.fieldEmailSubmitKey));
-          await tester.pump();
-          expect(
-            _alertNodes(tester),
-            isEmpty,
-            reason: 'An unchanged rebuild must not repeat the error.',
-          );
-          expect(announcements.introducedLabels, <String>[
-            'Enter a valid email address.',
-          ]);
+        await tester.pump();
+        expect(_alertNodes(tester), isEmpty);
 
-          await tester.tap(_editable);
-          await tester.pump();
-          await tester.enterText(_editable, '');
-          await tester.pump();
-          expect(
-            tester.widget<EditableText>(_editable).controller.text,
-            isEmpty,
-          );
-          expect(
-            announcements.introducedLabels,
-            <String>['Enter a valid email address.', 'Enter an email address.'],
-            reason:
-                'Each changed error must reach one completed semantics update.',
-          );
+        await tester.tap(find.byKey(field_example.fieldEmailSubmitKey));
+        await tester.pump();
+        expect(
+          _alertNodes(tester),
+          isEmpty,
+          reason: 'An unchanged rebuild must not repeat the error.',
+        );
+        expect(announcements.introducedLabels, <String>[
+          'Enter a valid email address.',
+        ]);
 
-          await tester.pump();
-          expect(
-            _alertNodes(tester),
-            isEmpty,
-            reason: 'The transient alert must clear after it is dispatched.',
-          );
-          expect(
-            announcements.introducedLabels.where(
-              (label) => label == 'Enter an email address.',
-            ),
-            hasLength(1),
-          );
-          expect(
-            _textFieldNode(tester).getSemanticsData().hint,
-            'Use the address where we can reach you.\n'
-            'Enter an email address.',
-          );
+        await tester.tap(_editable);
+        await tester.pump();
+        await tester.enterText(_editable, '');
+        await tester.pump();
+        expect(tester.widget<EditableText>(_editable).controller.text, isEmpty);
+        expect(
+          announcements.introducedLabels,
+          <String>['Enter a valid email address.', 'Enter an email address.'],
+          reason:
+              'Each changed error must reach one completed semantics update.',
+        );
 
-          await tester.enterText(_editable, 'person@example.com');
-          await tester.pump();
+        await tester.pump();
+        expect(
+          _alertNodes(tester),
+          isEmpty,
+          reason: 'The transient alert must clear after it is dispatched.',
+        );
+        expect(
+          announcements.introducedLabels.where(
+            (label) => label == 'Enter an email address.',
+          ),
+          hasLength(1),
+        );
+        expect(
+          _textFieldNode(tester).getSemanticsData().hint,
+          'Use the address where we can reach you.\n'
+          'Enter an email address.',
+        );
 
-          data = _textFieldNode(tester).getSemanticsData();
-          expect(data.hint, 'Use the address where we can reach you.');
-          expect(data.validationResult, SemanticsValidationResult.valid);
-          expect(_alertNodes(tester), isEmpty);
-          expect(_stateText(tester), contains('valid'));
+        await tester.enterText(_editable, 'person@example.com');
+        await tester.pump();
 
-          await tester.tap(find.byKey(field_example.fieldEmailResetKey));
-          await tester.pump();
+        data = _textFieldNode(tester).getSemanticsData();
+        expect(data.hint, 'Use the address where we can reach you.');
+        expect(data.validationResult, SemanticsValidationResult.valid);
+        expect(_alertNodes(tester), isEmpty);
+        expect(_stateText(tester), contains('valid'));
 
-          expect(
-            tester.widget<EditableText>(_editable).controller.text,
-            isEmpty,
-          );
-          data = _textFieldNode(tester).getSemanticsData();
-          expect(data.validationResult, SemanticsValidationResult.none);
-          expect(_stateText(tester), contains('empty'));
-        } finally {
-          announcements.dispose();
-          semantics.dispose();
-        }
+        await tester.tap(find.byKey(field_example.fieldEmailResetKey));
+        await tester.pump();
+
+        expect(tester.widget<EditableText>(_editable).controller.text, isEmpty);
+        data = _textFieldNode(tester).getSemanticsData();
+        expect(data.validationResult, SemanticsValidationResult.none);
+        expect(_stateText(tester), contains('empty'));
+        announcements.dispose();
       },
     );
 
