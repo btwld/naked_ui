@@ -3,7 +3,7 @@
 Status: **D-03 OPEN; production Context Menu API NOT AUTHORIZED**
 Spike date: 2026-07-13
 Fixture: `packages/example/lib/context_menu_accessibility_spike.dart`
-Baseline: Link PR #65 head `8084ecf`, Flutter 3.41.2 workspace pin
+Baseline: Link PR #65 head `52d9c97`, Flutter 3.41.2 workspace pin
 
 This is a disposable V0/V1 evidence record. Automated semantics can establish
 serialized node count/order/properties, selected node flags/actions, behavior,
