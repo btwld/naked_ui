@@ -363,6 +363,14 @@ remains blocked by the Phase 0 Flutter 3.41.2 capture limitation. VoiceOver,
 TalkBack, Chrome accessibility-tree, and release-iOS evidence remain human
 review gates and are not inferred from automated semantics tests.
 
+The first exact-head Ubuntu run confirmed that all 18 other example tests pass
+and the only failure is the intentionally absent alert reference image. Flutter
+does not emit a diagnostic file for a non-existent golden, so the existing
+failure-only artifact was empty. The CI diagnostic path now generates candidate
+images with `--update-goldens` on that same pinned Ubuntu host after the original
+blocking test has failed; the candidate still requires explicit visual review
+and a subsequent exact-head green run.
+
 ## Verification and publication gates
 
 Focused development:
