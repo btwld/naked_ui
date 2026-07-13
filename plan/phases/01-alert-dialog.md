@@ -371,6 +371,11 @@ images with `--update-goldens` on that same pinned Ubuntu host after the origina
 blocking test has failed; the candidate still requires explicit visual review
 and a subsequent exact-head green run.
 
+The first diagnostic workflow attempt skipped its generator because GitHub
+Actions implicitly requires `success()` for a post-failure step. The corrected
+condition explicitly requires both `failure()` and the example-test step's
+failed outcome; no retry or test relaxation was added.
+
 ## Verification and publication gates
 
 Focused development:
