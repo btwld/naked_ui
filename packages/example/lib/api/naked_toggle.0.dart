@@ -185,11 +185,6 @@ class _ToggleGroupExampleState extends State<ToggleGroupExample> {
     'italic': 'Italic',
     'underline': 'Underline',
   };
-  static const _icons = {
-    'bold': Icons.format_bold,
-    'italic': Icons.format_italic,
-    'underline': Icons.format_underlined,
-  };
 
   late final Map<String, FocusNode> _optionFocusNodes = {
     for (final value in _values)
@@ -267,14 +262,7 @@ class _ToggleGroupExampleState extends State<ToggleGroupExample> {
               width: state.isFocused ? 2 : 1,
             ),
           ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(_icons[value], color: foregroundColor, size: 18),
-              const SizedBox(width: 6),
-              Text(label, style: TextStyle(color: foregroundColor)),
-            ],
-          ),
+          child: Text(label, style: TextStyle(color: foregroundColor)),
         );
       },
     );

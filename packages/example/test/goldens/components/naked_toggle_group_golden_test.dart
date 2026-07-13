@@ -10,6 +10,27 @@ import '../golden_test_harness.dart';
 void main() {
   setUpAll(loadGoldenTestFont);
 
+  testWidgets('canonical toggle group options use text-only labels', (
+    tester,
+  ) async {
+    await pumpGoldenSurface(
+      tester,
+      child: const toggle_example.ToggleGroupExample(),
+    );
+
+    final groupFinder = find.byKey(const Key('toggle-group.root'));
+    expect(
+      find.descendant(of: groupFinder, matching: find.byType(Icon)),
+      findsNothing,
+    );
+    for (final label in ['Bold', 'Italic', 'Underline']) {
+      expect(
+        find.descendant(of: groupFinder, matching: find.text(label)),
+        findsOneWidget,
+      );
+    }
+  });
+
   testWidgets(
     'focused option paints its final border when animations are disabled',
     (tester) async {
