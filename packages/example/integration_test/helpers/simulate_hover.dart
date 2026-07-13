@@ -38,13 +38,8 @@ extension WidgetTesterExtension on WidgetTester {
       await gesture.moveTo(const Offset(-1000, -1000));
       await pump(const Duration(milliseconds: 32)); // allow onExit
     } finally {
-      // Ensure gesture cleanup even if something fails
-      try {
-        await gesture.removePointer();
-      } catch (e) {
-        // Cleanup may fail if gesture already released - log for debugging
-        debugPrint('Gesture cleanup (expected if already released): $e');
-      }
+      // Cleanup failures must fail the test so pointer state cannot leak.
+      await gesture.removePointer();
     }
   }
 
@@ -73,7 +68,7 @@ extension WidgetTesterExtension on WidgetTester {
     await pump();
   }
 
-  void expectCursor(SystemMouseCursor cursor, {required Key on}) async {
+  void expectCursor(SystemMouseCursor cursor, {required Key on}) {
     final region = widget<MouseRegion>(
       find
           .descendant(of: find.byKey(on), matching: find.byType(MouseRegion))

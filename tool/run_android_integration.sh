@@ -11,10 +11,9 @@ adb -s "$device_id" get-state
 (
   cd packages/example
 
-  flutter drive \
-    --driver=test_driver/integration_test_behavior.dart \
-    --target=integration_test/all_tests.dart \
-    -d "$device_id"
+  flutter test -r compact \
+    -d "$device_id" \
+    integration_test/all_tests.dart
 
   flutter drive \
     --driver=test_driver/integration_test.dart \
