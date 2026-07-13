@@ -1,3 +1,4 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
 import '../mixins/naked_mixins.dart';
@@ -16,6 +17,7 @@ class NakedFocusableDetector extends StatefulWidget {
     this.descendantsAreTraversable = true,
     this.skipTraversal = false,
     this.includeSemantics = true,
+    this.restoreHoverOnEnable = false,
     this.onFocusChange,
     this.onHoverChange,
     this.onEnableChange,
@@ -52,6 +54,11 @@ class NakedFocusableDetector extends StatefulWidget {
   /// Whether to include focus semantics.
   final bool includeSemantics;
 
+  /// Whether to restore hover after re-enabling under a stationary pointer.
+  ///
+  /// This is opt-in so existing component hover behavior remains unchanged.
+  final bool restoreHoverOnEnable;
+
   /// Called when the focus state changes.
   final ValueChanged<bool>? onFocusChange;
 
@@ -86,6 +93,8 @@ class NakedFocusableDetector extends StatefulWidget {
 class _NakedFocusableDetectorState extends State<NakedFocusableDetector>
     with FocusNodeMixin<NakedFocusableDetector> {
   bool _wasEnabled = true;
+  bool _pointerInside = false;
+  bool _hoverReported = false;
 
   @override
   FocusNode? get widgetProvidedNode => widget.focusNode;
@@ -107,12 +116,62 @@ class _NakedFocusableDetectorState extends State<NakedFocusableDetector>
     _wasEnabled = widget.enabled;
   }
 
+  void _handlePointerEnter(PointerEnterEvent event) {
+    _pointerInside = true;
+    if (widget.enabled) _reportHover(true);
+  }
+
+  void _handlePointerExit(PointerExitEvent event) {
+    _pointerInside = false;
+    if (widget.enabled) _reportHover(false);
+  }
+
+  void _reportHover(bool hovered) {
+    if (_hoverReported == hovered) return;
+    _hoverReported = hovered;
+    widget.onHoverChange?.call(hovered);
+  }
+
+  void _restoreHoverAfterFrame() {
+    if (!_pointerInside || widget.onHoverChange == null) return;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted &&
+          widget.enabled &&
+          widget.restoreHoverOnEnable &&
+          _pointerInside) {
+        _reportHover(true);
+      }
+    });
+  }
+
+  void _clearHoverAfterFrame() {
+    if (!_hoverReported) return;
+    _hoverReported = false;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) widget.onHoverChange?.call(false);
+    });
+  }
+
   @override
   void didUpdateWidget(NakedFocusableDetector oldWidget) {
     super.didUpdateWidget(oldWidget);
 
     if (widget.enabled != oldWidget.enabled) {
       _handleEnabledChange();
+      if (widget.restoreHoverOnEnable) {
+        if (widget.enabled) {
+          _restoreHoverAfterFrame();
+        } else {
+          _clearHoverAfterFrame();
+        }
+      }
+    }
+
+    if ((!widget.restoreHoverOnEnable && oldWidget.restoreHoverOnEnable) ||
+        (widget.onHoverChange == null && oldWidget.onHoverChange != null)) {
+      _pointerInside = false;
+      _hoverReported = false;
     }
   }
 
@@ -144,28 +203,45 @@ class _NakedFocusableDetectorState extends State<NakedFocusableDetector>
     );
 
     // Wrap with MouseRegion if hover detection is needed
-    // When disabled, MouseRegion still exists (for cursor) but doesn't trigger callbacks
     if (widget.onHoverChange != null) {
+      void Function(PointerEnterEvent)? onEnter;
+      void Function(PointerExitEvent)? onExit;
+      if (widget.restoreHoverOnEnable) {
+        onEnter = _handlePointerEnter;
+        onExit = _handlePointerExit;
+      } else if (widget.enabled) {
+        onEnter = (_) => widget.onHoverChange!(true);
+        onExit = (_) => widget.onHoverChange!(false);
+      }
+
       result = MouseRegion(
-        onEnter: widget.enabled ? (_) => widget.onHoverChange!(true) : null,
-        onExit: widget.enabled ? (_) => widget.onHoverChange!(false) : null,
+        onEnter: onEnter,
+        onExit: onExit,
         cursor: widget.mouseCursor ?? MouseCursor.defer,
         child: result,
       );
     }
 
-    // Add Actions if provided and enabled
-    if (widget.enabled &&
-        widget.actions != null &&
-        widget.actions!.isNotEmpty) {
-      result = Actions(actions: widget.actions!, child: result);
+    // Keep the wrapper stable across enabled changes so stateful descendants
+    // are not recreated. An empty map disables local actions.
+    if (widget.actions != null && widget.actions!.isNotEmpty) {
+      result = Actions(
+        actions: widget.enabled
+            ? widget.actions!
+            : const <Type, Action<Intent>>{},
+        child: result,
+      );
     }
 
-    // Add Shortcuts last (outermost) if provided and enabled
-    if (widget.enabled &&
-        widget.shortcuts != null &&
-        widget.shortcuts!.isNotEmpty) {
-      result = Shortcuts(shortcuts: widget.shortcuts!, child: result);
+    // Add Shortcuts last (outermost). An empty map disables local shortcuts
+    // without changing the widget-tree shape.
+    if (widget.shortcuts != null && widget.shortcuts!.isNotEmpty) {
+      result = Shortcuts(
+        shortcuts: widget.enabled
+            ? widget.shortcuts!
+            : const <ShortcutActivator, Intent>{},
+        child: result,
+      );
     }
 
     return result;

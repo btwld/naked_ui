@@ -90,14 +90,25 @@ jobs:
         id: example_tests
         run: flutter test packages/example/test
 
-      # A missing reference image does not create a file under failures/. Run
-      # the same pinned golden suite in update mode so reviewers still receive
-      # a candidate from the authoritative Ubuntu host. The original test step
-      # remains failed until the candidate is explicitly reviewed and checked
-      # in.
-      - name: Generate golden candidate images
+      # A missing baseline cannot produce a failure diff. Keep the original
+      # example-test step blocking, then generate review candidates only after
+      # that exact pinned-host failure.
+      - name: Generate golden diagnostic candidates
         if: failure() && steps.example_tests.outcome == 'failure'
-        run: flutter test packages/example/test/goldens --update-goldens
+        run: >-
+          flutter test packages/example/test/goldens
+          --update-goldens
+
+      - name: Upload golden diagnostic candidates
+        if: failure() && steps.example_tests.outcome == 'failure'
+        uses: actions/upload-artifact@v4
+        with:
+          name: golden-diagnostics-${{ github.sha }}
+          path: |
+            packages/example/test/goldens/components/baselines/
+            packages/example/test/goldens/components/failures/
+          if-no-files-found: error
+          retention-days: 14
 
       - name: Upload golden failure images
         if: failure()

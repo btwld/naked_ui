@@ -184,6 +184,98 @@ void main() {
         expect(hoverState, isFalse);
       });
 
+      testWidgets('reports hover after reenable under a stationary pointer', (
+        tester,
+      ) async {
+        var enabled = true;
+        final hoverChanges = <bool>[];
+        late StateSetter rebuild;
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Center(
+              child: StatefulBuilder(
+                builder: (context, setState) {
+                  rebuild = setState;
+                  return NakedFocusableDetector(
+                    enabled: enabled,
+                    restoreHoverOnEnable: true,
+                    onHoverChange: hoverChanges.add,
+                    child: Container(
+                      width: 100,
+                      height: 100,
+                      color: Colors.red,
+                    ),
+                  );
+                },
+              ),
+            ),
+          ),
+        );
+
+        final gesture = await tester.createGesture(
+          kind: PointerDeviceKind.mouse,
+        );
+        await gesture.addPointer(location: Offset.zero);
+        addTearDown(gesture.removePointer);
+        await gesture.moveTo(tester.getCenter(find.byType(Container)));
+        await tester.pump();
+        expect(hoverChanges, [true]);
+
+        rebuild(() => enabled = false);
+        await tester.pump();
+        rebuild(() => enabled = true);
+        await tester.pump();
+        await tester.pump();
+
+        expect(hoverChanges, [true, false, true]);
+      });
+
+      testWidgets('does not restore hover after reenable by default', (
+        tester,
+      ) async {
+        var enabled = true;
+        final hoverChanges = <bool>[];
+        late StateSetter rebuild;
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Center(
+              child: StatefulBuilder(
+                builder: (context, setState) {
+                  rebuild = setState;
+                  return NakedFocusableDetector(
+                    enabled: enabled,
+                    onHoverChange: hoverChanges.add,
+                    child: Container(
+                      width: 100,
+                      height: 100,
+                      color: Colors.red,
+                    ),
+                  );
+                },
+              ),
+            ),
+          ),
+        );
+
+        final gesture = await tester.createGesture(
+          kind: PointerDeviceKind.mouse,
+        );
+        await gesture.addPointer(location: Offset.zero);
+        addTearDown(gesture.removePointer);
+        await gesture.moveTo(tester.getCenter(find.byType(Container)));
+        await tester.pump();
+
+        rebuild(() => enabled = false);
+        await tester.pump();
+        rebuild(() => enabled = true);
+        await tester.pump();
+        await tester.pump();
+
+        expect(hoverChanges, [true]);
+      });
+
       testWidgets('sets custom mouse cursor', (tester) async {
         await tester.pumpWidget(
           MaterialApp(
