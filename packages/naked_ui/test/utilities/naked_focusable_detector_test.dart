@@ -228,7 +228,7 @@ void main() {
         await tester.pump();
         await tester.pump();
 
-        expect(hoverChanges, [true, true]);
+        expect(hoverChanges, [true, false, true]);
       });
 
       testWidgets('does not restore hover after reenable by default', (

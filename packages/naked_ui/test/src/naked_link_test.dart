@@ -12,7 +12,7 @@ final _destination = Uri.parse('https://example.com/docs');
 void main() {
   group('NakedLink public state contract', () {
     test('requires either a child or builder', () {
-      expect(() => NakedLink(onPressed: () {}), throwsAssertionError);
+      expect(() => NakedLink(linkUrl: _destination), throwsAssertionError);
     });
 
     testWidgets('renders its child without a builder', (tester) async {
@@ -20,7 +20,6 @@ void main() {
         MaterialApp(
           home: NakedLink(
             linkUrl: _destination,
-            onPressed: () {},
             child: const Text('Documentation'),
           ),
         ),
@@ -41,7 +40,6 @@ void main() {
         MaterialApp(
           home: NakedLink(
             linkUrl: linkUrl,
-            onPressed: () {},
             child: const Text('Documentation'),
             builder: (context, state, child) {
               builderState = state;
@@ -85,16 +83,186 @@ void main() {
     });
   });
 
-  group('NakedLink activation contract', () {
-    testWidgets('destination URL is the effective-enabled source of truth', (
+  group('NakedLink resolver contract', () {
+    testWidgets('nearest resolver follows the observer with the exact URI', (
       tester,
     ) async {
-      const callbackOnlyKey = ValueKey('callback-only');
-      const destinationOnlyKey = ValueKey('destination-only');
+      final linkUrl = Uri.parse('custom-scheme:destination');
+      final events = <String>[];
+
+      await tester.pumpWidget(
+        _testApp(
+          NakedLinkResolver(
+            resolve: (context, resolvedUrl) {
+              events.add('outer:$resolvedUrl');
+              expect(resolvedUrl, linkUrl);
+              return NakedLinkResolution.handled;
+            },
+            child: NakedLinkResolver(
+              resolve: (context, resolvedUrl) {
+                events.add('inner:$resolvedUrl');
+                expect(context, same(tester.element(find.byType(NakedLink))));
+                return NakedLinkResolution.handled;
+              },
+              child: NakedLink(
+                linkUrl: linkUrl,
+                onActivated: (activatedUrl) {
+                  events.add('observer:$activatedUrl');
+                },
+                child: const SizedBox(
+                  width: 160,
+                  height: 48,
+                  child: Text('Link'),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+
+      await tester.tap(find.text('Link'));
+      await tester.pump();
+
+      expect(events, ['observer:$linkUrl', 'inner:$linkUrl']);
+    });
+
+    testWidgets('platformDefault falls through to platform navigation', (
+      tester,
+    ) async {
+      final platformCalls = <MethodCall>[];
+      final messenger =
+          TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
+      const launcherChannel = MethodChannel('plugins.flutter.io/url_launcher');
+      messenger.setMockMethodCallHandler(launcherChannel, (call) async {
+        platformCalls.add(call);
+        return true;
+      });
+      addTearDown(
+        () => messenger.setMockMethodCallHandler(launcherChannel, null),
+      );
+
+      await tester.pumpWidget(
+        _testApp(
+          NakedLink(
+            linkUrl: Uri.parse('https://example.com/platform-default'),
+            child: const SizedBox(width: 160, height: 48, child: Text('Link')),
+          ),
+          resolve: (_, _) => NakedLinkResolution.platformDefault,
+        ),
+      );
+
+      await tester.tap(find.text('Link'));
+      await tester.pump();
+      await tester.pump();
+
+      expect(platformCalls.map((call) => call.method), contains('launch'));
+    });
+
+    testWidgets('no resolver is equivalent to platformDefault', (tester) async {
+      final platformCalls = <MethodCall>[];
+      final messenger =
+          TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
+      const launcherChannel = MethodChannel('plugins.flutter.io/url_launcher');
+      messenger.setMockMethodCallHandler(launcherChannel, (call) async {
+        platformCalls.add(call);
+        return true;
+      });
+      addTearDown(
+        () => messenger.setMockMethodCallHandler(launcherChannel, null),
+      );
+
+      await tester.pumpWidget(
+        _testApp(
+          NakedLink(
+            linkUrl: Uri.parse('https://example.com/no-resolver'),
+            child: const SizedBox(width: 160, height: 48, child: Text('Link')),
+          ),
+          includeResolver: false,
+        ),
+      );
+
+      await tester.tap(find.text('Link'));
+      await tester.pump();
+      await tester.pump();
+
+      expect(platformCalls.map((call) => call.method), contains('launch'));
+    });
+
+    testWidgets('resolver exceptions surface without default fallback', (
+      tester,
+    ) async {
+      final platformCalls = <MethodCall>[];
+      final messenger =
+          TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
+      const launcherChannel = MethodChannel('plugins.flutter.io/url_launcher');
+      messenger.setMockMethodCallHandler(launcherChannel, (call) async {
+        platformCalls.add(call);
+        return true;
+      });
+      addTearDown(
+        () => messenger.setMockMethodCallHandler(launcherChannel, null),
+      );
+      final events = <String>[];
+
+      await tester.pumpWidget(
+        _testApp(
+          NakedLink(
+            linkUrl: Uri.parse('https://example.com/resolver-error'),
+            onActivated: (_) => events.add('observer'),
+            child: const SizedBox(width: 160, height: 48, child: Text('Link')),
+          ),
+          resolve: (_, _) {
+            events.add('resolver');
+            throw StateError('resolver failure');
+          },
+        ),
+      );
+
+      await tester.tap(find.text('Link'));
+      await tester.pump();
+
+      expect(events, ['observer', 'resolver']);
+      expect(tester.takeException(), isA<StateError>());
+      expect(platformCalls, isEmpty);
+    });
+
+    testWidgets('disabled Link invokes neither observer nor resolver', (
+      tester,
+    ) async {
+      var observerCalls = 0;
+      var resolverCalls = 0;
+
+      await tester.pumpWidget(
+        _testApp(
+          NakedLink(
+            enabled: false,
+            linkUrl: Uri.parse('https://example.com/disabled'),
+            onActivated: (_) => observerCalls++,
+            child: const SizedBox(width: 160, height: 48, child: Text('Link')),
+          ),
+          resolve: (_, _) {
+            resolverCalls++;
+            return NakedLinkResolution.handled;
+          },
+        ),
+      );
+
+      await tester.tap(find.text('Link'));
+      await tester.pump();
+
+      expect(observerCalls, 0);
+      expect(resolverCalls, 0);
+    });
+  });
+
+  group('NakedLink activation contract', () {
+    testWidgets('enabled is the only availability switch and retains the URI', (
+      tester,
+    ) async {
+      const enabledKey = ValueKey('enabled');
       const explicitDisabledKey = ValueKey('explicit-disabled');
       var callbackCount = 0;
-      NakedLinkState? callbackOnlyState;
-      NakedLinkState? destinationOnlyState;
+      NakedLinkState? enabledState;
       NakedLinkState? explicitDisabledState;
 
       await tester.pumpWidget(
@@ -103,26 +271,15 @@ void main() {
             mainAxisSize: MainAxisSize.min,
             children: [
               NakedLink(
-                key: callbackOnlyKey,
-                onPressed: () => callbackCount++,
+                key: enabledKey,
+                linkUrl: _destination,
+                onActivated: (_) => callbackCount++,
                 builder: (context, state, child) {
-                  callbackOnlyState = state;
+                  enabledState = state;
                   return const SizedBox(
                     width: 160,
                     height: 48,
-                    child: Text('Callback only'),
-                  );
-                },
-              ),
-              NakedLink(
-                key: destinationOnlyKey,
-                linkUrl: Uri.parse('https://example.com/docs'),
-                builder: (context, state, child) {
-                  destinationOnlyState = state;
-                  return const SizedBox(
-                    width: 160,
-                    height: 48,
-                    child: Text('Destination only'),
+                    child: Text('Enabled'),
                   );
                 },
               ),
@@ -130,6 +287,7 @@ void main() {
                 key: explicitDisabledKey,
                 enabled: false,
                 linkUrl: Uri.parse('https://example.com/unavailable'),
+                onActivated: (_) => callbackCount++,
                 builder: (context, state, child) {
                   explicitDisabledState = state;
                   return const SizedBox(
@@ -144,18 +302,18 @@ void main() {
         ),
       );
 
-      expect(callbackOnlyState!.isDisabled, isTrue);
-      expect(callbackOnlyState!.linkUrl, isNull);
-      expect(destinationOnlyState!.isDisabled, isFalse);
-      expect(destinationOnlyState!.linkUrl, _destination);
+      expect(enabledState!.isDisabled, isFalse);
+      expect(enabledState!.linkUrl, _destination);
       expect(explicitDisabledState!.isDisabled, isTrue);
-      expect(explicitDisabledState!.linkUrl, isNull);
+      expect(
+        explicitDisabledState!.linkUrl,
+        Uri.parse('https://example.com/unavailable'),
+      );
 
-      await tester.tap(find.byKey(callbackOnlyKey));
+      await tester.tap(find.byKey(explicitDisabledKey));
       await tester.pump();
       expect(callbackCount, 0);
-      tester.expectCursor(SystemMouseCursors.basic, on: callbackOnlyKey);
-      tester.expectCursor(SystemMouseCursors.click, on: destinationOnlyKey);
+      tester.expectCursor(SystemMouseCursors.click, on: enabledKey);
       tester.expectCursor(SystemMouseCursors.basic, on: explicitDisabledKey);
     });
 
@@ -172,7 +330,7 @@ void main() {
           NakedLink(
             key: linkKey,
             linkUrl: _destination,
-            onPressed: () => callbackCount++,
+            onActivated: (_) => callbackCount++,
             onPressChange: pressChanges.add,
             builder: (context, value, child) {
               state = value;
@@ -213,7 +371,7 @@ void main() {
           NakedLink(
             key: linkKey,
             linkUrl: _destination,
-            onPressed: () => callbackCount++,
+            onActivated: (_) => callbackCount++,
             onPressChange: pressChanges.add,
             child: const SizedBox(width: 160, height: 48, child: Text('Link')),
           ),
@@ -233,7 +391,7 @@ void main() {
       expect(callbackCount, 0);
     });
 
-    testWidgets('secondary click remains unclaimed', (tester) async {
+    testWidgets('secondary and middle clicks remain unclaimed', (tester) async {
       const linkKey = ValueKey('link');
       var callbackCount = 0;
       final pressChanges = <bool>[];
@@ -243,7 +401,7 @@ void main() {
           NakedLink(
             key: linkKey,
             linkUrl: _destination,
-            onPressed: () => callbackCount++,
+            onActivated: (_) => callbackCount++,
             onPressChange: pressChanges.add,
             child: const SizedBox(width: 160, height: 48, child: Text('Link')),
           ),
@@ -259,14 +417,63 @@ void main() {
 
       expect(callbackCount, 0);
       expect(pressChanges, isEmpty);
+
+      await tester.tapAt(
+        tester.getCenter(find.byKey(linkKey)),
+        kind: PointerDeviceKind.mouse,
+        buttons: kMiddleMouseButton,
+      );
+      await tester.pump();
+
+      expect(callbackCount, 0);
+      expect(pressChanges, isEmpty);
     });
+
+    testWidgets(
+      'modified primary activation bypasses the observer and resolver',
+      (tester) async {
+        const linkKey = ValueKey('link');
+        var observerCalls = 0;
+        var resolverCalls = 0;
+
+        await tester.pumpWidget(
+          _testApp(
+            NakedLink(
+              key: linkKey,
+              linkUrl: Uri.parse('/modified-primary'),
+              onActivated: (_) => observerCalls++,
+              child: const SizedBox(
+                width: 160,
+                height: 48,
+                child: Text('Link'),
+              ),
+            ),
+            resolve: (_, _) {
+              resolverCalls++;
+              return NakedLinkResolution.handled;
+            },
+          ),
+        );
+
+        await tester.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);
+        await tester.tapAt(
+          tester.getCenter(find.byKey(linkKey)),
+          kind: PointerDeviceKind.mouse,
+        );
+        await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
+        await tester.pump();
+
+        expect(observerCalls, 0);
+        expect(resolverCalls, 0);
+      },
+    );
 
     testWidgets('Enter and Numpad Enter activate while Space does not', (
       tester,
     ) async {
       final focusNode = FocusNode(debugLabel: 'link test');
       addTearDown(focusNode.dispose);
-      var callbackCount = 0;
+      final events = <String>[];
       NakedLinkState? state;
 
       await tester.pumpWidget(
@@ -274,7 +481,7 @@ void main() {
           NakedLink(
             focusNode: focusNode,
             linkUrl: _destination,
-            onPressed: () => callbackCount++,
+            onActivated: (_) => events.add('observer'),
             builder: (context, value, child) {
               state = value;
               return const SizedBox(
@@ -284,6 +491,10 @@ void main() {
               );
             },
           ),
+          resolve: (_, _) {
+            events.add('resolver');
+            return NakedLinkResolution.handled;
+          },
         ),
       );
       focusNode.requestFocus();
@@ -293,15 +504,15 @@ void main() {
 
       await tester.sendKeyEvent(LogicalKeyboardKey.enter);
       await tester.pump();
-      expect(callbackCount, 1);
+      expect(events, ['observer', 'resolver']);
 
       await tester.sendKeyEvent(LogicalKeyboardKey.numpadEnter);
       await tester.pump();
-      expect(callbackCount, 2);
+      expect(events, ['observer', 'resolver', 'observer', 'resolver']);
 
       await tester.sendKeyEvent(LogicalKeyboardKey.space);
       await tester.pump();
-      expect(callbackCount, 2);
+      expect(events, ['observer', 'resolver', 'observer', 'resolver']);
       expect(state!.isPressed, isFalse);
     });
 
@@ -317,7 +528,7 @@ void main() {
           NakedLink(
             focusNode: focusNode,
             linkUrl: _destination,
-            onPressed: () => callbackCount++,
+            onActivated: (_) => callbackCount++,
             child: const Text('Link'),
           ),
         ),
@@ -343,7 +554,7 @@ void main() {
         _testApp(
           NakedLink(
             linkUrl: _destination,
-            onPressed: () => callbackCount++,
+            onActivated: (_) => callbackCount++,
             child: const SelectableText('Selectable documentation text'),
           ),
         ),
@@ -384,7 +595,7 @@ void main() {
                   enabled: enabled,
                   enableFeedback: feedback,
                   linkUrl: _destination,
-                  onPressed: () {},
+                  onActivated: (_) {},
                   child: const SizedBox(
                     width: 160,
                     height: 48,
@@ -446,7 +657,7 @@ void main() {
             key: linkKey,
             focusNode: focusNode,
             linkUrl: _destination,
-            onPressed: () {},
+            onActivated: (_) {},
             onHoverChange: hoverChanges.add,
             onFocusChange: focusChanges.add,
             builder: (context, value, child) {
@@ -494,17 +705,12 @@ void main() {
     ) async {
       const enabledKey = ValueKey('enabled');
       const explicitDisabledKey = ValueKey('explicit-disabled');
-      const destinationDisabledKey = ValueKey('destination-disabled');
       const customKey = ValueKey('custom');
       final enabledNode = FocusNode(debugLabel: 'enabled link');
       final explicitDisabledNode = FocusNode(debugLabel: 'explicit disabled');
-      final destinationDisabledNode = FocusNode(
-        debugLabel: 'destination disabled',
-      );
       final nextNode = FocusNode(debugLabel: 'next');
       addTearDown(enabledNode.dispose);
       addTearDown(explicitDisabledNode.dispose);
-      addTearDown(destinationDisabledNode.dispose);
       addTearDown(nextNode.dispose);
 
       await tester.pumpWidget(
@@ -517,27 +723,21 @@ void main() {
                 enabled: false,
                 focusNode: explicitDisabledNode,
                 linkUrl: _destination,
-                onPressed: () {},
+                onActivated: (_) {},
                 child: const SizedBox(child: Text('Explicit disabled')),
-              ),
-              NakedLink(
-                key: destinationDisabledKey,
-                focusNode: destinationDisabledNode,
-                onPressed: () {},
-                child: const SizedBox(child: Text('Destination disabled')),
               ),
               NakedLink(
                 key: enabledKey,
                 focusNode: enabledNode,
                 linkUrl: _destination,
-                onPressed: () {},
+                onActivated: (_) {},
                 child: const SizedBox(child: Text('Enabled')),
               ),
               NakedLink(
                 key: customKey,
                 mouseCursor: SystemMouseCursors.help,
                 linkUrl: _destination,
-                onPressed: () {},
+                onActivated: (_) {},
                 child: const SizedBox(child: Text('Custom')),
               ),
               TextButton(
@@ -554,11 +754,9 @@ void main() {
       await tester.pump();
       expect(enabledNode.hasFocus, isTrue);
       expect(explicitDisabledNode.hasFocus, isFalse);
-      expect(destinationDisabledNode.hasFocus, isFalse);
 
       tester.expectCursor(SystemMouseCursors.click, on: enabledKey);
       tester.expectCursor(SystemMouseCursors.basic, on: explicitDisabledKey);
-      tester.expectCursor(SystemMouseCursors.basic, on: destinationDisabledKey);
       tester.expectCursor(SystemMouseCursors.help, on: customKey);
     });
 
@@ -578,7 +776,7 @@ void main() {
               enabled: false,
               focusNode: focusNode,
               linkUrl: _destination,
-              onPressed: () {},
+              onActivated: (_) {},
               child: const Text('Unavailable Link'),
             ),
           ),
@@ -591,7 +789,7 @@ void main() {
       expect(focusNode.hasFocus, isFalse);
     });
 
-    testWidgets('destination removal immediately disables and clears hover', (
+    testWidgets('disabling retains the destination and clears hover', (
       tester,
     ) async {
       const linkKey = ValueKey('link');
@@ -599,7 +797,7 @@ void main() {
       addTearDown(focusNode.dispose);
       final hoverChanges = <bool>[];
       var callbackCount = 0;
-      Uri? destination = _destination;
+      var enabled = true;
       NakedLinkState? state;
       late StateSetter rebuild;
 
@@ -611,8 +809,9 @@ void main() {
               return NakedLink(
                 key: linkKey,
                 focusNode: focusNode,
-                linkUrl: destination,
-                onPressed: () => callbackCount++,
+                enabled: enabled,
+                linkUrl: _destination,
+                onActivated: (_) => callbackCount++,
                 onHoverChange: hoverChanges.add,
                 builder: (context, value, child) {
                   state = value;
@@ -637,10 +836,11 @@ void main() {
 
       focusNode.requestFocus();
       await tester.pump();
-      rebuild(() => destination = null);
+      rebuild(() => enabled = false);
       await tester.pump();
 
       expect(state!.isDisabled, isTrue);
+      expect(state!.linkUrl, _destination);
       expect(state!.isHovered, isFalse);
       expect(state!.isPressed, isFalse);
       expect(hoverChanges, [true, false]);
@@ -668,7 +868,7 @@ void main() {
                 key: linkKey,
                 enabled: enabled,
                 linkUrl: Uri.parse('https://example.com/docs'),
-                onPressed: () {},
+                onActivated: (_) {},
                 onHoverChange: (value) => setState(() => hovered = value),
                 child: const SizedBox(
                   width: 160,
@@ -713,7 +913,7 @@ void main() {
                 key: linkKey,
                 enabled: enabled,
                 linkUrl: Uri.parse('https://example.com/docs'),
-                onPressed: () {},
+                onActivated: (_) {},
                 onPressChange: (value) => setState(() => pressed = value),
                 child: const SizedBox(
                   width: 160,
@@ -760,7 +960,7 @@ void main() {
                 key: linkKey,
                 enabled: enabled,
                 linkUrl: Uri.parse('https://example.com/docs'),
-                onPressed: () {},
+                onActivated: (_) {},
                 onHoverChange: hoverChanges.add,
                 builder: (context, value, child) {
                   state = value;
@@ -812,7 +1012,7 @@ void main() {
               return NakedLink(
                 enabled: enabled,
                 linkUrl: _destination,
-                onPressed: () {},
+                onActivated: (_) {},
                 child: _LifecycleProbe(
                   onInit: () => initCount++,
                   onDispose: () => disposeCount++,
@@ -857,7 +1057,7 @@ void main() {
                   autofocus: true,
                   focusNode: currentNode,
                   linkUrl: _destination,
-                  onPressed: () {},
+                  onActivated: (_) {},
                   child: const SizedBox(child: Text('Link')),
                 );
               },
@@ -884,9 +1084,19 @@ void main() {
   });
 }
 
-Widget _testApp(Widget child) {
+Widget _testApp(
+  Widget child, {
+  NakedLinkResolveCallback? resolve,
+  bool includeResolver = true,
+}) {
+  final content = includeResolver
+      ? NakedLinkResolver(
+          resolve: resolve ?? (_, _) => NakedLinkResolution.handled,
+          child: child,
+        )
+      : child;
   return MaterialApp(
-    home: Scaffold(body: Center(child: child)),
+    home: Scaffold(body: Center(child: content)),
   );
 }
 

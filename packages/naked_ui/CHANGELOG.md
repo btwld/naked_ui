@@ -2,17 +2,20 @@
 
 ### Features
 
-- Add `NakedLink` with destination-driven availability, native web anchors,
-  default navigation through Flutter's official `url_launcher.Link`, and an
-  optional `onPressed` override for custom routing. It exposes Link semantics,
-  observable hover/focus/press/disabled state, caller-owned focus nodes,
-  primary and semantic activation, and Enter/Numpad Enter keyboard support.
-  Space and secondary click remain unclaimed; visited state, styling, and
-  localized copy stay consumer-owned.
+- Add `NakedLink` with a required destination URI, native web anchors through
+  Flutter's official `url_launcher.Link`, current-tab external web defaults,
+  official `FollowLink` internal/non-web defaults, optional subtree
+  `NakedLinkResolver` routing, and non-canceling `onActivated` observation. It
+  exposes Link semantics, observable hover/focus/press/disabled state,
+  caller-owned focus nodes, primary and semantic activation, and Enter/Numpad
+  Enter keyboard support. Space and browser-owned auxiliary actions remain
+  unclaimed; callers own URI validation, visited state, styling, and localized
+  copy.
 - Safely clear Link interaction callbacks after dynamic disabling, restore
   hover when re-enabled under a stationary pointer, suppress held-key repeats,
-  preserve stateful descendants across availability changes, and remove
-  disabled destinations from semantics and the web DOM.
+  preserve stateful descendants across availability changes, retain disabled
+  URIs in state, and remove disabled destination metadata from semantics and
+  the web DOM.
 
 ## 1.0.0-beta.3
 

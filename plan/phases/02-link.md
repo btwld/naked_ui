@@ -1,48 +1,52 @@
 # Phase 2 — Link
 
-Status: **PR #65 reviewer corrections pass every available local publication
-gate. Exact-head hosted verification (including Android) is pending publication;
-closure remains blocked by required web screenshots, manual assistive-technology
-sessions, and real Context Menu/Hover Card composition**.
+Status: **D-17 is implemented and the required local format, analyze, widget,
+semantics, example, focused integration, and `flutter-tester` aggregate gates
+pass. Exact Flutter 3.41.0 and matched Chrome/ChromeDriver 150.0.7871.115 also
+pass locally. Focused real-macOS Link integration passes; the full macOS
+aggregate remains host-blocked because this interactive session cannot keep the
+test app foregrounded without injecting real keyboard events into Flutter's
+synthetic keyboard state. Exact-head hosted verification, Android, web
+screenshots, manual assistive-technology sessions, and real Context Menu/Hover
+Card composition remain closure gates.**
 
-Goal: add a headless inline navigation primitive that exposes Link rather than
-Button semantics, activates once through primary pointer, Enter, Numpad Enter,
-or semantic tap, leaves Space and secondary click available to their normal
-page/composition behavior, reports immutable interaction state, and delegates
-default navigation and native web-anchor coordination to Flutter's official
-Link implementation. Consumers may replace default navigation with a custom
-callback and continue to own styling, localized copy, and visited history.
+Goal: provide a headless inline navigation primitive that exposes Link rather
+than Button semantics. It activates once through an ordinary primary pointer,
+Enter, Numpad Enter, or semantic tap; leaves Space, secondary click, modified
+activation, and browser context-menu actions to their normal owners; reports
+immutable interaction state; and retains native web anchors through Flutter's
+official `url_launcher.Link`. Consumers own styling, localized copy, visited
+history, destination trust, and optional subtree routing policy.
 
-Contract: briefing [§20](../briefing.md#20-component-contract-link) (binding),
-plus the cross-component rules in §§5 and 8–12, as corrected by resolved
-[D-16](../decisions.md#phase-2-decision-evidence-2026-07-13). D-16 supersedes
-the metadata-only, callback-required clauses after real-browser review proved
-they permit duplicate or disabled navigation. No open decision blocks Link.
-Baseline commit: `d341b90e7b09e13f83da299b4ed17ae0eaa9ddee` (all current-code
-findings below re-verified on 2026-07-13).
+Contract: the final API is defined by resolved
+[D-17](../decisions.md#phase-2-decision-evidence-2026-07-13).
+It supersedes D-16 and the frozen briefing's callback-override language. No
+compatibility constructor or deprecated alias is permitted.
 
-## Reviewer correction addendum — 2026-07-13
+## D-17 final contract — 2026-07-13
 
-- `linkUrl` is the destination and availability source. Effective enabled state
-  is `enabled && linkUrl != null`; removing `onPressed` switches to default
-  navigation, while removing `linkUrl` makes the Link unavailable.
-- Default navigation is delegated to `url_launcher.Link`. A supplied
-  `onPressed` replaces its `FollowLink` callback, so one activation cannot run
-  both custom routing and browser navigation.
-- An unavailable Link has no Link flag, URL, tap action, focus path, or web
-  `href`. Flutter's web delegate retains Link semantics for a null URI, so the
-  unavailable path omits that wrapper. A keyed inner detector preserves the
-  consumer's stateful subtree as the wrapper enters or leaves the tree. The
-  content remains discoverable as ordinary unavailable text because HTML has no
-  disabled-anchor contract.
-- Interaction state is synchronized during `didUpdateWidget` without invoking
-  consumer callbacks during build; ended hover, press, and focus callbacks are
-  delivered after the frame. Re-enabling beneath a stationary pointer restores
-  hover after layout.
-- Added regressions cover native DOM ownership, dynamic parent `setState`,
-  stationary hover, held Enter/Numpad Enter, directional disabled focus,
-  selectable text, and rich text. Real Context Menu/Hover Card composition
-  remains deferred to Phases 5 and 7 as originally required.
+- `NakedLink.linkUrl` and `NakedLinkState.linkUrl` are required, non-nullable
+  `Uri` values. `enabled` is the only availability switch; disabled Links retain
+  their URI in state but expose no Link role, semantic URL/action, focus path,
+  or web `href`.
+- `onPressed` is removed. `onActivated` is an observational
+  `ValueChanged<Uri>?`: for an accepted ordinary activation it runs exactly once
+  before resolution and cannot cancel navigation.
+- The closest `NakedLinkResolver` receives the Link build context and exact URI.
+  `handled` suppresses default navigation; `platformDefault`, or no resolver,
+  continues to it. Resolver exceptions surface and must not trigger fallback.
+- On web, ordinary external URI activation uses
+  `launchUrl(uri, webOnlyWindowName: '_self')`; failure is reported through
+  Flutter error reporting without retry. Scheme-less internal routes and all
+  non-web default navigation use the official `FollowLink` callback.
+- `url_launcher.Link` remains enabled-only to preserve real native anchors,
+  copy-link, middle-click, modifier, and context-menu behavior. A keyed inner
+  detector preserves a consumer's stateful child as that wrapper changes.
+- Pointer modifiers are read from `HardwareKeyboard`. Modified primary,
+  middle-click, secondary click, and browser context-menu paths bypass both the
+  observer and resolver. Interaction state clears safely during disable;
+  post-frame hover restoration reports `[true, false, true]` beneath a
+  stationary pointer.
 
 ## Research and readiness
 
@@ -63,9 +67,10 @@ findings below re-verified on 2026-07-13).
   Real-browser review showed that combining an application callback with this
   live web `href` does not coordinate navigation ownership. Flutter's official
   [`url_launcher.Link`](https://pub.dev/documentation/url_launcher/latest/link/Link-class.html)
-  provides that missing native/web coordination while a destination exists.
-  Its web delegate still contributes Link semantics for a null URI, so Naked UI
-  bypasses the wrapper while unavailable.
+  provides native-anchor coordination. D-17 keeps the delegate only while the
+  Link is enabled; its `FollowLink` callback remains the default for
+  scheme-less internal routes and non-web platforms, while ordinary external
+  web navigation explicitly stays in the current tab.
 - Flutter has no `SemanticsRole.link` in the pinned API. The binding contract's
   `link: true` flag is the supported representation; adding Button semantics as
   a fallback would be incorrect.
@@ -116,9 +121,9 @@ findings below re-verified on 2026-07-13).
 | Primitive | Discoverable Link, never Button | exact semantics test | VoiceOver, TalkBack, Chrome tree |
 | Name | visible child text, or one caller-localized `semanticLabel` override | semantics tests including Arabic | all AT sessions |
 | Role/flags | `link: true`; `button` absent | exact flags test | all AT sessions |
-| State | enabled is `enabled && linkUrl != null`; focus/focusable follows effective focus | widget + semantics transitions | macOS/Android/web |
-| Value/URL | non-null `linkUrl` is the destination; default navigation uses official Link; unavailable state removes URL/href | state, semantics, and pinned-Chrome DOM tests | Chrome tree/href inspection |
-| Actions | semantic tap only while effectively enabled | semantics action/callback tests | VoiceOver/TalkBack |
+| State | `enabled` alone controls availability; the required URI stays in state | widget + semantics transitions | macOS/Android/web |
+| Value/URL | required `linkUrl` is retained while disabled; enabled native anchor/semantic URL is removed on disable | state, semantics, and pinned-Chrome DOM tests | Chrome tree/href inspection |
+| Actions | semantic tap only while enabled; observer then nearest resolver/default | semantics action/resolver tests | VoiceOver/TalkBack |
 | Hint | optional caller-localized `semanticHint`, once | semantics test | all AT sessions |
 | Children | visible label preserved unless an explicit label overrides it; decorative icon excluded by consumer | semantics/example tests | Chrome tree |
 | Exclusion | `excludeSemantics` removes the Link semantics subtree and focus semantics | semantics test | N/A |
@@ -126,18 +131,18 @@ findings below re-verified on 2026-07-13).
 
 ### Input, state, and lifecycle matrix
 
-| Path | Enabled result | Disabled/null-destination result | Required assertion |
+| Path | Enabled result | Disabled result | Required assertion |
 |---|---|---|---|
-| Primary tap | custom callback once, or default navigation once, plus optional feedback | no recognizer/callback/feedback | callback, DOM location, and state transitions |
+| Ordinary primary tap | feedback, observer, then nearest resolver/default once | no recognizer/callback/feedback | ordering, DOM location, and state transitions |
 | Canceled primary sequence | press true → false; no callback | no state transition | pointer cancel test |
-| Secondary click | unclaimed; no callback | unclaimed | gesture test and later Context Menu composition |
-| Enter/Numpad Enter | one activation per physical key sequence | no activation | known focus node + key-down/repeat/up sequence |
-| Space | no Link callback and no Link press state | no callback | widget test; web scroll outcome |
-| Semantic tap | same activation path once | action absent | semantics action test |
+| Modified primary / middle / secondary | browser-owned; observer/resolver bypassed | unclaimed | trusted browser auxiliary-context tests |
+| Enter/Numpad Enter | observer, resolver/default once per physical key sequence | no activation | known focus node + key-down/repeat/up sequence |
+| Space | no Link observer/resolver and no Link press state | no callback | widget test; web scroll outcome |
+| Semantic tap | same observer/resolver/default path once | action absent | semantics action test |
 | Hover | state/callback true then false | no hover callback | mouse gesture test |
 | Focus/Tab | state/callback and normal traversal | skipped in traditional traversal | focus and next-target assertions |
-| Callback removal | remains enabled and switches to default navigation | already default | rebuild test |
-| Destination removal | immediately unavailable; transient press/hover/focus clear after safe notification | already unavailable | parent-`setState` lifecycle tests |
+| Resolver change | nearest current resolver owns future ordinary activation | N/A | nested resolver/rebuild test |
+| Disable | immediately unavailable; transient press/hover/focus clear after safe notification | already unavailable | parent-`setState` lifecycle tests |
 | Stationary re-enable | hover restores after layout when the pointer remains inside | N/A | detector and Link hover regression |
 | Focus-node replacement | listener moves; focused state handed off; neither external node disposed | same ownership | lifecycle test |
 | Disposal | internal detector node/listeners removed; external node remains usable | same | teardown/no exception |
@@ -149,10 +154,10 @@ findings below re-verified on 2026-07-13).
 | LINK-API-01 | Child/builder invariant; immutable state/scope includes URL and all widget states | `naked_link_test.dart` + hash contract | N/A |
 | LINK-ACT-01 | Primary tap once; cancellation and secondary click do not activate | widget gesture tests | macOS/web hover+pointer; Android touch |
 | LINK-KEY-01 | Enter and Numpad Enter activate; Space is unclaimed | widget shortcut tests | macOS and pinned web scroll/result |
-| LINK-STATE-01 | Destination-owned effective enabled state controls activation, traversal, feedback, cursor, and disabled state | widget transitions + platform-channel feedback test | all behavior targets |
+| LINK-STATE-01 | `enabled` controls activation, traversal, feedback, cursor, semantic URL, and disabled state while URI remains retained | widget transitions + platform-channel feedback test | all behavior targets |
 | LINK-STATE-02 | Hover/focus/press callbacks and builder/scope snapshots are exact | widget state tests | macOS/web fixture readout |
-| LINK-LIFE-01 | Focus ownership/replacement/disposal, safe destination removal, and stationary hover restoration do not leak | lifecycle + detector tests | aggregate teardown on macOS/web |
-| LINK-NAV-01 | Official default navigation, custom override, and unavailable DOM paths have one owner | widget + pinned-Chrome DOM click tests | pinned Chrome location/href |
+| LINK-LIFE-01 | Focus ownership/replacement/disposal, safe disable, and stationary hover restoration do not leak | lifecycle + detector tests | aggregate teardown on macOS/web |
+| LINK-NAV-01 | Observer ordering, nearest resolver ownership, current-tab default navigation, and disabled DOM paths have one owner | widget + pinned-Chrome DOM click tests | pinned Chrome location/href |
 | LINK-SEM-01 | Link flag, URL, name, hint, enabled/focus/action exact; Button absent | `naked_link_semantics_test.dart` | VoiceOver/TalkBack/Chrome tree |
 | LINK-SEM-02 | Disabled action absent; label override not duplicated; icon/exclusion correct; Arabic/RTL | semantics + example tests | all AT sessions |
 | LINK-COMP-01 | Primary, secondary, hover, and keyboard paths compose without conflict | Link secondary-path test now; future Context Menu/Hover Card integration | later Phase 5/7 real targets |
@@ -165,16 +170,18 @@ findings below re-verified on 2026-07-13).
 - **Where:** add `packages/naked_ui/test/src/naked_link_test.dart`; extend
   `packages/naked_ui/test/hashcode_contract_test.dart` only for the new public
   state type.
-- **How:** first reference the binding API so the focused test fails to compile
-  because `NakedLink`/`NakedLinkState` do not exist. Then, before production
-  behavior, cover the constructor invariant; builder child and identical scope
-  snapshot; URL equality/hash; primary tap exactly once; canceled primary and
-  secondary gestures; Enter/Numpad Enter; Space with no callback or pressed
-  state; explicit and effective disabled paths; default/custom/basic cursors;
-  hover/focus/press callbacks; feedback only while enabled; dynamic callback
-  and destination removal; parent-`setState` lifecycle safety; stationary
-  hover restoration; held-key repeats; directional disabled focus; selectable
-  and rich text; external focus ownership, replacement, and disposal.
+- **How:** first reference the final required-URI constructor and resolver API
+  so the focused test fails to compile. Before production behavior, cover the
+  child/builder invariant; immutable state/scope URL equality/hash; nearest
+  resolver wins; `handled` suppresses fallback; `platformDefault` and no
+  resolver fall through; observer-before-resolver ordering; Link context and
+  exact custom URI; resolver exception behavior; ordinary primary once;
+  canceled, secondary, middle, and modified gestures; Enter/Numpad Enter;
+  Space with no observer/resolver or pressed state; enabled-only availability;
+  hover/focus/press callbacks; feedback only while enabled; dynamic disable;
+  stationary hover restoration; held-key repeats; directional disabled focus;
+  selectable and rich text; external focus ownership, replacement, and
+  disposal.
 - **Red proof:** observe the missing API, then use the smallest targeted
   assertions/mutations if several behaviors become green through shared
   infrastructure. Record the first failing expectation for every group.
@@ -202,23 +209,29 @@ findings below re-verified on 2026-07-13).
 - **Where:** add `packages/naked_ui/lib/src/naked_link.dart`; export it from
   `packages/naked_ui/lib/src/naked_widgets.dart`; add a Link namespace/private
   intent to `packages/naked_ui/lib/src/utilities/intents.dart`.
-- **How:** implement `NakedLinkState` with state helpers, equality/hash, and
-  `linkUrl`. Implement the binding constructor exactly, including a nullable
-  `mouseCursor`, the child/builder assertion, and effective enabled
-  `enabled && linkUrl != null`. Delegate default navigation and native web
-  anchors to `url_launcher.Link`; when `onPressed` is present, route activation
-  only to that override. Compose the existing state mixin, state scope,
-  focusable detector, primary-only gesture path, and one effective Link
-  semantics node. Map only Enter/Numpad Enter without repeat events; do not bind
-  Space. When the destination becomes unavailable, synchronize transient state
-  without rebuilding or invoking consumers during `didUpdateWidget`, then
+- **How:** implement `NakedLinkState` with state helpers, equality/hash, and a
+  required non-null `linkUrl`. Add `NakedLinkResolution`,
+  `NakedLinkResolveCallback`, and `NakedLinkResolver.maybeOf`. The constructor
+  exposes `onActivated`, never `onPressed`; `enabled` alone determines
+  availability. Compose the existing state mixin, state scope, focusable
+  detector, primary-only gesture path, and one effective Link semantics node.
+  Accepted ordinary activation performs feedback, observer, then the nearest
+  resolver exactly once. `handled` stops; `platformDefault`/no resolver follows
+  the current-tab external web default through `launchUrl(..., '_self')`, or
+  `FollowLink` for internal/non-web defaults. Let resolver failures surface.
+  Map only Enter/Numpad Enter without repeats; do not bind Space. Read pointer
+  modifiers from `HardwareKeyboard` and delegate modified primary actions
+  straight to `FollowLink`. Keep `url_launcher.Link` only for enabled native
+  anchors and preserve the keyed wrapper transition. When disabled, synchronize
+  transient state without invoking consumers during `didUpdateWidget`, then
   deliver ended-state callbacks after the frame. Borrow external focus nodes
   and never dispose them. Remove URL, Link flag, focus, and actions while
-  unavailable; preserve the advanced semantics-exclusion escape hatch.
-- **Avoid:** direct `launchUrl` calls, hand-rolled DOM anchors or event
-  coordination, router dependencies, visited state, modifier-click synthesis,
-  long-press ownership, raw key handlers, timers, styles, English defaults,
-  changes to Button, or a speculative generic pressable base class.
+  disabled; preserve the advanced semantics-exclusion escape hatch.
+- **Avoid:** an `onPressed` compatibility shim, per-Link resolver/target,
+  validation or rewriting of caller URIs, retry after a failed web launch,
+  hand-rolled DOM anchors, router dependencies, visited state, long-press
+  ownership, raw key handlers, timers, styles, English defaults, changes to
+  Button, or a speculative generic pressable base class.
 - **Verify:** focused A1/A2 tests, then
   `fvm dart format --set-exit-if-changed packages/naked_ui/lib/src/naked_link.dart packages/naked_ui/lib/src/naked_widgets.dart packages/naked_ui/lib/src/utilities/intents.dart packages/naked_ui/test/src/naked_link_test.dart packages/naked_ui/test/semantics/naked_link_semantics_test.dart packages/naked_ui/test/hashcode_contract_test.dart`
   and `fvm flutter analyze packages/naked_ui`.
@@ -258,13 +271,17 @@ findings below re-verified on 2026-07-13).
   import/group it in `packages/example/integration_test/all_tests.dart`; rerun
   `packages/example/test/integration_inventory_test.dart`.
 - **How:** drive only stable keys. Add five presently executable binding
-  scenarios: Tab → known Link focus → Enter → one result with retained focus;
-  focused Space → no callback (and observable page scroll on web); hover/down/up
-  → exact state readout and one result; semantic tap → same callback path;
-  disabled skipped by Tab with no pointer/semantic action. Add Arabic/RTL and
-  200% long-text assertions, destination removal while focused, secondary click
-  remaining unclaimed, and pinned-Chrome DOM cases for destination-only native
-  navigation, custom override, and unavailable href removal.
+  scenarios: Tab → known Link focus → Enter → observer then resolver once with
+  retained focus; focused Space → no activation (and observable page scroll on
+  web); hover/down/up → exact state readout and one resolver-owned result;
+  semantic tap → the same ordinary activation path; disabled skipped by Tab
+  with no pointer/semantic action. Add Arabic/RTL and 200% long-text assertions,
+  disabling while focused, secondary click remaining unclaimed, and pinned
+  Chrome cases for current-tab default navigation, resolver-owned activation,
+  browser auxiliary actions that bypass observer/resolver, and enabled-only
+  native `href` presence/removal. The WebDriver driver must click the visible
+  semantics anchor under `flt-semantics-host`; hidden native anchors are checked
+  only for `href` presence/removal.
 - **Deferred composition:** do not create fake Hover Card/Context Menu
   implementations. Record LINK-COMP-01 as a closure blocker and require Phase 5
   and Phase 7 integration suites to wrap the real `NakedLink` and prove the
@@ -302,13 +319,14 @@ findings below re-verified on 2026-07-13).
 
 - **Where:** dartdoc in `naked_link.dart`; root and package READMEs; package
   changelog; registry; this plan and `plan/README.md`; PR description.
-- **How:** document Link-versus-Button use, destination/default/override
-  ownership, effective enabled state, Enter/Numpad/Space behavior, state and
-  focus ownership, semantics override/icon rules, secondary/modifier-click
-  boundaries, styling and router non-goals, and Remix responsibilities. Build
-  the §22 ten-item packet with the stable requirement table, platform
-  commands/runs, screenshot review, manual AT rows, limitations, and exact
-  SHAs.
+- **How:** document Link-versus-Button use, required URI ownership, default
+  navigation, subtree resolver policy, observational activation, `enabled` as
+  the sole availability switch, Enter/Numpad/Space behavior, state and focus
+  ownership, semantics override/icon rules, secondary/modifier-click
+  boundaries, styling and router non-goals, and Remix responsibilities. State
+  explicitly that callers validate and trust their own URIs. Build the §22
+  ten-item packet with the stable requirement table, platform commands/runs,
+  screenshot review, manual AT rows, limitations, and exact SHAs.
 - **Review:** inspect the entire diff for API drift, accidental Button/Space
   behavior, duplicate semantics/names/actions, disabled descendants,
   feedback/cursor/focus leaks, selection interference, router or styling scope,
@@ -325,13 +343,13 @@ findings below re-verified on 2026-07-13).
 
 | Scenario | flutter-tester | real macOS | API 34 Android | pinned Chrome/web |
 |---|---:|---:|---:|---:|
-| Tab, Enter, one callback, retained focus | Yes | Required | Required focus path | Required |
-| Space no activation | Yes | Required | Required | Required + scroll outcome |
+| Tab, Enter, observer then resolver/default once, retained focus | Yes | Required | Required focus path | Required |
+| Space no observer/resolver activation | Yes | Required | Required | Required + scroll outcome |
 | Pointer hover/press/tap state | Yes | Required | Touch/press required; hover N/A | Required hover |
-| Semantic tap same callback | Yes | Required | Required | Required tree/action |
+| Semantic tap same observer/resolver/default path | Yes | Required | Required | Required tree/action |
 | Disabled skipped/no action/cursor | Yes | Required | Required + screenshot | Required |
 | Arabic RTL + 200% long text | Yes | Required + screenshots | Required behavior | Required behavior; RTL screenshot blocked |
-| Secondary click unclaimed | Yes | Required | N/A | Required |
+| Secondary/middle/modified activation browser-owned | Yes | Required | N/A | Required |
 | Real Context Menu/Hover Card composition | Not available | Deferred | Deferred | Deferred to Phase 5/7 |
 
 ### Evidence and manual sessions
@@ -352,25 +370,23 @@ findings below re-verified on 2026-07-13).
 Focused development:
 
 ```sh
-fvm flutter test packages/naked_ui/test/src/naked_link_test.dart
-fvm flutter test packages/naked_ui/test/semantics/naked_link_semantics_test.dart
-fvm flutter test packages/naked_ui/test/hashcode_contract_test.dart
-fvm flutter test packages/example/test/naked_link_example_test.dart
-fvm flutter test packages/example/test/accessibility_guidelines_test.dart
-fvm flutter test packages/example/test/goldens/components/naked_link_golden_test.dart
+flutter test packages/naked_ui/test/src/naked_link_test.dart
+flutter test packages/naked_ui/test/semantics/naked_link_semantics_test.dart
+flutter test packages/example/test/naked_link_example_test.dart
 cd packages/example
-fvm flutter test -r compact -d flutter-tester integration_test/components/naked_link_integration.dart
+flutter test -r compact -d flutter-tester integration_test/components/naked_link_integration.dart
 ```
 
 Required local publication gate from the repository root:
 
 ```sh
-fvm dart format --set-exit-if-changed .
-fvm flutter analyze
-fvm flutter test packages/naked_ui/test
-fvm flutter test packages/example/test
+dart format --output=none --set-exit-if-changed .
+flutter analyze --fatal-infos
+flutter test packages/naked_ui/test
+flutter test packages/example/test
 cd packages/example
-fvm flutter test -r compact -d flutter-tester integration_test/all_tests.dart
+flutter test -r compact -d flutter-tester integration_test/components/naked_link_integration.dart
+flutter test -r compact -d flutter-tester integration_test/all_tests.dart
 ```
 
 Additional exact proof:
@@ -388,12 +404,36 @@ Hosted gates: primary and exact-minimum suites; canonical golden/guidelines;
 pinned Chrome/ChromeDriver behavior log; PR-title policy. Every result must be
 green on the exact PR head or an identified GitHub merge ref.
 
-## Reviewer-correction local evidence — 2026-07-13
+## D-17 local execution evidence — 2026-07-13
 
-Correction implementation `dc20214ba1aab5d665d80f2baa0fe13855de2792`
-was verified from parent `2614555` before publication. This docs-only follow-up
-records that exact implementation SHA. No push, PR update, merge, or hosted
-exact-head run is claimed here.
+- Exact Flutter 3.41.0 dependency resolution and analysis pass; the full
+  package suite passes with 615 tests and three documented external-integration
+  skips.
+- Matched Chrome/ChromeDriver 150.0.7871.115 passes both the full web aggregate
+  and the trusted visible-semantics-anchor Link driver. The Link proof covers
+  resolver-owned activation, native middle and modified auxiliary navigation,
+  disabled visible/native anchor removal, and current-tab pointer and Enter
+  defaults.
+- Chrome exposes semantic Links as native `<a>` elements with an implicit Link
+  role, not a redundant `role="link"` attribute. The driver therefore selects
+  visible non-hidden anchors beneath `flt-semantics-host`.
+- ChromeDriver's W3C middle-button action does not perform native auxiliary
+  navigation even for a plain HTML anchor. The accepted driver uses
+  ChromeDriver's DevTools input endpoint, asserts a trusted middle-button
+  `auxclick`, and verifies the new context and destination before closing it.
+- Browser destinations use a query marker. A hash marker is consumed as a
+  Flutter web route and normalized back to `/`, which makes successful `_self`
+  navigation unobservable.
+- Focused real-macOS Link integration passes. The full aggregate's unrelated
+  foreground retry is not accepted as Link evidence: a manual foreground lets
+  Accordion keyboard focus proceed, but real host keystrokes then corrupt the
+  synthetic `HardwareKeyboard` stream. Hosted macOS remains authoritative.
+
+## Superseded D-16 historical evidence — 2026-07-13
+
+This retained audit record describes the earlier D-16 callback-override
+implementation. It does not specify or validate the D-17 resolver API. No
+push, PR update, merge, or hosted exact-head D-17 run is claimed here.
 
 ### Available local publication gates
 
@@ -406,10 +446,9 @@ exact-head run is claimed here.
 - Matched Chrome/ChromeDriver 150.0.7871.115 aggregate passes. Exact disabled
   semantics and DOM assertions prove no Link role, URL, action, anchor, or
   `href` remains.
-- A separate W3C WebDriver proof performs a trusted primary click, proves the
-  custom override runs exactly once without navigation, and proves dynamic
-  disable removes the native anchor and cannot activate. The aggregate's
-  in-app coordinator separately proves the default destination outcome.
+- The separate W3C WebDriver proof in this record exercised D-16's custom
+  callback override. It is superseded by the D-17 trusted visible-semantics
+  anchor coverage for observer/resolver ownership and current-tab defaults.
 - Flutter 3.41.0 exact-minimum dependency resolution, analyze, and the full
   609-test package suite pass with the same three documented skips.
 
@@ -430,7 +469,7 @@ tested implementation/evidence head is
 `24460f0a94b657854c95d5dc900e5ef7215d9604`; its GitHub test merge ref is
 `09e62c8dc29b424a1d00e5e7de8cfc4a99cd124f`. The PR remains unmerged.
 These checks establish the original implementation's evidence but do not
-validate the unpublished D-16 reviewer correction above.
+validate the unpublished D-17 resolver correction above.
 
 ### Test-first and failure-triage record
 
@@ -523,18 +562,21 @@ All seven checks passed for head `24460f0` / merge ref `09e62c8`:
 
 - [x] Every A1/A2 test was observed failing for the intended missing behavior
       before implementation and the red evidence is recorded.
-- [x] Link public API, state equality/scope, and effective-enabled behavior
-      match the binding contract without router, styling, or visited state.
-- [x] Primary/canceled/secondary pointer, Enter/Numpad/Space, semantic tap,
-      feedback, cursor, callbacks, and dynamic removal pass focused tests.
+- [x] Link public API, required URI state equality/scope, `enabled`-only
+      availability, resolver ownership, and observational activation match
+      D-17 without router, styling, or visited state.
+- [x] Ordinary primary/Enter/Numpad/semantic activation, browser-owned
+      auxiliary paths, feedback, cursor, callbacks, and dynamic disable pass
+      focused tests.
 - [x] Link/URL/name/hint/enabled/focus/action semantics are exact; Button and
       duplicate naming are absent; disabled/excluded behavior passes.
 - [x] Focus-node ownership/replacement/disposal and aggregate teardown pass.
 - [x] Canonical fixture, stable result/reset/readout, Arabic RTL, 200% text,
       external-icon exclusion, golden, and accessibility guidelines pass.
-- [ ] Correction integration, inventory, fast aggregate, and real macOS
-      aggregate pass locally; exact-head hosted API 34 and pinned-web reruns
-      remain pending publication.
+- [ ] Correction integration, inventory, fast aggregate, focused real-macOS,
+      exact Flutter 3.41.0, and pinned Chrome 150 pass locally. The full macOS
+      aggregate is host-blocked; exact-head hosted macOS and API 34 remain
+      pending publication.
 - [x] All seven screenshot names have reviewed evidence, or Phase 2 is
       explicitly blocked; unsupported web screenshots are not marked passed.
 - [ ] VoiceOver, TalkBack, Chrome accessibility-tree, and release-level iOS
@@ -542,7 +584,8 @@ All seven checks passed for head `24460f0` / merge ref `09e62c8`:
 - [ ] Real Context Menu and Hover Card composition proof is attached after
       those components exist; placeholder wrappers do not satisfy it.
 - [ ] Full local publication commands and Flutter 3.41.0 pass; hosted
-      correction-head verification remains pending publication.
+      correction-head macOS and Android verification remains pending
+      publication.
 - [x] Docs, changelog, compatibility statement, traceability, manifests,
       visual review, and ten-item handoff packet are ready.
 - [ ] Entire correction diff is locally reviewed and committed; PR #65 still
@@ -550,8 +593,9 @@ All seven checks passed for head `24460f0` / merge ref `09e62c8`:
       without explicit maintainer authorization.
 
 Block Phase 2 closure (not independent program work) if Link maps as a Button,
-Space activates or is swallowed on web, disabled paths retain activation or
-focus, linkUrl lacks the required Link flag/href mapping, accessible naming is
-duplicated, focus ownership leaks, any required target is retry-dependent, the
-real composition scenario is unavailable, required web screenshots remain
-unsupported, or manual AT evidence is unavailable.
+Space activates or is swallowed on web, ordinary default activation opens a new
+tab or navigates twice, an auxiliary browser action invokes the observer or
+resolver, disabled paths retain activation, focus, or anchors, accessible
+naming is duplicated, focus ownership leaks, any required target is
+retry-dependent, the real composition scenario is unavailable, required web
+screenshots remain unsupported, or manual AT evidence is unavailable.

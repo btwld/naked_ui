@@ -145,6 +145,14 @@ class _NakedFocusableDetectorState extends State<NakedFocusableDetector>
     });
   }
 
+  void _clearHoverAfterFrame() {
+    if (!_hoverReported) return;
+    _hoverReported = false;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) widget.onHoverChange?.call(false);
+    });
+  }
+
   @override
   void didUpdateWidget(NakedFocusableDetector oldWidget) {
     super.didUpdateWidget(oldWidget);
@@ -155,7 +163,7 @@ class _NakedFocusableDetectorState extends State<NakedFocusableDetector>
         if (widget.enabled) {
           _restoreHoverAfterFrame();
         } else {
-          _hoverReported = false;
+          _clearHoverAfterFrame();
         }
       }
     }

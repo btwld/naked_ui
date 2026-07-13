@@ -76,35 +76,34 @@ void main() {
     expect(data.hasAction(SemanticsAction.tap), isFalse);
   });
 
-  testWidgets(
-    'focus and dynamic destination state are visible and resettable',
-    (tester) async {
-      await tester.pumpWidget(_app(const link_example.LinkExample()));
+  testWidgets('focus and dynamic enabled state are visible and resettable', (
+    tester,
+  ) async {
+    await tester.pumpWidget(_app(const link_example.LinkExample()));
 
-      await tester.sendKeyEvent(LogicalKeyboardKey.tab);
-      await tester.pump();
-      await tester.pump();
-      expect(
-        find.text('hovered:false focused:true pressed:false enabled:true'),
-        findsOneWidget,
-      );
+    await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+    await tester.pump();
+    await tester.pump();
+    expect(
+      find.text('hovered:false focused:true pressed:false enabled:true'),
+      findsOneWidget,
+    );
 
-      await tester.tap(find.byKey(const ValueKey('link.disable-primary')));
-      await tester.pump();
-      await tester.pump();
-      expect(
-        find.text('hovered:false focused:false pressed:false enabled:false'),
-        findsOneWidget,
-      );
+    await tester.tap(find.byKey(const ValueKey('link.disable-primary')));
+    await tester.pump();
+    await tester.pump();
+    expect(
+      find.text('hovered:false focused:false pressed:false enabled:false'),
+      findsOneWidget,
+    );
 
-      await tester.tap(find.byKey(const ValueKey('link.reset')));
-      await tester.pump();
-      expect(
-        find.text('hovered:false focused:false pressed:false enabled:true'),
-        findsOneWidget,
-      );
-    },
-  );
+    await tester.tap(find.byKey(const ValueKey('link.reset')));
+    await tester.pump();
+    expect(
+      find.text('hovered:false focused:false pressed:false enabled:true'),
+      findsOneWidget,
+    );
+  });
 
   testWidgets('external hint is named once and its icon is decorative', (
     tester,

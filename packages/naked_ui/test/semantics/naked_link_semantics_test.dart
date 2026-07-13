@@ -22,7 +22,7 @@ void main() {
               linkUrl: linkUrl,
               semanticLabel: 'Documentation',
               semanticHint: 'Opens in a new window',
-              onPressed: () {},
+              onActivated: (_) {},
               child: const Text('Visible documentation'),
             ),
           ),
@@ -52,7 +52,7 @@ void main() {
           _testApp(
             NakedLink(
               linkUrl: _destination,
-              onPressed: () {},
+              onActivated: (_) {},
               child: const Text('Visible name'),
             ),
           ),
@@ -72,7 +72,7 @@ void main() {
           _testApp(
             NakedLink(
               linkUrl: _destination,
-              onPressed: () {},
+              onActivated: (_) {},
               child: const Text.rich(
                 TextSpan(
                   children: [
@@ -102,7 +102,7 @@ void main() {
             NakedLink(
               linkUrl: _destination,
               semanticLabel: 'Accessible documentation',
-              onPressed: () {},
+              onActivated: (_) {},
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -146,7 +146,7 @@ void main() {
             NakedLink(
               linkUrl: _destination,
               semanticHint: 'Opens in a new window',
-              onPressed: () {},
+              onActivated: (_) {},
               child: const Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -183,7 +183,7 @@ void main() {
             NakedLink(
               focusNode: focusNode,
               linkUrl: _destination,
-              onPressed: () {},
+              onActivated: (_) {},
               child: const Text('Documentation'),
             ),
           ),
@@ -209,76 +209,69 @@ void main() {
       tester,
     ) async {
       final handle = tester.ensureSemantics();
-      var callbackCount = 0;
+      final events = <String>[];
 
       try {
         await tester.pumpWidget(
           _testApp(
             NakedLink(
               linkUrl: _destination,
-              onPressed: () => callbackCount++,
+              onActivated: (url) => events.add('observer:$url'),
               child: const Text('Documentation'),
             ),
+            resolve: (_, url) {
+              events.add('resolver:$url');
+              return NakedLinkResolution.handled;
+            },
           ),
         );
 
         final node = _singleLinkNode(tester);
         node.owner!.performAction(node.id, SemanticsAction.tap);
         await tester.pump();
-        expect(callbackCount, 1);
+        expect(events, ['observer:$_destination', 'resolver:$_destination']);
+      } finally {
+        handle.dispose();
+      }
+    });
+
+    testWidgets('a resolver does not alter the semantic contract', (
+      tester,
+    ) async {
+      final handle = tester.ensureSemantics();
+
+      try {
+        await tester.pumpWidget(
+          _testApp(
+            NakedLinkResolver(
+              resolve: (_, _) => NakedLinkResolution.handled,
+              child: NakedLink(
+                linkUrl: Uri.parse('https://example.com/docs'),
+                semanticLabel: 'Documentation',
+                child: const Text('Visible documentation'),
+              ),
+            ),
+          ),
+        );
+
+        final data = _singleLinkData(tester);
+        expect(data.label, 'Documentation');
+        expect(data.flagsCollection.isLink, isTrue);
+        expect(data.flagsCollection.isButton, isFalse);
+        expect(data.flagsCollection.isEnabled, Tristate.isTrue);
+        expect(data.flagsCollection.isFocused, Tristate.isFalse);
+        expect(data.hasAction(SemanticsAction.tap), isTrue);
       } finally {
         handle.dispose();
       }
     });
 
     testWidgets(
-      'callback removal keeps the destination available to default navigation',
-      (tester) async {
-        final handle = tester.ensureSemantics();
-        VoidCallback? callback = () {};
-        late StateSetter rebuild;
-
-        try {
-          await tester.pumpWidget(
-            _testApp(
-              StatefulBuilder(
-                builder: (context, setState) {
-                  rebuild = setState;
-                  return NakedLink(
-                    linkUrl: Uri.parse('https://example.com/docs'),
-                    semanticLabel: 'Documentation',
-                    onPressed: callback,
-                    child: const Text('Visible documentation'),
-                  );
-                },
-              ),
-            ),
-          );
-          expect(
-            _singleLinkData(tester).hasAction(SemanticsAction.tap),
-            isTrue,
-          );
-
-          rebuild(() => callback = null);
-          await tester.pump();
-          final data = _singleLinkData(tester);
-          expect(data.label, 'Documentation');
-          expect(data.flagsCollection.isLink, isTrue);
-          expect(data.flagsCollection.isButton, isFalse);
-          expect(data.flagsCollection.isEnabled, Tristate.isTrue);
-          expect(data.flagsCollection.isFocused, Tristate.isFalse);
-          expect(data.hasAction(SemanticsAction.tap), isTrue);
-        } finally {
-          handle.dispose();
-        }
-      },
-    );
-
-    testWidgets(
       'disabled destination exposes unavailable text without URL or action',
       (tester) async {
         final handle = tester.ensureSemantics();
         final linkUrl = Uri.parse('https://example.com/docs');
+        var activations = 0;
 
         try {
           await tester.pumpWidget(
@@ -287,7 +280,7 @@ void main() {
                 enabled: false,
                 linkUrl: linkUrl,
                 semanticLabel: 'Unavailable documentation',
-                onPressed: () {},
+                onActivated: (_) => activations++,
                 child: const Text('Documentation'),
               ),
             ),
@@ -302,6 +295,9 @@ void main() {
           expect(data.flagsCollection.isButton, isFalse);
           expect(data.flagsCollection.isEnabled, Tristate.isFalse);
           expect(data.hasAction(SemanticsAction.tap), isFalse);
+          await tester.tap(find.text('Documentation'));
+          await tester.pump();
+          expect(activations, 0);
         } finally {
           handle.dispose();
         }
@@ -320,7 +316,7 @@ void main() {
                 linkUrl: _destination,
                 semanticLabel: 'الوثائق',
                 semanticHint: 'يفتح في نافذة جديدة',
-                onPressed: () {},
+                onActivated: (_) {},
                 child: const Text('المستندات'),
               ),
             ),
@@ -347,7 +343,7 @@ void main() {
             NakedLink(
               linkUrl: _destination,
               semanticLabel: 'Documentation',
-              onPressed: () {},
+              onActivated: (_) {},
               child: const Text('Visible documentation'),
             ),
           ),
@@ -360,7 +356,7 @@ void main() {
               linkUrl: _destination,
               semanticLabel: 'Documentation',
               excludeSemantics: true,
-              onPressed: () {},
+              onActivated: (_) {},
               child: const Text('Visible documentation'),
             ),
           ),
@@ -382,9 +378,16 @@ void main() {
   });
 }
 
-Widget _testApp(Widget child) {
+Widget _testApp(Widget child, {NakedLinkResolveCallback? resolve}) {
   return MaterialApp(
-    home: Scaffold(body: Center(child: child)),
+    home: Scaffold(
+      body: Center(
+        child: NakedLinkResolver(
+          resolve: resolve ?? (_, _) => NakedLinkResolution.handled,
+          child: child,
+        ),
+      ),
+    ),
   );
 }
 

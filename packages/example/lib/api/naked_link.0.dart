@@ -39,6 +39,11 @@ class LinkExample extends StatefulWidget {
 }
 
 class _LinkExampleState extends State<LinkExample> {
+  static final _primaryLinkUrl = Uri.parse('https://example.com/naked-ui');
+  static final _externalLinkUrl = Uri.parse(
+    'https://docs.flutter.dev/ui/accessibility',
+  );
+
   var _result = 'none';
   var _activationCount = 0;
   var _primaryEnabled = true;
@@ -48,11 +53,19 @@ class _LinkExampleState extends State<LinkExample> {
 
   bool get _isRtl => widget.textDirection == TextDirection.rtl;
 
-  void _activate(String result) {
+  void _setResult(String result) {
     setState(() {
       _result = result;
-      _activationCount++;
     });
+  }
+
+  void _recordActivation(Uri _) {
+    setState(() => _activationCount++);
+  }
+
+  NakedLinkResolution _resolveLink(BuildContext context, Uri linkUrl) {
+    _setResult(linkUrl == _primaryLinkUrl ? 'primary' : 'external');
+    return NakedLinkResolution.handled;
   }
 
   void _reset() {
@@ -78,77 +91,83 @@ class _LinkExampleState extends State<LinkExample> {
       ),
       child: Directionality(
         textDirection: widget.textDirection,
-        child: RepaintBoundary(
-          key: const ValueKey('link.evidence.surface'),
-          child: Material(
-            color: const Color(0xFFF8FAFC),
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(32),
-              child: Center(
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 680),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Text(
-                        _isRtl ? 'روابط Naked UI' : 'Naked UI links',
-                        style: const TextStyle(
-                          color: Color(0xFF0F172A),
-                          fontSize: 24,
-                          fontWeight: FontWeight.w700,
+        child: NakedLinkResolver(
+          resolve: _resolveLink,
+          child: RepaintBoundary(
+            key: const ValueKey('link.evidence.surface'),
+            child: Material(
+              color: const Color(0xFFF8FAFC),
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(32),
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 680),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Text(
+                          _isRtl ? 'روابط Naked UI' : 'Naked UI links',
+                          style: const TextStyle(
+                            color: Color(0xFF0F172A),
+                            fontSize: 24,
+                            fontWeight: FontWeight.w700,
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 12),
-                      _buildPrimaryLine(),
-                      const SizedBox(height: 20),
-                      Wrap(
-                        spacing: 12,
-                        runSpacing: 12,
-                        children: [_buildExternalLink(), _buildDisabledLink()],
-                      ),
-                      const SizedBox(height: 20),
-                      Text(
-                        'Result: $_result; activations: $_activationCount',
-                        key: const ValueKey('link.result'),
-                        style: const TextStyle(
-                          color: Color(0xFF0F172A),
-                          fontWeight: FontWeight.w600,
+                        const SizedBox(height: 12),
+                        _buildPrimaryLine(),
+                        const SizedBox(height: 20),
+                        Wrap(
+                          spacing: 12,
+                          runSpacing: 12,
+                          children: [
+                            _buildExternalLink(),
+                            _buildDisabledLink(),
+                          ],
                         ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'hovered:$_hovered focused:$_focused '
-                        'pressed:$_pressed enabled:$_primaryEnabled',
-                        key: const ValueKey('link.state'),
-                        style: const TextStyle(color: Color(0xFF334155)),
-                      ),
-                      const SizedBox(height: 20),
-                      Wrap(
-                        spacing: 12,
-                        runSpacing: 12,
-                        children: [
-                          OutlinedButton(
-                            key: const ValueKey('link.next-focus'),
-                            onPressed: () => _activate('next-focus'),
-                            child: const Text('Next focus target'),
+                        const SizedBox(height: 20),
+                        Text(
+                          'Result: $_result; activations: $_activationCount',
+                          key: const ValueKey('link.result'),
+                          style: const TextStyle(
+                            color: Color(0xFF0F172A),
+                            fontWeight: FontWeight.w600,
                           ),
-                          OutlinedButton(
-                            key: const ValueKey('link.disable-primary'),
-                            onPressed: _primaryEnabled
-                                ? () => setState(() {
-                                    _primaryEnabled = false;
-                                  })
-                                : null,
-                            child: const Text('Disable primary Link'),
-                          ),
-                          OutlinedButton(
-                            key: const ValueKey('link.reset'),
-                            onPressed: _reset,
-                            child: const Text('Reset Link fixture'),
-                          ),
-                        ],
-                      ),
-                    ],
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'hovered:$_hovered focused:$_focused '
+                          'pressed:$_pressed enabled:$_primaryEnabled',
+                          key: const ValueKey('link.state'),
+                          style: const TextStyle(color: Color(0xFF334155)),
+                        ),
+                        const SizedBox(height: 20),
+                        Wrap(
+                          spacing: 12,
+                          runSpacing: 12,
+                          children: [
+                            OutlinedButton(
+                              key: const ValueKey('link.next-focus'),
+                              onPressed: () => _setResult('next-focus'),
+                              child: const Text('Next focus target'),
+                            ),
+                            OutlinedButton(
+                              key: const ValueKey('link.disable-primary'),
+                              onPressed: _primaryEnabled
+                                  ? () => setState(() {
+                                      _primaryEnabled = false;
+                                    })
+                                  : null,
+                              child: const Text('Disable primary Link'),
+                            ),
+                            OutlinedButton(
+                              key: const ValueKey('link.reset'),
+                              onPressed: _reset,
+                              child: const Text('Reset Link fixture'),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -177,11 +196,10 @@ class _LinkExampleState extends State<LinkExample> {
         ),
         NakedLink(
           key: const ValueKey('link.primary'),
-          linkUrl: _primaryEnabled
-              ? Uri.parse('https://example.com/naked-ui')
-              : null,
+          enabled: _primaryEnabled,
+          linkUrl: _primaryLinkUrl,
           semanticLabel: _isRtl ? linkText : null,
-          onPressed: () => _activate('primary'),
+          onActivated: _recordActivation,
           onHoverChange: (value) => setState(() => _hovered = value),
           onFocusChange: (value) => setState(() => _focused = value),
           onPressChange: (value) => setState(() => _pressed = value),
@@ -200,10 +218,10 @@ class _LinkExampleState extends State<LinkExample> {
   Widget _buildExternalLink() {
     return NakedLink(
       key: const ValueKey('link.external'),
-      linkUrl: Uri.parse('https://docs.flutter.dev/ui/accessibility'),
+      linkUrl: _externalLinkUrl,
       semanticLabel: 'Flutter accessibility documentation',
       semanticHint: 'External destination',
-      onPressed: () => _activate('external'),
+      onActivated: _recordActivation,
       child: const Wrap(
         crossAxisAlignment: WrapCrossAlignment.center,
         children: [
@@ -232,7 +250,7 @@ class _LinkExampleState extends State<LinkExample> {
       key: const ValueKey('link.disabled'),
       enabled: false,
       linkUrl: Uri.parse('https://example.com/unavailable'),
-      onPressed: () => _activate('disabled'),
+      onActivated: _recordActivation,
       child: const Text('Unavailable documentation'),
       builder: (context, state, child) => _LinkSurface(
         state: state,
@@ -254,7 +272,6 @@ class StandaloneLinkExample extends StatelessWidget {
       child: NakedLink(
         key: const ValueKey('link.standalone'),
         linkUrl: Uri.parse('https://example.com/naked-ui'),
-        onPressed: () {},
         child: const Text('Open documentation'),
         builder: (context, state, child) => _LinkSurface(
           state: state,

@@ -1,7 +1,10 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:url_launcher/link.dart' as launcher;
+import 'package:url_launcher/url_launcher.dart' as url_launcher;
 
 import 'mixins/naked_mixins.dart';
 import 'utilities/intents.dart';
@@ -9,13 +12,55 @@ import 'utilities/naked_focusable_detector.dart';
 import 'utilities/naked_state_scope.dart';
 import 'utilities/state.dart';
 
+/// The result of resolving an ordinary [NakedLink] activation.
+enum NakedLinkResolution {
+  /// The resolver has requested navigation and platform navigation is skipped.
+  handled,
+
+  /// [NakedLink] continues with its platform-default navigation behavior.
+  platformDefault,
+}
+
+/// Resolves an ordinary [NakedLink] activation for a subtree.
+///
+/// The callback receives the activating Link's [BuildContext] and its exact
+/// destination URI. It is synchronous so a [NakedLink] can reliably prevent
+/// duplicate platform navigation when it returns [NakedLinkResolution.handled].
+typedef NakedLinkResolveCallback =
+    NakedLinkResolution Function(BuildContext context, Uri linkUrl);
+
+/// Supplies navigation policy to descendant [NakedLink] widgets.
+///
+/// The closest resolver wins. Resolvers observe only ordinary primary, Enter,
+/// Numpad Enter, and semantic activation; browser-owned auxiliary actions such
+/// as modified and middle clicks bypass this scope.
+class NakedLinkResolver extends InheritedWidget {
+  /// Creates a subtree navigation resolver.
+  const NakedLinkResolver({
+    required this.resolve,
+    required super.child,
+    super.key,
+  });
+
+  /// Resolves a descendant Link's ordinary activation.
+  final NakedLinkResolveCallback resolve;
+
+  /// Returns the closest [NakedLinkResolver], if one is in scope.
+  static NakedLinkResolver? maybeOf(BuildContext context) =>
+      context.dependOnInheritedWidgetOfExactType<NakedLinkResolver>();
+
+  @override
+  bool updateShouldNotify(NakedLinkResolver oldWidget) =>
+      resolve != oldWidget.resolve;
+}
+
 /// An immutable snapshot of a [NakedLink]'s interaction state and destination.
 class NakedLinkState extends NakedState {
   /// Creates a snapshot with the current interaction [states] and [linkUrl].
   NakedLinkState({required super.states, required this.linkUrl});
 
-  /// The Link's destination, or null when it is unavailable.
-  final Uri? linkUrl;
+  /// The Link's destination, including while the Link is disabled.
+  final Uri linkUrl;
 
   /// Returns the nearest [NakedLinkState] provided by [NakedStateScope].
   static NakedLinkState of(BuildContext context) => NakedState.of(context);
@@ -47,15 +92,17 @@ class NakedLinkState extends NakedState {
 
 /// A headless navigation Link with observable interaction state.
 ///
-/// Primary pointer tap, Enter, Numpad Enter, and semantic tap follow [linkUrl]
-/// while the Link is effectively enabled. When [onPressed] is supplied, it
-/// replaces the default navigation path. Space is not bound by this widget, so
-/// a surrounding page retains its normal scrolling behavior. Secondary click
-/// is likewise left available for consumer-owned context menus.
+/// Primary pointer tap, Enter, Numpad Enter, and semantic tap use [linkUrl]
+/// while [enabled]. [onActivated] observes each accepted ordinary activation,
+/// then the nearest [NakedLinkResolver] decides whether to handle it or use
+/// platform-default navigation. Space is not bound by this widget, so a
+/// surrounding page retains its normal scrolling behavior. Secondary,
+/// middle, and modified primary clicks remain browser-owned.
 ///
 /// Naked UI delegates default navigation and the native web anchor to
 /// `url_launcher`'s Link coordinator. The [builder] owns all visual styling. A
 /// supplied [focusNode] remains caller-owned and is never disposed by Naked UI.
+/// Callers own destination validation and must not pass untrusted URIs.
 ///
 /// ```dart
 /// NakedLink(
@@ -79,8 +126,8 @@ class NakedLink extends StatefulWidget {
     super.key,
     this.child,
     this.builder,
-    this.onPressed,
-    this.linkUrl,
+    required this.linkUrl,
+    this.onActivated,
     this.enabled = true,
     this.focusNode,
     this.autofocus = false,
@@ -103,20 +150,19 @@ class NakedLink extends StatefulWidget {
   /// Builds the Link using the current immutable state.
   final ValueWidgetBuilder<NakedLinkState>? builder;
 
-  /// Overrides default navigation when the Link activates.
+  /// Observes an accepted ordinary activation before its navigation resolves.
   ///
-  /// When null, activation follows [linkUrl] through the platform Link
-  /// coordinator. When non-null, only this callback runs; native navigation is
-  /// suppressed.
-  final VoidCallback? onPressed;
+  /// This callback cannot cancel navigation. Use [NakedLinkResolver] when a
+  /// subtree needs to handle a destination itself.
+  final ValueChanged<Uri>? onActivated;
 
   /// The destination exposed to assistive technologies and the web DOM.
   ///
-  /// A null destination makes the Link effectively disabled, even if
-  /// [onPressed] is supplied.
-  final Uri? linkUrl;
+  /// Naked UI accepts every URI unchanged. Callers are responsible for
+  /// validating its destination and must not pass untrusted values.
+  final Uri linkUrl;
 
-  /// Whether the Link may activate when [linkUrl] is also non-null.
+  /// Whether the Link may activate.
   final bool enabled;
 
   /// The optional caller-owned focus node.
@@ -160,7 +206,7 @@ class NakedLink extends StatefulWidget {
   /// providing an equivalent accessible navigation path.
   final bool excludeSemantics;
 
-  bool get _effectiveEnabled => enabled && linkUrl != null;
+  bool get _effectiveEnabled => enabled;
 
   @override
   State<NakedLink> createState() => _NakedLinkState();
@@ -168,32 +214,97 @@ class NakedLink extends StatefulWidget {
 
 class _NakedLinkState extends State<NakedLink>
     with WidgetStatesMixin<NakedLink> {
-  // url_launcher's web delegate always contributes Link semantics, including
-  // for a null URI. Keep its wrapper out of the unavailable tree and use this
-  // key to preserve the consumer subtree as the wrapper is added or removed.
+  // url_launcher's web delegate contributes Link semantics whenever it wraps
+  // the Link. Keep that wrapper out of the disabled tree and use this key to
+  // preserve the consumer subtree as it is added or removed.
   final _contentKey = GlobalKey(debugLabel: 'NakedLink content');
+  var _modifiedPointerActivation = false;
 
-  void _handleActivation(launcher.FollowLink? followLink) {
+  bool get _hasPointerModifier {
+    final keyboard = HardwareKeyboard.instance;
+    return keyboard.isAltPressed ||
+        keyboard.isControlPressed ||
+        keyboard.isMetaPressed ||
+        keyboard.isShiftPressed;
+  }
+
+  void _handleOrdinaryActivation(launcher.FollowLink followLink) {
     if (!widget._effectiveEnabled) return;
 
     if (widget.enableFeedback) {
       Feedback.forTap(context);
     }
-    final override = widget.onPressed;
-    if (override != null) {
-      override();
-    } else {
-      assert(followLink != null);
-      unawaited(followLink!());
+
+    widget.onActivated?.call(widget.linkUrl);
+    final resolution =
+        NakedLinkResolver.maybeOf(context)?.resolve(context, widget.linkUrl) ??
+        NakedLinkResolution.platformDefault;
+    if (resolution == NakedLinkResolution.platformDefault) {
+      _followPlatformDefault(followLink);
     }
   }
 
+  void _followPlatformDefault(launcher.FollowLink followLink) {
+    if (kIsWeb && widget.linkUrl.hasScheme) {
+      unawaited(_launchWebExternalLink());
+      return;
+    }
+    unawaited(followLink());
+  }
+
+  Future<void> _launchWebExternalLink() async {
+    try {
+      final launched = await url_launcher.launchUrl(
+        widget.linkUrl,
+        webOnlyWindowName: '_self',
+      );
+      if (launched) return;
+
+      FlutterError.reportError(
+        FlutterErrorDetails(
+          exception: StateError('Could not launch Link ${widget.linkUrl}.'),
+          stack: StackTrace.current,
+          library: 'naked_ui',
+          context: ErrorDescription('while following a NakedLink'),
+        ),
+      );
+    } catch (error, stackTrace) {
+      FlutterError.reportError(
+        FlutterErrorDetails(
+          exception: error,
+          stack: stackTrace,
+          library: 'naked_ui',
+          context: ErrorDescription('while following a NakedLink'),
+        ),
+      );
+    }
+  }
+
+  void _handlePointerActivation(launcher.FollowLink followLink) {
+    final modified = _modifiedPointerActivation || _hasPointerModifier;
+    _modifiedPointerActivation = false;
+    if (modified) {
+      unawaited(followLink());
+      return;
+    }
+    _handleOrdinaryActivation(followLink);
+  }
+
   void _handlePressStart(TapDownDetails details) {
+    _modifiedPointerActivation = _hasPointerModifier;
+    if (_modifiedPointerActivation) return;
     updatePressState(true, widget.onPressChange);
   }
 
   void _handlePressEnd() {
+    if (_modifiedPointerActivation) return;
     updatePressState(false, widget.onPressChange);
+  }
+
+  void _handlePressCancel() {
+    final modified = _modifiedPointerActivation;
+    _modifiedPointerActivation = false;
+    if (!modified) updatePressState(false, widget.onPressChange);
   }
 
   void _clearInteractionStates() {
@@ -223,7 +334,7 @@ class _NakedLinkState extends State<NakedLink>
   void didUpdateWidget(covariant NakedLink oldWidget) {
     super.didUpdateWidget(oldWidget);
 
-    final wasEnabled = oldWidget.enabled && oldWidget.linkUrl != null;
+    final wasEnabled = oldWidget.enabled;
     if (wasEnabled == widget._effectiveEnabled) return;
 
     updateDisabledState(!widget._effectiveEnabled, rebuild: false);
@@ -232,19 +343,18 @@ class _NakedLinkState extends State<NakedLink>
 
   Widget _buildLink(launcher.FollowLink? followLink) {
     final isEnabled = widget._effectiveEnabled;
-    final activation = isEnabled ? () => _handleActivation(followLink) : null;
+    final activation = isEnabled
+        ? () => _handlePointerActivation(followLink!)
+        : null;
     Widget result = GestureDetector(
       onTapDown: isEnabled ? _handlePressStart : null,
       onTapUp: isEnabled ? (_) => _handlePressEnd() : null,
-      onTapCancel: isEnabled ? _handlePressEnd : null,
+      onTapCancel: isEnabled ? _handlePressCancel : null,
       onTap: activation,
       behavior: HitTestBehavior.opaque,
       excludeFromSemantics: true,
       child: NakedStateScopeBuilder(
-        value: NakedLinkState(
-          states: widgetStates,
-          linkUrl: isEnabled ? widget.linkUrl : null,
-        ),
+        value: NakedLinkState(states: widgetStates, linkUrl: widget.linkUrl),
         child: widget.child,
         builder: widget.builder,
       ),
@@ -282,7 +392,7 @@ class _NakedLinkState extends State<NakedLink>
           : SystemMouseCursors.basic,
       shortcuts: NakedIntentActions.link.shortcuts,
       actions: NakedIntentActions.link.actions(
-        onPressed: () => _handleActivation(followLink),
+        onPressed: () => _handleOrdinaryActivation(followLink!),
       ),
       debugLabel: 'NakedLink',
       child: result,

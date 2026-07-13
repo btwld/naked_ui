@@ -15,7 +15,7 @@ business rules ([briefing §5](briefing.md#5-definition-of-the-headless-boundary
 | [briefing.md](briefing.md) | Full handoff contract (per-component behavior, semantics, tests, evidence) | **Frozen** — reference only |
 | [process.md](process.md) | The repeatable per-component workflow and PR gates | Stable |
 | [integration-testing.md](integration-testing.md) | Mandatory runner, determinism, evidence, and failure-triage playbook | Stable |
-| [decisions.md](decisions.md) | Decision log D-01…D-16 and escalation rule | **Living** — update as decisions resolve |
+| [decisions.md](decisions.md) | Decision log D-01…D-17 and escalation rule | **Living** — update as decisions resolve |
 | README.md (this file) | Index and status board | **Living** — update every phase PR |
 | [phases/](phases/) using the NN-name.md convention | Executable plan for one phase | Created just-in-time when a phase starts |
 
@@ -29,7 +29,7 @@ do not pre-write plans for phases whose blocking decisions are unresolved.
 |---:|---|---|---|---|---|
 | 0 | Test-harness hardening | [§6.2](briefing.md#62-confirmed-delivery-gaps-to-fix-before-adding-the-new-suite), [§21](briefing.md#21-integration-screenshot-golden-and-ci-implementation) | D-12, D-13, D-14, D-15 (resolved) | [phases/00-test-harness.md](phases/00-test-harness.md) | **Closed** — delivered by [PR #63](https://github.com/btwld/naked_ui/pull/63), squash-merged as `58a48a3` |
 | 1 | Alert Dialog (extend `NakedDialog`) | [§13](briefing.md#13-component-contract-alert-dialog) | D-02 (resolved) | — | Tracked independently in ready-for-review PR #64; closure blockers are recorded there |
-| 2 | Link | [§20](briefing.md#20-component-contract-link) + D-16 correction | D-16 (resolved) | [phases/02-link.md](phases/02-link.md) | Reviewer correction `dc20214` for [PR #65](https://github.com/btwld/naked_ui/pull/65) passes all available local gates; exact-head hosted verification, required web screenshots, manual AT, and Phase 5/7 composition evidence remain pending |
+| 2 | Link | [§20](briefing.md#20-component-contract-link) + D-17 hard cut | D-17 (resolved) | [phases/02-link.md](phases/02-link.md) | Resolver/observer hard cut is implemented and passes the required local Flutter/widget gates; exact-head hosted verification, required web screenshots, manual AT, and Phase 5/7 composition evidence remain pending |
 | 3 | Field + `NakedTextField` integration | [§17](briefing.md#17-component-contract-field) | D-08, D-09 | — | Not started |
 | 4 | Toggle Group expansion | [§14](briefing.md#14-component-contract-toggle-group) | D-01 | — | Not started |
 | 5 | Context Menu | [§15](briefing.md#15-component-contract-context-menu) | D-03 | — | Not started |
@@ -52,7 +52,7 @@ gates.
 | Phase | Start readiness | Required work before implementation |
 |---:|---|---|
 | 1 — Alert Dialog | **Ready for a just-in-time phase plan** | Re-verify the current `NakedDialog` baseline, carry the resolved D-02 focus contract into tests/examples, then create the phase plan. |
-| 2 — Link | **Implemented; reviewer correction locally verified** | D-16 supersedes the metadata-only ownership clause. Publish the correction, rerun exact-head hosted gates (including Android), then complete the outstanding manual and composition evidence. |
+| 2 — Link | **Implemented; external gates pending** | D-17 supersedes D-16's callback override. Local exact Flutter 3.41.0 and matched Chrome/ChromeDriver 150 pass; rerun exact-head hosted macOS/Android, then complete the outstanding manual and composition evidence. |
 | 3 — Field | Blocked on decisions | Resolve D-08 metadata precedence and D-09 initial-error announcement policy before implementation/semantics tests. |
 | 4 — Toggle Group | Blocked on compatibility decision | Resolve D-01 and document the consumer-facing `selected` to `toggled` announcement migration. |
 | 5 — Context Menu | Spike/decision required | Resolve D-03 with a trigger-role/semantic-long-press prototype and real VoiceOver/TalkBack results. |

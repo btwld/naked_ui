@@ -61,15 +61,18 @@ NakedButton(
 
 ### Custom Link
 
-Use a Link for navigation rather than styling a Button like text. The URL is
-the destination and enables the Link. Naked UI delegates default navigation to
-Flutter's official `url_launcher.Link`; provide `onPressed` only when custom
-routing should replace that default. Enter and Numpad Enter activate, while
-Space remains available to the page.
+Use a Link for navigation rather than styling a Button like text. `linkUrl` is
+required, while `enabled` is the only availability switch. Naked UI retains a
+native anchor through Flutter's official `url_launcher.Link`; ordinary external
+web navigation opens in the current tab, while internal/non-web defaults use
+its `FollowLink` path. Enter and Numpad Enter activate, while
+Space remains available to the page. Validate destinations before constructing
+a Link—Naked UI accepts every `Uri` unchanged.
 
 ```dart
 NakedLink(
   linkUrl: Uri.parse('https://example.com/docs'),
+  onActivated: (url) => debugPrint('Activated $url'),
   child: const Text('Documentation'),
   builder: (context, state, child) => DecoratedBox(
     decoration: BoxDecoration(
@@ -79,6 +82,27 @@ NakedLink(
       ),
     ),
     child: child,
+  ),
+)
+```
+
+### Custom Link Resolution
+
+Install a resolver around a subtree when the application, rather than the
+platform, should route ordinary Link activations. Returning `handled` prevents
+the default navigation; `onActivated` remains an observation hook and cannot
+cancel it. Modified, middle, and secondary clicks stay browser-owned.
+
+```dart
+NakedLinkResolver(
+  resolve: (context, url) {
+    Navigator.of(context).pushNamed(url.toString());
+    return NakedLinkResolution.handled;
+  },
+  child: NakedLink(
+    linkUrl: Uri.parse('/account'),
+    onActivated: (url) => debugPrint('Activated $url'),
+    child: const Text('Account settings'),
   ),
 )
 ```
