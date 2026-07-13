@@ -1,6 +1,9 @@
 # Phase 03 — Field semantic composition
 
-Status: **Plan ready; generic-control composition has an implementation gate.**
+Authority: **inactive research draft; not approved for implementation**.
+
+Status: **D-08 and D-09 recommendations await explicit approval. If activated
+just in time, generic-control composition still has an evidence gate.**
 
 Goal: add a small field scope that gives one primary control one accessible
 name, description, required state, validation result, and current error without
@@ -8,8 +11,10 @@ duplicating speech. Integrate it first with `NakedTextField`, while preserving
 standalone text-field behavior.
 
 Planning baseline: `d341b90` on 2026-07-13. Contract source: briefing
-[§17](../briefing.md#17-component-contract-field), narrowed by resolved
-[D-08 and D-09](../decisions.md#component-plan-decision-evidence-2026-07-13).
+[§17](../briefing.md#17-component-contract-field). Proposed narrowing is
+recorded in the approval-pending
+[D-08 and D-09 recommendations](../decisions.md#component-plan-research-recommendations-2026-07-13).
+Cross-cutting D-19 also requires approval before activation.
 
 ## Scope correction
 
@@ -140,20 +145,22 @@ not available at 3.41, and role plus live-region duplication must be avoided.
 
 Run the full feature suite on exact Flutter 3.41.0 and workspace 3.41.2. Add a
 3.44.6 compatibility run before closure because Remix consumes 3.44, but keep
-the production code on APIs available at the declared minimum.
+the production code on APIs available at the declared minimum. Use the
+[shared SDK matrix](../process.md#executable-sdk-and-local-command-matrix) for
+those exact-version gates; the commands below are the workspace slice.
 
 ```sh
-dart format --set-exit-if-changed .
-flutter analyze
-flutter test packages/naked_ui/test/src/naked_field_test.dart
-flutter test packages/naked_ui/test/semantics/naked_field_semantics_test.dart
-flutter test packages/naked_ui/test/src/naked_textfield_test.dart
-flutter test packages/naked_ui/test/semantics/naked_textfield_semantics_test.dart
-flutter test packages/naked_ui/test
-flutter test packages/example/test
+fvm dart format --set-exit-if-changed .
+fvm flutter analyze
+fvm flutter test packages/naked_ui/test/src/naked_field_test.dart
+fvm flutter test packages/naked_ui/test/semantics/naked_field_semantics_test.dart
+fvm flutter test packages/naked_ui/test/src/naked_textfield_test.dart
+fvm flutter test packages/naked_ui/test/semantics/naked_textfield_semantics_test.dart
+fvm flutter test packages/naked_ui/test
+fvm flutter test packages/example/test
 cd packages/example
-flutter test -r compact -d flutter-tester integration_test/components/naked_field_integration.dart
-flutter test -r compact -d flutter-tester integration_test/all_tests.dart
+fvm flutter test -r compact -d flutter-tester integration_test/components/naked_field_integration.dart
+fvm flutter test -r compact -d flutter-tester integration_test/all_tests.dart
 ```
 
 ## Stop conditions

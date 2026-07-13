@@ -26,7 +26,12 @@ Flutter's feature release notes are named 3.44.0, while the current stable
 hotfix release inspected here is 3.44.6. Record both the exact version and
 commit in future evidence so “3.44” cannot hide a moving baseline.
 
-## Adoption policy
+## Recommended adoption policy (D-19 approval pending)
+
+This section records the clean-sheet recommendation. It does not resolve D-19
+or authorize a future phase; the maintainer must approve that policy when the
+next phase is activated. Existing package constraints and explicitly approved
+phase decisions continue to apply meanwhile.
 
 - Reuse a primitive only when it is exported from a public Flutter library such
   as `package:flutter/widgets.dart`, `cupertino.dart`, or `material.dart` and
@@ -53,10 +58,10 @@ wrappers, and behavior fixes rather than a new headless component family.
 
 ## Component-by-component result
 
-| Component | Raw/public foundation now | Stable/upcoming result | Plan decision |
+| Component | Raw/public foundation now | Stable/upcoming result | Research/approved result |
 |---|---|---|---|
 | Alert Dialog | `RawDialogRoute`, Navigator route focus/barrier semantics | 3.44.6 exports `showRawDialog`, but experimental native windowing can remove the barrier and silently ignore `routeBuilder`. | Keep the current route composition. Revisit only after a floor increase and real windowing modal/focus/semantics proof. |
-| Link | `Semantics`, `Focus`, `Shortcuts`/`Actions`, pointer gestures | No Flutter-core raw Link exists through audited master. Official `url_launcher.Link` remains the optional native/web adapter. | Keep Naked Link navigation-agnostic and prove the optional adapter; do not add a core launcher dependency. |
+| Link | `Semantics`, `Focus`, `Shortcuts`/`Actions`, pointer gestures, and official `url_launcher.Link` 6.3.2 | No Flutter-core raw Link exists through audited master. The official package provides the public native/web navigation coordinator; its web delegate retains Link semantics for a null URI. | **Approved D-16:** use official Link directly for destination/default navigation, let `onPressed` replace that path, and bypass the wrapper while unavailable. Do not call `launchUrl` or coordinate DOM events directly. |
 | Field | `Semantics.isRequired`, `validationResult`, native child role/actions | 3.44.6 includes `FormState.fields`, `FormState.clearError`, and `FormFieldState.clearError`. | Do not use them: they miss the floor and would make Field own validation lifecycle. |
 | Toggle Group | `FocusTraversalGroup`, `FocusNode`, `Shortcuts`/`Actions` | `RawRadio` is already the right base for real radio choice, not button toggles. Material `SegmentedButton` remains an API/behavior reference. | Keep custom roving focus for the toggle contract; route radio and tab intent to existing primitives. |
 | Context Menu | `RawMenuAnchor`, `MenuController`, `TapRegion`, existing Naked Menu items/positioner | New `CupertinoMenuAnchor` demonstrates long-press-open, same-gesture swipe selection, focus, collision, and large-text behavior. Beta fixes semantic taps/long presses reaching `TapRegion`; master changes raw-menu close callbacks. | Keep `RawMenuAnchor`; use Cupertino as a test oracle, add current-stable semantic dismissal tests, and make close/select paths idempotent. |

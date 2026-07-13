@@ -1,14 +1,20 @@
 # Phase 06 — Toast controller and viewport MVP
 
-Status: **Skip for now. Keep this plan for a future named Remix use case.**
+Authority: **inactive, demand-gated research draft; not approved for
+implementation**.
+
+Status: **Skip for now. A named Remix use case and explicit D-04–D-07 approval
+are required before a just-in-time plan can be activated.**
 
 Goal: provide transient status feedback with one visible toast, a FIFO queue,
 safe optional actions, correct live semantics, deterministic auto-dismissal,
 and no focus theft. Keep presentation, copy, and product policy in Remix.
 
 Planning baseline: `d341b90` on 2026-07-13. Contract source: briefing
-[§16](../briefing.md#16-component-contract-toast), narrowed by resolved
-[D-04–D-07](../decisions.md#component-plan-decision-evidence-2026-07-13).
+[§16](../briefing.md#16-component-contract-toast). Proposed narrowing is
+recorded in the approval-pending
+[D-04–D-07 recommendations](../decisions.md#component-plan-research-recommendations-2026-07-13).
+Cross-cutting D-19 also requires approval before activation.
 
 ## MVP scope
 
@@ -141,18 +147,20 @@ Alert Dialog, not Toast.
 
 Run queue/controller logic on 3.41.0, 3.41.2, and 3.44.6. Run viewport inset,
 semantics attachment, focus, and keyboard tests on 3.41.2 and 3.44.6 plus the
-real target matrix.
+real target matrix. Use the exact install/spawn commands in the
+[shared SDK matrix](../process.md#executable-sdk-and-local-command-matrix);
+the commands below are the workspace slice.
 
 ```sh
-dart format --set-exit-if-changed .
-flutter analyze
-flutter test packages/naked_ui/test/src/naked_toast_test.dart
-flutter test packages/naked_ui/test/semantics/naked_toast_semantics_test.dart
-flutter test packages/naked_ui/test
-flutter test packages/example/test
+fvm dart format --set-exit-if-changed .
+fvm flutter analyze
+fvm flutter test packages/naked_ui/test/src/naked_toast_test.dart
+fvm flutter test packages/naked_ui/test/semantics/naked_toast_semantics_test.dart
+fvm flutter test packages/naked_ui/test
+fvm flutter test packages/example/test
 cd packages/example
-flutter test -r compact -d flutter-tester integration_test/components/naked_toast_integration.dart
-flutter test -r compact -d flutter-tester integration_test/all_tests.dart
+fvm flutter test -r compact -d flutter-tester integration_test/components/naked_toast_integration.dart
+fvm flutter test -r compact -d flutter-tester integration_test/all_tests.dart
 ```
 
 ## Stop conditions

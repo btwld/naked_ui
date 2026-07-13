@@ -1,6 +1,10 @@
 # Phase 05 — Context Menu adapter over Menu
 
-Status: **Plan ready; implementation blocked until the trigger-semantics spike passes.**
+Authority: **inactive research/spike draft; neither spike nor implementation is
+approved by this file**.
+
+Status: **Implementation remains blocked until an explicitly approved
+trigger-semantics spike produces the real AT evidence needed for D-03.**
 
 Goal: add secondary-click, touch long-press, and keyboard context-menu entry
 to the existing menu implementation, opening at the invocation point while
@@ -9,7 +13,8 @@ behavior.
 
 Planning baseline: `d341b90` on 2026-07-13. Contract source: briefing
 [§15](../briefing.md#15-component-contract-context-menu). Open gate:
-[D-03](../decisions.md#component-plan-decision-evidence-2026-07-13).
+[D-03](../decisions.md#decision-log). Cross-cutting D-19 also requires
+approval before activation.
 
 ## Reuse before new machinery
 
@@ -134,20 +139,22 @@ The component must pass on 3.41.0/3.41.2 and 3.44.6 because it depends on raw
 menu open/close ordering. Run existing Menu, Select, and Popover suites on both
 ends of the matrix, not just the new test. Add focused beta/master canaries for
 the watched `TapRegion` and `RawMenuAnchor` changes; those canaries are not
-release proof.
+release proof. Use the exact install/spawn commands in the
+[shared SDK matrix](../process.md#executable-sdk-and-local-command-matrix);
+the commands below are the workspace slice.
 
 ```sh
-dart format --set-exit-if-changed .
-flutter analyze
-flutter test packages/naked_ui/test/src/naked_context_menu_test.dart
-flutter test packages/naked_ui/test/semantics/naked_context_menu_semantics_test.dart
-flutter test packages/naked_ui/test/src/naked_menu_test.dart
-flutter test packages/naked_ui/test/src/naked_select_test.dart
-flutter test packages/naked_ui/test/src/naked_popover_test.dart
-flutter test packages/naked_ui/test
+fvm dart format --set-exit-if-changed .
+fvm flutter analyze
+fvm flutter test packages/naked_ui/test/src/naked_context_menu_test.dart
+fvm flutter test packages/naked_ui/test/semantics/naked_context_menu_semantics_test.dart
+fvm flutter test packages/naked_ui/test/src/naked_menu_test.dart
+fvm flutter test packages/naked_ui/test/src/naked_select_test.dart
+fvm flutter test packages/naked_ui/test/src/naked_popover_test.dart
+fvm flutter test packages/naked_ui/test
 cd packages/example
-flutter test -r compact -d flutter-tester integration_test/components/naked_context_menu_integration.dart
-flutter test -r compact -d flutter-tester integration_test/all_tests.dart
+fvm flutter test -r compact -d flutter-tester integration_test/components/naked_context_menu_integration.dart
+fvm flutter test -r compact -d flutter-tester integration_test/all_tests.dart
 ```
 
 ## Stop conditions

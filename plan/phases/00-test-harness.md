@@ -133,7 +133,7 @@ past phase 1.
   diverge most. The driver entry already exists
   (`packages/example/test_driver/integration_test.dart`).
 - **How:** pinned Chrome/ChromeDriver job running
-  `flutter drive --driver=test_driver/integration_test_behavior.dart --target=integration_test/all_tests.dart -d chrome`
+  `fvm flutter drive --driver=test_driver/integration_test_behavior.dart --target=integration_test/all_tests.dart -d chrome`
   after web platform files exist (D-13), per briefing §21.7.
 - **Verify:** job green in CI; artifacts uploaded.
 
@@ -235,10 +235,10 @@ SDK/emulator, so the hosted job is the authoritative Android evidence.
 ## Verify commands
 
 ```sh
-flutter pub get
-dart format --set-exit-if-changed .
-flutter analyze
-flutter test packages/naked_ui/test
+fvm flutter pub get
+fvm dart format --set-exit-if-changed .
+fvm flutter analyze
+fvm flutter test packages/naked_ui/test
 bash tool/run_integration_all.sh flutter-tester
-cd packages/example && flutter test -r compact -d flutter-tester integration_test/all_tests.dart
+cd packages/example && fvm flutter test -r compact -d flutter-tester integration_test/all_tests.dart
 ```

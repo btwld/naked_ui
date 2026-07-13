@@ -1,6 +1,9 @@
 # Phase 04 — Toggle Group intent split and composite focus
 
-Status: **Plan ready; multiple selection is consumer-gated.**
+Authority: **inactive research draft; not approved for implementation**.
+
+Status: **D-01 awaits explicit approval; multiple selection also requires a
+named consumer use case.**
 
 Goal: make grouped toggles keyboard-coherent without turning one API into
 Tabs, Radio Group, and a toggle toolbar at once. Preserve current single-select
@@ -8,8 +11,10 @@ source compatibility and semantics; add a multiple-toggle mode only for a
 concrete Remix use case.
 
 Planning baseline: `d341b90` on 2026-07-13. Contract source: briefing
-[§14](../briefing.md#14-component-contract-toggle-group), refined by resolved
-[D-01](../decisions.md#component-plan-decision-evidence-2026-07-13).
+[§14](../briefing.md#14-component-contract-toggle-group). Proposed refinement
+is recorded in the approval-pending
+[D-01 recommendation](../decisions.md#component-plan-research-recommendations-2026-07-13).
+Cross-cutting D-19 also requires approval before activation.
 
 ## Choose the semantic primitive first
 
@@ -133,16 +138,19 @@ Home/End choose first/last enabled option. Loop behavior must be explicit.
 
 ## Verification
 
+Run the workspace commands below plus every applicable exact-SDK command in
+the [shared SDK matrix](../process.md#executable-sdk-and-local-command-matrix).
+
 ```sh
-dart format --set-exit-if-changed .
-flutter analyze
-flutter test packages/naked_ui/test/src/naked_toggle_test.dart
-flutter test packages/naked_ui/test/semantics/naked_toggle_semantics_test.dart
-flutter test packages/naked_ui/test
-flutter test packages/example/test
+fvm dart format --set-exit-if-changed .
+fvm flutter analyze
+fvm flutter test packages/naked_ui/test/src/naked_toggle_test.dart
+fvm flutter test packages/naked_ui/test/semantics/naked_toggle_semantics_test.dart
+fvm flutter test packages/naked_ui/test
+fvm flutter test packages/example/test
 cd packages/example
-flutter test -r compact -d flutter-tester integration_test/components/naked_toggle_integration.dart
-flutter test -r compact -d flutter-tester integration_test/all_tests.dart
+fvm flutter test -r compact -d flutter-tester integration_test/components/naked_toggle_integration.dart
+fvm flutter test -r compact -d flutter-tester integration_test/all_tests.dart
 ```
 
 Run real macOS, Android, pinned Chrome, VoiceOver, TalkBack, and release iOS per

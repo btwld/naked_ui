@@ -136,17 +136,20 @@ and real window modal/focus/semantics proof. See the shared
 
 ## Verification
 
+Run the workspace commands below plus every applicable exact-SDK command in
+the [shared SDK matrix](../process.md#executable-sdk-and-local-command-matrix).
+
 ```sh
-dart format --set-exit-if-changed .
-flutter analyze
-flutter test packages/naked_ui/test/src/naked_dialog_test.dart
-flutter test packages/naked_ui/test/semantics/naked_dialog_semantics_test.dart
-flutter test packages/naked_ui/test
-flutter test packages/example/test
+fvm dart format --set-exit-if-changed .
+fvm flutter analyze
+fvm flutter test packages/naked_ui/test/src/naked_dialog_test.dart
+fvm flutter test packages/naked_ui/test/semantics/naked_dialog_semantics_test.dart
+fvm flutter test packages/naked_ui/test
+fvm flutter test packages/example/test
 cd packages/example
-flutter test -r compact -d flutter-tester integration_test/components/naked_dialog_integration.dart
-flutter test -r compact -d flutter-tester integration_test/all_tests.dart
-flutter test -r compact -d macos integration_test/all_tests.dart
+fvm flutter test -r compact -d flutter-tester integration_test/components/naked_dialog_integration.dart
+fvm flutter test -r compact -d flutter-tester integration_test/all_tests.dart
+fvm flutter test -r compact -d macos integration_test/all_tests.dart
 ```
 
 Hosted Android and pinned-Chrome jobs remain blocking per

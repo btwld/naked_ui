@@ -3,9 +3,11 @@
 This is the operational companion to the verification baseline in
 [briefing §12](briefing.md#12-verification-architecture) and
 [briefing §21](briefing.md#21-integration-screenshot-golden-and-ci-implementation).
-It applies to every component phase. The matching phase plan is the execution
-authority; if it changes a briefing verification proposal, the delta must be
-explicit and must not weaken outcome evidence silently.
+It applies to every component phase. Once a decision-cleared phase is
+explicitly activated just in time, its matching plan is the execution
+authority. An inactive research draft is not. If an active plan changes a
+briefing verification proposal, the approved delta must be explicit and must
+not weaken outcome evidence silently.
 
 The rules below incorporate the failures and fixes from Phase 0 / PR #63.
 
@@ -32,11 +34,11 @@ widget or semantics assertions.
 
 | Proof | Authoritative command/path | Rule |
 |---|---|---|
-| Fast aggregate | `flutter test -r compact -d flutter-tester integration_test/all_tests.dart` from `packages/example` | Proves aggregate registration and shared behavior quickly. |
+| Fast aggregate | `fvm flutter test -r compact -d flutter-tester integration_test/all_tests.dart` from `packages/example` | Proves aggregate registration and shared behavior quickly on the committed workspace pin. |
 | Real macOS behavior | Same command with `-d macos` | Must run on a real macOS target; a macOS host using `flutter-tester` is not macOS proof. |
-| Android behavior | `flutter test -r compact -d <emulator> integration_test/all_tests.dart` | Native behavior is authoritative. `flutter drive` is reserved for screenshot/report-data transport. |
-| Web behavior | `flutter drive` with `test_driver/integration_test_behavior.dart`, `-d web-server`, and `--browser-name=chrome` | Flutter web integration uses a driver; do not replace this with `flutter test -d chrome`. |
-| Screenshot evidence | Dedicated `integration_test/screenshot_smoke.dart` with `test_driver/integration_test.dart` | Behavior must pass independently before evidence capture runs. |
+| Android behavior | `fvm flutter test -r compact -d <emulator> integration_test/all_tests.dart` | Native behavior is authoritative. `flutter drive` is reserved for screenshot/report-data transport. |
+| Web behavior | `fvm flutter drive` with `test_driver/integration_test_behavior.dart`, `-d web-server`, and `--browser-name=chrome` | Flutter web integration uses a driver; do not replace this with `flutter test -d chrome`. |
+| Screenshot evidence | `fvm flutter drive` against dedicated `integration_test/screenshot_smoke.dart` with `test_driver/integration_test.dart` | Behavior must pass independently before evidence capture runs. |
 
 Use the checked-in workflows and scripts as the executable source of truth:
 
@@ -51,13 +53,15 @@ that relies on `RawMenuAnchor`, `OverlayPortal`, `RawTooltip`, or
 `RawAutocomplete` also runs its focused regression slice on pinned Flutter
 3.44.6 before closure because those primitives changed after 3.41. Re-verify
 the current stable pin when that phase starts; a compatibility run does not
-silently raise the package floor.
+silently raise the package floor. Use the exact install/spawn commands in the
+[process SDK matrix](process.md#executable-sdk-and-local-command-matrix), not a
+different SDK found on `PATH`.
 
 When [the Flutter raw-primitives watchlist](flutter-raw-primitives.md) names a
-beta/master change for the component, add a focused canary run at the recorded
-commit. Canary failures inform the adapter and upstream follow-up, but an
-unreleased channel is neither a release gate nor evidence that an API can be
-used at the declared minimum.
+beta/main change for the component, add a focused canary run at the exact
+recorded commit and record the exact FVM command. Canary failures inform the
+adapter and upstream follow-up, but an unreleased channel is neither a release
+gate nor evidence that an API can be used at the declared minimum.
 
 Do not combine native behavior and host-transport evidence into one result that
 can hide an in-app failure. Keep the behavior aggregate and screenshot smoke as
@@ -114,11 +118,11 @@ pointer cleanup failures.
 
 ### macOS
 
-- Confirm `flutter devices` lists macOS and run with `-d macos`.
+- Confirm `fvm flutter devices` lists macOS and run with `-d macos`.
 - If sandboxed IO/network behavior is introduced, review both debug/profile
-  and release entitlements. Run `flutter clean` after entitlement changes.
+  and release entitlements. Run `fvm flutter clean` after entitlement changes.
 - A Flutter-tool foreground warning is evidence to investigate, not a reason
-  to retry. Reproduce the smallest failing file, inspect `flutter doctor -v`,
+  to retry. Reproduce the smallest failing file, inspect `fvm flutter doctor -v`,
   and compare with the pinned hosted macOS run.
 - Moving stalls across unrelated tests indicate a runner/toolchain problem;
   stable failure at one assertion indicates test or product behavior. Record
@@ -126,8 +130,8 @@ pointer cleanup failures.
 
 ### Android
 
-- Check `flutter devices` and `adb devices` before claiming a local run.
-- Use `flutter test` for behavior and the checked-in Android script for the
+- Check `fvm flutter devices` and `adb devices` before claiming a local run.
+- Use `fvm flutter test` for behavior and the checked-in Android script for the
   behavior-plus-screenshot CI sequence.
 - If no local SDK/emulator exists, say so and use the hosted API 34 result as
   the authoritative Android proof. Missing local hardware is not permission to

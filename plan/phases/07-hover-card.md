@@ -1,15 +1,21 @@
 # Phase 07 — Hover Card preview
 
-Status: **Skip for now. Keep this plan until Link lands and Remix has a valid
-noninteractive preview use case.**
+Authority: **inactive, dependency/demand-gated research draft; not approved for
+implementation**.
+
+Status: **Skip for now. Link must land, Remix must supply a valid
+noninteractive preview use case, and D-17 must be explicitly approved before a
+just-in-time spike/plan is activated.**
 
 Goal: show a noninteractive, supplementary preview from hover or keyboard
 focus, keep it visible while the pointer crosses into it, dismiss it with
 Escape, and never make essential information available only through hover.
 
 Planning baseline: `d341b90` on 2026-07-13. Contract source: briefing
-[§19](../briefing.md#19-component-contract-hover-card), refined by
-[D-17](../decisions.md#component-plan-decision-evidence-2026-07-13).
+[§19](../briefing.md#19-component-contract-hover-card--preview-card). Proposed
+refinement is recorded in the approval-pending
+[D-17 recommendation](../decisions.md#component-plan-research-recommendations-2026-07-13).
+Cross-cutting D-19 also requires approval before activation.
 
 ## Scope
 
@@ -138,18 +144,21 @@ without claiming that a visual preview is a screen-reader interaction surface.
 
 ## Verification
 
+Run the workspace commands below plus the exact 3.41.0 and 3.44.6 commands in
+the [shared SDK matrix](../process.md#executable-sdk-and-local-command-matrix).
+
 ```sh
-dart format --set-exit-if-changed .
-flutter analyze
-flutter test packages/naked_ui/test/src/naked_hover_card_test.dart
-flutter test packages/naked_ui/test/semantics/naked_hover_card_semantics_test.dart
-flutter test packages/naked_ui/test/src/naked_tooltip_test.dart
-flutter test packages/naked_ui/test/src/naked_popover_test.dart
-flutter test packages/naked_ui/test/src/naked_menu_test.dart
-flutter test packages/naked_ui/test
+fvm dart format --set-exit-if-changed .
+fvm flutter analyze
+fvm flutter test packages/naked_ui/test/src/naked_hover_card_test.dart
+fvm flutter test packages/naked_ui/test/semantics/naked_hover_card_semantics_test.dart
+fvm flutter test packages/naked_ui/test/src/naked_tooltip_test.dart
+fvm flutter test packages/naked_ui/test/src/naked_popover_test.dart
+fvm flutter test packages/naked_ui/test/src/naked_menu_test.dart
+fvm flutter test packages/naked_ui/test
 cd packages/example
-flutter test -r compact -d flutter-tester integration_test/components/naked_hover_card_integration.dart
-flutter test -r compact -d flutter-tester integration_test/all_tests.dart
+fvm flutter test -r compact -d flutter-tester integration_test/components/naked_hover_card_integration.dart
+fvm flutter test -r compact -d flutter-tester integration_test/all_tests.dart
 ```
 
 ## Stop conditions

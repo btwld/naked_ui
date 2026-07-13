@@ -1,9 +1,13 @@
 # Per-component process
 
 Every component phase follows this workflow. The frozen briefing is the
-historical handoff and research baseline. The matching file under `phases/` is
-the execution authority and may explicitly narrow or correct a briefing
-proposal; every delta must be visible in that plan and in `decisions.md`.
+historical handoff and research baseline. A file under `phases/` becomes
+execution authority only when that phase is active, its blocking decisions are
+explicitly approved, current code has been re-inspected, and the plan has been
+activated just in time. Inactive phase files are research drafts: they preserve
+useful evidence but cannot authorize implementation or silently narrow the
+briefing. Every approved delta must be visible in the active plan and in
+`decisions.md`.
 
 ## Ground rules (apply to every PR)
 
@@ -32,16 +36,17 @@ proposal; every delta must be visible in that plan and in `decisions.md`.
   dependency.
 - **Version truthfulness** — compile and test on exact Flutter 3.41.0 and the
   workspace pin. Components depending on raw behavior that changed by current
-  stable also run a pinned 3.44.6 compatibility slice. Re-verify the current
-  stable version and commit when implementation begins. Beta/master runs are
-  non-blocking canaries only and never authorize a package API or release
-  claim.
+  stable also run a pinned 3.44.6 compatibility slice. Use the executable FVM
+  matrix below; re-verify the current stable version and commit when
+  implementation begins. Beta/main runs are non-blocking canaries only and
+  never authorize a package API or release claim.
 - **Integration proof is operational, not implied** — every phase follows
   [integration-testing.md](integration-testing.md), including authoritative
   runners, bounded waits, failure triage, artifacts, and manual AT evidence.
 - Confirmed vs proposed vs open-decision language is defined in
   [§2.1](briefing.md#21-confirmed-facts-versus-proposals). Open decisions are
-  resolved in [decisions.md](decisions.md) **before** the implementation PR.
+  explicitly approved and resolved in [decisions.md](decisions.md) **before**
+  the implementation PR.
 
 ## Workflow (briefing [§8](briefing.md#8-required-implementation-process))
 
@@ -87,25 +92,59 @@ records, and a changelog naming any semantic or keyboard behavior change.
 Escalation conditions that block a component are listed in
 [§24.3](briefing.md#243-escalation-rule).
 
-## Local commands
+## Executable SDK and local command matrix
 
-Root of this repo (see [§21.7](briefing.md#217-exact-local-commands) for the
-full set including Android/web):
+Run from the repository root. The committed `.fvmrc` pins Flutter 3.41.2.
+`fvm flutter`/`fvm dart` resolve that project pin, while `fvm spawn <version>`
+runs a Flutter command on an exact alternate SDK. This syntax is defined by the
+[FVM command reference](https://fvm.app/documentation/guides/basic-commands)
+and was rechecked locally with FVM 4.1.0 on 2026-07-13.
+
+Workspace publication gate:
 
 ```sh
-flutter pub get
-dart format --set-exit-if-changed .
-flutter analyze
-flutter test packages/naked_ui/test
-flutter test packages/example/test
+fvm install --skip-pub-get
+fvm flutter pub get
+fvm dart format --set-exit-if-changed .
+fvm flutter analyze
+fvm flutter test packages/naked_ui/test
+fvm flutter test packages/example/test
 
 # fast integration smoke
 cd packages/example
-flutter test -r compact -d flutter-tester integration_test/all_tests.dart
+fvm flutter test -r compact -d flutter-tester integration_test/all_tests.dart
 
-# real macOS (after Phase 0 lands platform files)
-flutter test -r compact -d macos integration_test/all_tests.dart
+# real macOS
+fvm flutter test -r compact -d macos integration_test/all_tests.dart
 ```
+
+Exact declared-minimum gate, mirroring the hosted minimum job:
+
+```sh
+fvm install 3.41.0 --skip-pub-get
+fvm spawn 3.41.0 pub get
+fvm spawn 3.41.0 analyze
+fvm spawn 3.41.0 test packages/naked_ui/test
+```
+
+Current-stable compatibility gate for a component whose raw primitive changed
+after 3.41. Flutter 3.44.6 was verified as the stable release dated 2026-07-09;
+the active phase must recheck the current stable before execution and record
+why it keeps or updates this pin.
+
+```sh
+fvm install 3.44.6 --skip-pub-get
+fvm spawn 3.44.6 pub get
+fvm spawn 3.44.6 analyze
+fvm spawn 3.44.6 test packages/naked_ui/test
+```
+
+Do not write a vague `beta` or `main` gate. If the raw-primitives watchlist
+identifies a relevant unreleased change, the active plan must record an exact
+Flutter commit and the exact focused `fvm spawn <commit> ...` command. That run
+is diagnostic and non-blocking. See [§21.7](briefing.md#217-exact-local-commands)
+and [integration-testing.md](integration-testing.md) for Android/web drivers
+and artifact commands.
 
 ## Phase plan file template
 
@@ -114,6 +153,7 @@ Use this shape when adding or materially revising a phase plan:
 ```markdown
 # Phase NN — <name>
 
+Authority: active just-in-time execution plan | inactive research draft
 Goal: <one paragraph>
 Contract source: briefing §<n>; list every explicit delta. Decisions: D-xx.
 Baseline commit: <sha this plan was derived against>
@@ -137,7 +177,7 @@ Order tasks so the PR stays releasable at every merge point.
 ## Research and readiness
 - Current-code baseline re-verified:
 - Minimum/current Flutter behavior re-verified:
-- Decisions resolved:
+- Decisions resolved with explicit approval evidence:
 - Required spike/manual AT sessions:
 - Known engine/platform limitations and stop conditions:
 

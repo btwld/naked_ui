@@ -1,6 +1,10 @@
 # Phase 08 — Combobox accessibility and RawAutocomplete spike
 
-Status: **Spike plan ready; public API and implementation remain blocked.**
+Authority: **inactive research/spike draft; neither spike nor implementation is
+approved by this file**.
+
+Status: **Public API and implementation remain blocked. D-18 awaits approval;
+the named AT/IME/version spike must run before D-10 and D-11 can resolve.**
 
 Goal: determine whether Flutter's raw autocomplete can support an accessible,
 editable, single-selection combobox on the declared SDK range without breaking
@@ -8,9 +12,11 @@ IME/text editing, controlled state, disabled options, or active-option
 announcements. Freeze an implementation plan only if the spike passes.
 
 Planning baseline: `d341b90` on 2026-07-13. Contract source: briefing
-[§18](../briefing.md#18-component-contract-combobox), narrowed by
-[D-18](../decisions.md#component-plan-decision-evidence-2026-07-13). Open
-evidence decisions: [D-10 and D-11](../decisions.md#decision-log).
+[§18](../briefing.md#18-component-contract-combobox). Proposed narrowing is
+recorded in the approval-pending
+[D-18 recommendation](../decisions.md#component-plan-research-recommendations-2026-07-13).
+Open evidence decisions: [D-10 and D-11](../decisions.md#decision-log).
+Cross-cutting D-19 also requires approval before activation.
 
 ## Scope correction
 
@@ -156,18 +162,21 @@ Stable fixture keys after approval: `combobox.field`, `.popup`, `.option.<id>`,
 
 ## Verification after implementation
 
+Run the workspace commands below plus the exact 3.41.0 and 3.44.6 commands in
+the [shared SDK matrix](../process.md#executable-sdk-and-local-command-matrix).
+
 ```sh
-dart format --set-exit-if-changed .
-flutter analyze
-flutter test packages/naked_ui/test/src/naked_combobox_test.dart
-flutter test packages/naked_ui/test/semantics/naked_combobox_semantics_test.dart
-flutter test packages/naked_ui/test/src/naked_textfield_test.dart
-flutter test packages/naked_ui/test/semantics/naked_textfield_semantics_test.dart
-flutter test packages/naked_ui/test
-flutter test packages/example/test
+fvm dart format --set-exit-if-changed .
+fvm flutter analyze
+fvm flutter test packages/naked_ui/test/src/naked_combobox_test.dart
+fvm flutter test packages/naked_ui/test/semantics/naked_combobox_semantics_test.dart
+fvm flutter test packages/naked_ui/test/src/naked_textfield_test.dart
+fvm flutter test packages/naked_ui/test/semantics/naked_textfield_semantics_test.dart
+fvm flutter test packages/naked_ui/test
+fvm flutter test packages/example/test
 cd packages/example
-flutter test -r compact -d flutter-tester integration_test/components/naked_combobox_integration.dart
-flutter test -r compact -d flutter-tester integration_test/all_tests.dart
+fvm flutter test -r compact -d flutter-tester integration_test/components/naked_combobox_integration.dart
+fvm flutter test -r compact -d flutter-tester integration_test/all_tests.dart
 ```
 
 ## Stop conditions
