@@ -252,7 +252,9 @@ class _ToggleGroupExampleState extends State<ToggleGroupExample> {
             : Colors.grey.shade800;
 
         return AnimatedContainer(
-          duration: const Duration(milliseconds: 120),
+          duration: MediaQuery.disableAnimationsOf(context)
+              ? Duration.zero
+              : const Duration(milliseconds: 120),
           constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           decoration: BoxDecoration(
@@ -290,29 +292,27 @@ class _ToggleGroupExampleState extends State<ToggleGroupExample> {
 
   @override
   Widget build(BuildContext context) {
-    final isHorizontal = widget.orientation == Axis.horizontal;
-
-    return Directionality(
-      textDirection: widget.textDirection,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Text(
-            'Single-choice compatibility demonstration',
-            style: TextStyle(fontWeight: FontWeight.w600),
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        const Text(
+          'Single-choice compatibility demonstration',
+          style: TextStyle(fontWeight: FontWeight.w600),
+        ),
+        const SizedBox(height: 4),
+        ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 420),
+          child: Text(
+            'This group deliberately allows one choice. Use the standalone '
+            'formatting controls when Bold, Italic, and Underline must combine.',
+            textAlign: TextAlign.center,
+            style: TextStyle(color: Colors.grey.shade700),
           ),
-          const SizedBox(height: 4),
-          ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 420),
-            child: Text(
-              'This group deliberately allows one choice. Use the standalone '
-              'formatting controls when Bold, Italic, and Underline must combine.',
-              textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.grey.shade700),
-            ),
-          ),
-          const SizedBox(height: 12),
-          NakedToggleGroup<String>(
+        ),
+        const SizedBox(height: 12),
+        Directionality(
+          textDirection: widget.textDirection,
+          child: NakedToggleGroup<String>(
             key: const Key('toggle-group.root'),
             selectedValue: _selectedValue,
             orientation: widget.orientation,
@@ -322,51 +322,45 @@ class _ToggleGroupExampleState extends State<ToggleGroupExample> {
                 setState(() => _selectedValue = value);
               }
             },
-            child: Flex(
+            child: Wrap(
               direction: widget.orientation,
-              mainAxisSize: MainAxisSize.min,
+              alignment: WrapAlignment.center,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              spacing: 8,
+              runSpacing: 8,
               children: [
-                for (var index = 0; index < _visibleValues.length; index++) ...[
-                  if (index > 0)
-                    SizedBox(
-                      width: isHorizontal ? 8 : 0,
-                      height: isHorizontal ? 0 : 8,
-                    ),
-                  _buildOption(_visibleValues[index]),
-                ],
+                for (final value in _visibleValues) _buildOption(value),
               ],
             ),
           ),
-          const SizedBox(height: 12),
-          ExcludeSemantics(
-            child: Text(
-              'Selected: ${_labels[_selectedValue]}',
-              key: const Key('toggle-group.value'),
+        ),
+        const SizedBox(height: 12),
+        ExcludeSemantics(
+          child: Text(
+            'Selected: ${_labels[_selectedValue]}',
+            key: const Key('toggle-group.value'),
+          ),
+        ),
+        const SizedBox(height: 8),
+        Wrap(
+          alignment: WrapAlignment.center,
+          spacing: 8,
+          children: [
+            OutlinedButton(
+              key: const Key('toggle-group.remove-focused'),
+              focusNode: _removeFocusNode,
+              onPressed: _canRemoveFocusedOption ? _removeFocusedOption : null,
+              child: const Text('Remove focused'),
             ),
-          ),
-          const SizedBox(height: 8),
-          Wrap(
-            alignment: WrapAlignment.center,
-            spacing: 8,
-            children: [
-              OutlinedButton(
-                key: const Key('toggle-group.remove-focused'),
-                focusNode: _removeFocusNode,
-                onPressed: _canRemoveFocusedOption
-                    ? _removeFocusedOption
-                    : null,
-                child: const Text('Remove focused'),
-              ),
-              TextButton(
-                key: const Key('toggle-group.reset'),
-                focusNode: _resetFocusNode,
-                onPressed: _reset,
-                child: const Text('Reset'),
-              ),
-            ],
-          ),
-        ],
-      ),
+            TextButton(
+              key: const Key('toggle-group.reset'),
+              focusNode: _resetFocusNode,
+              onPressed: _reset,
+              child: const Text('Reset'),
+            ),
+          ],
+        ),
+      ],
     );
   }
 }

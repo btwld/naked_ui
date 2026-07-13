@@ -253,6 +253,27 @@ void main() {
     );
     await tester.pumpAndSettle();
 
+    expect(
+      Directionality.of(
+        tester.element(find.textContaining('This group deliberately')),
+      ),
+      TextDirection.ltr,
+    );
+    expect(
+      Directionality.of(
+        tester.element(find.byKey(const Key('toggle-group.root'))),
+      ),
+      TextDirection.rtl,
+    );
+    expect(
+      tester.getCenter(find.byKey(const Key('toggle-group.option.bold'))).dx,
+      greaterThan(
+        tester
+            .getCenter(find.byKey(const Key('toggle-group.option.italic')))
+            .dx,
+      ),
+    );
+
     final boldOption = tester.widget<NakedToggleOption<String>>(
       find.byKey(const Key('toggle-group.option.bold')),
     );

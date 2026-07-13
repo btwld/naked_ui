@@ -11,6 +11,41 @@ void main() {
   setUpAll(loadGoldenTestFont);
 
   testWidgets(
+    'focused option paints its final border when animations are disabled',
+    (tester) async {
+      await pumpGoldenSurface(
+        tester,
+        child: const toggle_example.ToggleGroupExample(),
+      );
+
+      final italicFinder = find.byKey(const Key('toggle-group.option.italic'));
+      final italicOption = tester.widget<NakedToggleOption<String>>(
+        italicFinder,
+      );
+      italicOption.focusNode!.requestFocus();
+      await tester.pumpAndSettle();
+
+      expect(italicOption.focusNode!.hasPrimaryFocus, isTrue);
+      final paintedDecoration =
+          tester
+                  .widget<DecoratedBox>(
+                    find
+                        .descendant(
+                          of: italicFinder,
+                          matching: find.byType(DecoratedBox),
+                        )
+                        .first,
+                  )
+                  .decoration
+              as BoxDecoration;
+      expect(
+        paintedDecoration.border,
+        Border.all(color: Colors.blue.shade600, width: 2),
+      );
+    },
+  );
+
+  testWidgets(
     'canonical toggle group focus matches its reference golden',
     (tester) async {
       const goldenKey = ValueKey('toggle-group.golden.surface');
@@ -23,12 +58,7 @@ void main() {
             key: goldenKey,
             child: ColoredBox(
               color: Colors.white,
-              child: Center(
-                child: TickerMode(
-                  enabled: true,
-                  child: toggle_example.ToggleGroupExample(),
-                ),
-              ),
+              child: Center(child: toggle_example.ToggleGroupExample()),
             ),
           ),
         ),

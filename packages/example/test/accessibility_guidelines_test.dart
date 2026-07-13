@@ -42,6 +42,39 @@ void main() {
     await tester.expectMeetsAccessibilityGuidelines();
   });
 
+  testWidgets(
+    'horizontal toggle group fits an Android-width surface at 200% text',
+    (tester) async {
+      tester.view.physicalSize = const Size(363.4, 1600);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          builder: (context, child) => MediaQuery(
+            data: MediaQuery.of(
+              context,
+            ).copyWith(textScaler: const TextScaler.linear(2)),
+            child: child!,
+          ),
+          home: const Scaffold(
+            body: Center(child: toggle_example.ToggleGroupExample()),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+      expect(
+        MediaQuery.textScalerOf(
+          tester.element(find.byKey(const Key('toggle-group.root'))),
+        ).scale(10),
+        20,
+      );
+    },
+  );
+
   testWidgets('vertical toggle group fits a narrow surface at 200% text', (
     tester,
   ) async {
