@@ -1,3 +1,4 @@
+import 'dart:async' show scheduleMicrotask;
 import 'dart:ui' show SemanticsValidationResult;
 
 import 'package:flutter/foundation.dart';
@@ -110,7 +111,8 @@ class NakedField extends StatefulWidget {
     this.child,
     this.builder,
     this.excludeSemantics = false,
-  }) : assert(
+  }) : assert(label != '', 'NakedField.label must not be empty.'),
+       assert(
          child != null || builder != null,
          'Either child or builder must be provided',
        ),
@@ -158,7 +160,13 @@ class NakedField extends StatefulWidget {
   final bool excludeSemantics;
 
   @override
-  State<NakedField> createState() => _NakedFieldState();
+  State<NakedField> createState() {
+    assert(
+      label.trim().isNotEmpty,
+      'NakedField.label must contain a non-whitespace character.',
+    );
+    return _NakedFieldState();
+  }
 }
 
 class _NakedFieldState extends State<NakedField> {
@@ -166,7 +174,6 @@ class _NakedFieldState extends State<NakedField> {
       NakedFieldScopeController._(this);
   final Map<Object, NakedFieldControlRegistration> _registrations = {};
   bool _stateSyncScheduled = false;
-  bool _multipleControlCheckScheduled = false;
 
   String? get _normalizedError {
     final errorText = widget.errorText;
@@ -185,7 +192,6 @@ class _NakedFieldState extends State<NakedField> {
   ) {
     _registrations[token] = registration;
     _scheduleStateSync();
-    _scheduleMultipleControlCheck();
   }
 
   void _unregisterControl(Object token) {
@@ -214,21 +220,22 @@ class _NakedFieldState extends State<NakedField> {
   void _scheduleStateSync() {
     if (_stateSyncScheduled || !mounted) return;
     _stateSyncScheduled = true;
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    scheduleMicrotask(() {
       _stateSyncScheduled = false;
       if (mounted) setState(() {});
-    });
-  }
-
-  void _scheduleMultipleControlCheck() {
-    if (_multipleControlCheckScheduled || _registrations.length < 2) return;
-    _multipleControlCheckScheduled = true;
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _multipleControlCheckScheduled = false;
-      assert(
-        !mounted || _registrations.length <= 1,
-        'NakedField supports exactly one mounted primary control.',
-      );
+      assert(() {
+        try {
+          assert(
+            !mounted || _registrations.length <= 1,
+            'NakedField supports exactly one mounted primary control.',
+          );
+        } on AssertionError catch (error, stackTrace) {
+          FlutterError.reportError(
+            FlutterErrorDetails(exception: error, stack: stackTrace),
+          );
+        }
+        return true;
+      }());
     });
   }
 

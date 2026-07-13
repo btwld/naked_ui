@@ -22,6 +22,9 @@ Widget _textField({
   bool? isRequired,
   SemanticsValidationResult? validationResult,
   bool? ignorePointers,
+  ValueChanged<bool>? onTapChange,
+  ValueChanged<bool>? onHoverChange,
+  ValueChanged<bool>? onPressChange,
   ValueChanged<NakedTextFieldState>? onBuild,
 }) {
   return NakedTextField(
@@ -37,6 +40,9 @@ Widget _textField({
     isRequired: isRequired,
     validationResult: validationResult,
     ignorePointers: ignorePointers,
+    onTapChange: onTapChange,
+    onHoverChange: onHoverChange,
+    onPressChange: onPressChange,
     builder: (context, state, editable) {
       onBuild?.call(state);
       return editable;
@@ -48,6 +54,23 @@ void main() {
   group('NakedField API', () {
     test('requires a child or builder', () {
       expect(() => NakedField(label: 'Email'), throwsAssertionError);
+    });
+
+    testWidgets('requires a usable label without rewriting its contents', (
+      tester,
+    ) async {
+      expect(
+        () => NakedField(label: '', child: const SizedBox()),
+        throwsAssertionError,
+      );
+
+      await tester.pumpWidget(
+        _testApp(NakedField(label: '   ', child: const SizedBox())),
+      );
+      expect(tester.takeException(), isAssertionError);
+
+      final field = NakedField(label: '  Email  ', child: const SizedBox());
+      expect(field.label, '  Email  ');
     });
 
     test('rejects a visible error with a valid result', () {
@@ -338,6 +361,177 @@ void main() {
       expect(textFieldState!.isHovered, isFalse);
     });
 
+    testWidgets(
+      'disabling a Field safely defers ordered interaction callbacks',
+      (tester) async {
+        late StateSetter rebuild;
+        var enabled = true;
+        var callbackSetStates = 0;
+        final falseCallbacks = <String>[];
+        NakedTextFieldState? textFieldState;
+
+        void recordFalseCallback(String name, bool value) {
+          if (value) return;
+          falseCallbacks.add(name);
+          rebuild(() => callbackSetStates++);
+        }
+
+        await tester.pumpWidget(
+          _testApp(
+            StatefulBuilder(
+              builder: (context, setState) {
+                rebuild = setState;
+                return NakedField(
+                  label: 'Email',
+                  enabled: enabled,
+                  child: _textField(
+                    onHoverChange: (value) =>
+                        recordFalseCallback('hover', value),
+                    onTapChange: (value) => recordFalseCallback('tap', value),
+                    onPressChange: (value) =>
+                        recordFalseCallback('press', value),
+                    onBuild: (state) => textFieldState = state,
+                  ),
+                );
+              },
+            ),
+          ),
+        );
+
+        final mouse = await tester.createGesture(kind: PointerDeviceKind.mouse);
+        addTearDown(mouse.removePointer);
+        await mouse.addPointer(location: const Offset(-1000, -1000));
+        await mouse.moveTo(tester.getCenter(find.byType(EditableText)));
+        await tester.pump();
+
+        final touch = await tester.startGesture(
+          tester.getCenter(find.byType(EditableText)),
+        );
+        addTearDown(touch.cancel);
+        await tester.pump(kPressTimeout);
+        expect(textFieldState!.isHovered, isTrue);
+        expect(textFieldState!.isPressed, isTrue);
+
+        rebuild(() => enabled = false);
+        await tester.pump();
+
+        expect(tester.takeException(), isNull);
+        expect(falseCallbacks, ['hover', 'tap', 'press']);
+        expect(callbackSetStates, 3);
+        expect(textFieldState!.isHovered, isFalse);
+        expect(textFieldState!.isPressed, isFalse);
+
+        await tester.pump();
+        expect(tester.takeException(), isNull);
+      },
+    );
+
+    testWidgets('forced interaction callbacks are emitted only once', (
+      tester,
+    ) async {
+      late StateSetter rebuild;
+      var enabled = true;
+      final hoverChanges = <bool>[];
+      final tapChanges = <bool>[];
+      final pressChanges = <bool>[];
+
+      await tester.pumpWidget(
+        _testApp(
+          StatefulBuilder(
+            builder: (context, setState) {
+              rebuild = setState;
+              return NakedField(
+                label: 'Email',
+                enabled: enabled,
+                child: _textField(
+                  onHoverChange: hoverChanges.add,
+                  onTapChange: tapChanges.add,
+                  onPressChange: pressChanges.add,
+                ),
+              );
+            },
+          ),
+        ),
+      );
+
+      final mouse = await tester.createGesture(kind: PointerDeviceKind.mouse);
+      addTearDown(mouse.removePointer);
+      await mouse.addPointer(location: const Offset(-1000, -1000));
+      await mouse.moveTo(tester.getCenter(find.byType(EditableText)));
+      await tester.pump();
+
+      final touch = await tester.startGesture(
+        tester.getCenter(find.byType(EditableText)),
+      );
+      await tester.pump(kPressTimeout);
+
+      rebuild(() => enabled = false);
+      await tester.pump();
+      await touch.cancel();
+      await mouse.moveTo(const Offset(-1000, -1000));
+      rebuild(() {});
+      await tester.pump();
+
+      expect(hoverChanges, [true, false]);
+      expect(tapChanges, [true, false]);
+      expect(pressChanges, [true, false]);
+    });
+
+    testWidgets('rapid re-enable suppresses deferred false callbacks', (
+      tester,
+    ) async {
+      late StateSetter rebuild;
+      late BuildContext hostContext;
+      var enabled = true;
+      final falseCallbacks = <String>[];
+
+      void recordFalseCallback(String name, bool value) {
+        if (!value) falseCallbacks.add(name);
+      }
+
+      await tester.pumpWidget(
+        _testApp(
+          StatefulBuilder(
+            builder: (context, setState) {
+              hostContext = context;
+              rebuild = setState;
+              return NakedField(
+                label: 'Email',
+                enabled: enabled,
+                child: _textField(
+                  onHoverChange: (value) => recordFalseCallback('hover', value),
+                  onTapChange: (value) => recordFalseCallback('tap', value),
+                  onPressChange: (value) => recordFalseCallback('press', value),
+                ),
+              );
+            },
+          ),
+        ),
+      );
+
+      final mouse = await tester.createGesture(kind: PointerDeviceKind.mouse);
+      addTearDown(mouse.removePointer);
+      await mouse.addPointer(location: const Offset(-1000, -1000));
+      await mouse.moveTo(tester.getCenter(find.byType(EditableText)));
+      await tester.pump();
+
+      final touch = await tester.startGesture(
+        tester.getCenter(find.byType(EditableText)),
+      );
+      addTearDown(touch.cancel);
+      await tester.pump(kPressTimeout);
+
+      rebuild(() => enabled = false);
+      tester.binding.buildOwner!.buildScope(hostContext as Element);
+      rebuild(() => enabled = true);
+      tester.binding.buildOwner!.buildScope(hostContext as Element);
+      await tester.pump();
+
+      expect(tester.takeException(), isNull);
+      expect(enabled, isTrue);
+      expect(falseCallbacks, isEmpty);
+    });
+
     testWidgets('read-only Field remains focusable but is not editable', (
       tester,
     ) async {
@@ -409,7 +603,6 @@ void main() {
 
       focusNode.requestFocus();
       controller.text = 'value';
-      await tester.pump();
       await tester.pump();
 
       expect(fieldState!.isFocused, isTrue);

@@ -636,8 +636,7 @@ class _NakedTextFieldState extends State<NakedTextField>
     }
     _navMode = MediaQuery.maybeNavigationModeOf(context);
     _effectiveFocusNode.canRequestFocus = _canRequestFocusFor(_navMode);
-    updateDisabledState(!_effectiveEnabled);
-    updateErrorState(_effectiveHasError);
+    syncWidgetStates();
     _observeEffectiveError();
     _notifyFieldControlChanged();
   }
@@ -651,8 +650,7 @@ class _NakedTextFieldState extends State<NakedTextField>
     if (_fieldScope != null && wasEffectivelyEnabled && !_effectiveEnabled) {
       _clearTransientInteractionStates();
     }
-    updateDisabledState(!_effectiveEnabled);
-    updateErrorState(_effectiveHasError);
+    syncWidgetStates();
 
     if (widget.controller == null && oldWidget.controller != null) {
       _createLocalController(oldWidget.controller!.value);
@@ -740,10 +738,24 @@ class _NakedTextFieldState extends State<NakedTextField>
   }
 
   void _clearTransientInteractionStates() {
+    final wasHovered = isHovered;
     final wasPressed = isPressed;
-    updateHoverState(false, widget.onHoverChange);
-    if (wasPressed) widget.onTapChange?.call(false);
-    updatePressState(false, widget.onPressChange);
+    final onHoverChange = widget.onHoverChange;
+    final onTapChange = widget.onTapChange;
+    final onPressChange = widget.onPressChange;
+
+    updateHoverState(false, null);
+    updatePressState(false, null);
+    if (!wasHovered && !wasPressed) return;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || _effectiveEnabled) return;
+      if (wasHovered) onHoverChange?.call(false);
+      if (wasPressed) {
+        onTapChange?.call(false);
+        onPressChange?.call(false);
+      }
+    });
   }
 
   void _observeEffectiveError() {
