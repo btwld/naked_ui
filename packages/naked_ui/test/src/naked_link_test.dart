@@ -236,57 +236,60 @@ void main() {
         return null;
       });
 
-      var enabled = true;
-      var feedback = true;
-      late StateSetter rebuild;
-      await tester.pumpWidget(
-        _testApp(
-          StatefulBuilder(
-            builder: (context, setState) {
-              rebuild = setState;
-              return NakedLink(
-                enabled: enabled,
-                enableFeedback: feedback,
-                onPressed: () {},
-                child: const SizedBox(
-                  width: 160,
-                  height: 48,
-                  child: Text('Link'),
-                ),
-              );
-            },
+      try {
+        var enabled = true;
+        var feedback = true;
+        late StateSetter rebuild;
+        await tester.pumpWidget(
+          _testApp(
+            StatefulBuilder(
+              builder: (context, setState) {
+                rebuild = setState;
+                return NakedLink(
+                  enabled: enabled,
+                  enableFeedback: feedback,
+                  onPressed: () {},
+                  child: const SizedBox(
+                    width: 160,
+                    height: 48,
+                    child: Text('Link'),
+                  ),
+                );
+              },
+            ),
           ),
-        ),
-      );
+        );
 
-      await tester.tap(find.text('Link'));
-      await tester.pump();
-      expect(
-        platformCalls.where((call) => call.method == 'SystemSound.play'),
-        hasLength(1),
-      );
-      rebuild(() => feedback = false);
-      await tester.pump();
-      await tester.tap(find.text('Link'));
-      await tester.pump();
-      expect(
-        platformCalls.where((call) => call.method == 'SystemSound.play'),
-        hasLength(1),
-      );
+        await tester.tap(find.text('Link'));
+        await tester.pump();
+        expect(
+          platformCalls.where((call) => call.method == 'SystemSound.play'),
+          hasLength(1),
+        );
+        rebuild(() => feedback = false);
+        await tester.pump();
+        await tester.tap(find.text('Link'));
+        await tester.pump();
+        expect(
+          platformCalls.where((call) => call.method == 'SystemSound.play'),
+          hasLength(1),
+        );
 
-      rebuild(() {
-        feedback = true;
-        enabled = false;
-      });
-      await tester.pump();
-      await tester.tap(find.text('Link'));
-      await tester.pump();
-      expect(
-        platformCalls.where((call) => call.method == 'SystemSound.play'),
-        hasLength(1),
-      );
-      messenger.setMockMethodCallHandler(SystemChannels.platform, null);
-      debugDefaultTargetPlatformOverride = oldPlatform;
+        rebuild(() {
+          feedback = true;
+          enabled = false;
+        });
+        await tester.pump();
+        await tester.tap(find.text('Link'));
+        await tester.pump();
+        expect(
+          platformCalls.where((call) => call.method == 'SystemSound.play'),
+          hasLength(1),
+        );
+      } finally {
+        messenger.setMockMethodCallHandler(SystemChannels.platform, null);
+        debugDefaultTargetPlatformOverride = oldPlatform;
+      }
     });
   });
 

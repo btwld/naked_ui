@@ -24,5 +24,6 @@ adb -s "$device_id" get-state
     --dart-define="NAKED_UI_FLUTTER_VERSION=$NAKED_UI_FLUTTER_VERSION"
 
   test -s build/integration_test_screenshots/dialog__open__android__reference.png
+  test -s build/integration_test_screenshots/link__disabled__android__reference.png
   test -s build/integration_test_screenshots/manifest.json
 )

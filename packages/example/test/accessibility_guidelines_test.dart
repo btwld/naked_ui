@@ -1,4 +1,5 @@
 import 'package:example/api/naked_button.0.dart' as button_example;
+import 'package:example/api/naked_link.0.dart' as link_example;
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:naked_ui/naked_ui.dart';
@@ -6,6 +7,31 @@ import 'package:naked_ui/naked_ui.dart';
 import 'helpers/accessibility_guideline_helpers.dart';
 
 void main() {
+  testWidgets('inline Link meets labeling and contrast guidelines', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      const MaterialApp(home: Scaffold(body: link_example.LinkExample())),
+    );
+
+    await tester.expectMeetsAccessibilityGuidelines(
+      androidTapTarget: false,
+      iOSTapTarget: false,
+    );
+  });
+
+  testWidgets('standalone styled Link meets platform target guidelines', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Scaffold(body: link_example.StandaloneLinkExample()),
+      ),
+    );
+
+    await tester.expectMeetsAccessibilityGuidelines();
+  });
+
   testWidgets('canonical styled button meets accessibility guidelines', (
     tester,
   ) async {

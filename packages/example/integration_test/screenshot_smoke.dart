@@ -1,8 +1,11 @@
 import 'dart:io';
 
 import 'package:example/api/naked_dialog.0.dart' as dialog_example;
+import 'package:example/api/naked_link.0.dart' as link_example;
 import 'package:example/src/testing/screenshot_evidence.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/semantics.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 
@@ -50,4 +53,128 @@ void main() {
       surface: screenshotSurface,
     );
   });
+
+  testWidgets('Link default inline screenshot evidence', (tester) async {
+    final screenshotSurface = await _pumpLinkSurface(
+      tester,
+      const link_example.LinkExample(),
+    );
+    expect(find.byKey(const ValueKey('link.primary')), findsOneWidget);
+
+    await _captureLinkEvidence(
+      tester,
+      binding,
+      screenshotSurface,
+      scenario: 'default_inline',
+    );
+  });
+
+  testWidgets('Link keyboard focus screenshot evidence', (tester) async {
+    final screenshotSurface = await _pumpLinkSurface(
+      tester,
+      const link_example.LinkExample(),
+    );
+    await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+    await tester.pump();
+    await tester.pump();
+    expect(
+      find.text('hovered:false focused:true pressed:false enabled:true'),
+      findsOneWidget,
+    );
+
+    await _captureLinkEvidence(
+      tester,
+      binding,
+      screenshotSurface,
+      scenario: 'keyboard_focus',
+    );
+  });
+
+  testWidgets('Link disabled screenshot evidence', (tester) async {
+    final screenshotSurface = await _pumpLinkSurface(
+      tester,
+      const link_example.LinkExample(),
+    );
+    final semantics = tester.ensureSemantics();
+    try {
+      final disabled = tester
+          .getSemantics(find.text('Unavailable documentation'))
+          .getSemanticsData();
+      expect(disabled.flagsCollection.isLink, isTrue);
+      expect(disabled.hasAction(SemanticsAction.tap), isFalse);
+    } finally {
+      semantics.dispose();
+    }
+
+    await _captureLinkEvidence(
+      tester,
+      binding,
+      screenshotSurface,
+      scenario: 'disabled',
+    );
+  });
+
+  testWidgets('Link 200% long text screenshot evidence', (tester) async {
+    final screenshotSurface = await _pumpLinkSurface(
+      tester,
+      const link_example.LinkExample(textScale: 2, longText: true),
+    );
+    expect(tester.takeException(), isNull);
+    expect(find.textContaining('complete accessibility guide'), findsOneWidget);
+
+    await _captureLinkEvidence(
+      tester,
+      binding,
+      screenshotSurface,
+      scenario: 'long_text_200',
+      textScale: 2,
+    );
+  });
+}
+
+Future<Finder> _pumpLinkSurface(WidgetTester tester, Widget child) async {
+  final usesNativeSurface = Platform.isAndroid || Platform.isIOS;
+  if (!usesNativeSurface) {
+    tester.view.physicalSize = const Size(800, 600);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+  }
+
+  FocusManager.instance.primaryFocus?.unfocus();
+  await tester.pumpWidget(
+    MaterialApp(
+      debugShowCheckedModeBanner: false,
+      home: Scaffold(body: SizedBox.expand(child: child)),
+    ),
+  );
+  await tester.pump();
+  final screenshotSurface = find.byKey(const ValueKey('link.evidence.surface'));
+  expect(screenshotSurface, findsOneWidget);
+  if (!usesNativeSurface) {
+    expect(tester.getSize(screenshotSurface), const Size(800, 600));
+  }
+  return screenshotSurface;
+}
+
+Future<void> _captureLinkEvidence(
+  WidgetTester tester,
+  IntegrationTestWidgetsFlutterBinding binding,
+  Finder screenshotSurface, {
+  required String scenario,
+  double textScale = 1,
+}) async {
+  final logicalSize = tester.getSize(screenshotSurface);
+  await tester.captureEvidenceScreenshot(
+    binding,
+    ScreenshotEvidence(
+      component: 'link',
+      scenario: scenario,
+      surface: '${logicalSize.width}x${logicalSize.height} logical pixels',
+      devicePixelRatio: tester.view.devicePixelRatio,
+      textScale: textScale,
+      animationMode: 'disabled',
+    ),
+    surface: screenshotSurface,
+  );
 }

@@ -1,7 +1,7 @@
 # Phase 2 — Link
 
-Status: **Active — current code and pinned Flutter behavior re-verified;
-test-first implementation is next**.
+Status: **Active — core implementation and deterministic fixture complete;
+publication and real-platform evidence gates are in progress**.
 
 Goal: add a headless inline navigation primitive that exposes Link rather than
 Button semantics, activates once through primary pointer, Enter, Numpad Enter,
@@ -200,8 +200,8 @@ findings below re-verified on 2026-07-13).
   text configurations; disable/fix animation for evidence. Use no network or
   router.
 - **Stable keys:** `link.primary`, `link.disabled`, `link.external`,
-  `link.result`, `link.next-focus`, plus `link.state`, `link.reset`, and a fixed
-  evidence surface key.
+  `link.result`, `link.next-focus`, plus `link.state`,
+  `link.disable-primary`, `link.reset`, and a fixed evidence surface key.
 - **Golden:** default inline/focus-capable canonical surface at 800×600, DPR 1,
   pinned Roboto, locale/direction/text scale/brightness fixed. Generate only
   through the approved Ubuntu update-then-verify diagnostic, inspect the PNG,
@@ -229,7 +229,8 @@ findings below re-verified on 2026-07-13).
   implementations. Record LINK-COMP-01 as a closure blocker and require Phase 5
   and Phase 7 integration suites to wrap the real `NakedLink` and prove the
   sixth scenario.
-- **Pumps/cleanup:** use one frame for synchronous focus/state transitions and
+- **Pumps/cleanup:** use one event-delivery frame plus one focus-callback rebuild
+  frame for traversal, one frame for other synchronous state transitions, and
   bounded observable waits only for web scrolling or platform attachment.
   Restore view, DPR, direction, text scale, scroll controller, semantics handle,
   mouse gesture, focus nodes, and fixture state. No `pumpAndSettle`, sleeps,

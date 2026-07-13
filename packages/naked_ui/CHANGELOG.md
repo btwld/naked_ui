@@ -1,5 +1,13 @@
 ## 1.0.0-beta.3
 
+### Features
+
+- Add `NakedLink` with Link semantics and optional URL metadata, observable
+  hover/focus/press/disabled state, caller-owned focus nodes, primary and
+  semantic activation, and Enter/Numpad Enter keyboard support. Space and
+  secondary click remain unclaimed, and routing, launching, visited state,
+  styling, and localized copy stay consumer-owned.
+
 ### Fixes and hardening
 
 - Scope overlay-item builders to their declared state type: `NakedMenuItem` and

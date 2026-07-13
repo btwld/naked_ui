@@ -17,6 +17,7 @@ The complete documentation covers detailed component APIs and examples, guides a
 ## Supported Components
 
 - NakedButton — button interactions (hover, press, focus)
+- NakedLink — Link semantics, URL metadata, and Enter-only keyboard activation
 - NakedCheckbox — toggle behavior and semantics
 - NakedRadio — single‑select radio with group management
 - NakedSelect — dropdown/select with keyboard navigation
@@ -54,6 +55,29 @@ NakedButton(
       orElse: Colors.blue,
     ),
     child: const Text('Click Me', style: TextStyle(color: Colors.white)),
+  ),
+)
+```
+
+### Custom Link
+
+Use a Link for navigation rather than styling a Button like text. The URL is
+semantics metadata; your callback still owns routing or launching. Enter and
+Numpad Enter activate, while Space remains available to the page.
+
+```dart
+NakedLink(
+  linkUrl: Uri.parse('https://example.com/docs'),
+  onPressed: openDocumentation,
+  child: const Text('Documentation'),
+  builder: (context, state, child) => DecoratedBox(
+    decoration: BoxDecoration(
+      color: state.isHovered ? Colors.blue.shade50 : Colors.transparent,
+      border: Border.all(
+        color: state.isFocused ? Colors.blue : Colors.transparent,
+      ),
+    ),
+    child: child,
   ),
 )
 ```
