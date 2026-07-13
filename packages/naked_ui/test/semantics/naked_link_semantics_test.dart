@@ -5,6 +5,8 @@ import 'package:flutter/semantics.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:naked_ui/naked_ui.dart';
 
+final _destination = Uri.parse('https://example.com/docs');
+
 void main() {
   group('NakedLink semantics', () {
     testWidgets('enabled Link exposes exact name role URL hint and action', (
@@ -48,11 +50,42 @@ void main() {
       try {
         await tester.pumpWidget(
           _testApp(
-            NakedLink(onPressed: () {}, child: const Text('Visible name')),
+            NakedLink(
+              linkUrl: _destination,
+              onPressed: () {},
+              child: const Text('Visible name'),
+            ),
           ),
         );
 
         expect(_singleLinkData(tester).label, 'Visible name');
+      } finally {
+        handle.dispose();
+      }
+    });
+
+    testWidgets('rich text supplies one complete Link name', (tester) async {
+      final handle = tester.ensureSemantics();
+
+      try {
+        await tester.pumpWidget(
+          _testApp(
+            NakedLink(
+              linkUrl: _destination,
+              onPressed: () {},
+              child: const Text.rich(
+                TextSpan(
+                  children: [
+                    TextSpan(text: 'Read '),
+                    TextSpan(text: 'docs'),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+
+        expect(_singleLinkData(tester).label, 'Read docs');
       } finally {
         handle.dispose();
       }
@@ -67,6 +100,7 @@ void main() {
         await tester.pumpWidget(
           _testApp(
             NakedLink(
+              linkUrl: _destination,
               semanticLabel: 'Accessible documentation',
               onPressed: () {},
               child: Row(
@@ -110,6 +144,7 @@ void main() {
         await tester.pumpWidget(
           _testApp(
             NakedLink(
+              linkUrl: _destination,
               semanticHint: 'Opens in a new window',
               onPressed: () {},
               child: const Row(
@@ -147,6 +182,7 @@ void main() {
           _testApp(
             NakedLink(
               focusNode: focusNode,
+              linkUrl: _destination,
               onPressed: () {},
               child: const Text('Documentation'),
             ),
@@ -179,6 +215,7 @@ void main() {
         await tester.pumpWidget(
           _testApp(
             NakedLink(
+              linkUrl: _destination,
               onPressed: () => callbackCount++,
               child: const Text('Documentation'),
             ),
@@ -194,44 +231,82 @@ void main() {
       }
     });
 
-    testWidgets('callback removal retains disabled Link and removes action', (
-      tester,
-    ) async {
-      final handle = tester.ensureSemantics();
-      VoidCallback? callback = () {};
-      late StateSetter rebuild;
+    testWidgets(
+      'callback removal keeps the destination available to default navigation',
+      (tester) async {
+        final handle = tester.ensureSemantics();
+        VoidCallback? callback = () {};
+        late StateSetter rebuild;
 
-      try {
-        await tester.pumpWidget(
-          _testApp(
-            StatefulBuilder(
-              builder: (context, setState) {
-                rebuild = setState;
-                return NakedLink(
-                  linkUrl: Uri.parse('https://example.com/docs'),
-                  semanticLabel: 'Documentation',
-                  onPressed: callback,
-                  child: const Text('Visible documentation'),
-                );
-              },
+        try {
+          await tester.pumpWidget(
+            _testApp(
+              StatefulBuilder(
+                builder: (context, setState) {
+                  rebuild = setState;
+                  return NakedLink(
+                    linkUrl: Uri.parse('https://example.com/docs'),
+                    semanticLabel: 'Documentation',
+                    onPressed: callback,
+                    child: const Text('Visible documentation'),
+                  );
+                },
+              ),
             ),
-          ),
-        );
-        expect(_singleLinkData(tester).hasAction(SemanticsAction.tap), isTrue);
+          );
+          expect(
+            _singleLinkData(tester).hasAction(SemanticsAction.tap),
+            isTrue,
+          );
 
-        rebuild(() => callback = null);
-        await tester.pump();
-        final data = _singleLinkData(tester);
-        expect(data.label, 'Documentation');
-        expect(data.flagsCollection.isLink, isTrue);
-        expect(data.flagsCollection.isButton, isFalse);
-        expect(data.flagsCollection.isEnabled, Tristate.isFalse);
-        expect(data.flagsCollection.isFocused, Tristate.none);
-        expect(data.hasAction(SemanticsAction.tap), isFalse);
-      } finally {
-        handle.dispose();
-      }
-    });
+          rebuild(() => callback = null);
+          await tester.pump();
+          final data = _singleLinkData(tester);
+          expect(data.label, 'Documentation');
+          expect(data.flagsCollection.isLink, isTrue);
+          expect(data.flagsCollection.isButton, isFalse);
+          expect(data.flagsCollection.isEnabled, Tristate.isTrue);
+          expect(data.flagsCollection.isFocused, Tristate.isFalse);
+          expect(data.hasAction(SemanticsAction.tap), isTrue);
+        } finally {
+          handle.dispose();
+        }
+      },
+    );
+
+    testWidgets(
+      'disabled destination exposes unavailable text without URL or action',
+      (tester) async {
+        final handle = tester.ensureSemantics();
+        final linkUrl = Uri.parse('https://example.com/docs');
+
+        try {
+          await tester.pumpWidget(
+            _testApp(
+              NakedLink(
+                enabled: false,
+                linkUrl: linkUrl,
+                semanticLabel: 'Unavailable documentation',
+                onPressed: () {},
+                child: const Text('Documentation'),
+              ),
+            ),
+          );
+
+          final data = tester
+              .getSemantics(find.text('Documentation'))
+              .getSemanticsData();
+          expect(data.label, 'Unavailable documentation');
+          expect(data.linkUrl, isNull);
+          expect(data.flagsCollection.isLink, isFalse);
+          expect(data.flagsCollection.isButton, isFalse);
+          expect(data.flagsCollection.isEnabled, Tristate.isFalse);
+          expect(data.hasAction(SemanticsAction.tap), isFalse);
+        } finally {
+          handle.dispose();
+        }
+      },
+    );
 
     testWidgets('Arabic label and hint remain exact in RTL', (tester) async {
       final handle = tester.ensureSemantics();
@@ -242,6 +317,7 @@ void main() {
             Directionality(
               textDirection: TextDirection.rtl,
               child: NakedLink(
+                linkUrl: _destination,
                 semanticLabel: 'الوثائق',
                 semanticHint: 'يفتح في نافذة جديدة',
                 onPressed: () {},
@@ -269,6 +345,7 @@ void main() {
         await tester.pumpWidget(
           _testApp(
             NakedLink(
+              linkUrl: _destination,
               semanticLabel: 'Documentation',
               onPressed: () {},
               child: const Text('Visible documentation'),
@@ -280,6 +357,7 @@ void main() {
         await tester.pumpWidget(
           _testApp(
             NakedLink(
+              linkUrl: _destination,
               semanticLabel: 'Documentation',
               excludeSemantics: true,
               onPressed: () {},

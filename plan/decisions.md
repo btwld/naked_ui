@@ -14,6 +14,26 @@ choosing an SDK-floor policy, platform-directory strategy, golden host/font,
 or Android/web cadence. The maintainer approved the evidence-backed D-12–D-15
 recommendations on 2026-07-12 before decision-dependent implementation began.
 
+### Phase 2 decision evidence (2026-07-13)
+
+- **D-16:** approved destination-owned Link availability and navigation. A
+  non-null `linkUrl` is the destination and, together with `enabled`, controls
+  availability. With no `onPressed`, Naked UI delegates to Flutter's official
+  [`url_launcher.Link`](https://pub.dev/documentation/url_launcher/latest/link/Link-class.html),
+  which renders a real web link and follows the URI on native platforms. A
+  supplied `onPressed` replaces that default path so custom routing and native
+  navigation cannot both run. A null or explicitly disabled destination is
+  exposed as unavailable text with no URL, Link role, tap action, focus, or web
+  `href`; HTML does not define anchors as actually disabled
+  [elements](https://html.spec.whatwg.org/dev/semantics-other.html#disabled-elements).
+  This also follows WAI-ARIA guidance to prefer a native anchor because a Link
+  role alone does not provide browser navigation or context-menu behavior
+  ([Link Pattern](https://www.w3.org/WAI/ARIA/apg/patterns/link/)). The public
+  `linkUrl` name remains unchanged for source compatibility.
+  Flutter's web Link delegate still contributes Link semantics for a null URI,
+  so the unavailable path omits that delegate; a keyed inner detector preserves
+  the consumer subtree when the platform wrapper enters or leaves the tree.
+
 ### Phase 1 decision evidence (2026-07-12)
 
 - **D-02:** approved the optional caller-owned `initialFocusNode`. When the
@@ -63,6 +83,7 @@ recommendations on 2026-07-12 before decision-dependent implementation began.
 | D-13 | Example platform directories | Commit reviewed minimal platform files or generate reproducibly in CI; job names must match actual devices | Phase 0 (test-harness PR) | [resolved(commit reviewed Android/macOS/web directories)](#phase-0-decision-evidence-2026-07-12) |
 | D-14 | Golden host/font pinning | One Ubuntu image, Flutter 3.41.2, fixed surface config, checked-in licensed test font | Phase 0 (test-harness PR) | [resolved(Ubuntu 24.04, Flutter 3.41.2, Roboto Apache-2.0, fixed harness)](#phase-0-decision-evidence-2026-07-12) |
 | D-15 | Android/web PR frequency | Affected-path PR/merge-queue jobs; release blocked unless both passed on the exact release commit | Phase 0 (test-harness PR) | [resolved(affected PR/merge queue plus exact-tag release gates)](#phase-0-decision-evidence-2026-07-12) |
+| D-16 | Link destination and web-navigation ownership | Make `linkUrl` the destination and availability source; use official `url_launcher.Link` for default navigation; a custom callback replaces the default; unavailable Links expose no native destination | Before Phase 2 reviewer corrections | [resolved(destination-owned availability; official default navigation; callback override)](#phase-2-decision-evidence-2026-07-13) |
 
 ## Risk register
 

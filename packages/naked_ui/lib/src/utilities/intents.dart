@@ -307,8 +307,10 @@ const Map<ShortcutActivator, Intent> _buttonShortcuts =
 
 const Map<ShortcutActivator, Intent> _linkShortcuts =
     <ShortcutActivator, Intent>{
-      SingleActivator(LogicalKeyboardKey.enter): _LinkActivateIntent(),
-      SingleActivator(LogicalKeyboardKey.numpadEnter): _LinkActivateIntent(),
+      SingleActivator(LogicalKeyboardKey.enter, includeRepeats: false):
+          _LinkActivateIntent(),
+      SingleActivator(LogicalKeyboardKey.numpadEnter, includeRepeats: false):
+          _LinkActivateIntent(),
     };
 
 const Map<ShortcutActivator, Intent> _tabShortcuts =

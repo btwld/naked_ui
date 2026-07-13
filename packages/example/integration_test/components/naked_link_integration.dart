@@ -6,8 +6,10 @@ import 'package:flutter/semantics.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
+import 'package:naked_ui/naked_ui.dart';
 
 import '../helpers/keyboard_test_helpers.dart';
+import '../helpers/link_dom_probe.dart';
 
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
@@ -38,7 +40,13 @@ void main() {
       await tester.pumpWidget(
         const MaterialApp(
           home: Scaffold(
-            body: link_example.LinkExample(textScale: 2, longText: true),
+            body: Align(
+              alignment: Alignment.topCenter,
+              child: SizedBox(
+                height: 320,
+                child: link_example.LinkExample(textScale: 2, longText: true),
+              ),
+            ),
           ),
         ),
       );
@@ -124,6 +132,123 @@ void main() {
       }
     });
 
+    testWidgets('web destination-only Link delegates to native navigation', (
+      tester,
+    ) async {
+      if (!supportsLinkDomProbe) return;
+
+      final originalUri = currentBrowserUri!;
+      const marker = 'naked-link-native-navigation';
+      final destination = originalUri.replace(fragment: marker);
+      addTearDown(() => restoreBrowserUri(originalUri));
+
+      final semantics = tester.ensureSemantics();
+      addTearDown(semantics.dispose);
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Center(
+            child: NakedLink(
+              linkUrl: destination,
+              child: const Text('Native navigation'),
+            ),
+          ),
+        ),
+      );
+      await tester.pump();
+      await tester.pumpUntil(
+        () => hasLinkHrefContaining(marker),
+        timeout: const Duration(seconds: 2),
+      );
+
+      expect(hasLinkHrefContaining(marker), isTrue);
+      final node = tester.getSemantics(find.text('Native navigation'));
+      node.owner!.performAction(node.id, SemanticsAction.tap);
+      final click = await dispatchSyntheticLinkClick(marker);
+      expect(click?.defaultPrevented, isFalse);
+      expect(click?.resultingUri.fragment, marker);
+      expect(currentBrowserUri, originalUri);
+    });
+
+    testWidgets('web custom callback signals native suppression', (
+      tester,
+    ) async {
+      if (!supportsLinkDomProbe) return;
+
+      final originalUri = currentBrowserUri!;
+      const marker = 'naked-link-custom-override';
+      final destination = originalUri.replace(fragment: marker);
+      var activations = 0;
+      addTearDown(() => restoreBrowserUri(originalUri));
+
+      final semantics = tester.ensureSemantics();
+      addTearDown(semantics.dispose);
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Center(
+            child: NakedLink(
+              linkUrl: destination,
+              onPressed: () => activations++,
+              child: const Text('Custom navigation'),
+            ),
+          ),
+        ),
+      );
+      await tester.pump();
+      await tester.pumpUntil(
+        () => hasLinkHrefContaining(marker),
+        timeout: const Duration(seconds: 2),
+      );
+
+      expect(hasLinkHrefContaining(marker), isTrue);
+      await tester.tap(find.text('Custom navigation'));
+      await tester.pump();
+      expect(activations, 1);
+      expect(currentBrowserUri, originalUri);
+
+      final click = await dispatchSyntheticLinkClick(marker);
+      expect(click?.defaultPrevented, isTrue);
+      expect(currentBrowserUri, originalUri);
+    });
+
+    testWidgets('web disabled Link removes its native destination', (
+      tester,
+    ) async {
+      if (!supportsLinkDomProbe) return;
+
+      final originalUri = currentBrowserUri!;
+      const marker = 'naked-link-disabled';
+      final destination = originalUri.replace(fragment: marker);
+      var activations = 0;
+      addTearDown(() => restoreBrowserUri(originalUri));
+
+      final semantics = tester.ensureSemantics();
+      addTearDown(semantics.dispose);
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Center(
+            child: NakedLink(
+              linkUrl: destination,
+              enabled: false,
+              onPressed: () => activations++,
+              child: const Text('Unavailable destination'),
+            ),
+          ),
+        ),
+      );
+      await tester.pump();
+
+      expect(hasLinkHrefContaining(marker), isFalse);
+      await tester.tap(find.text('Unavailable destination'));
+      await tester.pump();
+      expect(activations, 0);
+      expect(currentBrowserUri, originalUri);
+      final data = tester
+          .getSemantics(find.text('Unavailable destination'))
+          .getSemanticsData();
+      expect(data.flagsCollection.isLink, isFalse);
+      expect(data.hasAction(SemanticsAction.tap), isFalse);
+    });
+
     testWidgets(
       'disabled Link is skipped and has no pointer or semantic action',
       (tester) async {
@@ -149,6 +274,7 @@ void main() {
           final disabled = tester.getSemantics(
             find.text('Unavailable documentation'),
           );
+          expect(disabled.getSemanticsData().flagsCollection.isLink, isFalse);
           expect(
             disabled.getSemanticsData().hasAction(SemanticsAction.tap),
             isFalse,
@@ -159,7 +285,7 @@ void main() {
       },
     );
 
-    testWidgets('callback removal while focused blocks later activation', (
+    testWidgets('destination removal while focused blocks later activation', (
       tester,
     ) async {
       await tester.pumpWidget(const link_example.MyApp());

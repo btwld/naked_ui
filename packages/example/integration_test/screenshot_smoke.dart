@@ -125,7 +125,7 @@ void main() {
       final disabled = tester
           .getSemantics(find.text('Unavailable documentation'))
           .getSemanticsData();
-      expect(disabled.flagsCollection.isLink, isTrue);
+      expect(disabled.flagsCollection.isLink, isFalse);
       expect(disabled.hasAction(SemanticsAction.tap), isFalse);
     } finally {
       semantics.dispose();

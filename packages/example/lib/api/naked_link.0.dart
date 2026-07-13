@@ -137,8 +137,6 @@ class _LinkExampleState extends State<LinkExample> {
                             onPressed: _primaryEnabled
                                 ? () => setState(() {
                                     _primaryEnabled = false;
-                                    _hovered = false;
-                                    _pressed = false;
                                   })
                                 : null,
                             child: const Text('Disable primary Link'),
@@ -179,9 +177,11 @@ class _LinkExampleState extends State<LinkExample> {
         ),
         NakedLink(
           key: const ValueKey('link.primary'),
-          linkUrl: Uri.parse('https://example.com/naked-ui'),
+          linkUrl: _primaryEnabled
+              ? Uri.parse('https://example.com/naked-ui')
+              : null,
           semanticLabel: _isRtl ? linkText : null,
-          onPressed: _primaryEnabled ? () => _activate('primary') : null,
+          onPressed: () => _activate('primary'),
           onHoverChange: (value) => setState(() => _hovered = value),
           onFocusChange: (value) => setState(() => _focused = value),
           onPressChange: (value) => setState(() => _pressed = value),
@@ -202,7 +202,7 @@ class _LinkExampleState extends State<LinkExample> {
       key: const ValueKey('link.external'),
       linkUrl: Uri.parse('https://docs.flutter.dev/ui/accessibility'),
       semanticLabel: 'Flutter accessibility documentation',
-      semanticHint: 'Opens in a new window',
+      semanticHint: 'External destination',
       onPressed: () => _activate('external'),
       child: const Wrap(
         crossAxisAlignment: WrapCrossAlignment.center,
@@ -231,6 +231,7 @@ class _LinkExampleState extends State<LinkExample> {
     return NakedLink(
       key: const ValueKey('link.disabled'),
       enabled: false,
+      linkUrl: Uri.parse('https://example.com/unavailable'),
       onPressed: () => _activate('disabled'),
       child: const Text('Unavailable documentation'),
       builder: (context, state, child) => _LinkSurface(

@@ -72,38 +72,39 @@ void main() {
     final data = tester
         .getSemantics(find.text('Unavailable documentation'))
         .getSemanticsData();
-    expect(data.flagsCollection.isLink, isTrue);
+    expect(data.flagsCollection.isLink, isFalse);
     expect(data.hasAction(SemanticsAction.tap), isFalse);
   });
 
-  testWidgets('focus and dynamic callback state are visible and resettable', (
-    tester,
-  ) async {
-    await tester.pumpWidget(_app(const link_example.LinkExample()));
+  testWidgets(
+    'focus and dynamic destination state are visible and resettable',
+    (tester) async {
+      await tester.pumpWidget(_app(const link_example.LinkExample()));
 
-    await tester.sendKeyEvent(LogicalKeyboardKey.tab);
-    await tester.pump();
-    await tester.pump();
-    expect(
-      find.text('hovered:false focused:true pressed:false enabled:true'),
-      findsOneWidget,
-    );
+      await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+      await tester.pump();
+      await tester.pump();
+      expect(
+        find.text('hovered:false focused:true pressed:false enabled:true'),
+        findsOneWidget,
+      );
 
-    await tester.tap(find.byKey(const ValueKey('link.disable-primary')));
-    await tester.pump();
-    await tester.pump();
-    expect(
-      find.text('hovered:false focused:false pressed:false enabled:false'),
-      findsOneWidget,
-    );
+      await tester.tap(find.byKey(const ValueKey('link.disable-primary')));
+      await tester.pump();
+      await tester.pump();
+      expect(
+        find.text('hovered:false focused:false pressed:false enabled:false'),
+        findsOneWidget,
+      );
 
-    await tester.tap(find.byKey(const ValueKey('link.reset')));
-    await tester.pump();
-    expect(
-      find.text('hovered:false focused:false pressed:false enabled:true'),
-      findsOneWidget,
-    );
-  });
+      await tester.tap(find.byKey(const ValueKey('link.reset')));
+      await tester.pump();
+      expect(
+        find.text('hovered:false focused:false pressed:false enabled:true'),
+        findsOneWidget,
+      );
+    },
+  );
 
   testWidgets('external hint is named once and its icon is decorative', (
     tester,
@@ -116,7 +117,7 @@ void main() {
           .getSemantics(find.byKey(const ValueKey('link.external')))
           .getSemanticsData();
       expect(data.label, 'Flutter accessibility documentation');
-      expect(data.hint, 'Opens in a new window');
+      expect(data.hint, 'External destination');
       expect(
         find.bySemanticsLabel(RegExp(r'^External link icon$')),
         findsNothing,

@@ -17,7 +17,7 @@ The complete documentation covers detailed component APIs and examples, guides a
 ## Supported Components
 
 - NakedButton — button interactions (hover, press, focus)
-- NakedLink — Link semantics, URL metadata, and Enter-only keyboard activation
+- NakedLink — native Link navigation, semantics, and Enter-only activation
 - NakedCheckbox — toggle behavior and semantics
 - NakedRadio — single‑select radio with group management
 - NakedSelect — dropdown/select with keyboard navigation
@@ -62,13 +62,14 @@ NakedButton(
 ### Custom Link
 
 Use a Link for navigation rather than styling a Button like text. The URL is
-semantics metadata; your callback still owns routing or launching. Enter and
-Numpad Enter activate, while Space remains available to the page.
+the destination and enables the Link. Naked UI delegates default navigation to
+Flutter's official `url_launcher.Link`; provide `onPressed` only when custom
+routing should replace that default. Enter and Numpad Enter activate, while
+Space remains available to the page.
 
 ```dart
 NakedLink(
   linkUrl: Uri.parse('https://example.com/docs'),
-  onPressed: openDocumentation,
   child: const Text('Documentation'),
   builder: (context, state, child) => DecoratedBox(
     decoration: BoxDecoration(
