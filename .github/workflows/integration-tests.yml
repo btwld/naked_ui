@@ -42,8 +42,8 @@ jobs:
         working-directory: packages/example
         run: flutter test -r compact -d flutter-tester integration_test/all_tests.dart
 
-      # Guards tool/run_integration_all.sh against path rot (Phase 0 task
-      # B1): runs the script itself on a single component file.
+      # Guards tool/run_integration_all.sh against path rot by running the
+      # script itself on a single component file.
       - name: Smoke the sequential runner script
         run: bash tool/run_integration_all.sh flutter-tester "naked_button*"
 
@@ -75,11 +75,7 @@ jobs:
 
       - name: Run integration tests on macOS
         working-directory: packages/example
-        run: >-
-          flutter drive
-          --driver=test_driver/integration_test_behavior.dart
-          --target=integration_test/all_tests.dart
-          -d macos
+        run: flutter test -r compact -d macos integration_test/all_tests.dart
 
       - name: Capture macOS screenshot evidence
         working-directory: packages/example

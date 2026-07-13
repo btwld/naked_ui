@@ -23,7 +23,7 @@ jobs:
   integration-tests-web:
     name: Integration Tests (web)
     runs-on: ubuntu-24.04
-    timeout-minutes: 30
+    timeout-minutes: 10
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -76,7 +76,13 @@ jobs:
             2>&1 | tee build/web-integration.log
 
       - name: Verify web integration evidence
-        run: grep -F "All tests passed." packages/example/build/web-integration.log
+        run: |
+          log=packages/example/build/web-integration.log
+          grep -F "All tests passed." "$log"
+          if grep -Eq 'TimeoutException|Some tests failed\.| \[E\]' "$log"; then
+            echo "The in-app test runner reported failures." >&2
+            exit 1
+          fi
 
       - name: Upload web integration evidence
         if: always()

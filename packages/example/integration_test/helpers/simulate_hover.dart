@@ -66,17 +66,11 @@ extension WidgetTesterExtension on WidgetTester {
       await pump(const Duration(milliseconds: 100));
 
       onPressed?.call();
-      await gesture.up();
-      await pump();
     } finally {
-      // Ensure gesture cleanup even if something fails
-      try {
-        await gesture.up();
-      } catch (e) {
-        // Cleanup may fail if gesture already released - log for debugging
-        debugPrint('Gesture cleanup (expected if already released): $e');
-      }
+      // Release exactly once, including when the observation callback fails.
+      await gesture.up();
     }
+    await pump();
   }
 
   void expectCursor(SystemMouseCursor cursor, {required Key on}) async {
