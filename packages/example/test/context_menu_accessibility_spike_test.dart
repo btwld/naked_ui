@@ -1,3 +1,5 @@
+import 'dart:ui' show Tristate;
+
 import 'package:example/src/testing/context_menu_accessibility_spike.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -6,10 +8,9 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  testWidgets(
+  _semanticsTestWidgets(
     'V1 adds exactly one longPress action without changing the Link node',
     (tester) async {
-      final semantics = tester.ensureSemantics();
       final counters = ContextMenuSpikeCounters();
 
       await tester.pumpWidget(
@@ -49,14 +50,12 @@ void main() {
       expect(counters.openRequests, 1);
       expect(counters.actualOpens, 1);
       expect(find.byKey(ContextMenuSpikeKeys.menu), findsOneWidget);
-      semantics.dispose();
     },
   );
 
-  testWidgets('V0 to V1 records exact node-level contract failures', (
+  _semanticsTestWidgets('V0 to V1 records exact node-level contract failures', (
     tester,
   ) async {
-    final semantics = tester.ensureSemantics();
     for (final childKind in ContextMenuSpikeChildKind.values) {
       await _pumpTrigger(
         tester,
@@ -64,13 +63,29 @@ void main() {
         childKind: childKind,
         variant: ContextMenuSpikeVariant.v0PhysicalAndKeyboard,
       );
-      final v0 = _treeSnapshot(tester);
+      final v0 = _serializedSemanticsSnapshot(tester);
       final v0LongPressCount = _semanticNodes(tester)
           .where(
             (node) =>
                 node.getSemanticsData().hasAction(SemanticsAction.longPress),
           )
           .length;
+      String? v0TextFieldSnapshot;
+      if (childKind == ContextMenuSpikeChildKind.selectableText) {
+        final textFieldNodes = _semanticNodes(tester)
+            .where(
+              (node) => node.getSemanticsData().flagsCollection.isTextField,
+            )
+            .toList();
+        expect(textFieldNodes, hasLength(1));
+        expect(
+          textFieldNodes.single.getSemanticsData().hasAction(
+            SemanticsAction.longPress,
+          ),
+          isTrue,
+        );
+        v0TextFieldSnapshot = _semanticNodeSnapshot(textFieldNodes.single);
+      }
 
       await _pumpTrigger(
         tester,
@@ -85,7 +100,7 @@ void main() {
           )
           .toList();
 
-      final v1 = _treeSnapshot(tester);
+      final v1 = _serializedSemanticsSnapshot(tester);
       if (childKind == ContextMenuSpikeChildKind.link) {
         expect(v0LongPressCount, 0);
         expect(actionNodes, hasLength(1));
@@ -109,13 +124,37 @@ void main() {
         expect(actionData.role, SemanticsRole.none);
         expect(actionData.flagsCollection.isButton, isFalse);
         if (childKind == ContextMenuSpikeChildKind.selectableText) {
+          final textFieldNodes = _semanticNodes(tester)
+              .where(
+                (node) => node.getSemanticsData().flagsCollection.isTextField,
+              )
+              .toList();
+          expect(textFieldNodes, hasLength(1));
+          expect(
+            textFieldNodes.single.getSemanticsData().hasAction(
+              SemanticsAction.longPress,
+            ),
+            isTrue,
+          );
+          expect(
+            _semanticNodeSnapshot(textFieldNodes.single),
+            v0TextFieldSnapshot,
+          );
           expect(v1, hasLength(v0.length + 1));
           expect(
-            _treeSnapshot(tester, omitUnlabeledLongPressNode: true),
+            _serializedSemanticsSnapshot(
+              tester,
+              omitUnlabeledLongPressNode: true,
+            ),
             v0,
             reason: 'SelectableText native node must otherwise stay intact',
           );
         } else {
+          expect(
+            actionData.flagsCollection.isFocused,
+            isNot(Tristate.none),
+            reason: 'the row action must be on an existing focusable node',
+          );
           expect(
             v1,
             v0,
@@ -124,97 +163,110 @@ void main() {
         }
       }
     }
-    semantics.dispose();
   });
 
   testWidgets(
-    'secondary click opens once and primary Link tap passes through',
+    'secondary click records every child and primary Link tap passes through',
     (tester) async {
-      final counters = ContextMenuSpikeCounters();
-      await _pumpTrigger(tester, counters: counters);
-      final trigger = find.byKey(ContextMenuSpikeKeys.triggerLink);
+      final linkCounters = ContextMenuSpikeCounters();
+      await _pumpTrigger(tester, counters: linkCounters);
+      final link = find.byKey(ContextMenuSpikeKeys.triggerLink);
 
-      await tester.tap(trigger);
+      await tester.tap(link);
       await tester.pump();
-      expect(counters.childActivations, 1);
-      expect(counters.openRequests, 0);
+      expect(linkCounters.childActivations, 1);
+      expect(linkCounters.openRequests, 0);
 
-      final secondary = await tester.createGesture(
-        buttons: kSecondaryButton,
-        kind: PointerDeviceKind.mouse,
-      );
-      final center = tester.getCenter(trigger);
-      await secondary.addPointer(location: center);
-      await secondary.down(center);
-      await tester.pump();
-      expect(counters.openRequests, 0);
-      expect(counters.actualOpens, 0);
+      for (final childKind in ContextMenuSpikeChildKind.values) {
+        final counters = ContextMenuSpikeCounters();
+        await _pumpTrigger(tester, counters: counters, childKind: childKind);
+        final trigger = _triggerFor(childKind);
+        final secondary = await tester.createGesture(
+          buttons: kSecondaryButton,
+          kind: PointerDeviceKind.mouse,
+        );
+        final center = tester.getCenter(trigger);
+        await secondary.addPointer(location: center);
+        await secondary.down(center);
+        await tester.pump();
+        expect(counters.openRequests, 0);
+        expect(counters.actualOpens, 0);
 
-      await secondary.up();
-      await tester.pump();
-      await secondary.removePointer();
-      expect(counters.openRequests, 1);
-      expect(counters.actualOpens, 1);
-      expect(counters.childActivations, 1);
-      expect(
-        counters.lastOpenSource,
-        ContextMenuSpikeOpenSource.secondaryPointer,
-      );
-      expect(counters.lastLocalInvocation, isNotNull);
+        await secondary.up();
+        await tester.pump();
+        await secondary.removePointer();
+
+        final selectable =
+            childKind == ContextMenuSpikeChildKind.selectableText;
+        expect(counters.openRequests, selectable ? 0 : 1);
+        expect(counters.actualOpens, selectable ? 0 : 1);
+        expect(counters.childActivations, 0);
+        expect(
+          counters.lastOpenSource,
+          selectable ? isNull : ContextMenuSpikeOpenSource.secondaryPointer,
+        );
+        expect(counters.lastLocalInvocation, selectable ? isNull : isNotNull);
+        if (selectable) {
+          expect(counters.textSelectionChanges, greaterThan(0));
+          expect(counters.lastTextSelection, isNotNull);
+          expect(counters.lastTextSelection!.isCollapsed, isTrue);
+        }
+      }
     },
   );
 
-  testWidgets(
-    'physical long press opens, while a pre-threshold scroll cancels',
-    (tester) async {
+  testWidgets('physical long press records every child, while scroll cancels', (
+    tester,
+  ) async {
+    for (final childKind in ContextMenuSpikeChildKind.values) {
       final counters = ContextMenuSpikeCounters();
-      await _pumpTrigger(
-        tester,
-        counters: counters,
-        childKind: ContextMenuSpikeChildKind.row,
-      );
-      await tester.longPress(find.byKey(ContextMenuSpikeKeys.triggerRow));
-      await tester.pump();
-      expect(counters.openRequests, 1);
-      expect(counters.actualOpens, 1);
-      expect(
-        counters.lastOpenSource,
-        ContextMenuSpikeOpenSource.physicalLongPress,
-      );
-      await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+      await _pumpTrigger(tester, counters: counters, childKind: childKind);
+      await tester.longPress(_triggerFor(childKind));
       await tester.pump();
 
-      final scrollCounters = ContextMenuSpikeCounters();
-      await tester.pumpWidget(
-        MaterialApp(
-          home: ListView(
-            key: ContextMenuSpikeKeys.scroll,
-            children: [
-              ContextMenuSpikeTrigger(
-                variant: ContextMenuSpikeVariant.v1SemanticLongPress,
-                childKind: ContextMenuSpikeChildKind.row,
-                counters: scrollCounters,
-              ),
-              const SizedBox(height: 1200),
-            ],
-          ),
+      final selectable = childKind == ContextMenuSpikeChildKind.selectableText;
+      expect(counters.openRequests, selectable ? 0 : 1);
+      expect(counters.actualOpens, selectable ? 0 : 1);
+      expect(
+        counters.lastOpenSource,
+        selectable ? isNull : ContextMenuSpikeOpenSource.physicalLongPress,
+      );
+      if (selectable) {
+        expect(counters.textSelectionChanges, greaterThan(0));
+        expect(counters.lastTextSelection, isNotNull);
+        expect(counters.lastTextSelection!.isCollapsed, isFalse);
+      } else {
+        await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+        await tester.pump();
+      }
+    }
+
+    final scrollCounters = ContextMenuSpikeCounters();
+    await tester.pumpWidget(
+      MaterialApp(
+        home: ListView(
+          key: ContextMenuSpikeKeys.scroll,
+          children: [
+            ContextMenuSpikeTrigger(
+              variant: ContextMenuSpikeVariant.v1SemanticLongPress,
+              childKind: ContextMenuSpikeChildKind.row,
+              counters: scrollCounters,
+            ),
+            const SizedBox(height: 1200),
+          ],
         ),
-      );
-      await tester.pump();
-      final row = find.byKey(ContextMenuSpikeKeys.triggerRow);
-      final scrollable = Scrollable.of(tester.element(row));
-      await tester.timedDrag(
-        row,
-        const Offset(0, -300),
-        kLongPressTimeout ~/ 4,
-      );
-      await tester.pump(kLongPressTimeout);
+      ),
+    );
+    await tester.pump();
+    final row = find.byKey(ContextMenuSpikeKeys.triggerRow);
+    final scrollable = Scrollable.of(tester.element(row));
+    await tester.timedDrag(row, const Offset(0, -300), kLongPressTimeout ~/ 4);
+    await tester.pump(kLongPressTimeout);
 
-      expect(scrollable.position.pixels, greaterThan(0));
-      expect(scrollCounters.openRequests, 0);
-      expect(scrollCounters.actualOpens, 0);
-    },
-  );
+    expect(scrollable.position.pixels, greaterThan(0));
+    expect(scrollCounters.openRequests, 0);
+    expect(scrollCounters.actualOpens, 0);
+  });
 
   testWidgets('same long-press gesture cannot activate an inserted item', (
     tester,
@@ -375,12 +427,21 @@ void main() {
       kind: PointerDeviceKind.mouse,
     );
     await tester.pump();
-    await tester.tap(
-      trigger,
+    final rapidReopen = await tester.createGesture(
       buttons: kSecondaryButton,
       kind: PointerDeviceKind.mouse,
     );
+    final triggerCenter = tester.getCenter(trigger);
+    await rapidReopen.down(triggerCenter);
     await tester.pump();
+    expect(counters.openRequests, 2);
+    expect(counters.actualOpens, 2);
+    expect(counters.closeRequests, 2);
+    expect(counters.actualCloses, 2);
+
+    await rapidReopen.up();
+    await tester.pump();
+    await rapidReopen.removePointer();
     expect(counters.openRequests, 3);
     expect(counters.actualOpens, 3);
     expect(counters.closeRequests, 2);
@@ -418,6 +479,10 @@ void main() {
     await tester.pump();
     await tester.pump();
     await tester.pump();
+    final boundaryFocus = Focus.of(
+      tester.element(find.byKey(ContextMenuSpikeKeys.menu)),
+    );
+    expect(FocusManager.instance.primaryFocus, same(boundaryFocus));
     expect(boundary.initialFocusObservation, 'boundary');
     expect(boundary.focusedItem, isNull);
     await tester.sendKeyEvent(LogicalKeyboardKey.escape);
@@ -445,29 +510,28 @@ void main() {
     expect(firstEnabled.focusedItem, 'delete');
   });
 
-  testWidgets('disabled wrapper has no trigger action but Link stays native', (
-    tester,
-  ) async {
-    final semantics = tester.ensureSemantics();
-    final counters = ContextMenuSpikeCounters();
-    await _pumpTrigger(tester, counters: counters, enabled: false);
-    final trigger = find.byKey(ContextMenuSpikeKeys.triggerLink);
-    final data = tester.getSemantics(trigger).getSemanticsData();
-    expect(data.flagsCollection.isLink, isTrue);
-    expect(data.hasAction(SemanticsAction.longPress), isFalse);
+  _semanticsTestWidgets(
+    'disabled wrapper has no trigger action but Link stays native',
+    (tester) async {
+      final counters = ContextMenuSpikeCounters();
+      await _pumpTrigger(tester, counters: counters, enabled: false);
+      final trigger = find.byKey(ContextMenuSpikeKeys.triggerLink);
+      final data = tester.getSemantics(trigger).getSemanticsData();
+      expect(data.flagsCollection.isLink, isTrue);
+      expect(data.hasAction(SemanticsAction.longPress), isFalse);
 
-    await tester.tap(
-      trigger,
-      buttons: kSecondaryButton,
-      kind: PointerDeviceKind.mouse,
-    );
-    await tester.pump();
-    expect(counters.openRequests, 0);
-    await tester.tap(trigger);
-    await tester.pump();
-    expect(counters.childActivations, 1);
-    semantics.dispose();
-  });
+      await tester.tap(
+        trigger,
+        buttons: kSecondaryButton,
+        kind: PointerDeviceKind.mouse,
+      );
+      await tester.pump();
+      expect(counters.openRequests, 0);
+      await tester.tap(trigger);
+      await tester.pump();
+      expect(counters.childActivations, 1);
+    },
+  );
 
   testWidgets('open trigger can be removed without stale focus or callbacks', (
     tester,
@@ -596,33 +660,34 @@ void main() {
     );
   });
 
-  testWidgets('geometry survives scroll, translation, RTL, and 200% text', (
-    tester,
-  ) async {
-    final observations = ContextMenuGeometryObservations();
-    final scrollController = ScrollController(initialScrollOffset: 120);
-    addTearDown(scrollController.dispose);
-    await tester.pumpWidget(
-      MaterialApp(
-        home: Builder(
-          builder: (context) => MediaQuery(
-            data: MediaQuery.of(
-              context,
-            ).copyWith(textScaler: const TextScaler.linear(2)),
-            child: Directionality(
-              textDirection: TextDirection.rtl,
-              child: SingleChildScrollView(
-                controller: scrollController,
-                child: SizedBox(
-                  height: 1000,
-                  child: Align(
-                    alignment: Alignment.topCenter,
-                    child: Padding(
-                      padding: const EdgeInsets.only(top: 240),
-                      child: Transform.translate(
-                        offset: const Offset(36, 24),
-                        child: ContextMenuGeometryProbe(
-                          observations: observations,
+  testWidgets(
+    'point conversion survives scroll/translation with ambient RTL/text scale',
+    (tester) async {
+      final observations = ContextMenuGeometryObservations();
+      final scrollController = ScrollController(initialScrollOffset: 120);
+      addTearDown(scrollController.dispose);
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Builder(
+            builder: (context) => MediaQuery(
+              data: MediaQuery.of(
+                context,
+              ).copyWith(textScaler: const TextScaler.linear(2)),
+              child: Directionality(
+                textDirection: TextDirection.rtl,
+                child: SingleChildScrollView(
+                  controller: scrollController,
+                  child: SizedBox(
+                    height: 1000,
+                    child: Align(
+                      alignment: Alignment.topCenter,
+                      child: Padding(
+                        padding: const EdgeInsets.only(top: 240),
+                        child: Transform.translate(
+                          offset: const Offset(36, 24),
+                          child: ContextMenuGeometryProbe(
+                            observations: observations,
+                          ),
                         ),
                       ),
                     ),
@@ -632,24 +697,35 @@ void main() {
             ),
           ),
         ),
-      ),
-    );
-    await tester.pump();
-    final anchor = find.byKey(ContextMenuSpikeKeys.geometryAnchor);
-    final point = tester.getCenter(anchor);
-    await tester.tapAt(
-      point,
-      buttons: kSecondaryButton,
-      kind: PointerDeviceKind.mouse,
-    );
-    await tester.pump();
+      );
+      await tester.pump();
+      final anchor = find.byKey(ContextMenuSpikeKeys.geometryAnchor);
+      final point = tester.getCenter(anchor);
+      await tester.tapAt(
+        point,
+        buttons: kSecondaryButton,
+        kind: PointerDeviceKind.mouse,
+      );
+      await tester.pump();
 
-    expect(scrollController.offset, 120);
-    expect(
-      tester.getTopLeft(find.byKey(ContextMenuSpikeKeys.geometryOverlay)),
-      offsetMoreOrLessEquals(point, epsilon: 0.01),
-    );
-    expect(observations.rawMenuPosition, observations.requestedLocalPosition);
+      expect(scrollController.offset, 120);
+      expect(
+        tester.getTopLeft(find.byKey(ContextMenuSpikeKeys.geometryOverlay)),
+        offsetMoreOrLessEquals(point, epsilon: 0.01),
+      );
+      expect(observations.rawMenuPosition, observations.requestedLocalPosition);
+    },
+  );
+}
+
+void _semanticsTestWidgets(String description, WidgetTesterCallback callback) {
+  testWidgets(description, (tester) async {
+    final semantics = tester.ensureSemantics();
+    try {
+      await callback(tester);
+    } finally {
+      semantics.dispose();
+    }
   });
 }
 
@@ -693,7 +769,17 @@ Future<void> _sendShiftF10(WidgetTester tester) async {
   await tester.sendKeyUpEvent(LogicalKeyboardKey.shiftLeft);
 }
 
-List<String> _treeSnapshot(
+Finder _triggerFor(ContextMenuSpikeChildKind childKind) => switch (childKind) {
+  ContextMenuSpikeChildKind.link => find.byKey(
+    ContextMenuSpikeKeys.triggerLink,
+  ),
+  ContextMenuSpikeChildKind.selectableText => find.byKey(
+    ContextMenuSpikeKeys.triggerSelectable,
+  ),
+  ContextMenuSpikeChildKind.row => find.byKey(ContextMenuSpikeKeys.triggerRow),
+};
+
+List<String> _serializedSemanticsSnapshot(
   WidgetTester tester, {
   bool omitUnlabeledLongPressNode = false,
 }) => _semanticNodes(tester)
@@ -704,23 +790,25 @@ List<String> _treeSnapshot(
           data.value.isNotEmpty ||
           !data.hasAction(SemanticsAction.longPress);
     })
-    .map((node) {
-      final data = node.getSemanticsData();
-      final actionsWithoutLongPress =
-          data.actions & ~SemanticsAction.longPress.index;
-      return <Object?>[
-        data.role,
-        data.flagsCollection.toString(),
-        actionsWithoutLongPress,
-        data.label,
-        data.value,
-        data.hint,
-        data.tooltip,
-        data.textDirection,
-        node.rect,
-      ].join('|');
-    })
+    .map(_semanticNodeSnapshot)
     .toList();
+
+String _semanticNodeSnapshot(SemanticsNode node) {
+  final data = node.getSemanticsData();
+  final actionsWithoutLongPress =
+      data.actions & ~SemanticsAction.longPress.index;
+  return <Object?>[
+    data.role,
+    data.flagsCollection.toString(),
+    actionsWithoutLongPress,
+    data.label,
+    data.value,
+    data.hint,
+    data.tooltip,
+    data.textDirection,
+    node.rect,
+  ].join('|');
+}
 
 Iterable<SemanticsNode> _semanticNodes(WidgetTester tester) sync* {
   // Flutter 3.41.0 attaches test semantics to this child PipelineOwner rather

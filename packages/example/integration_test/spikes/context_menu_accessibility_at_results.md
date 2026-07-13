@@ -6,28 +6,37 @@ Fixture: `packages/example/lib/context_menu_accessibility_spike.dart`
 Baseline: Link PR #65 head `8084ecf`, Flutter 3.41.2 workspace pin
 
 This is a disposable V0/V1 evidence record. Automated semantics can establish
-tree shape, actions, behavior, focus, and geometry. It cannot establish spoken
-output, discoverability, or usability with assistive technology.
+serialized node count/order/properties, selected node flags/actions, behavior,
+focus, and geometry. It cannot establish spoken output, discoverability, or
+usability with assistive technology.
 
 ## Automated findings
 
 | Surface | V0 | V1 | Result |
 |---|---|---|---|
-| NakedLink | One labeled Link node with tap; no long-press action | Same node/role/label/native actions plus one long-press action | Automated contract passes for this child only |
-| SelectableText | One native text-field node with its own long-press action | Native node remains, plus a second unlabeled/valueless role-neutral long-press node | **V1 contract failure: duplicate long-press action and unlabeled action node** |
-| Generic focusable row | Labeled row node plus its existing focus node; no long-press action | Row node remains, but the long-press action lands on the existing unlabeled focus node | **V1 contract failure: unlabeled action node** |
+| NakedLink | One labeled Link node with tap; no long-press action | Same serialized node count/order/role/label/native actions plus one long-press action on the labeled Link | Automated contract passes for this child only |
+| SelectableText | One node flagged as a text field with its own long-press action | That text-field node retains its native action and serialized properties; a second unlabeled/valueless role-neutral long-press node is added | **V1 contract failure: duplicate long-press action and unlabeled action node** |
+| Generic focusable row | Labeled row node plus an unlabeled focusable node; no long-press action | Serialized nodes remain unchanged except that long press lands on the unlabeled role-neutral focusable node | **V1 contract failure: unlabeled action node** |
 
 The physical `GestureDetector` is excluded from semantics. V2 was not built or
-run because primary SelectableText selection and pre-threshold scrolling both
-remain functional under V1; no destructive gesture failure justified the
-passive-listener probe.
+run. Primary SelectableText mouse selection and pre-threshold scrolling remain
+functional, but the crossed child matrix now records a different negative:
+SelectableText's native recognizers win both secondary click and physical long
+press, so those inputs never reach the wrapper open path. That failure is
+evidence against the scaffold, not authorization for a harness workaround or a
+V2 passive-listener probe.
 
 Additional automated observations:
 
-- Secondary click, physical long press, Shift+F10, and the exposed Context Menu
-  key each request one open through the shared path.
-- Secondary pointer-down produces zero requests and zero opens; secondary
-  pointer-up produces exactly one request and one actual open.
+- On Link and row, secondary pointer-down produces zero requests/opens and
+  pointer-up produces exactly one request and one actual open. On
+  SelectableText, secondary down/up produces zero requests/opens and its native
+  selection callback reports a collapsed selection instead.
+- Physical long press requests and opens exactly once on Link and row. On
+  SelectableText it produces zero requests/opens while the native selection
+  callback reports a non-collapsed selection.
+- On Link, Shift+F10 and the exposed Context Menu key each request one open
+  through the shared path.
 - A touch pointer held past the long-press threshold opens once, but dragging
   that same pointer over Rename and releasing produces zero selections and
   zero closes; the menu remains open until a separate Escape. The disposable
@@ -40,15 +49,19 @@ Additional automated observations:
   click on the trigger while open is classified outside the menu on pointer
   down, closes once, then reopens once on secondary tap-up. Repeated Escape
   after close does not produce another close callback.
-- Current NakedMenu autofocus lands on its boundary. The test-only
-  first-enabled probe focuses Delete when Rename is disabled. Focus returns to
-  a mounted Link and removal of an open trigger does not request stale focus.
+- Current NakedMenu autofocus lands on its boundary: the test directly compares
+  the menu's nearest Focus node with `FocusManager.instance.primaryFocus`. The
+  test-only first-enabled probe focuses Delete when Rename is disabled. Focus
+  returns to a mounted Link and removal of an open trigger does not request
+  stale focus.
 - The separate geometry probe clamps at all four edges. Anchor-local
   `RawMenuOverlayInfo.position` is preserved. Under scale, naïve
   `anchorRect.topLeft + position` drifts; converting the pointer global point
   into Overlay coordinates before `OverlayPositioner` remains accurate.
-- Scroll offset, translated ancestry, RTL, and 200% text do not change the
-  resolved invocation point in the fixed geometry probe.
+- Scroll offset and translated ancestry preserve point conversion. Ambient RTL
+  and 200% text do not perturb that conversion in the fixed-size,
+  direction-neutral probe; this does not exercise direction-sensitive or
+  text-responsive menu layout.
 
 ### Automated SDK matrix
 
@@ -116,7 +129,8 @@ Screenshots/log: **UNRUN / not attached**.
 ## Gate conclusion
 
 D-03 remains open because V1 fails the automated SelectableText and row action
-node contract, the scaffold fails same-gesture touch selection, and all three
-required human AT sessions are UNRUN. This evidence does not authorize exports,
-production package code, a public constructor, registry changes,
-aggregate-runner changes, docs, changelog, or goldens.
+node contract, SelectableText prevents secondary/physical wrapper opens, the
+scaffold fails same-gesture touch selection, and all three required human AT
+sessions are UNRUN. This evidence does not authorize exports, production
+package code, a public constructor, registry changes, aggregate-runner changes,
+docs, changelog, or goldens.

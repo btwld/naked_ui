@@ -125,6 +125,7 @@ class ContextMenuSpikeCounters extends ChangeNotifier {
   void observeInitialFocus(String value) {
     initialFocusObservation = value;
     events.add('initial-focus:$value');
+    notifyListeners();
   }
 
   void reset() {
@@ -199,6 +200,9 @@ class _ContextMenuSpikeTriggerState extends State<ContextMenuSpikeTrigger> {
   final GlobalKey _deleteFocusProbeKey = GlobalKey(
     debugLabel: 'context-menu-spike.delete.focus-probe',
   );
+  final GlobalKey _menuFocusProbeKey = GlobalKey(
+    debugLabel: 'context-menu-spike.menu.focus-probe',
+  );
   bool _closeInFlight = false;
   int _openGeneration = 0;
 
@@ -231,15 +235,19 @@ class _ContextMenuSpikeTriggerState extends State<ContextMenuSpikeTrigger> {
             generation != _openGeneration) {
           return;
         }
-        _measureOrApplyInitialFocus();
+        _measureOrApplyInitialFocus(generation);
       });
     });
   }
 
-  void _measureOrApplyInitialFocus() {
+  void _measureOrApplyInitialFocus(int generation) {
     if (widget.initialFocus == ContextMenuSpikeInitialFocus.boundary) {
+      final menuContext = _menuFocusProbeKey.currentContext;
+      final boundaryHasPrimaryFocus =
+          menuContext != null &&
+          Focus.of(menuContext) == FocusManager.instance.primaryFocus;
       widget.counters.observeInitialFocus(
-        widget.counters.focusedItem ?? 'boundary',
+        boundaryHasPrimaryFocus ? 'boundary' : 'none',
       );
       return;
     }
@@ -253,7 +261,11 @@ class _ContextMenuSpikeTriggerState extends State<ContextMenuSpikeTrigger> {
     }
     Focus.of(targetContext).requestFocus();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted || !_menuController.isOpen) return;
+      if (!mounted ||
+          !_menuController.isOpen ||
+          generation != _openGeneration) {
+        return;
+      }
       widget.counters.observeInitialFocus(
         widget.counters.focusedItem ?? 'none',
       );
@@ -330,6 +342,7 @@ class _ContextMenuSpikeTriggerState extends State<ContextMenuSpikeTrigger> {
       key: ContextMenuSpikeKeys.menu,
       constraints: const BoxConstraints.tightFor(width: 184),
       child: ColoredBox(
+        key: _menuFocusProbeKey,
         color: const Color(0xFFF5F5F5),
         child: Column(
           mainAxisSize: MainAxisSize.min,
