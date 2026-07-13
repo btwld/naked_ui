@@ -1,7 +1,8 @@
 # Phase 2 — Link
 
-Status: **Active — core implementation and deterministic fixture complete;
-publication and real-platform evidence gates are in progress**.
+Status: **Ready for review in PR #65 — automated local and hosted evidence is
+green; closure remains blocked by required web screenshots, manual assistive
+technology sessions, and real Context Menu/Hover Card composition**.
 
 Goal: add a headless inline navigation primitive that exposes Link rather than
 Button semantics, activates once through primary pointer, Enter, Numpad Enter,
@@ -347,31 +348,125 @@ Hosted gates: primary and exact-minimum suites; canonical golden/guidelines;
 pinned Chrome/ChromeDriver behavior log; PR-title policy. Every result must be
 green on the exact PR head or an identified GitHub merge ref.
 
+## Execution evidence — 2026-07-13
+
+Review-ready PR: [#65](https://github.com/btwld/naked_ui/pull/65). The fully
+tested implementation/evidence head is
+`24460f0a94b657854c95d5dc900e5ef7215d9604`; its GitHub test merge ref is
+`09e62c8dc29b424a1d00e5e7de8cfc4a99cd124f`. The PR remains unmerged.
+
+### Test-first and failure-triage record
+
+- The first API tests failed to compile because `NakedLink` and
+  `NakedLinkState` did not exist. The first semantics tests failed because no
+  Link node, URL, or Link action existed.
+- Targeted restored mutations proved the tests reject Space activation
+  (callback count 3 instead of 2), secondary activation (1 instead of 0), and
+  Button semantics (Button true instead of false). A contrast mutation failed
+  at ratio 1.00 before the approved link color was restored.
+- Fixture review produced intentional red proofs before each correction:
+  inline height was 48px instead of less than 48px; a standalone target filled
+  680px; the standalone guideline fixture was absent; ambient font family was
+  null; and a synthetic safe-inset surface was 800×600 instead of 800×560.
+- The first hosted golden candidate was rejected at 800×397. The second fixed
+  the surface but exposed fallback-glyph blocks and a missing Material icon.
+  The third candidate fixed both by preserving the ambient font and loading
+  Material Icons from the pinned Flutter SDK. Only that reviewed 800×600 PNG
+  was checked in unchanged.
+- The first API 34 screenshot was rejected because content overlapped the top
+  system inset. The synthetic-inset regression failed for the same reason;
+  `SafeArea` fixed the root condition, and the replacement hosted image was
+  reviewed.
+
+### Local verification on Flutter 3.41.2
+
+- Format, analyze, and dartdoc dry run: pass with no findings.
+- Package suite: 597 pass; three documented external-integration skips.
+- Example suite after the reviewed golden: 24 pass; two host-specific pixel
+  comparison skips on macOS.
+- Focused Link package/semantics/hash proof: 39 pass.
+- Focused Link integration: 8/8 on `flutter-tester` and real macOS.
+- Aggregate: 96 pass and one documented Tooltip skip on both
+  `flutter-tester` and real macOS.
+- Screenshot smoke: six behavior scenarios pass; the exact-head real-macOS
+  driver captures the four Link states plus the inherited Dialog state and
+  records a complete manifest.
+
+### Hosted verification
+
+All seven checks passed for head `24460f0` / merge ref `09e62c8`:
+
+- [Flutter CI run 29229092269](https://github.com/btwld/naked_ui/actions/runs/29229092269):
+  primary Ubuntu 24.04 tests, format/analyze/DCM, reviewed golden comparison,
+  guidelines, and exact-minimum Flutter 3.41.0 all pass.
+- [Integration run 29229092358](https://github.com/btwld/naked_ui/actions/runs/29229092358):
+  aggregate `flutter-tester` and real macOS behavior pass; macOS screenshot
+  capture, exact file assertions, and artifact transport pass.
+- [Web run 29229092255](https://github.com/btwld/naked_ui/actions/runs/29229092255):
+  matched Chrome/ChromeDriver 150.0.7871.115 behavior passes, including the
+  observable Space-scroll postcondition; the behavior log is retained as an
+  artifact but is not substituted for missing screenshots.
+- [Android run 29229092250](https://github.com/btwld/naked_ui/actions/runs/29229092250):
+  API 34 Pixel 6 behavior and screenshot transport pass.
+- [PR-title run 29229091554](https://github.com/btwld/naked_ui/actions/runs/29229091554):
+  pass.
+
+### Reviewed visual evidence
+
+- Ubuntu golden `naked_link__keyboard_focus.png`: 800×600, DPR 1, pinned
+  Roboto/Material Icons, en-US/LTR, SHA-256
+  `88f39adcc2a5916f370d2ed5fdd8ff897e9c6cc4f00a5e3a9d71152ccf22086e`.
+  The same hosted job subsequently compared the checked-in file unchanged.
+- macOS default inline:
+  `02f2565b397780d8ea50d2a8c98c754fcab85464d13abe76c8b962097fd3a6a7`.
+- macOS keyboard focus:
+  `18683fbc41e260fa54622db65893c164bd4bdb29b06cbdea32754a098c9d9095`.
+- macOS 200% long text:
+  `4bf12ea4007dadc972a74bb71fa9a376f85dc823aca53658d381a70a68085cda`.
+  All three are 800×600/DPR 1, and hosted bytes match the reviewed local files.
+- Android disabled:
+  `db651e38a3e4b5f53e4ae07cd059e02a235b29563ea222806ce96795b5636b75`;
+  1080×2274 physical pixels, DPR 2.625, safe content surface approximately
+  411.43×817.52 logical pixels. The manifest records merge ref `09e62c8`.
+
+### Required closure blockers
+
+- `link__hover__web__reference.png`,
+  `link__external_hint__web__reference.png`, and
+  `link__rtl__web__reference.png` remain unsupported on Flutter 3.41.2.
+- VoiceOver, TalkBack, Chrome accessibility-tree, and release-level iOS
+  VoiceOver sessions require human operators and are not available here.
+- LINK-COMP-01 requires real Phase 5 Context Menu and Phase 7 Hover Card
+  implementations around Link; placeholders do not satisfy the contract.
+- Maintainer merge authorization and post-merge `main` verification have not
+  been provided. These blockers prevent closure but do not invalidate the
+  review-ready PR.
+
 ## Acceptance and stop conditions
 
-- [ ] Every A1/A2 test was observed failing for the intended missing behavior
+- [x] Every A1/A2 test was observed failing for the intended missing behavior
       before implementation and the red evidence is recorded.
-- [ ] Link public API, state equality/scope, and effective-enabled behavior
+- [x] Link public API, state equality/scope, and effective-enabled behavior
       match the binding contract without router, styling, or visited state.
-- [ ] Primary/canceled/secondary pointer, Enter/Numpad/Space, semantic tap,
+- [x] Primary/canceled/secondary pointer, Enter/Numpad/Space, semantic tap,
       feedback, cursor, callbacks, and dynamic removal pass focused tests.
-- [ ] Link/URL/name/hint/enabled/focus/action semantics are exact; Button and
+- [x] Link/URL/name/hint/enabled/focus/action semantics are exact; Button and
       duplicate naming are absent; disabled/excluded behavior passes.
-- [ ] Focus-node ownership/replacement/disposal and aggregate teardown pass.
-- [ ] Canonical fixture, stable result/reset/readout, Arabic RTL, 200% text,
+- [x] Focus-node ownership/replacement/disposal and aggregate teardown pass.
+- [x] Canonical fixture, stable result/reset/readout, Arabic RTL, 200% text,
       external-icon exclusion, golden, and accessibility guidelines pass.
-- [ ] Integration component, inventory, fast aggregate, real macOS aggregate,
+- [x] Integration component, inventory, fast aggregate, real macOS aggregate,
       hosted API 34, and pinned web behavior pass on the exact PR head.
-- [ ] All seven screenshot names have reviewed evidence, or Phase 2 is
+- [x] All seven screenshot names have reviewed evidence, or Phase 2 is
       explicitly blocked; unsupported web screenshots are not marked passed.
 - [ ] VoiceOver, TalkBack, Chrome accessibility-tree, and release-level iOS
       records are attached; missing human evidence blocks closure.
 - [ ] Real Context Menu and Hover Card composition proof is attached after
       those components exist; placeholder wrappers do not satisfy it.
-- [ ] Full publication commands and hosted Flutter 3.41.0 pass.
-- [ ] Docs, changelog, compatibility statement, traceability, manifests,
+- [x] Full publication commands and hosted Flutter 3.41.0 pass.
+- [x] Docs, changelog, compatibility statement, traceability, manifests,
       visual review, and ten-item handoff packet are ready.
-- [ ] Entire diff reviewed; ready-for-review PR open; exact-head checks green;
+- [x] Entire diff reviewed; ready-for-review PR open; evidence-head checks green;
       plan/status board contain final evidence; PR remains unmerged without
       explicit maintainer authorization.
 
