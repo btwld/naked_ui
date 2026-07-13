@@ -1,3 +1,5 @@
+import 'dart:ui' show SemanticsRole;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -5,6 +7,16 @@ import 'package:naked_ui/naked_ui.dart';
 
 void main() {
   group('NakedDialog', () {
+    test('rejects semantics roles other than dialog and alert dialog', () {
+      expect(
+        () => NakedDialog(
+          semanticsRole: SemanticsRole.tab,
+          child: const SizedBox.shrink(),
+        ),
+        throwsAssertionError,
+      );
+    });
+
     testWidgets(
       'renders child and returns a value on pop',
       (tester) async {
@@ -302,5 +314,417 @@ void main() {
       await tester.pumpAndSettle();
       await fut;
     });
+  });
+
+  group('showNakedAlertDialog', () {
+    testWidgets('requestFocus false does not move focus to the safe node', (
+      tester,
+    ) async {
+      BuildContext? hostContext;
+      final invokerNode = FocusNode(debugLabel: 'alert invoker');
+      final cancelNode = FocusNode(debugLabel: 'alert cancel');
+      addTearDown(invokerNode.dispose);
+      addTearDown(cancelNode.dispose);
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Builder(
+            builder: (context) {
+              hostContext = context;
+              return ElevatedButton(
+                focusNode: invokerNode,
+                onPressed: () {},
+                child: const Text('Invoker'),
+              );
+            },
+          ),
+        ),
+      );
+
+      invokerNode.requestFocus();
+      await tester.pump();
+      showNakedAlertDialog<void>(
+        context: hostContext!,
+        barrierColor: Colors.black54,
+        semanticLabel: 'Eliminar archivo',
+        transitionDuration: Duration.zero,
+        requestFocus: false,
+        initialFocusNode: cancelNode,
+        builder: (context) => ElevatedButton(
+          focusNode: cancelNode,
+          onPressed: () {},
+          child: const Text('Cancel'),
+        ),
+      );
+      await tester.pump();
+      await tester.pump();
+
+      expect(FocusManager.instance.primaryFocus, same(invokerNode));
+
+      Navigator.of(hostContext!).pop();
+      await tester.pump();
+      await tester.pump();
+    });
+
+    testWidgets('opt-in barrier dismissal completes exactly once', (
+      tester,
+    ) async {
+      final invokerNode = FocusNode(debugLabel: 'dismissible alert invoker');
+      addTearDown(invokerNode.dispose);
+      var completionCount = 0;
+      Future<Object?>? result;
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Builder(
+            builder: (context) {
+              return ElevatedButton(
+                focusNode: invokerNode,
+                onPressed: () {
+                  result = showNakedAlertDialog<Object>(
+                    context: context,
+                    barrierColor: Colors.black54,
+                    semanticLabel: 'Eliminar archivo',
+                    barrierDismissible: true,
+                    transitionDuration: Duration.zero,
+                    builder: (context) => const SizedBox.square(
+                      key: ValueKey('dismissible.alert'),
+                      dimension: 200,
+                    ),
+                  )..whenComplete(() => completionCount += 1);
+                },
+                child: const Text('Open dismissible alert'),
+              );
+            },
+          ),
+        ),
+      );
+
+      invokerNode.requestFocus();
+      await tester.pump();
+      await tester.tap(find.text('Open dismissible alert'));
+      await tester.pump();
+      await tester.pump();
+
+      await tester.tapAt(const Offset(4, 4));
+      await tester.pump();
+      await tester.pump();
+
+      expect(find.byKey(const ValueKey('dismissible.alert')), findsNothing);
+      expect(result, isNotNull);
+      expect(await result!, isNull);
+      expect(completionCount, 1);
+      expect(FocusManager.instance.primaryFocus, same(invokerNode));
+    });
+
+    testWidgets('Tab and Shift+Tab loop between known alert actions', (
+      tester,
+    ) async {
+      BuildContext? hostContext;
+      final firstNode = FocusNode(debugLabel: 'first alert action');
+      final secondNode = FocusNode(debugLabel: 'second alert action');
+      addTearDown(firstNode.dispose);
+      addTearDown(secondNode.dispose);
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Builder(
+            builder: (context) {
+              hostContext = context;
+              return const SizedBox.shrink();
+            },
+          ),
+        ),
+      );
+
+      showNakedAlertDialog<void>(
+        context: hostContext!,
+        barrierColor: Colors.black54,
+        semanticLabel: 'Eliminar archivo',
+        transitionDuration: Duration.zero,
+        initialFocusNode: firstNode,
+        builder: (context) => Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ElevatedButton(
+              focusNode: firstNode,
+              onPressed: () {},
+              child: const Text('First'),
+            ),
+            ElevatedButton(
+              focusNode: secondNode,
+              onPressed: () {},
+              child: const Text('Second'),
+            ),
+          ],
+        ),
+      );
+      await tester.pump();
+      await tester.pump();
+      expect(FocusManager.instance.primaryFocus, same(firstNode));
+
+      await tester.sendKeyDownEvent(LogicalKeyboardKey.shiftLeft);
+      await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+      await tester.sendKeyUpEvent(LogicalKeyboardKey.shiftLeft);
+      await tester.pump();
+      expect(FocusManager.instance.primaryFocus, same(secondNode));
+
+      await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+      await tester.pump();
+      expect(FocusManager.instance.primaryFocus, same(firstNode));
+
+      Navigator.of(hostContext!).pop();
+      await tester.pump();
+      await tester.pump();
+    });
+
+    testWidgets('closing after removing the invoker does not throw', (
+      tester,
+    ) async {
+      final invokerNode = FocusNode(debugLabel: 'removable alert invoker');
+      final cancelNode = FocusNode(debugLabel: 'alert cancel');
+      addTearDown(invokerNode.dispose);
+      addTearDown(cancelNode.dispose);
+      var showInvoker = true;
+      late StateSetter setHostState;
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: StatefulBuilder(
+            builder: (context, setState) {
+              setHostState = setState;
+              return Scaffold(
+                body: showInvoker
+                    ? ElevatedButton(
+                        focusNode: invokerNode,
+                        onPressed: () => showNakedAlertDialog<void>(
+                          context: context,
+                          barrierColor: Colors.black54,
+                          semanticLabel: 'Eliminar archivo',
+                          transitionDuration: Duration.zero,
+                          initialFocusNode: cancelNode,
+                          builder: (context) => ElevatedButton(
+                            focusNode: cancelNode,
+                            onPressed: () {},
+                            child: const Text('Cancel'),
+                          ),
+                        ),
+                        child: const Text('Open removable alert'),
+                      )
+                    : const SizedBox.shrink(),
+              );
+            },
+          ),
+        ),
+      );
+
+      invokerNode.requestFocus();
+      await tester.pump();
+      await tester.tap(find.text('Open removable alert'));
+      await tester.pump();
+      await tester.pump();
+      expect(FocusManager.instance.primaryFocus, same(cancelNode));
+
+      setHostState(() => showInvoker = false);
+      await tester.pump();
+      Navigator.of(tester.element(find.text('Cancel'))).pop();
+      await tester.pump();
+      await tester.pump();
+
+      expect(tester.takeException(), isNull);
+      expect(invokerNode.hasFocus, isFalse);
+    });
+
+    testWidgets(
+      'falls back to first traversable action when safe node is unavailable',
+      (tester) async {
+        BuildContext? hostContext;
+        final unavailableNode = FocusNode(
+          debugLabel: 'unavailable safe target',
+        );
+        final firstNode = FocusNode(debugLabel: 'first alert action');
+        final secondNode = FocusNode(debugLabel: 'second alert action');
+        addTearDown(unavailableNode.dispose);
+        addTearDown(firstNode.dispose);
+        addTearDown(secondNode.dispose);
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Builder(
+              builder: (context) {
+                hostContext = context;
+                return ElevatedButton(
+                  focusNode: unavailableNode,
+                  onPressed: () {},
+                  child: const Text('Background action'),
+                );
+              },
+            ),
+          ),
+        );
+
+        showNakedAlertDialog<void>(
+          context: hostContext!,
+          barrierColor: Colors.black54,
+          semanticLabel: 'Eliminar archivo',
+          transitionDuration: Duration.zero,
+          initialFocusNode: unavailableNode,
+          builder: (context) => Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ElevatedButton(
+                focusNode: firstNode,
+                onPressed: () {},
+                child: const Text('First'),
+              ),
+              ElevatedButton(
+                focusNode: secondNode,
+                onPressed: () {},
+                child: const Text('Second'),
+              ),
+            ],
+          ),
+        );
+        await tester.pump();
+        await tester.pump();
+
+        expect(FocusManager.instance.primaryFocus, same(firstNode));
+
+        Navigator.of(hostContext!).pop();
+        await tester.pump();
+        await tester.pump();
+      },
+    );
+
+    testWidgets('focuses the caller safe node and never disposes it', (
+      tester,
+    ) async {
+      final invokerNode = FocusNode(debugLabel: 'alert invoker');
+      final cancelNode = FocusNode(debugLabel: 'alert cancel');
+      final confirmNode = FocusNode(debugLabel: 'alert confirm');
+      addTearDown(invokerNode.dispose);
+      addTearDown(cancelNode.dispose);
+      addTearDown(confirmNode.dispose);
+      Future<String?>? result;
+      var cancelCount = 0;
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: Builder(
+              builder: (context) => ElevatedButton(
+                focusNode: invokerNode,
+                onPressed: () {
+                  result = showNakedAlertDialog<String>(
+                    context: context,
+                    barrierColor: Colors.black54,
+                    semanticLabel: 'Eliminar archivo',
+                    transitionDuration: Duration.zero,
+                    initialFocusNode: cancelNode,
+                    builder: (context) => Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        ElevatedButton(
+                          focusNode: cancelNode,
+                          onPressed: () {
+                            cancelCount += 1;
+                            Navigator.of(context).pop('cancel');
+                          },
+                          child: const Text('Cancel'),
+                        ),
+                        ElevatedButton(
+                          focusNode: confirmNode,
+                          onPressed: () => Navigator.of(context).pop('confirm'),
+                          child: const Text('Confirm'),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+                child: const Text('Open alert'),
+              ),
+            ),
+          ),
+        ),
+      );
+
+      invokerNode.requestFocus();
+      await tester.pump();
+      expect(FocusManager.instance.primaryFocus, same(invokerNode));
+
+      await tester.tap(find.text('Open alert'));
+      await tester.pump();
+      await tester.pump();
+      expect(FocusManager.instance.primaryFocus, same(cancelNode));
+
+      await tester.tap(find.text('Cancel'));
+      await tester.pump();
+      await tester.pump();
+      expect(await result, 'cancel');
+      expect(cancelCount, 1);
+      expect(FocusManager.instance.primaryFocus, same(invokerNode));
+
+      await tester.pumpWidget(
+        Directionality(
+          textDirection: TextDirection.ltr,
+          child: Focus(focusNode: cancelNode, child: const SizedBox.shrink()),
+        ),
+      );
+      cancelNode.requestFocus();
+      await tester.pump();
+      expect(FocusManager.instance.primaryFocus, same(cancelNode));
+    });
+
+    testWidgets(
+      'wraps content once and rejects implicit dismissal by default',
+      (tester) async {
+        BuildContext? hostContext;
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Builder(
+              builder: (context) {
+                hostContext = context;
+                return Scaffold(
+                  body: Center(
+                    child: ElevatedButton(
+                      onPressed: () => showNakedAlertDialog<void>(
+                        context: context,
+                        barrierColor: Colors.black54,
+                        semanticLabel: 'Eliminar archivo',
+                        transitionDuration: Duration.zero,
+                        builder: (context) => const SizedBox.square(
+                          key: ValueKey('alert.content'),
+                          dimension: 200,
+                        ),
+                      ),
+                      child: const Text('Open alert'),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        );
+
+        await tester.tap(find.text('Open alert'));
+        await tester.pump();
+        await tester.pump();
+
+        expect(find.byType(NakedDialog), findsOneWidget);
+        expect(
+          tester.widget<NakedDialog>(find.byType(NakedDialog)).semanticsRole,
+          SemanticsRole.alertDialog,
+        );
+
+        await tester.tapAt(const Offset(4, 4));
+        await tester.pump();
+        expect(find.byKey(const ValueKey('alert.content')), findsOneWidget);
+
+        await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+        await tester.pump();
+        expect(find.byKey(const ValueKey('alert.content')), findsOneWidget);
+
+        Navigator.of(hostContext!).pop();
+        await tester.pump();
+        await tester.pump();
+      },
+    );
   });
 }

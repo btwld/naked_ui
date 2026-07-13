@@ -36,4 +36,29 @@ void main() {
       throwsArgumentError,
     );
   });
+
+  test('alert dialog evidence uses every required native artifact name', () {
+    expect(
+      ScreenshotEvidence(
+        component: 'alert_dialog',
+        scenario: 'open_safe_focus',
+      ).artifactNameFor('macos'),
+      'alert_dialog__open_safe_focus__macos__reference.png',
+    );
+    expect(
+      ScreenshotEvidence(
+        component: 'alert_dialog',
+        scenario: 'destructive_action',
+      ).artifactNameFor('android'),
+      'alert_dialog__destructive_action__android__reference.png',
+    );
+    expect(
+      ScreenshotEvidence(
+        component: 'alert_dialog',
+        scenario: 'long_message_200_text',
+        textScale: 2,
+      ).artifactNameFor('macos'),
+      'alert_dialog__long_message_200_text__macos__reference.png',
+    );
+  });
 }
