@@ -2,6 +2,14 @@ export 'naked_accordion.dart';
 export 'naked_button.dart';
 export 'naked_checkbox.dart';
 export 'naked_dialog.dart';
+export 'naked_field.dart'
+    show
+        NakedField,
+        NakedFieldDescription,
+        NakedFieldError,
+        NakedFieldErrorAnnouncement,
+        NakedFieldLabel,
+        NakedFieldState;
 export 'naked_menu.dart';
 export 'naked_popover.dart';
 export 'naked_radio.dart';

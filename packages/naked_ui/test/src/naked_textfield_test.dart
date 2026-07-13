@@ -363,6 +363,33 @@ void main() {
       },
     );
 
+    testWidgets(
+      'standalone disabled field remains programmatically focusable in '
+      'directional navigation mode',
+      (tester) async {
+        final node = FocusNode();
+        addTearDown(node.dispose);
+
+        await _pumpApp(
+          tester,
+          child: MediaQuery(
+            data: const MediaQueryData(
+              navigationMode: NavigationMode.directional,
+            ),
+            child: NakedTextField(
+              enabled: false,
+              focusNode: node,
+              builder: _builder(),
+            ),
+          ),
+        );
+
+        node.requestFocus();
+        await tester.pump();
+        expect(node.hasFocus, isTrue);
+      },
+    );
+
     testWidgets('focus survives swapping from external to internal node', (
       tester,
     ) async {

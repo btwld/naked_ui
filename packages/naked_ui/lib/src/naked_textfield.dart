@@ -1,4 +1,10 @@
-import 'dart:ui' as ui show BoxHeightStyle, BoxWidthStyle;
+import 'dart:ui'
+    as ui
+    show
+        BoxHeightStyle,
+        BoxWidthStyle,
+        SemanticsRole,
+        SemanticsValidationResult;
 
 import 'package:flutter/cupertino.dart'
     show
@@ -17,6 +23,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
 import 'mixins/naked_mixins.dart';
+import 'naked_field.dart';
 import 'utilities/naked_state_scope.dart';
 import 'utilities/state.dart';
 
@@ -171,6 +178,8 @@ class NakedTextField extends StatefulWidget {
     this.semanticLabel,
     this.semanticHint,
     this.semanticErrorText,
+    this.isRequired,
+    this.validationResult,
     this.strutStyle,
     this.excludeSemantics = false,
   }) : assert(obscuringCharacter.length == 1),
@@ -404,6 +413,18 @@ class NakedTextField extends StatefulWidget {
   /// The accessibility announcement for the current validation error.
   final String? semanticErrorText;
 
+  /// Whether the field is semantically required when used standalone.
+  ///
+  /// When null, no standalone required state is declared. Inside a
+  /// [NakedField], the Field value is canonical.
+  final bool? isRequired;
+
+  /// The semantic validation result when used standalone.
+  ///
+  /// When null, this resolves to [ui.SemanticsValidationResult.none]. Inside a
+  /// [NakedField], the Field value is canonical.
+  final ui.SemanticsValidationResult? validationResult;
+
   /// Whether to exclude this widget from the semantic tree.
   ///
   /// When true, the widget and its children are hidden from accessibility services.
@@ -426,6 +447,24 @@ class _NakedTextFieldState extends State<NakedTextField>
   final GlobalKey<EditableTextState> editableTextKey =
       GlobalKey<EditableTextState>();
 
+  final Object _fieldRegistrationToken = Object();
+  NakedFieldScope? _fieldScope;
+  late final NakedFieldControlRegistration _fieldRegistration =
+      NakedFieldControlRegistration(
+        isMounted: () => mounted,
+        isEnabled: () => widget.enabled,
+        isReadOnly: () => widget.readOnly,
+        canRequestFocus: () => _effectiveFocusNode.canRequestFocus,
+        isFocused: () => _effectiveFocusNode.hasFocus,
+        isFilled: () => _effectiveController.text.isNotEmpty,
+        requestFocus: () => _effectiveFocusNode.requestFocus(),
+      );
+
+  bool _hasObservedEffectiveError = false;
+  String? _previousEffectiveError;
+  String? _announcementError;
+  int _announcementGeneration = 0;
+
   @override
   FocusNode? get widgetProvidedNode => widget.focusNode;
 
@@ -443,8 +482,7 @@ class _NakedTextFieldState extends State<NakedTextField>
       _createLocalController();
     }
 
-    _effectiveFocusNode.canRequestFocus =
-        widget.canRequestFocus && widget.enabled;
+    _effectiveFocusNode.canRequestFocus = _canRequestFocusFor(_navMode);
     if (widget.controller != null) {
       _updateAttachedController(widget.controller);
     } else if (_controller != null && !restorePending) {
@@ -453,6 +491,10 @@ class _NakedTextFieldState extends State<NakedTextField>
   }
 
   bool _canRequestFocusFor(NavigationMode? mode) {
+    if (_fieldScope != null) {
+      return widget.canRequestFocus && _effectiveEnabled;
+    }
+
     switch (mode) {
       case NavigationMode.directional:
         return widget.canRequestFocus;
@@ -488,12 +530,14 @@ class _NakedTextFieldState extends State<NakedTextField>
 
   void _handleControllerChanged() {
     if (!mounted) return;
+    _notifyFieldControlChanged();
     // ignore: no-empty-block
     setState(() {});
   }
 
   void _handleFocusChange(bool focused) {
     updateFocusState(focused, widget.onFocusChange);
+    _notifyFieldControlChanged();
   }
 
   void _handlePressChange(bool pressed) {
@@ -505,8 +549,8 @@ class _NakedTextFieldState extends State<NakedTextField>
       return false;
     }
     if (cause == SelectionChangedCause.keyboard) return false;
-    if (!widget.enabled) return false;
-    if (widget.readOnly && _effectiveController.selection.isCollapsed) {
+    if (!_effectiveEnabled) return false;
+    if (_effectiveReadOnly && _effectiveController.selection.isCollapsed) {
       return false;
     }
     switch (cause) {
@@ -568,23 +612,47 @@ class _NakedTextFieldState extends State<NakedTextField>
 
   @override
   void initializeWidgetStates() {
-    updateDisabledState(!widget.enabled);
-    updateErrorState(widget.error);
+    updateDisabledState(!_effectiveEnabled);
+    updateErrorState(_effectiveHasError);
   }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+    final wasEffectivelyEnabled = _effectiveEnabled;
+    final previousController = _fieldScope?.controller;
+    final nextScope = NakedFieldScope.maybeOf(context);
+    final nextController = nextScope?.controller;
+    if (!identical(previousController, nextController)) {
+      previousController?.unregisterControl(_fieldRegistrationToken);
+      nextController?.registerControl(
+        _fieldRegistrationToken,
+        _fieldRegistration,
+      );
+    }
+    _fieldScope = nextScope;
+    if (nextScope != null && wasEffectivelyEnabled && !_effectiveEnabled) {
+      _clearTransientInteractionStates();
+    }
     _navMode = MediaQuery.maybeNavigationModeOf(context);
     _effectiveFocusNode.canRequestFocus = _canRequestFocusFor(_navMode);
+    updateDisabledState(!_effectiveEnabled);
+    updateErrorState(_effectiveHasError);
+    _observeEffectiveError();
+    _notifyFieldControlChanged();
   }
 
   @override
   void didUpdateWidget(NakedTextField oldWidget) {
     super.didUpdateWidget(oldWidget);
 
-    updateDisabledState(!widget.enabled);
-    updateErrorState(widget.error);
+    final wasEffectivelyEnabled =
+        oldWidget.enabled && (_fieldScope?.enabled ?? true);
+    if (_fieldScope != null && wasEffectivelyEnabled && !_effectiveEnabled) {
+      _clearTransientInteractionStates();
+    }
+    updateDisabledState(!_effectiveEnabled);
+    updateErrorState(_effectiveHasError);
 
     if (widget.controller == null && oldWidget.controller != null) {
       _createLocalController(oldWidget.controller!.value);
@@ -603,7 +671,7 @@ class _NakedTextFieldState extends State<NakedTextField>
 
     if (_effectiveFocusNode.hasFocus &&
         widget.readOnly != oldWidget.readOnly &&
-        widget.enabled) {
+        _effectiveEnabled) {
       final willShow = _shouldShowSelectionHandles(
         SelectionChangedCause.longPress,
       );
@@ -611,6 +679,9 @@ class _NakedTextFieldState extends State<NakedTextField>
         _showSelectionHandles = willShow;
       }
     }
+
+    _observeEffectiveError();
+    _notifyFieldControlChanged();
   }
 
   @override
@@ -623,6 +694,9 @@ class _NakedTextFieldState extends State<NakedTextField>
 
   @override
   void dispose() {
+    _fieldScope?.controller.unregisterControl(_fieldRegistrationToken);
+    _fieldScope = null;
+    _announcementGeneration++;
     _detachControllerListener?.call();
     _detachControllerListener = null;
     _controller?.dispose();
@@ -641,6 +715,125 @@ class _NakedTextFieldState extends State<NakedTextField>
       widget.controller ?? _controller!.value;
 
   FocusNode get _effectiveFocusNode => effectiveFocusNode;
+
+  bool get _effectiveEnabled =>
+      widget.enabled && (_fieldScope?.enabled ?? true);
+
+  bool get _effectiveReadOnly =>
+      widget.readOnly || (_fieldScope?.readOnly ?? false);
+
+  bool get _effectiveHasError =>
+      _fieldScope == null ? widget.error : _fieldScope!.errorText != null;
+
+  static String? _normalizeError(String? value) =>
+      value == null || value.isEmpty ? null : value;
+
+  String? get _effectiveErrorText => _fieldScope == null
+      ? (widget.error ? _normalizeError(widget.semanticErrorText) : null)
+      : _fieldScope!.errorText;
+
+  NakedFieldErrorAnnouncement get _effectiveErrorAnnouncement =>
+      _fieldScope?.errorAnnouncement ?? NakedFieldErrorAnnouncement.whenChanged;
+
+  void _notifyFieldControlChanged() {
+    _fieldScope?.controller.controlChanged(_fieldRegistrationToken);
+  }
+
+  void _clearTransientInteractionStates() {
+    final wasPressed = isPressed;
+    updateHoverState(false, widget.onHoverChange);
+    if (wasPressed) widget.onTapChange?.call(false);
+    updatePressState(false, widget.onPressChange);
+  }
+
+  void _observeEffectiveError() {
+    final currentError = _effectiveErrorText;
+    if (!_hasObservedEffectiveError) {
+      _hasObservedEffectiveError = true;
+      _previousEffectiveError = currentError;
+      return;
+    }
+    if (currentError == _previousEffectiveError) return;
+
+    _previousEffectiveError = currentError;
+    if (currentError == null ||
+        _effectiveErrorAnnouncement == NakedFieldErrorAnnouncement.none) {
+      _clearAnnouncement();
+      return;
+    }
+    _showAnnouncement(currentError);
+  }
+
+  void _clearAnnouncement() {
+    _announcementGeneration++;
+    _announcementError = null;
+  }
+
+  void _showAnnouncement(String error) {
+    final generation = ++_announcementGeneration;
+    _announcementError = error;
+    // Keep the role node through the semantics phase of the imminent frame.
+    // Cleanup is scheduled only after that completed frame; human AT evidence
+    // remains the authority for whether this bounded lifetime needs tuning.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || generation != _announcementGeneration) return;
+      setState(() => _announcementError = null);
+    });
+  }
+
+  _EffectiveTextFieldSemantics _resolveSemantics() {
+    final field = _fieldScope;
+    if (field == null) {
+      return _EffectiveTextFieldSemantics(
+        label: widget.semanticLabel,
+        description: widget.semanticHint,
+        errorText: _effectiveErrorText,
+        isRequired: widget.isRequired,
+        validationResult:
+            widget.validationResult ?? ui.SemanticsValidationResult.none,
+      );
+    }
+
+    assert(
+      widget.semanticLabel == null || widget.semanticLabel == field.label,
+      'NakedTextField.semanticLabel conflicts with NakedField.label.',
+    );
+    assert(
+      widget.semanticHint == null || widget.semanticHint == field.description,
+      'NakedTextField.semanticHint conflicts with NakedField.description.',
+    );
+    assert(
+      widget.semanticErrorText == null ||
+          _normalizeError(widget.semanticErrorText) == field.errorText,
+      'NakedTextField.semanticErrorText conflicts with NakedField.errorText.',
+    );
+    assert(
+      widget.isRequired == null || widget.isRequired == field.isRequired,
+      'NakedTextField.isRequired conflicts with NakedField.isRequired.',
+    );
+    assert(
+      widget.validationResult == null ||
+          widget.validationResult == field.validationResult,
+      'NakedTextField.validationResult conflicts with '
+      'NakedField.validationResult.',
+    );
+
+    // Field resolution is independent of the debug assertions above, so the
+    // canonical values deterministically win when assertions are disabled.
+    return _EffectiveTextFieldSemantics(
+      label: field.label,
+      description: field.description,
+      errorText: field.errorText,
+      isRequired: field.isRequired,
+      validationResult: field.validationResult,
+    );
+  }
+
+  static String? _combineSemanticHint(String? description, String? errorText) {
+    if (description == null || description.isEmpty) return errorText;
+    if (errorText == null) return description;
+    return '$description\n$errorText';
+  }
 
   MaxLengthEnforcement get _effectiveMaxLengthEnforcement =>
       widget.maxLengthEnforcement ??
@@ -706,6 +899,7 @@ class _NakedTextFieldState extends State<NakedTextField>
 
     final controller = _effectiveController;
     final focusNode = _effectiveFocusNode;
+    final fieldSemantics = _resolveSemantics();
 
     final formatters = <TextInputFormatter>[
       ...?widget.inputFormatters,
@@ -745,7 +939,7 @@ class _NakedTextFieldState extends State<NakedTextField>
           key: editableTextKey,
           controller: controller,
           focusNode: focusNode,
-          readOnly: widget.readOnly || !widget.enabled,
+          readOnly: _effectiveReadOnly || !_effectiveEnabled,
           obscuringCharacter: widget.obscuringCharacter,
           obscureText: widget.obscureText,
           autocorrect: widget.autocorrect,
@@ -812,7 +1006,9 @@ class _NakedTextFieldState extends State<NakedTextField>
 
     editable = TextFieldTapRegion(
       child: IgnorePointer(
-        ignoring: widget.ignorePointers ?? !widget.enabled,
+        ignoring: _fieldScope == null
+            ? (widget.ignorePointers ?? !widget.enabled)
+            : (!_effectiveEnabled || (widget.ignorePointers ?? false)),
         child: RepaintBoundary(
           child: UnmanagedRestorationScope(bucket: bucket, child: editable),
         ),
@@ -821,7 +1017,7 @@ class _NakedTextFieldState extends State<NakedTextField>
 
     void _semanticTap() {
       widget.onTap?.call();
-      if (!widget.readOnly) {
+      if (!_effectiveReadOnly) {
         final c = controller;
         if (!c.selection.isValid) {
           c.selection = TextSelection.collapsed(offset: c.text.length);
@@ -830,39 +1026,31 @@ class _NakedTextFieldState extends State<NakedTextField>
       }
     }
 
-    String? _semanticHint() {
-      final errorText = widget.error ? widget.semanticErrorText : null;
-      if (widget.semanticHint == null || widget.semanticHint!.isEmpty) {
-        return errorText;
-      }
-      if (errorText == null || errorText.isEmpty) {
-        return widget.semanticHint;
-      }
-
-      return '${widget.semanticHint}\n$errorText';
-    }
-
     Widget withSemantics(Widget child) {
       return widget.excludeSemantics
           ? ExcludeSemantics(child: child)
           : MergeSemantics(
               child: Semantics(
-                enabled: widget.enabled,
-                liveRegion: widget.error && widget.semanticErrorText != null,
-                readOnly: widget.readOnly || !widget.enabled,
-                focusable: widget.enabled,
-                focused: widget.enabled ? focusNode.hasFocus : null,
+                enabled: _effectiveEnabled,
+                readOnly: _effectiveReadOnly || !_effectiveEnabled,
+                focusable: _effectiveEnabled,
+                focused: _effectiveEnabled ? focusNode.hasFocus : null,
                 obscured: widget.obscureText,
                 multiline: widget.maxLines != 1,
                 maxValueLength: widget.maxLength,
                 currentValueLength: controller.text.length,
-                label: widget.semanticLabel,
+                label: fieldSemantics.label,
                 value: widget.obscureText ? null : controller.text,
-                hint: _semanticHint(),
-                onFocus: widget.enabled && focusNode.canRequestFocus
+                hint: _combineSemanticHint(
+                  fieldSemantics.description,
+                  fieldSemantics.errorText,
+                ),
+                isRequired: fieldSemantics.isRequired,
+                validationResult: fieldSemantics.validationResult,
+                onFocus: _effectiveEnabled && focusNode.canRequestFocus
                     ? focusNode.requestFocus
                     : null,
-                onTap: (widget.enabled && !widget.readOnly)
+                onTap: (_effectiveEnabled && !_effectiveReadOnly)
                     ? _semanticTap
                     : null,
                 child: child,
@@ -870,18 +1058,40 @@ class _NakedTextFieldState extends State<NakedTextField>
             );
     }
 
+    Widget withErrorAnnouncement(Widget child) {
+      final announcementError = _announcementError;
+      if (widget.excludeSemantics || announcementError == null) return child;
+
+      return Stack(
+        fit: StackFit.passthrough,
+        clipBehavior: Clip.none,
+        children: [
+          Positioned.fill(
+            child: Semantics(
+              container: true,
+              role: ui.SemanticsRole.alert,
+              label: announcementError,
+              child: const SizedBox.expand(),
+            ),
+          ),
+          child,
+        ],
+      );
+    }
+
     final textFieldState = NakedTextFieldState(
       states: {...widgetStates, if (focusNode.hasFocus) WidgetState.focused},
       text: controller.text,
       hasText: controller.text.isNotEmpty,
-      isReadOnly: widget.readOnly,
+      isReadOnly: _effectiveReadOnly,
     );
 
     final Widget content = NakedStateScopeBuilder(
       value: textFieldState,
       child: editable,
-      builder: (context, value, child) =>
-          withSemantics(widget.builder!(context, value, child!)),
+      builder: (context, value, child) => withErrorAnnouncement(
+        withSemantics(widget.builder!(context, value, child!)),
+      ),
     );
 
     final Widget detector = _selectionGestureDetectorBuilder
@@ -890,7 +1100,7 @@ class _NakedTextFieldState extends State<NakedTextField>
           child: content,
         );
 
-    final Widget maybeMouseRegion = widget.enabled
+    final Widget maybeMouseRegion = _effectiveEnabled
         ? MouseRegion(
             onEnter: _handleMouseEnter,
             onExit: _handleMouseExit,
@@ -903,6 +1113,22 @@ class _NakedTextFieldState extends State<NakedTextField>
   }
 }
 
+class _EffectiveTextFieldSemantics {
+  const _EffectiveTextFieldSemantics({
+    required this.label,
+    required this.description,
+    required this.errorText,
+    required this.isRequired,
+    required this.validationResult,
+  });
+
+  final String? label;
+  final String? description;
+  final String? errorText;
+  final bool? isRequired;
+  final ui.SemanticsValidationResult validationResult;
+}
+
 class _NakedSelectionGestureDetectorBuilder
     extends TextSelectionGestureDetectorBuilder {
   final _NakedTextFieldState _state;
@@ -913,10 +1139,10 @@ class _NakedSelectionGestureDetectorBuilder
 
   @override
   void onUserTap() {
-    if (!_state.widget.enabled) return;
+    if (!_state._effectiveEnabled) return;
     _state.widget.onTap?.call();
 
-    if (!_state.widget.readOnly) {
+    if (!_state._effectiveReadOnly) {
       final c = _state._effectiveController;
       if (!c.selection.isValid) {
         c.selection = TextSelection.collapsed(offset: c.text.length);
@@ -928,7 +1154,7 @@ class _NakedSelectionGestureDetectorBuilder
   @override
   void onTapDown(TapDragDownDetails details) {
     super.onTapDown(details);
-    if (!_state.widget.enabled) return;
+    if (!_state._effectiveEnabled) return;
     _state.widget.onTapChange?.call(true);
     _state._handlePressChange(true);
   }
@@ -936,7 +1162,7 @@ class _NakedSelectionGestureDetectorBuilder
   @override
   void onSingleTapUp(TapDragUpDetails details) {
     super.onSingleTapUp(details);
-    if (!_state.widget.enabled) return;
+    if (!_state._effectiveEnabled) return;
     _state.widget.onTapChange?.call(false);
     _state._handlePressChange(false);
   }
@@ -944,7 +1170,7 @@ class _NakedSelectionGestureDetectorBuilder
   @override
   void onSingleTapCancel() {
     super.onSingleTapCancel();
-    if (!_state.widget.enabled) return;
+    if (!_state._effectiveEnabled) return;
     _state.widget.onTapChange?.call(false);
     _state._handlePressChange(false);
   }

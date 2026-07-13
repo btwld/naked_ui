@@ -1,4 +1,4 @@
-import 'dart:ui' show Tristate;
+import 'dart:ui' show SemanticsRole, SemanticsValidationResult, Tristate;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -119,7 +119,7 @@ void main() {
       handle.dispose();
     });
 
-    testWidgets('error text is associated with a live text field node', (
+    testWidgets('initial error is discoverable without a live or alert node', (
       tester,
     ) async {
       final handle = tester.ensureSemantics();
@@ -155,9 +155,16 @@ void main() {
       expect(data.label, 'Email');
       expect(data.hint, contains('Enter your email'));
       expect(data.hint, contains('Enter a valid email address'));
-      expect(data.flagsCollection.isLiveRegion, isTrue);
+      expect(data.flagsCollection.isLiveRegion, isFalse);
       expect(data.flagsCollection.isTextField, isTrue);
       expect(data.flagsCollection.isFocused, isNot(Tristate.none));
+      expect(
+        collectSemanticsNodes(
+          root,
+          (node) => node.getSemanticsData().role == SemanticsRole.alert,
+        ),
+        isEmpty,
+      );
 
       controller.dispose();
       handle.dispose();
@@ -193,6 +200,138 @@ void main() {
       expect(data.hint, isNot(contains('Enter a valid email address')));
       expect(data.flagsCollection.isLiveRegion, isFalse);
 
+      handle.dispose();
+    });
+
+    testWidgets('standalone required and validation metadata are exposed', (
+      tester,
+    ) async {
+      final handle = tester.ensureSemantics();
+
+      await tester.pumpWidget(
+        _buildTestApp(
+          NakedTextField(
+            semanticLabel: 'Email',
+            isRequired: true,
+            validationResult: SemanticsValidationResult.valid,
+            builder: (context, state, editable) => editable,
+          ),
+        ),
+      );
+
+      final root = tester.getSemantics(find.byType(Scaffold));
+      final node = findSemanticsNode(
+        root,
+        (node) => node.getSemanticsData().flagsCollection.isTextField,
+      );
+      expect(node, isNotNull);
+      final data = node!.getSemanticsData();
+      expect(data.flagsCollection.isRequired, Tristate.isTrue);
+      expect(data.validationResult, SemanticsValidationResult.valid);
+      handle.dispose();
+    });
+
+    testWidgets('a changed standalone error creates one transient alert', (
+      tester,
+    ) async {
+      final handle = tester.ensureSemantics();
+      late StateSetter rebuild;
+      var error = false;
+
+      await tester.pumpWidget(
+        _buildTestApp(
+          StatefulBuilder(
+            builder: (context, setState) {
+              rebuild = setState;
+              return NakedTextField(
+                error: error,
+                semanticLabel: 'Email',
+                semanticErrorText: 'Invalid email',
+                builder: (context, state, editable) => editable,
+              );
+            },
+          ),
+        ),
+      );
+
+      rebuild(() => error = true);
+      await tester.pump();
+
+      var root = tester.getSemantics(find.byType(Scaffold));
+      var alerts = collectSemanticsNodes(
+        root,
+        (node) => node.getSemanticsData().role == SemanticsRole.alert,
+      );
+      expect(alerts, hasLength(1));
+      expect(alerts.single.getSemanticsData().label, 'Invalid email');
+      expect(
+        alerts.single.getSemanticsData().flagsCollection.isLiveRegion,
+        isFalse,
+      );
+
+      final textField = findSemanticsNode(
+        root,
+        (node) => node.getSemanticsData().flagsCollection.isTextField,
+      );
+      expect(textField, isNotNull);
+      expect(textField!.getSemanticsData().hint, 'Invalid email');
+      expect(
+        textField.getSemanticsData().flagsCollection.isLiveRegion,
+        isFalse,
+      );
+
+      await tester.pump();
+      root = tester.getSemantics(find.byType(Scaffold));
+      alerts = collectSemanticsNodes(
+        root,
+        (node) => node.getSemanticsData().role == SemanticsRole.alert,
+      );
+      expect(alerts, isEmpty);
+      handle.dispose();
+    });
+
+    testWidgets('excluded semantics suppresses a changed-error alert', (
+      tester,
+    ) async {
+      final handle = tester.ensureSemantics();
+      late StateSetter rebuild;
+      var error = false;
+
+      await tester.pumpWidget(
+        _buildTestApp(
+          StatefulBuilder(
+            builder: (context, setState) {
+              rebuild = setState;
+              return NakedTextField(
+                excludeSemantics: true,
+                error: error,
+                semanticLabel: 'Email',
+                semanticErrorText: 'Invalid email',
+                builder: (context, state, editable) => editable,
+              );
+            },
+          ),
+        ),
+      );
+
+      rebuild(() => error = true);
+      await tester.pump();
+
+      final root = tester.getSemantics(find.byType(Scaffold));
+      expect(
+        collectSemanticsNodes(
+          root,
+          (node) => node.getSemanticsData().role == SemanticsRole.alert,
+        ),
+        isEmpty,
+      );
+      expect(
+        collectSemanticsNodes(
+          root,
+          (node) => node.getSemanticsData().flagsCollection.isTextField,
+        ),
+        isEmpty,
+      );
       handle.dispose();
     });
   });
