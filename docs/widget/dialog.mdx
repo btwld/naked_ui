@@ -4,11 +4,12 @@ description: Headless dialog component with focus management and accessibility
 keywords: [flutter, dialog, modal, headless, overlay]
 ---
 
-Headless dialog component. Handles focus management, backdrop interaction, and accessibility. Use builder pattern for custom styling.
+Headless dialog component. Handles focus management, backdrop interaction, and accessibility. Use the builder pattern for custom styling.
 
 ## When to use this
 
-- **Confirmations**: "Are you sure?" dialogs for destructive actions
+- **Ordinary confirmations**: Reversible or low-risk choices
+- **Alert confirmations**: Urgent or destructive choices that require immediate attention
 - **Forms**: Modal forms for user input (login, contact, etc.)
 - **Content display**: Show detailed information or images
 - **Custom modals**: When standard dialog styles don't match your design
@@ -59,6 +60,24 @@ final result = await showNakedDialog<String>(
 );
 ```
 
+For an urgent or destructive confirmation, use the alert helper. Its builder
+returns visual content only; the helper supplies the single alert-dialog
+semantics wrapper and always moves focus into the route.
+
+```dart
+final result = await showNakedAlertDialog<bool>(
+  context: context,
+  barrierColor: Colors.black54,
+  semanticLabel: localizedDeleteProjectTitle,
+  initialFocusNode: cancelFocusNode,
+  builder: (context) => YourStyledAlertContents(
+    cancelFocusNode: cancelFocusNode,
+    onCancel: () => Navigator.pop(context, false),
+    onConfirm: () => Navigator.pop(context, true),
+  ),
+);
+```
+
 ## API
 
 ### `showNakedDialog`
@@ -89,6 +108,31 @@ Future<T?> showNakedDialog<T>({
 - traversalEdgeBehavior: Defaults to `TraversalEdgeBehavior.closedLoop` to keep focus inside the dialog; override for custom traversal.
 - useRootNavigator: Present on the root navigator instead of the nested one.
 
+### `showNakedAlertDialog`
+
+```dart
+Future<T?> showNakedAlertDialog<T>({
+  required BuildContext context,
+  required WidgetBuilder builder,
+  required Color barrierColor,
+  required String semanticLabel,
+  String? barrierLabel,
+  bool barrierDismissible = false,
+  bool useRootNavigator = true,
+  RouteSettings? routeSettings,
+  Offset? anchorPoint,
+  Duration transitionDuration = const Duration(milliseconds: 400),
+  RouteTransitionsBuilder? transitionBuilder,
+  FocusNode? initialFocusNode,
+})
+```
+
+- semanticLabel: Required, non-empty, caller-localized alert-dialog name.
+- initialFocusNode: Optional caller-owned safe target. The first traversable descendant is used when it is absent or unusable.
+- barrierDismissible: Outside taps are inert by default. When enabled, `barrierLabel` must be non-empty and localized.
+- Escape and platform Back: Always cancel safely with a null result.
+- Focus always enters the alert, loops inside, and returns to a surviving invoker when the route closes.
+
 ### `NakedDialog`
 
 ```dart
@@ -98,6 +142,8 @@ class NakedDialog extends StatelessWidget {
     required this.child,
     this.modal = true,
     this.semanticLabel,
+    this.excludeSemantics = false,
+    this.semanticsRole = SemanticsRole.dialog,
   });
 }
 ```
@@ -105,8 +151,12 @@ class NakedDialog extends StatelessWidget {
 - child: Your dialog content.
 - modal: When true, blocks background semantics and interaction.
 - semanticLabel: Optional screen reader label.
+- excludeSemantics: Hides the dialog subtree from accessibility services.
+- semanticsRole: Constrained to `SemanticsRole.dialog` or `SemanticsRole.alertDialog`.
 
 ## Notes
 
 - `NakedDialog` only sets semantics; visuals are entirely up to you.
+- Do not wrap `showNakedAlertDialog` content in another `NakedDialog`.
+- Keep caller-owned focus nodes in `State` and dispose them there.
 - For non‑modal popovers, set `modal: false` and manage dismissal yourself.

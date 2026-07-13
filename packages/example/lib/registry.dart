@@ -170,6 +170,15 @@ class DemoRegistry {
       tags: ['dialog'],
     ),
     Demo(
+      id: 'dialog-alert',
+      title: 'Dialog – Alert',
+      category: 'Dialog',
+      builder: (_) => const dialog_basic_example.AlertDialogExample(),
+      sourceUrl:
+          'https://github.com/btwld/naked_ui/blob/main/example/lib/api/naked_dialog.0.dart',
+      tags: ['dialog', 'alert'],
+    ),
+    Demo(
       id: 'link-basic',
       title: 'Link – Interaction states',
       category: 'Link',

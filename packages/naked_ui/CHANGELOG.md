@@ -16,6 +16,13 @@
   preserve stateful descendants across availability changes, retain disabled
   URIs in state, and remove disabled destination metadata from semantics and
   the web DOM.
+- Add `SemanticsRole.alertDialog` support to `NakedDialog` and a
+  `showNakedAlertDialog` helper with required non-empty caller-localized names,
+  a non-dismissible outside barrier by default, null cancellation from Escape
+  and platform Back, mandatory focus entry, safe initial-focus selection,
+  closed-loop traversal, and caller-owned focus-node handling. Dismissible
+  barriers require a non-empty localized label. Existing `NakedDialog` and
+  `showNakedDialog` defaults remain unchanged.
 
 ## 1.0.0-beta.3
 

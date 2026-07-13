@@ -60,6 +60,7 @@ Future<void> pumpGoldenSurface(
   WidgetTester tester, {
   required Widget child,
   Brightness brightness = Brightness.light,
+  Key? surfaceKey,
 }) async {
   tester.view.physicalSize = goldenSurfaceSize;
   tester.view.devicePixelRatio = goldenDevicePixelRatio;
@@ -67,41 +68,43 @@ Future<void> pumpGoldenSurface(
   addTearDown(tester.view.resetDevicePixelRatio);
 
   FocusManager.instance.primaryFocus?.unfocus();
-  await tester.pumpWidget(
-    MaterialApp(
-      debugShowCheckedModeBanner: false,
-      locale: const Locale('en', 'US'),
-      theme: ThemeData(
-        brightness: brightness,
-        fontFamily: goldenFontFamily,
-        useMaterial3: true,
+  Widget app = MaterialApp(
+    debugShowCheckedModeBanner: false,
+    locale: const Locale('en', 'US'),
+    theme: ThemeData(
+      brightness: brightness,
+      fontFamily: goldenFontFamily,
+      useMaterial3: true,
+    ),
+    home: MediaQuery(
+      data: MediaQueryData(
+        size: goldenSurfaceSize,
+        devicePixelRatio: goldenDevicePixelRatio,
+        textScaler: TextScaler.noScaling,
+        platformBrightness: brightness,
+        padding: EdgeInsets.zero,
+        viewPadding: EdgeInsets.zero,
+        viewInsets: EdgeInsets.zero,
+        systemGestureInsets: EdgeInsets.zero,
+        disableAnimations: true,
+        accessibleNavigation: false,
+        boldText: false,
       ),
-      home: MediaQuery(
-        data: MediaQueryData(
-          size: goldenSurfaceSize,
-          devicePixelRatio: goldenDevicePixelRatio,
-          textScaler: TextScaler.noScaling,
-          platformBrightness: brightness,
-          padding: EdgeInsets.zero,
-          viewPadding: EdgeInsets.zero,
-          viewInsets: EdgeInsets.zero,
-          systemGestureInsets: EdgeInsets.zero,
-          disableAnimations: true,
-          accessibleNavigation: false,
-          boldText: false,
-        ),
-        child: Directionality(
-          textDirection: TextDirection.ltr,
-          child: TickerMode(
-            enabled: false,
-            child: Scaffold(
-              backgroundColor: const Color(0xFFF7F7F7),
-              body: Center(child: child),
-            ),
+      child: Directionality(
+        textDirection: TextDirection.ltr,
+        child: TickerMode(
+          enabled: false,
+          child: Scaffold(
+            backgroundColor: const Color(0xFFF7F7F7),
+            body: Center(child: child),
           ),
         ),
       ),
     ),
   );
+  if (surfaceKey != null) {
+    app = RepaintBoundary(key: surfaceKey, child: app);
+  }
+  await tester.pumpWidget(app);
   await tester.pump();
 }

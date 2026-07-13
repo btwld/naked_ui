@@ -1,4 +1,5 @@
 import 'package:example/api/naked_button.0.dart' as button_example;
+import 'package:example/api/naked_dialog.0.dart' as dialog_example;
 import 'package:example/api/naked_link.0.dart' as link_example;
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -28,6 +29,23 @@ void main() {
         home: Scaffold(body: link_example.StandaloneLinkExample()),
       ),
     );
+
+    await tester.expectMeetsAccessibilityGuidelines();
+  });
+
+  testWidgets('canonical styled alert dialog meets accessibility guidelines', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Scaffold(
+          body: Center(child: dialog_example.AlertDialogExample()),
+        ),
+      ),
+    );
+    await tester.tap(find.byKey(const ValueKey('alert-dialog.open')));
+    await tester.pump();
+    await tester.pump();
 
     await tester.expectMeetsAccessibilityGuidelines();
   });

@@ -8,8 +8,43 @@ import 'package:flutter/semantics.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
+import 'package:naked_ui/naked_ui.dart';
 
 import 'helpers/screenshot_test_helpers.dart';
+import 'helpers/test_helpers.dart';
+
+const _alertOpenKey = ValueKey('alert-dialog.open');
+const _alertTitleKey = ValueKey('alert-dialog.title');
+const _alertMessageFocusKey = ValueKey('alert-dialog.message-focus');
+const _alertCancelKey = ValueKey('alert-dialog.cancel');
+const _alertConfirmKey = ValueKey('alert-dialog.confirm');
+
+void _configureScreenshotView(WidgetTester tester) {
+  if (Platform.isAndroid || Platform.isIOS) return;
+  tester.view.physicalSize = const Size(800, 600);
+  tester.view.devicePixelRatio = 1;
+  addTearDown(tester.view.resetPhysicalSize);
+  addTearDown(tester.view.resetDevicePixelRatio);
+}
+
+Widget _alertScreenshotApp({
+  bool longMessage = false,
+  TextScaler textScaler = TextScaler.noScaling,
+}) {
+  return MaterialApp(
+    debugShowCheckedModeBanner: false,
+    builder: (context, child) => MediaQuery(
+      data: MediaQuery.of(context).copyWith(textScaler: textScaler),
+      child: child!,
+    ),
+    home: Scaffold(
+      backgroundColor: const Color(0xFFF7F7F7),
+      body: Center(
+        child: dialog_example.AlertDialogExample(longMessage: longMessage),
+      ),
+    ),
+  );
+}
 
 void main() {
   final binding = IntegrationTestWidgetsFlutterBinding.ensureInitialized();
@@ -49,6 +84,138 @@ void main() {
         surface: '${logicalSize.width}x${logicalSize.height} logical pixels',
         devicePixelRatio: tester.view.devicePixelRatio,
         animationMode: 'fixed 400ms transition, settled',
+      ),
+      surface: screenshotSurface,
+    );
+  });
+
+  testWidgets('alert dialog safe focus screenshot evidence', (tester) async {
+    const screenshotSurfaceKey = ValueKey('alert-dialog.screenshot.safe-focus');
+    _configureScreenshotView(tester);
+    await tester.pumpWidget(
+      RepaintBoundary(key: screenshotSurfaceKey, child: _alertScreenshotApp()),
+    );
+    await tester.pump();
+
+    await tester.tap(find.byKey(_alertOpenKey));
+    await tester.pumpUntil(
+      () => find.byKey(_alertTitleKey).evaluate().isNotEmpty,
+      timeout: const Duration(seconds: 2),
+    );
+    final cancelButton = tester.widget<NakedButton>(
+      find.descendant(
+        of: find.byKey(_alertCancelKey),
+        matching: find.byType(NakedButton),
+      ),
+    );
+    await tester.pumpUntil(
+      () => FocusManager.instance.primaryFocus == cancelButton.focusNode,
+      timeout: const Duration(seconds: 2),
+    );
+    expect(FocusManager.instance.primaryFocus, same(cancelButton.focusNode));
+
+    final screenshotSurface = find.byKey(screenshotSurfaceKey);
+    final logicalSize = tester.getSize(screenshotSurface);
+    await tester.captureEvidenceScreenshot(
+      binding,
+      ScreenshotEvidence(
+        component: 'alert_dialog',
+        scenario: 'open_safe_focus',
+        surface: '${logicalSize.width}x${logicalSize.height} logical pixels',
+        devicePixelRatio: tester.view.devicePixelRatio,
+        animationMode: 'disabled, zero-duration route transition',
+      ),
+      surface: screenshotSurface,
+    );
+  });
+
+  testWidgets('alert dialog destructive action screenshot evidence', (
+    tester,
+  ) async {
+    const screenshotSurfaceKey = ValueKey(
+      'alert-dialog.screenshot.destructive-action',
+    );
+    _configureScreenshotView(tester);
+    await tester.pumpWidget(
+      RepaintBoundary(key: screenshotSurfaceKey, child: _alertScreenshotApp()),
+    );
+    await tester.pump();
+
+    await tester.tap(find.byKey(_alertOpenKey));
+    await tester.pumpUntil(
+      () => find.byKey(_alertConfirmKey).evaluate().isNotEmpty,
+      timeout: const Duration(seconds: 2),
+    );
+    await tester.tap(find.byKey(_alertConfirmKey));
+    await tester.pumpUntil(
+      () =>
+          find.text('Result: confirm; confirmations: 1').evaluate().isNotEmpty,
+      timeout: const Duration(seconds: 2),
+    );
+    expect(find.byKey(_alertTitleKey), findsNothing);
+
+    final screenshotSurface = find.byKey(screenshotSurfaceKey);
+    final logicalSize = tester.getSize(screenshotSurface);
+    await tester.captureEvidenceScreenshot(
+      binding,
+      ScreenshotEvidence(
+        component: 'alert_dialog',
+        scenario: 'destructive_action',
+        surface: '${logicalSize.width}x${logicalSize.height} logical pixels',
+        devicePixelRatio: tester.view.devicePixelRatio,
+        animationMode: 'disabled, action completed',
+      ),
+      surface: screenshotSurface,
+    );
+  });
+
+  testWidgets('alert dialog long message screenshot evidence', (tester) async {
+    const screenshotSurfaceKey = ValueKey(
+      'alert-dialog.screenshot.long-message',
+    );
+    _configureScreenshotView(tester);
+    await tester.pumpWidget(
+      RepaintBoundary(
+        key: screenshotSurfaceKey,
+        child: _alertScreenshotApp(
+          longMessage: true,
+          textScaler: const TextScaler.linear(2),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    await tester.tap(find.byKey(_alertOpenKey));
+    await tester.pumpUntil(
+      () => find.byKey(_alertMessageFocusKey).evaluate().isNotEmpty,
+      timeout: const Duration(seconds: 2),
+    );
+    final messageFocus = tester.widget<Focus>(
+      find.byKey(_alertMessageFocusKey),
+    );
+    await tester.pumpUntil(
+      () => FocusManager.instance.primaryFocus == messageFocus.focusNode,
+      timeout: const Duration(seconds: 2),
+    );
+    expect(FocusManager.instance.primaryFocus, same(messageFocus.focusNode));
+    expect(
+      MediaQuery.textScalerOf(
+        tester.element(find.byKey(_alertTitleKey)),
+      ).scale(10),
+      20,
+    );
+
+    final screenshotSurface = find.byKey(screenshotSurfaceKey);
+    final logicalSize = tester.getSize(screenshotSurface);
+    await tester.captureEvidenceScreenshot(
+      binding,
+      ScreenshotEvidence(
+        component: 'alert_dialog',
+        scenario: 'long_message_200_text',
+        surface: '${logicalSize.width}x${logicalSize.height} logical pixels',
+        devicePixelRatio: tester.view.devicePixelRatio,
+        textScale: 2,
+        animationMode: 'disabled, zero-duration route transition',
       ),
       surface: screenshotSurface,
     );

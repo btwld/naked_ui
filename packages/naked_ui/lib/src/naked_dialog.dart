@@ -4,6 +4,147 @@ import 'package:flutter/widgets.dart';
 
 import 'utilities/intents.dart';
 
+/// Displays an urgent modal alert dialog without default styling.
+///
+/// The [builder] returns only the visual contents. This helper adds the single
+/// [NakedDialog] semantics wrapper, requires a non-empty caller-localized
+/// [semanticLabel], and keeps outside-barrier dismissal disabled by default.
+/// Escape and platform Back safely cancel the route with a null result.
+/// Enabling [barrierDismissible] also requires a non-empty localized
+/// [barrierLabel]. Consumers remain responsible for an explicit safe cancel
+/// action and for testing every supported cancellation path.
+///
+/// An attached and focusable [initialFocusNode] receives focus after the route
+/// opens. Otherwise the first traversable descendant receives focus. The node
+/// remains owned by the caller and is never disposed by Naked UI. For
+/// irreversible work, prefer the least destructive action; long structured
+/// content may instead use a non-action focus target near its beginning.
+Future<T?> showNakedAlertDialog<T>({
+  required BuildContext context,
+  required WidgetBuilder builder,
+  required Color barrierColor,
+  required String semanticLabel,
+  String? barrierLabel,
+  bool barrierDismissible = false,
+  bool useRootNavigator = true,
+  RouteSettings? routeSettings,
+  Offset? anchorPoint,
+  Duration transitionDuration = const Duration(milliseconds: 400),
+  RouteTransitionsBuilder? transitionBuilder,
+  FocusNode? initialFocusNode,
+}) {
+  if (semanticLabel.trim().isEmpty) {
+    throw ArgumentError.value(
+      semanticLabel,
+      'semanticLabel',
+      'Alert dialogs require a non-empty localized semantic label.',
+    );
+  }
+  if (barrierDismissible &&
+      (barrierLabel == null || barrierLabel.trim().isEmpty)) {
+    throw ArgumentError.value(
+      barrierLabel,
+      'barrierLabel',
+      'Dismissible alert barriers require a non-empty localized label.',
+    );
+  }
+
+  return showNakedDialog<T>(
+    context: context,
+    barrierColor: barrierColor,
+    barrierLabel: barrierLabel,
+    barrierDismissible: barrierDismissible,
+    useRootNavigator: useRootNavigator,
+    routeSettings: routeSettings,
+    anchorPoint: anchorPoint,
+    transitionDuration: transitionDuration,
+    transitionBuilder: transitionBuilder,
+    requestFocus: true,
+    builder: (context) {
+      Widget dialog = NakedDialog(
+        semanticsRole: SemanticsRole.alertDialog,
+        semanticLabel: semanticLabel,
+        child: _NakedAlertDialogFocus(
+          initialFocusNode: initialFocusNode,
+          child: builder(context),
+        ),
+      );
+      if (!barrierDismissible) {
+        dialog = _withDialogDismissShortcut(context, dialog);
+      }
+      return dialog;
+    },
+  );
+}
+
+Widget _withDialogDismissShortcut(BuildContext context, Widget child) {
+  return Shortcuts(
+    shortcuts: NakedIntentActions.dialog.shortcuts,
+    child: Actions(
+      actions: NakedIntentActions.dialog.actions(
+        onDismiss: () => Navigator.of(context).maybePop(),
+      ),
+      child: child,
+    ),
+  );
+}
+
+class _NakedAlertDialogFocus extends StatefulWidget {
+  const _NakedAlertDialogFocus({
+    required this.initialFocusNode,
+    required this.child,
+  });
+
+  final FocusNode? initialFocusNode;
+  final Widget child;
+
+  @override
+  State<_NakedAlertDialogFocus> createState() => _NakedAlertDialogFocusState();
+}
+
+class _NakedAlertDialogFocusState extends State<_NakedAlertDialogFocus> {
+  @override
+  void initState() {
+    super.initState();
+    _scheduleFocusRequest();
+  }
+
+  @override
+  void didUpdateWidget(_NakedAlertDialogFocus oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.initialFocusNode != oldWidget.initialFocusNode) {
+      _scheduleFocusRequest();
+    }
+  }
+
+  void _scheduleFocusRequest() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final focusNode = widget.initialFocusNode;
+      final scope = FocusScope.of(context);
+      if (focusNode != null &&
+          focusNode.context != null &&
+          focusNode.canRequestFocus &&
+          focusNode.ancestors.contains(scope)) {
+        focusNode.requestFocus();
+        return;
+      }
+
+      final firstFocus = FocusTraversalGroup.maybeOf(
+        context,
+      )?.findFirstFocus(scope, ignoreCurrentFocus: true);
+      if (firstFocus != null &&
+          firstFocus != scope &&
+          firstFocus.canRequestFocus) {
+        firstFocus.requestFocus();
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) => widget.child;
+}
+
 /// Displays a headless dialog without default styling.
 ///
 /// Unlike [showDialog], imposes no visuals—appearance is fully controlled by
@@ -59,15 +200,7 @@ Future<T?> showNakedDialog<T>({
             Widget wrapped = FocusTraversalGroup(child: content);
 
             if (barrierDismissible) {
-              wrapped = Shortcuts(
-                shortcuts: NakedIntentActions.dialog.shortcuts,
-                child: Actions(
-                  actions: NakedIntentActions.dialog.actions(
-                    onDismiss: () => Navigator.of(routeContext).maybePop(),
-                  ),
-                  child: wrapped,
-                ),
-              );
+              wrapped = _withDialogDismissShortcut(routeContext, wrapped);
             }
 
             return themes.wrap(wrapped);
@@ -101,7 +234,12 @@ class NakedDialog extends StatelessWidget {
     this.modal = true,
     this.semanticLabel,
     this.excludeSemantics = false,
-  });
+    this.semanticsRole = SemanticsRole.dialog,
+  }) : assert(
+         semanticsRole == SemanticsRole.dialog ||
+             semanticsRole == SemanticsRole.alertDialog,
+         'NakedDialog only supports dialog and alertDialog semantics roles.',
+       );
 
   /// The dialog content.
   final Widget child;
@@ -117,12 +255,18 @@ class NakedDialog extends StatelessWidget {
   /// When true, the widget and its children are hidden from accessibility services.
   final bool excludeSemantics;
 
+  /// The dialog role exposed to accessibility services.
+  ///
+  /// Use [SemanticsRole.alertDialog] only for urgent or destructive
+  /// confirmations that require the user's immediate attention.
+  final SemanticsRole semanticsRole;
+
   @override
   Widget build(BuildContext context) {
     Widget dialog = excludeSemantics
         ? ExcludeSemantics(child: child)
         : Semantics(
-            role: SemanticsRole.dialog,
+            role: semanticsRole,
             container: true,
             explicitChildNodes: true,
             scopesRoute: modal,

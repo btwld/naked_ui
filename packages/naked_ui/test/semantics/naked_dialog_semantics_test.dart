@@ -1,4 +1,4 @@
-import 'dart:ui' show SemanticsRole;
+import 'dart:ui' show SemanticsAction, SemanticsRole;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -83,6 +83,328 @@ void main() {
   }
 
   group('NakedDialog Semantics', () {
+    testWidgets('alert dialog exposes its exact role and route semantics', (
+      tester,
+    ) async {
+      final handle = tester.ensureSemantics();
+      try {
+        await tester.pumpWidget(
+          _buildTestApp(
+            const Directionality(
+              textDirection: TextDirection.rtl,
+              child: NakedDialog(
+                semanticsRole: SemanticsRole.alertDialog,
+                semanticLabel: 'Eliminar archivo',
+                child: Text('Esta acción no se puede deshacer.'),
+              ),
+            ),
+          ),
+        );
+
+        final data = tester
+            .getSemantics(find.bySemanticsLabel('Eliminar archivo'))
+            .getSemanticsData();
+        expect(data.role, SemanticsRole.alertDialog);
+        expect(data.label, 'Eliminar archivo');
+        expect(data.flagsCollection.scopesRoute, isTrue);
+        expect(data.flagsCollection.namesRoute, isTrue);
+        expect(data.hasAction(SemanticsAction.tap), isFalse);
+        expect(tester.takeException(), isNull);
+      } finally {
+        handle.dispose();
+      }
+    });
+
+    testWidgets(
+      'alert helper blocks background and keeps title message and actions separate',
+      (tester) async {
+        final handle = tester.ensureSemantics();
+        const backgroundKey = ValueKey('alert.background');
+        const titleKey = ValueKey('alert.title');
+        const messageKey = ValueKey('alert.message');
+        const cancelKey = ValueKey('alert.cancel');
+        const confirmKey = ValueKey('alert.confirm');
+        var confirmCount = 0;
+        Future<String?>? result;
+
+        try {
+          await tester.pumpWidget(
+            MaterialApp(
+              home: Scaffold(
+                body: Builder(
+                  builder: (context) => Column(
+                    children: [
+                      Semantics(
+                        key: backgroundKey,
+                        label: 'Contenido de fondo',
+                        child: const Text('Background'),
+                      ),
+                      ElevatedButton(
+                        onPressed: () {
+                          result = showNakedAlertDialog<String>(
+                            context: context,
+                            barrierColor: Colors.black54,
+                            semanticLabel: 'Eliminar archivo',
+                            transitionDuration: Duration.zero,
+                            builder: (context) => Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Text(key: titleKey, 'Eliminar archivo'),
+                                const Text(
+                                  key: messageKey,
+                                  'Esta acción no se puede deshacer.',
+                                ),
+                                TextButton(
+                                  key: cancelKey,
+                                  onPressed: () =>
+                                      Navigator.of(context).pop('cancel'),
+                                  child: const Text('Cancelar'),
+                                ),
+                                ElevatedButton(
+                                  key: confirmKey,
+                                  onPressed: () {
+                                    confirmCount += 1;
+                                    Navigator.of(context).pop('confirm');
+                                  },
+                                  child: const Text('Eliminar'),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                        child: const Text('Abrir alerta'),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          );
+
+          expect(
+            find.bySemanticsLabel(RegExp('Contenido de fondo')),
+            findsOneWidget,
+          );
+          await tester.tap(find.text('Abrir alerta'));
+          await tester.pump();
+          await tester.pump();
+
+          final root = tester
+              .binding
+              .renderViews
+              .single
+              .owner!
+              .semanticsOwner!
+              .rootSemanticsNode!;
+          final alerts = collectSemanticsNodes(
+            root,
+            (node) => node.getSemanticsData().role == SemanticsRole.alertDialog,
+          );
+          expect(alerts, hasLength(1));
+          final alertData = alerts.single.getSemanticsData();
+          expect(alertData.label, 'Eliminar archivo');
+          expect(alertData.flagsCollection.scopesRoute, isTrue);
+          expect(alertData.flagsCollection.namesRoute, isTrue);
+          expect(alertData.hasAction(SemanticsAction.tap), isFalse);
+          expect(
+            countSemanticsNodes(
+              root,
+              (node) =>
+                  node.getSemanticsData().label.contains('Contenido de fondo'),
+            ),
+            0,
+          );
+
+          expect(
+            tester.getSemantics(find.byKey(titleKey)).getSemanticsData().label,
+            'Eliminar archivo',
+          );
+          expect(
+            tester
+                .getSemantics(find.byKey(messageKey))
+                .getSemanticsData()
+                .label,
+            'Esta acción no se puede deshacer.',
+          );
+          expect(
+            tester
+                .getSemantics(find.byKey(cancelKey))
+                .getSemanticsData()
+                .hasAction(SemanticsAction.tap),
+            isTrue,
+          );
+          expect(
+            tester
+                .getSemantics(find.byKey(confirmKey))
+                .getSemanticsData()
+                .hasAction(SemanticsAction.tap),
+            isTrue,
+          );
+
+          final confirmNode = tester.getSemantics(find.byKey(confirmKey));
+          tester.binding.renderViews.single.owner!.semanticsOwner!
+              .performAction(confirmNode.id, SemanticsAction.tap);
+          await tester.pump();
+          await tester.pump();
+          expect(await result, 'confirm');
+          expect(confirmCount, 1);
+          final restoredRoot = tester
+              .binding
+              .renderViews
+              .single
+              .owner!
+              .semanticsOwner!
+              .rootSemanticsNode!;
+          expect(
+            countSemanticsNodes(
+              restoredRoot,
+              (node) =>
+                  node.getSemanticsData().label.contains('Contenido de fondo'),
+            ),
+            1,
+          );
+          expect(tester.takeException(), isNull);
+        } finally {
+          handle.dispose();
+        }
+      },
+    );
+
+    testWidgets('dismissible barrier carries its localized semantics label', (
+      tester,
+    ) async {
+      Future<String?>? result;
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Builder(
+            builder: (context) => ElevatedButton(
+              onPressed: () {
+                result = showNakedAlertDialog<String>(
+                  context: context,
+                  barrierColor: Colors.black54,
+                  semanticLabel: 'Eliminar archivo',
+                  barrierDismissible: true,
+                  barrierLabel: 'Cerrar alerta',
+                  transitionDuration: Duration.zero,
+                  builder: (context) => const SizedBox.square(dimension: 200),
+                );
+              },
+              child: const Text('Abrir alerta'),
+            ),
+          ),
+        ),
+      );
+
+      await tester.tap(find.text('Abrir alerta'));
+      await tester.pump();
+      await tester.pump();
+
+      final barrier = tester.widget<AnimatedModalBarrier>(
+        find.byType(AnimatedModalBarrier),
+      );
+      expect(barrier.dismissible, isTrue);
+      expect(barrier.semanticsLabel, 'Cerrar alerta');
+      expect(barrier.barrierSemanticsDismissible, isTrue);
+
+      await tester.tapAt(const Offset(4, 4));
+      await tester.pump();
+      await tester.pump();
+
+      expect(await result, isNull);
+    });
+
+    testWidgets('long message safe target is focusable without a button role', (
+      tester,
+    ) async {
+      final handle = tester.ensureSemantics();
+      final messageNode = FocusNode(debugLabel: 'alert long message');
+      addTearDown(messageNode.dispose);
+      const messageKey = ValueKey('alert.long-message');
+      BuildContext? hostContext;
+
+      try {
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Builder(
+              builder: (context) {
+                hostContext = context;
+                return const SizedBox.shrink();
+              },
+            ),
+          ),
+        );
+
+        showNakedAlertDialog<void>(
+          context: hostContext!,
+          barrierColor: Colors.black54,
+          semanticLabel: 'Condiciones importantes',
+          transitionDuration: Duration.zero,
+          initialFocusNode: messageNode,
+          builder: (context) => Focus(
+            focusNode: messageNode,
+            child: Semantics(
+              key: messageKey,
+              container: true,
+              label: 'Lea estas condiciones antes de continuar.',
+              child: const Text('Mensaje largo'),
+            ),
+          ),
+        );
+        await tester.pump();
+        await tester.pump();
+
+        expect(FocusManager.instance.primaryFocus, same(messageNode));
+        final messageData = tester
+            .getSemantics(find.byKey(messageKey))
+            .getSemanticsData();
+        expect(messageData.role, SemanticsRole.none);
+        expect(messageData.flagsCollection.isButton, isFalse);
+        expect(messageData.hasAction(SemanticsAction.tap), isFalse);
+
+        Navigator.of(hostContext!).pop();
+        await tester.pump();
+        await tester.pump();
+      } finally {
+        handle.dispose();
+      }
+    });
+
+    testWidgets('excluded alert dialog has no role or subtree', (tester) async {
+      final handle = tester.ensureSemantics();
+      try {
+        await tester.pumpWidget(
+          _buildTestApp(
+            const NakedDialog(
+              semanticsRole: SemanticsRole.alertDialog,
+              semanticLabel: 'Alerta excluida',
+              excludeSemantics: true,
+              child: Text('Contenido excluido'),
+            ),
+          ),
+        );
+
+        final root = tester
+            .binding
+            .renderViews
+            .single
+            .owner!
+            .semanticsOwner!
+            .rootSemanticsNode!;
+        expect(
+          countSemanticsNodes(
+            root,
+            (node) => node.getSemanticsData().role == SemanticsRole.alertDialog,
+          ),
+          0,
+        );
+        expect(find.bySemanticsLabel('Alerta excluida'), findsNothing);
+        expect(find.bySemanticsLabel('Contenido excluido'), findsNothing);
+      } finally {
+        handle.dispose();
+      }
+    });
+
     testWidgets('basic dialog semantics structure', (tester) async {
       final handle = tester.ensureSemantics();
 

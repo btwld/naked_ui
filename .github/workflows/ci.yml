@@ -115,7 +115,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: golden-failures-${{ github.sha }}
-          path: packages/example/test/goldens/components/failures/
+          path: |
+            packages/example/test/goldens/components/failures/
+            packages/example/test/goldens/components/baselines/
           if-no-files-found: ignore
           retention-days: 14
 
