@@ -69,6 +69,31 @@ void main() {
     );
   });
 
+  testWidgets('Link screenshot surface respects safe insets', (tester) async {
+    const viewPadding = FakeViewPadding(top: 24, bottom: 16);
+    tester.view.padding = viewPadding;
+    tester.view.viewPadding = viewPadding;
+    addTearDown(tester.view.resetPadding);
+    addTearDown(tester.view.resetViewPadding);
+
+    final screenshotSurface = await _pumpLinkSurface(
+      tester,
+      const link_example.LinkExample(),
+    );
+    final logicalPadding = EdgeInsets.fromViewPadding(
+      tester.view.padding,
+      tester.view.devicePixelRatio,
+    );
+    final logicalViewSize =
+        tester.view.physicalSize / tester.view.devicePixelRatio;
+
+    expect(tester.getTopLeft(screenshotSurface).dy, logicalPadding.top);
+    expect(
+      tester.getBottomRight(screenshotSurface).dy,
+      logicalViewSize.height - logicalPadding.bottom,
+    );
+  });
+
   testWidgets('Link keyboard focus screenshot evidence', (tester) async {
     final screenshotSurface = await _pumpLinkSurface(
       tester,
@@ -145,14 +170,28 @@ Future<Finder> _pumpLinkSurface(WidgetTester tester, Widget child) async {
   await tester.pumpWidget(
     MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: Scaffold(body: SizedBox.expand(child: child)),
+      home: Scaffold(
+        body: SafeArea(child: SizedBox.expand(child: child)),
+      ),
     ),
   );
   await tester.pump();
   final screenshotSurface = find.byKey(const ValueKey('link.evidence.surface'));
   expect(screenshotSurface, findsOneWidget);
   if (!usesNativeSurface) {
-    expect(tester.getSize(screenshotSurface), const Size(800, 600));
+    final logicalPadding = EdgeInsets.fromViewPadding(
+      tester.view.padding,
+      tester.view.devicePixelRatio,
+    );
+    final logicalViewSize =
+        tester.view.physicalSize / tester.view.devicePixelRatio;
+    expect(
+      tester.getSize(screenshotSurface),
+      Size(
+        logicalViewSize.width - logicalPadding.horizontal,
+        logicalViewSize.height - logicalPadding.vertical,
+      ),
+    );
   }
   return screenshotSurface;
 }
