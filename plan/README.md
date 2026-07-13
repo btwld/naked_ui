@@ -28,7 +28,7 @@ do not pre-write plans for phases whose blocking decisions are unresolved.
 | Phase | Scope | Contract | Blocking decisions | Plan | Status |
 |---:|---|---|---|---|---|
 | 0 | Test-harness hardening | [§6.2](briefing.md#62-confirmed-delivery-gaps-to-fix-before-adding-the-new-suite), [§21](briefing.md#21-integration-screenshot-golden-and-ci-implementation) | D-12, D-13, D-14, D-15 (resolved) | [phases/00-test-harness.md](phases/00-test-harness.md) | **Closed** — delivered by [PR #63](https://github.com/btwld/naked_ui/pull/63), squash-merged as `58a48a3` |
-| 1 | Alert Dialog (extend `NakedDialog`) | [§13](briefing.md#13-component-contract-alert-dialog) | D-02 (resolved) | [phases/01-alert-dialog.md](phases/01-alert-dialog.md) | **Active** — implementation complete; publication and hosted evidence in progress |
+| 1 | Alert Dialog (extend `NakedDialog`) | [§13](briefing.md#13-component-contract-alert-dialog) | D-02 (resolved) | [phases/01-alert-dialog.md](phases/01-alert-dialog.md) | **Blocked** — PR #64 review-ready with automated gates green; RTL web screenshot and manual AT records unavailable |
 | 2 | Link | [§20](briefing.md#20-component-contract-link) | — | — | Not started |
 | 3 | Field + `NakedTextField` integration | [§17](briefing.md#17-component-contract-field) | D-08, D-09 | — | Not started |
 | 4 | Toggle Group expansion | [§14](briefing.md#14-component-contract-toggle-group) | D-01 | — | Not started |
@@ -73,9 +73,11 @@ Shared closure gates for every component:
   created; the original `0ca0b8b` audit is historical evidence, not a permanent
   assumption.
 
-Recommended next move: start the Phase 1 Alert Dialog plan in the nominal
-delivery order. Phase 2 Link remains independently ready if Phase 1 becomes
-blocked during implementation. Do not begin all phases in parallel.
+Recommended next move: continue the independently ready Phase 2 Link plan while
+Phase 1 waits for a stable RTL web capture or an explicit alternate-evidence
+decision and human VoiceOver, TalkBack, Chrome-tree, and release-iOS records.
+Do not merge PR #64 without explicit maintainer authorization and do not begin
+all phases in parallel.
 
 ## How to work a phase
 
