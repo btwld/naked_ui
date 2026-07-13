@@ -36,11 +36,11 @@ decision is never settled by prose in a draft.
 | Phase | Scope | Contract | Blocking decisions | Plan | Status |
 |---:|---|---|---|---|---|
 | 0 | Test-harness hardening | [§6.2](briefing.md#62-confirmed-delivery-gaps-to-fix-before-adding-the-new-suite), [§21](briefing.md#21-integration-screenshot-golden-and-ci-implementation) | D-12, D-13, D-14, D-15 (resolved) | [phases/00-test-harness.md](phases/00-test-harness.md) | **Closed** — delivered by [PR #63](https://github.com/btwld/naked_ui/pull/63), squash-merged as `58a48a3` |
-| 1 | Alert Dialog (extend `NakedDialog`) | [§13](briefing.md#13-component-contract-alert-dialog) | D-02, D-19 (resolved) | [phases/01-alert-dialog.md](phases/01-alert-dialog.md) | **PR #64 open** — implementation is sound; current-stable compatibility, manual AT/release evidence, and briefing correction remain |
+| 1 | Alert Dialog (extend `NakedDialog`) | [§13](briefing.md#13-component-contract-alert-dialog) | D-02, D-19 (resolved) | [phases/01-alert-dialog.md](phases/01-alert-dialog.md) | **Merged** — [PR #64](https://github.com/btwld/naked_ui/pull/64) landed as `936b171`; current-stable and required manual AT/release evidence remain unrecorded, so accessibility closure is not claimed |
 | 2 | Link | [§20](briefing.md#20-component-contract-link) | D-16, D-19 (resolved) | [phases/02-link.md](phases/02-link.md) | **PR #65 review-ready at `8084ecf`** — approved correction implemented; all seven exact-head hosted checks pass; closure still awaits current-stable compatibility, required web screenshots, manual AT, and real Context Menu/Hover Card composition |
-| 3 | Field + `NakedTextField` integration | [§17](briefing.md#17-component-contract-field) | D-08, D-09, D-19 (resolved) | [phases/03-field.md](phases/03-field.md) | **Active** — TextField-first implementation; generic controls remain evidence-gated |
-| 4 | Toggle Group intent/focus | [§14](briefing.md#14-component-contract-toggle-group) | D-01, D-19 (resolved) | [phases/04-toggle-group.md](phases/04-toggle-group.md) | **Active, single mode only** — roving-focus migration; multiple/toggled/allow-empty deferred |
-| 5 | Context Menu | [§15](briefing.md#15-component-contract-context-menu) | D-03 (evidence spike open); D-19 (resolved) | [phases/05-context-menu.md](phases/05-context-menu.md) | **Active spike only** — no production API; implementation blocked on trigger-role/AT evidence and D-03 |
+| 3 | Field + `NakedTextField` integration | [§17](briefing.md#17-component-contract-field) | D-08, D-09, D-19 (resolved) | [phases/03-field.md](phases/03-field.md) | **PR #67 review-ready at `c1a8073`** — TextField-first scope, three-SDK matrix, approved golden, reviewed native visuals, and all seven exact-head hosted checks pass; manual AT remains |
+| 4 | Toggle Group intent/focus | [§14](briefing.md#14-component-contract-toggle-group) | D-01, D-19 (resolved) | [phases/04-toggle-group.md](phases/04-toggle-group.md) | **PR #68 review-ready at `35ae43b`** — single-mode roving focus, three-SDK matrix, approved golden, native visuals, and all seven hosted checks pass; manual AT remains |
+| 5 | Context Menu | [§15](briefing.md#15-component-contract-context-menu) | D-03 (evidence spike open); D-19 (resolved) | [phases/05-context-menu.md](phases/05-context-menu.md) | **PR #66 spike recorded at `2aca8d6`** — no production API; Link passes the automated V1 contract, SelectableText/row do not; Chrome host teardown and required human AT remain incomplete, so D-03 stays open |
 | 6 | Toast | [§16](briefing.md#16-component-contract-toast) | D-04–D-07 (approval pending); D-19 (resolved) | [phases/06-toast.md](phases/06-toast.md) | **Demand-gated research draft only** — no implementation until a named use case and explicit D-04–D-07 decisions |
 | 7 | Hover Card | [§19](briefing.md#19-component-contract-hover-card--preview-card) | D-17 (approval pending); D-19 (resolved) | [phases/07-hover-card.md](phases/07-hover-card.md) | **Demand/dependency-gated research draft only** — Link must land, Remix must supply a valid preview story, and D-17 must resolve |
 | 8 | Combobox | [§18](briefing.md#18-component-contract-combobox) | D-10, D-11 (evidence spike open); D-18 (approval pending); D-19 (resolved) | [phases/08-combobox.md](phases/08-combobox.md) | **Research/spike draft only** — public API blocked on RawAutocomplete/AT/IME/version evidence and D-10/D-11/D-18 |
@@ -54,11 +54,11 @@ parts of the briefing while removing speculative APIs and wrong semantic
 shortcuts.
 
 The sequence remains evidence-driven rather than a promise to ship all eight.
-Field and single-mode Toggle Group are active on isolated branches. The Context
-Menu spike may run against Link PR #65, but production Context Menu remains
-blocked until D-03 resolves. Toast and Hover Card require named Remix demand;
-Combobox ships alone only after its spike passes. A blocked phase does not block
-independent work.
+Field and single-mode Toggle Group now have independently reviewed PRs from
+isolated branches. The Context Menu spike ran against Link PR #65, but
+production Context Menu remains blocked until D-03 resolves. Toast and Hover
+Card require named Remix demand; Combobox ships alone only after its spike
+passes. A blocked phase does not block independent work.
 
 ## Program readiness
 
@@ -69,11 +69,11 @@ demand, spike, version, or manual assistive-technology gate.
 
 | Phase | Start readiness | Required work before implementation |
 |---:|---|---|
-| 1 — Alert Dialog | **Completion ready** | Rebase/isolate PR #64; record the briefing correction; run current-stable compatibility; finish VoiceOver, TalkBack, Chrome tree, and release iOS evidence. |
+| 1 — Alert Dialog | **Merged; evidence closure pending** | Run the full current-stable matrix and record VoiceOver, TalkBack, Chrome tree, and release iOS evidence before claiming complete accessibility sign-off. |
 | 2 — Link | **Review-ready; not closed** | Approved correction is on PR #65 and exact-head hosted checks pass; run current-stable compatibility; obtain web screenshots, manual AT, real Phase 5/7 composition, merge authorization, and post-merge proof. |
-| 3 — Field | **Active** | Implement the TextField-first slice; generic control composition remains deferred. |
-| 4 — Toggle Group | **Active, single mode** | Preserve selected semantics and controlled behavior while adding one-stop roving focus; multiple mode remains demand-gated. |
-| 5 — Context Menu | **Spike active; implementation blocked** | Run the disposable D-03 trigger/focus/geometry evidence matrix; require explicit evidence review before production planning. |
+| 3 — Field | **Review-ready; not closed** | Complete manual VoiceOver, TalkBack, Chrome-tree, and release-iOS evidence; generic control composition remains deferred. |
+| 4 — Toggle Group | **Review-ready; not closed** | Complete manual VoiceOver, TalkBack, Chrome-tree, and release-iOS evidence; multiple mode remains demand-gated. |
+| 5 — Context Menu | **Spike recorded; implementation blocked** | Resolve the SelectableText/row failures, cleanly complete the Chrome target, run required human AT sessions, and explicitly decide D-03 before production planning. |
 | 6 — Toast | **Demand + decisions required** | Name a transient-feedback screen and approve D-04–D-07 before activating a plan. |
 | 7 — Hover Card | **Dependency + demand + decision required** | Land Link, prove a noninteractive/nonessential preview story, and approve D-17 before activating a spike/plan. |
 | 8 — Combobox | **Spike + decisions required** | Land Field; approve D-18; prove RawAutocomplete, active-option AT, disabled options, IME, and exact 3.41/3.44.6 behavior; then resolve D-10/D-11. |
@@ -94,10 +94,10 @@ Shared closure gates for every component:
   implementation starts; `d341b90` and Flutter 3.44.6 are planning evidence,
   not permanent assumptions.
 
-Recommended current move: run the three active isolated workflows, review each
-result independently, and finish the missing manual/evidence gates for PRs #64
-and #65 before integration. Field and Toggle implement only their activated
-contracts; Context Menu produces evidence only.
+Recommended current move: review PRs #67 and #68 without merging, finish their
+manual AT/release gates, and keep PR #66 as spike evidence only. Retarget the
+Context Menu spike after Link lands, then resolve D-03 from the missing human
+AT and SelectableText/row evidence rather than promoting speculative code.
 
 ## How to work a phase
 

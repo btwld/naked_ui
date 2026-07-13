@@ -3,10 +3,10 @@
 Authority: **active disposable D-03 evidence-spike contract; production
 implementation is not approved**.
 
-Status: **the isolated spike is authorized on 2026-07-13. D-03 remains open;
-exports, package production code, registry, aggregate runner, docs, changelog,
-and a public Context Menu constructor remain prohibited until the evidence is
-reviewed and explicitly approved.**
+Status: **the isolated spike is recorded on PR #66 at `2aca8d6`. D-03 remains
+open; exports, package production code, registry, aggregate runner, docs,
+changelog, and a public Context Menu constructor remain prohibited until the
+missing evidence is reviewed and D-03 is explicitly resolved.**
 
 Goal: determine whether secondary-click, touch long-press, keyboard entry, and
 a role-neutral semantic long-press action can open existing menu behavior at
@@ -14,9 +14,9 @@ the invocation point while preserving Link, selectable-text, row, scrolling,
 focus, and exactly-once activation. This phase produces evidence, not a
 component.
 
-Spike baseline: Link PR #65 head `8084ecf` stacked on `58a48a3` for the real
-Link fixture; repeat final proof after Link merges and the spike is refreshed
-from `origin/main`. Contract source: briefing
+Spike baseline: Link PR #65 head `52d9c97` stacked on current `origin/main` for
+the real Link fixture; repeat final proof after Link merges and the spike is
+refreshed from `origin/main`. Contract source: briefing
 [§15](../briefing.md#15-component-contract-context-menu). Open gate:
 [D-03](../decisions.md#decision-log). Approved cross-cutting D-19 governs
 SDK/API use if the spike or phase is activated.
@@ -167,14 +167,34 @@ in a way that produces duplicate callbacks. Leave D-03 open if Link #65 is not
 integrated, any required human AT session is missing, or only the passive V2
 gesture probe avoids damage. Stop on any production/public API edit.
 
+## Execution evidence (2026-07-13)
+
+- [PR #66](https://github.com/btwld/naked_ui/pull/66) records the disposable
+  spike at `2aca8d6`, based on Link `52d9c97`. Its diff is exactly the five
+  authorized spike/evidence files; package production code, exports, registry,
+  aggregate runner, production docs, changelog, and goldens are unchanged.
+- Flutter 3.41.0, 3.41.2, and 3.44.6 each pass 15 focused tests, 4 target
+  integration tests, and 67 Menu/Select/Popover regressions; pinned analysis
+  is clean. Real macOS passes 4/4 with exit 0.
+- V1 preserves Link role/actions and supports the measured trigger/focus/
+  lifecycle/geometry contract. SelectableText exposes duplicate unlabeled
+  native/wrapper action paths and prevents wrapper secondary-click/long-press
+  open; the generic row remains an unlabeled action, and same-gesture touch
+  selection is unproven. These are blockers, not implementation TODOs silently
+  accepted by the spike.
+- Chrome 150 reports all in-app tests passing but the host result/teardown hangs
+  past the bounded timeout and required interruption, so the target is recorded
+  as infrastructure-incomplete rather than passing. VoiceOver, TalkBack, and
+  headed Chrome accessibility-tree sessions remain unrun. D-03 stays open.
+
 ## Acceptance
 
 - [ ] D-03 has recorded VoiceOver, TalkBack, and Chrome evidence.
-- [ ] Existing item/scope/overlay machinery is reused; no parallel item family exists.
+- [x] Existing item/scope/overlay machinery is reused; no parallel item family exists.
 - [ ] Secondary click, long press, Shift+F10, and Context Menu key are proven.
 - [ ] Primary child behavior and role remain intact.
 - [ ] Edge positioning, close idempotence, restoration, and 3.41/3.44.6 regressions pass.
-- [ ] The five disposable files and evidence packet are current; no production
+- [x] The five disposable files and evidence packet are current; no production
       API, registry, aggregate, docs, changelog, or golden surface changed.
 
 ## Primary references

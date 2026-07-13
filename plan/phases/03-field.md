@@ -4,9 +4,10 @@ Authority: **active just-in-time implementation contract for the TextField-first
 slice**.
 
 Status: **activated after a clean `origin/main` preflight at `58a48a3` on
-2026-07-13. D-08, D-09, and D-19 are approved. Production `NakedField` plus
-`NakedTextField` integration is authorized; generic-control composition remains
-unexported and deferred behind its separate evidence gate.**
+2026-07-13 and refreshed onto `936b171`. D-08, D-09, and D-19 are approved.
+Production `NakedField` plus `NakedTextField` integration is review-ready on
+PR #67; generic-control composition remains unexported and deferred behind its
+separate evidence gate.**
 
 Goal: add a small field scope that gives one primary control one accessible
 name, description, required state, validation result, and current error without
@@ -14,7 +15,7 @@ duplicating speech. Integrate it first with `NakedTextField`, while preserving
 standalone source and interaction behavior except for D-09's approved
 initial-error announcement correction.
 
-Implementation baseline: `58a48a3` on 2026-07-13. Contract source: briefing
+Implementation baseline: `936b171` on 2026-07-13. Contract source: briefing
 [§17](../briefing.md#17-component-contract-field). The approved narrowing and
 cross-cutting release policy are recorded in
 [D-08, D-09, and D-19](../decisions.md#architecture-decision-evidence-approved-2026-07-13).
@@ -201,16 +202,40 @@ name/description/error, validation changes announce more than once, initial
 errors unexpectedly interrupt users, or the result requires post-3.41 APIs
 without raising the package floor deliberately.
 
+## Execution evidence (2026-07-13)
+
+- [PR #67](https://github.com/btwld/naked_ui/pull/67) implements the approved
+  TextField-first contract at `c1a8073`; generic control composition remains
+  unexported and no validator, touched/dirty, or submission ownership was added.
+- Flutter 3.41.0, 3.41.2, and 3.44.6 each pass the full package matrix (633
+  tests with 3 documented skips). Focused semantics pass 11 tests, focused
+  Field integration passes 5, and the aggregate passes 98 with 1 documented
+  Tooltip skip. Format and fatal-info analysis are clean.
+- Completed-semantics-update history proves initial errors are not alerts,
+  changed non-empty errors are introduced once, unchanged rebuilds do not
+  repeat, and clear/re-add is one new transition. The changelog records D-09.
+- The pinned Ubuntu invalid-state golden was reviewed and committed at SHA-256
+  `259aa87e0a010bc00d8cbaa8dfafa71581f6a675bc9420a8ae3dba24f36f7b35`.
+  Exact-head required-invalid (`b502e06c…af720`), Arabic RTL
+  (`78e1bd9d…c5e3d`), and Android 200% disabled/read-only
+  (`247dc12b…d78c8d50`) captures were visually reviewed. The RTL fixture scopes
+  English explanatory copy LTR while retaining Arabic Field/control metadata
+  as RTL.
+- All seven exact-head hosted checks pass: minimum Flutter, primary tests,
+  flutter-tester, real macOS, pinned web, Android API 34, and PR-title policy.
+  VoiceOver, TalkBack, headed Chrome accessibility-tree, and release-level iOS
+  sessions remain unrun and are not inferred from automated semantics.
+
 ## Acceptance
 
-- [ ] Minimal Field API contains no validation/business-state ownership.
-- [ ] Standalone `NakedTextField` remains source- and interaction-compatible
+- [x] Minimal Field API contains no validation/business-state ownership.
+- [x] Standalone `NakedTextField` remains source- and interaction-compatible
       except for the documented D-09 semantics correction.
-- [ ] Required, validation, label, description, and error semantics are exact.
-- [ ] Error transition policy is deterministic and manually verified with
-      VoiceOver and TalkBack; the changelog names the initial-error behavior
-      correction.
-- [ ] Generic control remains unexported and explicitly deferred.
+- [x] Required, validation, label, description, and error semantics are exact.
+- [x] Error transition policy is deterministic in completed-update tests; the
+      changelog names the initial-error behavior correction.
+- [ ] Error transition policy is manually verified with VoiceOver and TalkBack.
+- [x] Generic control remains unexported and explicitly deferred.
 - [ ] Example, integration aggregate, docs, changelog, AT evidence, and status board are current.
 
 ## Primary references

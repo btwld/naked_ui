@@ -90,6 +90,12 @@ named spike. The exact upstream audits are recorded in
   public Context Menu API or production overlay code. D-03 resolves only from
   recorded VoiceOver, TalkBack, and Chrome evidence plus preserved Link,
   selectable-text, scrolling, exactly-once activation, and focus restoration.
+- Spike [PR #66](https://github.com/btwld/naked_ui/pull/66) at `2aca8d6`
+  passes the automated V1 contract for Link across Flutter 3.41.0, 3.41.2, and
+  3.44.6, but not for SelectableText or the generic row. Same-gesture selection
+  is unproven, Chrome host teardown is incomplete, and all required human AT
+  sessions are unrun. This evidence narrows the open question but does not
+  resolve D-03 or authorize production code.
 
 ### Phase 2 decision evidence (approved 2026-07-13)
 

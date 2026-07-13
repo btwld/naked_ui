@@ -4,9 +4,10 @@ Authority: **active just-in-time implementation contract for existing
 single-selection mode only**.
 
 Status: **activated after a clean `origin/main` preflight at `58a48a3` on
-2026-07-13. D-01 and D-19 are resolved. Single-mode roving focus is authorized;
-`allowEmptySelection`, multiple selection, and `toggled` semantics remain
-deferred because no named consumer use case exists.**
+2026-07-13 and refreshed onto `936b171`. D-01 and D-19 are resolved.
+Single-mode roving focus is review-ready on PR #68; `allowEmptySelection`,
+multiple selection, and `toggled` semantics remain deferred because no named
+consumer use case exists.**
 
 Goal: make the existing single-selection group keyboard-coherent without
 turning one API into Tabs, Radio Group, and a toggle toolbar at once. Preserve
@@ -167,13 +168,32 @@ without a named consumer story. Redirect a story to Tabs or Radio Group if its
 meaning requires those roles; API convenience is not a reason to ship the
 wrong semantics.
 
+## Execution evidence (2026-07-13)
+
+- [PR #68](https://github.com/btwld/naked_ui/pull/68) implements the approved
+  single-mode migration at `35ae43b`. Multiple/set/allow-empty APIs and
+  `toggled` semantics remain absent and explicitly deferred.
+- Flutter 3.41.0, 3.41.2, and 3.44.6 compatibility matrices pass. Focused
+  widget/semantics tests pass 53 cases, focused integration passes 11, the
+  aggregate passes 98 with 1 documented Tooltip skip, and all seven hosted
+  exact-head checks are green.
+- Independent review corrected diagnostic semantic duplication, target size,
+  contrast, narrow/200% reflow, focus-paint evidence, RTL prose direction, and
+  missing-glyph fixture icons without widening the production API.
+- The approved Ubuntu focus golden has SHA-256
+  `d55c8116aff60c64c0391d5b2f448adfe85f8692f70db5e491bcd1693374754c`.
+  Exact-head macOS RTL and Android 200% disabled captures were visually
+  reviewed with no clipping, overflow, or ambiguous focus/selection state.
+- VoiceOver, TalkBack, headed Chrome accessibility-tree, and release-level iOS
+  sessions remain unrun and are not inferred from automated semantics.
+
 ## Acceptance
 
-- [ ] Existing constructor and single-selection behavior remain compatible.
-- [ ] The selected/toggled split is documented and never combined on one node.
-- [ ] Roving focus passes orientation, RTL, disabled, loop, and dynamic-child cases.
-- [ ] Arrows never select; Enter/Space emit once and controlled state remains controlled.
-- [ ] Multiple mode has a concrete consumer and immutable-set tests, or is explicitly deferred.
+- [x] Existing constructor and single-selection behavior remain compatible.
+- [x] The selected/toggled split is documented and never combined on one node.
+- [x] Roving focus passes orientation, RTL, disabled, loop, and dynamic-child cases.
+- [x] Arrows never select; Enter/Space emit once and controlled state remains controlled.
+- [x] Multiple mode has a concrete consumer and immutable-set tests, or is explicitly deferred.
 - [ ] Example, docs, changelog, platform/AT evidence, and status board are current.
 
 ## Primary references

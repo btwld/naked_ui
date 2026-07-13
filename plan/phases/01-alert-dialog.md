@@ -1,14 +1,17 @@
 # Phase 01 — Alert Dialog completion
 
-Status: **Implementation open in [PR #64](https://github.com/btwld/naked_ui/pull/64); completion evidence required.**
+Status: **[PR #64](https://github.com/btwld/naked_ui/pull/64) merged as
+`936b171`. Automated and hosted implementation gates pass; current-stable and
+required human AT/release evidence remain unrecorded, so accessibility closure
+is not claimed.**
 
 Goal: finish the alert-dialog specialization of `NakedDialog` with a small,
 correct modal contract: an urgent dialog role, an explicit accessible name,
 safe initial focus, contained traversal, predictable dismissal, and focus
 restoration. Preserve all existing dialog behavior and styling freedom.
 
-Planning baseline: workspace `d341b90`; reviewed PR head `409ec27` on
-2026-07-13. Contract source: briefing
+Planning baseline: workspace `d341b90`; reviewed PR head `409ec27`, merged as
+`936b171` on 2026-07-13. Contract source: briefing
 [§13](../briefing.md#13-component-contract-alert-dialog), with the explicit
 delta below. Decisions:
 [D-02](../decisions.md#phase-1-decision-evidence-2026-07-12) and approved
@@ -154,9 +157,10 @@ fvm flutter test -r compact -d flutter-tester integration_test/all_tests.dart
 fvm flutter test -r compact -d macos integration_test/all_tests.dart
 ```
 
-Hosted Android and pinned-Chrome jobs remain blocking per
-[integration-testing.md](../integration-testing.md). Run release iOS evidence
-before claiming iOS support; macOS VoiceOver is not a substitute.
+Exact-head Android, pinned-Chrome, primary, minimum-Flutter, flutter-tester,
+real-macOS, and title-policy jobs passed. The full current-stable matrix and
+manual VoiceOver, TalkBack, Chrome-tree, and release-iOS evidence remain open
+under [integration-testing.md](../integration-testing.md).
 
 ## Stop conditions
 
@@ -167,13 +171,13 @@ focus requires Naked UI to own a caller node.
 
 ## Acceptance
 
-- [ ] PR #64 contains only the Alert Dialog contract and is rebased on current `main`.
-- [ ] Role, name, descendants, initial focus, loop, every close path, and restoration are tested.
-- [ ] Outside tap is disabled by default; Escape and platform Back close safely.
+- [x] PR #64 contains only the Alert Dialog contract and is merged on `main`.
+- [x] Role, name, descendants, initial focus, loop, every close path, and restoration are tested.
+- [x] Outside tap is disabled by default; Escape and platform Back close safely.
 - [ ] The required current-stable compatibility gate passes without using
       post-minimum production APIs.
 - [ ] VoiceOver, TalkBack, Chrome tree, and release iOS evidence is attached.
-- [ ] Example, docs, changelog, traceability table, and status board are current.
+- [x] Example, docs, changelog, traceability table, and status board are current.
 
 ## Primary references
 
