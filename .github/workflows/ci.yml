@@ -87,14 +87,26 @@ jobs:
         run: flutter test packages/naked_ui/test --coverage
 
       - name: Run example tests
+        id: example_tests
         run: flutter test packages/example/test
+
+      # A missing reference image does not create a file under failures/. Run
+      # the same pinned golden suite in update mode so reviewers still receive
+      # a candidate from the authoritative Ubuntu host. The original test step
+      # remains failed until the candidate is explicitly reviewed and checked
+      # in.
+      - name: Generate golden candidate images
+        if: failure() && steps.example_tests.outcome == 'failure'
+        run: flutter test packages/example/test/goldens --update-goldens
 
       - name: Upload golden failure images
         if: failure()
         uses: actions/upload-artifact@v4
         with:
           name: golden-failures-${{ github.sha }}
-          path: packages/example/test/goldens/components/failures/
+          path: |
+            packages/example/test/goldens/components/failures/
+            packages/example/test/goldens/components/baselines/
           if-no-files-found: ignore
           retention-days: 14
 

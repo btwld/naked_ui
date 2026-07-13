@@ -22,6 +22,11 @@ extension ScreenshotTestHelpers on WidgetTester {
     if (!_screenshotsEnabled) return;
 
     await prepareScreenshotSurface(binding, this);
+    // LiveTestWidgetsFlutterBinding paints test pointers for two post-up
+    // frames. Paint once to expire the record, then once more to capture the
+    // clean state. These are deterministic zero-duration frames, not timing
+    // padding.
+    await pump();
     await pump();
 
     final target = screenshotTarget;
