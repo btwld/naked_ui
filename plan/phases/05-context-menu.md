@@ -1,17 +1,22 @@
 # Phase 05 — Context Menu adapter over Menu
 
-Authority: **inactive research/spike draft; neither spike nor implementation is
-approved by this file**.
+Authority: **active disposable D-03 evidence-spike contract; production
+implementation is not approved**.
 
-Status: **Implementation remains blocked until an explicitly approved
-trigger-semantics spike produces the real AT evidence needed for D-03.**
+Status: **the isolated spike is authorized on 2026-07-13. D-03 remains open;
+exports, package production code, registry, aggregate runner, docs, changelog,
+and a public Context Menu constructor remain prohibited until the evidence is
+reviewed and explicitly approved.**
 
-Goal: add secondary-click, touch long-press, and keyboard context-menu entry
-to the existing menu implementation, opening at the invocation point while
-preserving the trigger child's real semantic role and reusing all menu-item
-behavior.
+Goal: determine whether secondary-click, touch long-press, keyboard entry, and
+a role-neutral semantic long-press action can open existing menu behavior at
+the invocation point while preserving Link, selectable-text, row, scrolling,
+focus, and exactly-once activation. This phase produces evidence, not a
+component.
 
-Planning baseline: `d341b90` on 2026-07-13. Contract source: briefing
+Spike baseline: Link PR #65 head `8084ecf` stacked on `58a48a3` for the real
+Link fixture; repeat final proof after Link merges and the spike is refreshed
+from `origin/main`. Contract source: briefing
 [§15](../briefing.md#15-component-contract-context-menu). Open gate:
 [D-03](../decisions.md#decision-log). Approved cross-cutting D-19 governs
 SDK/API use if the spike or phase is activated.
@@ -20,9 +25,9 @@ SDK/API use if the spike or phase is activated.
 
 | Need | Reuse | Decision |
 |---|---|---|
-| Overlay/menu lifecycle | Flutter `RawMenuAnchor` + `MenuController` | Use `open(position: ...)`; do not create `OverlayEntry` lifecycle. |
-| Position/collision | `AnchoredOverlayShell` and `OverlayPositioner` | Add a private anchor-rect resolver; default behavior stays unchanged. |
-| Items, roles, close-on-select | Existing `NakedMenuItem` and private menu scope | Implement in `naked_menu.dart` so the item family is not copied or made public internally. |
+| Overlay/menu lifecycle | Flutter `RawMenuAnchor` + `MenuController` | Measure `open(position: ...)` and 3.41/3.44 close ordering in test-only scaffolds; do not create production lifecycle. |
+| Position/collision | `OverlayPositioner` | Use a separate test-only geometry probe because the current shell ignores `RawMenuOverlayInfo.position`; do not change the shell in this spike. |
+| Items, roles, close-on-select | Existing `NakedMenuItem` and private menu scope | Reuse behind a semantics-excluded, pointer-obscured test scaffold only; never copy the item family. |
 | Outside interaction | Existing `TapRegion` behavior through raw menu anchor | Reuse and test; do not stack another global pointer listener. |
 | Pointer/keyboard input | Flutter `GestureDetector`, `Shortcuts`, `Actions` | Add only trigger entry paths. |
 | Platform behavior reference | Flutter 3.44.6 `CupertinoMenuAnchor`/`CupertinoMenuItem` | Use its long-press, same-gesture swipe, focus, edge, and large-text cases as test input; do not add a styled Cupertino dependency. |
@@ -51,7 +56,7 @@ see the shared [watchlist](../flutter-raw-primitives.md#beta-and-master-watchlis
 | Menu | Existing `SemanticsRole.menu` with explicit menu-item children. |
 | Pointer open | Secondary tap opens at pointer position; touch long press opens at long-press position. |
 | Keyboard open | Context Menu key and Shift+F10 open relative to the focused trigger. |
-| Focus on open | First enabled item, using existing menu focus behavior. |
+| Focus on open | Measure current boundary autofocus versus a test-only first-enabled-item probe; current Menu does not focus the first item. |
 | Close | Escape/outside interaction/item activation; close callback once. |
 | Focus after close | Restore the invoking trigger if still mounted/focusable. |
 | Disabled | Trigger paths and semantic long press do nothing; child may retain unrelated native semantics. |
@@ -77,34 +82,34 @@ steal it, alter text selection, or consume drag/scroll gestures.
   discoverable, non-destructive trigger model works, block this component and
   prefer an explicit adjacent menu button in Remix.
 
-### 2. Add a private point-anchor hook
+Use three bounded variants: V0 preserves the baseline child and has physical/
+keyboard entry only; V1 adds role-neutral `Semantics.onLongPress` while the
+physical `GestureDetector` is excluded from semantics; V2 is a passive
+`Listener` timing probe only if V1 damages selection or scrolling. If only V2
+passes, leave D-03 open and stop rather than promoting that machinery.
 
-- **Where:** `packages/naked_ui/lib/src/utilities/anchored_overlay_shell.dart`
-  and `packages/naked_ui/lib/src/utilities/positioning.dart` tests.
-- Add an internal callback that derives the overlay anchor rect from
-  `RawMenuOverlayInfo`; its default returns the existing `anchorRect`, so Menu,
-  Select, Popover, and Tooltip behavior cannot change.
-- Context Menu derives a zero-size rect from
-  `info.anchorRect.topLeft + info.position` for pointer opens and uses the
-  normal trigger rect for keyboard opens.
-- Test viewport edges, transform/scroll, RTL, text scale, and trigger removal.
+Split proof into independent axes: trigger semantics/gestures, initial focus
+(current boundary versus test-only first enabled item), and point geometry
+(`RawMenuAnchor` plus `OverlayPositioner`). Count open requests, actual opens,
+close requests, actual closes, selections, and primary-child activations
+separately across 3.41.0, 3.41.2, and current stable.
 
-### 3. Implement the adapter without duplicating menu items
+### 2. Keep an exact spike-only file boundary
 
-- **Where:** `packages/naked_ui/lib/src/naked_menu.dart` and export barrel.
-- Add `NakedContextMenu<T>` in this file so it can reuse the private menu scope
-  and `NakedMenuItem<T>`. Share effective-enabled, selection, open/close, and
-  focus-restoration paths with `NakedMenu`.
-- Track open reason/position only as behavior state for builders. Clear stale
-  pointer coordinates before keyboard opens.
-- Make close and select callbacks idempotent across 3.41/3.44.6 raw-menu
-  lifecycle ordering and the watched master close-while-closed behavior.
+- `packages/example/lib/src/testing/context_menu_accessibility_spike.dart`
+- `packages/example/lib/context_menu_accessibility_spike.dart`
+- `packages/example/test/context_menu_accessibility_spike_test.dart`
+- `packages/example/integration_test/spikes/context_menu_accessibility_spike_test.dart`
+- `packages/example/integration_test/spikes/context_menu_accessibility_at_results.md`
 
-### 4. Cover gestures, keyboard, focus, and regression
+Do not edit `packages/naked_ui/lib/**`, exports, registry,
+`integration_test/all_tests.dart`, production docs, or changelog. If the
+test-only scaffold cannot reuse existing Menu behavior without changing the
+measured child, stop.
 
-- **Where:** proposed `naked_context_menu_test.dart` and
-  `naked_context_menu_semantics_test.dart`, plus regression tests in existing
-  menu/select/popover suites for the private shell change.
+### 3. Cover gestures, keyboard, focus, and geometry
+
+- **Where:** the spike test and direct real-target runner above.
 - Test secondary tap down/up, touch long press threshold/cancel, primary click
   pass-through, selection drag, scroll cancellation, keyboard keys, disabled
   wrapper, disabled item skip, item callback/close order, Escape/outside close,
@@ -114,47 +119,42 @@ steal it, alter text selection, or consume drag/scroll gestures.
   from the future beta `TapRegion` fix.
 - Verify the menu stays on-screen at all four viewport edges.
 
-### 5. Add deterministic fixture and platform proof
+### 4. Record deterministic platform and AT proof
 
-- **Where:** proposed `packages/example/lib/api/naked_context_menu.0.dart`,
-  registry, `packages/example/integration_test/components/naked_context_menu_integration.dart`,
-  aggregate runner, `docs/widget/context-menu.mdx`, and changelog.
-- Stable keys: `context-menu.trigger`, `.menu`, `.item.rename`, `.item.delete`,
-  `.value`, `.disable`, and `.reset`.
+- **Where:** the standalone manual runner and spike AT-results record only.
+- Stable keys use the `context-menu-spike.*` prefix and cover Link,
+  selectable-text, row, menu/items, scroll, state, disable, and reset.
 - Run mouse secondary-click on macOS/web, long press on Android, and both
   keyboard entry keys where the platform reports them. Attach edge-position
   screenshots and AT notes.
 
-## Planned visual evidence
+## Spike evidence
 
-- Screenshots: `context_menu__pointer_edge__macos__reference.png` and
-  `context_menu__long_press__android__reference.png`.
-- Golden: `packages/example/test/goldens/components/baselines/naked_context_menu__open.png`.
-- Web evidence is the pinned Chrome behavior/accessibility log until stable
-  screenshot capture is supported.
+- Preserve exact test/target logs and focused screenshots only when they help
+  diagnose geometry or AT output. Do not add production golden baselines or
+  screenshot inventories for a disposable spike. Web evidence is the pinned
+  headed-Chrome behavior/accessibility log.
 
 ## Version and verification matrix
 
-The component must pass on 3.41.0/3.41.2 and 3.44.6 because it depends on raw
-menu open/close ordering. Run existing Menu, Select, and Popover suites on both
-ends of the matrix, not just the new test. Add focused beta/master canaries for
+The spike must pass on 3.41.0/3.41.2 and 3.44.6 because it measures raw-menu
+open/close ordering. Run existing Menu, Select, and Popover suites on both ends
+of the matrix as regression evidence. Add focused beta/master canaries for
 the watched `TapRegion` and `RawMenuAnchor` changes; those canaries are not
 release proof. Use the exact install/spawn commands in the
 [shared SDK matrix](../process.md#executable-sdk-and-local-command-matrix);
 the commands below are the workspace slice.
 
 ```sh
-fvm dart format --set-exit-if-changed .
+fvm dart format --set-exit-if-changed packages/example/lib/context_menu_accessibility_spike.dart packages/example/lib/src/testing/context_menu_accessibility_spike.dart packages/example/test/context_menu_accessibility_spike_test.dart packages/example/integration_test/spikes/context_menu_accessibility_spike_test.dart
 fvm flutter analyze
-fvm flutter test packages/naked_ui/test/src/naked_context_menu_test.dart
-fvm flutter test packages/naked_ui/test/semantics/naked_context_menu_semantics_test.dart
+fvm flutter test packages/example/test/context_menu_accessibility_spike_test.dart
 fvm flutter test packages/naked_ui/test/src/naked_menu_test.dart
 fvm flutter test packages/naked_ui/test/src/naked_select_test.dart
 fvm flutter test packages/naked_ui/test/src/naked_popover_test.dart
-fvm flutter test packages/naked_ui/test
 cd packages/example
-fvm flutter test -r compact -d flutter-tester integration_test/components/naked_context_menu_integration.dart
-fvm flutter test -r compact -d flutter-tester integration_test/all_tests.dart
+fvm flutter test -r expanded -d flutter-tester integration_test/spikes/context_menu_accessibility_spike_test.dart
+fvm flutter test -r expanded -d macos integration_test/spikes/context_menu_accessibility_spike_test.dart
 ```
 
 ## Stop conditions
@@ -163,7 +163,9 @@ Block the phase if preserving the child role makes the menu undiscoverable to
 supported AT, semantic long press double-fires, primary link/selection/scroll
 behavior is damaged, point positioning cannot remain in the viewport, focus
 is lost after close, or the raw-menu lifecycle differs across supported SDKs
-in a way that produces duplicate callbacks.
+in a way that produces duplicate callbacks. Leave D-03 open if Link #65 is not
+integrated, any required human AT session is missing, or only the passive V2
+gesture probe avoids damage. Stop on any production/public API edit.
 
 ## Acceptance
 
@@ -172,7 +174,8 @@ in a way that produces duplicate callbacks.
 - [ ] Secondary click, long press, Shift+F10, and Context Menu key are proven.
 - [ ] Primary child behavior and role remain intact.
 - [ ] Edge positioning, close idempotence, restoration, and 3.41/3.44.6 regressions pass.
-- [ ] Example, aggregate, docs, changelog, evidence packet, and status board are current.
+- [ ] The five disposable files and evidence packet are current; no production
+      API, registry, aggregate, docs, changelog, or golden surface changed.
 
 ## Primary references
 

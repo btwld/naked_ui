@@ -1,10 +1,12 @@
 # Phase 03 — Field semantic composition
 
-Authority: **inactive research draft; not approved for implementation**.
+Authority: **active just-in-time implementation contract for the TextField-first
+slice**.
 
-Status: **D-08, D-09, and cross-cutting D-19 are approved. This draft remains
-inactive until current `main` is re-inspected and the plan is activated just in
-time; generic-control composition still has an evidence gate.**
+Status: **activated after a clean `origin/main` preflight at `58a48a3` on
+2026-07-13. D-08, D-09, and D-19 are approved. Production `NakedField` plus
+`NakedTextField` integration is authorized; generic-control composition remains
+unexported and deferred behind its separate evidence gate.**
 
 Goal: add a small field scope that gives one primary control one accessible
 name, description, required state, validation result, and current error without
@@ -12,7 +14,7 @@ duplicating speech. Integrate it first with `NakedTextField`, while preserving
 standalone source and interaction behavior except for D-09's approved
 initial-error announcement correction.
 
-Planning baseline: `d341b90` on 2026-07-13. Contract source: briefing
+Implementation baseline: `58a48a3` on 2026-07-13. Contract source: briefing
 [§17](../briefing.md#17-component-contract-field). The approved narrowing and
 cross-cutting release policy are recorded in
 [D-08, D-09, and D-19](../decisions.md#architecture-decision-evidence-approved-2026-07-13).
@@ -58,9 +60,14 @@ rejected, not missing work; see the shared
 | Initial error | Discoverable but not assertively announced on first build. |
 | Later error | A new non-empty value announces once; unchanged rebuilds do not; clear/re-add counts as a new transition. |
 
-Prefer semantic tree updates and a short-lived status/alert node over explicit
-announcement APIs at the minimum SDK. Flutter 3.44.6's newer announcement API is
-not available at 3.41, and role plus live-region duplication must be avoided.
+Prefer implicit semantic-tree updates over explicit announcement APIs.
+`SemanticsService.sendAnnouncement` exists at the 3.41 floor, but Flutter's own
+contract prefers implicit semantics and warns that explicit announcements can
+disrupt Android output. Use one transient role-based announcement path only;
+never combine an alert/status role with `liveRegion` for the same message. Its
+bounded lifetime must survive a completed semantics update and be verified by
+transition tests plus VoiceOver/TalkBack evidence rather than assumed to be a
+particular frame count.
 
 D-09 intentionally changes existing `NakedTextField` behavior: today every
 displayed semantic error, including an initial error, marks the merged text
@@ -75,11 +82,15 @@ manually with VoiceOver and TalkBack.
 
 - **Where:** proposed `packages/naked_ui/lib/src/naked_field.dart` and
   `packages/naked_ui/test/src/naked_field_test.dart`.
-- Keep one primary control. Support child-or-builder, label, optional
-  description/error, required, enabled, read-only, validation result, error
-  announcement policy, and exclusion.
-- Exclude touched/dirty and validator callbacks. Normalize empty errors to
-  absent. Assert contradictory `valid` + visible error.
+- Keep one primary control. Public scope is `NakedField`, immutable
+  `NakedFieldState`, `NakedFieldErrorAnnouncement`, and the label/description/
+  error visual helpers. Support child-or-builder, label, optional description/
+  error, required, enabled, read-only, validation result, error announcement
+  policy, and exclusion. `NakedTextField` may add nullable `isRequired` and
+  `validationResult` metadata for standalone use and migration.
+- Exclude touched/dirty and validator callbacks. Normalize only null/empty
+  errors to absent; do not trim or rewrite non-empty localized content. Assert
+  contradictory `valid` + visible error.
 - Assert a second registered primary control in debug mode.
 
 ### 2. Build a TextField-first scope
@@ -92,18 +103,25 @@ manually with VoiceOver and TalkBack.
   deterministically wins. D-09's initial-error live-region correction applies
   to standalone and Field-integrated `NakedTextField`; other standalone source
   and interaction behavior remains unchanged.
+- Resolve label, description, error, required, and validation independently;
+  do not compare a composed hint with one raw metadata field. For this
+  TextField-first slice, `NakedTextField` owns the single effective error
+  transition/announcement path in both standalone and Field-integrated use;
+  Field supplies policy and metadata but must not create a second announcer.
 - Let the primary control report focus/filled state only when needed by the
   builder. Guard updates during replacement/disposal.
 - Label taps request focus only when the control is mounted, enabled, and can
   request focus.
 
-### 3. Prove generic-control composition before exposing it
+### 3. Record generic-control composition as a deferred follow-up
 
-- Prototype the proposed `NakedFieldControl` around an existing non-text
-  control such as `NakedSelect` or `NakedCheckbox`.
-- Inspect the widget semantics tree and VoiceOver/TalkBack output. The wrapped
-  control must keep its role, value/state, focus, and actions while receiving
-  the label/description/error once.
+- Do not export or implement a production `NakedFieldControl` in this slice.
+  A later disposable prototype may wrap an existing non-text control such as
+  `NakedSelect` or `NakedCheckbox`.
+- Do not run that prototype as part of this active implementation. When it is
+  separately authorized, inspect the widget semantics tree and
+  VoiceOver/TalkBack output; the wrapped control must keep its role,
+  value/state, focus, and actions while receiving the metadata once.
 - Flutter has no general public `labelledBy` relation across arbitrary
   semantics nodes. If merging/replacement loses the child role or duplicates
   speech, do not publish `NakedFieldControl` in this release. Ship the proven
@@ -140,8 +158,7 @@ manually with VoiceOver and TalkBack.
 - Stable keys: `field.email`, `.label`, `.control`, `.description`, `.error`,
   `.submit`, `.state`, and `.reset`.
 - Scenarios: label focus, type, submit invalid, unchanged rebuild, correct and
-  clear, disabled vs read-only, localization/RTL, large text, and the generic
-  control only if its spike passes.
+  clear, disabled vs read-only, localization/RTL, and large text.
 - Record VoiceOver, TalkBack, and Chrome tree output for required/invalid and
   error-transition timing.
 
@@ -193,7 +210,7 @@ without raising the package floor deliberately.
 - [ ] Error transition policy is deterministic and manually verified with
       VoiceOver and TalkBack; the changelog names the initial-error behavior
       correction.
-- [ ] Generic control ships only if role/action preservation passes the spike.
+- [ ] Generic control remains unexported and explicitly deferred.
 - [ ] Example, integration aggregate, docs, changelog, AT evidence, and status board are current.
 
 ## Primary references

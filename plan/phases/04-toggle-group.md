@@ -1,20 +1,23 @@
 # Phase 04 — Toggle Group intent split and composite focus
 
-Authority: **inactive research draft; not approved for implementation**.
+Authority: **active just-in-time implementation contract for existing
+single-selection mode only**.
 
-Status: **D-01 awaits explicit approval; multiple selection also requires a
-named consumer use case.**
+Status: **activated after a clean `origin/main` preflight at `58a48a3` on
+2026-07-13. D-01 and D-19 are resolved. Single-mode roving focus is authorized;
+`allowEmptySelection`, multiple selection, and `toggled` semantics remain
+deferred because no named consumer use case exists.**
 
-Goal: make grouped toggles keyboard-coherent without turning one API into
-Tabs, Radio Group, and a toggle toolbar at once. Preserve current single-select
-source compatibility and semantics; add a multiple-toggle mode only for a
-concrete Remix use case.
+Goal: make the existing single-selection group keyboard-coherent without
+turning one API into Tabs, Radio Group, and a toggle toolbar at once. Preserve
+its source, controlled selection, no-clear behavior, and button + `selected`
+semantics.
 
-Planning baseline: `d341b90` on 2026-07-13. Contract source: briefing
-[§14](../briefing.md#14-component-contract-toggle-group). Proposed refinement
-is recorded in the approval-pending
-[D-01 recommendation](../decisions.md#component-plan-research-recommendations-2026-07-13).
-Approved cross-cutting D-19 governs SDK/API use if this phase is activated.
+Implementation baseline: `58a48a3` on 2026-07-13. Contract source: briefing
+[§14](../briefing.md#14-component-contract-toggle-group). The approved
+refinement is recorded in
+[D-01](../decisions.md#phase-4-decision-evidence-approved-2026-07-13).
+Approved cross-cutting D-19 governs SDK/API use in this phase.
 
 ## Choose the semantic primitive first
 
@@ -28,6 +31,11 @@ Approved cross-cutting D-19 governs SDK/API use if this phase is activated.
 Do not expose both `selected` and `toggled` on one option. Do not migrate the
 existing unnamed constructor globally just to make single and multiple modes
 look uniform; that would silently change screen-reader announcements.
+
+The consumer audit found no checked-in grouped-toggle Remix story. The current
+Bold/Italic/Underline example is three independent standalone toggles; a
+Grid/List content switch is Tabs intent, and an exclusive form value is Radio
+Group intent. Therefore this phase must not add a multiple constructor.
 
 ## Reuse before new machinery
 
@@ -61,18 +69,20 @@ distinct roving-focus/button contract. See the shared
 
 Horizontal arrows follow visual direction in RTL; vertical groups use Up/Down.
 Home/End choose first/last enabled option. Loop behavior must be explicit.
+The entry target priority is last still-valid focused option, then selected
+enabled option, then first enabled option.
+
+The only approved constructor additions are `orientation` (horizontal by
+default), `loop` (true by default), optional `semanticLabel`, and
+`excludeSemantics`. `allowEmptySelection` and all set-valued APIs are deferred.
 
 ## Ordered work
 
-### 1. Audit the actual Remix stories
+### 1. Preserve the completed consumer classification
 
-- Classify each proposed segmented/grouped control as content switcher, form
-  choice, existing single segmented use, or independent toggle set.
-- Migrate Tabs/Radio stories to those existing primitives in the consumer
-  plan. Record at least one independent-toggle story before approving
-  `NakedToggleGroup.multiple`.
-- If no such story exists, complete the single-mode keyboard work only and
-  stop; do not add speculative public API.
+- Keep content switchers on Tabs, form choices on Radio Group, and independent
+  boolean controls as standalone toggles. Complete single-mode keyboard work
+  only; do not add speculative public API.
 
 ### 2. Lock compatibility and focus migration tests
 
@@ -80,7 +90,7 @@ Home/End choose first/last enabled option. Loop behavior must be explicit.
   `packages/naked_ui/test/semantics/naked_toggle_semantics_test.dart`.
 - Preserve the unnamed constructor, controlled selection, null-callback
   effective disabling, option callbacks/builders, and `selected` semantics.
-- Add failing tests for one Tab stop, selected/last-focused/first-enabled entry
+- Add failing tests for one Tab stop, last-focused/selected/first-enabled entry
   priority, Tab exit, arrows, Home/End, loop on/off, disabled skip, all-disabled
   state, dynamic reorder/removal/disable, vertical orientation, and RTL.
 - Changelog the independent-focus-to-roving-focus behavior change; it is not a
@@ -97,23 +107,18 @@ Home/End choose first/last enabled option. Loop behavior must be explicit.
   waits for the controlled parent rebuild.
 - Avoid depending on Material focus/selection internals.
 
-### 4. Add multiple mode only after the gate
+### 4. Keep multiple mode behind the gate
 
-- Use a separate constructor with mutually exclusive value/callback
-  invariants. Copy the input set before modification and expose an immutable
-  result; equality is by content.
-- Reuse the same options, roving model, enabled propagation, and builder state.
-  Only the semantic state and controlled selection calculation differ.
-- Do not add mixed/range selection, mandatory selection, or toolbar command
+- Do not implement a multiple constructor, set-valued API, `toggled` option
+  semantics, allow-empty behavior, mixed/range selection, or toolbar command
   semantics in this phase.
 
 ### 5. Prove semantics and real keyboard behavior
 
-- Single mode must continue to announce its prior selected state; multiple
-  mode must announce toggled state. Group label appears once and neither mode
-  claims radio-group semantics.
+- Single mode must continue to announce its prior selected state. Group label
+  appears once and the group claims no radio-group semantics.
 - VoiceOver, TalkBack, and Chrome checks cover entry, arrow focus without
-  selection, activation, disabled options, and both state vocabularies.
+  selection, activation, disabled options, and the preserved state vocabulary.
 - Compare LTR/RTL visual-direction behavior to the Material reference without
   requiring pixel or internal implementation parity.
 
@@ -124,16 +129,14 @@ Home/End choose first/last enabled option. Loop behavior must be explicit.
   aggregate runner, `docs/widget/toggle.mdx`, and changelog.
 - Stable keys: `toggle-group.root`, `.option.bold`, `.option.italic`,
   `.option.underline`, `.value`, `.remove-focused`, and `.reset`.
-- Include horizontal LTR/RTL, vertical with disabled middle option, dynamic
-  removal, and multiple only if approved.
+- Include horizontal LTR/RTL, vertical with disabled middle option, and dynamic
+  removal.
 - Add a prominent “use Tabs / Radio / Toggle Group” decision table to docs.
 
 ## Planned visual evidence
 
 - Screenshots: `toggle_group__roving_rtl__macos__reference.png` and
   `toggle_group__vertical_disabled__android__reference.png`.
-- If multiple mode passes its gate, also capture
-  `toggle_group__multiple_selected__android__reference.png`.
 - Golden: `packages/example/test/goldens/components/baselines/naked_toggle_group__focus.png`.
 
 ## Verification

@@ -33,10 +33,6 @@ named spike. The exact upstream audits are recorded in
 [flutter-raw-primitives.md](flutter-raw-primitives.md) and
 [shadcn-flutter-reference.md](shadcn-flutter-reference.md).
 
-- **D-01:** preserve the existing single constructor's button + `selected`
-  semantics. A future multiple constructor uses button + `toggled`; one node
-  never exposes both. Content switching uses `NakedTabs`, and exclusive form
-  choice uses `NakedRadioGroup`. Multiple mode requires a real consumer story.
 - **D-04:** Toast uses structured message, optional action, and optional close
   composition so one announcement can be separated from usable controls.
 - **D-05:** Toast installs no global shortcut. Consumers may opt in; an example
@@ -74,6 +70,26 @@ named spike. The exact upstream audits are recorded in
   but newer APIs cannot enter production until the minimum is deliberately
   raised. Beta/master are canaries only. `package:flutter/src`, experimental
   windowing, and other unstable implementation APIs are prohibited.
+
+### Phase 4 decision evidence (approved 2026-07-13)
+
+- **D-01:** preserve the existing unnamed `NakedToggleGroup` constructor's
+  button + `selected` semantics and controlled, no-clear selection behavior.
+  Activate only its single-mode composite/roving-focus work. Content switching
+  uses `NakedTabs`; exclusive form choice uses `NakedRadioGroup`; independent
+  boolean controls use standalone toggles. `allowEmptySelection`, a multiple
+  constructor, set-valued APIs, and button + `toggled` option semantics remain
+  deferred until a named consumer demonstrates that separate intent. One node
+  must never expose both `selected` and `toggled`.
+
+### Phase 5 spike authorization (2026-07-13)
+
+- **D-03 remains open.** The maintainer authorized the disposable accessibility
+  spike only. It may compare role-neutral semantic long press, physical input,
+  focus, point geometry, and raw-menu lifecycle behavior; it may not add a
+  public Context Menu API or production overlay code. D-03 resolves only from
+  recorded VoiceOver, TalkBack, and Chrome evidence plus preserved Link,
+  selectable-text, scrolling, exactly-once activation, and focus restoration.
 
 ### Phase 2 decision evidence (approved 2026-07-13)
 
@@ -130,7 +146,7 @@ named spike. The exact upstream audits are recorded in
 
 | ID | Decision | Briefing recommendation | Must resolve by | Status |
 |---|---|---|---|---|
-| D-01 | Toggle option semantics migration (`selected` → `toggled`) | Preserve `selected` for existing single mode; use `toggled` only for future multiple mode; route Tabs/Radio intent correctly | Before Toggle Group implementation (phase 4) | [open (recommendation recorded; approval pending)](#component-plan-research-recommendations-2026-07-13) |
+| D-01 | Toggle option semantics migration (`selected` → `toggled`) | Preserve `selected` for existing single mode; use `toggled` only for future multiple mode; route Tabs/Radio intent correctly | Before Toggle Group implementation (phase 4) | [resolved(preserve single-mode selected semantics; defer multiple/toggled)](#phase-4-decision-evidence-approved-2026-07-13) |
 | D-02 | Alert Dialog initial focus API | Keep optional `initialFocusNode`; document safe-target heuristics; explicit canonical examples | Before Alert Dialog PR approval (phase 1) | [resolved(optional caller-owned node plus documented safe-target heuristics)](#phase-1-decision-evidence-2026-07-12) |
 | D-03 | Context Menu trigger semantic action | Preserve child role + long-press semantic action; no fake button; prototype with VoiceOver/TalkBack | During Context Menu spike (phase 5) | open |
 | D-04 | Toast composition API | Structured message/action/close helpers so duplicate message semantics can be excluded without hiding controls | Before Toast tests are written (phase 6) | [open (recommendation recorded; approval pending)](#component-plan-research-recommendations-2026-07-13) |
