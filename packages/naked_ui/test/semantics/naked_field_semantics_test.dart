@@ -230,6 +230,69 @@ void main() {
   });
 
   group('NakedField error transitions', () {
+    testWidgets(
+      'completed semantics updates announce changed errors exactly once',
+      (tester) async {
+        final handle = tester.ensureSemantics();
+        final announcements = AlertSemanticsUpdateRecorder(tester);
+        late StateSetter rebuild;
+        var errorText = 'Initial error';
+        var unrelated = 0;
+
+        try {
+          await tester.pumpWidget(
+            _testApp(
+              StatefulBuilder(
+                builder: (context, setState) {
+                  rebuild = setState;
+                  return NakedField(
+                    label: 'Email $unrelated',
+                    errorText: errorText,
+                    child: _textField(),
+                  );
+                },
+              ),
+            ),
+          );
+
+          expect(_alertNodes(tester), isEmpty);
+          expect(
+            announcements.introducedLabels,
+            isEmpty,
+            reason: 'An error present on the initial build is not live.',
+          );
+
+          rebuild(() => errorText = 'Changed error');
+          await tester.pump();
+          expect(_alertNodes(tester), hasLength(1));
+          expect(announcements.introducedLabels, <String>['Changed error']);
+
+          rebuild(() => errorText = 'Replacement error');
+          await tester.pump();
+          expect(_alertNodes(tester), hasLength(1));
+          expect(announcements.introducedLabels, <String>[
+            'Changed error',
+            'Replacement error',
+          ]);
+
+          await tester.pump();
+          expect(_alertNodes(tester), isEmpty);
+
+          rebuild(() => unrelated++);
+          await tester.pump();
+          expect(_alertNodes(tester), isEmpty);
+          expect(
+            announcements.introducedLabels,
+            <String>['Changed error', 'Replacement error'],
+            reason: 'An unchanged error must not be dispatched again.',
+          );
+        } finally {
+          announcements.dispose();
+          handle.dispose();
+        }
+      },
+    );
+
     testWidgets('changed error creates one alert for one completed update', (
       tester,
     ) async {
