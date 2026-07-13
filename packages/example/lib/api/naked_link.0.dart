@@ -313,7 +313,7 @@ class _LinkSurface extends StatelessWidget {
           color: background,
           borderRadius: BorderRadius.circular(standalone ? 6 : 2),
         ),
-        child: DefaultTextStyle(
+        child: DefaultTextStyle.merge(
           style: TextStyle(
             color: foreground,
             fontSize: 16,

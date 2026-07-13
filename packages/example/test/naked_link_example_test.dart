@@ -151,6 +151,20 @@ void main() {
     expect(directionality.textDirection, TextDirection.rtl);
     expect(find.textContaining('دليل الوصول'), findsOneWidget);
   });
+
+  testWidgets('styled Links preserve the ambient font family', (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: ThemeData(fontFamily: 'FixtureFont'),
+        home: const Scaffold(body: link_example.LinkExample()),
+      ),
+    );
+
+    final style = DefaultTextStyle.of(
+      tester.element(find.text('Read the documentation')),
+    ).style;
+    expect(style.fontFamily, 'FixtureFont');
+  });
 }
 
 Widget _app(Widget child) {
