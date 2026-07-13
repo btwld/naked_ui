@@ -239,7 +239,6 @@ class _ToggleGroupExampleState extends State<ToggleGroupExample> {
       value: value,
       enabled: enabled,
       focusNode: _optionFocusNodes[value],
-      semanticLabel: label,
       onFocusChange: (focused) {
         if (focused) {
           setState(() => _lastFocusedValue = value);
@@ -254,6 +253,7 @@ class _ToggleGroupExampleState extends State<ToggleGroupExample> {
 
         return AnimatedContainer(
           duration: const Duration(milliseconds: 120),
+          constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           decoration: BoxDecoration(
             color: state.isSelected ? Colors.grey.shade800 : Colors.white,
@@ -304,11 +304,11 @@ class _ToggleGroupExampleState extends State<ToggleGroupExample> {
           const SizedBox(height: 4),
           ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 420),
-            child: const Text(
+            child: Text(
               'This group deliberately allows one choice. Use the standalone '
               'formatting controls when Bold, Italic, and Underline must combine.',
               textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.grey),
+              style: TextStyle(color: Colors.grey.shade700),
             ),
           ),
           const SizedBox(height: 12),

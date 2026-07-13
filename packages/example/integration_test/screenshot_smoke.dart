@@ -1,8 +1,10 @@
 import 'dart:io';
 
 import 'package:example/api/naked_dialog.0.dart' as dialog_example;
+import 'package:example/api/naked_toggle.0.dart' as toggle_example;
 import 'package:example/src/testing/screenshot_evidence.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:naked_ui/naked_ui.dart';
@@ -38,6 +40,28 @@ Widget _alertScreenshotApp({
       backgroundColor: const Color(0xFFF7F7F7),
       body: Center(
         child: dialog_example.AlertDialogExample(longMessage: longMessage),
+      ),
+    ),
+  );
+}
+
+Widget _toggleGroupScreenshotApp({
+  Axis orientation = Axis.horizontal,
+  TextDirection textDirection = TextDirection.ltr,
+  bool disableMiddleOption = false,
+}) {
+  return MaterialApp(
+    debugShowCheckedModeBanner: false,
+    home: Scaffold(
+      backgroundColor: const Color(0xFFF7F7F7),
+      body: Center(
+        child: SingleChildScrollView(
+          child: toggle_example.ToggleGroupExample(
+            orientation: orientation,
+            textDirection: textDirection,
+            disableMiddleOption: disableMiddleOption,
+          ),
+        ),
       ),
     ),
   );
@@ -213,6 +237,98 @@ void main() {
         devicePixelRatio: tester.view.devicePixelRatio,
         textScale: 2,
         animationMode: 'disabled, zero-duration route transition',
+      ),
+      surface: screenshotSurface,
+    );
+  });
+
+  testWidgets('toggle group roving RTL screenshot evidence', (tester) async {
+    const screenshotSurfaceKey = ValueKey('toggle-group.screenshot.roving-rtl');
+    _configureScreenshotView(tester);
+    await tester.pumpWidget(
+      RepaintBoundary(
+        key: screenshotSurfaceKey,
+        child: _toggleGroupScreenshotApp(textDirection: TextDirection.rtl),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final boldOption = tester.widget<NakedToggleOption<String>>(
+      find.byKey(const Key('toggle-group.option.bold')),
+    );
+    final italicOption = tester.widget<NakedToggleOption<String>>(
+      find.byKey(const Key('toggle-group.option.italic')),
+    );
+    boldOption.focusNode!.requestFocus();
+    await tester.pump();
+    await tester.sendKeyEvent(LogicalKeyboardKey.arrowLeft);
+    await tester.pumpAndSettle();
+    expect(italicOption.focusNode!.hasPrimaryFocus, isTrue);
+    expect(find.text('Selected: Bold'), findsOneWidget);
+    if (!Platform.isMacOS) return;
+
+    final screenshotSurface = find.byKey(screenshotSurfaceKey);
+    final logicalSize = tester.getSize(screenshotSurface);
+    await tester.captureEvidenceScreenshot(
+      binding,
+      ScreenshotEvidence(
+        component: 'toggle_group',
+        scenario: 'roving_rtl',
+        surface: '${logicalSize.width}x${logicalSize.height} logical pixels',
+        devicePixelRatio: tester.view.devicePixelRatio,
+        direction: 'RTL',
+        animationMode: '120ms focus transition, settled',
+      ),
+      surface: screenshotSurface,
+    );
+  });
+
+  testWidgets('toggle group vertical disabled screenshot evidence', (
+    tester,
+  ) async {
+    const screenshotSurfaceKey = ValueKey(
+      'toggle-group.screenshot.vertical-disabled',
+    );
+    _configureScreenshotView(tester);
+    await tester.pumpWidget(
+      RepaintBoundary(
+        key: screenshotSurfaceKey,
+        child: _toggleGroupScreenshotApp(
+          orientation: Axis.vertical,
+          disableMiddleOption: true,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final boldOption = tester.widget<NakedToggleOption<String>>(
+      find.byKey(const Key('toggle-group.option.bold')),
+    );
+    final italicOption = tester.widget<NakedToggleOption<String>>(
+      find.byKey(const Key('toggle-group.option.italic')),
+    );
+    final underlineOption = tester.widget<NakedToggleOption<String>>(
+      find.byKey(const Key('toggle-group.option.underline')),
+    );
+    boldOption.focusNode!.requestFocus();
+    await tester.pump();
+    await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
+    await tester.pumpAndSettle();
+    expect(italicOption.focusNode!.canRequestFocus, isFalse);
+    expect(underlineOption.focusNode!.hasPrimaryFocus, isTrue);
+    expect(find.text('Selected: Bold'), findsOneWidget);
+    if (!Platform.isAndroid) return;
+
+    final screenshotSurface = find.byKey(screenshotSurfaceKey);
+    final logicalSize = tester.getSize(screenshotSurface);
+    await tester.captureEvidenceScreenshot(
+      binding,
+      ScreenshotEvidence(
+        component: 'toggle_group',
+        scenario: 'vertical_disabled',
+        surface: '${logicalSize.width}x${logicalSize.height} logical pixels',
+        devicePixelRatio: tester.view.devicePixelRatio,
+        animationMode: '120ms focus transition, settled',
       ),
       surface: screenshotSurface,
     );
