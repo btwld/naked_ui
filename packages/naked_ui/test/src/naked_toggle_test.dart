@@ -146,6 +146,46 @@ void main() {
       expect(secondCalls, 1);
     });
 
+    testWidgets('unrelated parent rebuild does not invalidate stable options', (
+      tester,
+    ) async {
+      var parentValue = 0;
+      var optionBuilds = 0;
+      late StateSetter rebuild;
+      final onChanged = (String? _) {};
+      final stableOption = NakedToggleOption<String>(
+        value: 'a',
+        builder: (context, state, child) {
+          optionBuilds++;
+          return const Text('A');
+        },
+      );
+
+      await tester.pumpMaterialWidget(
+        StatefulBuilder(
+          builder: (context, setState) {
+            rebuild = setState;
+            return Column(
+              children: [
+                Text('$parentValue'),
+                NakedToggleGroup<String>(
+                  selectedValue: 'a',
+                  onChanged: onChanged,
+                  child: stableOption,
+                ),
+              ],
+            );
+          },
+        ),
+      );
+      final initialBuilds = optionBuilds;
+
+      rebuild(() => parentValue++);
+      await tester.pump();
+
+      expect(optionBuilds, initialBuilds);
+    });
+
     testWidgets('disabled group prevents interaction', (tester) async {
       String? selected = 'a';
 
@@ -807,6 +847,113 @@ void main() {
       expect(optionC.hasPrimaryFocus, isTrue);
     });
 
+    testWidgets('updates arrow bindings when orientation changes at runtime', (
+      tester,
+    ) async {
+      final nodes = {
+        for (final value in ['a', 'b', 'c'])
+          value: FocusNode(debugLabel: 'option $value'),
+      };
+      for (final node in nodes.values) {
+        addTearDown(node.dispose);
+      }
+      var orientation = Axis.horizontal;
+      late StateSetter rebuild;
+
+      await tester.pumpMaterialWidget(
+        StatefulBuilder(
+          builder: (context, setState) {
+            rebuild = setState;
+            return NakedToggleGroup<String>(
+              selectedValue: 'b',
+              onChanged: (_) {},
+              orientation: orientation,
+              child: Flex(
+                direction: orientation,
+                children: [
+                  for (final value in ['a', 'b', 'c'])
+                    NakedToggleOption<String>(
+                      value: value,
+                      focusNode: nodes[value],
+                      child: Text(value.toUpperCase()),
+                    ),
+                ],
+              ),
+            );
+          },
+        ),
+      );
+
+      nodes['b']!.requestFocus();
+      await tester.pump();
+      await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
+      await tester.pump();
+      expect(nodes['c']!.hasPrimaryFocus, isTrue);
+
+      rebuild(() => orientation = Axis.vertical);
+      await tester.pump();
+      nodes['b']!.requestFocus();
+      await tester.pump();
+      await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
+      await tester.pump();
+      expect(nodes['b']!.hasPrimaryFocus, isTrue);
+
+      await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
+      await tester.pump();
+      expect(nodes['c']!.hasPrimaryFocus, isTrue);
+    });
+
+    testWidgets('updates horizontal direction at runtime', (tester) async {
+      final nodes = {
+        for (final value in ['a', 'b', 'c'])
+          value: FocusNode(debugLabel: 'option $value'),
+      };
+      for (final node in nodes.values) {
+        addTearDown(node.dispose);
+      }
+      var textDirection = TextDirection.ltr;
+      late StateSetter rebuild;
+
+      await tester.pumpMaterialWidget(
+        StatefulBuilder(
+          builder: (context, setState) {
+            rebuild = setState;
+            return Directionality(
+              textDirection: textDirection,
+              child: NakedToggleGroup<String>(
+                selectedValue: 'b',
+                onChanged: (_) {},
+                child: Row(
+                  children: [
+                    for (final value in ['a', 'b', 'c'])
+                      NakedToggleOption<String>(
+                        value: value,
+                        focusNode: nodes[value],
+                        child: Text(value.toUpperCase()),
+                      ),
+                  ],
+                ),
+              ),
+            );
+          },
+        ),
+      );
+
+      nodes['b']!.requestFocus();
+      await tester.pump();
+      await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
+      await tester.pump();
+      expect(nodes['c']!.hasPrimaryFocus, isTrue);
+
+      rebuild(() => textDirection = TextDirection.rtl);
+      await tester.pump();
+      nodes['b']!.requestFocus();
+      await tester.pump();
+      await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
+      await tester.pump();
+      expect(nodes['a']!.hasPrimaryFocus, isTrue);
+    });
+
     testWidgets(
       'falls back to first enabled and disappears when all disabled',
       (tester) async {
@@ -986,6 +1133,158 @@ void main() {
       final listener = () {};
       expect(() => nodes['b']!.addListener(listener), returnsNormally);
       nodes['b']!.removeListener(listener);
+    });
+
+    testWidgets('repairs removal from the final visual order exactly once', (
+      tester,
+    ) async {
+      final nodes = {
+        for (final value in ['a', 'b', 'c'])
+          value: FocusNode(debugLabel: 'option $value'),
+      };
+      for (final node in nodes.values) {
+        addTearDown(node.dispose);
+      }
+      var values = ['a', 'b', 'c'];
+      final focusChanges = <String>[];
+      late StateSetter rebuild;
+
+      await tester.pumpMaterialWidget(
+        StatefulBuilder(
+          builder: (context, setState) {
+            rebuild = setState;
+            return NakedToggleGroup<String>(
+              selectedValue: 'a',
+              onChanged: (_) {},
+              child: Row(
+                children: [
+                  for (final value in values)
+                    NakedToggleOption<String>(
+                      key: ValueKey(value),
+                      value: value,
+                      focusNode: nodes[value],
+                      onFocusChange: (focused) {
+                        focusChanges.add('$value:$focused');
+                      },
+                      child: Text(value.toUpperCase()),
+                    ),
+                ],
+              ),
+            );
+          },
+        ),
+      );
+
+      nodes['b']!.requestFocus();
+      await tester.pump();
+      focusChanges.clear();
+
+      rebuild(() => values = ['c', 'a']);
+      await tester.pump();
+
+      expect(FocusManager.instance.primaryFocus, same(nodes['a']));
+      expect(focusChanges, ['a:true']);
+    });
+
+    testWidgets('repairs disable from the final visual order', (tester) async {
+      final nodes = {
+        for (final value in ['a', 'b', 'c'])
+          value: FocusNode(debugLabel: 'option $value'),
+      };
+      for (final node in nodes.values) {
+        addTearDown(node.dispose);
+      }
+      var values = ['a', 'b', 'c'];
+      final enabledValues = {'a', 'b', 'c'};
+      late StateSetter rebuild;
+
+      await tester.pumpMaterialWidget(
+        StatefulBuilder(
+          builder: (context, setState) {
+            rebuild = setState;
+            return NakedToggleGroup<String>(
+              selectedValue: 'c',
+              onChanged: (_) {},
+              child: Row(
+                children: [
+                  for (final value in values)
+                    NakedToggleOption<String>(
+                      key: ValueKey(value),
+                      value: value,
+                      enabled: enabledValues.contains(value),
+                      focusNode: nodes[value],
+                      child: Text(value.toUpperCase()),
+                    ),
+                ],
+              ),
+            );
+          },
+        ),
+      );
+
+      nodes['b']!.requestFocus();
+      await tester.pump();
+
+      rebuild(() {
+        enabledValues.remove('b');
+        values = ['c', 'a', 'b'];
+      });
+      await tester.pump();
+
+      expect(FocusManager.instance.primaryFocus, same(nodes['a']));
+    });
+
+    testWidgets('same-turn outside focus and removal does not steal focus', (
+      tester,
+    ) async {
+      final nodes = {
+        for (final value in ['a', 'b', 'c'])
+          value: FocusNode(debugLabel: 'option $value'),
+      };
+      final after = FocusNode(debugLabel: 'after');
+      for (final node in [...nodes.values, after]) {
+        addTearDown(node.dispose);
+      }
+      var values = ['a', 'b', 'c'];
+      late StateSetter rebuild;
+
+      await tester.pumpMaterialWidget(
+        StatefulBuilder(
+          builder: (context, setState) {
+            rebuild = setState;
+            return Column(
+              children: [
+                NakedToggleGroup<String>(
+                  selectedValue: 'a',
+                  onChanged: (_) {},
+                  child: Row(
+                    children: [
+                      for (final value in values)
+                        NakedToggleOption<String>(
+                          key: ValueKey(value),
+                          value: value,
+                          focusNode: nodes[value],
+                          child: Text(value.toUpperCase()),
+                        ),
+                    ],
+                  ),
+                ),
+                Focus(focusNode: after, child: const Text('After')),
+              ],
+            );
+          },
+        ),
+      );
+
+      nodes['b']!.requestFocus();
+      await tester.pump();
+      expect(nodes['b']!.hasPrimaryFocus, isTrue);
+
+      after.requestFocus();
+      rebuild(() => values = ['a', 'c']);
+      await tester.pump();
+
+      expect(after.hasPrimaryFocus, isTrue);
     });
 
     testWidgets('retargets while outside without stealing page focus', (
@@ -1186,6 +1485,61 @@ void main() {
 
       await tester.simulatePress(optionKey);
       expect(pressChanges, [true, false]);
+    });
+
+    testWidgets('reports disabled cleanup in hover press focus order', (
+      tester,
+    ) async {
+      const optionKey = ValueKey('ordered-cleanup-option');
+      final optionFocus = FocusNode(debugLabel: 'ordered cleanup option');
+      addTearDown(optionFocus.dispose);
+      var optionEnabled = true;
+      late StateSetter rebuild;
+      final cleanupOrder = <String>[];
+      final mouse = await tester.createGesture(kind: PointerDeviceKind.mouse);
+      await mouse.addPointer();
+      addTearDown(mouse.removePointer);
+
+      await tester.pumpMaterialWidget(
+        StatefulBuilder(
+          builder: (context, setState) {
+            rebuild = setState;
+            return NakedToggleGroup<String>(
+              selectedValue: 'a',
+              onChanged: (_) {},
+              child: NakedToggleOption<String>(
+                key: optionKey,
+                value: 'a',
+                enabled: optionEnabled,
+                focusNode: optionFocus,
+                onHoverChange: (value) {
+                  if (!value) cleanupOrder.add('hover');
+                },
+                onPressChange: (value) {
+                  if (!value) cleanupOrder.add('press');
+                },
+                onFocusChange: (value) {
+                  if (!value) cleanupOrder.add('focus');
+                },
+                child: const SizedBox(width: 80, height: 40),
+              ),
+            );
+          },
+        ),
+      );
+
+      await mouse.moveTo(tester.getCenter(find.byKey(optionKey)));
+      optionFocus.requestFocus();
+      final press = await tester.startGesture(
+        tester.getCenter(find.byKey(optionKey)),
+      );
+      await tester.pump();
+
+      rebuild(() => optionEnabled = false);
+      await tester.pump();
+
+      expect(cleanupOrder, ['hover', 'press', 'focus']);
+      await press.up();
     });
 
     testWidgets('clears hover state on every effective-disable path', (
