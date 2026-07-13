@@ -297,15 +297,18 @@ class _ContextMenuSpikeTriggerState extends State<ContextMenuSpikeTrigger> {
   Widget _buildRealChild() {
     switch (widget.childKind) {
       case ContextMenuSpikeChildKind.link:
-        return NakedLink(
-          key: ContextMenuSpikeKeys.triggerLink,
-          linkUrl: Uri.parse('https://example.com/naked-ui'),
-          focusNode: _triggerFocusNode,
-          semanticLabel: 'Naked UI documentation',
-          onPressed: widget.counters.recordChildActivation,
-          child: const Padding(
-            padding: EdgeInsets.all(12),
-            child: Text('Naked UI documentation'),
+        return NakedLinkResolver(
+          resolve: (_, _) => NakedLinkResolution.handled,
+          child: NakedLink(
+            key: ContextMenuSpikeKeys.triggerLink,
+            linkUrl: Uri.parse('https://example.com/naked-ui'),
+            focusNode: _triggerFocusNode,
+            semanticLabel: 'Naked UI documentation',
+            onActivated: (_) => widget.counters.recordChildActivation(),
+            child: const Padding(
+              padding: EdgeInsets.all(12),
+              child: Text('Naked UI documentation'),
+            ),
           ),
         );
       case ContextMenuSpikeChildKind.selectableText:
