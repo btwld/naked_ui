@@ -51,6 +51,7 @@ class _DialogExampleState extends State<DialogExample> {
       barrierColor: Colors.black54,
       builder: (context) => Center(
         child: Container(
+          key: const ValueKey('dialog.basic.surface'),
           margin: const EdgeInsets.all(40),
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(

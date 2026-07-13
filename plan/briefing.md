@@ -84,7 +84,7 @@ Complexity is relative and is not a calendar estimate.
 
 | Item | Work type | Remix need | Priority | Relative complexity | Primary dependency/risk |
 |---|---|---|---|---|---|
-| Alert Dialog | Extend Dialog | Safe destructive/urgent confirmations | P0 | Small | Semantic role, initial focus, nondismissible default |
+| Alert Dialog | Extend Dialog | Safe destructive/urgent confirmations | P0 | Small | Semantic role, mandatory focus entry, inert default barrier, safe cancellation |
 | Link | New primitive | Foundational inline navigation and Hover Card trigger | P0 | Small | Correct link rather than button behavior |
 | Field | New composition + TextField integration | Consistent labels, descriptions, required/invalid/error behavior | P0 | Large | Avoiding duplicate semantics and preserving TextField compatibility |
 | Toggle Group | Expand existing group | Segmented/content-switcher and grouped formatting controls | P0 | Large | Roving focus, RTL, single/multiple semantics compatibility |
@@ -341,7 +341,7 @@ Every component must document and test all fields below.
 
 | Component | Primary semantics mapping | Name/value/state | Actions and focus |
 |---|---|---|---|
-| Alert Dialog | <code>role: SemanticsRole.alertDialog</code>, container, explicit children, route scope/name, blocked background | Visible title or caller <code>semanticLabel</code>; message remains readable | Focus enters the specified safe target, loops inside, and returns to invoker; no implicit dismissal when nondismissible |
+| Alert Dialog | <code>role: SemanticsRole.alertDialog</code>, container, explicit children, route scope/name, blocked background | Visible title or caller <code>semanticLabel</code>; message remains readable | Focus enters the specified safe target, loops inside, and returns to invoker; default outside barrier is inert, while Escape/platform Back safely cancel |
 | Context Menu | Trigger retains its native semantics; popup <code>role: menu</code>; initial-scope action items use <code>menuItem</code> | Trigger label only if supplied; item labels from visible content or explicit label | Secondary tap, long press, keyboard menu shortcut, item tap; focus moves into menu and restores on close |
 | Toggle Group | Group semantics container; options are toggle buttons | Each option has a name and <code>toggled</code> state; group can have a label | One tab stop; arrows move roving focus; Enter/Space toggle; disabled options have no action |
 | Toast | <code>role: status</code> for normal messages or <code>role: alert</code> for urgent messages | One concise announcement string; visual action remains a separate accessible control | No focus steal; optional user-invoked viewport focus; dismiss/action controls work normally |
@@ -515,6 +515,14 @@ Do not include long verbatim screen-reader transcripts when a concise outcome is
 
 ## 13. Component contract: Alert Dialog
 
+> **Approved safety correction — 2026-07-13:** Alert dialogs always request
+> route focus; the proposed <code>requestFocus</code> opt-out is removed because
+> it can leave an active background control focused. The outside barrier remains
+> non-dismissible by default, while Escape and platform Back cancel safely with
+> a null result. A dismissible barrier requires a non-empty caller-localized
+> label. This correction supersedes the earlier wording that grouped Escape
+> together with the inert outside barrier.
+
 ### 13.1 Why it is needed
 
 Remix can display a general dialog today, but a destructive or urgent confirmation has a distinct accessibility role and safer dismissal defaults. WAI-ARIA treats Alert Dialog as a modal dialog containing an alert message whose content and controls must be identified. Flutter 3.41.2 provides <code>SemanticsRole.alertDialog</code>, and Flutter's own Material and Cupertino alert dialogs use it.
@@ -564,25 +572,25 @@ Future<T?> showNakedAlertDialog<T>({
   Offset? anchorPoint,
   Duration transitionDuration = const Duration(milliseconds: 400),
   RouteTransitionsBuilder? transitionBuilder,
-  bool requestFocus = true,
   FocusNode? initialFocusNode,
 });
 ~~~
 
-The helper wraps the widget returned by <code>builder</code> in one <code>NakedDialog</code> with <code>SemanticsRole.alertDialog</code>, the required localized <code>semanticLabel</code>, and nondismissible defaults. The builder returns the visual dialog contents and must not add a second <code>NakedDialog</code>. Public naming is proposed, but the single role node and default dismissal behavior are required.
+The helper wraps the widget returned by <code>builder</code> in one <code>NakedDialog</code> with <code>SemanticsRole.alertDialog</code>, a required non-empty localized <code>semanticLabel</code>, a non-dismissible outside barrier by default, and safe Escape/platform-Back cancellation. Enabling outside-barrier dismissal requires a non-empty localized <code>barrierLabel</code>. The builder returns the visual dialog contents and must not add a second <code>NakedDialog</code>. Public naming is proposed, but the single role node, focus entry, and cancellation behavior are required.
 
 ### 13.4 Behavioral contract
 
 - The background is inert to pointer, keyboard, and semantics navigation while modal.
 - Focus moves inside after the route opens.
 - If <code>initialFocusNode</code> is provided and remains focusable, it receives focus.
-- Otherwise, normal route focus selects the first focusable descendant; the example must demonstrate an explicit safe target.
+- Otherwise, the helper explicitly selects the first traversable descendant; the example must demonstrate an explicit safe target.
 - For irreversible actions, the canonical example initially focuses the least destructive action.
 - For a long or structurally rich message, the consumer may focus a non-action semantic container at the beginning of the message.
 - Focus cannot escape with Tab or Shift+Tab.
 - Closing returns focus to the invoking control when it still exists and is focusable.
-- The alert helper does not close from outside tap or Escape by default.
-- A consumer that deliberately enables implicit dismissal must provide a safe equivalent cancel path and test it.
+- Outside tap does not close the default alert helper.
+- Escape and platform Back cancel with a null result.
+- A consumer that deliberately enables outside-barrier dismissal must provide a localized barrier label, an explicit safe cancel action, and tests for every cancellation result.
 - Nested alert dialogs are discouraged; if allowed, restoration follows route stack order.
 
 ### 13.5 Semantics contract
@@ -590,7 +598,7 @@ The helper wraps the widget returned by <code>builder</code> in one <code>NakedD
 | Field | Required behavior |
 |---|---|
 | Role | <code>SemanticsRole.alertDialog</code> |
-| Name | Visible title represented by <code>semanticLabel</code>, or another tested route naming strategy |
+| Name | Non-empty caller-localized <code>semanticLabel</code>; visible title/message remain separate useful nodes |
 | Message | Readable as content after the dialog name; not collapsed into an unusably long control name |
 | Modal state | <code>scopesRoute</code>, <code>namesRoute</code>, and <code>BlockSemantics</code> when modal |
 | Children | Explicit child nodes so message and actions remain navigable |
@@ -603,7 +611,9 @@ The helper wraps the widget returned by <code>builder</code> in one <code>NakedD
 - <code>semanticsRole: alertDialog</code> exposes exactly that role.
 - Any other role fails a debug assertion.
 - The alert helper defaults to a nondismissible barrier.
-- Outside tap and Escape do not close the default alert helper.
+- Outside tap does not close the default alert helper.
+- Escape and platform Back close once with a null result.
+- A dismissible barrier requires a non-empty caller-localized label.
 - Explicit action closes with its result.
 - Optional dismissible configuration closes exactly once.
 - Initial focus enters the supplied safe action after one frame.
@@ -629,10 +639,11 @@ Stable fixture keys:
 Integration scenarios:
 
 1. Open by keyboard, verify alert role in semantics, verify Cancel focus, Tab loop, cancel, and invoker restoration.
-2. Open by pointer, tap barrier, press Escape, and verify still open.
-3. Activate destructive action and verify one callback plus visible result.
-4. Remove the invoker while open, close programmatically, and verify no exception.
-5. Render a long message at 200% text scale and verify content scroll/focus access.
+2. Open by pointer, tap the default barrier and verify it remains open, then press Escape and verify one null cancellation.
+3. Open again, invoke platform Back, and verify one null cancellation.
+4. Activate destructive action and verify one callback plus visible result.
+5. Remove the invoker while open, close programmatically, and verify no exception.
+6. Render a long message at 200% text scale and verify content scroll/focus access.
 
 Required screenshots:
 
@@ -647,7 +658,7 @@ Manual checks must confirm that the dialog is announced as an alert dialog, back
 
 - [ ] Existing dialog API remains source-compatible.
 - [ ] Default normal dialog semantics do not change.
-- [ ] Alert role and safe dismissal defaults are covered.
+- [ ] Alert role and the safe cancellation contract are covered.
 - [ ] Focus containment/restoration pass on macOS and Android.
 - [ ] Long text and RTL screenshots are reviewed.
 - [ ] VoiceOver and TalkBack evidence is attached.

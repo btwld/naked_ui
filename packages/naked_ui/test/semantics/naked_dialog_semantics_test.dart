@@ -270,6 +270,50 @@ void main() {
       },
     );
 
+    testWidgets('dismissible barrier carries its localized semantics label', (
+      tester,
+    ) async {
+      Future<String?>? result;
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Builder(
+            builder: (context) => ElevatedButton(
+              onPressed: () {
+                result = showNakedAlertDialog<String>(
+                  context: context,
+                  barrierColor: Colors.black54,
+                  semanticLabel: 'Eliminar archivo',
+                  barrierDismissible: true,
+                  barrierLabel: 'Cerrar alerta',
+                  transitionDuration: Duration.zero,
+                  builder: (context) => const SizedBox.square(dimension: 200),
+                );
+              },
+              child: const Text('Abrir alerta'),
+            ),
+          ),
+        ),
+      );
+
+      await tester.tap(find.text('Abrir alerta'));
+      await tester.pump();
+      await tester.pump();
+
+      final barrier = tester.widget<AnimatedModalBarrier>(
+        find.byType(AnimatedModalBarrier),
+      );
+      expect(barrier.dismissible, isTrue);
+      expect(barrier.semanticsLabel, 'Cerrar alerta');
+      expect(barrier.barrierSemanticsDismissible, isTrue);
+
+      await tester.tapAt(const Offset(4, 4));
+      await tester.pump();
+      await tester.pump();
+
+      expect(await result, isNull);
+    });
+
     testWidgets('long message safe target is focusable without a button role', (
       tester,
     ) async {

@@ -1,15 +1,20 @@
 # Phase 1 — Alert Dialog
 
-Status: **Blocked — automated implementation and exact-head hosted gates are
-green; the required RTL web screenshot and manual AT records are unavailable**.
+Status: **Blocked — the committed safety correction requires a new hosted
+exact-head run; the required RTL web screenshot and manual AT records also
+remain unavailable**.
 
-Review state: ready-for-review [PR #64](https://github.com/btwld/naked_ui/pull/64)
-is open and intentionally unmerged. Phase 2 Link may proceed independently.
+Review state: [PR #64](https://github.com/btwld/naked_ui/pull/64) is open and
+intentionally unmerged. Its earlier hosted record remains historical; the local
+safety correction is verified and committed, but must be pushed, reviewed, and
+rerun before the PR is again ready for merge consideration. Phase 2 Link may
+proceed independently.
 
 Goal: extend the existing dialog primitive without changing current callers by
 adding a constrained alert-dialog semantics role and a convenience helper with
-safe, nondismissible defaults. The helper must put focus on the caller's safe
-target (or the first traversable descendant), trap focus, restore it safely,
+a non-dismissible outside barrier by default and safe cancellation. The helper
+must put focus on the caller's safe target (or the first traversable descendant),
+trap focus, restore it safely, cancel with null from Escape or platform Back,
 keep title/message/actions as separate semantics nodes, and leave all styling
 and localized copy to the consumer.
 
@@ -74,9 +79,14 @@ findings below re-verified on 2026-07-12).
   dismissible behavior.
 - `NakedDialog.semanticsRole` accepts only `SemanticsRole.dialog` or
   `SemanticsRole.alertDialog`; no arbitrary-role escape hatch.
-- `showNakedAlertDialog` requires a caller-localized `semanticLabel`, defaults
-  to a nondismissible barrier, and wraps the builder's visual contents in
-  exactly one `NakedDialog`. It adds no styles or English copy.
+- `showNakedAlertDialog` requires a non-empty caller-localized `semanticLabel`,
+  defaults to a non-dismissible outside barrier, and wraps the builder's visual
+  contents in exactly one `NakedDialog`. Escape and platform Back safely cancel
+  with null. It adds no styles or English copy.
+- Alert routes always request focus; unlike the general helper, the alert helper
+  exposes no opt-out that could leave an active background control focused.
+- Enabling `barrierDismissible` requires a non-empty caller-localized
+  `barrierLabel`.
 - `initialFocusNode` remains caller-owned. Naked UI may request it but never
   disposes or reparents it outside the route's normal focus tree.
 - The helper owns no persistent controller or timer. Its finite transition is
@@ -88,15 +98,15 @@ findings below re-verified on 2026-07-12).
 | Dimension | Alert Dialog contract and proof |
 |---|---|
 | Primitive | Modal urgent/destructive confirmation region. |
-| Name | Required caller-localized `semanticLabel`; title/message remain separate child nodes. |
+| Name | Required non-empty caller-localized `semanticLabel`; title/message remain separate child nodes. |
 | Role/flags | One `SemanticsRole.alertDialog` node with container, explicit children, `scopesRoute`, and `namesRoute`; no fake tap action. |
 | State/value | Modal route state is observable through route flags and blocked background; no synthetic value. |
-| Actions | Dialog container exposes no activation action; child actions own tap/keyboard/semantic activation. Default barrier and Escape expose no dismissal path. |
+| Actions | Dialog container exposes no activation action; child actions own tap/keyboard/semantic activation. The default outside barrier is inert; Escape and platform Back cancel with null. |
 | Focus | Supplied attached/focusable safe node wins; otherwise first traversable descendant; closed-loop Tab/Shift+Tab; restoration to a surviving invoker. |
 | Traversal | Message and actions remain separately discoverable; background is unreachable while modal. |
 | Grouping/relations | `BlockSemantics` around one explicit-child route container; exclusion hides the complete dialog subtree. |
 | Disabled behavior | The dialog region has no enabled state. Disabled child actions remain consumer controls and cannot become a dismissal path. An unavailable initial node triggers the traversal fallback. |
-| Localization | `semanticLabel` is required by the alert helper; `barrierLabel` remains caller supplied. Tests include a non-English name and RTL fixture. |
+| Localization | A non-empty `semanticLabel` is required by the alert helper. A non-empty caller-localized `barrierLabel` is required when outside-barrier dismissal is enabled. Tests include non-English labels and an RTL fixture. |
 | Flutter mapping | `Semantics.role`, `container`, `explicitChildNodes`, `scopesRoute`, `namesRoute`, `label`, `BlockSemantics`, `ExcludeSemantics`. |
 | Automated proof | Exact node data/action set, separate child nodes, blocked/restored background, pointer/key/semantic outcomes, focus entry/loop/restoration/removal, and no role-sensitive exception. |
 | Manual proof | VoiceOver and TalkBack announce an alert dialog once, expose title/message/actions, keep background unreachable, start at a sensible target, and restore focus. Chrome accessibility tree and keyboard are recorded separately. |
@@ -106,10 +116,10 @@ findings below re-verified on 2026-07-12).
 - Open: programmatic helper call reached by pointer, Enter, or Space on the
   canonical invoker.
 - Act/close: pointer, Enter, and direct semantics tap on Cancel/Confirm;
-  explicit `Navigator.pop(result)`; deliberate optional barrier/Escape
-  dismissal when enabled.
-- Refused paths: outside pointer and Escape on the default helper leave the
-  dialog open and do not emit a result/callback.
+  explicit `Navigator.pop(result)`; Escape and platform Back safe cancellation
+  with null; deliberate optional outside-barrier dismissal when enabled.
+- Refused path: outside pointer input on the default helper leaves the dialog
+  open and does not emit a result/callback.
 - Focus: supplied Cancel node, missing/unattached/unfocusable-node fallback,
   forward and reverse loop, each supported close path, removed invoker, and a
   focusable non-button message container for long structured content.
@@ -129,8 +139,9 @@ findings below re-verified on 2026-07-12).
   `packages/naked_ui/test/src/naked_dialog_test.dart:7-305` and
   `packages/naked_ui/test/src/parity/naked_dialog_material_parity_test.dart`.
 - **How:** add named tests for the constrained role assertion; alert helper
-  nondismissible defaults; rejected outside/Escape paths; action result and
-  exactly-once callback; opt-in dismissal; supplied-node focus after one
+  non-dismissible outside-barrier default; safe Escape/platform-Back null
+  cancellation; action result and exactly-once callback; localized opt-in
+  barrier dismissal; supplied-node focus after one
   application frame; first-traversable fallback; Tab and Shift+Tab loop with
   known enabled nodes; focus restoration for action and opt-in dismissal;
   safe removed-invoker close; and proof that the external node remains usable
@@ -173,9 +184,11 @@ findings below re-verified on 2026-07-12).
   export.
 - **How:** add the constrained `semanticsRole` property/assertion to
   `NakedDialog`; add `showNakedAlertDialog<T>` with the binding signature,
-  required localized label, nondismissible default, and one automatic alert
-  wrapper. Add one private stateful focus coordinator that schedules a single
-  post-frame request: choose the supplied node only when attached and
+  required non-empty localized label, non-dismissible outside-barrier default,
+  safe Escape/platform-Back cancellation, mandatory route focus, and one
+  automatic alert wrapper. Require a non-empty localized barrier label when
+  outside dismissal is enabled. Add one private stateful focus coordinator that
+  schedules a single post-frame request: choose the supplied node only when attached and
   `canRequestFocus`, otherwise ask Flutter's active focus traversal policy for the
   first traversable descendant and request it. Handle node replacement/removal
   without disposing caller resources or firing stale post-frame work.
@@ -219,9 +232,12 @@ findings below re-verified on 2026-07-12).
   `packages/example/integration_test/all_tests.dart:9` and
   `packages/example/integration_test/all_tests.dart:35`) and rerun
   `packages/example/test/integration_inventory_test.dart`.
-- **How:** drive only stable keys and deterministic local state. Add the five
-  §13.7 scenarios: keyboard open → exact Cancel focus → forward/reverse loop →
-  cancel → invoker restoration; pointer open with rejected barrier/Escape;
+- **How:** drive only stable keys and deterministic local state. Preserve the
+  existing general-dialog open/cancel and outside-dismissal scenarios, then add
+  the Alert Dialog §13.7 scenarios: keyboard open → exact Cancel focus →
+  forward/reverse loop →
+  cancel → invoker restoration; pointer open with an inert default barrier then
+  safe Escape cancellation; platform Back safe cancellation;
   destructive action with exactly one callback/result; removed invoker plus
   programmatic close/no exception; 200% long-message scroll/focus access.
   Add RTL layout/keyboard coverage and a direct semantics-action result where
@@ -270,7 +286,8 @@ findings below re-verified on 2026-07-12).
   Phase 1 status/evidence in this file and `plan/README.md`.
 - **How:** document normal-vs-alert usage, single-wrapper rule, required
   localized label, safe initial-target heuristics, focus-node ownership,
-  nondismissible defaults, opt-in dismissal responsibility, semantic/focus
+  non-dismissible outside-barrier default, safe Escape/platform-Back null
+  cancellation, localized opt-in barrier responsibility, semantic/focus
   compatibility, and Remix's remaining styling/product-copy checks. Build the
   ten-item §22 handoff packet and stable AD requirement-to-test table in the PR
   description; record exact head/merge-ref SHAs separately.
@@ -288,7 +305,7 @@ findings below re-verified on 2026-07-12).
 |---|---|---|---|
 | AD-API-01 | Existing dialog source/default semantics compatibility | widget + semantics + parity tests | exact-minimum CI |
 | AD-API-02 | Role constrained to dialog/alertDialog | constructor + semantics tests | N/A |
-| AD-DISMISS-01 | Alert defaults reject barrier and Escape | widget test | macOS pointer/key + Android touch + web key |
+| AD-DISMISS-01 | Default outside barrier is inert; Escape and platform Back safely cancel with null | widget test | macOS pointer/key + Android touch/back + web key |
 | AD-DISMISS-02 | Explicit action/result and opt-in dismissal fire once | widget test | integration result readout |
 | AD-FOCUS-01 | Safe supplied node or first traversable fallback | widget test | macOS + Android + web |
 | AD-FOCUS-02 | Forward/reverse closed loop and restoration | widget test | macOS + Android; web keyboard |
@@ -306,7 +323,8 @@ findings below re-verified on 2026-07-12).
 | Scenario | flutter-tester | real macOS | API 34 Android | pinned Chrome/web |
 |---|---:|---:|---:|---:|
 | Keyboard open, safe focus, loop, cancel, restore | Yes | Required | Required focus/restoration | Required |
-| Pointer open, barrier rejected, Escape rejected | Yes | Required | Required touch | Escape required |
+| Pointer open, barrier rejected, Escape safely cancels | Yes | Required | Required touch | Escape required |
+| Platform Back safely cancels once | Yes | N/A | Required | Browser-history mapping checked separately |
 | Destructive action once + result | Yes | Required | Required + screenshot | Required |
 | Invoker removed, programmatic close | Yes | Required | Required | Required |
 | Long message, 200% text, non-action focus | Yes | Required + screenshot | Required | Required |
@@ -334,8 +352,10 @@ findings below re-verified on 2026-07-12).
 The test-first sequence was observed locally on pinned Flutter 3.41.2 before
 the corresponding production or fixture changes. Focused red runs proved the
 missing alert role and helper API, missing initial-focus contract, route-scope
-focus instead of the safe descendant, incorrect focus when `requestFocus` was
-false, and unsafe acceptance of a supplied background node. Targeted mutation
+focus instead of the safe descendant, unsafe background focus when the original
+alert proposal exposed `requestFocus: false`, and unsafe acceptance of a
+supplied background node. The alert focus opt-out was subsequently removed.
+Targeted mutation
 runs also caught opt-in barrier dismissal, escaped traversal, non-modal route
 semantics, undersized actions, and the missing canonical fixture.
 
@@ -448,6 +468,46 @@ the passing automated semantics and platform behavior suites. No manual AT row
 is inferred or marked passed. PR #64 remains unmerged pending those records or
 explicit maintainer decisions.
 
+### Safety-correction evidence (2026-07-13)
+
+The correction on this branch supersedes the alert helper's
+earlier focus opt-out and Escape-rejection behavior. Focused red/green runs
+proved that the old opt-out left the invoker focused and activatable behind the
+modal route, that Escape did not cancel, and that empty alert/barrier labels
+were accepted. Characterization confirmed that platform Back already cancels
+the route with null. The correction removes the alert-only `requestFocus`
+parameter, always requests route focus, keeps only the outside barrier inert by
+default, safely cancels from Escape/platform Back, and validates both localized
+labels. The existing general-dialog API and defaults are unchanged.
+
+The first simplification pass consolidated dismissal shortcuts and ensured that
+both the default and opt-in barrier paths install exactly one shortcut layer.
+Its focused behavior and semantics suites passed. A separate second pass found
+no further simplification that reduced complexity without weakening the
+contract; repository-wide text searches found no contradictory cancellation
+wording, both public READMEs are byte-for-byte synchronized, and all alert call
+sites match the corrected signature. The search used `rg`, so Dart analyzer and
+the complete test suites provide the semantic/type cross-check. The second pass
+ran after fetching `origin/main` at `58a48a3`; that commit was already an
+ancestor of the feature branch, so integration required no merge commit and
+produced no conflicts.
+
+Fresh Flutter 3.41.2 local evidence for the corrected worktree:
+
+- repository format check: 146 files, zero changes;
+- analyzer with fatal infos: no issues;
+- package suite: 590 passed, 3 documented skips;
+- example suite: 17 passed, 2 host-specific skips;
+- `flutter-tester` aggregate: 93 passed, 1 existing Tooltip skip;
+- real macOS dialog component: all 9 scenarios passed, including restored
+  general-dialog coverage plus alert Escape and platform-Back cancellation.
+
+The macOS runner again printed `Failed to foreground app; open returned 1`
+after a successful build, then connected and passed every scenario. No local
+Android SDK/device is available. These results cover the committed local tree,
+not a hosted exact PR head, Flutter 3.41.0, Android, or web result; those hosted
+gates remain pending after push.
+
 ## Verification and publication gates
 
 Focused development:
@@ -495,24 +555,27 @@ green on the exact PR head (or identified merge-ref where GitHub tests one).
       before implementation and the red evidence is recorded.
 - [x] Existing dialog API remains source-compatible and normal dialog role and
       dismissal defaults do not change.
-- [x] Alert role, single wrapper, safe dismissal defaults, action results,
+- [x] Alert role, single wrapper, safe cancellation contract, action results,
       safe focus entry/fallback, closed loop, restoration, dynamic removal,
       exclusion, and external-node ownership pass focused tests.
 - [x] Canonical fixture, result/reset, non-English semantics, RTL, 200% text,
       golden, and accessibility guidelines pass.
-- [x] Integration component, inventory, fast aggregate, real macOS aggregate,
-      hosted API 34, and pinned web behavior pass on the exact PR head.
+- [ ] Corrected-head integration component, inventory, fast aggregate, real
+      macOS, hosted API 34, and pinned web behavior pass. Local Flutter tester
+      and real macOS are green; a committed exact-head hosted run is pending.
 - [x] All four required screenshot names have reviewed evidence, or Phase 1 is
       explicitly blocked; an unsupported web screenshot is not marked passed.
 - [ ] VoiceOver, TalkBack, Chrome accessibility-tree, and release-level iOS
       records are attached where required; missing human evidence blocks
       closure rather than being inferred from semantics tests.
-- [x] Full publication commands pass with Flutter 3.41.2 and hosted exact
-      minimum Flutter 3.41.0 passes.
+- [ ] Full publication commands pass on the corrected committed head with
+      Flutter 3.41.2 and hosted exact-minimum Flutter 3.41.0. The local 3.41.2
+      publication gate is green; corrected-head hosted evidence is pending.
 - [x] API docs, README, changelog, compatibility statement, traceability table,
       platform manifests, visual review, and ten-item handoff packet are ready.
-- [x] Entire diff reviewed; only Phase 1 files staged; ready-for-review PR open
-      and exact-head checks monitored.
+- [ ] Entire corrected diff is committed, pushed, and covered by monitored
+      exact-head checks. The local diff is reviewed and committed; push and
+      exact-head checks remain pending.
 - [x] `plan/README.md` and this plan contain the final evidence/status.
 - [x] No merge occurs without explicit maintainer authorization; after an
       authorized merge, workflows on the resulting `main` commit are verified

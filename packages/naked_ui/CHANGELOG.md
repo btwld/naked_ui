@@ -3,9 +3,11 @@
 ### Features
 
 - Add `SemanticsRole.alertDialog` support to `NakedDialog` and a
-  `showNakedAlertDialog` helper with a required caller-localized name,
-  nondismissible defaults, safe initial-focus selection, closed-loop traversal,
-  and caller-owned focus-node handling. Existing `NakedDialog` and
+  `showNakedAlertDialog` helper with required non-empty caller-localized names,
+  a non-dismissible outside barrier by default, null cancellation from Escape
+  and platform Back, mandatory focus entry, safe initial-focus selection,
+  closed-loop traversal, and caller-owned focus-node handling. Dismissible
+  barriers require a non-empty localized label. Existing `NakedDialog` and
   `showNakedDialog` defaults remain unchanged.
 
 ## 1.0.0-beta.3

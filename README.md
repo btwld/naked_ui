@@ -43,8 +43,9 @@ Below are examples of using `NakedButton`, `NakedCheckbox`, and `NakedMenu`. Eac
 
 Use `showNakedAlertDialog` for urgent acknowledgements or destructive
 confirmations, not ordinary modal content. Its builder returns only the visual
-contents; the helper adds the single alert-dialog semantics wrapper and rejects
-barrier and Escape dismissal by default.
+contents; the helper adds the single alert-dialog semantics wrapper, always
+moves focus inside, and keeps outside-barrier dismissal disabled by default.
+Escape and platform Back safely cancel with a null result.
 
 Keep the initial focus node in the caller's `State` and dispose it there. For
 irreversible work, focus the least destructive action. For a simple
@@ -65,9 +66,11 @@ showNakedAlertDialog<bool>(
 );
 ```
 
-If a consumer deliberately enables `barrierDismissible`, it must provide and
-test an equivalent safe cancel path. Naked UI never disposes the caller's focus
-node and does not provide styling or localized product copy.
+`semanticLabel` must be non-empty and localized. If a consumer deliberately
+enables `barrierDismissible`, it must also pass a non-empty localized
+`barrierLabel`, provide an explicit safe cancel action, and test every
+cancellation result. Naked UI never disposes the caller's focus node and does
+not provide styling or localized product copy.
 
 ### Custom Button
 Create a button with custom styling that responds to interaction states.

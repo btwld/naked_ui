@@ -8,6 +8,9 @@ import 'package:naked_ui/naked_ui.dart';
 
 import '../helpers/test_helpers.dart';
 
+const _basicOpenKey = ValueKey('dialog.open.basic');
+const _basicSurfaceKey = ValueKey('dialog.basic.surface');
+const _basicCancelKey = ValueKey('dialog.basic.cancel');
 const _openKey = ValueKey('alert-dialog.open');
 const _removeInvokerKey = ValueKey('alert-dialog.remove-invoker');
 const _titleKey = ValueKey('alert-dialog.title');
@@ -57,10 +60,53 @@ SemanticsNode? _findSemanticsRole(SemanticsNode root, SemanticsRole role) {
   return result;
 }
 
+Future<void> _openAlert(
+  WidgetTester tester, {
+  Widget? app,
+  Key readyKey = _titleKey,
+}) async {
+  await tester.pumpWidget(app ?? _buildAlertApp());
+  await tester.pump();
+  await tester.tap(find.byKey(_openKey));
+  await tester.pumpUntil(
+    () => find.byKey(readyKey).evaluate().isNotEmpty,
+    timeout: const Duration(seconds: 2),
+  );
+}
+
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
   group('NakedDialog Integration Tests', () {
+    testWidgets('basic dialog opens and closes through Cancel', (tester) async {
+      await tester.pumpWidget(const dialog_example.MyApp());
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(_basicSurfaceKey), findsNothing);
+      await tester.tap(find.byKey(_basicOpenKey));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(_basicSurfaceKey), findsOneWidget);
+      await tester.tap(find.byKey(_basicCancelKey));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(_basicSurfaceKey), findsNothing);
+    });
+
+    testWidgets('basic dialog preserves opt-outside dismissal', (tester) async {
+      await tester.pumpWidget(const dialog_example.MyApp());
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byKey(_basicOpenKey));
+      await tester.pumpAndSettle();
+      expect(find.byKey(_basicSurfaceKey), findsOneWidget);
+
+      await tester.tapAt(const Offset(4, 4));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(_basicSurfaceKey), findsNothing);
+    });
+
     testWidgets(
       'keyboard open focuses Cancel, loops, closes, and restores the invoker',
       (tester) async {
@@ -116,17 +162,10 @@ void main() {
       },
     );
 
-    testWidgets('pointer barrier and Escape keep the default alert open', (
+    testWidgets('default barrier stays inert and Escape safely cancels', (
       tester,
     ) async {
-      await tester.pumpWidget(_buildAlertApp());
-      await tester.pump();
-
-      await tester.tap(find.byKey(_openKey));
-      await tester.pumpUntil(
-        () => find.byKey(_titleKey).evaluate().isNotEmpty,
-        timeout: const Duration(seconds: 2),
-      );
+      await _openAlert(tester);
 
       final surfaceRect = tester.getRect(find.byKey(_surfaceKey));
       await tester.tapAt(surfaceRect.topLeft - const Offset(8, 8));
@@ -134,27 +173,29 @@ void main() {
       expect(find.byKey(_titleKey), findsOneWidget);
 
       await tester.sendKeyEvent(LogicalKeyboardKey.escape);
-      await tester.pump();
-      expect(find.byKey(_titleKey), findsOneWidget);
-
-      await tester.tap(find.byKey(_cancelKey));
       await tester.pumpUntil(
         () => find.byKey(_titleKey).evaluate().isEmpty,
         timeout: const Duration(seconds: 2),
       );
+      expect(find.text('Result: dismissed; confirmations: 0'), findsOneWidget);
+    });
+
+    testWidgets('platform back safely cancels the alert', (tester) async {
+      await _openAlert(tester);
+
+      expect(await tester.binding.handlePopRoute(), isTrue);
+      await tester.pumpUntil(
+        () => find.byKey(_titleKey).evaluate().isEmpty,
+        timeout: const Duration(seconds: 2),
+      );
+
+      expect(find.text('Result: dismissed; confirmations: 0'), findsOneWidget);
     });
 
     testWidgets('destructive action records one callback and visible result', (
       tester,
     ) async {
-      await tester.pumpWidget(_buildAlertApp());
-      await tester.pump();
-
-      await tester.tap(find.byKey(_openKey));
-      await tester.pumpUntil(
-        () => find.byKey(_confirmKey).evaluate().isNotEmpty,
-        timeout: const Duration(seconds: 2),
-      );
+      await _openAlert(tester, readyKey: _confirmKey);
       await tester.tap(find.byKey(_confirmKey));
       await tester.pumpUntil(
         () => find
@@ -194,18 +235,13 @@ void main() {
     testWidgets('200% long message starts on readable non-action content', (
       tester,
     ) async {
-      await tester.pumpWidget(
-        _buildAlertApp(
+      await _openAlert(
+        tester,
+        app: _buildAlertApp(
           longMessage: true,
           textScaler: const TextScaler.linear(2),
         ),
-      );
-      await tester.pump();
-
-      await tester.tap(find.byKey(_openKey));
-      await tester.pumpUntil(
-        () => find.byKey(_messageFocusKey).evaluate().isNotEmpty,
-        timeout: const Duration(seconds: 2),
+        readyKey: _messageFocusKey,
       );
 
       final messageFocus = tester.widget<Focus>(find.byKey(_messageFocusKey));
@@ -237,13 +273,9 @@ void main() {
     testWidgets('RTL fixture preserves alert behavior and direction', (
       tester,
     ) async {
-      await tester.pumpWidget(_buildAlertApp(textDirection: TextDirection.rtl));
-      await tester.pump();
-
-      await tester.tap(find.byKey(_openKey));
-      await tester.pumpUntil(
-        () => find.byKey(_titleKey).evaluate().isNotEmpty,
-        timeout: const Duration(seconds: 2),
+      await _openAlert(
+        tester,
+        app: _buildAlertApp(textDirection: TextDirection.rtl),
       );
       expect(
         Directionality.of(tester.element(find.byKey(_titleKey))),
