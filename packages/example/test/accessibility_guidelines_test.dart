@@ -1,5 +1,6 @@
 import 'package:example/api/naked_button.0.dart' as button_example;
 import 'package:example/api/naked_dialog.0.dart' as dialog_example;
+import 'package:example/api/naked_field.0.dart' as field_example;
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:naked_ui/naked_ui.dart';
@@ -21,6 +22,27 @@ void main() {
     await tester.pump();
     await tester.pump();
 
+    await tester.expectMeetsAccessibilityGuidelines();
+  });
+
+  testWidgets('canonical styled Field meets accessibility guidelines', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Scaffold(
+          body: SingleChildScrollView(
+            padding: EdgeInsets.all(24),
+            child: Center(child: field_example.FieldExample()),
+          ),
+        ),
+      ),
+    );
+    await tester.ensureVisible(find.byKey(field_example.fieldEmailSubmitKey));
+    await tester.tap(find.byKey(field_example.fieldEmailSubmitKey));
+    await tester.pump();
+
+    expect(find.text('Enter an email address.'), findsOneWidget);
     await tester.expectMeetsAccessibilityGuidelines();
   });
 

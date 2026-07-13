@@ -182,20 +182,23 @@ class _FieldExampleState extends State<FieldExample> {
                     onSubmitted: (_) => _submit(),
                     style: const TextStyle(fontSize: 16),
                     builder: (context, _, editable) {
-                      return DecoratedBox(
-                        decoration: BoxDecoration(
-                          color: state.isDisabled
-                              ? Colors.grey.shade200
-                              : Colors.white,
-                          borderRadius: BorderRadius.circular(10),
-                          border: Border.all(color: borderColor, width: 2),
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 11,
+                      return ConstrainedBox(
+                        constraints: const BoxConstraints(minHeight: 48),
+                        child: DecoratedBox(
+                          decoration: BoxDecoration(
+                            color: state.isDisabled
+                                ? Colors.grey.shade200
+                                : Colors.white,
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(color: borderColor, width: 2),
                           ),
-                          child: editable,
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 11,
+                            ),
+                            child: editable,
+                          ),
                         ),
                       );
                     },
