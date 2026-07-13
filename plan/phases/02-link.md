@@ -390,9 +390,10 @@ green on the exact PR head or an identified GitHub merge ref.
 
 ## Reviewer-correction local evidence — 2026-07-13
 
-The correction candidate was verified from parent `2614555` before publication.
-The implementation commit is recorded in the follow-up evidence commit. No push,
-PR update, merge, or hosted exact-head run is claimed here.
+Correction implementation `dc20214ba1aab5d665d80f2baa0fe13855de2792`
+was verified from parent `2614555` before publication. This docs-only follow-up
+records that exact implementation SHA. No push, PR update, merge, or hosted
+exact-head run is claimed here.
 
 ### Available local publication gates
 
