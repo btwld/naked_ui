@@ -136,14 +136,20 @@ class _FieldExampleState extends State<FieldExample> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const Text(
-            'Semantic email field',
-            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+          const Directionality(
+            textDirection: TextDirection.ltr,
+            child: Text(
+              'Semantic email field',
+              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+            ),
           ),
           const SizedBox(height: 8),
-          const Text(
-            'Validation remains application-owned while Field coordinates '
-            'metadata and control state.',
+          const Directionality(
+            textDirection: TextDirection.ltr,
+            child: Text(
+              'Validation remains application-owned while Field coordinates '
+              'metadata and control state.',
+            ),
           ),
           const SizedBox(height: 24),
           NakedField(
@@ -221,10 +227,13 @@ class _FieldExampleState extends State<FieldExample> {
                   ),
                   const SizedBox(height: 8),
                   ExcludeSemantics(
-                    child: Text(
-                      _stateSummary(state),
-                      key: fieldEmailStateKey,
-                      style: Theme.of(context).textTheme.bodySmall,
+                    child: Directionality(
+                      textDirection: TextDirection.ltr,
+                      child: Text(
+                        _stateSummary(state),
+                        key: fieldEmailStateKey,
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
                     ),
                   ),
                 ],

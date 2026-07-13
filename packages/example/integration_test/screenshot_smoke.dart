@@ -394,6 +394,8 @@ void main() {
 
   testWidgets('RTL Field screenshot evidence', (tester) async {
     const screenshotSurfaceKey = ValueKey('field.screenshot.rtl');
+    const label = 'البريد الإلكتروني';
+    const description = 'أدخل عنوان بريد يمكننا الوصول إليه.';
     const invalidError = 'أدخل عنوان بريد إلكتروني صالحًا.';
     _configureScreenshotView(tester);
     await tester.pumpWidget(
@@ -403,8 +405,8 @@ void main() {
           textDirection: TextDirection.rtl,
           child: const field_example.FieldExample(
             initialValue: 'غير صالح',
-            label: 'البريد الإلكتروني',
-            description: 'أدخل عنوان بريد يمكننا الوصول إليه.',
+            label: label,
+            description: description,
             requiredError: 'أدخل عنوان بريد إلكتروني.',
             invalidError: invalidError,
           ),
@@ -417,6 +419,34 @@ void main() {
     await tester.tap(find.byKey(field_example.fieldEmailSubmitKey));
     await tester.pump();
     final invalidErrorContext = tester.element(find.text(invalidError));
+    TextDirection directionOf(Finder finder) =>
+        Directionality.of(tester.element(finder));
+
+    expect(directionOf(find.text('Semantic email field')), TextDirection.ltr);
+    expect(
+      directionOf(find.textContaining('Validation remains application-owned')),
+      TextDirection.ltr,
+    );
+    expect(
+      directionOf(find.byKey(field_example.fieldEmailStateKey)),
+      TextDirection.ltr,
+    );
+    expect(
+      directionOf(find.byKey(field_example.fieldEmailKey)),
+      TextDirection.rtl,
+    );
+    expect(
+      directionOf(find.byKey(field_example.fieldEmailControlKey)),
+      TextDirection.rtl,
+    );
+    expect(
+      directionOf(find.byKey(field_example.fieldEmailLabelKey)),
+      TextDirection.rtl,
+    );
+    expect(
+      directionOf(find.byKey(field_example.fieldEmailDescriptionKey)),
+      TextDirection.rtl,
+    );
     expect(Directionality.of(invalidErrorContext), TextDirection.rtl);
     expect(
       Localizations.localeOf(invalidErrorContext),
