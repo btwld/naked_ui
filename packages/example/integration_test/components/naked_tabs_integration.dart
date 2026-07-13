@@ -130,12 +130,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // Test hover state
-      await tester.simulateHover(
-        tabKey,
-        onHover: () {
-          expect(isHovered, isTrue);
-        },
-      );
+      await tester.simulateHover(tabKey, until: () => isHovered);
 
       // Test focus state
       focusNode.requestFocus();

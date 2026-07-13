@@ -237,12 +237,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // Test hover state
-      await tester.simulateHover(
-        itemKey,
-        onHover: () {
-          expect(isHovered, isTrue);
-        },
-      );
+      await tester.simulateHover(itemKey, until: () => isHovered);
 
       // Test press state
       await tester.simulatePress(

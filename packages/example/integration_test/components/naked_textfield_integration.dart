@@ -147,12 +147,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // Test hover state
-      await tester.simulateHover(
-        textFieldKey,
-        onHover: () {
-          expect(isHovered, isTrue);
-        },
-      );
+      await tester.simulateHover(textFieldKey, until: () => isHovered);
 
       // Test basic tap interaction works
       await tester.tap(find.byKey(textFieldKey));

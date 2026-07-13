@@ -117,12 +117,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // Test hover state
-      await tester.simulateHover(
-        buttonKey,
-        onHover: () {
-          expect(isHovered, isTrue);
-        },
-      );
+      await tester.simulateHover(buttonKey, until: () => isHovered);
 
       // Test press state
       await tester.simulatePress(
@@ -318,12 +313,7 @@ void main() {
       expect(find.text('Builder Button'), findsOneWidget);
 
       // Test that builder updates with state changes
-      await tester.simulateHover(
-        buttonKey,
-        onHover: () {
-          expect(isHovered, isTrue);
-        },
-      );
+      await tester.simulateHover(buttonKey, until: () => isHovered);
 
       await tester.simulatePress(
         buttonKey,

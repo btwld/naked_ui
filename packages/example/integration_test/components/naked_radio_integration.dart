@@ -118,12 +118,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // Test hover state
-      await tester.simulateHover(
-        radioKey,
-        onHover: () {
-          expect(isHovered, isTrue);
-        },
-      );
+      await tester.simulateHover(radioKey, until: () => isHovered);
 
       // Test press state
       await tester.simulatePress(
@@ -365,12 +360,7 @@ void main() {
       expect(isSelected, isFalse);
 
       // Test hover state updates builder
-      await tester.simulateHover(
-        radioKey,
-        onHover: () {
-          expect(isHovered, isTrue);
-        },
-      );
+      await tester.simulateHover(radioKey, until: () => isHovered);
 
       // Tap to select - builder should update
       await tester.tap(radioFinder);

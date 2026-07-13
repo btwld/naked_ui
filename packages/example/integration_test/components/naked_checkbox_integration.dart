@@ -96,12 +96,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // Test hover state
-      await tester.simulateHover(
-        checkboxKey,
-        onHover: () {
-          expect(isHovered, isTrue);
-        },
-      );
+      await tester.simulateHover(checkboxKey, until: () => isHovered);
 
       // Test press state
       await tester.simulatePress(
@@ -330,12 +325,7 @@ void main() {
       expect(find.byIcon(Icons.check), findsNothing);
 
       // Test hover state updates builder
-      await tester.simulateHover(
-        checkboxKey,
-        onHover: () {
-          expect(isHovered, isTrue);
-        },
-      );
+      await tester.simulateHover(checkboxKey, until: () => isHovered);
 
       // Tap to check - builder should update
       await tester.tap(checkboxFinder);

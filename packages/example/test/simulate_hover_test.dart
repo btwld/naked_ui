@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -5,6 +7,23 @@ import 'package:flutter_test/flutter_test.dart';
 import '../integration_test/helpers/simulate_hover.dart';
 
 void main() {
+  testWidgets('simulateHover waits for the observable hover state', (
+    tester,
+  ) async {
+    const targetKey = ValueKey('delayed-hover-target');
+    var hovered = false;
+
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Scaffold(body: SizedBox(key: targetKey, width: 40, height: 40)),
+      ),
+    );
+    Timer(const Duration(milliseconds: 48), () => hovered = true);
+
+    await tester.simulateHover(targetKey, until: () => hovered);
+    expect(hovered, isTrue);
+  });
+
   testWidgets('simulateHover propagates pointer cleanup failures', (
     tester,
   ) async {
