@@ -394,6 +394,14 @@ checked in unchanged with SHA-256
 `710c58b7debc2bf86de9d6ebdec0ce46abe12c1725347f6a6b4ba11f07296724`;
 the final exact-head CI comparison remains required.
 
+Hosted Android behavior passed on API 34, but visual review rejected its first
+destructive-result screenshot because Flutter's live-test pointer crosshair
+obscured part of the result. Pinned Flutter uses a two-frame post-up pointer
+decay; the capture helper had painted only the expiring frame. The helper now
+paints two exact zero-duration frames before capture so the pointer record is
+removed and a clean frame is rendered. This is deterministic frame control,
+not a sleep or retry. Fresh API 34 evidence is required on the next exact head.
+
 ## Verification and publication gates
 
 Focused development:
