@@ -49,9 +49,14 @@ Widget _toggleGroupScreenshotApp({
   Axis orientation = Axis.horizontal,
   TextDirection textDirection = TextDirection.ltr,
   bool disableMiddleOption = false,
+  TextScaler textScaler = TextScaler.noScaling,
 }) {
   return MaterialApp(
     debugShowCheckedModeBanner: false,
+    builder: (context, child) => MediaQuery(
+      data: MediaQuery.of(context).copyWith(textScaler: textScaler),
+      child: child!,
+    ),
     home: Scaffold(
       backgroundColor: const Color(0xFFF7F7F7),
       body: Center(
@@ -317,6 +322,7 @@ void main() {
         child: _toggleGroupScreenshotApp(
           orientation: Axis.vertical,
           disableMiddleOption: true,
+          textScaler: const TextScaler.linear(2),
         ),
       ),
     );
@@ -338,6 +344,12 @@ void main() {
     expect(italicOption.focusNode!.canRequestFocus, isFalse);
     expect(underlineOption.focusNode!.hasPrimaryFocus, isTrue);
     expect(find.text('Selected: Bold'), findsOneWidget);
+    expect(
+      MediaQuery.textScalerOf(
+        tester.element(find.byKey(const Key('toggle-group.root'))),
+      ).scale(10),
+      20,
+    );
     if (!Platform.isAndroid) return;
 
     final screenshotSurface = find.byKey(screenshotSurfaceKey);
@@ -349,6 +361,7 @@ void main() {
         scenario: 'vertical_disabled',
         surface: '${logicalSize.width}x${logicalSize.height} logical pixels',
         devicePixelRatio: tester.view.devicePixelRatio,
+        textScale: 2,
         animationMode: '120ms focus transition, settled',
       ),
       surface: screenshotSurface,

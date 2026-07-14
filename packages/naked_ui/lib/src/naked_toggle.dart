@@ -429,14 +429,44 @@ class _ToggleScope<T> extends InheritedWidget {
 }
 
 class _ToggleGroupEntry<T> {
-  _ToggleGroupEntry(this.owner);
+  _ToggleGroupEntry(this.owner) {
+    syncExternalFocusNode();
+  }
 
   final _NakedToggleOptionState<T> owner;
   late T value;
   var effectiveEnabled = false;
   var autofocus = false;
+  FocusNode? _managedExternalFocusNode;
+  ({bool canRequestFocus, bool skipTraversal})? _originalExternalProperties;
 
   FocusNode get focusNode => owner.effectiveFocusNode;
+
+  void syncExternalFocusNode() {
+    final externalFocusNode = owner.widget.focusNode;
+    if (identical(externalFocusNode, _managedExternalFocusNode)) return;
+
+    restoreExternalFocusNode();
+    if (externalFocusNode == null) return;
+
+    _managedExternalFocusNode = externalFocusNode;
+    _originalExternalProperties = (
+      canRequestFocus: externalFocusNode.canRequestFocus,
+      skipTraversal: externalFocusNode.skipTraversal,
+    );
+  }
+
+  void restoreExternalFocusNode() {
+    final externalFocusNode = _managedExternalFocusNode;
+    final originalProperties = _originalExternalProperties;
+    if (externalFocusNode != null && originalProperties != null) {
+      externalFocusNode
+        ..canRequestFocus = originalProperties.canRequestFocus
+        ..skipTraversal = originalProperties.skipTraversal;
+    }
+    _managedExternalFocusNode = null;
+    _originalExternalProperties = null;
+  }
 }
 
 class _ToggleGroupController<T> {
@@ -483,6 +513,7 @@ class _ToggleGroupController<T> {
 
     _entries.remove(entry);
     _orderedEntries.remove(entry);
+    entry.restoreExternalFocusNode();
     if (identical(_target, entry)) _target = null;
     if (identical(_lastFocused, entry)) _lastFocused = null;
     if (identical(_focusedEntry, entry)) _focusedEntry = null;
@@ -514,6 +545,7 @@ class _ToggleGroupController<T> {
     required bool effectiveEnabled,
     required bool autofocus,
   }) {
+    entry.syncExternalFocusNode();
     final wasEnabled = entry.effectiveEnabled;
     final wasFocused =
         entry.focusNode.hasFocus || identical(_focusedEntry, entry);
@@ -680,6 +712,7 @@ class _ToggleGroupController<T> {
   }
 
   void _applyFocusability(_ToggleGroupEntry<T> entry) {
+    entry.syncExternalFocusNode();
     final isEnabled = _enabled && entry.effectiveEnabled;
     entry.focusNode
       ..canRequestFocus = isEnabled
@@ -701,24 +734,11 @@ class _ToggleGroupController<T> {
           (entry) => entry.owner.mounted && entry.focusNode.context != null,
         )
         .toList();
-    attachedEntries.sort((a, b) {
-      final aRect = a.focusNode.rect;
-      final bRect = b.focusNode.rect;
-      if (_orientation == Axis.vertical) {
-        final vertical = aRect.top.compareTo(bRect.top);
-        if (vertical != 0) return vertical;
-      } else {
-        final horizontal = _textDirection == TextDirection.ltr
-            ? aRect.left.compareTo(bRect.left)
-            : bRect.right.compareTo(aRect.right);
-        if (horizontal != 0) return horizontal;
-      }
-      return _entries.indexOf(a).compareTo(_entries.indexOf(b));
-    });
+    final visualEntries = _sortInVisualOrder(attachedEntries);
 
     _orderedEntries
       ..clear()
-      ..addAll(attachedEntries);
+      ..addAll(visualEntries);
 
     final pendingFocusRepair = _pendingFocusRepair;
     _pendingFocusRepair = null;
@@ -737,16 +757,88 @@ class _ToggleGroupController<T> {
       _choosePriorityTarget();
     }
 
-    if (!_autofocusHandled &&
-        _target != null &&
-        _entries.any((entry) => entry.autofocus)) {
+    if (!_autofocusHandled && _entries.any((entry) => entry.autofocus)) {
       _autofocusHandled = true;
-      FocusScope.of(_target!.owner.context).autofocus(_target!.focusNode);
+      final autofocusEntry = _orderedEntries
+          .where((entry) => entry.autofocus && entry.effectiveEnabled)
+          .firstOrNull;
+      if (autofocusEntry != null) {
+        _setTarget(autofocusEntry);
+        FocusScope.of(
+          autofocusEntry.owner.context,
+        ).autofocus(autofocusEntry.focusNode);
+      }
     }
+  }
+
+  List<_ToggleGroupEntry<T>> _sortInVisualOrder(
+    List<_ToggleGroupEntry<T>> entries,
+  ) {
+    if (entries.length < 2) return entries;
+
+    final crossAxisSorted = [...entries]
+      ..sort((a, b) {
+        final aRect = a.focusNode.rect;
+        final bRect = b.focusNode.rect;
+        final crossAxisComparison = _compareCrossAxis(aRect, bRect);
+        if (crossAxisComparison != 0) return crossAxisComparison;
+        return _entries.indexOf(a).compareTo(_entries.indexOf(b));
+      });
+
+    final runs = <List<_ToggleGroupEntry<T>>>[];
+    var currentRun = <_ToggleGroupEntry<T>>[];
+    var runCrossAxisEnd = double.negativeInfinity;
+    for (final entry in crossAxisSorted) {
+      final bounds = _crossAxisBounds(entry.focusNode.rect);
+      if (currentRun.isNotEmpty && bounds.start >= runCrossAxisEnd) {
+        runs.add(currentRun);
+        currentRun = <_ToggleGroupEntry<T>>[];
+        runCrossAxisEnd = double.negativeInfinity;
+      }
+      currentRun.add(entry);
+      if (bounds.end > runCrossAxisEnd) runCrossAxisEnd = bounds.end;
+    }
+    if (currentRun.isNotEmpty) runs.add(currentRun);
+
+    for (final run in runs) {
+      run.sort((a, b) {
+        final aRect = a.focusNode.rect;
+        final bRect = b.focusNode.rect;
+        final primaryAxisComparison = _comparePrimaryAxis(aRect, bRect);
+        if (primaryAxisComparison != 0) return primaryAxisComparison;
+        return _entries.indexOf(a).compareTo(_entries.indexOf(b));
+      });
+    }
+    return [for (final run in runs) ...run];
+  }
+
+  int _compareHorizontal(Rect a, Rect b) => _textDirection == TextDirection.ltr
+      ? a.left.compareTo(b.left)
+      : b.right.compareTo(a.right);
+
+  int _compareCrossAxis(Rect a, Rect b) => _orientation == Axis.horizontal
+      ? a.top.compareTo(b.top)
+      : _compareHorizontal(a, b);
+
+  int _comparePrimaryAxis(Rect a, Rect b) => _orientation == Axis.horizontal
+      ? _compareHorizontal(a, b)
+      : a.top.compareTo(b.top);
+
+  ({double start, double end}) _crossAxisBounds(Rect rect) {
+    if (_orientation == Axis.horizontal) {
+      return (start: rect.top, end: rect.bottom);
+    }
+    if (_textDirection == TextDirection.ltr) {
+      return (start: rect.left, end: rect.right);
+    }
+    return (start: -rect.right, end: -rect.left);
   }
 
   void dispose() {
     _disposed = true;
+    for (final entry in _entries) {
+      entry.restoreExternalFocusNode();
+    }
     _entries.clear();
     _orderedEntries.clear();
     _target = null;
@@ -1035,6 +1127,7 @@ class _NakedToggleOptionState<T> extends State<NakedToggleOption<T>>
       autofocus: false,
       canRequestFocus: isEnabled,
       skipTraversal: !scope.controller.isRovingTarget(entry),
+      descendantsAreTraversable: false,
       onFocusChange: (f) {
         scope.controller.handleFocusChange(entry, f);
         updateFocusState(f, widget.onFocusChange);

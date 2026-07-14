@@ -71,12 +71,15 @@ void main() {
       ).artifactNameFor('macos'),
       'toggle_group__roving_rtl__macos__reference.png',
     );
+    final verticalDisabled = ScreenshotEvidence(
+      component: 'toggle_group',
+      scenario: 'vertical_disabled',
+      textScale: 2,
+    );
     expect(
-      ScreenshotEvidence(
-        component: 'toggle_group',
-        scenario: 'vertical_disabled',
-      ).artifactNameFor('android'),
+      verticalDisabled.artifactNameFor('android'),
       'toggle_group__vertical_disabled__android__reference.png',
     );
+    expect(verticalDisabled.manifestEntryFor('android')['textScale'], 2.0);
   });
 }

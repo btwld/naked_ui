@@ -534,6 +534,48 @@ void main() {
       expect(optionB.hasFocus, isFalse);
     });
 
+    testWidgets('option descendants do not add a Tab stop', (tester) async {
+      final before = FocusNode(debugLabel: 'before');
+      final option = FocusNode(debugLabel: 'option');
+      final descendant = FocusNode(debugLabel: 'option descendant');
+      final after = FocusNode(debugLabel: 'after');
+      for (final node in [before, option, descendant, after]) {
+        addTearDown(node.dispose);
+      }
+
+      await tester.pumpMaterialWidget(
+        Column(
+          children: [
+            Focus(focusNode: before, child: const Text('Before')),
+            NakedToggleGroup<String>(
+              selectedValue: 'a',
+              onChanged: (_) {},
+              child: NakedToggleOption<String>(
+                value: 'a',
+                focusNode: option,
+                child: Focus(
+                  focusNode: descendant,
+                  child: const Text('Focusable content'),
+                ),
+              ),
+            ),
+            Focus(focusNode: after, child: const Text('After')),
+          ],
+        ),
+      );
+
+      before.requestFocus();
+      await tester.pump();
+      await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+      await tester.pump();
+      expect(option.hasPrimaryFocus, isTrue);
+
+      await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+      await tester.pump();
+      expect(after.hasPrimaryFocus, isTrue);
+      expect(descendant.hasFocus, isFalse);
+    });
+
     testWidgets('enters on the selected enabled option', (tester) async {
       final before = FocusNode(debugLabel: 'before');
       final optionA = FocusNode(debugLabel: 'option A');
@@ -1082,6 +1124,67 @@ void main() {
       expect(FocusManager.instance.primaryFocus, same(nodes['d']));
     });
 
+    for (final orientation in Axis.values) {
+      for (final textDirection in TextDirection.values) {
+        testWidgets('follows wrapped ${orientation.name} visual order in '
+            '${textDirection.name}', (tester) async {
+          final nodes = {
+            for (final value in ['a', 'b', 'c', 'd'])
+              value: FocusNode(debugLabel: 'option $value'),
+          };
+          for (final node in nodes.values) {
+            addTearDown(node.dispose);
+          }
+
+          await tester.pumpMaterialWidget(
+            Directionality(
+              textDirection: textDirection,
+              child: SizedBox(
+                width: orientation == Axis.horizontal ? 110 : 120,
+                height: orientation == Axis.horizontal ? 80 : 65,
+                child: NakedToggleGroup<String>(
+                  selectedValue: 'a',
+                  onChanged: (_) {},
+                  orientation: orientation,
+                  child: Wrap(
+                    direction: orientation,
+                    children: [
+                      for (final value in ['a', 'b', 'c', 'd'])
+                        NakedToggleOption<String>(
+                          value: value,
+                          focusNode: nodes[value],
+                          child: SizedBox(
+                            width: 50,
+                            height: 30,
+                            child: Text(value.toUpperCase()),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          );
+
+          nodes['a']!.requestFocus();
+          await tester.pump();
+          final forwardKey = switch ((orientation, textDirection)) {
+            (Axis.vertical, _) => LogicalKeyboardKey.arrowDown,
+            (Axis.horizontal, TextDirection.ltr) =>
+              LogicalKeyboardKey.arrowRight,
+            (Axis.horizontal, TextDirection.rtl) =>
+              LogicalKeyboardKey.arrowLeft,
+          };
+          await tester.sendKeyEvent(forwardKey);
+          await tester.pump();
+          expect(FocusManager.instance.primaryFocus, same(nodes['b']));
+          await tester.sendKeyEvent(forwardKey);
+          await tester.pump();
+          expect(FocusManager.instance.primaryFocus, same(nodes['c']));
+        });
+      }
+    }
+
     testWidgets('repairs focused removal to successor then predecessor', (
       tester,
     ) async {
@@ -1407,7 +1510,59 @@ void main() {
       newNode.removeListener(listener);
     });
 
-    testWidgets('autofocus resolves to the enabled roving target', (
+    testWidgets('restores caller-owned focus node properties', (tester) async {
+      final oldNode = FocusNode(
+        debugLabel: 'old option node',
+        canRequestFocus: false,
+        skipTraversal: true,
+      );
+      final newNode = FocusNode(
+        debugLabel: 'new option node',
+        canRequestFocus: true,
+        skipTraversal: true,
+      );
+      addTearDown(oldNode.dispose);
+      addTearDown(newNode.dispose);
+      var focusNode = oldNode;
+      var showGroup = true;
+      late StateSetter rebuild;
+
+      await tester.pumpMaterialWidget(
+        StatefulBuilder(
+          builder: (context, setState) {
+            rebuild = setState;
+            return showGroup
+                ? NakedToggleGroup<String>(
+                    selectedValue: 'a',
+                    onChanged: (_) {},
+                    child: NakedToggleOption<String>(
+                      value: 'a',
+                      focusNode: focusNode,
+                      child: const Text('A'),
+                    ),
+                  )
+                : const SizedBox();
+          },
+        ),
+      );
+
+      expect(oldNode.canRequestFocus, isTrue);
+      expect(oldNode.skipTraversal, isFalse);
+
+      rebuild(() => focusNode = newNode);
+      await tester.pump();
+      expect(oldNode.canRequestFocus, isFalse);
+      expect(oldNode.skipTraversal, isTrue);
+      expect(newNode.canRequestFocus, isTrue);
+      expect(newNode.skipTraversal, isFalse);
+
+      rebuild(() => showGroup = false);
+      await tester.pump();
+      expect(newNode.canRequestFocus, isTrue);
+      expect(newNode.skipTraversal, isTrue);
+    });
+
+    testWidgets('autofocus targets the requesting enabled option', (
       tester,
     ) async {
       final optionA = FocusNode(debugLabel: 'option A');
@@ -1438,8 +1593,44 @@ void main() {
       );
       await tester.pump();
 
-      expect(optionB.hasPrimaryFocus, isTrue);
+      expect(optionA.hasPrimaryFocus, isTrue);
+      expect(optionB.hasFocus, isFalse);
+    });
+
+    testWidgets('disabled autofocus does not focus another option', (
+      tester,
+    ) async {
+      final optionA = FocusNode(debugLabel: 'disabled option A');
+      final optionB = FocusNode(debugLabel: 'selected option B');
+      addTearDown(optionA.dispose);
+      addTearDown(optionB.dispose);
+
+      await tester.pumpMaterialWidget(
+        NakedToggleGroup<String>(
+          selectedValue: 'b',
+          onChanged: (_) {},
+          child: Row(
+            children: [
+              NakedToggleOption<String>(
+                value: 'a',
+                enabled: false,
+                autofocus: true,
+                focusNode: optionA,
+                child: const Text('A'),
+              ),
+              NakedToggleOption<String>(
+                value: 'b',
+                focusNode: optionB,
+                child: const Text('B'),
+              ),
+            ],
+          ),
+        ),
+      );
+      await tester.pump();
+
       expect(optionA.hasFocus, isFalse);
+      expect(optionB.hasFocus, isFalse);
     });
 
     testWidgets('preserves option builder and interaction callbacks', (
