@@ -1,0 +1,191 @@
+---
+title: NakedField
+description: Semantic field metadata and state for one primary text control
+keywords: [flutter, field, form, validation, accessibility, headless]
+---
+
+`NakedField` coordinates the label, description, error, validation semantics,
+and effective interaction state for one primary `NakedTextField`. It does not
+own the value or decide when that value is valid.
+
+<Info>
+  See the complete email example in [`example/lib/api/naked_field.0.dart`](https://github.com/btwld/naked_ui/blob/main/example/lib/api/naked_field.0.dart).
+</Info>
+
+## Field or standalone TextField?
+
+| Use | Choose |
+| --- | --- |
+| A form control with a visible label, description, error, required state, or controlled validation result | `NakedField` containing one `NakedTextField` |
+| A standalone search box, editor, or other input whose metadata can live directly on the control | `NakedTextField` by itself |
+
+A standalone `NakedTextField` continues to support `semanticLabel`,
+`semanticHint`, `semanticErrorText`, `isRequired`, and `validationResult`.
+Wrapping it in a `NakedField` adds coordinated visible helpers, label-to-focus
+behavior, and a field-level builder state.
+
+## Basic implementation
+
+Validation is application policy. Keep the controller, submission state, and
+validation function in your form or state-management layer, then pass the
+result into `NakedField`.
+
+```dart
+import 'dart:ui' show SemanticsValidationResult;
+
+import 'package:flutter/material.dart';
+import 'package:naked_ui/naked_ui.dart';
+
+class EmailField extends StatefulWidget {
+  const EmailField({super.key});
+
+  @override
+  State<EmailField> createState() => _EmailFieldState();
+}
+
+class _EmailFieldState extends State<EmailField> {
+  final controller = TextEditingController();
+  String? error;
+  bool submitted = false;
+
+  String? validate(String value) {
+    if (value.trim().isEmpty) return 'Enter an email address.';
+    if (!value.contains('@')) return 'Enter a valid email address.';
+    return null;
+  }
+
+  void submit() {
+    setState(() {
+      submitted = true;
+      error = validate(controller.text);
+    });
+  }
+
+  @override
+  void dispose() {
+    controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final validationResult = !submitted
+        ? SemanticsValidationResult.none
+        : error == null
+        ? SemanticsValidationResult.valid
+        : SemanticsValidationResult.invalid;
+
+    return NakedField(
+      label: 'Email address',
+      description: 'Use the address where we can reach you.',
+      errorText: error,
+      isRequired: true,
+      validationResult: validationResult,
+      builder: (context, state, _) {
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const NakedFieldLabel(child: Text('Email address *')),
+            NakedTextField(
+              controller: controller,
+              onChanged: (value) {
+                if (submitted) setState(() => error = validate(value));
+              },
+              onSubmitted: (_) => submit(),
+              builder: (context, _, editable) => editable,
+            ),
+            const NakedFieldDescription(
+              child: Text('Use the address where we can reach you.'),
+            ),
+            if (error != null) NakedFieldError(child: Text(error!)),
+          ],
+        );
+      },
+    );
+  }
+}
+```
+
+`NakedFieldLabel` makes the visible label focus the registered text control.
+`NakedFieldDescription` and `NakedFieldError` keep visible helper text from
+being spoken a second time after it has been associated with that control.
+Provide localized strings directly; Field preserves them verbatim and works
+with the surrounding text direction.
+
+## Canonical metadata precedence
+
+Inside a `NakedField`, the Field is the canonical source for:
+
+- `label`
+- `description`
+- `errorText`
+- `isRequired`
+- `validationResult`
+
+Normally, omit the corresponding `NakedTextField` semantic properties. If a
+property is supplied in both places, identical values are accepted. Conflicts
+assert in debug builds, and the Field value still wins deterministically when
+assertions are disabled.
+
+The canonical metadata is merged onto the native text-field semantics node.
+The visible label, description, and error helpers do not create duplicate
+spoken copies.
+
+## Required and validation semantics
+
+`isRequired` only communicates that a value is required. It does not prevent
+submission or validate input.
+
+`validationResult` is controlled state:
+
+- `SemanticsValidationResult.none` — not evaluated or no result declared
+- `SemanticsValidationResult.invalid` — evaluated and invalid
+- `SemanticsValidationResult.valid` — evaluated and valid
+
+A non-empty `errorText` is discoverable with the control and adds the error
+widget state. A visible error cannot be paired with a `valid` result.
+
+`NakedField` intentionally has no validator callback and owns no `touched`,
+`dirty`, or submission state. Your form decides when to validate, whether to
+validate while typing, and when to clear or replace an error.
+
+## Error announcements
+
+The default `NakedFieldErrorAnnouncement.whenChanged` policy distinguishes
+discoverability from live announcements:
+
+- An error present on the initial build remains discoverable on the text-field
+  semantics node, but is not emitted as a live or alert announcement.
+- A later changed, non-empty error creates one bounded alert announcement.
+- Rebuilding with the same error does not announce it again.
+- Clearing the error removes it without announcing an empty value.
+
+Set `errorAnnouncement: NakedFieldErrorAnnouncement.none` when another layer
+owns error announcements. The error remains discoverable on the control.
+
+## Builder state and interaction
+
+`NakedField.builder` receives a `NakedFieldState` with effective control state:
+
+- `isFocused`, `isFilled`, `isDisabled`, and `isError`
+- `isReadOnly`
+- canonical label, description, error, required, and validation metadata
+
+Field-level `enabled: false` makes the control disabled and non-focusable.
+Field-level `readOnly: true` keeps it enabled and focusable while preventing
+editing. If the nested `NakedTextField` is stricter, the stricter effective
+state wins.
+
+Use one mounted primary `NakedTextField` per `NakedField`. Multiple mounted
+primary controls assert in debug builds.
+
+## Layout and accessibility
+
+- Use flexible widths and wrapping button rows so the field remains usable at
+  200% text scaling.
+- Keep a visible focus indicator and sufficient error contrast in custom
+  builders.
+- Use `NakedFieldLabel`, `NakedFieldDescription`, and `NakedFieldError` only
+  inside their owning Field.
+- Use `excludeSemantics` only when a higher-level widget supplies the complete
+  accessibility contract.

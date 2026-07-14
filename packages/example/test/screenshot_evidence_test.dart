@@ -61,4 +61,34 @@ void main() {
       'alert_dialog__long_message_200_text__macos__reference.png',
     );
   });
+
+  test('Field evidence uses every required native artifact name', () {
+    expect(
+      ScreenshotEvidence(
+        component: 'field',
+        scenario: 'required_invalid',
+      ).artifactNameFor('macos'),
+      'field__required_invalid__macos__reference.png',
+    );
+    final rtlEvidence = ScreenshotEvidence(
+      component: 'field',
+      scenario: 'rtl',
+      locale: 'en-US',
+      direction: 'RTL',
+    );
+    expect(
+      rtlEvidence.artifactNameFor('macos'),
+      'field__rtl__macos__reference.png',
+    );
+    expect(rtlEvidence.manifestEntryFor('macos')['locale'], 'en-US');
+    expect(rtlEvidence.manifestEntryFor('macos')['direction'], 'RTL');
+    expect(
+      ScreenshotEvidence(
+        component: 'field',
+        scenario: 'disabled_readonly_200',
+        textScale: 2,
+      ).artifactNameFor('android'),
+      'field__disabled_readonly_200__android__reference.png',
+    );
+  });
 }

@@ -9,6 +9,8 @@ import 'api/naked_button.1.dart' as button_builder_example;
 import 'api/naked_checkbox.0.dart' as checkbox_basic_example;
 // Dialog
 import 'api/naked_dialog.0.dart' as dialog_basic_example;
+// Field
+import 'api/naked_field.0.dart' as field_example;
 // Menu
 import 'api/naked_menu.0.dart' as menu_example;
 // Popover
@@ -130,6 +132,15 @@ class DemoRegistry {
       sourceUrl:
           'https://github.com/btwld/naked_ui/blob/main/example/lib/api/naked_slider.0.dart',
       tags: ['slider'],
+    ),
+    Demo(
+      id: 'field-email',
+      title: 'Field – Email Validation',
+      category: 'Field',
+      builder: (_) => const field_example.FieldExample(),
+      sourceUrl:
+          'https://github.com/btwld/naked_ui/blob/main/example/lib/api/naked_field.0.dart',
+      tags: ['field', 'textfield', 'validation', 'semantics'],
     ),
     Demo(
       id: 'textfield-basic',

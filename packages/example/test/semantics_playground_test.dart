@@ -188,8 +188,8 @@ void main() {
         .getSemanticsData();
     expect(
       overrideTfData.flagsCollection.isLiveRegion,
-      isTrue,
-      reason: 'override text field error should be announced as live',
+      isFalse,
+      reason: 'an initial text field error is discoverable but not live',
     );
     expect(
       overrideTfData.hint,

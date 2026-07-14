@@ -7,6 +7,41 @@ import 'package:flutter_test/flutter_test.dart';
 
 typedef SemanticsPredicate = bool Function(SemanticsNode node);
 
+/// Records alert labels when they are introduced in completed semantics
+/// updates, after the update has already been sent to the platform.
+class AlertSemanticsUpdateRecorder {
+  AlertSemanticsUpdateRecorder(WidgetTester tester)
+    : _owner = tester.binding.renderViews.single.owner!.semanticsOwner! {
+    _owner.addListener(_recordUpdate);
+  }
+
+  final SemanticsOwner _owner;
+  final List<String> introducedLabels = <String>[];
+  Map<int, String> _previousAlerts = <int, String>{};
+
+  void _recordUpdate() {
+    final currentAlerts = <int, String>{};
+    final root = _owner.rootSemanticsNode;
+    if (root != null) {
+      for (final node in collectSemanticsNodes(
+        root,
+        (node) => node.getSemanticsData().role == SemanticsRole.alert,
+      )) {
+        currentAlerts[node.id] = node.getSemanticsData().label;
+      }
+    }
+
+    for (final entry in currentAlerts.entries) {
+      if (_previousAlerts[entry.key] != entry.value) {
+        introducedLabels.add(entry.value);
+      }
+    }
+    _previousAlerts = currentAlerts;
+  }
+
+  void dispose() => _owner.removeListener(_recordUpdate);
+}
+
 /// Minimal control kinds supported for parity comparisons
 enum ControlType { button, checkbox, radio, slider, textField, toggle, tab }
 
@@ -407,6 +442,17 @@ Future<T> withSemantics<T>(
   } finally {
     handle.dispose();
   }
+}
+
+/// Declares a widget test with semantics enabled for the callback's lifetime.
+void testWidgetsWithSemantics(
+  String description,
+  WidgetTesterCallback callback,
+) {
+  testWidgets(
+    description,
+    (tester) => withSemantics(tester, () => callback(tester)),
+  );
 }
 
 String? _normalizeLabel(String raw) {

@@ -9,6 +9,17 @@
   closed-loop traversal, and caller-owned focus-node handling. Dismissible
   barriers require a non-empty localized label. Existing `NakedDialog` and
   `showNakedDialog` defaults remain unchanged.
+- Add `NakedField`, a text-field-first semantic scope that coordinates one
+  primary `NakedTextField` with canonical label, description, error, required,
+  validation, enabled, and read-only metadata; visible label, description, and
+  error helpers; label-to-focus behavior; and effective builder state.
+
+### Fixes and hardening
+
+- D-09 (intentional correction): an error present on the initial build remains
+  discoverable on the text-field semantics node but is no longer emitted as a
+  live announcement. Later changed non-empty errors announce once, while
+  unchanged rebuilds do not repeat them.
 
 ## 1.0.0-beta.3
 

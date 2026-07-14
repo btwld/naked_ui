@@ -6,6 +6,8 @@
 // - Non-brittle spellcheck/magnifier checks
 // - Covers lifecycle, editing, selection, semantics, restoration, etc.
 
+import 'dart:ui' show SemanticsValidationResult;
+
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -363,6 +365,33 @@ void main() {
       },
     );
 
+    testWidgets(
+      'standalone disabled field remains programmatically focusable in '
+      'directional navigation mode',
+      (tester) async {
+        final node = FocusNode();
+        addTearDown(node.dispose);
+
+        await _pumpApp(
+          tester,
+          child: MediaQuery(
+            data: const MediaQueryData(
+              navigationMode: NavigationMode.directional,
+            ),
+            child: NakedTextField(
+              enabled: false,
+              focusNode: node,
+              builder: _builder(),
+            ),
+          ),
+        );
+
+        node.requestFocus();
+        await tester.pump();
+        expect(node.hasFocus, isTrue);
+      },
+    );
+
     testWidgets('focus survives swapping from external to internal node', (
       tester,
     ) async {
@@ -526,7 +555,19 @@ void main() {
     });
   });
 
-  group('Semantics', () {});
+  group('Semantics', () {
+    test('rejects a visible error with a valid result', () {
+      expect(
+        () => NakedTextField(
+          error: true,
+          semanticErrorText: 'Invalid email',
+          validationResult: SemanticsValidationResult.valid,
+          builder: _builder(),
+        ),
+        throwsAssertionError,
+      );
+    });
+  });
 
   group('Restoration & ownership', () {
     testWidgets('internal RestorableTextEditingController restores text', (
