@@ -181,6 +181,31 @@ void main() {
   });
 
   group('NakedField control registration', () {
+    testWidgets('builder-created control settles after initial registration', (
+      tester,
+    ) async {
+      var fieldBuilds = 0;
+
+      await tester.pumpWidget(
+        _testApp(
+          NakedField(
+            label: 'Email',
+            builder: (context, state, child) {
+              fieldBuilds++;
+              return _textField();
+            },
+          ),
+        ),
+      );
+      await tester.pump();
+
+      final settledBuilds = fieldBuilds;
+      expect(tester.binding.hasScheduledFrame, isFalse);
+
+      await tester.pump();
+      expect(fieldBuilds, settledBuilds);
+    });
+
     testWidgets('label focuses the mounted enabled text field', (tester) async {
       final focusNode = FocusNode();
       addTearDown(focusNode.dispose);

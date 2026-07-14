@@ -116,6 +116,20 @@ String _stateText(WidgetTester tester) {
       '';
 }
 
+void _testWidgetsWithSemantics(
+  String description,
+  WidgetTesterCallback callback,
+) {
+  testWidgets(description, (tester) async {
+    final semantics = tester.ensureSemantics();
+    try {
+      await callback(tester);
+    } finally {
+      semantics.dispose();
+    }
+  });
+}
+
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
@@ -242,13 +256,12 @@ void main() {
         data = _textFieldNode(tester).getSemanticsData();
         expect(data.validationResult, SemanticsValidationResult.none);
         expect(_stateText(tester), contains('empty'));
-        announcements.dispose();
       },
     );
 
-    testWidgets('disabled and read-only remain distinct', (tester) async {
-      final semantics = tester.ensureSemantics();
-
+    _testWidgetsWithSemantics('disabled and read-only remain distinct', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         _testApp(
           const field_example.FieldExample(
@@ -298,43 +311,43 @@ void main() {
       await tester.enterText(_editable, 'changed@example.com');
       await tester.pump();
       expect(editable.controller.text, 'person@example.com');
-      semantics.dispose();
     });
 
-    testWidgets('RTL fixture keeps localized metadata canonical', (
-      tester,
-    ) async {
-      final semantics = tester.ensureSemantics();
+    _testWidgetsWithSemantics(
+      'RTL fixture keeps localized metadata canonical',
+      (tester) async {
+        const label = 'البريد الإلكتروني';
+        const description = 'أدخل عنوان بريد يمكننا الوصول إليه.';
+        const invalidError = 'أدخل عنوان بريد إلكتروني صالحًا.';
 
-      const label = 'البريد الإلكتروني';
-      const description = 'أدخل عنوان بريد يمكننا الوصول إليه.';
-      const invalidError = 'أدخل عنوان بريد إلكتروني صالحًا.';
-
-      await tester.pumpWidget(
-        _testApp(
-          const field_example.FieldExample(
-            label: label,
-            description: description,
-            requiredError: 'أدخل عنوان بريد إلكتروني.',
-            invalidError: invalidError,
+        await tester.pumpWidget(
+          _testApp(
+            const field_example.FieldExample(
+              label: label,
+              description: description,
+              requiredError: 'أدخل عنوان بريد إلكتروني.',
+              invalidError: invalidError,
+            ),
+            textDirection: TextDirection.rtl,
           ),
-          textDirection: TextDirection.rtl,
-        ),
-      );
-      await tester.pump();
+        );
+        await tester.pump();
 
-      expect(Directionality.of(tester.element(_control)), TextDirection.rtl);
-      await tester.enterText(_editable, 'غير صالح');
-      await tester.tap(find.byKey(field_example.fieldEmailSubmitKey));
-      await tester.pump();
+        expect(Directionality.of(tester.element(_control)), TextDirection.rtl);
+        await tester.enterText(_editable, 'غير صالح');
+        await tester.tap(find.byKey(field_example.fieldEmailSubmitKey));
+        await tester.pump();
 
-      final data = _textFieldNode(tester).getSemanticsData();
-      expect(data.label, label);
-      expect(data.hint, '$description\n$invalidError');
-      expect(data.validationResult, SemanticsValidationResult.invalid);
-      expect(_alertNodes(tester).single.getSemanticsData().label, invalidError);
-      semantics.dispose();
-    });
+        final data = _textFieldNode(tester).getSemanticsData();
+        expect(data.label, label);
+        expect(data.hint, '$description\n$invalidError');
+        expect(data.validationResult, SemanticsValidationResult.invalid);
+        expect(
+          _alertNodes(tester).single.getSemanticsData().label,
+          invalidError,
+        );
+      },
+    );
 
     testWidgets('fixture remains usable with 200 percent text', (tester) async {
       await tester.pumpWidget(

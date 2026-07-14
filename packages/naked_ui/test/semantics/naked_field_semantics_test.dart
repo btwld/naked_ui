@@ -54,186 +54,180 @@ List<SemanticsNode> _alertNodes(WidgetTester tester) {
 
 void main() {
   group('NakedField semantics', () {
-    testWidgets('metadata lands once on the native text-field node', (
-      tester,
-    ) async {
-      final handle = tester.ensureSemantics();
-
-      await tester.pumpWidget(
-        _testApp(
-          NakedField(
-            label: 'Email',
-            description: 'Work address',
-            errorText: 'Invalid email',
-            isRequired: true,
-            validationResult: SemanticsValidationResult.invalid,
-            child: Column(
-              children: [
-                const NakedFieldLabel(child: Text('Email')),
-                const NakedFieldDescription(child: Text('Work address')),
-                _textField(
-                  semanticLabel: 'Email',
-                  semanticHint: 'Work address',
-                  semanticErrorText: 'Invalid email',
-                  error: true,
-                  isRequired: true,
-                  validationResult: SemanticsValidationResult.invalid,
-                ),
-                const NakedFieldError(child: Text('Invalid email')),
-              ],
+    testWidgetsWithSemantics(
+      'metadata lands once on the native text-field node',
+      (tester) async {
+        await tester.pumpWidget(
+          _testApp(
+            NakedField(
+              label: 'Email',
+              description: 'Work address',
+              errorText: 'Invalid email',
+              isRequired: true,
+              validationResult: SemanticsValidationResult.invalid,
+              child: Column(
+                children: [
+                  const NakedFieldLabel(child: Text('Email')),
+                  const NakedFieldDescription(child: Text('Work address')),
+                  _textField(
+                    semanticLabel: 'Email',
+                    semanticHint: 'Work address',
+                    semanticErrorText: 'Invalid email',
+                    error: true,
+                    isRequired: true,
+                    validationResult: SemanticsValidationResult.invalid,
+                  ),
+                  const NakedFieldError(child: Text('Invalid email')),
+                ],
+              ),
             ),
           ),
-        ),
-      );
-      await tester.tap(find.byType(EditableText));
-      await tester.pump();
+        );
+        await tester.tap(find.byType(EditableText));
+        await tester.pump();
 
-      final textFields = _textFieldNodes(tester);
-      expect(textFields, hasLength(1));
-      final data = textFields.single.getSemanticsData();
-      expect(data.label, 'Email');
-      expect(data.hint, 'Work address\nInvalid email');
-      expect(data.flagsCollection.isRequired, Tristate.isTrue);
-      expect(data.validationResult, SemanticsValidationResult.invalid);
-      expect(data.flagsCollection.isLiveRegion, isFalse);
-      expect(data.hasAction(SemanticsAction.setText), isTrue);
-      expect(data.hasAction(SemanticsAction.setSelection), isTrue);
-      expect(data.hasAction(SemanticsAction.tap), isTrue);
-      expect(_alertNodes(tester), isEmpty);
+        final textFields = _textFieldNodes(tester);
+        expect(textFields, hasLength(1));
+        final data = textFields.single.getSemanticsData();
+        expect(data.label, 'Email');
+        expect(data.hint, 'Work address\nInvalid email');
+        expect(data.flagsCollection.isRequired, Tristate.isTrue);
+        expect(data.validationResult, SemanticsValidationResult.invalid);
+        expect(data.flagsCollection.isLiveRegion, isFalse);
+        expect(data.hasAction(SemanticsAction.setText), isTrue);
+        expect(data.hasAction(SemanticsAction.setSelection), isTrue);
+        expect(data.hasAction(SemanticsAction.tap), isTrue);
+        expect(_alertNodes(tester), isEmpty);
 
-      expect(
-        _nodes(tester).where((node) {
-          final nodeData = node.getSemanticsData();
-          return nodeData.label == 'Email' ||
-              nodeData.hint.contains('Work address') ||
-              nodeData.hint.contains('Invalid email');
-        }),
-        hasLength(1),
-      );
-      handle.dispose();
-    });
+        expect(
+          _nodes(tester).where((node) {
+            final nodeData = node.getSemanticsData();
+            return nodeData.label == 'Email' ||
+                nodeData.hint.contains('Work address') ||
+                nodeData.hint.contains('Invalid email');
+          }),
+          hasLength(1),
+        );
+      },
+    );
 
-    testWidgets('required false and valid are explicit on the control', (
+    testWidgetsWithSemantics(
+      'required false and valid are explicit on the control',
+      (tester) async {
+        await tester.pumpWidget(
+          _testApp(
+            NakedField(
+              label: 'Email',
+              isRequired: false,
+              validationResult: SemanticsValidationResult.valid,
+              child: _textField(),
+            ),
+          ),
+        );
+
+        final data = _textFieldNodes(tester).single.getSemanticsData();
+        expect(data.flagsCollection.isRequired, Tristate.isFalse);
+        expect(data.validationResult, SemanticsValidationResult.valid);
+      },
+    );
+
+    testWidgetsWithSemantics('default validation result is explicitly none', (
       tester,
     ) async {
-      final handle = tester.ensureSemantics();
-
-      await tester.pumpWidget(
-        _testApp(
-          NakedField(
-            label: 'Email',
-            isRequired: false,
-            validationResult: SemanticsValidationResult.valid,
-            child: _textField(),
-          ),
-        ),
-      );
-
-      final data = _textFieldNodes(tester).single.getSemanticsData();
-      expect(data.flagsCollection.isRequired, Tristate.isFalse);
-      expect(data.validationResult, SemanticsValidationResult.valid);
-      handle.dispose();
-    });
-
-    testWidgets('default validation result is explicitly none', (tester) async {
-      final handle = tester.ensureSemantics();
-
       await tester.pumpWidget(
         _testApp(NakedField(label: 'Email', child: _textField())),
       );
 
       final data = _textFieldNodes(tester).single.getSemanticsData();
       expect(data.validationResult, SemanticsValidationResult.none);
-      handle.dispose();
     });
 
-    testWidgets('disabled and read-only semantics use the stricter state', (
-      tester,
-    ) async {
-      final handle = tester.ensureSemantics();
+    testWidgetsWithSemantics(
+      'disabled and read-only semantics use the stricter state',
+      (tester) async {
+        await tester.pumpWidget(
+          _testApp(
+            NakedField(label: 'Email', enabled: false, child: _textField()),
+          ),
+        );
 
-      await tester.pumpWidget(
-        _testApp(
-          NakedField(label: 'Email', enabled: false, child: _textField()),
-        ),
-      );
+        var data = _textFieldNodes(tester).single.getSemanticsData();
+        expect(data.flagsCollection.isEnabled, Tristate.isFalse);
+        expect(data.flagsCollection.isReadOnly, isTrue);
+        expect(data.hasAction(SemanticsAction.tap), isFalse);
+        expect(data.hasAction(SemanticsAction.focus), isFalse);
 
-      var data = _textFieldNodes(tester).single.getSemanticsData();
-      expect(data.flagsCollection.isEnabled, Tristate.isFalse);
-      expect(data.flagsCollection.isReadOnly, isTrue);
-      expect(data.hasAction(SemanticsAction.tap), isFalse);
-      expect(data.hasAction(SemanticsAction.focus), isFalse);
+        await tester.pumpWidget(
+          _testApp(
+            NakedField(label: 'Email', readOnly: true, child: _textField()),
+          ),
+        );
 
-      await tester.pumpWidget(
-        _testApp(
-          NakedField(label: 'Email', readOnly: true, child: _textField()),
-        ),
-      );
+        data = _textFieldNodes(tester).single.getSemanticsData();
+        expect(data.flagsCollection.isEnabled, Tristate.isTrue);
+        expect(data.flagsCollection.isReadOnly, isTrue);
+        expect(data.hasAction(SemanticsAction.focus), isTrue);
+        expect(data.hasAction(SemanticsAction.setText), isFalse);
 
-      data = _textFieldNodes(tester).single.getSemanticsData();
-      expect(data.flagsCollection.isEnabled, Tristate.isTrue);
-      expect(data.flagsCollection.isReadOnly, isTrue);
-      expect(data.hasAction(SemanticsAction.focus), isTrue);
-      expect(data.hasAction(SemanticsAction.setText), isFalse);
+        await tester.pumpWidget(
+          _testApp(
+            NakedField(label: 'Email', child: _textField(enabled: false)),
+          ),
+        );
 
-      await tester.pumpWidget(
-        _testApp(NakedField(label: 'Email', child: _textField(enabled: false))),
-      );
+        data = _textFieldNodes(tester).single.getSemanticsData();
+        expect(data.flagsCollection.isEnabled, Tristate.isFalse);
+        expect(data.flagsCollection.isReadOnly, isTrue);
+        expect(data.hasAction(SemanticsAction.focus), isFalse);
 
-      data = _textFieldNodes(tester).single.getSemanticsData();
-      expect(data.flagsCollection.isEnabled, Tristate.isFalse);
-      expect(data.flagsCollection.isReadOnly, isTrue);
-      expect(data.hasAction(SemanticsAction.focus), isFalse);
+        await tester.pumpWidget(
+          _testApp(
+            NakedField(label: 'Email', child: _textField(readOnly: true)),
+          ),
+        );
 
-      await tester.pumpWidget(
-        _testApp(NakedField(label: 'Email', child: _textField(readOnly: true))),
-      );
+        data = _textFieldNodes(tester).single.getSemanticsData();
+        expect(data.flagsCollection.isEnabled, Tristate.isTrue);
+        expect(data.flagsCollection.isReadOnly, isTrue);
+        expect(data.hasAction(SemanticsAction.focus), isTrue);
+      },
+    );
 
-      data = _textFieldNodes(tester).single.getSemanticsData();
-      expect(data.flagsCollection.isEnabled, Tristate.isTrue);
-      expect(data.flagsCollection.isReadOnly, isTrue);
-      expect(data.hasAction(SemanticsAction.focus), isTrue);
-      handle.dispose();
-    });
-
-    testWidgets('Field exclusion removes control and helper semantics', (
-      tester,
-    ) async {
-      final handle = tester.ensureSemantics();
-
-      await tester.pumpWidget(
-        _testApp(
-          NakedField(
-            label: 'Email',
-            description: 'Work address',
-            excludeSemantics: true,
-            child: Column(
-              children: [
-                const NakedFieldLabel(child: Text('Email')),
-                const NakedFieldDescription(child: Text('Work address')),
-                _textField(),
-              ],
+    testWidgetsWithSemantics(
+      'Field exclusion removes control and helper semantics',
+      (tester) async {
+        await tester.pumpWidget(
+          _testApp(
+            NakedField(
+              label: 'Email',
+              description: 'Work address',
+              excludeSemantics: true,
+              child: Column(
+                children: [
+                  const NakedFieldLabel(child: Text('Email')),
+                  const NakedFieldDescription(child: Text('Work address')),
+                  _textField(),
+                ],
+              ),
             ),
           ),
-        ),
-      );
+        );
 
-      expect(_textFieldNodes(tester), isEmpty);
-      expect(
-        _nodes(
-          tester,
-        ).where((node) => node.getSemanticsData().label.contains('Email')),
-        isEmpty,
-      );
-      handle.dispose();
-    });
+        expect(_textFieldNodes(tester), isEmpty);
+        expect(
+          _nodes(
+            tester,
+          ).where((node) => node.getSemanticsData().label.contains('Email')),
+          isEmpty,
+        );
+      },
+    );
   });
 
   group('NakedField error transitions', () {
-    testWidgets(
+    testWidgetsWithSemantics(
       'completed semantics updates announce changed errors exactly once',
       (tester) async {
-        final handle = tester.ensureSemantics();
         final announcements = AlertSemanticsUpdateRecorder(tester);
         late StateSetter rebuild;
         var errorText = 'Initial error';
@@ -288,90 +282,92 @@ void main() {
           );
         } finally {
           announcements.dispose();
-          handle.dispose();
         }
       },
     );
 
-    testWidgets('changed error creates one alert for one completed update', (
+    testWidgetsWithSemantics(
+      'changed error creates one alert for one completed update',
+      (tester) async {
+        late StateSetter rebuild;
+        String? errorText;
+
+        await tester.pumpWidget(
+          _testApp(
+            StatefulBuilder(
+              builder: (context, setState) {
+                rebuild = setState;
+                return NakedField(
+                  label: 'Email',
+                  errorText: errorText,
+                  isRequired: true,
+                  validationResult: errorText == null
+                      ? SemanticsValidationResult.none
+                      : SemanticsValidationResult.invalid,
+                  child: _textField(),
+                );
+              },
+            ),
+          ),
+        );
+        expect(_alertNodes(tester), isEmpty);
+        await tester.tap(find.byType(EditableText));
+        await tester.pump();
+
+        rebuild(() => errorText = 'Invalid email');
+        await tester.pump();
+
+        final root = tester.getSemantics(find.byType(Scaffold));
+        final alerts = _alertNodes(tester);
+        expect(alerts, hasLength(1));
+        final alertData = alerts.single.getSemanticsData();
+        expect(alertData.label, 'Invalid email');
+        expect(alertData.flagsCollection.isLiveRegion, isFalse);
+        expect(
+          collectSemanticsNodes(
+            alerts.single,
+            (node) => node.getSemanticsData().flagsCollection.isTextField,
+          ),
+          isEmpty,
+        );
+
+        final textFields = _textFieldNodes(tester);
+        expect(textFields, hasLength(1));
+        expect(
+          collectSemanticsNodes(
+            textFields.single,
+            (node) => node.getSemanticsData().role == SemanticsRole.alert,
+          ),
+          isEmpty,
+        );
+        final textFieldData = textFields.single.getSemanticsData();
+        expect(textFieldData.label, 'Email');
+        expect(textFieldData.hint, 'Invalid email');
+        expect(textFieldData.flagsCollection.isRequired, Tristate.isTrue);
+        expect(
+          textFieldData.validationResult,
+          SemanticsValidationResult.invalid,
+        );
+        expect(textFieldData.flagsCollection.isLiveRegion, isFalse);
+        expect(textFieldData.hasAction(SemanticsAction.setText), isTrue);
+        expect(textFieldData.hasAction(SemanticsAction.setSelection), isTrue);
+        expect(textFieldData.hasAction(SemanticsAction.tap), isTrue);
+        expect(
+          collectSemanticsNodes(
+            root,
+            (node) => node.getSemanticsData().role == SemanticsRole.alert,
+          ),
+          hasLength(1),
+        );
+
+        await tester.pump();
+        expect(_alertNodes(tester), isEmpty);
+      },
+    );
+
+    testWidgetsWithSemantics('unchanged rebuild does not recreate an alert', (
       tester,
     ) async {
-      final handle = tester.ensureSemantics();
-      late StateSetter rebuild;
-      String? errorText;
-
-      await tester.pumpWidget(
-        _testApp(
-          StatefulBuilder(
-            builder: (context, setState) {
-              rebuild = setState;
-              return NakedField(
-                label: 'Email',
-                errorText: errorText,
-                isRequired: true,
-                validationResult: errorText == null
-                    ? SemanticsValidationResult.none
-                    : SemanticsValidationResult.invalid,
-                child: _textField(),
-              );
-            },
-          ),
-        ),
-      );
-      expect(_alertNodes(tester), isEmpty);
-      await tester.tap(find.byType(EditableText));
-      await tester.pump();
-
-      rebuild(() => errorText = 'Invalid email');
-      await tester.pump();
-
-      final root = tester.getSemantics(find.byType(Scaffold));
-      final alerts = _alertNodes(tester);
-      expect(alerts, hasLength(1));
-      final alertData = alerts.single.getSemanticsData();
-      expect(alertData.label, 'Invalid email');
-      expect(alertData.flagsCollection.isLiveRegion, isFalse);
-      expect(
-        collectSemanticsNodes(
-          alerts.single,
-          (node) => node.getSemanticsData().flagsCollection.isTextField,
-        ),
-        isEmpty,
-      );
-
-      final textFields = _textFieldNodes(tester);
-      expect(textFields, hasLength(1));
-      expect(
-        collectSemanticsNodes(
-          textFields.single,
-          (node) => node.getSemanticsData().role == SemanticsRole.alert,
-        ),
-        isEmpty,
-      );
-      final textFieldData = textFields.single.getSemanticsData();
-      expect(textFieldData.label, 'Email');
-      expect(textFieldData.hint, 'Invalid email');
-      expect(textFieldData.flagsCollection.isRequired, Tristate.isTrue);
-      expect(textFieldData.validationResult, SemanticsValidationResult.invalid);
-      expect(textFieldData.flagsCollection.isLiveRegion, isFalse);
-      expect(textFieldData.hasAction(SemanticsAction.setText), isTrue);
-      expect(textFieldData.hasAction(SemanticsAction.setSelection), isTrue);
-      expect(textFieldData.hasAction(SemanticsAction.tap), isTrue);
-      expect(
-        collectSemanticsNodes(
-          root,
-          (node) => node.getSemanticsData().role == SemanticsRole.alert,
-        ),
-        hasLength(1),
-      );
-
-      await tester.pump();
-      expect(_alertNodes(tester), isEmpty);
-      handle.dispose();
-    });
-
-    testWidgets('unchanged rebuild does not recreate an alert', (tester) async {
-      final handle = tester.ensureSemantics();
       late StateSetter rebuild;
       String? errorText;
       var unrelated = 0;
@@ -400,113 +396,109 @@ void main() {
       rebuild(() => unrelated++);
       await tester.pump();
       expect(_alertNodes(tester), isEmpty);
-      handle.dispose();
     });
 
-    testWidgets('clear then re-add announces the same error again', (
-      tester,
-    ) async {
-      final handle = tester.ensureSemantics();
-      late StateSetter rebuild;
-      String? errorText;
+    testWidgetsWithSemantics(
+      'clear then re-add announces the same error again',
+      (tester) async {
+        late StateSetter rebuild;
+        String? errorText;
 
-      await tester.pumpWidget(
-        _testApp(
-          StatefulBuilder(
-            builder: (context, setState) {
-              rebuild = setState;
-              return NakedField(
-                label: 'Email',
-                errorText: errorText,
-                child: _textField(),
-              );
-            },
+        await tester.pumpWidget(
+          _testApp(
+            StatefulBuilder(
+              builder: (context, setState) {
+                rebuild = setState;
+                return NakedField(
+                  label: 'Email',
+                  errorText: errorText,
+                  child: _textField(),
+                );
+              },
+            ),
           ),
-        ),
-      );
+        );
 
-      rebuild(() => errorText = 'Invalid email');
-      await tester.pump();
-      expect(_alertNodes(tester), hasLength(1));
-      await tester.pump();
+        rebuild(() => errorText = 'Invalid email');
+        await tester.pump();
+        expect(_alertNodes(tester), hasLength(1));
+        await tester.pump();
 
-      rebuild(() => errorText = null);
-      await tester.pump();
-      expect(_alertNodes(tester), isEmpty);
+        rebuild(() => errorText = null);
+        await tester.pump();
+        expect(_alertNodes(tester), isEmpty);
 
-      rebuild(() => errorText = 'Invalid email');
-      await tester.pump();
-      expect(_alertNodes(tester), hasLength(1));
-      handle.dispose();
-    });
+        rebuild(() => errorText = 'Invalid email');
+        await tester.pump();
+        expect(_alertNodes(tester), hasLength(1));
+      },
+    );
 
-    testWidgets('announcement policy none suppresses transition alerts', (
-      tester,
-    ) async {
-      final handle = tester.ensureSemantics();
-      late StateSetter rebuild;
-      String? errorText;
+    testWidgetsWithSemantics(
+      'announcement policy none suppresses transition alerts',
+      (tester) async {
+        late StateSetter rebuild;
+        String? errorText;
 
-      await tester.pumpWidget(
-        _testApp(
-          StatefulBuilder(
-            builder: (context, setState) {
-              rebuild = setState;
-              return NakedField(
-                label: 'Email',
-                errorText: errorText,
-                errorAnnouncement: NakedFieldErrorAnnouncement.none,
-                child: _textField(),
-              );
-            },
+        await tester.pumpWidget(
+          _testApp(
+            StatefulBuilder(
+              builder: (context, setState) {
+                rebuild = setState;
+                return NakedField(
+                  label: 'Email',
+                  errorText: errorText,
+                  errorAnnouncement: NakedFieldErrorAnnouncement.none,
+                  child: _textField(),
+                );
+              },
+            ),
           ),
-        ),
-      );
+        );
 
-      rebuild(() => errorText = 'Invalid email');
-      await tester.pump();
+        rebuild(() => errorText = 'Invalid email');
+        await tester.pump();
 
-      expect(_alertNodes(tester), isEmpty);
-      expect(
-        _textFieldNodes(tester).single.getSemanticsData().hint,
-        'Invalid email',
-      );
-      handle.dispose();
-    });
+        expect(_alertNodes(tester), isEmpty);
+        expect(
+          _textFieldNodes(tester).single.getSemanticsData().hint,
+          'Invalid email',
+        );
+      },
+    );
 
-    testWidgets('localized non-empty error change announces translated text', (
-      tester,
-    ) async {
-      final handle = tester.ensureSemantics();
-      late StateSetter rebuild;
-      var errorText = 'Invalid email';
+    testWidgetsWithSemantics(
+      'localized non-empty error change announces translated text',
+      (tester) async {
+        late StateSetter rebuild;
+        var errorText = 'Invalid email';
 
-      await tester.pumpWidget(
-        _testApp(
-          StatefulBuilder(
-            builder: (context, setState) {
-              rebuild = setState;
-              return NakedField(
-                label: 'Email',
-                errorText: errorText,
-                child: _textField(),
-              );
-            },
+        await tester.pumpWidget(
+          _testApp(
+            StatefulBuilder(
+              builder: (context, setState) {
+                rebuild = setState;
+                return NakedField(
+                  label: 'Email',
+                  errorText: errorText,
+                  child: _textField(),
+                );
+              },
+            ),
           ),
-        ),
-      );
-      expect(_alertNodes(tester), isEmpty);
+        );
+        expect(_alertNodes(tester), isEmpty);
 
-      rebuild(() => errorText = 'E-Mail-Adresse ist ungültig');
-      await tester.pump();
+        rebuild(() => errorText = 'E-Mail-Adresse ist ungültig');
+        await tester.pump();
 
-      final alerts = _alertNodes(tester);
-      expect(alerts, hasLength(1));
-      expect(
-        alerts.single.getSemanticsData().label,
-        'E-Mail-Adresse ist ungültig',
-      );
-      handle.dispose();
-    });
+        final alerts = _alertNodes(tester);
+        expect(alerts, hasLength(1));
+        expect(
+          alerts.single.getSemanticsData().label,
+          'E-Mail-Adresse ist ungültig',
+        );
+      },
+    );
   });
 }

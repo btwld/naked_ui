@@ -7,6 +7,13 @@ import 'package:flutter/widgets.dart';
 import 'utilities/naked_state_scope.dart';
 import 'utilities/state.dart';
 
+typedef _ControlSnapshot = ({
+  bool isEnabled,
+  bool isReadOnly,
+  bool isFocused,
+  bool isFilled,
+});
+
 /// Controls whether changed field errors create an accessibility announcement.
 enum NakedFieldErrorAnnouncement {
   /// Never create an announcement node for an error transition.
@@ -173,6 +180,7 @@ class _NakedFieldState extends State<NakedField> {
   late final NakedFieldScopeController _scopeController =
       NakedFieldScopeController._(this);
   final Map<Object, NakedFieldControlRegistration> _registrations = {};
+  _ControlSnapshot? _lastControlSnapshot;
   bool _stateSyncScheduled = false;
 
   String? get _normalizedError {
@@ -184,6 +192,17 @@ class _NakedFieldState extends State<NakedField> {
     if (_registrations.isEmpty) return null;
     final registration = _registrations.values.first;
     return registration.isMounted() ? registration : null;
+  }
+
+  _ControlSnapshot? get _controlSnapshot {
+    final control = _primaryControl;
+    if (control == null) return null;
+    return (
+      isEnabled: control.isEnabled(),
+      isReadOnly: control.isReadOnly(),
+      isFocused: control.isFocused(),
+      isFilled: control.isFilled(),
+    );
   }
 
   void _registerControl(
@@ -222,11 +241,11 @@ class _NakedFieldState extends State<NakedField> {
     _stateSyncScheduled = true;
     scheduleMicrotask(() {
       _stateSyncScheduled = false;
-      if (mounted) setState(() {});
+      if (!mounted) return;
       assert(() {
         try {
           assert(
-            !mounted || _registrations.length <= 1,
+            _registrations.length <= 1,
             'NakedField supports exactly one mounted primary control.',
           );
         } on AssertionError catch (error, stackTrace) {
@@ -236,6 +255,10 @@ class _NakedFieldState extends State<NakedField> {
         }
         return true;
       }());
+
+      final snapshot = _controlSnapshot;
+      if (snapshot == _lastControlSnapshot) return;
+      setState(() => _lastControlSnapshot = snapshot);
     });
   }
 

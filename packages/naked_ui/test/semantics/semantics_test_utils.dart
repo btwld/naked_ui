@@ -444,6 +444,17 @@ Future<T> withSemantics<T>(
   }
 }
 
+/// Declares a widget test with semantics enabled for the callback's lifetime.
+void testWidgetsWithSemantics(
+  String description,
+  WidgetTesterCallback callback,
+) {
+  testWidgets(
+    description,
+    (tester) => withSemantics(tester, () => callback(tester)),
+  );
+}
+
 String? _normalizeLabel(String raw) {
   if (raw.isEmpty) return null;
   // Split on newlines and dedupe while preserving order.

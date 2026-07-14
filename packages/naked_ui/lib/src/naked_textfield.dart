@@ -204,7 +204,14 @@ class NakedTextField extends StatefulWidget {
          !obscureText || maxLines == 1,
          'Obscured fields cannot be multiline.',
        ),
-       assert(maxLength == null || maxLength > 0);
+       assert(maxLength == null || maxLength > 0),
+       assert(
+         !error ||
+             semanticErrorText == null ||
+             semanticErrorText == '' ||
+             validationResult != ui.SemanticsValidationResult.valid,
+         'A visible text-field error cannot have a valid validation result.',
+       );
 
   /// The magnifier configuration (defaults to platform-appropriate).
   final TextMagnifierConfiguration? magnifierConfiguration;
@@ -410,7 +417,10 @@ class NakedTextField extends StatefulWidget {
   /// The accessibility hint that describes how to use the field.
   final String? semanticHint;
 
-  /// The accessibility announcement for the current validation error.
+  /// The current validation error exposed to accessibility services.
+  ///
+  /// This value is ignored unless [error] is true. A changed non-empty error
+  /// creates a transient alert unless an enclosing [NakedField] disables it.
   final String? semanticErrorText;
 
   /// Whether the field is semantically required when used standalone.

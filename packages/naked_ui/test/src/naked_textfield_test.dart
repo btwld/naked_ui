@@ -6,6 +6,8 @@
 // - Non-brittle spellcheck/magnifier checks
 // - Covers lifecycle, editing, selection, semantics, restoration, etc.
 
+import 'dart:ui' show SemanticsValidationResult;
+
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -553,7 +555,19 @@ void main() {
     });
   });
 
-  group('Semantics', () {});
+  group('Semantics', () {
+    test('rejects a visible error with a valid result', () {
+      expect(
+        () => NakedTextField(
+          error: true,
+          semanticErrorText: 'Invalid email',
+          validationResult: SemanticsValidationResult.valid,
+          builder: _builder(),
+        ),
+        throwsAssertionError,
+      );
+    });
+  });
 
   group('Restoration & ownership', () {
     testWidgets('internal RestorableTextEditingController restores text', (
