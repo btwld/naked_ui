@@ -172,6 +172,7 @@ const NakedToggle({
   this.builder,
   this.semanticLabel,
   this.asSwitch = false,
+  this.excludeSemantics = false,
 })
 ```
 
@@ -188,6 +189,7 @@ const NakedToggle({
 - `focusNode`, `autofocus`: focus management options
 - interaction callbacks: `onFocusChange`, `onHoverChange`, `onPressChange`
 - `semanticLabel` → `String?`: accessibility label, especially important when no text label is visible
+- `excludeSemantics` → `bool`: hide the toggle and its descendants from the semantic tree
 
 ## Single-select Toggle Group Compatibility
 
