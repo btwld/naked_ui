@@ -128,7 +128,7 @@ Future<T?> showNakedAlertDialog<T>({
 ```
 
 - semanticLabel: Required, non-empty, caller-localized alert-dialog name.
-- initialFocusNode: Optional caller-owned safe target. The first traversable descendant is used when it is absent or unusable.
+- initialFocusNode: Optional caller-owned safe target. When it is absent or unusable, descendant autofocus is honored before falling back to the first traversable descendant.
 - barrierDismissible: Outside taps are inert by default. When enabled, `barrierLabel` must be non-empty and localized.
 - Escape and platform Back: Always cancel safely with a null result.
 - Focus always enters the alert, loops inside, and returns to a surviving invoker when the route closes.
