@@ -401,10 +401,7 @@ void main() {
         _buildTestApp(
           NakedPopover(
             popoverBuilder: (context, info) => const Text('Content'),
-            child: Focus(
-              focusNode: focusNode,
-              child: const Text('Trigger'),
-            ),
+            child: Focus(focusNode: focusNode, child: const Text('Trigger')),
           ),
         ),
       );
@@ -448,9 +445,7 @@ void main() {
         ),
       );
 
-      final data = tester
-          .getSemantics(find.text('Trigger'))
-          .getSemanticsData();
+      final data = tester.getSemantics(find.text('Trigger')).getSemanticsData();
       expect(data.hasAction(SemanticsAction.expand), isFalse);
       expect(data.hasAction(SemanticsAction.collapse), isFalse);
       // No component-owned disclosure state either; the caller owns the trigger.
