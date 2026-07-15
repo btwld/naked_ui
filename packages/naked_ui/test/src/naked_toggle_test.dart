@@ -1124,6 +1124,60 @@ void main() {
       expect(FocusManager.instance.primaryFocus, same(nodes['d']));
     });
 
+    testWidgets('refreshes visual order when only a stateful child reorders', (
+      tester,
+    ) async {
+      final reversed = ValueNotifier<bool>(false);
+      addTearDown(reversed.dispose);
+      final optionA = FocusNode(debugLabel: 'option A');
+      final optionB = FocusNode(debugLabel: 'option B');
+      addTearDown(optionA.dispose);
+      addTearDown(optionB.dispose);
+      final widgetA = NakedToggleOption<String>(
+        key: const ValueKey('a'),
+        value: 'a',
+        focusNode: optionA,
+        child: const SizedBox(width: 40, height: 40, child: Text('A')),
+      );
+      final widgetB = NakedToggleOption<String>(
+        key: const ValueKey('b'),
+        value: 'b',
+        focusNode: optionB,
+        child: const SizedBox(width: 40, height: 40, child: Text('B')),
+      );
+
+      await tester.pumpMaterialWidget(
+        NakedToggleGroup<String>(
+          selectedValue: 'a',
+          onChanged: (_) {},
+          loop: false,
+          child: ValueListenableBuilder<bool>(
+            valueListenable: reversed,
+            builder: (context, isReversed, child) => Row(
+              children: isReversed ? [widgetB, widgetA] : [widgetA, widgetB],
+            ),
+          ),
+        ),
+      );
+
+      optionB.requestFocus();
+      await tester.pump();
+      await tester.pump();
+
+      reversed.value = true;
+      await tester.pump();
+      await tester.pump();
+      expect(
+        tester.getCenter(find.text('B')).dx,
+        lessThan(tester.getCenter(find.text('A')).dx),
+      );
+
+      await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
+      await tester.pump();
+
+      expect(optionA.hasPrimaryFocus, isTrue);
+    });
+
     for (final orientation in Axis.values) {
       for (final textDirection in TextDirection.values) {
         testWidgets('follows wrapped ${orientation.name} visual order in '
@@ -1465,6 +1519,78 @@ void main() {
         isTrue,
         reason: 'last still-valid focus has priority over selection',
       );
+    });
+
+    testWidgets('preserves focused keyed option when moved between groups', (
+      tester,
+    ) async {
+      final movingOptionKey = GlobalKey();
+      final moving = FocusNode(debugLabel: 'moving option');
+      final firstSibling = FocusNode(debugLabel: 'first group sibling');
+      final secondSibling = FocusNode(debugLabel: 'second group sibling');
+      for (final node in [moving, firstSibling, secondSibling]) {
+        addTearDown(node.dispose);
+      }
+      final movingOption = NakedToggleOption<String>(
+        key: movingOptionKey,
+        value: 'moving',
+        focusNode: moving,
+        child: const Text('Moving'),
+      );
+      var inFirstGroup = true;
+      late StateSetter rebuild;
+
+      await tester.pumpMaterialWidget(
+        StatefulBuilder(
+          builder: (context, setState) {
+            rebuild = setState;
+            return Column(
+              children: [
+                NakedToggleGroup<String>(
+                  selectedValue: inFirstGroup ? 'moving' : 'first',
+                  onChanged: (_) {},
+                  child: Row(
+                    children: [
+                      if (inFirstGroup) movingOption,
+                      NakedToggleOption<String>(
+                        value: 'first',
+                        focusNode: firstSibling,
+                        child: const Text('First'),
+                      ),
+                    ],
+                  ),
+                ),
+                NakedToggleGroup<String>(
+                  selectedValue: 'second',
+                  onChanged: (_) {},
+                  child: Row(
+                    children: [
+                      if (!inFirstGroup) movingOption,
+                      NakedToggleOption<String>(
+                        value: 'second',
+                        focusNode: secondSibling,
+                        child: const Text('Second'),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            );
+          },
+        ),
+      );
+
+      moving.requestFocus();
+      await tester.pump();
+      expect(moving.hasPrimaryFocus, isTrue);
+
+      rebuild(() => inFirstGroup = false);
+      await tester.pump();
+
+      expect(FocusManager.instance.primaryFocus, same(moving));
+      expect(firstSibling.hasFocus, isFalse);
+      expect(moving.skipTraversal, isFalse);
+      expect(secondSibling.skipTraversal, isTrue);
     });
 
     testWidgets('hands focus across caller-owned node swaps', (tester) async {

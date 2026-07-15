@@ -497,11 +497,12 @@ class _ToggleGroupController<T> {
     return entry;
   }
 
-  void unregister(_ToggleGroupEntry<T> entry) {
+  void unregister(_ToggleGroupEntry<T> entry, {bool repairFocus = true}) {
     if (!_entries.contains(entry)) return;
 
     final oldIndex = _orderedEntries.indexOf(entry);
     final repairFocusedEntry =
+        repairFocus &&
         (entry.focusNode.hasFocus || identical(_focusedEntry, entry)) &&
         oldIndex >= 0;
     if (repairFocusedEntry) {
@@ -570,7 +571,11 @@ class _ToggleGroupController<T> {
       if (identical(_focusedEntry, entry)) _focusedEntry = null;
     }
 
-    if (!shouldRepairFocus) {
+    if (effectiveEnabled && wasFocused) {
+      _focusedEntry = entry;
+      _lastFocused = entry;
+      _setTarget(entry);
+    } else if (!shouldRepairFocus) {
       _choosePriorityTarget(preferredEntry: entry);
     }
     _applyFocusability(entry);
@@ -600,7 +605,9 @@ class _ToggleGroupController<T> {
   }
 
   void move(_ToggleGroupEntry<T> entry, int delta) {
-    if (!entry.effectiveEnabled || _orderedEntries.isEmpty) return;
+    if (!entry.effectiveEnabled) return;
+    _refreshOrderedEntries();
+    if (_orderedEntries.isEmpty) return;
     final currentIndex = _orderedEntries.indexOf(entry);
     if (currentIndex < 0) return;
 
@@ -621,6 +628,7 @@ class _ToggleGroupController<T> {
   }
 
   void focusFirst() {
+    _refreshOrderedEntries();
     for (final entry in _orderedEntries) {
       if (entry.effectiveEnabled) {
         _focus(entry);
@@ -630,6 +638,7 @@ class _ToggleGroupController<T> {
   }
 
   void focusLast() {
+    _refreshOrderedEntries();
     for (final entry in _orderedEntries.reversed) {
       if (entry.effectiveEnabled) {
         _focus(entry);
@@ -729,16 +738,7 @@ class _ToggleGroupController<T> {
   }
 
   void _reconcile() {
-    final attachedEntries = _entries
-        .where(
-          (entry) => entry.owner.mounted && entry.focusNode.context != null,
-        )
-        .toList();
-    final visualEntries = _sortInVisualOrder(attachedEntries);
-
-    _orderedEntries
-      ..clear()
-      ..addAll(visualEntries);
+    _refreshOrderedEntries();
 
     final pendingFocusRepair = _pendingFocusRepair;
     _pendingFocusRepair = null;
@@ -769,6 +769,19 @@ class _ToggleGroupController<T> {
         ).autofocus(autofocusEntry.focusNode);
       }
     }
+  }
+
+  void _refreshOrderedEntries() {
+    final attachedEntries = _entries
+        .where(
+          (entry) => entry.owner.mounted && entry.focusNode.context != null,
+        )
+        .toList();
+    final visualEntries = _sortInVisualOrder(attachedEntries);
+
+    _orderedEntries
+      ..clear()
+      ..addAll(visualEntries);
   }
 
   List<_ToggleGroupEntry<T>> _sortInVisualOrder(
@@ -990,7 +1003,9 @@ class _NakedToggleOptionState<T> extends State<NakedToggleOption<T>>
     final scope = _ToggleScope.of<T>(context);
     if (!identical(_scope?.controller, scope.controller)) {
       final oldEntry = _entry;
-      if (oldEntry != null) _scope?.controller.unregister(oldEntry);
+      if (oldEntry != null) {
+        _scope?.controller.unregister(oldEntry, repairFocus: false);
+      }
       _entry = scope.controller.register(this);
     }
     _scope = scope;
