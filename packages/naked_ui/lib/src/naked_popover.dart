@@ -261,6 +261,9 @@ class _NakedPopoverState extends State<NakedPopover>
     trigger = Semantics(
       enabled: true,
       button: true,
+      // Disclosure state: announce open/closed alongside the button role, so AT
+      // reports isExpanded. Matches NakedMenu/NakedSelect/NakedAccordion.
+      expanded: _menuController.isOpen,
       label: widget.semanticLabel,
       onTap: _activate,
       child: trigger,
@@ -292,23 +295,28 @@ class _NakedPopoverState extends State<NakedPopover>
         return _buildChildOwnedTrigger(childFocusNode!);
       }
 
-      return NakedButton(
-        onPressed: _toggle,
-        focusNode: returnNode,
-        semanticLabel: widget.semanticLabel,
-        child: excludeChildTraversal
-            ? ExcludeFocusTraversal(child: widget.child!)
-            : widget.child,
-        builder: (context, buttonState, child) {
-          return NakedStateScopeBuilder(
-            value: NakedPopoverState(
-              states: buttonState.states,
-              isOpen: _menuController.isOpen,
-            ),
-            child: child,
-            builder: widget.builder,
-          );
-        },
+      // Wrap NakedButton (rather than extend it with an `expanded` param) so the
+      // disclosure state merges onto the button's node. Mirrors NakedMenu.
+      return Semantics(
+        expanded: _menuController.isOpen,
+        child: NakedButton(
+          onPressed: _toggle,
+          focusNode: returnNode,
+          semanticLabel: widget.semanticLabel,
+          child: excludeChildTraversal
+              ? ExcludeFocusTraversal(child: widget.child!)
+              : widget.child,
+          builder: (context, buttonState, child) {
+            return NakedStateScopeBuilder(
+              value: NakedPopoverState(
+                states: buttonState.states,
+                isOpen: _menuController.isOpen,
+              ),
+              child: child,
+              builder: widget.builder,
+            );
+          },
+        ),
       );
     }
 
