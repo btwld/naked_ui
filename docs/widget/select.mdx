@@ -183,7 +183,7 @@ const NakedSelect({
 - `mouseCursor` → set the trigger cursor when the select is enabled
 - `triggerFocusNode` → reuse an external focus node; focus is restored here automatically on close
 - `semanticLabel` → override trigger semantics; the current `value?.toString()` is announced when provided
-- `excludeSemantics` → hide the select trigger and overlay from the semantic tree
+- `excludeSemantics` → hide the select trigger subtree from the semantic tree; opened overlay content remains exposed
 - Lifecycle hooks: `onOpen`, `onClose`, `onCanceled` fire around overlay visibility; `onOpenRequested`, `onCloseRequested` intercept RawMenuAnchor requests (e.g. for animations)
 
 ## Options via `NakedSelect.Option`

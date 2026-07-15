@@ -204,7 +204,7 @@ const NakedMenu({
 - `consumeOutsideTaps` / `useRootOverlay` → capture outside taps before they reach ancestors or target the root overlay stack
 - `triggerFocusNode` → reuse an external focus node so focus returns to the trigger after closing
 - `semanticLabel` → provide an accessible name for the menu trigger
-- `excludeSemantics` → hide the menu trigger and overlay from the semantic tree
+- `excludeSemantics` → hide the menu trigger subtree from the semantic tree; opened overlay content remains exposed
 - Lifecycle hooks: `onOpen`, `onClose`, `onCanceled` announce overlay visibility; `onOpenRequested`, `onCloseRequested` let you intercept RawMenuAnchor requests before they commit
 
 ## NakedMenuItem Essentials

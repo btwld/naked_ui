@@ -188,10 +188,23 @@ const NakedTextField({
 
 ## Accessibility & Semantics
 
-- Supply `semanticLabel`, `semanticHint`, and `semanticErrorText` when the visual chrome lacks textual context
+- Supply `semanticLabel` and `semanticHint` when the visual chrome lacks textual context
+- Pair `semanticErrorText` with `error: true`; when `error` is false, the error text is not announced and the field is not a live region
 - Set `excludeSemantics` to hide the field and its descendants from accessibility services
 - `NakedTextField` wraps the builder result with proper `Semantics` for focusable text fields
 - Respect contrast and focus indicators in your builder to ensure the field remains discoverable
+
+For a validation error, derive both parameters from the same state:
+
+```dart
+NakedTextField(
+  controller: emailController,
+  error: emailError != null,
+  semanticLabel: 'Email',
+  semanticErrorText: emailError,
+  builder: (context, state, editableText) => editableText,
+);
+```
 
 ## Tips
 
