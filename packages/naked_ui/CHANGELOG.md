@@ -10,6 +10,13 @@
   barriers require a non-empty localized label. Existing `NakedDialog` and
   `showNakedDialog` defaults remain unchanged.
 
+### Behavior changes
+
+- Migrate `NakedToggleGroup` options from independent Tab stops to one
+  roving-focus stop: Tab enters and exits once, arrows and Home/End move focus
+  without selecting, activation proposes the controlled value, and disabled or
+  dynamically removed options repair focus within the group.
+
 ## 1.0.0-beta.3
 
 ### Fixes and hardening
