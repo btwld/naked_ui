@@ -1,3 +1,33 @@
+## 1.0.0-beta.5
+
+### Breaking changes
+
+- Replace alignment-pair overlay positioning with a Radix-shaped
+  `OverlayPositionConfig`: side, logical alignment, signed side/alignment
+  offsets, collision padding, collision avoidance, and a resolved
+  `OverlayPlacement` available to overlay descendants after flip or shift.
+- Change `NakedSlider` from one `double value` to a nonempty, ordered
+  `List<double> values`. Callbacks are list-valued; defaults are now `min=0`,
+  `max=100`, and `step=1`. The slider supports arbitrary thumb counts,
+  orientation, inversion, minimum spacing, nearest-thumb pointer selection,
+  non-crossing constraints, and per-thumb focus, labels, formatters, and
+  semantics actions.
+
+### Features and behavior changes
+
+- Add controlled `open` / `onOpenChanged` contracts to Select and Tooltip.
+  Controlled owners may accept or reject trigger, selection, Escape, outside
+  tap, hover, focus, and touch requests without transient visual mutation.
+- Keep Tooltip open while either its trigger or overlay content is hovered,
+  with an opt-out through `disableHoverableContent`; expose the final
+  collision-resolved placement to tooltip content.
+- Add separate keyed Popover anchors and automatic/manual Tabs activation.
+- Add controlled menu checkbox items and typed radio groups/items with checked
+  roles and mutually-exclusive semantics.
+- Add recursively composable submenus with delayed hover handoff, LTR/RTL
+  open/close arrows, Escape handling, sibling coordination, root dismissal,
+  first-item focus, and trigger-focus restoration.
+
 ## 1.0.0-beta.4
 
 ### Features

@@ -89,6 +89,7 @@ class NakedPopover extends StatefulWidget {
     this.consumeOutsideTaps = true,
     this.useRootOverlay = false,
     this.openOnTap = true,
+    this.anchorKey,
     this.triggerFocusNode,
     this.onOpen,
     this.onClose,
@@ -122,6 +123,13 @@ class NakedPopover extends StatefulWidget {
 
   /// Whether tapping the trigger opens the popover.
   final bool openOnTap;
+
+  /// Optional key for a separate widget used as the positioning anchor.
+  ///
+  /// When null, the trigger is the anchor. The keyed widget may be a sibling
+  /// or ancestor descendant in the same overlay subtree, allowing trigger and
+  /// positioning geometry to be composed independently.
+  final GlobalKey? anchorKey;
 
   /// Focus node for the trigger widget.
   final FocusNode? triggerFocusNode;
@@ -364,6 +372,7 @@ class _NakedPopoverState extends State<NakedPopover>
     final result = AnchoredOverlayShell(
       controller: _menuController,
       triggerFocusNode: returnNode,
+      positioningAnchorKey: widget.anchorKey,
       consumeOutsideTaps: widget.consumeOutsideTaps,
       onOpen: _handleOpen,
       onClose: _handleClose,
