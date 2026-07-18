@@ -217,6 +217,21 @@ void main() {
   });
 
   group('pointer behavior', () {
+    testWidgets('a single drag move updates the active thumb', (tester) async {
+      final changes = <List<double>>[];
+      await tester.pumpWidget(
+        harness(values: const [50], onChanged: changes.add),
+      );
+
+      final gesture = await tester.startGesture(pointAt(tester, 0.5));
+      await gesture.moveTo(pointAt(tester, 0.8));
+      await tester.pump();
+      await gesture.up();
+      await tester.pump();
+
+      expect(changes.last, [80]);
+    });
+
     testWidgets('tap selects and changes the nearest thumb', (tester) async {
       final changes = <List<double>>[];
       await tester.pumpWidget(

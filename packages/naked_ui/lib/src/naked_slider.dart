@@ -541,8 +541,13 @@ class _NakedSliderState extends State<NakedSlider>
     widget.onChangeEnd?.call(result);
   }
 
-  void _handleHorizontalDragStart(DragStartDetails details) =>
+  void _handleHorizontalDragStart(DragStartDetails details) {
+    if (_isDragging) {
+      _updatePointerInteraction(details.localPosition);
+    } else {
       _beginPointerInteraction(details.localPosition);
+    }
+  }
 
   void _handleHorizontalDragDown(DragDownDetails details) =>
       _beginPointerInteraction(details.localPosition);
@@ -553,8 +558,13 @@ class _NakedSliderState extends State<NakedSlider>
   void _handleHorizontalDragEnd(DragEndDetails details) =>
       _finishPointerInteraction();
 
-  void _handleVerticalDragStart(DragStartDetails details) =>
+  void _handleVerticalDragStart(DragStartDetails details) {
+    if (_isDragging) {
+      _updatePointerInteraction(details.localPosition);
+    } else {
       _beginPointerInteraction(details.localPosition);
+    }
+  }
 
   void _handleVerticalDragDown(DragDownDetails details) =>
       _beginPointerInteraction(details.localPosition);
