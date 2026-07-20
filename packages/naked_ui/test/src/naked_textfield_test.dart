@@ -457,6 +457,25 @@ void main() {
       et = _getEditableText(tester);
       expect(et.selectionColor, isNotNull);
     });
+
+    testWidgets('ambient DefaultSelectionStyle selection color reaches '
+        'EditableText', (tester) async {
+      final ctl = TextEditingController(text: 'abc');
+
+      await _pumpApp(
+        tester,
+        child: DefaultSelectionStyle(
+          selectionColor: const Color(0xFF9E9E9E),
+          child: NakedTextField(controller: ctl, builder: _builder()),
+        ),
+      );
+
+      await tester.tap(find.byType(EditableText));
+      await tester.pump();
+
+      final et = _getEditableText(tester);
+      expect(et.selectionColor, const Color(0xFF9E9E9E));
+    });
   });
 
   group('Scrolling & bring-into-view', () {
