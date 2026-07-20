@@ -1,3 +1,16 @@
+## 1.0.0-beta.6
+
+### Fixes
+
+- Make `NakedTextField` honor ambient `DefaultSelectionStyle` cursor and
+  selection colors, including context-resolved `CupertinoDynamicColor`
+  variants, while preserving explicit cursor precedence, focus gating, and
+  platform fallbacks.
+
+### Maintenance
+
+- Point package metadata at the canonical `conceptadev/naked_ui` repository.
+
 ## 1.0.0-beta.5
 
 ### Breaking changes
