@@ -2,8 +2,9 @@ import 'dart:ui' as ui show BoxHeightStyle, BoxWidthStyle;
 
 import 'package:flutter/cupertino.dart'
     show
-        cupertinoTextSelectionHandleControls,
-        cupertinoDesktopTextSelectionHandleControls;
+        CupertinoDynamicColor,
+        cupertinoDesktopTextSelectionHandleControls,
+        cupertinoTextSelectionHandleControls;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 // We import just what we need from Material/Cupertino to keep surface minimal,
@@ -299,7 +300,10 @@ class NakedTextField extends StatefulWidget {
   /// Whether cursor opacity changes are animated.
   final bool? cursorOpacityAnimates;
 
-  /// The cursor color, or null to use the package's neutral fallback.
+  /// The cursor color.
+  ///
+  /// If null, uses the ambient [DefaultSelectionStyle.cursorColor] before the
+  /// platform fallback.
   final Color? cursorColor;
 
   /// How selection highlights align vertically with text boxes.
@@ -723,11 +727,19 @@ class _NakedTextFieldState extends State<NakedTextField>
     final DefaultSelectionStyle selectionStyle = DefaultSelectionStyle.of(
       context,
     );
+    final Color? cursorColor = CupertinoDynamicColor.maybeResolve(
+      widget.cursorColor ?? selectionStyle.cursorColor,
+      context,
+    );
+    final Color? selectionColor = CupertinoDynamicColor.maybeResolve(
+      selectionStyle.selectionColor,
+      context,
+    );
 
     final _PlatformDefaults p = _PlatformDefaults.resolve(
       context: context,
-      cursorColorOverride: widget.cursorColor ?? selectionStyle.cursorColor,
-      selectionColorOverride: selectionStyle.selectionColor,
+      cursorColorOverride: cursorColor,
+      selectionColorOverride: selectionColor,
       cursorRadiusOverride: widget.cursorRadius,
       cursorOpacityAnimatesOverride: widget.cursorOpacityAnimates,
     );
