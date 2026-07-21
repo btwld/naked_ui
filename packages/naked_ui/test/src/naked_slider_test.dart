@@ -214,6 +214,60 @@ void main() {
       expect(first.hashCode, equal.hashCode);
       expect(first, isNot(different));
     });
+
+    test(
+      'visualPercentageOf flips for direction, orientation, and inversion',
+      () {
+        NakedSliderState create({
+          Axis orientation = Axis.horizontal,
+          TextDirection textDirection = TextDirection.ltr,
+          bool inverted = false,
+        }) => NakedSliderState(
+          states: const <WidgetState>{},
+          values: const [50],
+          min: 0,
+          max: 100,
+          step: 1,
+          minSpacing: 0,
+          orientation: orientation,
+          inverted: inverted,
+          textDirection: textDirection,
+          isDragging: false,
+        );
+
+        // Left-to-right horizontal maps the logical fraction straight through.
+        expect(create().visualPercentageOf(0), 0);
+        expect(create().visualPercentageOf(0.25), 0.25);
+        expect(create().visualPercentageOf(1), 1);
+
+        // Each of RTL, vertical, and inversion mirrors the fraction once.
+        expect(
+          create(textDirection: TextDirection.rtl).visualPercentageOf(0.25),
+          0.75,
+        );
+        expect(
+          create(orientation: Axis.vertical).visualPercentageOf(0.25),
+          0.75,
+        );
+        expect(create(inverted: true).visualPercentageOf(0.25), 0.75);
+
+        // Two mirrors cancel out (RTL combined with inversion).
+        expect(
+          create(
+            textDirection: TextDirection.rtl,
+            inverted: true,
+          ).visualPercentageOf(0.25),
+          0.25,
+        );
+
+        // visualPercentageAt stays consistent with the delegated helper.
+        final state = create(inverted: true);
+        expect(
+          state.visualPercentageAt(0),
+          state.visualPercentageOf(state.percentageAt(0)),
+        );
+      },
+    );
   });
 
   group('pointer behavior', () {
