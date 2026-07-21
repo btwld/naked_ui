@@ -85,11 +85,15 @@ class NakedSliderState extends NakedState {
     List<double>.generate(values.length, percentageAt),
   );
 
-  /// The physical alignment along [orientation] for the thumb at [index].
+  /// The physical alignment along [orientation] for a logical [percentage].
   ///
-  /// The result is zero at the left/top edge and one at the right/bottom edge.
-  double visualPercentageAt(int index) {
-    var result = percentageAt(index);
+  /// [percentage] is a logical fraction where zero is [min] and one is [max].
+  /// The result is zero at the left/top edge and one at the right/bottom edge,
+  /// accounting for [orientation], [textDirection], and [inverted]. Use this for
+  /// track decorations that are not tied to a thumb, such as the origin of a
+  /// range fill, where [visualPercentageAt] (keyed by thumb index) does not fit.
+  double visualPercentageOf(double percentage) {
+    var result = percentage;
     if (orientation == Axis.horizontal && textDirection == TextDirection.rtl) {
       result = 1 - result;
     } else if (orientation == Axis.vertical) {
@@ -99,6 +103,12 @@ class NakedSliderState extends NakedState {
 
     return result;
   }
+
+  /// The physical alignment along [orientation] for the thumb at [index].
+  ///
+  /// The result is zero at the left/top edge and one at the right/bottom edge.
+  double visualPercentageAt(int index) =>
+      visualPercentageOf(percentageAt(index));
 
   @override
   bool operator ==(Object other) {
