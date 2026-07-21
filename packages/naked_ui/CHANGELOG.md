@@ -1,3 +1,11 @@
+## 1.0.0-beta.7
+
+### Features
+
+- Add `NakedSliderState.visualPercentageOf` for mapping arbitrary logical
+  fractions to physical track alignment across orientation, text direction,
+  and inversion, while preserving `visualPercentageAt` thumb placement.
+
 ## 1.0.0-beta.6
 
 ### Fixes
